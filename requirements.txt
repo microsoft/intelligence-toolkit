@@ -1,2 +1,10 @@
 pandas==1.5.3
 streamlit==1.27.2
+openai==0.28.1
+tiktoken==0.5.2
+jsonschema==4.19.1
+numpy==1.23.4
+pdfplumber==0.10.3
+scipy==1.11.3
+langchain==0.0.339
+streamlit-agraph==0.0.45
