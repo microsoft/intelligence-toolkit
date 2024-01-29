@@ -1,0 +1,33 @@
+# Python-related
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyz
+*.pyw
+
+# Virtual environment
+venv/
+env/
+
+# Streamlit
+.cache/
+.streamlit/
+
+# Other generated files
+*.log
+*.pyc
+*.pyo
+*.db
+*.sqlite
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+
+# Editor-specific files
+.vscode/
+.idea/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
