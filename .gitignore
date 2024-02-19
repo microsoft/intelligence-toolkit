@@ -31,3 +31,10 @@ env/
 # OS-specific files
 .DS_Store
 Thumbs.db
+
+# IntelligenceToolkit
+qa_mine
+outputs
+cache
+data
+legacy

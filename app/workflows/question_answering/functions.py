@@ -2,45 +2,20 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from collections import Counter
-import openai
 import re
 import os
-import AI_API
-from itertools import combinations
 import sklearn.cluster
 import json
 import io
-import pdfplumber
 import tiktoken
+import pdfplumber
 import scipy.spatial.distance
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-class Embedder:
-    def __init__(self, cache, model='text-embedding-ada-002', encoder='cl100k_base', max_tokens=8191) -> None:
-        self.model = model
-        self.encoder = tiktoken.get_encoding(encoder)
-        self.max_tokens = max_tokens
-        self.embedder = openai.Embedding()
-        self.cache = cache
+import util.AI_API
 
-    def encode(self, text):
-        text = text.replace("\n", " ")
-        hsh = hash(text)
-        path = os.path.join(self.cache, f'{hsh}.txt')
-        if os.path.exists(path):
-            return np.array([float(x) for x in open(path, 'r').read().split('\n') if len(x) > 0])
-        else:
-            tokens = len(self.encoder.encode(text))
-            if tokens > self.max_tokens:
-                text = text[:self.max_tokens]
-                print('Truncated text to max tokens')
-            try:
-                embedding = self.embedder.create(input = [text], model=self.model).data[0].embedding
-                np.savetxt(path, embedding, delimiter=',')
-                return np.array(embedding)
-            except:
-                print(f'Error embedding text: {text}')
-                return None
+embedder = util.AI_API.create_embedder(cache='qa_mine\\embeddings') #SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+encoder = tiktoken.get_encoding('cl100k_base')
 
 class Question:
     def __init__(self, file, text, vector, tier, id) -> None:
@@ -363,7 +338,7 @@ Input questions:
                     variables = {
                         'q_text': q_text
                     }
-                    deep_qas_raw = AI_API.generate(
+                    deep_qas_raw = util.AI_API.generate(
                         model=sv.model.value,
                         temperature=sv.temperature.value,
                         max_tokens=sv.max_tokens.value,
@@ -427,7 +402,7 @@ Input questions:
             variables = {
                 'q_text': q_text
             }
-            deep_qas_raw = AI_API.generate(
+            deep_qas_raw = util.AI_API.generate(
                 model=sv.model.value,
                 temperature=sv.temperature.value,
                 max_tokens=sv.max_tokens.value,
@@ -490,7 +465,7 @@ New augmented question adding to the prevous augmented question:
             'augmented_question': question_history[-1],
             'q_text': q_text
         }
-        response = AI_API.generate(
+        response = util.AI_API.generate(
             model=sv.model.value,
             temperature=sv.temperature.value,
             max_tokens=sv.max_tokens.value,
@@ -504,5 +479,3 @@ New augmented question adding to the prevous augmented question:
         print('Got no new questions!')
     return response
 
-embedder = Embedder(cache='qa_mine\\embeddings') #SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
-encoder = tiktoken.get_encoding('cl100k_base')
