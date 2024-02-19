@@ -1,5 +1,5 @@
 # Introduction 
 
-pip install -r requirementx.txt
+pip install -r requirements.txt
 
-streamlit run app/home.py
+streamlit run app/Home.py
