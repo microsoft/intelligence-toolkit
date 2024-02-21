@@ -16,6 +16,7 @@ import workflows.network_analysis.config as config
 import workflows.network_analysis.prompts as prompts
 import workflows.network_analysis.variables as vars
 import util.AI_API
+import util.ui_components
 
 embedder = util.AI_API.create_embedder(config.cache_dir)
 
@@ -31,21 +32,22 @@ def create():
     with uploader_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:
-            st.markdown('##### Upload data for processing')
-            files = st.file_uploader("Upload CSVs", type=['csv'], accept_multiple_files=True)
-            st.number_input('Maximum rows to process (0 = all)', min_value=0, step=1000, key=sv.network_max_rows_to_process.key, value=sv.network_max_rows_to_process.value)
+            # st.markdown('##### Upload data for processing')
+            # files = st.file_uploader("Upload CSVs", type=['csv'], accept_multiple_files=True)
+            # st.number_input('Maximum rows to process (0 = all)', min_value=0, step=1000, key=sv.network_max_rows_to_process.key, value=sv.network_max_rows_to_process.value)
             
-            if files != None:
-                for file in files:
-                    if file.name not in sv.network_uploaded_files.value:
-                        df = pd.read_csv(file, encoding='unicode_escape')[:sv.network_max_rows_to_process.value] if sv.network_max_rows_to_process.value > 0 else pd.read_csv(file, encoding='unicode_escape')
-                        df.to_csv(os.path.join(config.outputs_dir, file.name), index=False)
-                        sv.network_uploaded_files.value.append(file.name)
-            selected_file = st.selectbox("Select a file", sv.network_uploaded_files.value)
+            # if files != None:
+            #     for file in files:
+            #         if file.name not in sv.network_uploaded_files.value:
+            #             df = pd.read_csv(file, encoding='unicode_escape')[:sv.network_max_rows_to_process.value] if sv.network_max_rows_to_process.value > 0 else pd.read_csv(file, encoding='unicode_escape')
+            #             df.to_csv(os.path.join(config.outputs_dir, file.name), index=False)
+            #             sv.network_uploaded_files.value.append(file.name)
+            # selected_file = st.selectbox("Select a file", sv.network_uploaded_files.value)
             
-            if selected_file != None:
-                df = pd.read_csv(os.path.join(config.outputs_dir, selected_file), encoding='unicode_escape')[:sv.network_max_rows_to_process.value] if sv.network_max_rows_to_process.value > 0 else pd.read_csv(os.path.join(config.outputs_dir, selected_file), encoding='unicode_escape')
-                st.dataframe(df[:config.max_rows_to_show], hide_index=True, use_container_width=True)
+            # if selected_file != None:
+            #     df = pd.read_csv(os.path.join(config.outputs_dir, selected_file), encoding='unicode_escape')[:sv.network_max_rows_to_process.value] if sv.network_max_rows_to_process.value > 0 else pd.read_csv(os.path.join(config.outputs_dir, selected_file), encoding='unicode_escape')
+            #     st.dataframe(df[:config.max_rows_to_show], hide_index=True, use_container_width=True)
+            selected_file, df = util.ui_components.multi_csv_uploader('Upload multiple CSVs', sv.network_uploaded_files, config.outputs_dir, 'network_uploader', sv.network_max_rows_to_process)
         with model_col:
             st.markdown('##### Map columns to model')
             if df is None:

@@ -31,7 +31,7 @@ def create():
     with uploader_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:
-            selected_file, df = util.ui_components.multi_csv_uploader(sv.matching_uploaded_files, config.outputs_dir, sv.matching_max_rows_to_process)
+            selected_file, df = util.ui_components.multi_csv_uploader('Upload multiple CSVs', sv.matching_uploaded_files, config.outputs_dir, 'matching_uploader', sv.matching_max_rows_to_process)
         with model_col:
                 st.markdown('##### Map columns to data model')
                 if df is None:
@@ -47,17 +47,23 @@ def create():
                     filtered_cols = [c for c in cols if c not in [entity_col, name_col]]
                     att_cols = st.multiselect('Entity attribute columns', filtered_cols)
                     ready = dataset is not None and len(dataset) > 0 and len(att_cols) > 0 and name_col != ''
-                    if st.button("Add records to data model", disabled=not ready):
-                        if entity_col == '':
-                            df = df.with_row_count(name="Entity ID")
-                            df = df.rename({name_col: 'Entity name'})
-                        else:
-                            df = df.rename({entity_col: 'Entity ID', name_col: 'Entity name'})
-                            df = df.with_columns(pl.col('Entity ID').cast(pl.Utf8))
-                        df = df.select([pl.col('Entity ID'), pl.col('Entity name')] + [pl.col(c) for c in sorted(att_cols)]).collect()
-                        if sv.matching_max_rows_to_process.value > 0:
-                            df = df.head(sv.matching_max_rows_to_process.value)
-                        sv.matching_dfs.value[dataset] = df
+                    b1, b2 = st.columns([1, 1])
+                    with b1:
+                        if st.button("Add records to data model", disabled=not ready, use_container_width=True):
+                            if entity_col == '':
+                                df = df.with_row_count(name="Entity ID")
+                                df = df.rename({name_col: 'Entity name'})
+                            else:
+                                df = df.rename({entity_col: 'Entity ID', name_col: 'Entity name'})
+                                df = df.with_columns(pl.col('Entity ID').cast(pl.Utf8))
+                            df = df.select([pl.col('Entity ID'), pl.col('Entity name')] + [pl.col(c) for c in sorted(att_cols)]).collect()
+                            if sv.matching_max_rows_to_process.value > 0:
+                                df = df.head(sv.matching_max_rows_to_process.value)
+                            sv.matching_dfs.value[dataset] = df
+                    with b2:
+                        if st.button('Reset data model', disabled=len(sv.matching_dfs.value) == 0, use_container_width=True):
+                            if dataset in sv.matching_dfs.value.keys():
+                                del sv.matching_dfs.value[dataset]
                     if len(sv.matching_dfs.value) > 0:
                         recs = sum([len(df) for df in sv.matching_dfs.value.values()])
                         st.markdown(f'Data model has **{len(sv.matching_dfs.value)}** datasets with **{recs}** total records.')
@@ -65,7 +71,7 @@ def create():
         if len(sv.matching_dfs.value) == 0:
             st.markdown('Upload data files to continue')
         else:
-            c1, c2 = st.columns([3, 7])
+            c1, c2 = st.columns([1, 1])
             with c1:
                 st.markdown('##### Configure text embedding model')
                 # max_atts = max([len(df.columns) for df in sv.matching_dfs.value.values()])
@@ -87,7 +93,7 @@ def create():
                 def att_ui(i):
                     st.markdown(f'**Attribute {i+1}**')
                     is_assigned = False
-                    b1, b2 = st.columns([3, 2])
+                    b1, b2 = st.columns([3, 1])
                     with b1:
                         att_vals = st.multiselect(f'Values', key=f'att{i}_vals', options=options)
                         if len(att_vals) > 0:
@@ -269,40 +275,28 @@ def create():
             with c2:
                 st.markdown('##### Record groups')
                 if len(sv.matching_matches_df.value) > 0:
-                    st.dataframe(sv.matching_matches_df.value, height=500, use_container_width=True, hide_index=True)
+                    st.dataframe(sv.matching_matches_df.value, height=700, use_container_width=True, hide_index=True)
                     st.download_button('Download record groups', data=sv.matching_matches_df.value.write_csv(), file_name='record_groups.csv', mime='text/csv')
                            
     with evaluate_tab:
-        if st.button('Generate AI evaluations'):
-            # split sv.matching_matches_df.value into batches of 10 records
+        b1, b2 = st.columns([2, 3])
+        with b1:
             batch_size = 100
-            batch_offset = 0
-            batch_count = (len(sv.matching_matches_df.value) // batch_size) + 1
-            prefix = '```\nGroup ID, Relatedness, Explanation\n'
-
+            data = sv.matching_matches_df.value.drop(['Entity ID', 'Dataset', 'Name similarity']).to_pandas()
+            generate, batch_messages = util.ui_components.generative_batch_ai_component(sv.matching_system_prompt, sv.matching_instructions, {}, 'data', data, batch_size)
+        with b2:
+            st.markdown('##### AI evaluation of record groups')
+            prefix = '```\nGroup ID,Relatedness,Explanation\n'
             placeholder = st.empty()
-            placeholder.markdown(prefix, unsafe_allow_html=True)
-            for i in range(batch_count):
-                batch = sv.matching_matches_df.value[batch_offset:min(batch_offset+batch_size, len(sv.matching_matches_df.value))]
-                batch_offset += batch_size
-                variables = {
-                    'batch': batch.drop(['Entity ID', 'Dataset', 'Name similarity']).write_csv()
-                }
-                
-                result = util.AI_API.generate_from_message_pair(
-                    model=sv.model.value,
-                    temperature=sv.temperature.value,
-                    max_tokens=sv.max_tokens.value,
-                    placeholder=placeholder,
-                    system_message=prompts.system_prompt,
-                    user_message=prompts.user_prompt,
-                    variables=variables,
-                    prefix=prefix
-                )
-                if len(result.strip()) > 0:
-                    prefix = prefix + result + '\n'
+            if generate:
+                for messages in batch_messages:
+                    response = util.AI_API.generate_text_from_message_list(messages, placeholder, prefix=prefix)
+                    if len(response.strip()) > 0:
+                        prefix = prefix + response + '\n'
+                result = prefix.replace('```\n', '').strip()
+                sv.matching_evaluations.value = pl.read_csv(io.StringIO(result))
             placeholder.empty()
-            sv.matching_evaluations.value = pl.read_csv(io.StringIO(prefix.replace('```\n', '')))
-            st.dataframe(sv.matching_evaluations.value.to_pandas(), height=500, use_container_width=True, hide_index=True)
-            jdf = sv.matching_matches_df.value.join(sv.matching_evaluations.value, left_on='Group ID', right_on='Group ID', how='inner')
-            st.download_button('Download AI evaluations', data=jdf.write_csv(), file_name='record_groups_evaluated.csv', mime='text/csv')
+            if len(sv.matching_evaluations.value) > 0:
+                st.dataframe(sv.matching_evaluations.value.to_pandas(), height=700, use_container_width=True, hide_index=True)
+                jdf = sv.matching_matches_df.value.join(sv.matching_evaluations.value, left_on='Group ID', right_on='Group ID', how='inner')
+                st.download_button('Download AI evaluations', data=jdf.write_csv(), file_name='record_groups_evaluated.csv', mime='text/csv')
