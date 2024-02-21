@@ -25,7 +25,7 @@ def create():
     with prepare_tab:
         uploader_col, model_col = st.columns([1, 1])
         with uploader_col:
-            util.ui_components.single_csv_uploader(sv.narrative_last_file_name, sv.narrative_input_df, sv.narrative_input_df, height=180)
+            util.ui_components.single_csv_uploader('Upload CSV to narrate', sv.narrative_last_file_name, sv.narrative_input_df, sv.narrative_input_df, key='narrative_uploader', height=180)
         
             st.markdown('##### Define summary model')
             sorted_atts = []
@@ -162,7 +162,7 @@ def create():
                 with b1:
                     selected_groups = st.multiselect('Select specific groups to narrate:', list(groups), key=sv.narrative_selected_groups.key)
                 with b2:
-                    top_group_ranks = st.number_input('OR Select top group ranks to narrate:', min_value=0, max_value=sys.maxint, key=sv.narrative_top_groups.key)
+                    top_group_ranks = st.number_input('OR Select top group ranks to narrate:', min_value=0, max_value=sys.maxsize, key=sv.narrative_top_groups.key)
                 fdf = sv.narrative_model_df.value.copy(deep=True)
                 filter_description = ''
                 if len(selected_groups) > 0:

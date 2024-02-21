@@ -13,9 +13,13 @@ If names are in a language other than English, consider whether the English tran
 
 Output the rows of a CSV file containing the Group ID, Relatedness, and Explanation. Keep explanations short and simple.
 
-Do not output ``` or the column headers - start directly with the row values and separate each row with a \n. Output Group ID and Relatedness directly, but wrap explanations in "".
-"""
+Do not output ``` or the column headers - start directly with the row values and separate each row with a newline. Output Group ID and Relatedness directly, but wrap explanations in "".
 
-user_prompt = """\
-{batch}
+Additional instructions:
+
+{instructions}
+
+Group data:
+
+{data}
 """

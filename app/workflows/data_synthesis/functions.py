@@ -32,10 +32,10 @@ def color_to_hsl(color):
     return [int(hls[0]*360), int(hls[2]*100), int(hls[1]*100)]
 
 def flow_chart(links_df, selection, source_attribute, target_attribute, highlight_attribute, width, height, unit, scheme):
-    title = f'{source_attribute}\u2014{target_attribute} links across all {unit.title()} records'.replace('  ', ' ')
+    title = f'{source_attribute}\u2014{target_attribute} links for all {unit.title()} records'.replace('  ', ' ')
     if len(selection) > 0:
-        title += f' matching:'.replace('  ', ' ') + print_selections(selection, multiline=False)
-    title += f', colored by proportion with {highlight_attribute}'.replace('  ', ' ') if highlight_attribute != '' else ''
+        title += f' matching '.replace('  ', ' ') + print_selections(selection, multiline=False)
+    title += f',<br>colored by proportion with {highlight_attribute}'.replace('  ', ' ') if highlight_attribute != '' else ''
     if unit != '':
         unit = unit + ' '
     if highlight_attribute != '':
@@ -144,7 +144,7 @@ def print_selections(selection, multiline=True):
         for k, vs in sd.items():
             text += f'- {k} = ' + ' | '.join(vs) + '\n'
     else:
-        text = ', '.join([f'{k} = ' + ' | '.join(vs) for k, vs in sd.items()])
+        text = ', '.join([f'{k}:' + '|'.join(vs) for k, vs in sd.items()])
     return text
 
 # def get_bar_chart(title, df, width, height, unit, scheme):
