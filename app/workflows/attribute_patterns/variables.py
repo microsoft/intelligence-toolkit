@@ -5,8 +5,8 @@ class SessionVariables:
 
     def __init__(self, prefix):
         self.attribute_max_rows_to_process = SessionVariable(0, prefix)
-        self.attribute_uploaded_files = SessionVariable([], prefix)
-        self.attribute_selected_file_name = SessionVariable('', prefix)
+        self.attribute_input_df = SessionVariable(pd.DataFrame(), prefix)
+        self.attribute_last_file_name = SessionVariable('', prefix)
         self.attribute_dynamic_df = SessionVariable(pd.DataFrame(), prefix)
         self.attribute_type_val_sep_in = SessionVariable('', prefix)
         self.attribute_type_val_sep_out = SessionVariable('=', prefix)
@@ -35,5 +35,8 @@ class SessionVariables:
         self.attribute_secondary_pattern_df = SessionVariable(pd.DataFrame(), prefix)
         self.attribute_overall_pattern_df = SessionVariable(pd.DataFrame(), prefix)
         self.attribute_primary_threshold = SessionVariable(0.2, prefix)
+        self.attribute_subject_identifier = SessionVariable('', prefix)
+        self.attribute_binned_df = SessionVariable(pd.DataFrame(), prefix)
+        self.attribute_wide_df = SessionVariable(pd.DataFrame(), prefix)
 
 

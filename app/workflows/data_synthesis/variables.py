@@ -19,4 +19,5 @@ class SessionVariables:
         self.synthesis_epsilon = SessionVariable(12.0, prefix)
         self.synthesis_delta = SessionVariable(0.0, prefix)
         self.synthesis_wide_sensitive_df = SessionVariable(pd.DataFrame(), prefix)
+        self.synthesis_min_count = SessionVariable(0, prefix)  
 
