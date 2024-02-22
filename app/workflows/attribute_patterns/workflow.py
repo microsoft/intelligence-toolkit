@@ -18,7 +18,10 @@ import workflows.attribute_patterns.config as config
 import workflows.attribute_patterns.prompts as prompts
 import workflows.attribute_patterns.variables as vars
 
+import util.ui_components
+
 def create():
+    workflow = 'attribute_patterns'
     st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title='Intelligence Toolkit | Attribute Patterns')
     sv = vars.SessionVariables('attribute_patterns')
 
@@ -27,93 +30,29 @@ def create():
     with uploader_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:
-            st.markdown('##### Upload data for processing')
-            files = st.file_uploader("Upload CSVs", type=['csv'], accept_multiple_files=True)
-            st.number_input('Maximum rows to process (0 = all)', min_value=0, max_value=1000000, step=1000, key=sv.attribute_max_rows_to_process.key)
-            
-            if files != None:
-                for file in files:
-                    if file.name not in sv.attribute_uploaded_files.value:
-                        df = pd.read_csv(file, encoding='unicode_escape')[:sv.attribute_max_rows_to_process.value] if sv.attribute_max_rows_to_process.value > 0 else pd.read_csv(file, encoding='unicode_escape')
-                        df.to_csv(os.path.join(config.outputs_dir, file.name), index=False)
-                        sv.attribute_uploaded_files.value.append(file.name)
-            selected_file = st.selectbox("Select a file", sv.attribute_uploaded_files.value)
-            
-            if selected_file != None:
-                df = pd.read_csv(selected_file, encoding='unicode_escape')[:sv.attribute_max_rows_to_process.value] if sv.attribute_max_rows_to_process.value > 0 else pd.read_csv(selected_file, encoding='unicode_escape')
-                df = df.fillna('').astype(str)
-                st.dataframe(df[:config.max_rows_to_show], hide_index=True, use_container_width=True)
+            util.ui_components.single_csv_uploader('Upload CSV', sv.attribute_last_file_name, sv.attribute_input_df, sv.attribute_binned_df, key='attributes_uploader', height=500)
         with model_col:
-                st.markdown('##### Map columns to graph model')
-                if df is None:
-                    st.markdown('Upload and select a file to continue')
-                else:
-                    # Map all data into a single model of Period | Entity ID | Attribute Type | Attribute Value | Full Attribute
-                    att_types = []
-                    cols = [''] + df.columns.values.tolist()
-                    data_format = st.radio('Data format', ['Long (1 line/attribute)', 'Wide (1 line/record)'], horizontal=True)
-                    entity_col = ''
-                    type_col = ''
-                    val_col = ''
-                    time_col = ''
-                    ready = False
-                    if data_format == 'Long (1 line/attribute)':
-                        entity_col = st.selectbox('Entity ID column', cols)
-                        att_form = st.radio('Attribute format', ['Separate type and value columns', 'Combined type-value column'], horizontal=True)
-                        if att_form == 'Separate type and value columns':
-                            type_col = st.selectbox('Attribute type column', cols)
-                            if type_col != '':
-                                att_types = sorted(df[type_col].unique().tolist())
-                            val_col = st.selectbox('Attribute value column', cols)
-                        else:
-                            type_val_col = st.selectbox('Combined type-value column', cols)
-                            type_val_sep_in = st.text_input('Type-value separator', key=sv.attribute_type_val_sep_in.key, value=sv.attribute_type_val_sep_in.value)
-                            att_types = sorted(df[type_val_col].apply(lambda x: x.split(type_val_sep_in)[0]).unique().tolist()) if type_val_col != '' and type_val_sep_in != '' else []
-                        time_format = st.radio('Time period format', ['Period column', 'Period attribute type'], horizontal=True)
-                        if time_format == 'Period column':
-                            time_col = st.selectbox('Period column', cols)
-                        else:
-                            time_att = st.selectbox('Period attribute type', [''] + att_types)
-                        ready = entity_col != '' and ((att_form == 'Separate type and value columns' and type_col != '' and val_col != '') or (att_form == 'Combined type-value column' and type_val_col != '' and type_val_sep_in != '')) and ((time_format == 'Period column' and time_col != '') or (time_format == 'Period attribute type' and time_att != ''))
-                    elif data_format == 'Wide (1 line/record)':
-                        att_cols = st.multiselect('Attribute columns', cols)
-                        time_col = st.selectbox('Period column', cols)
-                        ready = len(att_cols) > 0 and time_col != ''
+            util.ui_components.prepare_binned_df(workflow, sv.attribute_input_df, sv.attribute_binned_df, sv.attribute_subject_identifier)
+            att_cols = [col for col in sv.attribute_binned_df.value.columns.values if col != 'Subject ID' and st.session_state[f'{workflow}_{col}'] == True]
+            time_col = st.selectbox('Period column', [''] + [c for c in sv.attribute_binned_df.value.columns.values if c != 'Subject ID'])
+            ready = len(att_cols) > 0 and time_col != ''
 
-                    if st.button("Add links to graph model", disabled=not ready):
-                        with st.spinner('Adding links to model...'):
-                            if data_format == 'Long (1 line/attribute)':
-                                pdf = df.copy(deep=True)
-                                pdf.rename(columns={entity_col : 'Entity ID'}, inplace=True)
-                                if att_form == 'Separate type and value columns':
-                                    pdf.rename(columns={type_col : 'Attribute Type', val_col : 'Attribute Value'}, inplace=True)
-                                    pdf['Full Attribute'] = pdf['Attribute Type'] + sv.attribute_type_val_sep_out.value + pdf['Attribute Value']
-                                elif att_form == 'Combined type-value column':
-                                    pdf['Attribute Type'] = pdf[type_val_col].apply(lambda x: x.split(type_val_sep_in)[0])
-                                    pdf['Attribute Value'] = pdf[type_val_col].apply(lambda x: x.split(type_val_sep_in)[1])
-                                    pdf['Full Attribute'] = pdf['Attribute Type'] + type_val_sep_in + pdf['Attribute Value']
-                                if time_format == 'Period column':
-                                    pdf['Period'] = pdf[time_col]
-                                else:
-                                    entity_times = pdf[pdf['Attribute Type'] == time_att] [['Entity ID', 'Attribute Value']].drop_duplicates()   
-                                    entity_times.rename(columns={'Attribute Value' : 'Period'}, inplace=True)                         
-                                    # join on entity ID
-                                    pdf = pdf.merge(entity_times, on='Entity ID', how='inner')
-                                    pdf = pdf[pdf['Attribute Type'] != time_att]
-                                pdf = pdf[['Period', 'Entity ID', 'Attribute Type', 'Attribute Value', 'Full Attribute']]
-                            elif data_format == 'Wide (1 line/record)':
-                                if entity_col == '':
-                                    entity_col = 'Entity ID'
-                                    df[entity_col] = df.index.astype(str)
-                                pdf = df.copy(deep=True)[[time_col, entity_col] + att_cols]
-                                pdf = pdf[pdf[time_col].notna() & pdf[entity_col].notna()]
-                                pdf.rename(columns={entity_col : 'Entity ID', time_col : 'Period'}, inplace=True)
-                                pdf = pd.melt(pdf, id_vars=['Entity ID', 'Period'], value_vars=att_cols, var_name='Attribute Type', value_name='Attribute Value')
-                                pdf = pdf[pdf['Attribute Value'].notna()]
-                                pdf['Full Attribute'] = pdf.apply(lambda x: str(x['Attribute Type']) + sv.attribute_type_val_sep_out.value + str(x['Attribute Value']), axis=1)
-                        sv.attribute_dynamic_df.value = pdf
-                    if len(sv.attribute_dynamic_df.value) > 0:
-                        st.markdown(f'Graph model has **{len(sv.attribute_dynamic_df.value)}** links spanning **{len(sv.attribute_dynamic_df.value["Entity ID"].unique())}** cases, **{len(sv.attribute_dynamic_df.value["Full Attribute"].unique())}** attributes, and **{len(sv.attribute_dynamic_df.value["Period"].unique())}** periods.')
+            if st.button("Add links to graph model", disabled=not ready):
+                with st.spinner('Adding links to model...'):
+                    df = sv.attribute_binned_df.value.copy(deep=True)
+                    df['Entity ID'] = [str(x) for x in range(1, len(df) + 1)]
+                    df['Entity ID'] = df['Entity ID'].astype(str)
+                    pdf = df.copy(deep=True)[[time_col, 'Entity ID'] + att_cols]
+                    pdf = pdf[pdf[time_col].notna() & pdf['Entity ID'].notna()]
+                    pdf.rename(columns={time_col : 'Period'}, inplace=True)
+                    
+                    pdf['Period'] = pdf['Period'].astype(str)
+                    pdf = pd.melt(pdf, id_vars=['Entity ID', 'Period'], value_vars=att_cols, var_name='Attribute Type', value_name='Attribute Value')
+                    pdf = pdf[pdf['Attribute Value'].notna()]
+                    pdf['Full Attribute'] = pdf.apply(lambda x: str(x['Attribute Type']) + sv.attribute_type_val_sep_out.value + str(x['Attribute Value']), axis=1)
+                sv.attribute_dynamic_df.value = pdf
+            if len(sv.attribute_dynamic_df.value) > 0:
+                st.markdown(f'Graph model has **{len(sv.attribute_dynamic_df.value)}** links spanning **{len(sv.attribute_dynamic_df.value["Entity ID"].unique())}** cases, **{len(sv.attribute_dynamic_df.value["Full Attribute"].unique())}** attributes, and **{len(sv.attribute_dynamic_df.value["Period"].unique())}** periods.')
     with process_tab:
         if sv.attribute_dynamic_df.value is None:
             st.markdown('Upload and select a file to continue')

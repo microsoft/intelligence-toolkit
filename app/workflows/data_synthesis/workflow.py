@@ -6,7 +6,6 @@ import plotly.io as pio
 import math
 import os
 
-from dateutil import parser as dateparser
 from collections import defaultdict
 from pacsynth import Dataset
 from pacsynth import DpAggregateSeededParametersBuilder, AccuracyMode, FabricationMode
@@ -23,6 +22,7 @@ import util.df_functions
 
 
 def create():
+    workflow = 'data_synthesis'
     st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title='Intelligence Toolkit | Data Synthesis')
     sv = vars.SessionVariables('data_synthesis')
 
@@ -36,217 +36,17 @@ def create():
         with uploader_col:
             util.ui_components.single_csv_uploader('Upload sensitive data CSV', sv.synthesis_last_sensitive_file_name, sv.synthesis_raw_sensitive_df, sv.synthesis_binned_df, key='sensitive_data_uploader', height=500)
         with model_col:
-            with st.expander('Set subject identifier', expanded=True):
-                identifier = st.radio('Subject identifier', options=['Row number', 'ID column'])
-                if identifier == 'ID column':
-
-                    options = ['']+list(sv.synthesis_raw_sensitive_df.value.columns.values)
-                    identifier = st.selectbox('Select subject identifier column', options=options)
-                    if identifier != '':
-                        if 'Subject ID' in sv.synthesis_raw_sensitive_df.value.columns:
-                            # remove
-                            sv.synthesis_raw_sensitive_df.value.drop(columns=['Subject ID'], inplace=True)
-                            sv.synthesis_binned_df.value.drop(columns=['Subject ID'], inplace=True)
-                        sv.synthesis_subject_identifier.value = identifier
-                        sv.synthesis_raw_sensitive_df.value.rename(columns={identifier: 'Subject ID'}, inplace=True)
-                        sv.synthesis_binned_df.value.rename(columns={identifier: 'Subject ID'}, inplace=True)
-                else:
-                    sv.synthesis_raw_sensitive_df.value['Subject ID'] = [i for i in range(len(sv.synthesis_raw_sensitive_df.value))]
-                    sv.synthesis_binned_df.value['Subject ID'] = [i for i in range(len(sv.synthesis_binned_df.value))]
-                    sv.synthesis_subject_identifier.value = 'Subject ID'
-           
-
-            with st.expander('Quantize datetime attributes', expanded=False):
-                # quantize numeric columns into bins
-                binnable_cols = []
-                for col in sv.synthesis_raw_sensitive_df.value.columns:
-                    # if sv.synthesis_raw_sensitive_df.value[col].dtype in ['str']:
-                    binnable_cols.append(col)
-
-                selected_date_cols = st.multiselect('Select datetime attribute to quantize', binnable_cols, help='Select the datetime columns you want to quantize. Quantizing datetime columns into bins makes it easier to synthesize data, but reduces the amount of information in the data. If you do not select any columns, no binning will be performed.')
-                bin_size = st.radio('Select bin size', options=['Year', 'Half', 'Quarter', 'Month', 'Day'], help='Select the bin size for the datetime columns you want to quantize. Quantizing datetime columns into bins makes it easier to synthesize data, but reduces the amount of information in the data. If you do not select any columns, no binning will be performed.')
-                # num_bins = st.number_input('Number of bins', value=5, help='Number of bins to use for each column. If 0, no binning will be performed. Fewer bins makes it easier to synthesize data, but reduces the amount of information in the data. More bins makes it harder to synthesize data, but preserves more information in the data.')
-                # trim_percent = st.number_input('Trim percent', value=0.05, help='Percent of values to trim from the top and bottom of each column before binning. This helps to reduce the impact of outliers on the binning process. For example, if trim percent is 0.05, the top and bottom 5% of values will be trimmed from each column before binning. If 0, no trimming will be performed.')
-                if st.button('Quantize selected columns', key='quantize_date'):
-                    for col in selected_date_cols:
-                        func = None
-                        if bin_size == 'Year':
-                            def convert(x):
-                                # parse as datetime using dateutil
-                                try:
-                                    dt = dateparser.parse(str(x))
-                                    return str(dt.year)
-                                except:
-                                    return ''
-                            func = convert
-                        elif bin_size == 'Half':
-                            def convert(x):
-                                try:
-                                    dt = dateparser.parse(str(x))
-                                    half = 'H1' if dt.month < 7 else 'H2'
-                                    return str(dt.year) + '-' + half
-                                except:
-                                    return ''
-                            func = convert
-                        elif bin_size == 'Quarter':
-                            def convert(x):
-                                try:
-                                    dt = dateparser.parse(str(x))
-                                    quarter = 'Q1' if dt.month < 4 else 'Q2' if dt.month < 7 else 'Q3' if dt.month < 10 else 'Q4'
-                                    return str(dt.year) + '-' + quarter
-                                except:
-                                    return ''
-                            func = convert
-                        elif bin_size == 'Month':
-                            def convert(x):
-                                try:
-                                    dt = dateparser.parse(str(x))
-                                    return str(dt.year) + '-' + str(dt.month).zfill(2)
-                                except:
-                                    return ''
-                            func = convert
-                        elif bin_size == 'Day':
-                            def convert(x):
-                                try:
-                                    dt = dateparser.parse(str(x))
-                                    return str(dt.year) + '-' + str(dt.month).zfill(2) + '-' + str(dt.day).zfill(2)
-                                except:
-                                    return ''
-                            func = convert
-                        sv.synthesis_binned_df.value[col] = sv.synthesis_raw_sensitive_df.value[col].apply(func)
-                    st.rerun()
-                #     if num_bins == 0:
-                #         sv.synthesis_binned_df.value = sv.synthesis_raw_sensitive_df.value.copy(deep=True)
-                #     else:
-                #         for col in selected_binnable_cols:
-                #             distinct_values = tuple(sorted(sv.synthesis_raw_sensitive_df.value[col].unique()))
-                #             if len(distinct_values) < 2:
-                #                 continue
-                #             if distinct_values == tuple([0, 1]):
-                #                 continue
-
-                #             sorted_values = sorted(sv.synthesis_raw_sensitive_df.value[col].values)
-                #             # first, calculate the top and bottom trim_percent values and apply top and bottom coding
-                #             top = min(len(sorted_values)-1, math.floor(len(sorted_values) * (1 - trim_percent)))
-                #             top_trim = sorted_values[top]
-                #             bottom_trim = sorted_values[math.floor(len(sorted_values) * trim_percent)]
-                #             sv.synthesis_raw_sensitive_df.value.loc[sv.synthesis_raw_sensitive_df.value[col] > top_trim, col] = top_trim
-                #             sv.synthesis_raw_sensitive_df.value.loc[sv.synthesis_raw_sensitive_df.value[col] < bottom_trim, col] = bottom_trim
-                #             target_bin_width = (top_trim - bottom_trim) / num_bins
-                #             # round target bin width to a multiple of N x 10^k for N = [1, 2, 2.5, 5]. N and k should be chosen to exceed the target bin width by the least positive amount
-                #             k = math.floor(math.log10(target_bin_width))
-                #             n_bin_sizes = {}
-                #             n_excess = {}
-                #             for N in [1, 2, 2.5, 5]:
-                #                 n_bin_sizes[N] = N * pow(10, k)
-                #                 if n_bin_sizes[N] < target_bin_width:
-                #                     n_bin_sizes[N] = N * pow(10, k+1)
-                #                 n_excess[N] = n_bin_sizes[N] - target_bin_width
-                #             # find the N that minimizes the excess
-                #             min_excess_n = sorted([(n, e) for n, e in n_excess.items()], key=lambda x: x[1])[0][0]
-                #             selected_bin_size = n_bin_sizes[min_excess_n]
-                #             # next, calculate the bin edges
-                            
-                #             lower_bin_edge = (bottom_trim // selected_bin_size) * selected_bin_size
-                #             bin_edges = [lower_bin_edge * 0.999999999999]
-                #             last_bin = lower_bin_edge
-                #             while last_bin < top_trim:
-                #                 last_bin += selected_bin_size
-                #                 bin_edges.append(last_bin)
-
-                #             # finally, bin the values
-                #             values, bins = pd.cut(sv.synthesis_raw_sensitive_df.value[col], bins=bin_edges, retbins=True, include_lowest=False)
-                #             fraction = sum([abs(v - round(v)) for v in bins])
-
-                #             if k > 0 or fraction < 0.0001:
-                #                 sv.synthesis_binned_df.value[col] = ['(' + str(int(v.left)) + '-' + str(int(v.right)) + ']' for v in values]
-                #             else:
-                #                 sv.synthesis_binned_df.value[col] = ['0' if type(v) == float else '(' + str(v.left) + '-' + str(v.right) + ']' for v in values]
-                #             sv.synthesis_binned_df.value[col] = sv.synthesis_binned_df.value[col].astype('str')
-                    
-
-            with st.expander('Quantize numeric attributes', expanded=False):
-                # quantize numeric columns into bins
-                binnable_cols = []
-                for col in sv.synthesis_process_columns.value:
-                    if sv.synthesis_raw_sensitive_df.value[col].dtype in ['float64', 'int64', 'Int64']:
-                        binnable_cols.append(col)
-
-                selected_binnable_cols = st.multiselect('Select numeric attributes to quantize', binnable_cols, help='Select the numeric columns you want to quantize. Quantizing numeric columns into bins makes it easier to synthesize data, but reduces the amount of information in the data. If you do not select any columns, no binning will be performed.')
-                num_bins = st.number_input('Number of bins', value=5, help='Number of bins to use for each column. If 0, no binning will be performed. Fewer bins makes it easier to synthesize data, but reduces the amount of information in the data. More bins makes it harder to synthesize data, but preserves more information in the data.')
-                trim_percent = st.number_input('Trim percent', value=0.05, help='Percent of values to trim from the top and bottom of each column before binning. This helps to reduce the impact of outliers on the binning process. For example, if trim percent is 0.05, the top and bottom 5% of values will be trimmed from each column before binning. If 0, no trimming will be performed.')
-                if st.button('Quantize selected columns', key='quantize_numeric'):
-                    if num_bins == 0:
-                        sv.synthesis_binned_df.value = sv.synthesis_raw_sensitive_df.value.copy(deep=True)
-                    else:
-                        for col in selected_binnable_cols:
-                            distinct_values = tuple(sorted(sv.synthesis_raw_sensitive_df.value[col].unique()))
-                            if len(distinct_values) < 2:
-                                continue
-                            if distinct_values == tuple([0, 1]):
-                                continue
-
-                            sorted_values = sorted(sv.synthesis_raw_sensitive_df.value[col].values)
-                            # first, calculate the top and bottom trim_percent values and apply top and bottom coding
-                            top = min(len(sorted_values)-1, math.floor(len(sorted_values) * (1 - trim_percent)))
-                            top_trim = sorted_values[top]
-                            bottom_trim = sorted_values[math.floor(len(sorted_values) * trim_percent)]
-                            sv.synthesis_raw_sensitive_df.value.loc[sv.synthesis_raw_sensitive_df.value[col] > top_trim, col] = top_trim
-                            sv.synthesis_raw_sensitive_df.value.loc[sv.synthesis_raw_sensitive_df.value[col] < bottom_trim, col] = bottom_trim
-                            target_bin_width = (top_trim - bottom_trim) / num_bins
-                            # round target bin width to a multiple of N x 10^k for N = [1, 2, 2.5, 5]. N and k should be chosen to exceed the target bin width by the least positive amount
-                            k = math.floor(math.log10(target_bin_width))
-                            n_bin_sizes = {}
-                            n_excess = {}
-                            for N in [1, 2, 2.5, 5]:
-                                n_bin_sizes[N] = N * pow(10, k)
-                                if n_bin_sizes[N] < target_bin_width:
-                                    n_bin_sizes[N] = N * pow(10, k+1)
-                                n_excess[N] = n_bin_sizes[N] - target_bin_width
-                            # find the N that minimizes the excess
-                            min_excess_n = sorted([(n, e) for n, e in n_excess.items()], key=lambda x: x[1])[0][0]
-                            selected_bin_size = n_bin_sizes[min_excess_n]
-                            # next, calculate the bin edges
-                            
-                            lower_bin_edge = (bottom_trim // selected_bin_size) * selected_bin_size
-                            bin_edges = [lower_bin_edge * 0.999999999999]
-                            last_bin = lower_bin_edge
-                            while last_bin < top_trim:
-                                last_bin += selected_bin_size
-                                bin_edges.append(last_bin)
-
-                            # finally, bin the values
-                            values, bins = pd.cut(sv.synthesis_raw_sensitive_df.value[col], bins=bin_edges, retbins=True, include_lowest=False)
-                            fraction = sum([abs(v - round(v)) for v in bins])
-
-                            if k > 0 or fraction < 0.0001:
-                                sv.synthesis_binned_df.value[col] = ['(' + str(int(v.left)) + '-' + str(int(v.right)) + ']' for v in values]
-                            else:
-                                sv.synthesis_binned_df.value[col] = ['0' if type(v) == float else '(' + str(v.left) + '-' + str(v.right) + ']' for v in values]
-                            sv.synthesis_binned_df.value[col] = sv.synthesis_binned_df.value[col].astype('str')
-                    st.rerun() 
-
-            with st.expander('Select attribute columns to include', expanded=False):
-                b1, b2 = st.columns([1, 1])
-                with b1:
-                    if st.button('Select all', use_container_width=True):
-                        for col in sv.synthesis_raw_sensitive_df.value.columns:
-                            st.session_state[col] = True
-                with b2:
-                    if st.button('Deselect all', use_container_width=True):
-                        for col in sv.synthesis_raw_sensitive_df.value.columns:
-                            st.session_state[col] = False
-                for col in sv.synthesis_raw_sensitive_df.value.columns:
-                    if col != 'Subject ID':
-                        st.checkbox(col, key=col, value=col in sv.synthesis_process_columns.value)
+            util.ui_components.prepare_binned_df(workflow, sv.synthesis_raw_sensitive_df, sv.synthesis_binned_df, sv.synthesis_subject_identifier, sv.synthesis_min_count)
+            sv.synthesis_process_columns.value = [col for col in sv.synthesis_raw_sensitive_df.value.columns.values if col != 'Subject ID' and st.session_state[f'{workflow}_{col}'] == True]
             
-            sv.synthesis_process_columns.value = [col for col in sv.synthesis_raw_sensitive_df.value.columns if col != 'Subject ID' and st.session_state[col] == True]
-
+            for col in sv.synthesis_process_columns.value:
+                print(sv.synthesis_binned_df.value[col].value_counts())
+            
             distinct_counts = []
             num_cols = len(sv.synthesis_process_columns.value)
             
             for col in sv.synthesis_process_columns.value:
-                distinct_values = tuple(sorted(sv.synthesis_raw_sensitive_df.value[col].astype(str).unique()))
+                distinct_values = tuple(sorted(sv.synthesis_binned_df.value[col].astype(str).unique()))
                 if distinct_values == tuple(['0', '1']):
                     distinct_counts.append(1)
                 else:
@@ -283,13 +83,10 @@ def create():
                 with b2:
                     if st.button('Synthesize data'):
                         with st.spinner('Synthesizing data...'):
-                            print(f'Processing columns: {sv.synthesis_process_columns.value}')
                             # Drop empty Subject ID rows
                             filtered = sv.synthesis_binned_df.value.dropna(subset=['Subject ID'])
                             filtered = sv.synthesis_binned_df.value[['Subject ID'] + sv.synthesis_process_columns.value]
-                            print(f'Filtered: {filtered}')
                             melted = filtered.melt(id_vars=['Subject ID'], var_name='Attribute', value_name='Value').drop_duplicates()
-                            print(filtered)
                             att_to_subject_to_vals = defaultdict(lambda: defaultdict(set))
                             for i, row in melted.iterrows():
                                 att_to_subject_to_vals[row['Attribute']][row['Subject ID']].add(row['Value'])
@@ -316,7 +113,6 @@ def create():
                                 distinct_values = tuple(sorted(sv.synthesis_sensitive_df.value[col].astype(str).unique()))
                                 if distinct_values == tuple(['0', '1']):
                                     sv.synthesis_sensitive_df.value.replace({col : {'0': ''}}, inplace=True)
-                                    print(f'Column {col} has only 0 and 1 values. Replacing 0 with empty string.')
                             sensitive_dataset = Dataset.from_data_frame(sv.synthesis_sensitive_df.value)
                             
 

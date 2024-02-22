@@ -2,6 +2,8 @@ import pandas as pd
 import networkx as nx
 import numpy as np
 from collections import Counter
+import umap
+import sklearn.cluster
 
 from itertools import combinations
 from util.SparseGraphEncoder import GraphEncoderEmbed
@@ -123,17 +125,17 @@ def prepare_graph(sv, mi):
             tdf = tdf[['Grouping ID', 'Full Attribute']].groupby('Grouping ID').agg(list).reset_index()
             dedge_df = create_edge_df_from_atts(sv, atts, tdf, mi)
             G, lcc = convert_edge_df_to_graph(dedge_df)
-            retained = len(lcc.nodes()) / len(full_lcc.nodes())
+            retained = len(lcc) / len(full_lcc)
             if retained >= sv.attribute_retain_target.value:
                 if ix == 0:
-                    dynamic_lcc.update(lcc.nodes())
+                    dynamic_lcc.update(lcc)
                 else:
-                    dynamic_lcc.intersection_update(lcc.nodes())
+                    dynamic_lcc.intersection_update(lcc)
                 used_periods.append(period)
                 time_to_graph[period] = G
             else:
                 unused_periods.append(period)
-        retained_prop = len(dynamic_lcc) / len(full_lcc.nodes())
+        retained_prop = len(dynamic_lcc) / len(full_lcc)
         print(f'retained_prop: {retained_prop}')
         combine_windows += 1
     print(f'used_periods: {used_periods}')

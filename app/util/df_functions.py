@@ -14,7 +14,6 @@ def fix_null_ints(in_df):
             fsum = idf['float'].sum()
             isum = idf['int'].sum()
             if int(fsum) == int(isum):
-                print(f'Column {col} is already int-compatible')
                 df[col] = idf['int_s']
                 df[col] = df[col].astype('Int64')
                 df[col] = df[col].replace(-sys.maxsize, np.nan)
