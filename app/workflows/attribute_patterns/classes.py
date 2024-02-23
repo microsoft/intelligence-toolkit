@@ -12,11 +12,11 @@ class RecordCounter:
         self.df = df
         self.periods = sorted(df['Period'].unique())
         self.atts = sorted(df['Full Attribute'].unique())
-        att_to_ids_df = df[['Entity ID', 'Full Attribute']].groupby('Full Attribute').agg(list).reset_index()
-        self.att_to_ids = dict(zip(att_to_ids_df['Full Attribute'], [set(x) for x in att_to_ids_df['Entity ID']]))
+        att_to_ids_df = df[['Subject ID', 'Full Attribute']].groupby('Full Attribute').agg(list).reset_index()
+        self.att_to_ids = dict(zip(att_to_ids_df['Full Attribute'], [set(x) for x in att_to_ids_df['Subject ID']]))
         # do same for Period
-        time_to_ids_df = df[['Entity ID', 'Period']].groupby('Period').agg(list).reset_index()
-        self.att_to_ids.update(dict(zip(time_to_ids_df['Period'], [set(x) for x in time_to_ids_df['Entity ID']])))
+        time_to_ids_df = df[['Subject ID', 'Period']].groupby('Period').agg(list).reset_index()
+        self.att_to_ids.update(dict(zip(time_to_ids_df['Period'], [set(x) for x in time_to_ids_df['Subject ID']])))
         self.cache = {}
 
     def count_records(self, atts):

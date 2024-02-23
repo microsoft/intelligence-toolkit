@@ -1,14 +1,12 @@
 import pandas as pd
 import networkx as nx
 import numpy as np
-from collections import Counter
-import umap
-import sklearn.cluster
+from collections import Counter, defaultdict
 
 from itertools import combinations
 from util.SparseGraphEncoder import GraphEncoderEmbed
-import altair as alt
 
+import workflows.attribute_patterns.classes as classes
 import workflows.attribute_patterns.config as config
 
 def create_time_series_df(rc, pattern_df):
@@ -18,20 +16,6 @@ def create_time_series_df(rc, pattern_df):
     columns = ['period', 'pattern', 'count']
     ts_df = pd.DataFrame(rows, columns=columns)
     return ts_df
-
-def get_scatterplot(df, height):
-    map = None
-    base = alt.Chart(df).encode(
-        x=alt.X('x', axis=None), # type: ignore
-        y=alt.Y('y', axis=None), # type: ignore
-        tooltip=['id'], # type: ignore
-    )
-    map = base.mark_circle().encode(
-            color=alt.Color('attribute:N', legend=None),
-            opacity=alt.value(0.75),
-            size=alt.value(50)
-        ).properties(height=height).interactive() # type: ignore
-    return map
 
 def convert_edge_df_to_graph(edge_df):
     G = nx.from_pandas_edgelist(edge_df, 'source', 'target', 'weight')
@@ -61,11 +45,11 @@ def create_edge_df_from_atts(sv, all_atts, pdf, mi):
 
     max_w = edge_df['weight'].max()
     min_w = edge_df['weight'].min()
-    min_t = sv.attribute_min_edge_weight.value
+    min_t = config.min_edge_weight
     edge_df['weight'] = edge_df['weight'].apply(lambda x: ((x - min_w) / (max_w - min_w)) * (1 - min_t) + min_t)
 
     null_rows = []
-    missing_w = sv.attribute_missing_edge_prop.value * sv.attribute_min_edge_weight.value
+    missing_w = config.missing_edge_prop * config.min_edge_weight
     # if sv.attribute_min_edge_weight.value > 0:
     for ix, att1 in enumerate(all_atts):
         for att2 in all_atts[ix + 1:]:
@@ -91,59 +75,36 @@ def combine_periods(pdf, combine_windows):
                 cdf.loc[cdf['Period'].isin(group), 'Period'] = group[0] + ' to ' + group[-1]
         return cdf
     
-def prepare_graph(sv, mi):
-    retained_prop = 0
-    combine_windows = 1
+def prepare_graph(sv, mi=False):
     G0 = nx.Graph()
-    dynamic_lcc = set()
-    used_periods = []
-    unused_periods = []
     edge_df = pd.DataFrame()
     time_to_graph = {}
+    dynamic_lcc = set()
+    pdf = sv.attribute_dynamic_df.value.copy()
+    atts = sorted(pdf['Full Attribute'].unique())
+    pdf['Grouping ID'] = pdf['Subject ID'] + '@' + pdf['Period']
+    adf = pdf[['Grouping ID', 'Full Attribute']].groupby('Grouping ID').agg(list).reset_index()
+    edge_df = create_edge_df_from_atts(sv, atts, adf, mi)
+    
+    
+    periods = sorted(pdf['Period'].unique())
 
-    while retained_prop < sv.attribute_retain_target.value:
-        time_to_graph = {}
-        used_periods = []
-        unused_periods = []
-        dynamic_lcc = set()
-        pdf = sv.attribute_dynamic_df.value.copy()
-        atts = sorted(pdf['Full Attribute'].unique())
-        pdf = combine_periods(pdf, combine_windows)
-        pdf['Grouping ID'] = pdf['Entity ID'] + '@' + pdf['Period']
-        adf = pdf[['Grouping ID', 'Full Attribute']].groupby('Grouping ID').agg(list).reset_index()
-        edge_df = create_edge_df_from_atts(sv, atts, adf, mi)
-        
-        
-        periods = sorted(pdf['Period'].unique())
-
-        G0, full_lcc = convert_edge_df_to_graph(edge_df)
-        for ix, period in enumerate(periods):
-            print(period)
-            tdf = pdf.copy()
-            tdf = tdf[tdf['Period'] == period]
-            tdf['Grouping ID'] = tdf['Entity ID'] + '@' + tdf['Period']
-            tdf = tdf[['Grouping ID', 'Full Attribute']].groupby('Grouping ID').agg(list).reset_index()
-            dedge_df = create_edge_df_from_atts(sv, atts, tdf, mi)
-            G, lcc = convert_edge_df_to_graph(dedge_df)
-            retained = len(lcc) / len(full_lcc)
-            if retained >= sv.attribute_retain_target.value:
-                if ix == 0:
-                    dynamic_lcc.update(lcc)
-                else:
-                    dynamic_lcc.intersection_update(lcc)
-                used_periods.append(period)
-                time_to_graph[period] = G
-            else:
-                unused_periods.append(period)
-        retained_prop = len(dynamic_lcc) / len(full_lcc)
-        print(f'retained_prop: {retained_prop}')
-        combine_windows += 1
-    print(f'used_periods: {used_periods}')
-    print(f'unused_periods: {unused_periods}')
-    fdf = pdf[pdf['Period'].isin(used_periods)]
-    fdf = fdf[fdf['Full Attribute'].isin(dynamic_lcc)]
-    fdf['Grouping ID'] = fdf['Entity ID'] + '@' + fdf['Period']
-    return fdf, time_to_graph
+    G0, full_lcc = convert_edge_df_to_graph(edge_df)
+    for ix, period in enumerate(periods):
+        print(period)
+        tdf = pdf.copy()
+        tdf = tdf[tdf['Period'] == period]
+        tdf['Grouping ID'] = tdf['Subject ID'] + '@' + tdf['Period']
+        tdf = tdf[['Grouping ID', 'Full Attribute']].groupby('Grouping ID').agg(list).reset_index()
+        dedge_df = create_edge_df_from_atts(sv, atts, tdf, mi)
+        G, lcc = convert_edge_df_to_graph(dedge_df)
+        if ix == 0:
+            dynamic_lcc.update(lcc)
+        else:
+            dynamic_lcc.intersection_update(lcc)
+        time_to_graph[period] = G
+    pdf['Grouping ID'] = pdf['Subject ID'] + '@' + pdf['Period']
+    return pdf, time_to_graph
 
 def generate_embedding(sv, df, time_to_graph):
     period_embeddings = {}
@@ -151,7 +112,7 @@ def generate_embedding(sv, df, time_to_graph):
     print(node_list)
     sorted_att_types = sorted(df['Attribute Type'].unique())
     node_to_ix = {n : i for i, n in enumerate(node_list)}
-    node_to_label = {n : sorted_att_types.index(n.split(sv.attribute_type_val_sep_out.value)[0]) for n in node_list}
+    node_to_label = {n : sorted_att_types.index(n.split(config.type_val_sep)[0]) for n in node_list}
     embedding_dfs = []
     for period, graph in time_to_graph.items():
         edge_list = []
@@ -165,7 +126,7 @@ def generate_embedding(sv, df, time_to_graph):
         for node in node_list:
             labels[node_list.index(node)] = node_to_label[node]
         Y = np.array(labels).reshape((num_nodes, 1))
-        Z, W = GraphEncoderEmbed().run(edge_list, Y, num_nodes, EdgeList = True, Laplacian = sv.attribute_laplacian.value, DiagA = sv.attribute_diaga.value, Correlation = sv.attribute_correlation.value)
+        Z, W = GraphEncoderEmbed().run(edge_list, Y, num_nodes, EdgeList = True, Laplacian = config.laplacian, DiagA = config.diaga, Correlation = config.correlation)
         period_embeddings[period] = Z.toarray()
 
         # serialize embedding
@@ -194,56 +155,9 @@ def generate_embedding(sv, df, time_to_graph):
     overall_embedding_df['Full Attribute'] = overall_embedding_df['dynamic_node_id'].apply(lambda x: node_list[int(x.split(config.att_val_sep)[0])])
     return overall_embedding_df, node_to_centroid, period_embeddings
 
-def generate_umap(sv, df):
-    sorted_nodes = sorted(df['Full Attribute'].unique().tolist())
-    points = umap.UMAP(
-        min_dist=config.min_dist,
-        n_neighbors=config.n_neighbors
-        ).fit_transform(df['embedding'].tolist())
-    umap_df = pd.DataFrame(points, columns=['x', 'y'])
-    umap_df['ix'] = df['dynamic_node_id'].tolist()
-    umap_df['id'] = umap_df['ix'].apply(lambda x: sorted_nodes[int(x.split(config.att_val_sep)[0])] + ' @ ' + x.split(config.att_val_sep)[1])
-    umap_df['attribute'] = umap_df['id'].apply(lambda x: x.split(sv.attribute_type_val_sep_out.value)[0])
-    umap_df['period'] = umap_df['ix'].apply(lambda x: x.split(config.att_val_sep)[1])
-    return umap_df
 
-def detect_primary_patterns(sv):
-    df = sv.attribute_embedding_df.value
-    if len(df) == 0:
-        return
-    rc = sv.attribute_record_counter.value
-    pattern_rows = []
-    for period in sorted(df['period'].unique()):
-        period_patterns = set()
-        pdf = df[df['period'] == period].copy()
-        # clustering = sklearn.cluster.AgglomerativeClustering(n_clusters=None, distance_threshold=sv.attribute_primary_threshold.value, metric='cosine', linkage='average').fit(pdf['embedding'].tolist())
-        epss = [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]
-        for eps in epss:
-            clustering = sklearn.cluster.DBSCAN(eps=eps, min_samples=1, metric='cosine').fit(pdf['embedding'].tolist())
-            pdf['cluster'] = clustering.labels_
-            cluster_to_nodes = {}
-            for ix, row in pdf.iterrows():
-                if row['cluster'] not in cluster_to_nodes.keys():
-                    cluster_to_nodes[row['cluster']] = []
-                cluster_to_nodes[row['cluster']].append(row['Full Attribute'])
-            # print(f'In {period} found {len(cluster_to_nodes.keys())} clusters with mean size {np.mean([len(c) for c in cluster_to_nodes.values()])}')
-            for cluster, nodes in cluster_to_nodes.items():
-                count = rc.count_records([period] + nodes)
-                if len(nodes) > 1 and count > sv.attribute_min_primary_pattern_count.value:
-                    mean, sd, mx = rc.compute_period_mean_sd_max(nodes)
-                    score = (count - mean) / sd
-                    if score >= 0:
-                        pattern = ' & '.join(nodes)
-                        if pattern not in period_patterns:
-                            period_patterns.add(pattern)
-                            row = [period, pattern, len(nodes), count, round(mean, 0), score]
-                            pattern_rows.append(row)
-    columns = ['period', 'pattern', 'length', 'count', 'mean', 'score']
-    pattern_df = pd.DataFrame(pattern_rows, columns=columns)
-    return pattern_df
-
-def detect_secondary_patterns(sv):
-    df = sv.attribute_df.value
+def detect_patterns(sv):
+    df = sv.attribute_final_df.value
     node_to_centroid = sv.attribute_node_to_centroid.value
     period_embeddings = sv.attribute_period_embeddings.value
     node_list = sorted(node_to_centroid.keys())
@@ -280,23 +194,24 @@ def detect_secondary_patterns(sv):
         for ix, node1 in enumerate(sorted_nodes):
             for node2 in sorted_nodes[ix + 1:]:
                 all_pairs += 1
-                n1a = node1.split(sv.attribute_type_val_sep_out.value)[0]
-                n2a = node2.split(sv.attribute_type_val_sep_out.value)[0]
+                n1a = node1.split(config.type_val_sep)[0]
+                n2a = node2.split(config.type_val_sep)[0]
                 if n1a != n2a:
                     cosine_shift, euclidean_shift = period_shifts[period][(node1, node2)]
                     if cosine_shift > 0 or euclidean_shift > 0:
                         period_count = rc.count_records([period, node1, node2])
-                        if period_count >= sv.attribute_min_secondary_pattern_count.value:
+                        if period_count >= sv.attribute_min_pattern_count.value:
                             close_pairs += 1
                             period_to_close_nodes[period].append((node1, node2))
-    print(f'Detected {close_pairs} close pairs out of {all_pairs} total pairs, or {round(close_pairs / all_pairs * 100, 2)}%')
+    if all_pairs > 0:
+        print(f'Detected {close_pairs} close pairs out of {all_pairs} total pairs, or {round(close_pairs / all_pairs * 100, 2)}%')
     # convert to df
     close_node_rows = []
     for period, close_nodes in period_to_close_nodes.items():
         for node1, node2 in close_nodes:
             period_count = rc.count_records([period, node1, node2])
             mean_count, sd, max = rc.compute_period_mean_sd_max([node1, node2])
-            if period_count >= sv.attribute_min_secondary_pattern_count.value:
+            if period_count >= sv.attribute_min_pattern_count.value:
                 count_factor = period_count / mean_count
                 count_delta = period_count - mean_count
                 # if period_count > mean_count:
@@ -317,6 +232,7 @@ def detect_secondary_patterns(sv):
 
     # for each period, combine overlapping similar pairs of nodes if they are supported by a positive count
     period_to_patterns = {}
+    pattern_to_periods = defaultdict(set)
     for period in used_periods:
         period_pair_counts = close_node_df[close_node_df['period'] == period][['node1', 'node2', 'period_count']].values.tolist()
         period_to_patterns[period] = [([], 0)]
@@ -336,7 +252,7 @@ def detect_secondary_patterns(sv):
                     candidate = [a, b]
                 if candidate is not None:
                     candidate_pattern = sorted(pattern + candidate)
-                    if len(candidate_pattern) <= sv.attribute_max_secondary_pattern_length.value:
+                    if len(candidate_pattern) <= sv.attribute_max_pattern_length.value:
                         if candidate_pattern not in [p for p, c in period_to_patterns[period]]:
                             candidate_pairs = combinations(candidate_pattern, 2)
                             exclude = False
@@ -345,9 +261,10 @@ def detect_secondary_patterns(sv):
                                     exclude = True
                                     break
                             if not exclude:
-                                pcount = rc.count_records([period] + candidate_pattern)
-                                if pcount > sv.attribute_min_secondary_pattern_count.value:
+                                pcount = rc.count_records([period] + list(candidate_pattern))
+                                if pcount > sv.attribute_min_pattern_count.value:
                                     period_to_patterns[period].append((candidate_pattern, pcount))
+                                    pattern_to_periods[tuple(candidate_pattern)].add(period)
                                         # print(f'In {period} added {candidate_pattern} with count {pcount}')
     print('done combining pairs')
     # convert to df
@@ -358,8 +275,31 @@ def detect_secondary_patterns(sv):
                 mean, sd, mx = rc.compute_period_mean_sd_max(pattern)
                 score = (count - mean) / sd
                 if score >= 0:
-                    row = [period, ' & '.join(pattern), len(pattern), count, round(mean_count, 0), score]
+                    row = [period, len(pattern_to_periods[tuple(pattern)]), ' & '.join(pattern), len(pattern), count, round(mean_count, 0), round(score, 2)]
                     pattern_rows.append(row)
-    columns = ['period', 'pattern', 'length', 'count', 'mean', 'score']
+    columns = ['period', 'periods', 'pattern', 'length', 'count', 'mean', 'extreme_score']
     pattern_df = pd.DataFrame(pattern_rows, columns=columns)
+    pattern_df['overall_score'] = pattern_df['extreme_score'] * pattern_df['length'] * np.log(pattern_df['count']) * pattern_df['periods']
+    # normalize overall score
+    max_score = pattern_df['overall_score'].max()
+    pattern_df['overall_score'] = pattern_df['overall_score'].apply(lambda x: round((x) / (max_score), 2))
+    pattern_df = pattern_df.sort_values('overall_score', ascending=False)
     return pattern_df, close_pairs, all_pairs
+
+def compute_attribute_counts(df, pattern, time_col, period):
+    print(pattern, time_col, period)
+    atts = pattern.split(' & ')
+    counts = []
+    fdf = df.copy(deep=True).astype(str)
+    fdf = fdf[fdf[time_col] == period]
+    for att in atts:
+        if att == 'Subject ID':
+            continue
+        ps = att.split(config.type_val_sep)
+        if len(ps) == 2:
+            a, v = ps
+            fdf = fdf[fdf[a] == v]
+        else:
+            print(f'Error parsing attribute {att}')
+    melted = pd.melt(fdf, id_vars=['Subject ID'], value_vars=[c for c in fdf.columns if c not in ['Subject ID', time_col]], var_name='Attribute', value_name='Value')
+    print(melted)

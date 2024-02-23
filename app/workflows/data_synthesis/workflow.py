@@ -34,43 +34,40 @@ def create():
     with prepare_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:
-            util.ui_components.single_csv_uploader('Upload sensitive data CSV', sv.synthesis_last_sensitive_file_name, sv.synthesis_raw_sensitive_df, sv.synthesis_binned_df, key='sensitive_data_uploader', height=500)
+            util.ui_components.single_csv_uploader(workflow, 'Upload sensitive data CSV', sv.synthesis_last_sensitive_file_name, sv.synthesis_raw_sensitive_df, sv.synthesis_processing_df, sv.synthesis_sensitive_df, key='sensitive_data_uploader', height=500)
         with model_col:
-            util.ui_components.prepare_binned_df(workflow, sv.synthesis_raw_sensitive_df, sv.synthesis_binned_df, sv.synthesis_subject_identifier, sv.synthesis_min_count)
-            sv.synthesis_process_columns.value = [col for col in sv.synthesis_raw_sensitive_df.value.columns.values if col != 'Subject ID' and st.session_state[f'{workflow}_{col}'] == True]
+            util.ui_components.prepare_input_df(workflow, sv.synthesis_raw_sensitive_df, sv.synthesis_processing_df, sv.synthesis_sensitive_df, sv.synthesis_subject_identifier)
             
-            for col in sv.synthesis_process_columns.value:
-                print(sv.synthesis_binned_df.value[col].value_counts())
+            # distinct_counts = []
+            # wdf = sv.synthesis_sensitive_df.value
+            # num_cols = len(wdf.columns.values)
             
-            distinct_counts = []
-            num_cols = len(sv.synthesis_process_columns.value)
-            
-            for col in sv.synthesis_process_columns.value:
-                distinct_values = tuple(sorted(sv.synthesis_binned_df.value[col].astype(str).unique()))
-                if distinct_values == tuple(['0', '1']):
-                    distinct_counts.append(1)
-                else:
-                    distinct_counts.append(len(distinct_values))
-            # calculate number of pairs of column values using combinatorics
-            num_observed_pairs = 0
-            num_common_pairs = 0
-            common_level = num_cols+1 + int(0.01 * pow(num_cols, 2)) #round(math.sqrt(num_cols))+1
-            for ix, ci in enumerate(sv.synthesis_process_columns.value):
-                for jx, cj in enumerate(sv.synthesis_process_columns.value[ix+1:]):
-                    groups = sv.synthesis_binned_df.value[[ci, cj]].dropna().groupby([ci, cj]).size()
+            # for col in wdf.columns.values:
+            #     distinct_values = tuple(sorted(wdf[col].astype(str).unique()))
+            #     # if distinct_values == tuple(['0', '1']):
+            #     #     distinct_counts.append(1)
+            #     # else:
+            #     distinct_counts.append(len(distinct_values))
+            # # calculate number of pairs of column values using combinatorics
+            # num_observed_pairs = 0
+            # num_common_pairs = 0
+            # common_level = num_cols+1 + int(0.01 * pow(num_cols, 2)) #round(math.sqrt(num_cols))+1
+            # for ix, ci in enumerate(wdf.columns.values):
+            #     for jx, cj in enumerate(wdf.columns.values[ix+1:]):
+            #         groups = wdf[[ci, cj]].dropna().groupby([ci, cj]).size()
 
-                    num_observed_pairs += len(groups)
-                    # count groups with at least common_level records
-                    common_groups = groups[groups >= common_level]
-                    num_common_pairs += len(common_groups)
+            #         num_observed_pairs += len(groups)
+            #         # count groups with at least common_level records
+            #         common_groups = groups[groups >= common_level]
+            #         num_common_pairs += len(common_groups)
                     
-            coverage = num_common_pairs / num_observed_pairs if num_observed_pairs > 0 else 1
-            st.markdown(f'### Synthesizability summary')
-            st.markdown(f'Number of selected columns: **{num_cols}**', help='This is the number of columns you selected for processing. The more columns you select, the harder it will be to synthesize data.')
-            st.markdown(f'Common pair threshold: **{common_level}**', help='This is the minimum number of records that must appear in a pair of column values for the pair to be considered common. The higher this number, the harder it will be to synthesize data. The value is set as num_columns + 1 + int(0.01 * num_columns^2).')
-            st.markdown(f'Estimated synthesizability score: **{round(coverage, 4)}**', help=f'We define synthesizability as the proportion of observed pairs of values across selected columns that are common, appearing at least as many times as the number of columns. In this case, {num_common_pairs}/{num_observed_pairs} pairs appear at least {num_cols} times. The intuition here is that all combinations of attribute values in a synthetic record must be composed from common attribute pairs. **Rule of thumb**: Aim for a synthesizability score of **0.5** or higher.')
+            # coverage = num_common_pairs / num_observed_pairs if num_observed_pairs > 0 else 1
+            # st.markdown(f'### Synthesizability summary')
+            # st.markdown(f'Number of selected columns: **{num_cols}**', help='This is the number of columns you selected for processing. The more columns you select, the harder it will be to synthesize data.')
+            # st.markdown(f'Common pair threshold: **{common_level}**', help='This is the minimum number of records that must appear in a pair of column values for the pair to be considered common. The higher this number, the harder it will be to synthesize data. The value is set as num_columns + 1 + int(0.01 * num_columns^2).')
+            # st.markdown(f'Estimated synthesizability score: **{round(coverage, 4)}**', help=f'We define synthesizability as the proportion of observed pairs of values across selected columns that are common, appearing at least as many times as the number of columns. In this case, {num_common_pairs}/{num_observed_pairs} pairs appear at least {num_cols} times. The intuition here is that all combinations of attribute values in a synthetic record must be composed from common attribute pairs. **Rule of thumb**: Aim for a synthesizability score of **0.5** or higher.')
     with generate_tab:
-        if len(sv.synthesis_process_columns.value) == 0:
+        if len(sv.synthesis_sensitive_df.value) == 0:
             st.markdown('Please upload and prepare data before generating synthetic data.')
         else:
             c1, c2, c3 = st.columns([1, 1, 1])
@@ -83,37 +80,11 @@ def create():
                 with b2:
                     if st.button('Synthesize data'):
                         with st.spinner('Synthesizing data...'):
-                            # Drop empty Subject ID rows
-                            filtered = sv.synthesis_binned_df.value.dropna(subset=['Subject ID'])
-                            filtered = sv.synthesis_binned_df.value[['Subject ID'] + sv.synthesis_process_columns.value]
-                            melted = filtered.melt(id_vars=['Subject ID'], var_name='Attribute', value_name='Value').drop_duplicates()
-                            att_to_subject_to_vals = defaultdict(lambda: defaultdict(set))
-                            for i, row in melted.iterrows():
-                                att_to_subject_to_vals[row['Attribute']][row['Subject ID']].add(row['Value'])
-                            # define expanded atts as all attributes with more than one value for a given subject
-                            expanded_atts = []
-                            for att, subject_to_vals in att_to_subject_to_vals.items():
-                                max_count = max([len(vals) for vals in subject_to_vals.values()])
-                                if max_count > 1:
-                                    expanded_atts.append(att)
-                            new_rows = []
-                            for i, row in melted.iterrows():
-                                if row['Attribute'] in expanded_atts:
-                                    if str(row['Value']) not in ['', '<NA>']:
-                                        new_rows.append([row['Subject ID'], row['Attribute']+'_'+str(row['Value']), '1'])
-                                else:
-                                    new_rows.append([row['Subject ID'], row['Attribute'], str(row['Value'])])
-                            melted = pd.DataFrame(new_rows, columns=['Subject ID', 'Attribute', 'Value'])
-                            # convert back to wide format
-                            sv.synthesis_sensitive_df.value = melted.pivot(index='Subject ID', columns='Attribute', values='Value').reset_index()
-                            sv.synthesis_sensitive_df.value = sv.synthesis_sensitive_df.value.drop(columns=['Subject ID'])
-                            sv.synthesis_sensitive_df.value.replace({'<NA>': ''}, inplace=True)
-
-                            for col in sv.synthesis_sensitive_df.value.columns:
-                                distinct_values = tuple(sorted(sv.synthesis_sensitive_df.value[col].astype(str).unique()))
-                                if distinct_values == tuple(['0', '1']):
-                                    sv.synthesis_sensitive_df.value.replace({col : {'0': ''}}, inplace=True)
-                            sensitive_dataset = Dataset.from_data_frame(sv.synthesis_sensitive_df.value)
+                            # for col in sv.synthesis_wide_sensitive_df.value.columns:
+                            #     distinct_values = tuple(sorted(sv.synthesis_wide_sensitive_df.value[col].astype(str).unique()))
+                            #     if distinct_values == tuple(['0', '1']):
+                            #         sv.synthesis_sensitive_df.value.replace({col : {'0': ''}}, inplace=True)
+                            sensitive_dataset = Dataset.from_data_frame(sv.synthesis_sensitive_df.value.drop(columns=['Subject ID']))
                             
 
                             params = DpAggregateSeededParametersBuilder() \
@@ -195,8 +166,8 @@ def create():
     with queries_tab:
         if len(sv.synthesis_synthetic_df.value) == 0 or len(sv.synthesis_aggregate_df.value) == 0:
             st.markdown('Please synthesize data before performing queries, or upload an existing synthetic dataset below.')
-            util.ui_components.single_csv_uploader('Upload synthetic data CSV', sv.synthesis_last_synthetic_file_name, sv.synthesis_synthetic_df, sv.synthesis_synthetic_df, key='synthetic_data_uploader')
-            util.ui_components.single_csv_uploader('Upload aggregate data CSV', sv.synthesis_last_aggregate_file_name, sv.synthesis_aggregate_df, sv.synthesis_aggregate_df, key='aggregate_data_uploader')
+            util.ui_components.single_csv_uploader(workflow, 'Upload synthetic data CSV', sv.synthesis_last_synthetic_file_name, sv.synthesis_synthetic_df, None, None, key='synthetic_data_uploader')
+            util.ui_components.single_csv_uploader(workflow, 'Upload aggregate data CSV', sv.synthesis_last_aggregate_file_name, sv.synthesis_aggregate_df, None, None, key='aggregate_data_uploader')
             if len(sv.synthesis_synthetic_df.value) > 0 and len(sv.synthesis_aggregate_df.value) > 0:
                 st.rerun()
         else:

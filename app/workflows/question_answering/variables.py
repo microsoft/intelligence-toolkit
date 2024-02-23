@@ -7,7 +7,6 @@ class SessionVariables:
         # Add a prefix to each SessionVariable
         self.answering_raw_embedding_df = SessionVariable(pd.DataFrame(), prefix)
         self.answering_q_embedding_df = SessionVariable(pd.DataFrame(), prefix)
-        self.answering_chunk_size = SessionVariable(2000, prefix)
         self.answering_next_file_id = SessionVariable(1, prefix)
         self.answering_next_chunk_id = SessionVariable(1, prefix)
         self.answering_next_q_id = SessionVariable(1, prefix)

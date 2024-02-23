@@ -14,6 +14,7 @@ import util.AI_API
 import util.ui_components
 
 def create():
+    workflow = 'data_narratives'
     st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title='Intelligence Toolkit | Data Narratives')
     sv = vars.SessionVariables('data_narratives')
 
@@ -25,7 +26,7 @@ def create():
     with prepare_tab:
         uploader_col, model_col = st.columns([1, 1])
         with uploader_col:
-            util.ui_components.single_csv_uploader('Upload CSV to narrate', sv.narrative_last_file_name, sv.narrative_input_df, sv.narrative_input_df, key='narrative_uploader', height=180)
+            util.ui_components.single_csv_uploader(workflow, 'Upload CSV to narrate', sv.narrative_last_file_name, sv.narrative_input_df, None, None, key='narrative_uploader', height=180)
         
             st.markdown('##### Define summary model')
             sorted_atts = []
@@ -162,7 +163,7 @@ def create():
                 with b1:
                     selected_groups = st.multiselect('Select specific groups to narrate:', list(groups), key=sv.narrative_selected_groups.key)
                 with b2:
-                    top_group_ranks = st.number_input('OR Select top group ranks to narrate:', min_value=0, max_value=sys.maxsize, key=sv.narrative_top_groups.key)
+                    top_group_ranks = st.number_input('OR Select top group ranks to narrate:', min_value=0, max_value=9999999999, key=sv.narrative_top_groups.key)
                 fdf = sv.narrative_model_df.value.copy(deep=True)
                 filter_description = ''
                 if len(selected_groups) > 0:
@@ -176,7 +177,6 @@ def create():
                 st.dataframe(fdf, hide_index=True, use_container_width=True, height=280)
                 variables = {
                     'description': sv.narrative_description.value,
-                    'instructions': sv.narrative_instructions.value,
                     'dataset': fdf.to_csv(index=False, encoding='utf-8-sig'),
                     'filters': filter_description
                 }

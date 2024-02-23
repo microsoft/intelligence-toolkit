@@ -11,7 +11,7 @@ import workflows.question_answering.prompts as prompts
 import workflows.question_answering.variables as vars
 import util.AI_API
 
-embedder = util.AI_API.create_embedder(config.cache)
+embedder = util.AI_API.create_embedder(config.cache_dir)
 
 def create():
     st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title='Intelligence Toolkit | Question Answering')
@@ -122,10 +122,11 @@ def create():
                 status_history += '<br/><br/>'
 
                 new_questions = []
+                used_chunks = set()
                 for j in range(len(cosine_distances)):
                     t, c, d = cosine_distances[j]
                     
-                    if t == 'chunk':
+                    if t == 'chunk' and c not in used_chunks:
                         f = c[0]
                         cx = c[1]
                         source = c[0].id
@@ -138,6 +139,7 @@ def create():
                             print('Cannot use')
                         else:
                             print('Can use')
+                            used_chunks.add(c)
                             cosine_distances.pop(j)
                             source_counts.update([source])
                             break
@@ -147,16 +149,12 @@ def create():
                     'text': f.chunk_texts[cx],
                     'file_id': f.id
                 }
-                qas_raw = util.AI_API.generate_from_message_pair(
-                    model=sv.model.value,
-                    temperature=sv.temperature.value,
-                    max_tokens=sv.max_tokens.value,
-                    placeholder=lazy_answering_placeholder,
+                messages = util.AI_API.prepare_messages_from_message_pair(
                     system_message=prompts.extraction_system_prompt,
                     user_message=prompts.extraction_user_prompt,
-                    variables=variables,
-                    prefix=status_history
+                    variables=variables
                 )
+                qas_raw = util.AI_API.generate_text_from_message_list(messages, placeholder=lazy_answering_placeholder, prefix=status_history)
                 status_history += qas_raw + '<br/><br/>'
 
                 try:
