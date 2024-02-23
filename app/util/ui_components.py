@@ -7,6 +7,7 @@ import math
 import sys
 
 from dateutil import parser as dateparser
+from collections import defaultdict
 
 import util.AI_API
 import util.df_functions
@@ -70,7 +71,7 @@ def generative_batch_ai_component(system_prompt_var, instructions_var, variables
         st.markdown(f'AI input uses {tokens}/{util.AI_API.max_input_tokens} ({round(ratio, 2)}%) of token limit')
     return generate, batch_messages
 
-def single_csv_uploader(upload_label, last_uploaded_file_name_var, input_df_var, processed_df_var, key, show_rows=10000, height=250):
+def single_csv_uploader(workflow, upload_label, last_uploaded_file_name_var, input_df_var, processed_df_var, final_df_var, key, show_rows=10000, height=250):
     file = st.file_uploader(upload_label, type=['csv'], accept_multiple_files=False, key=key)
     if file != None and file.name != last_uploaded_file_name_var.value:
         last_uploaded_file_name_var.value = file.name
@@ -78,10 +79,25 @@ def single_csv_uploader(upload_label, last_uploaded_file_name_var, input_df_var,
         df.columns = df.columns.str.strip()
         df = util.df_functions.fix_null_ints(df)
         input_df_var.value = df
-        processed_df_var.value = df.copy(deep=True)
-        print('Resetting processed_df_var')
-    if len(processed_df_var.value) > 0:
+        if processed_df_var is not None:
+            processed_df_var.value = pd.DataFrame()
+        if final_df_var is not None:
+            final_df_var.value = pd.DataFrame()
+    options = []
+    if input_df_var is not None:
+        options += ['Raw']
+    if processed_df_var is not None:
+        options += ['Processing']
+    if final_df_var is not None:
+        options += ['Final']
+    dfo = st.radio('Select data table', options=options, index=0, horizontal=True, key=f'{workflow}_{upload_label}_data_table_select')
+    if dfo == 'Raw':
+        st.dataframe(input_df_var.value[:show_rows], hide_index=True, use_container_width=True, height=height)
+    elif dfo == 'Processing':
         st.dataframe(processed_df_var.value[:show_rows], hide_index=True, use_container_width=True, height=height)
+    elif dfo == 'Final':
+        st.dataframe(final_df_var.value[:show_rows], hide_index=True, use_container_width=True, height=height)
+        st.download_button('Download final dataset', final_df_var.value.to_csv(index=False), file_name='final_dataset.csv', disabled=len(final_df_var.value) == 0)
 
 def multi_csv_uploader(upload_label, uploaded_files_var, outputs_dir, key, max_rows_var=0, show_rows=1000, height=250):
     files = st.file_uploader(upload_label, type=['csv'], accept_multiple_files=True, key=key)
@@ -102,30 +118,69 @@ def multi_csv_uploader(upload_label, uploaded_files_var, outputs_dir, key, max_r
         st.dataframe(df[:show_rows], hide_index=True, use_container_width=True, height=height)
     return selected_file, df
 
-def prepare_binned_df(workflow, input_df_var, processed_df_var, identifier_var, min_count_var):
+def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, identifier_var):
     # processed_df_var.value = input_df_var.value.copy(deep=True)
+    if f'{workflow}_last_identifier' not in st.session_state.keys():
+        st.session_state[f'{workflow}_last_identifier'] = ''
+    if f'{workflow}_last_attributes' not in st.session_state.keys():
+        st.session_state[f'{workflow}_last_attributes'] = []
+    if f'{workflow}_last_suppress_zeros' not in st.session_state.keys():
+        st.session_state[f'{workflow}_last_suppress_zeros'] = False
+    if f'{workflow}_binned_df' not in st.session_state.keys() or len(st.session_state[f'{workflow}_binned_df']) == 0:
+        st.session_state[f'{workflow}_binned_df'] = input_df_var.value.copy(deep=True)
+    print(st.session_state[f'{workflow}_binned_df'])
     with st.expander('Set subject identifier', expanded=True):
         identifier = st.radio('Subject identifier', options=['Row number', 'ID column'])
         if identifier == 'ID column':
-
-            options = ['']+list(processed_df_var.value.columns.values)
-            identifier = st.selectbox('Select subject identifier column', options=options)
-            if identifier != '':
-                if 'Subject ID' in processed_df_var.value.columns:
-                    # remove
-                    processed_df_var.value.drop(columns=['Subject ID'], inplace=True)
-                identifier_var.value = identifier
-                processed_df_var.value.rename(columns={identifier: 'Subject ID'}, inplace=True)
+            options = ['']+list(input_df_var.value.columns.values)
+            identifier_col = st.selectbox('Select subject identifier column', options=options)
+            if identifier_col != '' and identifier_col != st.session_state[f'{workflow}_last_identifier']:
+                st.session_state[f'{workflow}_last_identifier'] = identifier_col
+                identifier_var.value = identifier_col
+                if len(processed_df_var.value) == 0:
+                    processed_df_var.index = input_df_var.value.index
+                processed_df_var.value['Subject ID'] = list(input_df_var.value[identifier_col])
+                st.rerun()
         else:
-            processed_df_var.value['Subject ID'] = [i for i in range(len(processed_df_var.value))]
             identifier_var.value = 'Subject ID'
-    
+            processed_df_var.value['Subject ID'] = [i for i in range(len(input_df_var.value))]
+            if 'Subject ID' != st.session_state[f'{workflow}_last_identifier']:
+                st.session_state[f'{workflow}_last_identifier'] = 'Subject ID'
+                st.rerun()
+
+    with st.expander('Select attribute columns to include', expanded=False):
+        b1, b2 = st.columns([1, 1])
+        with b1:
+            if st.button('Select all', use_container_width=True):
+                for col in input_df_var.value.columns.values:
+                    st.session_state[f'{workflow}_{col}'] = True
+        with b2:
+            if st.button('Deselect all', use_container_width=True):
+                for col in input_df_var.value.columns.values:
+                    st.session_state[f'{workflow}_{col}'] = False
+        for col in input_df_var.value.columns.values:
+            if f'{workflow}_{col}' not in st.session_state.keys():
+                st.session_state[f'{workflow}_{col}'] = False
+                print(f'Initializing {workflow}_{col}')
+            if col != 'Subject ID':
+                input = st.checkbox(col, key=f'{workflow}_{col}_input', value=st.session_state[f'{workflow}_{col}'])            
+                st.session_state[f'{workflow}_{col}'] = input
+    # set processed_df_var to input_df_var filtered by selected columns
+    selected_cols = [col for col in input_df_var.value.columns.values if st.session_state[f'{workflow}_{col}'] == True]
+    processed_df_var.value = processed_df_var.value[['Subject ID']].copy()
+    for col in selected_cols:
+        processed_df_var.value[col] = st.session_state[f'{workflow}_binned_df'][col]
+    if selected_cols != st.session_state[f'{workflow}_last_attributes']:
+        st.session_state[f'{workflow}_last_attributes'] = selected_cols
+        st.rerun()
+
 
     with st.expander('Quantize datetime attributes', expanded=False):
         # quantize numeric columns into bins
         binnable_cols = []
-        for col in input_df_var.value.columns:
-            binnable_cols.append(col)
+        for col in processed_df_var.value.columns:
+            if col != 'Subject ID':
+                binnable_cols.append(col)
 
         selected_date_cols = st.multiselect('Select datetime attribute to quantize', binnable_cols, help='Select the datetime columns you want to quantize. Quantizing datetime columns into bins makes it easier to synthesize data, but reduces the amount of information in the data. If you do not select any columns, no binning will be performed.')
         bin_size = st.radio('Select bin size', options=['Year', 'Half', 'Quarter', 'Month', 'Day'], help='Select the bin size for the datetime columns you want to quantize. Quantizing datetime columns into bins makes it easier to synthesize data, but reduces the amount of information in the data. If you do not select any columns, no binning will be performed.')
@@ -177,14 +232,15 @@ def prepare_binned_df(workflow, input_df_var, processed_df_var, identifier_var, 
                         except:
                             return ''
                     func = convert
-                processed_df_var.value[col] = input_df_var.value[col].apply(func)
+                st.session_state[f'{workflow}_binned_df'][col] = input_df_var.value[col].apply(func)
+            st.session_state[f'{workflow}_last_attributes'] = [] # hack to force second rerun and show any changes from binning
             st.rerun()
 
     with st.expander('Quantize numeric attributes', expanded=False):
         # quantize numeric columns into bins
         binnable_cols = []
-        for col in input_df_var.value:
-            if input_df_var.value[col].dtype in ['float64', 'int64', 'Int64']:
+        for col in processed_df_var.value:
+            if col != 'Subject ID' and processed_df_var.value[col].dtype in ['float64', 'int64', 'Int64']:
                 binnable_cols.append(col)
 
         selected_binnable_cols = st.multiselect('Select numeric attributes to quantize', binnable_cols, help='Select the numeric columns you want to quantize. Quantizing numeric columns into bins makes it easier to synthesize data, but reduces the amount of information in the data. If you do not select any columns, no binning will be performed.')
@@ -192,7 +248,8 @@ def prepare_binned_df(workflow, input_df_var, processed_df_var, identifier_var, 
         trim_percent = st.number_input('Trim percent', value=0.05, help='Percent of values to trim from the top and bottom of each column before binning. This helps to reduce the impact of outliers on the binning process. For example, if trim percent is 0.05, the top and bottom 5% of values will be trimmed from each column before binning. If 0, no trimming will be performed.')
         if st.button('Quantize selected columns', key='quantize_numeric'):
             if num_bins == 0:
-                processed_df_var.value = input_df_var.value.copy(deep=True)
+                for col in selected_binnable_cols:
+                    st.session_state[f'{workflow}_binned_df'][col] = input_df_var.value[col]
             else:
                 for col in selected_binnable_cols:
                     distinct_values = tuple(sorted(input_df_var.value[col].unique()))
@@ -229,45 +286,85 @@ def prepare_binned_df(workflow, input_df_var, processed_df_var, identifier_var, 
                     while last_bin < top_trim:
                         last_bin += selected_bin_size
                         bin_edges.append(last_bin)
-                    processed_df_var.value[col] = input_df_var.value[col].copy(deep=True).astype('float64')
+                    st.session_state[f'{workflow}_binned_df'][col] = input_df_var.value[col].copy(deep=True).astype('float64')
                     # finally, bin the values
                     values, bins = pd.cut(processed_df_var.value[col], bins=bin_edges, retbins=True, include_lowest=False)
 
                     results = ['' if type(v) == float else '(' + str(v.left) + '-' + str(v.right) + ']' for v in values]
                     # processed_df_var.value[col] = processed_df_var.value[col].astype('str')
-                    processed_df_var.value[col] = results
+                    st.session_state[f'{workflow}_binned_df'][col] = results
+            st.session_state[f'{workflow}_last_attributes'] = [] # hack to force second rerun and show any changes from binning
             st.rerun() 
 
-    with st.expander('Select attribute columns to include', expanded=False):
-        b1, b2 = st.columns([1, 1])
-        with b1:
-            if st.button('Select all', use_container_width=True):
-                for col in input_df_var.value.columns.values:
-                    st.session_state[f'{workflow}_{col}'] = True
-        with b2:
-            if st.button('Deselect all', use_container_width=True):
-                for col in input_df_var.value.columns.values:
-                    st.session_state[f'{workflow}_{col}'] = False
-        for col in input_df_var.value.columns.values:
-            if f'{workflow}_{col}' not in st.session_state.keys():
-                st.session_state[f'{workflow}_{col}'] = False
-            if col != 'Subject ID':
-                st.checkbox(col, key=f'{workflow}_{col}', value=st.session_state[f'{workflow}_{col}'])
-
-    with st.expander('Prefilter rare attribute values', expanded=False):
-        min_value = st.number_input('Minimum count', key=min_count_var.key, value=min_count_var.value, help='Minimum count of an attribute value to be included in the sensitive dataset. If 0, no filtering will be performed.')
+    with st.expander('Suppress insignificant attribute values', expanded=False):
+        if f'{workflow}_min_count' not in st.session_state.keys():
+            st.session_state[f'{workflow}_min_count'] = 0
+        min_value = st.number_input('Minimum value count', key=f'{workflow}_min_count_input', value=st.session_state[f'{workflow}_min_count'], help='Minimum count of an attribute value to be included in the sensitive dataset. If 0, no filtering will be performed.')
+        st.session_state[f'{workflow}_min_count'] = min_value
+        bdf = st.session_state[f'{workflow}_binned_df']
         for col in processed_df_var.value.columns:
             if col != 'Subject ID':
-                value_counts = processed_df_var.value[col].value_counts()
+                value_counts = bdf[col].value_counts()
                 # convert to dict with value as key and count as value
                 value_counts = dict(zip(value_counts.index, value_counts.values))
 
                 # remove any values that are less than the minimum count
-                if processed_df_var.value[col].dtype == 'str':
-                    processed_df_var.value[col] = processed_df_var.value[col].apply(lambda x: '' if x in value_counts and value_counts[x] < min_value else str(x))
-                elif processed_df_var.value[col].dtype == 'float64':
-                    processed_df_var.value[col] = processed_df_var.value[col].apply(lambda x: np.nan if x in value_counts and value_counts[x] < min_value else x)
-                elif processed_df_var.value[col].dtype == 'int64':
-                    processed_df_var.value[col] = processed_df_var.value[col].apply(lambda x: -sys.maxsize if x in value_counts and value_counts[x] < min_value else x)
-                    processed_df_var.value[col] = processed_df_var.value[col].astype('Int64')
-                    processed_df_var.value[col] = processed_df_var.value[col].replace(-sys.maxsize, np.nan)
+                if bdf[col].dtype == 'str':
+                    bdf[col] = bdf[col].apply(lambda x: '' if x in value_counts and value_counts[x] < min_value else str(x))
+                elif bdf[col].dtype == 'float64':
+                    bdf[col] = bdf[col].apply(lambda x: np.nan if x in value_counts and value_counts[x] < min_value else x)
+                elif bdf[col].dtype == 'int64':
+                    bdf[col] = bdf[col].apply(lambda x: -sys.maxsize if x in value_counts and value_counts[x] < min_value else x)
+                    bdf[col] = bdf[col].astype('Int64')
+                    bdf[col] = bdf[col].replace(-sys.maxsize, np.nan)
+
+        if f'{workflow}_suppress_zeros' not in st.session_state.keys():
+            st.session_state[f'{workflow}_suppress_zeros'] = False
+        suppress_zeros = st.checkbox('Suppress binary 0s', key=f'{workflow}_suppress_zeros_input', value=st.session_state[f'{workflow}_suppress_zeros'])
+        if suppress_zeros != st.session_state[f'{workflow}_suppress_zeros']:
+            st.session_state[f'{workflow}_suppress_zeros'] = suppress_zeros
+            if suppress_zeros:
+                for col in bdf.columns.values:
+                    if col != 'Entity ID' and len(bdf[col].unique()) <= 2:
+                        if 0 in [x for x in bdf[col].unique()]:
+                            print(f'Zero found in {col}')
+                            bdf[col] = input_df_var.value[col].replace(0, np.nan)
+                            processed_df_var.value[col] = bdf[col]
+            else:
+                for col in bdf.columns.values:
+                    if col != 'Entity ID' and len(bdf[col].unique()) <= 2:
+                        bdf[col] = input_df_var.value[col]
+                        processed_df_var.value[col] = bdf[col]
+            st.rerun()
+
+    if st.button('Generate final dataset'):
+        with st.spinner('Transforming data...'):
+            # Drop empty Subject ID rows
+            filtered = processed_df_var.value.dropna(subset=['Subject ID'])
+            melted = filtered.melt(id_vars=['Subject ID'], var_name='Attribute', value_name='Value').drop_duplicates()
+            att_to_subject_to_vals = defaultdict(lambda: defaultdict(set))
+            for i, row in melted.iterrows():
+                att_to_subject_to_vals[row['Attribute']][row['Subject ID']].add(row['Value'])
+            # define expanded atts as all attributes with more than one value for a given subject
+            expanded_atts = []
+            for att, subject_to_vals in att_to_subject_to_vals.items():
+                max_count = max([len(vals) for vals in subject_to_vals.values()])
+                if max_count > 1:
+                    expanded_atts.append(att)
+            new_rows = []
+            for i, row in melted.iterrows():
+                if row['Attribute'] in expanded_atts:
+                    if str(row['Value']) not in ['', '<NA>']:
+                        new_rows.append([row['Subject ID'], row['Attribute']+'_'+str(row['Value']), '1'])
+                else:
+                    new_rows.append([row['Subject ID'], row['Attribute'], str(row['Value'])])
+            melted = pd.DataFrame(new_rows, columns=['Subject ID', 'Attribute', 'Value'])
+            # convert back to wide format
+            wdf = melted.pivot(index='Subject ID', columns='Attribute', values='Value').reset_index()
+            # wdf = wdf.drop(columns=['Subject ID'])
+            wdf.replace({'<NA>': np.nan}, inplace=True)
+            wdf.replace({'nan': ''}, inplace=True)
+            wdf.replace({'1.0': '1'}, inplace=True)
+            output_df_var.value = wdf
+            st.rerun()
+    
