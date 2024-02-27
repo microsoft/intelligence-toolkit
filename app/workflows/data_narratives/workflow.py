@@ -21,26 +21,33 @@ def create():
     if not os.path.exists(config.outputs_dir):
         os.makedirs(config.outputs_dir)
 
-    prepare_tab, generate_tab = st.tabs(['Prepare data summary', 'Generate data narratives',])
+    prepare_tab, summarize_tab, generate_tab = st.tabs(['Upload data to narrate', 'Prepare data summary', 'Generate data narratives',])
 
     with prepare_tab:
         uploader_col, model_col = st.columns([1, 1])
         with uploader_col:
-            util.ui_components.single_csv_uploader(workflow, 'Upload CSV to narrate', sv.narrative_last_file_name, sv.narrative_input_df, None, None, key='narrative_uploader', height=180)
-        
+            util.ui_components.single_csv_uploader(workflow, 'Upload CSV to narrate', sv.narrative_last_file_name, sv.narrative_input_df, sv.narrative_binned_df, sv.narrative_final_df, key='narrative_uploader', height=400)
+        with model_col:
+            util.ui_components.prepare_input_df(workflow, sv.narrative_input_df, sv.narrative_binned_df, sv.narrative_final_df, sv.narrative_subject_identifier)
+    with summarize_tab:
+        c1, c2 = st.columns([1, 2])
+        with c1:
             st.markdown('##### Define summary model')
             sorted_atts = []
-            sorted_cols = sorted(sv.narrative_input_df.value.columns)
+            sorted_cols = sorted(sv.narrative_final_df.value.columns)
             for col in sorted_cols:
-                vals = [f'{col}:{x}' for x in sorted(sv.narrative_input_df.value[col].astype(str).unique()) if x not in ['', 'nan', 'NaN', 'None', 'none', 'NULL', 'null']]
+                if col == 'Subject ID':
+                    continue
+                vals = [f'{col}:{x}' for x in sorted(sv.narrative_final_df.value[col].astype(str).unique()) if x not in ['', 'nan', 'NaN', 'None', 'none', 'NULL', 'null']]
                 sorted_atts.extend(vals)
+            
             st.multiselect('After filtering to records matching these values:', sorted_atts, key=sv.narrative_filters.key)
             st.multiselect('Compare groups of records matching different combinations of these attributes:', sorted_cols, key=sv.narrative_groups.key)
             st.multiselect('Using counts of these attributes:', sorted_cols, key=sv.narrative_aggregates.key)
             st.selectbox('Across levels of this temporal/ordinal attribute (optional):', [''] + sorted_cols, key=sv.narrative_temporal.key)
         
             model = st.button('Create summary')
-        with model_col:
+        with c2:
             st.markdown('##### Data summary')
             
             
@@ -49,15 +56,20 @@ def create():
             aggregates = sv.narrative_aggregates.value
             temporal = sv.narrative_temporal.value
             if model:
-                sv.narrative_model_df.value = sv.narrative_input_df.value.copy(deep=True)
+                sv.narrative_model_df.value = sv.narrative_final_df.value.copy(deep=True)
                 sv.narrative_model_df.value['Subject ID'] = [str(x) for x in range(1, len(sv.narrative_model_df.value) + 1)]
                 # drop any rows with missing values in groups, aggregates, or temporal
                 sv.narrative_model_df.value = sv.narrative_model_df.value.replace('', None)
-                sv.narrative_model_df.value = sv.narrative_model_df.value.dropna(subset=groups + aggregates + [temporal])
+                print(f'Narrative model df: {sv.narrative_model_df.value}')
+                # if temporal != '':
+                #     sv.narrative_model_df.value = sv.narrative_model_df.value.dropna(subset=groups + aggregates + [temporal])
+                # else:
+                #     sv.narrative_model_df.value = sv.narrative_model_df.value.dropna(subset=groups + aggregates)
 
                 # wide df for model
                 wdf = sv.narrative_model_df.value
                 initial_row_count = len(wdf)
+                
                 if len(filters) > 0:
                     for f in filters:
                         col, val = f.split(':')
@@ -124,7 +136,7 @@ def create():
                             tdf.loc[(tdf['Attribute Value'] == att_val), f'{temporal} Level Rank'] = tdf[tdf['Attribute Value'] == att_val][f'{temporal} Level Count'].rank(ascending=False, method='first')
                         tdfs.append(tdf)
                     ldf = pd.concat(tdfs).sort_values(by=temporal)
- 
+
                 # Create overall df
                 odf = ldf.merge(gdf, on=[*groups], how='left', suffixes=['', '_r']) if temporal != '' else adf.merge(gdf, on=[*groups], how='left', suffixes=['', '_r'])
                 odf = odf.merge(adf, on=[*groups, 'Attribute Value'], how='left', suffixes=['', '_r'])
@@ -140,7 +152,7 @@ def create():
                 groups_text = '['+ ', '.join(['**'+g+'**' for g in groups]) + ']'
                 filters_text = '['+ ', '.join(['**'+f.replace(':', '\\:')+'**' for f in filters]) + ']'
                 description = 'This table shows:'
-                description += f'\n- A summary of **{filtered_row_count}** data records matching {filters_text}, representing **{dataset_proportion}%** of the overall dataset' if len(filters) > 0 else '\n- A summary of all data records'   
+                description += f'\n- A summary of **{filtered_row_count}** data records matching {filters_text}, representing **{dataset_proportion}%** of the overall dataset' if len(filters) > 0 else f'\n- A summary of all **{initial_row_count}** data records'   
                 description += f'\n- The **Group Count** of records for all {groups_text} groups, and corresponding **Group Rank**'
                 description += f'\n- The **Attribute Count** of each **Attribute Value** for all {groups_text} groups, and corresponding **Attribute Rank**'
                 if temporal != '':
@@ -149,7 +161,7 @@ def create():
                 sv.narrative_description.value = description
             if len(sv.narrative_model_df.value) > 0:
                 st.dataframe(sv.narrative_model_df.value, hide_index=True, use_container_width=True, height=500)
-               
+                
                 st.markdown(sv.narrative_description.value)
                 st.download_button('Download data', data=sv.narrative_model_df.value.to_csv(index=False, encoding='utf-8-sig'), file_name='narrative_data_summary.csv', mime='text/csv')
 

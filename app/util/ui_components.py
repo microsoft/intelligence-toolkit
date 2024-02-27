@@ -337,7 +337,7 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
                         processed_df_var.value[col] = bdf[col]
             st.rerun()
 
-    if st.button('Generate final dataset'):
+    if st.button('Generate final dataset', disabled=len(processed_df_var.value.columns) < 2):
         with st.spinner('Transforming data...'):
             # Drop empty Subject ID rows
             filtered = processed_df_var.value.dropna(subset=['Subject ID'])

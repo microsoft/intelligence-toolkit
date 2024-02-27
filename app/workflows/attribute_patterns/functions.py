@@ -60,20 +60,6 @@ def create_edge_df_from_atts(sv, all_atts, pdf, mi):
     edge_df = pd.concat([edge_df, null_df])
     edge_df = edge_df.sort_values('weight', ascending=False)
     return edge_df
-
-def combine_periods(pdf, combine_windows):
-    if combine_windows == 1:
-        return pdf
-    else:
-        cdf = pdf.copy(deep=True)
-        windows = sorted(pdf['Period'].unique())
-        # split windows into groups of combine_windows
-        window_groups = [windows[i:i + combine_windows] for i in range(0, len(windows), combine_windows)]
-        for group in window_groups:
-            if len(group) > 1:
-                # combine windows into a single window
-                cdf.loc[cdf['Period'].isin(group), 'Period'] = group[0] + ' to ' + group[-1]
-        return cdf
     
 def prepare_graph(sv, mi=False):
     G0 = nx.Graph()
@@ -83,13 +69,13 @@ def prepare_graph(sv, mi=False):
     pdf = sv.attribute_dynamic_df.value.copy()
     atts = sorted(pdf['Full Attribute'].unique())
     pdf['Grouping ID'] = pdf['Subject ID'] + '@' + pdf['Period']
-    adf = pdf[['Grouping ID', 'Full Attribute']].groupby('Grouping ID').agg(list).reset_index()
-    edge_df = create_edge_df_from_atts(sv, atts, adf, mi)
+    # adf = pdf[['Grouping ID', 'Full Attribute']].groupby('Grouping ID').agg(list).reset_index()
+    # edge_df = create_edge_df_from_atts(sv, atts, adf, mi)
     
     
     periods = sorted(pdf['Period'].unique())
 
-    G0, full_lcc = convert_edge_df_to_graph(edge_df)
+    # G0, full_lcc = convert_edge_df_to_graph(edge_df)
     for ix, period in enumerate(periods):
         print(period)
         tdf = pdf.copy()
@@ -302,4 +288,7 @@ def compute_attribute_counts(df, pattern, time_col, period):
         else:
             print(f'Error parsing attribute {att}')
     melted = pd.melt(fdf, id_vars=['Subject ID'], value_vars=[c for c in fdf.columns if c not in ['Subject ID', time_col]], var_name='Attribute', value_name='Value')
-    print(melted)
+    melted = melted[melted['Value'] != '']
+    melted['AttributeValue'] = melted['Attribute'] + config.type_val_sep + melted['Value']
+    att_counts = melted.groupby('AttributeValue').agg({'Subject ID' : 'nunique'}).rename(columns={'Subject ID' : 'Count'}).sort_values(by='Count', ascending=False).reset_index()
+    return att_counts
