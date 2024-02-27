@@ -29,21 +29,21 @@ List seven potential responses targeted at the specific details of the identifie
 
 TASK
 
-Detected pattern: {{pattern}}
+Detected pattern: {pattern}
 
-Detected in period: {{period}}
+Detected in period: {period}
 
 Pattern observations over time:
 
-{{time_series}}
+{time_series}
 
 Note that percentages reflect the percentage of all records observed/collected in the given period that match the pattern.
 
 Counts of attributes in cases linked to the pattern:
 
-{{attribute_counts}}
+{attribute_counts}
 
 Additional instructions:
 
-{{instructions}}
+{instructions}
 """

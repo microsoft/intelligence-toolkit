@@ -29,46 +29,51 @@ def create():
     if not os.path.exists(config.outputs_dir):
         os.makedirs(config.outputs_dir)
 
-    prepare_tab, generate_tab, queries_tab = st.tabs(['Prepare sensitive data', 'Generate synthetic data', 'Query and visualize'])
+    prepare_tab, generate_tab, queries_tab = st.tabs(['Upload deidentified sensitive data', 'Generate anonymous synthetic data', 'Query and visualize data'])
     df = None
     with prepare_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:
-            util.ui_components.single_csv_uploader(workflow, 'Upload sensitive data CSV', sv.synthesis_last_sensitive_file_name, sv.synthesis_raw_sensitive_df, sv.synthesis_processing_df, sv.synthesis_sensitive_df, key='sensitive_data_uploader', height=500)
+            util.ui_components.single_csv_uploader(workflow, 'Upload sensitive data CSV', sv.synthesis_last_sensitive_file_name, sv.synthesis_raw_sensitive_df, sv.synthesis_processing_df, sv.synthesis_sensitive_df, key='sensitive_data_uploader', height=400)
         with model_col:
             util.ui_components.prepare_input_df(workflow, sv.synthesis_raw_sensitive_df, sv.synthesis_processing_df, sv.synthesis_sensitive_df, sv.synthesis_subject_identifier)
             
-            # distinct_counts = []
-            # wdf = sv.synthesis_sensitive_df.value
-            # num_cols = len(wdf.columns.values)
+            distinct_counts = []
+            wdf = sv.synthesis_sensitive_df.value
+            att_cols = [col for col in wdf.columns if col != 'Subject ID']
+            num_cols = len(att_cols) 
             
-            # for col in wdf.columns.values:
-            #     distinct_values = tuple(sorted(wdf[col].astype(str).unique()))
-            #     # if distinct_values == tuple(['0', '1']):
-            #     #     distinct_counts.append(1)
-            #     # else:
-            #     distinct_counts.append(len(distinct_values))
-            # # calculate number of pairs of column values using combinatorics
-            # num_observed_pairs = 0
-            # num_common_pairs = 0
-            # common_level = num_cols+1 + int(0.01 * pow(num_cols, 2)) #round(math.sqrt(num_cols))+1
-            # for ix, ci in enumerate(wdf.columns.values):
-            #     for jx, cj in enumerate(wdf.columns.values[ix+1:]):
-            #         groups = wdf[[ci, cj]].dropna().groupby([ci, cj]).size()
+            for col in wdf.columns.values:
+                if col == 'Subject ID':
+                    continue
+                distinct_values = tuple(sorted(wdf[col].astype(str).unique()))
+                # if distinct_values == tuple(['0', '1']):
+                #     distinct_counts.append(1)
+                # else:
+                distinct_counts.append(len(distinct_values))
+            overall_att_count = sum(distinct_counts)
+            # calculate number of pairs of column values using combinatorics
+            num_observed_pairs = 0
+            num_common_pairs = 0
+            common_level = int(math.log2(overall_att_count)) * num_cols # num_cols+1 + int(0.1 * pow(num_cols, 2)) #round(math.sqrt(num_cols))+1
+            for ix, ci in enumerate(att_cols):
+                for jx, cj in enumerate(att_cols[ix+1:]):
+                    groups = wdf[[ci, cj]].dropna().groupby([ci, cj]).size()
 
-            #         num_observed_pairs += len(groups)
-            #         # count groups with at least common_level records
-            #         common_groups = groups[groups >= common_level]
-            #         num_common_pairs += len(common_groups)
+                    num_observed_pairs += len(groups)
+                    # count groups with at least common_level records
+                    common_groups = groups[groups >= common_level]
+                    num_common_pairs += len(common_groups)
                     
-            # coverage = num_common_pairs / num_observed_pairs if num_observed_pairs > 0 else 1
-            # st.markdown(f'### Synthesizability summary')
-            # st.markdown(f'Number of selected columns: **{num_cols}**', help='This is the number of columns you selected for processing. The more columns you select, the harder it will be to synthesize data.')
-            # st.markdown(f'Common pair threshold: **{common_level}**', help='This is the minimum number of records that must appear in a pair of column values for the pair to be considered common. The higher this number, the harder it will be to synthesize data. The value is set as num_columns + 1 + int(0.01 * num_columns^2).')
-            # st.markdown(f'Estimated synthesizability score: **{round(coverage, 4)}**', help=f'We define synthesizability as the proportion of observed pairs of values across selected columns that are common, appearing at least as many times as the number of columns. In this case, {num_common_pairs}/{num_observed_pairs} pairs appear at least {num_cols} times. The intuition here is that all combinations of attribute values in a synthetic record must be composed from common attribute pairs. **Rule of thumb**: Aim for a synthesizability score of **0.5** or higher.')
+            coverage = num_common_pairs / num_observed_pairs if num_observed_pairs > 0 else 1
+            st.markdown(f'### Synthesizability summary')
+            st.markdown(f'Number of selected columns: **{num_cols}**', help='This is the number of columns you selected for processing. The more columns you select, the harder it will be to synthesize data.')
+            st.markdown(f'Number of distinct attribute values: **{overall_att_count}**', help='This is the total number of distinct attribute values across all selected columns. The more distinct values, the harder it will be to synthesize data.')
+            st.markdown(f'Common pair threshold: **{common_level}**', help='This is the minimum number of records that must appear in a pair of column values for the pair to be considered common. The higher this number, the harder it will be to synthesize data. The value is set as int(math.log2(distinct_att_vals)) * num_selected_cols.')
+            st.markdown(f'Estimated synthesizability score: **{round(coverage, 4)}**', help=f'We define synthesizability as the proportion of observed pairs of values across selected columns that are common, appearing at least as many times as the number of columns. In this case, {num_common_pairs}/{num_observed_pairs} pairs appear at least {num_cols} times. The intuition here is that all combinations of attribute values in a synthetic record must be composed from common attribute pairs. **Rule of thumb**: Aim for a synthesizability score of **0.5** or higher.')
     with generate_tab:
         if len(sv.synthesis_sensitive_df.value) == 0:
-            st.markdown('Please upload and prepare data before generating synthetic data.')
+            st.markdown('Please upload and prepare data to continue.')
         else:
             c1, c2, c3 = st.columns([1, 1, 1])
             with c1:
@@ -165,7 +170,7 @@ def create():
         
     with queries_tab:
         if len(sv.synthesis_synthetic_df.value) == 0 or len(sv.synthesis_aggregate_df.value) == 0:
-            st.markdown('Please synthesize data before performing queries, or upload an existing synthetic dataset below.')
+            st.markdown('Please synthesize data to continue, or upload an existing synthetic dataset below.')
             util.ui_components.single_csv_uploader(workflow, 'Upload synthetic data CSV', sv.synthesis_last_synthetic_file_name, sv.synthesis_synthetic_df, None, None, key='synthetic_data_uploader')
             util.ui_components.single_csv_uploader(workflow, 'Upload aggregate data CSV', sv.synthesis_last_aggregate_file_name, sv.synthesis_aggregate_df, None, None, key='aggregate_data_uploader')
             if len(sv.synthesis_synthetic_df.value) > 0 and len(sv.synthesis_aggregate_df.value) > 0:

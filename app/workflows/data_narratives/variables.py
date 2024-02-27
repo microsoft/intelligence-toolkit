@@ -7,6 +7,8 @@ class SessionVariables:
 
     def __init__(self, prefix):
         self.narrative_input_df = SessionVariable(pd.DataFrame(), prefix)
+        self.narrative_binned_df = SessionVariable(pd.DataFrame(), prefix)
+        self.narrative_final_df = SessionVariable(pd.DataFrame(), prefix)
         self.narrative_last_file_name = SessionVariable('', prefix)
         self.narrative_model_df = SessionVariable(pd.DataFrame(), prefix)
         self.narrative_filters = SessionVariable([], prefix)
@@ -20,3 +22,4 @@ class SessionVariables:
         self.narrative_instructions = SessionVariable('', prefix)
         self.narrative_report = SessionVariable('', prefix)
         self.narrative_system_prompt = SessionVariable(prompts.system_prompt, prefix)
+        self.narrative_subject_identifier = SessionVariable('', prefix)

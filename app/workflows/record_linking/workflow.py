@@ -26,7 +26,7 @@ def create():
     if not os.path.exists(config.outputs_dir):
         os.makedirs(config.outputs_dir)
 
-    uploader_tab, process_tab, evaluate_tab = st.tabs(['Create data model', 'Detect record groups', 'Evaluate record groups'])
+    uploader_tab, process_tab, evaluate_tab = st.tabs(['Upload data to link', 'Detect record groups', 'Evaluate record groups'])
     df = None
     with uploader_tab:
         uploader_col, model_col = st.columns([2, 1])
@@ -49,7 +49,7 @@ def create():
                     ready = dataset is not None and len(dataset) > 0 and len(att_cols) > 0 and name_col != ''
                     b1, b2 = st.columns([1, 1])
                     with b1:
-                        if st.button("Add records to data model", disabled=not ready, use_container_width=True):
+                        if st.button("Add records to model", disabled=not ready, use_container_width=True):
                             if entity_col == '':
                                 df = df.with_row_count(name="Entity ID")
                                 df = df.rename({name_col: 'Entity name'})

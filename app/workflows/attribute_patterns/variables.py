@@ -30,5 +30,11 @@ class SessionVariables:
         self.attribute_instructions = SessionVariable('', prefix)
         self.attribute_system_prompt = SessionVariable(prompts.system_prompt, prefix)
         self.attribute_final_df = SessionVariable(pd.DataFrame(), prefix)
+        self.attribute_report = SessionVariable('', prefix)
+        self.attribute_time_col = SessionVariable('', prefix)
+        self.attribute_selected_pattern = SessionVariable('', prefix)
+        self.attribute_selected_pattern_period = SessionVariable('', prefix)
+        self.attribute_selected_pattern_df = SessionVariable(pd.DataFrame(), prefix)
+        self.attribute_selected_pattern_att_counts = SessionVariable(pd.DataFrame(), prefix)
 
 
