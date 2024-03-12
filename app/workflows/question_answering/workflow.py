@@ -1,6 +1,7 @@
 import streamlit as st
 from collections import Counter
 import os
+import re
 import json
 import scipy.spatial.distance
 
@@ -10,6 +11,7 @@ import workflows.question_answering.config as config
 import workflows.question_answering.prompts as prompts
 import workflows.question_answering.variables as vars
 import util.AI_API
+import util.ui_components
 
 embedder = util.AI_API.create_embedder(config.cache_dir)
 
@@ -22,12 +24,14 @@ def create():
         if not os.path.exists(d):
             os.mkdir(d)
 
-    uploader_tab, lazy_tab = st.tabs(['Upload data', 'Generate reports'])
+    intro_tab, uploader_tab, mining_tab, report_tab = st.tabs(['Question answering workflow:', 'Upload data', 'Mine & match questions', 'Generate AI answer reports'])
     
     df = None
+    with intro_tab:
+        pass
     with uploader_tab:
         st.markdown('##### Upload data for processing')
-        files = st.file_uploader("Upload text files", type=['pdf'], accept_multiple_files=True)
+        files = st.file_uploader("Upload PDF text files", type=['pdf'], accept_multiple_files=True)
         if files != None:
             if st.button('Chunk and embed files'):
                 functions.chunk_files(sv, files)
@@ -36,7 +40,7 @@ def create():
         num_chunks = sum([len(f.chunk_texts) for f in sv.answering_files.value.values()])
         if num_files > 0:
             st.markdown(f'Chunked **{num_files}** files into **{num_chunks}** chunks of **~{config.chunk_size}** characters.')
-    with lazy_tab:
+    with mining_tab:
         c1, c2, c3, c4 = st.columns([4, 1, 1, 1])
         with c1:
             question = st.text_input('Question', key='lazy_question')
@@ -45,11 +49,13 @@ def create():
         with c3:
             st.number_input('Target source diversity', min_value=1, step=1, value=sv.answering_source_diversity.value, key=sv.answering_source_diversity.key)
         with c4:
-            regenerate = st.button('Generate report', key='lazy_regenerate', use_container_width=True)
-        
-        with st.expander('Question mining', expanded=True):
+            regenerate = st.button('Mine matching questions', key='lazy_regenerate', use_container_width=True)
+        c1, c2 = st.columns([2, 3])
+        with c1:
+            st.markdown('#### Question mining')
             lazy_answering_placeholder = st.empty()
-        with st.expander('Matched questions'):
+        with c2:
+            st.markdown('#### Question matching')
             lazy_matches_placeholder = st.empty()
         lazy_answering_placeholder.markdown(sv.answering_status_history.value, unsafe_allow_html=True)
         lazy_matches_placeholder.markdown(sv.answering_matches.value, unsafe_allow_html=True)
@@ -96,14 +102,14 @@ def create():
                 if len(matched_qs) == sv.answering_target_matches.value:
                     status_history += f'Iteration **{iteration}**...<br/><br/>Matched user question to **{len(matched_qs)}** mined questions:<br/>- ' + '<br/>- '.join([f'Q{matched_q.id}: {matched_q.text}' for matched_q in matched_qs]) + '<br/><br/>'
                     sv.answering_status_history.value = status_history
-                    report_input = f'#### {sv.answering_question_history.value[-1]}\n\n'
+                    report_input = f'**User question**: {sv.answering_question_history.value[0]}\n\n**Augmented question**: {sv.answering_question_history.value[-1]}\n\n'
                     seen_qs = set()
                     for t, c, d in cosine_distances:
                         if t in ['question', 'answer']:
                             if c.id not in seen_qs:
-                                delta = c.generate_outline(level=4)
+                                delta = c.generate_outline(level=6)
                                 qs = c.list_all_sub_questions()
-                                candidate = report_input + '\n\n' + delta
+                                candidate = report_input + delta
                                 candidate_tokens = len(util.AI_API.encoder.encode(candidate))
                                 if candidate_tokens <= sv.answering_outline_limit.value:
                                     report_input = candidate
@@ -111,10 +117,10 @@ def create():
                                 else:
                                     break
                     sv.answering_matches.value = report_input
-                    st.session_state['generate_lazy_answer'] = True
+                    # st.session_state['generate_lazy_answer'] = True
                     st.rerun()
                     break
-                status_history += f'Iteration **{iteration}**...<br/><br/>Matched user question to **{len(matched_qs)}** of **{sv.answering_target_matches.value}** mined questions before reaching an unmined chunk'
+                status_history += f'**Iteration {iteration}**...<br/><br/>Matched user question to **{len(matched_qs)}** of **{sv.answering_target_matches.value}** mined questions before reaching an unmined chunk'
                 if len(matched_qs) > 0:
                     status_history += ':<br/>- ' + '<br/>- '.join([f'Q{matched_q.id}: {matched_q.text}' for matched_q in matched_qs])
                 status_history += '<br/><br/>'
@@ -179,7 +185,7 @@ def create():
                         if t == 'chunk' and c[0].id == f.id and c[1] == cx:
                             all_units.remove((t, c, v))
 
-                    status_history += f'Augmenting question...<br/><br/>'
+                    status_history += f'Augmenting user question with partial answers:<br/>'
                     new_question = functions.update_question(sv, sv.answering_question_history.value, new_questions, lazy_answering_placeholder, status_history)
                     status_history += new_question + '<br/><br/>'
                     sv.answering_question_history.value.append(new_question)
@@ -187,28 +193,33 @@ def create():
                     print('Error processing JSON')
                     print(e)
                     pass
-            
-        if 'generate_lazy_answer' in st.session_state:
-            del st.session_state['generate_lazy_answer']    
 
-            variables = {
-                'question': sv.answering_question_history.value[-1],
-                'outline': sv.answering_matches.value,
-                'source_diversity': sv.answering_source_diversity.value
-            }
-            messages = util.AI_API.prepare_messages_from_message_pair(
-                system_message=prompts.answering_system_prompt,
-                user_message=prompts.answering_user_prompt,
-                variables=variables
-            )
-            report = util.AI_API.generate_text_from_message_list(
-                messages=messages,
-                placeholder=lazy_answer_placeholder,
-                prefix=''
-            )
-            sv.answering_lazy_answer_text.value = report
-        
-        lazy_answering_placeholder.markdown(sv.answering_status_history.value, unsafe_allow_html=True)
-        lazy_matches_placeholder.markdown(sv.answering_matches.value, unsafe_allow_html=True)
-        lazy_answer_placeholder.markdown(sv.answering_lazy_answer_text.value, unsafe_allow_html=True)
-        st.download_button('Download report', data=sv.answering_lazy_answer_text.value, file_name=sv.answering_lazy_answer_text.value.split('\n')[0].replace('#','').strip().replace(' ', '_')+'.md', mime='text/markdown', disabled=sv.answering_lazy_answer_text.value == '', key='lazy_download_button')      
+    with report_tab:        
+        # if 'generate_lazy_answer' in st.session_state:
+        #     del st.session_state['generate_lazy_answer']
+        if sv.answering_matches.value == '':
+            st.markdown('Mine question matches to continue.')    
+        else:
+            c1, c2 = st.columns([2, 3])
+
+            with c1:
+                variables = {
+                    'question': sv.answering_question_history.value[-1],
+                    'outline': sv.answering_matches.value,
+                    'source_diversity': sv.answering_source_diversity.value
+                }
+                generate, messages = util.ui_components.generative_ai_component(sv.answering_system_prompt, sv.answering_instructions, variables)
+            with c2:
+                report_placeholder = st.empty()
+            
+                if generate:
+                    result = util.AI_API.generate_text_from_message_list(
+                        placeholder=report_placeholder,
+                        messages=messages,
+                        prefix=''
+                    )
+                    sv.answering_lazy_answer_text.value = result
+                report_placeholder.markdown(sv.answering_lazy_answer_text.value)
+                
+                full_text = sv.answering_lazy_answer_text.value + '\n\n## Supporting FAQ\n\n' + re.sub(r' Q[\d]+: ', ' ', '\n\n'.join(sv.answering_matches.value.split('\n\n')[2:]), re.MULTILINE).replace('###### ', '### ')
+                st.download_button('Download report', data=full_text, file_name=sv.answering_lazy_answer_text.value.split('\n')[0].replace('#','').strip().replace(' ', '_')+'.md', mime='text/markdown', disabled=sv.answering_lazy_answer_text.value == '', key='lazy_download_button')      

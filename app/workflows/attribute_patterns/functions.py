@@ -190,8 +190,9 @@ def detect_patterns(sv):
                         if period_count >= sv.attribute_min_pattern_count.value:
                             close_pairs += 1
                             period_to_close_nodes[period].append((node1, node2))
-    if all_pairs > 0:
-        print(f'Detected {close_pairs} close pairs out of {all_pairs} total pairs, or {round(close_pairs / all_pairs * 100, 2)}%')
+
+    sv.attribute_converging_pairs.value = close_pairs
+    sv.attribute_all_pairs.value = all_pairs
     # convert to df
     close_node_rows = []
     for period, close_nodes in period_to_close_nodes.items():
@@ -208,14 +209,14 @@ def detect_patterns(sv):
     columns = ['period', 'node1', 'node2', 'period_count', 'mean_count', 'count_delta', 'count_factor', 'cosine_shift', 'euclidean_shift']
     close_node_df = pd.DataFrame(close_node_rows, columns=columns)
     # correlation between shift and delta
-    corr1 = close_node_df[['count_delta', 'cosine_shift']].corr()
-    corr2 = close_node_df[['count_delta', 'euclidean_shift']].corr()
-    corr3 = close_node_df[['count_factor', 'cosine_shift']].corr()
-    corr4 = close_node_df[['count_factor', 'euclidean_shift']].corr()
-    print(f'count-cos delta corr: {corr1}')
-    print(f'count-euc delta corr: {corr2}')
-    print(f'count-cos factor corr: {corr3}')
-    print(f'count-euc factor corr: {corr4}')
+    # corr1 = close_node_df[['count_delta', 'cosine_shift']].corr()
+    # corr2 = close_node_df[['count_delta', 'euclidean_shift']].corr()
+    # corr3 = close_node_df[['count_factor', 'cosine_shift']].corr()
+    # corr4 = close_node_df[['count_factor', 'euclidean_shift']].corr()
+    # print(f'count-cos delta corr: {corr1}')
+    # print(f'count-euc delta corr: {corr2}')
+    # print(f'count-cos factor corr: {corr3}')
+    # print(f'count-euc factor corr: {corr4}')
 
     # for each period, combine overlapping similar pairs of nodes if they are supported by a positive count
     period_to_patterns = {}
@@ -262,11 +263,11 @@ def detect_patterns(sv):
                 mean, sd, mx = rc.compute_period_mean_sd_max(pattern)
                 score = (count - mean) / sd
                 if score >= 0:
-                    row = [period, len(pattern_to_periods[tuple(pattern)]), ' & '.join(pattern), len(pattern), count, round(mean_count, 0), round(score, 2)]
+                    row = [period, ' & '.join(pattern), len(pattern_to_periods[tuple(pattern)]), len(pattern), count, round(mean_count, 0), round(score, 2)]
                     pattern_rows.append(row)
-    columns = ['period', 'periods', 'pattern', 'length', 'count', 'mean', 'extreme_score']
+    columns = ['period', 'pattern', 'detections', 'length', 'count', 'mean', 'z_score']
     pattern_df = pd.DataFrame(pattern_rows, columns=columns)
-    pattern_df['overall_score'] = pattern_df['extreme_score'] * pattern_df['length'] * np.log(pattern_df['count']) * pattern_df['periods']
+    pattern_df['overall_score'] = pattern_df['z_score'] * pattern_df['length'] * np.log(pattern_df['count']) * pattern_df['detections']
     # normalize overall score
     max_score = pattern_df['overall_score'].max()
     pattern_df['overall_score'] = pattern_df['overall_score'].apply(lambda x: round((x) / (max_score), 2))

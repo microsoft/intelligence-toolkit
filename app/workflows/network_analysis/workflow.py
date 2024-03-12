@@ -27,8 +27,10 @@ def create():
     if not os.path.exists(config.outputs_dir):
         os.makedirs(config.outputs_dir)
 
-    uploader_tab, process_tab, view_tab = st.tabs(['Create data model', 'Process data model', 'Explore networks'])
+    intro_tab, uploader_tab, process_tab, view_tab = st.tabs(['Network analysis workflow:', 'Create data model', 'Process data model', 'Explore networks'])
     df = None
+    with intro_tab:
+        pass
     with uploader_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:

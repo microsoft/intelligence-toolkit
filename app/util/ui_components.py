@@ -139,7 +139,7 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
     if f'{workflow}_binned_df' not in st.session_state.keys() or len(st.session_state[f'{workflow}_binned_df']) == 0:
         st.session_state[f'{workflow}_binned_df'] = input_df_var.value.copy(deep=True)
 
-    with st.expander('Set subject identifier', expanded=True):
+    with st.expander('Set subject identifier', expanded=False):
         identifier = st.radio('Subject identifier', options=['Row number', 'ID column'])
         if identifier == 'ID column':
             options = ['']+list(input_df_var.value.columns.values)

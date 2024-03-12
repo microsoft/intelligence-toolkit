@@ -39,9 +39,7 @@ The final report should:
 - include ALL source references from the input questions and answers, combining them as needed if they support the same claim
 - end with a ## Conclusion section that summarizes the key findings of the report and answers the high-level question posed in the title, while retaining all relevant source references
 - be formatted in markdown, with headings indicated by # symbols and subheadings indicated by additional # symbols
-"""
-                
-answering_user_prompt = """\
+
 User question:
 
 {question}
@@ -49,4 +47,9 @@ User question:
 Relevant questions:
 
 {outline}
+
+Additional instructions:
+
+{instructions}
+
 """

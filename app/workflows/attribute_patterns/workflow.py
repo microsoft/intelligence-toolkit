@@ -25,8 +25,10 @@ def create():
     workflow = 'attribute_patterns'
     st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title='Intelligence Toolkit | Attribute Patterns')
     sv = vars.SessionVariables('attribute_patterns')
-    uploader_tab, detect_tab, explain_tab = st.tabs(['Create graph model', 'Detect patterns', 'Explain pattern'])
+    intro_tab, uploader_tab, detect_tab, explain_tab = st.tabs(['Attribute patterns workflow:', 'Create graph model', 'Detect patterns', 'Generate AI pattern report'])
     df = None
+    with intro_tab:
+        pass
     with uploader_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:
@@ -91,7 +93,7 @@ def create():
                     period_count = len(sv.attribute_pattern_df.value["period"].unique())
                     pattern_count = len(sv.attribute_pattern_df.value)
                     unique_count = len(sv.attribute_pattern_df.value['pattern'].unique())
-                    st.markdown(f'Over **{period_count}** periods, detected **{pattern_count}** attribute patterns (**{unique_count}** unique).')
+                    st.markdown(f'Over **{period_count}** periods, detected **{pattern_count}** attribute patterns (**{unique_count}** unique) from **{sv.attribute_converging_pairs.value}**/**{sv.attribute_all_pairs.value}** converging attribute pairs (**{round(sv.attribute_converging_pairs.value / sv.attribute_all_pairs.value * 100, 2) if sv.attribute_all_pairs.value > 0 else 0}%**).')
                     show_df = sv.attribute_pattern_df.value
                     tdf = functions.create_time_series_df(sv.attribute_record_counter.value, sv.attribute_pattern_df.value)
                     gb = GridOptionsBuilder.from_dataframe(show_df)
@@ -108,11 +110,11 @@ def create():
                         enable_enterprise_modules=False,
                         update_mode=GridUpdateMode.SELECTION_CHANGED,
                         data_return_mode=DataReturnMode.FILTERED_AND_SORTED,
-                        fit_columns_on_grid_load=True,
+                        fit_columns_on_grid_load=False,
                         header_checkbox_selection_filtered_only=False,
                         use_checkbox=False,
                         enable_quicksearch=True,
-                        reload_data=True
+                        reload_data=False
                         ) # type: ignore
                     selected_pattern = response['selected_rows'][0]['pattern'] if len(response['selected_rows']) > 0 else ''
                     selected_pattern_period = response['selected_rows'][0]['period'] if len(response['selected_rows']) > 0 else ''
