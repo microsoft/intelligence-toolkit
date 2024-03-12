@@ -362,10 +362,9 @@ def create():
                             'network_nodes': merged_nodes_df.to_csv(index=False),
                             'network_edges': merged_links_df.to_csv(index=False)
                         }
-                        util.AI_API.generate_from_message_pair(
-                            placeholder=placeholder,
-                            system_message=prompts.system_prompt,
+                        messages = util.AI_API.prepare_messages_from_message_pair( system_message=prompts.system_prompt,
                             user_message=prompts.user_prompt,
-                            variables=variables
-                        )
+                            variables=variables)
+                        
+                        util.AI_API.generate_text_from_message_list(messages, placeholder)
                     

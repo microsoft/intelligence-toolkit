@@ -30,5 +30,5 @@ class SessionVariables:
         self.answering_target_matches = SessionVariable(5, prefix)
         self.answering_status_history = SessionVariable('', prefix)
         self.answering_matches = SessionVariable('', prefix)
-        self.answering_source_diversity = SessionVariable(3, prefix)
+        self.answering_source_diversity = SessionVariable(1, prefix)
         self.answering_question_history = SessionVariable([], prefix)

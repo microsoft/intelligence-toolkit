@@ -9,24 +9,24 @@ import os
 from collections import defaultdict
 from sklearn.neighbors import NearestNeighbors
 
-import workflows.record_linking.functions as functions
-import workflows.record_linking.classes as classes
-import workflows.record_linking.config as config
-import workflows.record_linking.prompts as prompts
-import workflows.record_linking.variables as vars
+import workflows.record_matching.functions as functions
+import workflows.record_matching.classes as classes
+import workflows.record_matching.config as config
+import workflows.record_matching.prompts as prompts
+import workflows.record_matching.variables as vars
 import util.AI_API
 import util.ui_components
 
 embedder = util.AI_API.create_embedder(config.cache_dir)
 
 def create():
-    st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title='Intelligence Toolkit | Record Linking')
-    sv = vars.SessionVariables('record_linking')
+    st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title='Intelligence Toolkit | Record Matching')
+    sv = vars.SessionVariables('record_matching')
 
     if not os.path.exists(config.outputs_dir):
         os.makedirs(config.outputs_dir)
 
-    uploader_tab, process_tab, evaluate_tab = st.tabs(['Upload data to link', 'Detect record groups', 'Evaluate record groups'])
+    uploader_tab, process_tab, evaluate_tab = st.tabs(['Upload data to match', 'Detect record groups', 'Evaluate record groups'])
     df = None
     with uploader_tab:
         uploader_col, model_col = st.columns([2, 1])

@@ -1,51 +1,67 @@
 import streamlit as st
+import util.mermaid as mermaid
 
 def main():
-    st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title='Intelligence Toolkit | Home')
+    st.set_page_config(layout="wide", initial_sidebar_state="expanded", page_title='Intelligence Toolkit | Home')
 
     st.markdown(f"""\
 # Intelligence Toolkit
-- A suite of tools for generating intelligence from real-world data types, including entity records, case records, and text documents.
-- Identifies and explains real-world patterns, relationships, and risks, while maintaining data provenance and data privacy.
-- Combines generative AI with complementary data science capabilities in visual workflows that are accessible to domain experts.         
 
-#### Case Intelligence
+*Interactive workflows for creating AI intelligence reports from real-world data sources*
 
-- [Attribute Patterns](/Attribute_Patterns): Detects time-linked attribute patterns from streams of case records.
-- [Data Synthesis](/Data_Synthesis): Generates private datasets and summaries from sensitive case records.
+Project home: [github.com/microsoft/intelligence-toolkit](https://github.com/microsoft/intelligence-toolkit) 
 
-#### Entity Intelligence
+##### Input Data Types
 
-- [Record Linking](/Record_Linking): Detects links between entity records based on the similarity of their attributes.
-- [Network Analysis](/Network_Analysis): Detects networks of closely-related entities based on shared attributes and/or activity.
-                                        
-#### Text Intelligence
+The Intelligence Toolkit supports workflows spanning two broad categories of data:
+- **Case Data** describing individual people (e.g., users, respondants, patients, victims)
+- **Entity Data** describing real-world entities (e.g., organizations, businesses, buyers, suppliers)
+                
+##### Case Intelligence Workflows
 
-- [Question Answering](/Question_Answering): Generates reports in response to user questions about a report collection.
-- [Data Narratives](/Data_Narratives): Generates reports by combining and comparing information across datasets. 
-""")
+These workflows 
 
+- **Data Synthesis**: Generates private datasets and data summaries from sensitive case records
+- **Attribute Patterns**: Generates reports on attribute patterns detected in streams of case records
+- **Group Narratives**: Generates reports by defining and comparing groups of case records
+
+##### Entity Intelligence Workflows
+
+- **Record Matching**: Generates evaluations of record matches detected across entity datasets
+- **Network Analysis**: Generates reports on networks of entities sharing attributes and risks
+- **Question Answering**: Generates answers to questions about entities in a document collection
+
+#### Workflow Selection                
+
+Use the diagram below to select an appropriate workflow, then open the workflow from the sidebar to begin
+                       
+"""
+    )
+    mermaid.mermaid(
+        code = """\
+flowchart TD
+    Data[Input Data] --> IsStructured{Is Structured?} --> |Yes| StructuredData[Structured Records]
+    IsStructured{Is Structured?} --> |No| UnstructuredData[Unstructured Texta]
+    UnstructuredData[Unstructured Texts] --> TextSubjects{Text Subject?} --> |Entities| KnowledgeCorpus[Entity Knowledge Corpus]
+    KnowledgeCorpus[Entity Knowledge Corpus] --> |Question Answering Workflow| V[AI Answer Reports]
+    StructuredData[Structured Records] --> DataSubjects{Record Subject?} --> |Person| PersonalData[Case Records]
+    DataSubjects{Record Subject?} --> |Entity| EntityData[Entity Records]
+    PersonalData[Personal Case Records] --> |Data Synthesis Workflow| SyntheticData[Synthetic Case Records]
+    SyntheticData[Synthetic Case Records] --> NonPersonalData[Non-Personal Records]
+    EntityData[Entity Records] --> NonPersonalData[Non-Personal Records]
+    NonPersonalData[Non-Personal Records] --> HasTime{Time Attributes?} --> |Yes| TimeBinnedData[Time-Binnable Case Records]
+    TimeBinnedData[Time-Binnable Case Records] --> |Attribute Patterns Workflow| AttributePatterns[AI Pattern Reports]
+    NonPersonalData[Non-Personal Records]--> HasGroups{Grouping Attributes?} --> |Yes| GroupedData[Attribute-Groupable Case Records]
+    GroupedData[Attribute-Groupable Case Records] --> |Group Narratives Workflow| GroupNarratives[AI Group Reports]
+    EntityData[Entity Records] --> HasInconsistencies{Inconsistent Attributes?} --> |Yes| UnlinkedEntityData[Text-Linkable Entity Records]
+    UnlinkedEntityData[Text-Matchable Entity Records] --> |Record Matching Workflow| RecordLinking[AI Link Reports]
+    EntityData[Entity Records] --> HasIdentifiers{Identifying Attributes?} --> |Yes| LinkedEntityData[Attribute-Linkable Entity Records]
+    LinkedEntityData[Attribute-Linkable Entity Records] --> |Network Analysis Workflow| NetworkAnalysis[AI Network Reports]
+
+    """, 
+        height = 2000
+    )
+
+    
 if __name__ == '__main__':
     main()
-
-# # Intelligence Toolkit
-# - A suite of tools for generating intelligence from real-world data types, including entity records, case records, and text documents.
-# - Identifies and explains real-world patterns, relationships, and risks, while maintaining data provenance and data privacy.
-# - Combines generative AI with complementary data science capabilities in visual workflows that are accessible to domain experts.         
-
-# #### Case Intelligence
-
-# - [Record Extraction](/Record_Extraction): Extracts records of structured attributes from unstructured text notes.
-# - [Attribute Patterns](/Attribute_Patterns): Detects time-linked attribute patterns from streams of case records.
-# - [Data Synthesis](/Data_Synthesis): Generates private datasets and summaries from sensitive case records.
-
-# #### Entity Intelligence
-
-# - [Record Linking](/Record_Linking): Detects links between entity records based on the similarity of their attributes.
-# - [Activity Patterns](/Activity_Patterns): Detects links between entities based on the similarity of their activity.
-# - [Network Analysis](/Network_Analysis): Detects networks of closely-related entities based on shared attributes and/or activity.
-                                        
-# #### Text Intelligence
-
-# - [Question Answering](/Question_Answering): Generates reports in response to user questions about a report collection.
-# - [Data Narratives](/Data_Narratives): Generates reports by combining and comparing information across datasets. 
