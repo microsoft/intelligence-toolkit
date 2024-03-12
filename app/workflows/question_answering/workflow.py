@@ -17,13 +17,10 @@ def create():
     st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title='Intelligence Toolkit | Question Answering')
     sv = vars.SessionVariables('question_answering')
 
-    if not os.path.exists('qa_mine'):
-        os.mkdir('qa_mine')
-        os.mkdir('qa_mine/raw_files')
-        os.mkdir('qa_mine/text_files')
-        os.mkdir('qa_mine/text_chunks')
-        os.mkdir('qa_mine/embeddings')
-        os.mkdir('qa_mine/questions')
+    dirs = ['qa_mine', 'qa_mine/raw_files', 'qa_mine/text_files', 'qa_mine/text_chunks', 'qa_mine/embeddings', 'qa_mine/questions']
+    for d in dirs:
+        if not os.path.exists(d):
+            os.mkdir(d)
 
     uploader_tab, lazy_tab = st.tabs(['Upload data', 'Generate reports'])
     
@@ -83,6 +80,7 @@ def create():
             status_history = ''
             iteration = 0
             source_counts = Counter()
+            used_chunks = set()
             while True:
                 qe = embedder.encode(question)
                 iteration += 1
@@ -122,7 +120,7 @@ def create():
                 status_history += '<br/><br/>'
 
                 new_questions = []
-                used_chunks = set()
+                target_diversity = min(sv.answering_source_diversity.value, len(sv.answering_files.value))
                 for j in range(len(cosine_distances)):
                     t, c, d = cosine_distances[j]
                     
@@ -130,15 +128,16 @@ def create():
                         f = c[0]
                         cx = c[1]
                         source = c[0].id
-                        max_source_counts = source_counts.most_common(sv.answering_source_diversity.value)
+                        max_source_counts = source_counts.most_common(target_diversity)
                         max_count = max_source_counts[0][1] if len(max_source_counts) > 0 else 0
                         num_max = len([x for x in max_source_counts if x[1] == max_count])
                         source_count = source_counts[source]
-                        print(f'Got a chunk with source count {source_count}. Max count is {max_count} and num max is {num_max}.')
-                        if source_count > 0 and source_count == max_count and num_max < sv.answering_source_diversity.value:
-                            print('Cannot use')
+                        # print(f'Got a chunk with source count {source_count}. Max count is {max_count} and num max is {num_max}.')
+                        if source_count > 0 and source_count == max_count and num_max < target_diversity:
+                            pass
+                            # print('Cannot use')
                         else:
-                            print('Can use')
+                            # print('Can use')
                             used_chunks.add(c)
                             cosine_distances.pop(j)
                             source_counts.update([source])
@@ -180,7 +179,7 @@ def create():
                         if t == 'chunk' and c[0].id == f.id and c[1] == cx:
                             all_units.remove((t, c, v))
 
-                    status_history += f'Augmenting question...<br/>'
+                    status_history += f'Augmenting question...<br/><br/>'
                     new_question = functions.update_question(sv, sv.answering_question_history.value, new_questions, lazy_answering_placeholder, status_history)
                     status_history += new_question + '<br/><br/>'
                     sv.answering_question_history.value.append(new_question)
@@ -197,14 +196,14 @@ def create():
                 'outline': sv.answering_matches.value,
                 'source_diversity': sv.answering_source_diversity.value
             }
-            report = util.AI_API.generate_from_message_pair(
-                model=sv.model.value,
-                temperature=sv.temperature.value,
-                max_tokens=sv.max_tokens.value,
-                placeholder=lazy_answer_placeholder,
+            messages = util.AI_API.prepare_messages_from_message_pair(
                 system_message=prompts.answering_system_prompt,
                 user_message=prompts.answering_user_prompt,
-                variables=variables,
+                variables=variables
+            )
+            report = util.AI_API.generate_text_from_message_list(
+                messages=messages,
+                placeholder=lazy_answer_placeholder,
                 prefix=''
             )
             sv.answering_lazy_answer_text.value = report

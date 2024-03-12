@@ -13,117 +13,16 @@ import scipy.spatial.distance
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 import util.AI_API
+import workflows.question_answering.classes as classes
+import workflows.question_answering.config as config
 
-embedder = util.AI_API.create_embedder(cache='qa_mine\\embeddings') #SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+embedder = util.AI_API.create_embedder(cache='qa_mine\\embeddings')
 encoder = tiktoken.get_encoding('cl100k_base')
 
-class Question:
-    def __init__(self, file, text, vector, tier, id) -> None:
-        self.file = file
-        self.text = text
-        self.id = id
-        self.vector = vector
-        self.tier = tier
-        self.answer_texts = []
-        self.answer_vectors = []
-        self.super_qs = []
-        self.sub_qs = []
-        self.answer_references = []
-        self.merged_questions = []
 
-    def add_answer(self, answer, answer_references, qa_vector):
-        self.answer_texts.append(answer)
-        self.answer_references.append(answer_references)
-        self.answer_vectors.append(qa_vector)
-
-    def add_merged_question(self, q):
-        if q not in self.merged_questions:
-            self.merged_questions.append(q)
-
-    def add_sub_q(self, sub_q):
-        self.sub_qs.append(sub_q)
-
-    def calculate_sub_q_spread(self):
-        distances = []
-        all_sub_qs = self.list_all_sub_questions()
-        if len(all_sub_qs) > 0:
-            for sq in all_sub_qs:
-                distances.append(scipy.spatial.distance.cosine(self.vector, sq.vector))
-            l = len(all_sub_qs)
-            m = np.mean(distances)
-            s = l*m
-            return l, m, s
-        else:
-            return 0, 0.0, 0.0
-
-    def list_all_sub_questions(self):
-        sub_qs = []
-        for sq in self.sub_qs:
-            sub_qs.append(sq)
-            sub_qs += sq.list_all_sub_questions()
-        return sub_qs
-
-    def generate_outline(self, level):
-        outline = ''
-        outline += level * '#' + f' Q{self.id}: {self.text}\n\n'
-        if self.tier == 0:
-            sources = ', '.join([f'{self.file.name} (p{p})' for (f, p) in self.answer_references[0]])
-            outline += f'{self.answer_texts[0]} [sources: {sources}]\n\n'
-            for mq in self.merged_questions:
-                msources = ', '.join([f'{mq.file.name} (p{p})' for (f, p) in mq.answer_references[0]])
-                outline += f'{mq.answer_texts[0]} [sources: {msources}]\n\n'
-        merged_sqs = set(self.sub_qs)
-        for mq in self.merged_questions:
-            merged_sqs.update(mq.sub_qs)
-        for sq in merged_sqs:
-            outline += sq.generate_outline(level=level+1)
-        return outline
-
-    def __str__(self):
-        return f'T{self.tier}Q{self.id}: {self.text}'
-    
-    def __repr__(self):
-        return self.__str__()
-
-
-class File:
-
-    def __init__(self, name, id) -> None:
-        self.name = name
-        self.id = id
-        self.text = ''
-        self.vector = []
-        self.chunk_texts = {}
-        self.chunk_vectors = {}
-        # self.page_texts = {}
-        # self.page_vectors = {}
-        self.questions = {}
-
-    def set_text(self, text):
-        self.text = text
-
-    def set_vector(self, vector):
-        self.vector = vector
-
-    # def add_page(self, page_text, page_vector, page_ix):
-    #     self.page_texts[page_ix] = page_text
-    #     self.page_vectors[page_ix] = page_vector
-
-    def add_chunk(self, chunk_text, chunk_vector, chunk_id):
-        self.chunk_texts[chunk_id] = chunk_text
-        self.chunk_vectors[chunk_id] = chunk_vector
-
-    def add_question(self, q):
-        self.questions[q.id] = q
-
-    def add_answer(self, qid, answer, references, qa_vector):
-        self.questions[qid].add_answer(answer, references, qa_vector)
-
-chunk_size = 5000
-chunk_overlap = 0
 text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=chunk_size,
-    chunk_overlap=chunk_overlap,
+    chunk_size=config.chunk_size,
+    chunk_overlap=config.chunk_overlap,
     length_function=len,
     is_separator_regex=False,
 )
@@ -137,7 +36,7 @@ def chunk_files(sv, files):
         if file_link.name not in file_names:
             file_id = sv.answering_next_file_id.value
             sv.answering_next_file_id.value += 1
-            file = File(file_link.name, file_id)
+            file = classes.File(file_link.name, file_id)
             sv.answering_files.value[file_id] = file
             bytes = file_link.getvalue()
             path = os.path.join('qa_mine\\raw_files', file.name)
@@ -145,24 +44,22 @@ def chunk_files(sv, files):
                 with open(path, 'wb') as f:
                     f.write(bytes)
                 pdf_reader = pdfplumber.open(io.BytesIO(bytes))
-                for ix in range(len(pdf_reader.pages)):
-                    page_text = pdf_reader.pages[ix].extract_text()
-                    doc_text += f'\n[PAGE {ix+1}]\n\n{page_text}\n\n'
+                cx = 1
+                for px in range(len(pdf_reader.pages)):
+                    page_text = pdf_reader.pages[px].extract_text()
+                    doc_text += f'\n[PAGE {px+1}]\n\n{page_text}\n\n'
+                    chunks = [x.strip() for x in text_splitter.split_text(page_text)]
+                    paged_chunks = []
+                    for ix, chunk in enumerate(chunks):
+                        chunk = f'[PAGE {px+1}]\n\n{chunk}'
+                        chunk = f'[FILE {file.name}]\n\n{chunk}'
+                        open(os.path.join('qa_mine\\text_chunks', f'{file.name[:-4]}-p{px+1}-c{cx}.txt'), 'wb').write(chunk.encode('utf-8'))
+                        chunk_vec = embedder.encode(chunk)
+                        paged_chunks.append(chunk)
+                        file.add_chunk(chunk, chunk_vec, cx)
+                        cx += 1
                 file.set_text(doc_text)
-                chunks = [x.strip() for x in text_splitter.split_text(doc_text)]
-                paged_chunks = []
-                for ix, chunk in enumerate(chunks):
-                    page_matches = re.match(r'\[PAGE (\d+)\]', chunk)
-                    if page_matches != None:
-                        first_page = int(page_matches.groups()[0])
-                        last_page = int(page_matches.groups()[-1])
-                    if not chunk.startswith('[PAGE '):
-                        chunk = f'[PAGE {last_page}]\n\n{chunk}'
-                    chunk = f'[FILE {file.name}]\n\n{chunk}'
-                    open(os.path.join('qa_mine\\text_chunks', f'{file.name[:-4]}-{ix+1}.txt'), 'wb').write(chunk.encode('utf-8'))
-                    chunk_vec = embedder.encode(chunk)
-                    paged_chunks.append(chunk)
-                    file.add_chunk(chunk, chunk_vec, ix+1)                  
+                                  
                 # doc_vector = embedder.encode(doc_text, normalize_embeddings=True)
                 # file.set_vector(doc_vector)
                 with open(os.path.join('qa_mine\\text_files', file.name+'.txt'), 'wb') as f:
@@ -293,144 +190,6 @@ def generate_data_context(sv, input_text, data_limit):
             break
     return outline
 
-def mine_deeper_questions(sv):
-    sv.answering_deeper_questions.value = {}
-    num_tiers = sv.answering_max_tier.value
-    for tier in range(0, num_tiers):
-        cluster_to_qs = generate_question_clusters(sv, tier)
-        cluster_placeholder = st.empty()
-        for cx, (cluster, qs) in enumerate(cluster_to_qs.items()):
-            if len(qs) > 0:
-                qd = sv.answering_deeper_questions.value if tier > 0 else sv.answering_surface_questions.value
-                q_texts = [f'{qid}: {qd[qid].text}' for qid in qs]
-                q_text = '\n\n'.join(q_texts)
-                cluster_placeholder.markdown(f'Mining cluster **{cx+1}** of **{len(cluster_to_qs)}** for tier **{tier+1}** of **{num_tiers}**:\n\n{q_text}')
-            
-                q_text_hash = hash(q_text)
-                if os.path.exists(f'qa_mine\\questions\\{q_text_hash}.txt'):
-                    print(f'{q_text_hash}.txt found. Reusing...')
-                    deep_qas_raw = open(f'qa_mine\\questions\\{q_text_hash}.txt', 'r').read()
-                else:
-                    print(f'{q_text_hash}.txt not found. Generating...')
-                    
-                    deep_placeholder = st.empty()
-                    system_message = """\
-You are a helpful assistant extracting a single deeper question from a list of surface-level questions, each of which is prefixed by the question ID.
-
-The identified deeper question should:
-
-- give priority to the first question in the list, which is ranked by question importance
-- represent deeper or higher-level questions that are answered by different combinations of input questions
-- draw on as many input questions as possible to answer the deeper question, without generating redundant questions
-- not duplicate any of the input questions
-
-Further instructions:
-
-Output the response as a JSON object, with the "question" field supported by a list of "sub_questions" IDs drawn from the input questions and formatted as a list of numbers.
-Do not begin the response with ```json or end it with ```.
-"""
-                        
-                    user_message = """\
-Input questions:
-
-{q_text}
-"""
-                    variables = {
-                        'q_text': q_text
-                    }
-                    deep_qas_raw = util.AI_API.generate(
-                        model=sv.model.value,
-                        temperature=sv.temperature.value,
-                        max_tokens=sv.max_tokens.value,
-                        placeholder=deep_placeholder,
-                        system_message=system_message,
-                        user_message=user_message,
-                        variables=variables,
-                        prefix=''
-                    )
-                    deep_qas_raw = deep_qas_raw.replace('```json', '').replace('```', '').strip()
-                    open(f'qa_mine\\questions\\{q_text_hash}.txt', 'w').write(deep_qas_raw)
-                    deep_placeholder.empty()
-                try:
-                    with st.spinner('Parsing JSON...'):
-                        x = json.loads(deep_qas_raw)
-                        q = x['question']
-                        qid = sv.answering_next_q_id.value
-                        sv.answering_next_q_id.value += 1
-                        sqxs = [int(y) for y in x['sub_questions']]
-                        q_vec = embedder.encode(q)
-                        new_q = Question(None, q, q_vec, tier+1, qid)
-                        for sqx in sqxs:
-                            sq = sv.answering_surface_questions.value[sqx] if tier == 0 else sv.answering_deeper_questions.value[sqx]
-                            new_q.add_sub_q(sq)
-                        sv.answering_deeper_questions.value[qid] = new_q
-                except Exception as e:
-                    print(e)
-        cluster_placeholder.empty()
-
-def mine_deeper_questions_from_question_list(sv, questions, placeholder, prefix):
-    deep_qas_raw = ''
-    if len(questions) > 0:
-        q_texts = [f'{q.id}: {q.text}' for q in questions]
-        q_text = '\n\n'.join(q_texts)    
-        q_text_hash = hash(q_text)
-        if os.path.exists(f'qa_mine\\questions\\{q_text_hash}.txt'):
-            print(f'{q_text_hash}.txt found. Reusing...')
-            deep_qas_raw = open(f'qa_mine\\questions\\{q_text_hash}.txt', 'r').read()
-        else:
-            print(f'{q_text_hash}.txt not found. Generating...')
-
-            system_message = """\
-You are a helpful assistant extracting deeper questions from a list of surface-level questions, each of which is prefixed by the question ID.
-
-The identified deeper questions should:
-
-- represent deeper or higher-level questions that are answered by the input questions
-- not duplicate one another or any of the input questions
-
-Further instructions:
-
-Output the response as a JSON list, with the "question" field of each item supported by a list of "sub_questions" IDs drawn from the input questions and formatted as a list of numbers.
-Do not begin the response with ```json or end it with ```.
-"""
-                
-            user_message = """\
-Input questions:
-
-{q_text}
-"""
-            variables = {
-                'q_text': q_text
-            }
-            deep_qas_raw = util.AI_API.generate(
-                model=sv.model.value,
-                temperature=sv.temperature.value,
-                max_tokens=sv.max_tokens.value,
-                placeholder=placeholder,
-                system_message=system_message,
-                user_message=user_message,
-                variables=variables,
-                prefix=prefix
-            )
-            deep_qas_raw = deep_qas_raw.replace('```json', '').replace('```', '').strip()
-            open(f'qa_mine\\questions\\{q_text_hash}.txt', 'w').write(deep_qas_raw)
-        try:
-            with st.spinner('Parsing JSON...'):
-                deep_qas = json.loads(deep_qas_raw)
-                for x in deep_qas:
-                    q = x['question']
-                    qid = sv.answering_next_q_id.value
-                    sv.answering_next_q_id.value += 1
-                    sqxs = [int(y) for y in x['sub_questions']]
-                    q_vec = embedder.encode(q)
-                    new_q = Question(None, q, q_vec, 1, qid)
-                    for sqx in sqxs:
-                        sq = sv.answering_deeper_questions.value[sqx]
-                        new_q.add_sub_q(sq)
-                    sv.answering_deeper_questions.value[qid] = new_q
-        except Exception as e:
-            print(e)   
-    return deep_qas_raw
 
 def update_question(sv, question_history, new_questions, placeholder, prefix):
     response = question_history[-1]
@@ -440,13 +199,13 @@ def update_question(sv, question_history, new_questions, placeholder, prefix):
         
 
         system_message = """\
-You are a helpful assistant augmenting a user question with any answers found in a list of input questions, each of which is prefixed by the question ID.
+You are a helpful assistant augmenting a user question with any relevant keywords (e.g., entities, concepts, or knowledge) found in a list of input questions, each of which is prefixed by the question ID.
 
-Any partial answers should be inserted in parentheses at the appropriate point in the question and reference the supporting question IDs using "[questions: Q<ID>, Q<ID>...]".
+Any relevant keywords should be inserted as a list, enclosed by parentheses, at the appropriate point in the question, with each keywords item referencing the supporting question IDs using "(<keywords 1> [Q<ID>, Q<ID>...], <keywords 2> [Q<ID>, Q<ID>...], ...)".
 
-Do not insert any text indicating lack of knowledge, and do not remove any knowledge (including question references) already present in the previous augmented question.
+Do not insert any text indicating lack of relevant keywords, and do not remove any text (including question references) already present in the previous augmented question unless it is clearly irrelevant.
 
-Retain the structure of the original question, including any punctuation such as question marks. Do not add any new parts to the question other than the inserted answers.
+Retain the structure of the original question, including any punctuation such as question marks. Do not add any new parts to the question other than the inserted keywords.
 """
                 
         user_message = """\
@@ -465,14 +224,14 @@ New augmented question adding to the prevous augmented question:
             'augmented_question': question_history[-1],
             'q_text': q_text
         }
-        response = util.AI_API.generate(
-            model=sv.model.value,
-            temperature=sv.temperature.value,
-            max_tokens=sv.max_tokens.value,
-            placeholder=placeholder,
+        messages = util.AI_API.prepare_messages_from_message_pair(
             system_message=system_message,
             user_message=user_message,
             variables=variables,
+        )
+        response = util.AI_API.generate_text_from_message_list(
+            messages=messages,
+            placeholder=placeholder,
             prefix=prefix
         )
     else:

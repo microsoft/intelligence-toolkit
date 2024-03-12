@@ -1,7 +1,7 @@
 from util.session_variable import SessionVariable
 import polars as pl
 
-import workflows.record_linking.prompts as prompts
+import workflows.record_matching.prompts as prompts
 
 class SessionVariables:
 

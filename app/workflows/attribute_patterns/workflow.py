@@ -44,6 +44,8 @@ def create():
                 with st.spinner('Adding links to model...'):
                     time_col = sv.attribute_time_col.value
                     df = sv.attribute_final_df.value.copy(deep=True)
+                    df = util.df_functions.fix_null_ints(df).astype(str).replace('nan', '').replace('<NA>', '')
+                
                     df['Subject ID'] = [str(x) for x in range(1, len(df) + 1)]
                     df['Subject ID'] = df['Subject ID'].astype(str)
                     pdf = df.copy(deep=True)[[time_col, 'Subject ID'] + att_cols]
@@ -57,7 +59,7 @@ def create():
                 sv.attribute_dynamic_df.value = pdf
             if ready and len(sv.attribute_dynamic_df.value) > 0:
                 st.markdown(f'Graph model has **{len(sv.attribute_dynamic_df.value)}** links spanning **{len(sv.attribute_dynamic_df.value["Subject ID"].unique())}** cases, **{len(sv.attribute_dynamic_df.value["Full Attribute"].unique())}** attributes, and **{len(sv.attribute_dynamic_df.value["Period"].unique())}** periods.')
-
+            print(sv.attribute_dynamic_df.value)
     with detect_tab:
         if not ready or len(sv.attribute_final_df.value) == 0:
             st.markdown('Generate a graph model to continue.')

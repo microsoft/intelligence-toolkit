@@ -34,7 +34,7 @@ def color_to_hsl(color):
 def flow_chart(links_df, selection, source_attribute, target_attribute, highlight_attribute, width, height, unit, scheme):
     title = f'{source_attribute}\u2014{target_attribute} links for all {unit.title()} records'.replace('  ', ' ')
     if len(selection) > 0:
-        title += f' matching '.replace('  ', ' ') + print_selections(selection, multiline=False)
+        title += f' matching "'.replace('  ', ' ') + print_selections(selection, multiline=False) + '"'
     title += f',<br>colored by proportion with {highlight_attribute}'.replace('  ', ' ') if highlight_attribute != '' else ''
     if unit != '':
         unit = unit + ' '
@@ -147,25 +147,10 @@ def print_selections(selection, multiline=True):
         text = ', '.join([f'{k}:' + '|'.join(vs) for k, vs in sd.items()])
     return text
 
-# def get_bar_chart(title, df, width, height, unit, scheme):
-#     cdf = df.copy(deep=True)
-#     chart = alt.Chart(cdf).mark_bar().encode(
-#         y=alt.Y('Count:Q', axis=alt.Axis(title=f'{unit.title()} Count', titleFontSize=14, labelFontSize=14)),
-#         x=alt.X('Attribute Value:N', sort='-y', axis=alt.Axis(labelLimit=0), title=''),
-#         color=alt.Color('Attribute', legend=alt.Legend(title='Attribute Type', orient='top', labelFontSize=14, titleFontSize=14), scale=alt.Scale(scheme=scheme)),
-#         tooltip=['Attribute Value', 'Count', 'Dataset']
-#     ).configure_scale(
-#         bandPaddingInner=0
-#     ).properties(
-#         width=width,
-#         height=height,
-#         title=title)
-#     return chart
-
 def get_bar_chart(selection, show_attributes, unit, chart_df, width, height, scheme):
     title = f'Top {"" if len(show_attributes) == 0 else ", ".join(show_attributes)} attributes across all {unit.title()} records'.replace('  ', ' ')
     if len(selection) > 0:
-        title += f' matching: '.replace('  ', ' ') + print_selections(selection, multiline=False)                       
+        title += f' matching "'.replace('  ', ' ') + print_selections(selection, multiline=False) + '"'                      
     chart_df = chart_df.copy(deep=True)
     fig = px.bar(chart_df, x='Attribute Value', y='Count', color='Attribute', orientation='v', text_auto=True, title=title, width=width, height=height, color_discrete_sequence=config.color_schemes[scheme])
     fig.update_xaxes(title_text='')
@@ -175,25 +160,11 @@ def get_bar_chart(selection, show_attributes, unit, chart_df, width, height, sch
 def get_line_chart(selection, series_attributes, unit, chart_df, time_attribute, width, height, scheme):
     title = f'Time series for {", ".join(series_attributes)} attributes across all {unit.title()} records'.replace('  ', ' ')
     if len(selection) > 0:
-        title += f' matching:'.replace('  ', ' ') + print_selections(selection, multiline=False)                    
+        title += f' matching "'.replace('  ', ' ') + print_selections(selection, multiline=False) + '"'                    
     chart_df = chart_df.copy(deep=True)
     fig = px.line(chart_df, x=time_attribute, y='Count', color='Attribute Value', orientation='v', title=title, width=width, height=height, color_discrete_sequence=config.color_schemes[scheme])
     fig.update_layout(yaxis={'title_text': f'{unit.title()} Count' if unit != '' else 'Count'})
     return fig
-
-# def get_line_chart(title, df, time_attribute, width, height, unit, scheme):
-#     cdf = df.copy(deep=True)
-#     chart = alt.Chart(cdf).mark_line().encode(
-#         x=alt.X(f'{time_attribute}:O'),
-#         y=alt.Y('Count', axis=alt.Axis(title=f'{unit.title()} Count', titleFontSize=14, labelFontSize=14)),
-#         color=alt.Color('Attribute Value', legend=alt.Legend(title='Attribute', orient='top', labelFontSize=14, titleFontSize=14, symbolLimit=0, columns=5), scale=alt.Scale(scheme=scheme)),
-#         tooltip=[time_attribute, 'Attribute Value', 'Count', 'Dataset']
-#     ).properties(
-#         width=width,
-#         height=height,
-#         title=title
-#     )
-#     return chart
 
 def compute_top_attributes_query(query, sdf, adf, att_separator, val_separator, data_schema, show_attributes, num_values):
     # print(f'compute_query with query {query}')

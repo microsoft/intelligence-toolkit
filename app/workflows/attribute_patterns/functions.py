@@ -8,6 +8,7 @@ from util.SparseGraphEncoder import GraphEncoderEmbed
 
 import workflows.attribute_patterns.classes as classes
 import workflows.attribute_patterns.config as config
+import util.df_functions
 
 def create_time_series_df(rc, pattern_df):
     rows = []
@@ -273,10 +274,9 @@ def detect_patterns(sv):
     return pattern_df, close_pairs, all_pairs
 
 def compute_attribute_counts(df, pattern, time_col, period):
-    print(pattern, time_col, period)
     atts = pattern.split(' & ')
     counts = []
-    fdf = df.copy(deep=True).astype(str)
+    fdf = util.df_functions.fix_null_ints(df).astype(str).replace('nan', '').replace('<NA>', '')
     fdf = fdf[fdf[time_col] == period]
     for att in atts:
         if att == 'Subject ID':
