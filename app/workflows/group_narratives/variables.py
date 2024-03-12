@@ -1,7 +1,7 @@
 from util.session_variable import SessionVariable
 import pandas as pd
 
-import workflows.data_narratives.prompts as prompts
+import workflows.group_narratives.prompts as prompts
 
 class SessionVariables:
 

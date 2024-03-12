@@ -36,5 +36,7 @@ class SessionVariables:
         self.attribute_selected_pattern_period = SessionVariable('', prefix)
         self.attribute_selected_pattern_df = SessionVariable(pd.DataFrame(), prefix)
         self.attribute_selected_pattern_att_counts = SessionVariable(pd.DataFrame(), prefix)
+        self.attribute_converging_pairs = SessionVariable(0, prefix)
+        self.attribute_all_pairs = SessionVariable(0, prefix)
 
 

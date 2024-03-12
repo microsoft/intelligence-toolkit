@@ -29,8 +29,10 @@ def create():
     if not os.path.exists(config.outputs_dir):
         os.makedirs(config.outputs_dir)
 
-    prepare_tab, generate_tab, queries_tab = st.tabs(['Upload deidentified sensitive data', 'Generate anonymous synthetic data', 'Query and visualize data'])
+    intro_tab, prepare_tab, generate_tab, queries_tab = st.tabs(['Data synthesis workflow:', 'Upload deidentified sensitive data', 'Generate anonymous synthetic data', 'Query and visualize data'])
     df = None
+    with intro_tab:
+        pass
     with prepare_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:

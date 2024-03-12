@@ -1,6 +1,8 @@
 from util.session_variable import SessionVariable
 import pandas as pd
 
+import workflows.question_answering.prompts as prompts
+
 class SessionVariables:
 
     def __init__(self, prefix):
@@ -32,3 +34,5 @@ class SessionVariables:
         self.answering_matches = SessionVariable('', prefix)
         self.answering_source_diversity = SessionVariable(1, prefix)
         self.answering_question_history = SessionVariable([], prefix)
+        self.answering_instructions = SessionVariable('', prefix)
+        self.answering_system_prompt = SessionVariable(prompts.answering_system_prompt, prefix)
