@@ -38,5 +38,6 @@ class SessionVariables:
         self.attribute_selected_pattern_att_counts = SessionVariable(pd.DataFrame(), prefix)
         self.attribute_converging_pairs = SessionVariable(0, prefix)
         self.attribute_all_pairs = SessionVariable(0, prefix)
+        self.attribute_table_index = SessionVariable(0, prefix)
 
 

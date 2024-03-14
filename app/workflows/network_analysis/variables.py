@@ -3,6 +3,8 @@ import pandas as pd
 import polars as pl
 from collections import defaultdict
 
+import workflows.network_analysis.prompts as prompts
+
 class SessionVariables:
 
     def __init__(self, prefix):
@@ -13,6 +15,7 @@ class SessionVariables:
         self.network_directed_entity_links = SessionVariable([], prefix)
         self.network_attribute_links = SessionVariable([], prefix)
         self.network_flag_links = SessionVariable([], prefix)
+        self.network_group_links = SessionVariable([], prefix)
         self.network_components = SessionVariable([], prefix)
         self.network_component_to_nodes = SessionVariable(set(), prefix)
         self.network_component_to_communities = SessionVariable({}, prefix)
@@ -38,3 +41,17 @@ class SessionVariables:
         self.network_flagged_nodes = SessionVariable([], prefix)
         self.network_entity_to_community_ix = SessionVariable({}, prefix)
         self.network_entity_df = SessionVariable(pd.DataFrame(), prefix)
+        self.network_table_index = SessionVariable(0, prefix)
+        self.network_selected_entity = SessionVariable('', prefix)
+        self.network_selected_community = SessionVariable('', prefix)
+        self.network_attributes_list = SessionVariable([], prefix)
+        self.network_additional_trimmed_attributes = SessionVariable([], prefix)
+        self.network_system_prompt = SessionVariable(prompts.system_prompt, prefix)
+        self.network_instructions = SessionVariable('', prefix)
+        self.network_report = SessionVariable('', prefix)
+        self.network_merged_links_df = SessionVariable([], prefix)
+        self.network_merged_nodes_df = SessionVariable([], prefix)
+        self.network_group_types = SessionVariable(set(), prefix)
+        self.network_max_entity_flags = SessionVariable(0, prefix)
+        self.network_mean_flagged_flags = SessionVariable(0, prefix)
+        self.network_risk_exposure = SessionVariable('', prefix)
