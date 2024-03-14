@@ -12,23 +12,52 @@ from collections import defaultdict
 import util.AI_API
 import util.df_functions
 
-def dataframe_with_selections(df, height=250):
+# def dataframe_with_selections(df, height=250):
+#     df_with_selections = df.copy()
+#     df_with_selections.insert(0, "Select", False)
+
+#     # Get dataframe row-selections from user with st.data_editor
+#     edited_df = st.data_editor(
+#         df_with_selections,
+#         hide_index=True,
+#         column_config={"Select": st.column_config.CheckboxColumn(required=True, )},
+#         disabled=df.columns,
+#         use_container_width=True,
+#         height=height
+#     )
+
+#     # Filter the dataframe using the temporary column, then drop the column
+#     selected_rows = edited_df[edited_df.Select]
+#     return selected_rows.drop('Select', axis=1)
+
+def dataframe_with_selections(df, selections, selection_col, label, key, height=250):
+    if key not in st.session_state:
+        st.session_state[key] = pd.DataFrame()
     df_with_selections = df.copy()
-    df_with_selections.insert(0, "Select", False)
+    values = []
+    for val in df[selection_col].to_list():
+        if val in selections:
+            values.append(True)
+        else:
+            values.append(False)
+    df_with_selections.insert(0, label, values)
+    df_with_selections[label] = df_with_selections[label].astype(bool)
 
     # Get dataframe row-selections from user with st.data_editor
     edited_df = st.data_editor(
         df_with_selections,
         hide_index=True,
-        column_config={"Select": st.column_config.CheckboxColumn(required=True, )},
+        column_config={label: st.column_config.CheckboxColumn(required=True)},
         disabled=df.columns,
         use_container_width=True,
         height=height
     )
 
     # Filter the dataframe using the temporary column, then drop the column
-    selected_rows = edited_df[edited_df.Select]
-    return selected_rows.drop('Select', axis=1)
+    selected_rows = edited_df[edited_df[label]]
+    selected_rows = selected_rows.drop(label, axis=1)
+
+    return selected_rows
 
 def generative_ai_component(system_prompt_var, instructions_var, variables):
     st.markdown('##### Generative AI instructions')
@@ -110,21 +139,15 @@ def multi_csv_uploader(upload_label, uploaded_files_var, outputs_dir, key, max_r
     st.number_input('Maximum rows to process (0 = all)', min_value=0, step=1000, key=max_rows_var.key)
     if files != None:
         for file in files:
-            if file.name not in uploaded_files_var.value:
-                print(f'Processing {file.name}')
-                df = pd.read_csv(file, encoding='unicode-escape')
-                print(f'Processing {file.name} - read')
-                if max_rows_var.value > 0:
-                    df = df[:max_rows_var.value]
-                # df.columns = df.columns.str.strip()
-                # df = util.df_functions.fix_null_ints(df)
-                df.to_csv(os.path.join(outputs_dir, file.name), index=False)
+            if file.name not in uploaded_files_var.value:  
+                df = pd.read_csv(file, encoding='unicode-escape', encoding_errors='ignore')
+                df.to_csv(os.path.join(outputs_dir, file.name), index=False)              
                 uploaded_files_var.value.append(file.name)
-    selected_file = st.selectbox("Select a file to process", uploaded_files_var.value)
+    selected_file = st.selectbox("Select a file to process", ['']+uploaded_files_var.value)
     
     df = pd.DataFrame()
-    if selected_file != None:
-        df = pd.read_csv(os.path.join(outputs_dir, selected_file), encoding='unicode-escape')
+    if selected_file not in [None, '']:
+        df = pd.read_csv(os.path.join(outputs_dir, selected_file), encoding='unicode-escape', nrows=max_rows_var.value, encoding_errors='ignore') if max_rows_var.value > 0 else pd.read_csv(os.path.join(outputs_dir, selected_file), encoding='unicode-escape', encoding_errors='ignore')
         st.dataframe(df[:show_rows], hide_index=True, use_container_width=True, height=height)
     return selected_file, df
 

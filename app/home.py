@@ -8,15 +8,15 @@ def main():
     c1, c2 = st.columns([1, 2])
     with c1:
         st.markdown(f"""\
-##### Case Data
+##### Use of Case Data
 
-- **Inputs** are structured records describing individual people
+- **Units** are structured records describing individual people
 - **Examples** include users, respondants, patients, victims
 - **Analysis** aims to inform *policy* while preserving *privacy*
                 
-##### Entity Data
+##### Use of Entity Data
                     
-- **Inputs** are records or documents describing real-world entities
+- **Units** are records or documents describing real-world entities
 - **Examples** include organizations, countries, products, suppliers
 - **Analysis** aims to understand *risks* carried by *relationships*
                 
@@ -44,24 +44,16 @@ def main():
             code = """\
 flowchart TD
 
-    PersonalData[\\Personal Case Records/] --> |Data Synthesis Workflow| SyntheticData[/Synthetic Case Records\\]
+    PersonalData[\\Personal Case Records/] ----> |Data Synthesis Workflow| SyntheticData[/Synthetic Case Records\\]
     EntityData[\\Entity Records/] ---> HasTime{Time Attributes?}
-    SyntheticData[/Synthetic Case Records\\] --> HasTime{Time Attributes?}
-    HasTime{Time Attributes?} --> |Yes| TimeBinnedData[Time-Binnable Records]
-    TimeBinnedData[Time-Binnable Records] --> |Attribute Patterns Workflow| AttributePatterns[/AI Pattern Reports\\]
+    CaseRecords[\\ Case Records/] ---> HasTime{Time Attributes?}
+    HasTime{Time Attributes?} --> |Attribute Patterns Workflow| AttributePatterns[/AI Pattern Reports\\]
     EntityData[\\Entity Records/] ---> HasGroups{Grouping Attributes?}
-    SyntheticData[/Synthetic Case Records\\] --> HasGroups{Grouping Attributes?}
-    HasGroups{Grouping Attributes?} --> |Yes| GroupedData[Attribute-Groupable Records]
-    GroupedData[Attribute-Groupable Records] --> |Group Narratives Workflow| GroupNarratives[/AI Group Reports\\]
-    EntityData[\\Entity Records/] ---> HasInconsistencies{Inconsistent Attributes?} --> |Yes| UnlinkedEntityData[Text-Linkable Entity Records]
-    UnlinkedEntityData[Text-Matchable Entity Records] --> |Record Matching Workflow| RecordLinking[/AI Match Reports\\]
-    EntityData[\\Entity Records/] ---> HasIdentifiers{Identifying Attributes?} --> |Yes| LinkedEntityData[Attribute-Linkable Entity Records]
-    LinkedEntityData[Attribute-Linkable Entity Records] --> |Network Analysis Workflow| NetworkAnalysis[/AI Network Reports\\]
-    AttributePatterns[/AI Pattern Reports\\] --> UnstructuredData[\\Unstructured Text Data/] 
-    GroupNarratives[/AI Group Reports\\] --> UnstructuredData[\\Unstructured Text Data/] 
-    RecordLinking[/AI Match Reports\\] --> UnstructuredData[\\Unstructured Text Data/] 
-    NetworkAnalysis[/AI Network Reports\\] --> UnstructuredData[\\Unstructured Text Data/] 
-    UnstructuredData[\\Unstructured Text Data/] --> |Question Answering Workflow| AnswerReports[/AI Answer Reports\\]
+    CaseRecords[\\Case Records/] ---> HasGroups{Grouping Attributes?}
+    HasGroups{Grouping Attributes?} --> |Group Narratives Workflow| GroupNarratives[/AI Group Reports\\]
+    EntityData[\\Entity Records/] ---> HasInconsistencies{Inconsistent Attributes?} --> |Record Matching Workflow| RecordLinking[/AI Match Reports\\]
+    EntityData[\\Entity Records/] ---> HasIdentifiers{Identifying Attributes?} --> |Network Analysis Workflow| NetworkAnalysis[/AI Network Reports\\]
+    EntityDocs[\\Entity Documents/] ----> |Question Answering Workflow| AnswerReports[/AI Answer Reports\\]
 
     """, 
             height = 2000

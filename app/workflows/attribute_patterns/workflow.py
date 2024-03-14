@@ -8,7 +8,8 @@ from st_aggrid import (
     DataReturnMode,
     GridOptionsBuilder,
     GridUpdateMode,
-)
+    ColumnsAutoSizeMode
+)   
 
 import workflows.attribute_patterns.functions as functions
 import workflows.attribute_patterns.classes as classes
@@ -65,17 +66,16 @@ def create():
     with detect_tab:
         if not ready or len(sv.attribute_final_df.value) == 0:
             st.markdown('Generate a graph model to continue.')
-        else:
-            c1, c2 = st.columns([1, 3])
-            with c1:
-                st.markdown('##### Pattern detection')
-                b1, b2 = st.columns([1, 1])
-                with b1:
-                    st.number_input('Minimum pattern count', min_value=1, step=1, key=sv.attribute_min_pattern_count.key, value=sv.attribute_min_pattern_count.value)
-                with b2:
-                    st.number_input('Maximum pattern length', min_value=1, step=1, key=sv.attribute_max_pattern_length.key, value=sv.attribute_max_pattern_length.value)
+        else: 
+            b1, b2, b3, b4, b5 = st.columns([1, 1, 1, 1, 2])
+            with b1:
+                st.number_input('Minimum pattern count', min_value=1, step=1, key=sv.attribute_min_pattern_count.key, value=sv.attribute_min_pattern_count.value)
+            with b2:
+                st.number_input('Maximum pattern length', min_value=1, step=1, key=sv.attribute_max_pattern_length.key, value=sv.attribute_max_pattern_length.value)
+            with b3:
                 if st.button('Detect patterns'):
                     with st.spinner('Detecting patterns...'):
+                        sv.attribute_table_index.value += 1
                         sv.attribute_df.value, time_to_graph = functions.prepare_graph(sv)
                         
                         sv.attribute_embedding_df.value, sv.attribute_node_to_centroid.value, sv.attribute_period_embeddings.value = functions.generate_embedding(sv, sv.attribute_df.value, time_to_graph)
@@ -83,60 +83,59 @@ def create():
                         rc = classes.RecordCounter(sv.attribute_dynamic_df.value)
                         sv.attribute_record_counter.value = rc
                         sv.attribute_pattern_df.value, sv.attribute_close_pairs.value, sv.attribute_all_pairs.value = functions.detect_patterns(sv)
-            with c2:
-                st.markdown('##### Detected patterns')
-                if len(sv.attribute_pattern_df.value) == 0:
-                    st.markdown('Detect patterns to proceed.')
-                else:
-                    prop = sv.attribute_close_pairs.value / sv.attribute_all_pairs.value if sv.attribute_all_pairs.value > 0 else 0
-                    prop = round(prop, -int(np.floor(np.log10(abs(prop))))) if prop > 0 else 0
-                    period_count = len(sv.attribute_pattern_df.value["period"].unique())
-                    pattern_count = len(sv.attribute_pattern_df.value)
-                    unique_count = len(sv.attribute_pattern_df.value['pattern'].unique())
-                    st.markdown(f'Over **{period_count}** periods, detected **{pattern_count}** attribute patterns (**{unique_count}** unique) from **{sv.attribute_converging_pairs.value}**/**{sv.attribute_all_pairs.value}** converging attribute pairs (**{round(sv.attribute_converging_pairs.value / sv.attribute_all_pairs.value * 100, 2) if sv.attribute_all_pairs.value > 0 else 0}%**).')
-                    show_df = sv.attribute_pattern_df.value
-                    tdf = functions.create_time_series_df(sv.attribute_record_counter.value, sv.attribute_pattern_df.value)
-                    gb = GridOptionsBuilder.from_dataframe(show_df)
-                    gb.configure_default_column(wrapText=True, enablePivot=False, enableValue=False, enableRowGroup=False)
-                    gb.configure_selection(selection_mode="single", use_checkbox=False)
-                    gb.configure_side_bar()
-                    gridoptions = gb.build()
+            with b4:
+                st.download_button('Download patterns', data=sv.attribute_pattern_df.value.to_csv(index=False), file_name='attribute_patterns.csv', mime='text/csv', disabled=len(sv.attribute_pattern_df.value) == 0)
+            if len(sv.attribute_pattern_df.value) > 0:
+                prop = sv.attribute_close_pairs.value / sv.attribute_all_pairs.value if sv.attribute_all_pairs.value > 0 else 0
+                prop = round(prop, -int(np.floor(np.log10(abs(prop))))) if prop > 0 else 0
+                period_count = len(sv.attribute_pattern_df.value["period"].unique())
+                pattern_count = len(sv.attribute_pattern_df.value)
+                unique_count = len(sv.attribute_pattern_df.value['pattern'].unique())
+                st.markdown(f'Over **{period_count}** periods, detected **{pattern_count}** attribute patterns (**{unique_count}** unique) from **{sv.attribute_converging_pairs.value}**/**{sv.attribute_all_pairs.value}** converging attribute pairs (**{round(sv.attribute_converging_pairs.value / sv.attribute_all_pairs.value * 100, 2) if sv.attribute_all_pairs.value > 0 else 0}%**).')
+                show_df = sv.attribute_pattern_df.value
+                tdf = functions.create_time_series_df(sv.attribute_record_counter.value, sv.attribute_pattern_df.value)
+                gb = GridOptionsBuilder.from_dataframe(show_df)
+                gb.configure_default_column(flex=1, wrapText=True, wrapHeaderText=True, enablePivot=False, enableValue=False, enableRowGroup=False)
+                gb.configure_selection(selection_mode="single", use_checkbox=False)
+                gb.configure_side_bar()
+                gridoptions = gb.build()
 
-                    response = AgGrid(
-                        show_df,
-                        key='report_grid',
-                        height=400,
-                        gridOptions=gridoptions,
-                        enable_enterprise_modules=False,
-                        update_mode=GridUpdateMode.SELECTION_CHANGED,
-                        data_return_mode=DataReturnMode.FILTERED_AND_SORTED,
-                        fit_columns_on_grid_load=False,
-                        header_checkbox_selection_filtered_only=False,
-                        use_checkbox=False,
-                        enable_quicksearch=True,
-                        reload_data=False
-                        ) # type: ignore
-                    selected_pattern = response['selected_rows'][0]['pattern'] if len(response['selected_rows']) > 0 else ''
-                    selected_pattern_period = response['selected_rows'][0]['period'] if len(response['selected_rows']) > 0 else ''
+                response = AgGrid(
+                    show_df,
+                    key=f'report_grid_{sv.attribute_table_index.value}',
+                    height=400,
+                    gridOptions=gridoptions,
+                    enable_enterprise_modules=False,
+                    update_mode=GridUpdateMode.SELECTION_CHANGED,
+                    data_return_mode=DataReturnMode.FILTERED_AND_SORTED,
+                    fit_columns_on_grid_load=False,
+                    header_checkbox_selection_filtered_only=False,
+                    use_checkbox=False,
+                    enable_quicksearch=True,
+                    reload_data=False,
+                    columns_auto_size_mode=ColumnsAutoSizeMode.FIT_ALL_COLUMNS_TO_VIEW
+                    ) # type: ignore
+                selected_pattern = response['selected_rows'][0]['pattern'] if len(response['selected_rows']) > 0 else ''
+                selected_pattern_period = response['selected_rows'][0]['period'] if len(response['selected_rows']) > 0 else ''
 
 
-                    if selected_pattern != '' and selected_pattern != sv.attribute_selected_pattern.value:
-                        sv.attribute_selected_pattern.value = selected_pattern
-                        sv.attribute_selected_pattern_period.value = selected_pattern_period
-                        sv.attribute_report.value = ''
-                        st.markdown('**Selected pattern: ' + selected_pattern + ' (' + selected_pattern_period + ')**')
-                        tdf = tdf[tdf['pattern'] == selected_pattern]
-                        sv.attribute_selected_pattern_df.value = tdf
-                        sv.attribute_selected_pattern_att_counts.value = functions.compute_attribute_counts(sv.attribute_final_df.value, selected_pattern, time_col, selected_pattern_period)
-                        count_ct = alt.Chart(tdf).mark_line().encode(
-                            x='period:O',
-                            y='count:Q',
-                            color=alt.ColorValue('blue')
-                        ).properties(
-                            height = 200,
-                            width = 600
-                        )
-                        st.altair_chart(count_ct, use_container_width=True)
+                if selected_pattern != '' and selected_pattern != sv.attribute_selected_pattern.value:
+                    sv.attribute_selected_pattern.value = selected_pattern
+                    sv.attribute_selected_pattern_period.value = selected_pattern_period
+                    sv.attribute_report.value = ''
+                    st.markdown('**Selected pattern: ' + selected_pattern + ' (' + selected_pattern_period + ')**')
+                    tdf = tdf[tdf['pattern'] == selected_pattern]
+                    sv.attribute_selected_pattern_df.value = tdf
+                    sv.attribute_selected_pattern_att_counts.value = functions.compute_attribute_counts(sv.attribute_final_df.value, selected_pattern, time_col, selected_pattern_period)
+                    count_ct = alt.Chart(tdf).mark_line().encode(
+                        x='period:O',
+                        y='count:Q',
+                        color=alt.ColorValue('blue')
+                    ).properties(
+                        height = 200,
+                        width = 600
+                    )
+                    st.altair_chart(count_ct, use_container_width=True)
     with explain_tab:
         if not ready or len(sv.attribute_final_df.value) == 0 or sv.attribute_selected_pattern.value == '':
             st.markdown('Select a pattern to continue.')

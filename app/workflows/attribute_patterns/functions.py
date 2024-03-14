@@ -263,9 +263,9 @@ def detect_patterns(sv):
                 mean, sd, mx = rc.compute_period_mean_sd_max(pattern)
                 score = (count - mean) / sd
                 if score >= 0:
-                    row = [period, ' & '.join(pattern), len(pattern_to_periods[tuple(pattern)]), len(pattern), count, round(mean_count, 0), round(score, 2)]
+                    row = [period, ' & '.join(pattern), len(pattern), len(pattern_to_periods[tuple(pattern)]), count, round(mean, 0), round(score, 2)]
                     pattern_rows.append(row)
-    columns = ['period', 'pattern', 'detections', 'length', 'count', 'mean', 'z_score']
+    columns = ['period', 'pattern', 'length', 'detections', 'count', 'mean', 'z_score']
     pattern_df = pd.DataFrame(pattern_rows, columns=columns)
     pattern_df['overall_score'] = pattern_df['z_score'] * pattern_df['length'] * np.log(pattern_df['count']) * pattern_df['detections']
     # normalize overall score
