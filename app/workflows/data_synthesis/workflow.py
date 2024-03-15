@@ -32,7 +32,7 @@ def create():
     intro_tab, prepare_tab, generate_tab, queries_tab = st.tabs(['Data synthesis workflow:', 'Upload deidentified sensitive data', 'Generate anonymous synthetic data', 'Query and visualize data'])
     df = None
     with intro_tab:
-        pass
+        st.markdown(config.intro)
     with prepare_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:

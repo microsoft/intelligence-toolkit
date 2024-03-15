@@ -3,7 +3,7 @@ import pandas as pd
 import polars as pl
 from collections import defaultdict
 
-import workflows.network_analysis.prompts as prompts
+import workflows.risk_networks.prompts as prompts
 
 class SessionVariables:
 
@@ -55,3 +55,5 @@ class SessionVariables:
         self.network_max_entity_flags = SessionVariable(0, prefix)
         self.network_mean_flagged_flags = SessionVariable(0, prefix)
         self.network_risk_exposure = SessionVariable('', prefix)
+        self.network_last_show_entities = SessionVariable(False, prefix)
+        self.network_last_show_groups = SessionVariable(False, prefix)

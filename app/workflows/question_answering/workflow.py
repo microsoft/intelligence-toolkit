@@ -19,7 +19,7 @@ def create():
     st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title='Intelligence Toolkit | Question Answering')
     sv = vars.SessionVariables('question_answering')
 
-    dirs = ['qa_mine', 'qa_mine/raw_files', 'qa_mine/text_files', 'qa_mine/text_chunks', 'qa_mine/embeddings', 'qa_mine/questions']
+    dirs = ['qa_mine', 'qa_mine/raw_files', 'qa_mine/text_files', 'qa_mine/embeddings']
     for d in dirs:
         if not os.path.exists(d):
             os.mkdir(d)
@@ -28,7 +28,7 @@ def create():
     
     df = None
     with intro_tab:
-        pass
+        st.markdown(config.intro)
     with uploader_tab:
         st.markdown('##### Upload data for processing')
         files = st.file_uploader("Upload PDF text files", type=['pdf'], accept_multiple_files=True)
@@ -39,7 +39,7 @@ def create():
         num_files = len(sv.answering_files.value)
         num_chunks = sum([len(f.chunk_texts) for f in sv.answering_files.value.values()])
         if num_files > 0:
-            st.markdown(f'Chunked **{num_files}** files into **{num_chunks}** chunks of **~{config.chunk_size}** characters.')
+            st.markdown(f'Chunked **{num_files}** files into **{num_chunks}** chunks of up to **{config.chunk_size}** characters.')
     with mining_tab:
         c1, c2, c3, c4 = st.columns([4, 1, 1, 1])
         with c1:
@@ -149,7 +149,7 @@ def create():
                             source_counts.update([source])
                             break
 
-                status_history +=f'Mining the next most similar chunk for question-answer pairs: chunk **{cx}** of file **{f.name}**...<br/>'
+                status_history +=f'Mining the next most similar chunk for question-answer pairs: chunk **{cx}** from file **{f.name}**...<br/>'
                 variables = {
                     'text': f.chunk_texts[cx],
                     'file_id': f.id
@@ -222,4 +222,4 @@ def create():
                 report_placeholder.markdown(sv.answering_lazy_answer_text.value)
                 
                 full_text = sv.answering_lazy_answer_text.value + '\n\n## Supporting FAQ\n\n' + re.sub(r' Q[\d]+: ', ' ', '\n\n'.join(sv.answering_matches.value.split('\n\n')[2:]), re.MULTILINE).replace('###### ', '### ')
-                st.download_button('Download report', data=full_text, file_name=sv.answering_lazy_answer_text.value.split('\n')[0].replace('#','').strip().replace(' ', '_')+'.md', mime='text/markdown', disabled=sv.answering_lazy_answer_text.value == '', key='lazy_download_button')      
+                st.download_button('Download AI answer report', data=full_text, file_name=sv.answering_lazy_answer_text.value.split('\n')[0].replace('#','').strip().replace(' ', '_')+'.md', mime='text/markdown', disabled=sv.answering_lazy_answer_text.value == '', key='lazy_download_button')      

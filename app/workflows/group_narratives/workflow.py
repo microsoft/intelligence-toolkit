@@ -21,10 +21,10 @@ def create():
     if not os.path.exists(config.outputs_dir):
         os.makedirs(config.outputs_dir)
 
-    intro_tab, prepare_tab, summarize_tab, generate_tab = st.tabs(['Group narratives workflow:', 'Upload data to narrate', 'Prepare data summary', 'Generate data narratives',])
+    intro_tab, prepare_tab, summarize_tab, generate_tab = st.tabs(['Group narratives workflow:', 'Upload data to narrate', 'Prepare data summary', 'Generate AI group reports',])
 
     with intro_tab:
-        pass
+        st.markdown(config.intro)
     with prepare_tab:
         uploader_col, model_col = st.columns([1, 1])
         with uploader_col:
@@ -209,4 +209,4 @@ def create():
                     )
                     sv.narrative_report.value = result
                 narrative_placeholder.markdown(sv.narrative_report.value)
-                st.download_button('Download narrative report', data=sv.narrative_report.value, file_name='narrative_report.md', mime='text/markdown', disabled=sv.narrative_report.value == '')
+                st.download_button('Download AI group report', data=sv.narrative_report.value, file_name='narrative_report.md', mime='text/markdown', disabled=sv.narrative_report.value == '')

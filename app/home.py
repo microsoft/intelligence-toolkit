@@ -3,45 +3,62 @@ import util.mermaid as mermaid
 
 def main():
     st.set_page_config(layout="wide", initial_sidebar_state="expanded", page_title='Intelligence Toolkit | Home')
-    st.markdown(f'# Intelligence Toolkit')
-    st.markdown('**A suite of interactive workflows for creating AI intelligence reports from real-world data sources**. For more information, visit [github.com/microsoft/intelligence-toolkit](https://github.com/microsoft/intelligence-toolkit)')
-    c1, c2 = st.columns([1, 2])
-    with c1:
-        st.markdown(f"""\
-##### Use of Case Data
+    st.markdown(f"""\
+# Intelligence Toolkit
+#### What is Intelligence Toolkit? 
 
-- **Units** are structured records describing individual people
-- **Examples** include users, respondants, patients, victims
-- **Analysis** aims to inform *policy* while preserving *privacy*
+The Intelligence Toolkit is a suite of interactive workflows for creating AI intelligence reports from real-world data sources. The toolkit is designed to help users identify patterns, answers, relationships, and risks within complex datasets, with generative AI ([OpenAI GPT models](https://platform.openai.com/docs/models/)) used to create reports on findings of interest. The project page can be found at [github.com/microsoft/intelligence-toolkit](https://github.com/microsoft/intelligence-toolkit/).
+
+#### What can Intelligence Toolkit do?  
+
+The Intelligence Toolkit aims to help domain experts make sense of real-world data at a speed and scale that wouldn't otherwise be possible. It was specifically designed for analysis of case data and entity data:
                 
-##### Use of Entity Data
-                    
-- **Units** are records or documents describing real-world entities
-- **Examples** include organizations, countries, products, suppliers
-- **Analysis** aims to understand *risks* carried by *relationships*
+- Case Data
+    - Units are structured records describing individual people
+    - Examples include users, respondants, patients, victims
+    - Analysis aims to inform *policy* while preserving *privacy*          
+- Entity Data             
+    - Units are records or documents describing real-world entities
+    - Examples include organizations, countries, products, suppliers
+    - Analysis aims to understand *risks* carried by *relationships*
                 
-##### Case Intelligence Workflows
+#### What are Intelligence Toolkit's intended uses? 
 
-- **Data Synthesis** generates private datasets and data summaries from sensitive case records
-- **Attribute Patterns** generates reports on attribute patterns detected in streams of case records
-- **Group Narratives** generates reports by defining and comparing groups of case records
+The Intelligence Toolkit is designed to be used by domain experts who are familiar with the data and the intelligence they want to derive from it. Users should be independently capable of evaluating the quality of data insights and AI interpretations before taking action, e.g., sharing intelligence outputs or making decisions informed by these outputs.
+                
+It supports a variety of interactive workflows, each designed to address a specific type of intelligence task:
 
-##### Entity Intelligence Workflows
+- Case Intelligence Workflows
+    - **Data Synthesis** generates differentially-private datasets and summaries from sensitive case records
+    - **Attribute Patterns** generates reports on attribute patterns detected in streams of case records
+    - **Group Narratives** generates reports by defining and comparing groups of case records
+- Entity Intelligence Workflows
+    - **Record Matching** generates reports on record matches detected across entity datasets
+    - **Risk Networks** generates reports on risk exposure for networks of related entities
+    - **Question Answering** generates reports from an entity-rich document collection
 
-- **Record Matching** generates evaluations of record matches detected across entity datasets
-- **Network Analysis** generates reports on networks of entities sharing attributes and risks
-- **Question Answering** generates answers to questions about entities in a document collection
-                     
+#### How was Intelligence Toolkit evaluated? 
+
+The Intelligence Toolkit was designed, refined, and evaluated in the context of the [Tech Against Trafficking (TAT)](https://techagainsttrafficking.org/) accelerator program with [Issara Institute](https://www.issarainstitute.org/) and [Polaris](https://polarisproject.org/) (2023-2024). It includes and builds on prior accelerator outputs developed with [Unseen](https://www.unseenuk.org/) (2021-2022) and [IOM](https://www.iom.int/)/[CTDC](https://www.ctdatacollaborative.org/) (2019-2020).
+
+#### What are the limitations of Intelligence Toolkit? How can users minimize the impact of these limitations when using the system? 
+
+The Intelligence toolkit aims to detect and explain patterns, relationships, and risks in data provided by the user. It is not designed to make decisions or take actions based on these findings. The statistical "insights" that it detects may not be insightful or useful in practice, and will inherit any biases, errors, or omissions present in the data collecting/generating process. These may be further amplified by the AI interpretations and reports generated by the toolkit, while the generative AI model may itself introduce additional biases as a consequence of its training data and design. It is important for users to consider all these limitations when using the system. Uses should also be experts in their domain, familiar with the data, and both able and willing to evaluate the quality of the insights and AI interpretations before taking action.
+
+#### What operational factors and settings allow for effective and responsible use of Intelligence Toolkit? 
+
+- The Intelligence Toolkit is designed for moderate-sized datasets (e.g., 100s of thousands of records, 100s of PDF documents). Larger datasets will require longer to process and may exceed the memory limits of the execution environment.
+- Responsible use of personal case data requires that the data be de-identified prior to uploading and then converted into anonymous data using the Data Synthesis workflow. Any subsequent analysis of the case data should be done using the synthetic case data, not the original (sensitive/personal) case data.
+- It is the user's responsibility to ensure that any data sent to generative AI models is not personal/sensitive/secret/confidential, that use of generative AI models is consistent with the terms of service of the model provider, and that such use incurs per-token costs charged to the OpenAI account linked to the user-provided API key. Understanding [usage costs](https://openai.com/pricing#language-models) and setting a [billing cap](https://platform.openai.com/docs/guides/production-best-practices/setting-up-your-organization) is recommended.
+
+#### Which Intelligence Toolkit workflow is right for me and my data?
+
+Use the diagram to identify an appropriate workflow, then open the workflow from the sidebar to the left
 """
     )
-    with c2:
-        st.markdown(f"""\
-**Workflow selection**. Use the diagram to identify an appropriate workflow, then open the workflow from the sidebar to the left.
-"""
-        )
 
-        mermaid.mermaid(
-            code = """\
+    mermaid.mermaid(
+        code = """\
 flowchart TD
 
     PersonalData[\\Personal Case Records/] ----> |Data Synthesis Workflow| SyntheticData[/Synthetic Case Records\\]
@@ -56,8 +73,9 @@ flowchart TD
     EntityDocs[\\Entity Documents/] ----> |Question Answering Workflow| AnswerReports[/AI Answer Reports\\]
 
     """, 
-            height = 2000
-        )
+        height = 600
+    )
+
 
     
 if __name__ == '__main__':

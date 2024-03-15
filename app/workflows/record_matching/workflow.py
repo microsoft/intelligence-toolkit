@@ -29,7 +29,7 @@ def create():
     intro_tab, uploader_tab, process_tab, evaluate_tab = st.tabs(['Record matching workflow:', 'Upload data to match', 'Detect record groups', 'Evaluate record groups'])
     df = None
     with intro_tab:
-        pass
+        st.markdown(config.intro)
     with uploader_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:
@@ -301,4 +301,4 @@ def create():
             if len(sv.matching_evaluations.value) > 0:
                 st.dataframe(sv.matching_evaluations.value.to_pandas(), height=700, use_container_width=True, hide_index=True)
                 jdf = sv.matching_matches_df.value.join(sv.matching_evaluations.value, left_on='Group ID', right_on='Group ID', how='inner')
-                st.download_button('Download AI evaluations', data=jdf.write_csv(), file_name='record_groups_evaluated.csv', mime='text/csv')
+                st.download_button('Download AI match report', data=jdf.write_csv(), file_name='record_groups_evaluated.csv', mime='text/csv')
