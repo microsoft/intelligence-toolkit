@@ -6,7 +6,7 @@ import numpy as np
 from collections import defaultdict
 from streamlit_agraph import Config, Edge, Node, agraph
 
-import workflows.network_analysis.config as config
+import workflows.risk_networks.config as config
 
 
 def hsl_to_hex(h, s, l):

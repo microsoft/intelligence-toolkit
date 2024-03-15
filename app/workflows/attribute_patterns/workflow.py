@@ -26,10 +26,10 @@ def create():
     workflow = 'attribute_patterns'
     st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title='Intelligence Toolkit | Attribute Patterns')
     sv = vars.SessionVariables('attribute_patterns')
-    intro_tab, uploader_tab, detect_tab, explain_tab = st.tabs(['Attribute patterns workflow:', 'Create graph model', 'Detect patterns', 'Generate AI pattern report'])
+    intro_tab, uploader_tab, detect_tab, explain_tab = st.tabs(['Attribute patterns workflow:', 'Create graph model', 'Detect patterns', 'Generate AI pattern reports'])
     df = None
     with intro_tab:
-        pass
+        st.markdown(config.intro)
     with uploader_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:
@@ -177,4 +177,4 @@ def create():
                     )
                     sv.attribute_report.value = result
                 report_placeholder.markdown(sv.attribute_report.value)
-                st.download_button('Download pattern report', data=sv.attribute_report.value, file_name='attribute_pattern_report.md', mime='text/markdown', disabled=sv.attribute_report.value == '')
+                st.download_button('Download AI pattern report', data=sv.attribute_report.value, file_name='attribute_pattern_report.md', mime='text/markdown', disabled=sv.attribute_report.value == '')

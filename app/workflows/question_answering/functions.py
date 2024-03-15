@@ -29,8 +29,8 @@ text_splitter = RecursiveCharacterTextSplitter(
 
 def chunk_files(sv, files):
     pb = st.progress(0, 'Chunking and embedding files...')
-    for fx, file_link in enumerate(files):
-        pb.progress((fx+1) / len(files), f'Chunking and embedding file {fx+1} of {len(files)}...')
+    file_chunks = []
+    for file_link in files:
         file_names = [f.name for f in sv.answering_files.value.values()]
         doc_text = ''
         if file_link.name not in file_names:
@@ -40,40 +40,25 @@ def chunk_files(sv, files):
             sv.answering_files.value[file_id] = file
             bytes = file_link.getvalue()
             path = os.path.join('qa_mine\\raw_files', file.name)
-            if not os.path.exists(path):
-                with open(path, 'wb') as f:
-                    f.write(bytes)
-                pdf_reader = pdfplumber.open(io.BytesIO(bytes))
-                cx = 1
-                for px in range(len(pdf_reader.pages)):
-                    page_text = pdf_reader.pages[px].extract_text()
-                    doc_text += f'\n[PAGE {px+1}]\n\n{page_text}\n\n'
-                    chunks = [x.strip() for x in text_splitter.split_text(page_text)]
-                    paged_chunks = []
-                    for ix, chunk in enumerate(chunks):
-                        chunk = f'[PAGE {px+1}]\n\n{chunk}'
-                        chunk = f'[FILE {file.name}]\n\n{chunk}'
-                        open(os.path.join('qa_mine\\text_chunks', f'{file.name[:-4]}-p{px+1}-c{cx}.txt'), 'wb').write(chunk.encode('utf-8'))
-                        chunk_vec = embedder.encode(chunk)
-                        paged_chunks.append(chunk)
-                        file.add_chunk(chunk, chunk_vec, cx)
-                        cx += 1
-                file.set_text(doc_text)
-                                  
-                # doc_vector = embedder.encode(doc_text, normalize_embeddings=True)
-                # file.set_vector(doc_vector)
-                with open(os.path.join('qa_mine\\text_files', file.name+'.txt'), 'wb') as f:
-                    f.write(doc_text.encode('utf-8'))
-            else:
-                doc_text = open(os.path.join('qa_mine\\text_files', file.name+'.txt'), 'r', encoding='utf-8', errors='ignore').read()
-                file.set_text(doc_text)
-                cx = 1
-                while os.path.exists(os.path.join('qa_mine\\text_chunks', f'{file.name[:-4]}-{cx}.txt')):
-                    chunk = open(os.path.join('qa_mine\\text_chunks', f'{file.name[:-4]}-{cx}.txt'), 'r', encoding='utf-8', errors='ignore').read()
-                    chunk_vec = embedder.encode(chunk)
-                    file.add_chunk(chunk, chunk_vec, cx)
-                    cx += 1
-                
+
+            with open(path, 'wb') as f:
+                f.write(bytes)
+            pdf_reader = pdfplumber.open(io.BytesIO(bytes))
+            for px in range(len(pdf_reader.pages)):
+                page_text = pdf_reader.pages[px].extract_text()
+                doc_text += f'\n[PAGE {px+1}]\n\n{page_text}\n\n'
+                chunks = [f'\n[PAGE {px+1}]\n\n{x.strip()}\n\n' for x in text_splitter.split_text(page_text)]
+                for chunk in chunks:
+                    file_chunks.append((file, chunk))
+            file.set_text(doc_text)
+           
+    for cx, (file, chunk) in enumerate(file_chunks):
+        pb.progress((cx+1) / len(file_chunks), f'Embedding chunk {cx+1} of {len(file_chunks)}...')
+        with open(os.path.join('qa_mine\\text_files', file.name+'.txt'), 'wb') as f:
+            f.write(doc_text.encode('utf-8'))
+        chunk_vec = embedder.encode(chunk)
+        file.add_chunk(chunk, chunk_vec, cx+1)   
+
     pb.empty()
 
 def update_question(sv, question_history, new_questions, placeholder, prefix):
