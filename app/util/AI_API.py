@@ -11,9 +11,13 @@ max_gen_tokens = 4096
 max_input_tokens = 128000
 default_temperature = 0
 max_embed_tokens = 8191
+import duckdb
 
 client = OpenAI()
 encoder = tiktoken.get_encoding(text_encoder)
+connection = duckdb.connect(database='cache\\question_answering\\embeddings.db')
+connection.execute("CREATE TABLE IF NOT EXISTS qa_mine (hash_text STRING, embedding DOUBLE[])")
+connection.execute("CREATE TABLE IF NOT EXISTS embeddings (hash_text STRING, embedding DOUBLE[])")
 
 def prepare_messages_from_message(system_message, variables):                
     messages = [
@@ -74,6 +78,7 @@ class Embedder:
         self.cache = cache
         if not os.path.exists(cache):
             os.makedirs(cache)
+        
 
     def encode_all(self, texts):
         final_embeddings = [None] * len(texts)
@@ -99,12 +104,14 @@ class Embedder:
                 final_embeddings[ix] = np.array(embeddings[j])
         return np.array(final_embeddings)
 
-    def encode(self, text):
+    def encode(self, text, table):
         text = text.replace("\n", " ")
         hsh = hash(text)
-        path = os.path.join(self.cache, f'{hsh}.txt')
-        if os.path.exists(path):
-            return np.array([float(x) for x in open(path, 'r').read().split('\n') if len(x) > 0])
+        exists = connection.execute(f"SELECT embedding FROM {table} WHERE hash_text = '{hsh}'").fetchone()
+
+        if exists:
+            return np.array(exists[0])
+            # return [float(x) for x in open(path, 'r').read().split('\n') if len(x) > 0]
         else:
             tokens = len(self.encoder.encode(text))
             if tokens > self.max_tokens:
@@ -112,7 +119,7 @@ class Embedder:
                 print('Truncated text to max tokens')
             try:
                 embedding = client.embeddings.create(input = [text], model=self.model).data[0].embedding
-                np.savetxt(path, embedding, delimiter=',')
+                connection.execute(f"INSERT INTO {table} VALUES ('{hsh}', {embedding})")
                 return np.array(embedding)
             except:
                 print(f'Error embedding text: {text}')

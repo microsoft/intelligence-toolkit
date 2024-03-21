@@ -1,3 +1,4 @@
+import numpy as np
 import streamlit as st
 from collections import Counter
 import os
@@ -12,8 +13,15 @@ import workflows.question_answering.prompts as prompts
 import workflows.question_answering.variables as vars
 import util.AI_API
 import util.ui_components
+import duckdb
 
 embedder = util.AI_API.create_embedder(config.cache_dir)
+#if cache\\question_answering doesnt exist, create the folder
+if not os.path.exists('cache\\question_answering'):
+    os.mkdir('cache\\question_answering')
+connection = duckdb.connect(database='cache\\question_answering\\embeddings1.db')
+connection.execute("CREATE TABLE IF NOT EXISTS embeddings (hash_text STRING, embedding DOUBLE[])")
+
 
 def create():
     st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title='Intelligence Toolkit | Question Answering')
@@ -88,9 +96,8 @@ def create():
             source_counts = Counter()
             used_chunks = set()
             while True:
-                qe = embedder.encode(question)
+                qe = embedder.encode(question,'embeddings')
                 iteration += 1
-                outline = ''
                 cosine_distances = sorted([(t, c, scipy.spatial.distance.cosine(qe, v)) for (t, c, v) in all_units], key=lambda x:x[2], reverse=False)
                 chunk_index = sv.answering_target_matches.value
                 for ix, (t, c, d) in enumerate(cosine_distances[:sv.answering_target_matches.value]):
@@ -169,9 +176,12 @@ def create():
                         a = qa['answer']
                         raw_refs = qa['source']
                         file_page_refs = [tuple([int(x[1:]) for x in r.split(';')]) for r in raw_refs]
-                        qa_text = f'{q}\n\n{a}'
-                        q_vec = embedder.encode(q)
-                        a_vec = embedder.encode(a)
+                        
+                        q_vec = embedder.encode(q, 'embeddings')
+                        a_vec = embedder.encode(a, 'embeddings')
+
+                        q_vec = np.array(q_vec)
+                        a_vec = np.array(a_vec)
                         qid = sv.answering_next_q_id.value
                         sv.answering_next_q_id.value += 1
                         q = classes.Question(f, q, q_vec, 0, qid)

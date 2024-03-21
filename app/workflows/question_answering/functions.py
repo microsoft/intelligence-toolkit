@@ -1,22 +1,16 @@
-import streamlit as st
-import pandas as pd
 import numpy as np
-from collections import Counter
-import re
+import streamlit as st
 import os
-import sklearn.cluster
-import json
 import io
 import tiktoken
 import pdfplumber
-import scipy.spatial.distance
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-
 import util.AI_API
 import workflows.question_answering.classes as classes
 import workflows.question_answering.config as config
 
 embedder = util.AI_API.create_embedder(cache='qa_mine\\embeddings')
+#pass table into embedder
 encoder = tiktoken.get_encoding('cl100k_base')
 
 
@@ -56,8 +50,8 @@ def chunk_files(sv, files):
         pb.progress((cx+1) / len(file_chunks), f'Embedding chunk {cx+1} of {len(file_chunks)}...')
         with open(os.path.join('qa_mine\\text_files', file.name+'.txt'), 'wb') as f:
             f.write(doc_text.encode('utf-8'))
-        chunk_vec = embedder.encode(chunk)
-        file.add_chunk(chunk, chunk_vec, cx+1)   
+        chunk_vec = embedder.encode(chunk, 'qa_mine')
+        file.add_chunk(chunk, np.array(chunk_vec), cx+1)   
 
     pb.empty()
 
