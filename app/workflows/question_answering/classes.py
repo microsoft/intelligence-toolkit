@@ -2,13 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from collections import Counter
-import re
-import os
-import sklearn.cluster
-import json
-import io
 import tiktoken
-import pdfplumber
 import scipy.spatial.distance
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
