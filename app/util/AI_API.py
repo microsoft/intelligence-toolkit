@@ -18,6 +18,8 @@ encoder = tiktoken.get_encoding(text_encoder)
 connection = duckdb.connect(database='cache\\question_answering\\embeddings.db')
 connection.execute("CREATE TABLE IF NOT EXISTS qa_mine (hash_text STRING, embedding DOUBLE[])")
 connection.execute("CREATE TABLE IF NOT EXISTS embeddings (hash_text STRING, embedding DOUBLE[])")
+connection.execute("CREATE TABLE IF NOT EXISTS record_matching (hash_text STRING, embedding DOUBLE[])")
+connection.execute("CREATE TABLE IF NOT EXISTS risk_networks (hash_text STRING, embedding DOUBLE[])")
 
 def prepare_messages_from_message(system_message, variables):                
     messages = [
@@ -80,17 +82,17 @@ class Embedder:
             os.makedirs(cache)
         
 
-    def encode_all(self, texts):
+    def encode_all(self, texts, table):
         final_embeddings = [None] * len(texts)
         new_texts  = []
         for ix, text in enumerate(texts):
             text = text.replace("\n", " ")
             hsh = hash(text)
-            path = os.path.join(self.cache, f'{hsh}.txt')
-            if not os.path.exists(path):
+            exists = connection.execute(f"SELECT embedding FROM {table} WHERE hash_text = '{hsh}'").fetchone()
+            if not exists:
                 new_texts.append((ix, text))
             else:
-                final_embeddings[ix] = np.array([float(x) for x in open(path, 'r').read().split('\n') if len(x) > 0])
+                final_embeddings[ix] = np.array(exists)
         print(f'Got {len(new_texts)} new texts')
         # split into batches of 2000
         for i in range(0, len(new_texts), 2000):
@@ -99,8 +101,7 @@ class Embedder:
             embeddings = [x.embedding for x in client.embeddings.create(input = batch_texts, model=self.model).data]
             for j, (ix, text) in enumerate(batch):
                 hsh = hash(text)
-                path = os.path.join(self.cache, f'{hsh}.txt')
-                np.savetxt(path, embeddings[j], delimiter=',')
+                connection.execute(f"INSERT INTO {table} VALUES ('{hsh}', {embeddings[j]})")
                 final_embeddings[ix] = np.array(embeddings[j])
         return np.array(final_embeddings)
 
