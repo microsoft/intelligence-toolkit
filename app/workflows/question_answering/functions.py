@@ -5,12 +5,11 @@ import io
 import tiktoken
 import pdfplumber
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-import util.AI_API
+import util.Embedder
 import workflows.question_answering.classes as classes
 import workflows.question_answering.config as config
 
-embedder = util.AI_API.create_embedder(cache='qa_mine\\embeddings')
-#pass table into embedder
+embedder = util.Embedder.create_embedder(cache=f'{config.cache_dir}\qa_mine')
 encoder = tiktoken.get_encoding('cl100k_base')
 
 
@@ -33,10 +32,13 @@ def chunk_files(sv, files):
             file = classes.File(file_link.name, file_id)
             sv.answering_files.value[file_id] = file
             bytes = file_link.getvalue()
-            path = os.path.join('qa_mine\\raw_files', file.name)
+            # path = f'{config.cache_dir}\\qa_mine\\raw_files'
+            # if not os.path.exists(path):
+            #     os.makedirs(path)
+            # path = os.path.join(path, file.name)
 
-            with open(path, 'wb') as f:
-                f.write(bytes)
+            # with open(path, 'wb') as f:
+            #     f.write(bytes)
             pdf_reader = pdfplumber.open(io.BytesIO(bytes))
             for px in range(len(pdf_reader.pages)):
                 page_text = pdf_reader.pages[px].extract_text()
@@ -48,9 +50,12 @@ def chunk_files(sv, files):
            
     for cx, (file, chunk) in enumerate(file_chunks):
         pb.progress((cx+1) / len(file_chunks), f'Embedding chunk {cx+1} of {len(file_chunks)}...')
-        with open(os.path.join('qa_mine\\text_files', file.name+'.txt'), 'wb') as f:
-            f.write(doc_text.encode('utf-8'))
-        chunk_vec = embedder.encode(chunk, 'qa_mine')
+        # path = f'{config.cache_dir}\\qa_mine\\text_files'
+        # if not os.path.exists(path):
+        #     os.makedirs(path)
+        # with open(os.path.join(path, file.name+'.txt'), 'wb') as f:
+        #     f.write(doc_text.encode('utf-8'))
+        chunk_vec = embedder.encode(chunk)
         file.add_chunk(chunk, np.array(chunk_vec), cx+1)   
 
     pb.empty()

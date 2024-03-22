@@ -10,14 +10,12 @@ from collections import defaultdict
 from sklearn.neighbors import NearestNeighbors
 
 import workflows.record_matching.functions as functions
-import workflows.record_matching.classes as classes
 import workflows.record_matching.config as config
-import workflows.record_matching.prompts as prompts
 import workflows.record_matching.variables as vars
-import util.AI_API
+import util.Embedder
 import util.ui_components
 
-embedder = util.AI_API.create_embedder(config.cache_dir)
+embedder = util.Embedder.create_embedder(config.cache_dir)
 
 def create():
     st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title='Intelligence Toolkit | Record Matching')
@@ -154,7 +152,7 @@ def create():
                             sv.matching_merged_df.value = sv.matching_merged_df.value.with_columns((pl.col('Entity ID').cast(pl.Utf8)) + '::' + pl.col('Dataset').alias('Unique ID'))
                             all_sentences = functions.convert_to_sentences(sv.matching_merged_df.value, skip=['Unique ID', 'Entity ID', 'Dataset'])
                             # model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
-                            embeddings = embedder.encode_all(all_sentences, 'record_matching')
+                            embeddings = embedder.encode_all(all_sentences)
                             nbrs = NearestNeighbors(n_neighbors=50, n_jobs=1, algorithm='auto', leaf_size=20, metric='cosine').fit(embeddings)
                             distances, indices = nbrs.kneighbors(embeddings)
                             threshold = sv.matching_sentence_pair_embedding_threshold.value

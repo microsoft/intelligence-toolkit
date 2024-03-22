@@ -1,7 +1,6 @@
 import numpy as np
 import streamlit as st
 from collections import Counter
-import os
 import re
 import json
 import scipy.spatial.distance
@@ -11,26 +10,14 @@ import workflows.question_answering.classes as classes
 import workflows.question_answering.config as config
 import workflows.question_answering.prompts as prompts
 import workflows.question_answering.variables as vars
-import util.AI_API
+import util.Embedder
 import util.ui_components
-import duckdb
 
-embedder = util.AI_API.create_embedder(config.cache_dir)
-#if cache\\question_answering doesnt exist, create the folder
-if not os.path.exists('cache\\question_answering'):
-    os.mkdir('cache\\question_answering')
-connection = duckdb.connect(database='cache\\question_answering\\embeddings1.db')
-connection.execute("CREATE TABLE IF NOT EXISTS embeddings (hash_text STRING, embedding DOUBLE[])")
-
+embedder = util.Embedder.create_embedder(config.cache_dir)
 
 def create():
     st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title='Intelligence Toolkit | Question Answering')
     sv = vars.SessionVariables('question_answering')
-
-    dirs = ['qa_mine', 'qa_mine/raw_files', 'qa_mine/text_files', 'qa_mine/embeddings']
-    for d in dirs:
-        if not os.path.exists(d):
-            os.mkdir(d)
 
     intro_tab, uploader_tab, mining_tab, report_tab = st.tabs(['Question answering workflow:', 'Upload data', 'Mine & match questions', 'Generate AI answer reports'])
     
@@ -96,7 +83,7 @@ def create():
             source_counts = Counter()
             used_chunks = set()
             while True:
-                qe = embedder.encode(question,'embeddings')
+                qe = embedder.encode(question)
                 iteration += 1
                 cosine_distances = sorted([(t, c, scipy.spatial.distance.cosine(qe, v)) for (t, c, v) in all_units], key=lambda x:x[2], reverse=False)
                 chunk_index = sv.answering_target_matches.value
@@ -177,8 +164,8 @@ def create():
                         raw_refs = qa['source']
                         file_page_refs = [tuple([int(x[1:]) for x in r.split(';')]) for r in raw_refs]
                         
-                        q_vec = embedder.encode(q, 'embeddings')
-                        a_vec = embedder.encode(a, 'embeddings')
+                        q_vec = embedder.encode(q)
+                        a_vec = embedder.encode(a)
 
                         q_vec = np.array(q_vec)
                         a_vec = np.array(a_vec)
