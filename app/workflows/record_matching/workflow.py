@@ -154,7 +154,7 @@ def create():
                             sv.matching_merged_df.value = sv.matching_merged_df.value.with_columns((pl.col('Entity ID').cast(pl.Utf8)) + '::' + pl.col('Dataset').alias('Unique ID'))
                             all_sentences = functions.convert_to_sentences(sv.matching_merged_df.value, skip=['Unique ID', 'Entity ID', 'Dataset'])
                             # model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
-                            embeddings = embedder.encode_all(all_sentences)
+                            embeddings = embedder.encode_all(all_sentences, 'record_matching')
                             nbrs = NearestNeighbors(n_neighbors=50, n_jobs=1, algorithm='auto', leaf_size=20, metric='cosine').fit(embeddings)
                             distances, indices = nbrs.kneighbors(embeddings)
                             threshold = sv.matching_sentence_pair_embedding_threshold.value

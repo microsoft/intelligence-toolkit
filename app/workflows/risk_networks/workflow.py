@@ -209,7 +209,7 @@ def create():
                     texts = [t[0] for t in text_types]
                     
                     df = pd.DataFrame(text_types, columns=['text', 'type'])
-                    embeddings = embedder.encode_all(texts)
+                    embeddings = embedder.encode_all(texts, "risk_networks")
                     vals = [(n, t, e) for (n, t), e in zip(text_types, embeddings)]
                     edf = pd.DataFrame(vals, columns=['text', 'type', 'vector'])
 
