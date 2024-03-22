@@ -1,6 +1,7 @@
 import plotly.express as px
 
-outputs_dir = 'outputs/data_synthesis'
+outputs_dir = 'cache/data_synthesis/outputs'
+
 
 att_separator = ';'
 val_separator = ':'

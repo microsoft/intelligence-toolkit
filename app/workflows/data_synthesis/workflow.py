@@ -4,7 +4,6 @@ import pandas as pd
 import plotly.io as pio
 
 import math
-import os
 
 from collections import defaultdict
 from pacsynth import Dataset
@@ -14,7 +13,6 @@ from pacsynth import DpAggregateSeededSynthesizer, Dataset
 import workflows.data_synthesis.functions as functions
 import workflows.data_synthesis.classes as classes
 import workflows.data_synthesis.config as config
-import workflows.data_synthesis.prompts as prompts
 import workflows.data_synthesis.variables as vars
 
 import util.ui_components
@@ -25,9 +23,6 @@ def create():
     workflow = 'data_synthesis'
     st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title='Intelligence Toolkit | Data Synthesis')
     sv = vars.SessionVariables('data_synthesis')
-
-    if not os.path.exists(config.outputs_dir):
-        os.makedirs(config.outputs_dir)
 
     intro_tab, prepare_tab, generate_tab, queries_tab = st.tabs(['Data synthesis workflow:', 'Upload deidentified sensitive data', 'Generate anonymous synthetic data', 'Query and visualize data'])
     df = None

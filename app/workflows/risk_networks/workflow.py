@@ -23,10 +23,10 @@ import workflows.risk_networks.classes as classes
 import workflows.risk_networks.config as config
 import workflows.risk_networks.prompts as prompts
 import workflows.risk_networks.variables as vars
-import util.AI_API
+import util.Embedder
 import util.ui_components
 
-embedder = util.AI_API.create_embedder(config.cache_dir)
+embedder = util.Embedder.create_embedder(config.cache_dir)
 
 def create():
     st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title='Intelligence Toolkit | Risk Networks')
@@ -209,7 +209,7 @@ def create():
                     texts = [t[0] for t in text_types]
                     
                     df = pd.DataFrame(text_types, columns=['text', 'type'])
-                    embeddings = embedder.encode_all(texts, "risk_networks")
+                    embeddings = embedder.encode_all(texts)
                     vals = [(n, t, e) for (n, t), e in zip(text_types, embeddings)]
                     edf = pd.DataFrame(vals, columns=['text', 'type', 'vector'])
 

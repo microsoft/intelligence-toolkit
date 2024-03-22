@@ -1,13 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-import os
-import sys
-
-import workflows.group_narratives.functions as functions
-import workflows.group_narratives.classes as classes
 import workflows.group_narratives.config as config
-import workflows.group_narratives.prompts as prompts
 import workflows.group_narratives.variables as vars
 
 import util.AI_API
@@ -17,9 +11,6 @@ def create():
     workflow = 'group_narratives'
     st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title='Intelligence Toolkit | Group Narratives')
     sv = vars.SessionVariables('group_narratives')
-
-    if not os.path.exists(config.outputs_dir):
-        os.makedirs(config.outputs_dir)
 
     intro_tab, prepare_tab, summarize_tab, generate_tab = st.tabs(['Group narratives workflow:', 'Upload data to narrate', 'Prepare data summary', 'Generate AI group reports',])
 

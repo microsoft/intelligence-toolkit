@@ -248,4 +248,6 @@ def make_random_data_table(num_rows, num_cols):
         else:
             df[f'col{i}'] = [random.random() for _ in range(num_rows)]
         
+    if not os.path.exists(config.outputs_dir):
+        os.makedirs(config.outputs_dir)
     df.to_csv(os.path.join(config.outputs_dir, 'random_data.csv'), index=False)

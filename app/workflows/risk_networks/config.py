@@ -3,7 +3,7 @@ list_sep = '; '
 max_rows_to_show = 1000
 entity_label = 'ENTITY'
 cache_dir = 'cache/risk_networks'
-outputs_dir = 'outputs/risk_networks'
+outputs_dir = f'{cache_dir}/outputs'
 
 intro = """ \
 # Risk Networks
