@@ -3,7 +3,7 @@ import util.mermaid as mermaid
 
 def main():
     st.set_page_config(layout="wide", initial_sidebar_state="expanded", page_title='Intelligence Toolkit | Home')
-    transparency_faq = open('Transparency_FAQ.md', 'r').read()
+    transparency_faq = open('./app/TransparencyFAQ.md', 'r').read()
     st.markdown(transparency_faq + '\n\n' + f"""\
 #### Which Intelligence Toolkit workflow is right for me and my data?
 
