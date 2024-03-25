@@ -1,7 +1,8 @@
 from openai import OpenAI
 import tiktoken
-import os
 import numpy as np
+from util.Database import Database
+import util.session_variables
 
 gen_model = 'gpt-4-turbo-preview'
 embed_model = 'text-embedding-3-small'
@@ -10,21 +11,20 @@ max_gen_tokens = 4096
 max_input_tokens = 128000
 default_temperature = 0
 max_embed_tokens = 8191
-import duckdb
+
 
 client = OpenAI()
 encoder = tiktoken.get_encoding(text_encoder)
 
 class Embedder:
     def __init__(self, cache, model=embed_model, encoder=text_encoder, max_tokens=max_embed_tokens) -> None:
+        sv = util.session_variables.SessionVariables('home')
+        self.username = sv.username.value
         self.model = model
         self.encoder = tiktoken.get_encoding(encoder)
         self.max_tokens = max_tokens
-        if not os.path.exists(cache):
-            os.makedirs(cache)
-        self.connection = duckdb.connect(database=f'{cache}\\embeddings.db')
-        self.connection.execute("CREATE TABLE IF NOT EXISTS embeddings (hash_text STRING, embedding DOUBLE[])")
-        
+        self.connection = Database(cache, 'embeddings')
+        self.connection.create_table('embeddings', ['username STRING','hash_text STRING', 'embedding DOUBLE[]'])
 
     def encode_all(self, texts):
         final_embeddings = [None] * len(texts)
@@ -32,11 +32,11 @@ class Embedder:
         for ix, text in enumerate(texts):
             text = text.replace("\n", " ")
             hsh = hash(text)
-            exists = self.connection.execute(f"SELECT embedding FROM embeddings WHERE hash_text = '{hsh}'").fetchone()
-            if not exists:
+            embeddings = self.connection.select_embedding_from_hash(hsh)
+            if not embeddings:
                 new_texts.append((ix, text))
             else:
-                final_embeddings[ix] = np.array(exists)
+                final_embeddings[ix] = np.array(embeddings)
         print(f'Got {len(new_texts)} new texts')
         # split into batches of 2000
         for i in range(0, len(new_texts), 2000):
@@ -45,18 +45,17 @@ class Embedder:
             embeddings = [x.embedding for x in client.embeddings.create(input = batch_texts, model=self.model).data]
             for j, (ix, text) in enumerate(batch):
                 hsh = hash(text)
-                self.connection.execute(f"INSERT INTO embeddings VALUES ('{hsh}', {embeddings[j]})")
+                self.connection.insert_into_embeddings(hsh, embeddings[j]) 
                 final_embeddings[ix] = np.array(embeddings[j])
         return np.array(final_embeddings)
 
     def encode(self, text):
         text = text.replace("\n", " ")
         hsh = hash(text)
-        exists = self.connection.execute(f"SELECT embedding FROM embeddings WHERE hash_text = '{hsh}'").fetchone()
+        embeddings = self.connection.select_embedding_from_hash(hsh)
 
-        if exists:
-            return np.array(exists[0])
-            # return [float(x) for x in open(path, 'r').read().split('\n') if len(x) > 0]
+        if embeddings:
+            return np.array(embeddings[0])
         else:
             tokens = len(self.encoder.encode(text))
             if tokens > self.max_tokens:
@@ -64,7 +63,7 @@ class Embedder:
                 print('Truncated text to max tokens')
             try:
                 embedding = client.embeddings.create(input = [text], model=self.model).data[0].embedding
-                self.connection.execute(f"INSERT INTO embeddings VALUES ('{hsh}', {embedding})")
+                self.connection.insert_into_embeddings(hsh, embedding)                
                 return np.array(embedding)
             except:
                 print(f'Error embedding text: {text}')
