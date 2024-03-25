@@ -2,8 +2,8 @@ att_val_sep = '=='
 list_sep = '; '
 max_rows_to_show = 1000
 entity_label = 'Entity'
-cache_dir = 'cache/record_matching'
-outputs_dir = f'{cache_dir}/outputs'
+cache_dir = '\\cache\\record_matching'
+outputs_dir = f'{cache_dir}\\outputs'
 
 intro = """ \
 # Record Matching

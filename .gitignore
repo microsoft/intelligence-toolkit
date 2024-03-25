@@ -12,7 +12,8 @@ env/
 
 # Streamlit
 .cache/
-.streamlit/
+.streamlit/*
+!.streamlit/config.toml
 
 # Other generated files
 *.log
