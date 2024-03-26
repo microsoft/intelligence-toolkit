@@ -9,7 +9,7 @@ import util.Embedder
 import workflows.question_answering.classes as classes
 import workflows.question_answering.config as config
 
-embedder = util.Embedder.create_embedder(cache=f'{config.cache_dir}\qa_mine')
+embedder = util.Embedder.create_embedder(cache=f'{config.cache_dir}/qa_mine')
 encoder = tiktoken.get_encoding('cl100k_base')
 
 
