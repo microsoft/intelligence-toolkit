@@ -10,7 +10,10 @@ ENV IS_DOCKER True
 
 # Install dependencies
 WORKDIR ./
-COPY . .
+COPY ./app ./app
+COPY ./.streamlit ./.streamlit
+COPY Dockerfile .
+COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 # Run application

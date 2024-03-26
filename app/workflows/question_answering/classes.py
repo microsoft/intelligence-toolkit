@@ -2,11 +2,12 @@ import numpy as np
 import tiktoken
 import scipy.spatial.distance
 import workflows.question_answering.config as config
+import os
 
 
 import util.Embedder
 
-embedder = util.Embedder.create_embedder(cache=f'{config.cache_dir}\\qa_mine') #SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+embedder = util.Embedder.create_embedder(cache=os.path.join(config.cache_dir,"qa_mine")) #SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 encoder = tiktoken.get_encoding('cl100k_base')
 
 class Question:
