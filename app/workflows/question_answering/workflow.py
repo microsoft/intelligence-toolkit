@@ -5,6 +5,7 @@ import re
 import json
 import scipy.spatial.distance
 
+from util.download_pdf import add_download_pdf
 import workflows.question_answering.functions as functions
 import workflows.question_answering.classes as classes
 import workflows.question_answering.config as config
@@ -217,6 +218,10 @@ def create():
                     )
                     sv.answering_lazy_answer_text.value = result
                 report_placeholder.markdown(sv.answering_lazy_answer_text.value)
-                
+                report_data = sv.answering_lazy_answer_text.value
+                is_download_disabled = report_data == ''
+                name = sv.answering_lazy_answer_text.value.split('\n')[0].replace('#','').strip().replace(' ', '_')
                 full_text = sv.answering_lazy_answer_text.value + '\n\n## Supporting FAQ\n\n' + re.sub(r' Q[\d]+: ', ' ', '\n\n'.join(sv.answering_matches.value.split('\n\n')[2:]), re.MULTILINE).replace('###### ', '### ')
-                st.download_button('Download AI answer report', data=full_text, file_name=sv.answering_lazy_answer_text.value.split('\n')[0].replace('#','').strip().replace(' ', '_')+'.md', mime='text/markdown', disabled=sv.answering_lazy_answer_text.value == '', key='lazy_download_button')      
+                
+                add_download_pdf(f'{name}.pdf', full_text, 'Download PDF report', disabled=is_download_disabled)
+                st.download_button('Download markdown report', data=full_text, file_name=f'{name}.md', mime='text/markdown', disabled=sv.answering_lazy_answer_text.value == '', key='lazy_download_button')      
