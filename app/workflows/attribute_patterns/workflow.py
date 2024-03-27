@@ -176,5 +176,5 @@ def create():
                 report_placeholder.markdown(sv.attribute_report.value)
                 is_download_disabled = sv.attribute_report.value == ''
                 name = 'attribute_pattern_report'
-                add_download_pdf(f'{name}.pdf', sv.attribute_report.value, 'Download pattern report PDF', is_markdown=True, disabled=is_download_disabled)
-                st.download_button('Download pattern report markdown', data=sv.attribute_report.value, file_name=f'{name}.md', mime='text/markdown', disabled=is_download_disabled)
+                add_download_pdf(f'{name}.pdf', sv.attribute_report.value, 'Download PDF report', is_markdown=True, disabled=is_download_disabled)
+                st.download_button('Download markdown report', data=sv.attribute_report.value, file_name=f'{name}.md', mime='text/markdown', disabled=is_download_disabled)

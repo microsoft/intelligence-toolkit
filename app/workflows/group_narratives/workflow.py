@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 
+from util.download_pdf import add_download_pdf
 import workflows.group_narratives.config as config
 import workflows.group_narratives.variables as vars
 
@@ -200,4 +201,7 @@ def create():
                     )
                     sv.narrative_report.value = result
                 narrative_placeholder.markdown(sv.narrative_report.value)
-                st.download_button('Download AI group report', data=sv.narrative_report.value, file_name='narrative_report.md', mime='text/markdown', disabled=sv.narrative_report.value == '')
+                is_download_disabled = sv.narrative_report.value == ''
+                reports_name = 'narrative_report'
+                add_download_pdf(f'{reports_name}.pdf', f'{reports_name}.pdf', button_text='Download PDF report', disabled=is_download_disabled)
+                st.download_button('Download markdown report', data=sv.narrative_report.value, file_name=f'{reports_name}.md', mime='text/markdown', disabled=is_download_disabled)
