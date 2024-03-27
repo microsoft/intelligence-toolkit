@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import networkx as nx
-import numpy as np
 
 from collections import defaultdict
 from sklearn.neighbors import NearestNeighbors
@@ -15,9 +14,9 @@ from st_aggrid import (
     DataReturnMode,
     GridOptionsBuilder,
     GridUpdateMode,
-    ColumnsAutoSizeMode
 )   
 
+from util.download_pdf import add_download_pdf
 import workflows.risk_networks.functions as functions
 import workflows.risk_networks.classes as classes
 import workflows.risk_networks.config as config
@@ -508,4 +507,10 @@ def create():
                     )
                     sv.network_report.value = result
                 report_placeholder.markdown(sv.network_report.value)
-                st.download_button('Download AI network report', data=sv.network_report.value, file_name='network_report.md', mime='text/markdown', disabled=sv.network_report.value == '')
+
+                report_data = sv.network_report.value
+                is_download_disabled = report_data == ''
+                name = 'network_report'
+                
+                add_download_pdf(f'{name}.pdf', report_data, 'Download PDF report', disabled=is_download_disabled)
+                st.download_button('Download AI network report', data=report_data, file_name=f'{name}.md', mime='text/markdown', disabled=is_download_disabled)
