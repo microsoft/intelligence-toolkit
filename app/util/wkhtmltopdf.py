@@ -21,8 +21,7 @@ def config_pdfkit():
 
     return pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
 
-def get_options(): 
-    return {
-        'encoding': 'UTF-8',
-        'enable-local-file-access': True
-    }
+pdfkit_options = {
+    'encoding': 'UTF-8',
+    'enable-local-file-access': True,
+}
