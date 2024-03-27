@@ -201,7 +201,8 @@ def create():
                     )
                     sv.narrative_report.value = result
                 narrative_placeholder.markdown(sv.narrative_report.value)
-                is_download_disabled = sv.narrative_report.value == ''
+                report_data = sv.narrative_report.value
+                is_download_disabled = report_data == ''
                 reports_name = 'narrative_report'
-                add_download_pdf(f'{reports_name}.pdf', f'{reports_name}.pdf', button_text='Download PDF report', disabled=is_download_disabled)
-                st.download_button('Download markdown report', data=sv.narrative_report.value, file_name=f'{reports_name}.md', mime='text/markdown', disabled=is_download_disabled)
+                add_download_pdf(f'{reports_name}.pdf', report_data, button_text='Download PDF report', disabled=is_download_disabled)
+                st.download_button('Download markdown report', data=report_data, file_name=f'{reports_name}.md', mime='text/markdown', disabled=is_download_disabled)
