@@ -4,6 +4,14 @@ pip install -r requirements.txt
 
 streamlit run app/Home.py
 
+## PDF export
+Install wkhtmltopdf to be able to generate the final story in PDF:
+
+Windows: [Download wkhtmltopdf installer](https://wkhtmltopdf.org/downloads.html)
+
+Linux:  `sudo apt-get install wkhtmltopdf`
+
+MacOS: `brew install homebrew/cask/wkhtmltopdf`
 
 # Project
 
