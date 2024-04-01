@@ -3,21 +3,39 @@ import util.mermaid as mermaid
 from streamlit_javascript import st_javascript
 import util.session_variables
 import os
+import psutil
+import keyboard
+import time
 
 def get_transparency_faq():
     file_path = os.path.join(os.path.dirname(__file__), 'TransparencyFAQ.md')
     with open(file_path, 'r') as file:
         return file.read()
 
+def click_off_button():
+    st.session_state.off_btn_disabled = not st.session_state.off_btn_disabled
+
 def get_user(sv):
-    if sv.mode.value != 'cloud':
-        return
     css='''
-            [data-testid="stSidebarNavItems"] {
-                max-height: 100vh
-            }
-        '''
+        [data-testid="stSidebarNavItems"] {
+            max-height: 100vh
+        }
+    '''
     st.markdown(f'<style>{css}</style>', unsafe_allow_html=True)
+
+    if sv.mode.value != 'cloud':
+        if "off_btn_disabled" not in st.session_state:
+                st.session_state.off_btn_disabled = False
+        exit_app = st.sidebar.button("🔴 Close application", disabled=st.session_state.off_btn_disabled, on_click=click_off_button)
+        if exit_app:
+            st.text("Shutting down application...")
+            time.sleep(1)
+            pid = os.getpid()
+            keyboard.press_and_release('ctrl+w')
+            p = psutil.Process(pid)
+            p.terminate()
+        return
+
     js_code = """await fetch("/.auth/me")
     .then(function(response) {return response.json();})
     """

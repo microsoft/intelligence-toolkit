@@ -197,7 +197,7 @@ Section "Uninstall"
   RMDir /r "$INSTDIR\pkgs"
   ;Delete saved data
   ;Delete secrets
-  RMDir /r "$LocalAppData\Story Generation"
+  RMDir /r "$LocalAppData\Intelligence Toolkit"
 
   ; Remove ourselves from %PATH%
   [% block uninstall_commands %]
