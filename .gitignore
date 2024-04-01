@@ -40,4 +40,5 @@ cache
 data
 legacy
 
-build
+build/nsis/*
+!build/nsis/Intelligence Toolkit.exe

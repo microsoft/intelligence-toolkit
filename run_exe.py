@@ -13,7 +13,9 @@ def main():
 
     # Getting path to python executable (full path of deployed python on Windows)
     executable = sys.executable
-
+    os.environ["DB_APP_DATA"] = os.environ["LOCALAPPDATA"]
+    os.environ["MODE"] = "exe"
+    
     path_to_main = os.path.join(os.path.dirname(__file__), "app","Home.py")
 
     port_use = is_port_in_use(PORT)
@@ -46,8 +48,8 @@ def main():
 
     # Force the opening (does not open automatically) of the browser tab after a brief delay to let
     # the streamlit server start.
-    # time.sleep(10)
-    # webbrowser.open(f"http://localhost:{PORT}")
+    time.sleep(10)
+    webbrowser.open(f"http://localhost:{PORT}")
 
     while True:
         s = proc.stdout.read()

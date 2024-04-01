@@ -1,8 +1,8 @@
-from openai import OpenAI
 import tiktoken
 import numpy as np
 from util.Database import Database
 import util.session_variables
+from util.openai_instance import _OpenAI
 
 gen_model = 'gpt-4-turbo-preview'
 embed_model = 'text-embedding-3-small'
@@ -12,8 +12,7 @@ max_input_tokens = 128000
 default_temperature = 0
 max_embed_tokens = 8191
 
-
-client = OpenAI()
+openai = _OpenAI()
 encoder = tiktoken.get_encoding(text_encoder)
 
 class Embedder:
@@ -42,7 +41,7 @@ class Embedder:
         for i in range(0, len(new_texts), 2000):
             batch = new_texts[i:i+2000]
             batch_texts = [x[1] for x in batch]
-            embeddings = [x.embedding for x in client.embeddings.create(input = batch_texts, model=self.model).data]
+            embeddings = [x.embedding for x in openai.client().embeddings.create(input = batch_texts, model=self.model).data]
             for j, (ix, text) in enumerate(batch):
                 hsh = hash(text)
                 self.connection.insert_into_embeddings(hsh, embeddings[j]) 
@@ -62,7 +61,7 @@ class Embedder:
                 text = text[:self.max_tokens]
                 print('Truncated text to max tokens')
             try:
-                embedding = client.embeddings.create(input = [text], model=self.model).data[0].embedding
+                embedding = openai.client().embeddings.create(input = [text], model=self.model).data[0].embedding
                 self.connection.insert_into_embeddings(hsh, embedding)                
                 return np.array(embedding)
             except:

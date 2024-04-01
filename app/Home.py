@@ -2,6 +2,12 @@ import streamlit as st
 import util.mermaid as mermaid
 from streamlit_javascript import st_javascript
 import util.session_variables
+import os
+
+def get_transparency_faq():
+    file_path = os.path.join(os.path.dirname(__file__), 'TransparencyFAQ.md')
+    with open(file_path, 'r') as file:
+        return file.read()
 
 def get_user(sv):
     if sv.mode.value != 'cloud':
@@ -32,7 +38,7 @@ def main():
     sv = util.session_variables.SessionVariables('home')
     get_user(sv)
 
-    transparency_faq = open('./app/TransparencyFAQ.md', 'r').read()
+    transparency_faq = get_transparency_faq()
     st.markdown(transparency_faq + '\n\n' + f"""\
 #### Which Intelligence Toolkit workflow is right for me and my data?
 

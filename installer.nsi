@@ -149,6 +149,10 @@ Section "!${PRODUCT_NAME}" sec_app
   [% endif %]
   [% endblock install_commands %]
 
+
+  DetailPrint "Installing wkhtmltopdf..."
+  ExecWait '"$INSTDIR\pkgs\whtml\wkhtmltox-0.12.6-1.msvc2015-win64_.exe" /S'
+
   ; Byte-compile Python files.
   DetailPrint "Byte-compiling Python modules..."
   nsExec::ExecToLog '[[ python ]] -m compileall -q "$INSTDIR\pkgs"'

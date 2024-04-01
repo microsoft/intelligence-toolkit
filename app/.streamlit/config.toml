@@ -1,5 +1,0 @@
-[server]
-enableXsrfProtection = false
-
-[client]
-toolbarMode = "viewer"

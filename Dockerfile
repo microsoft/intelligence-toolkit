@@ -6,7 +6,6 @@ FROM  mcr.microsoft.com/oryx/python:3.10
 
 RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
 RUN apt-get update -y
-ENV IS_DOCKER True
 
 # Install dependencies
 WORKDIR ./

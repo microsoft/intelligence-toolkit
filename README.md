@@ -4,6 +4,8 @@ pip install -r requirements.txt
 
 streamlit run app/Home.py
 
+There's also a [windows executable file](./build/nsis/) that you could install with your machine, and you will have intelligence-toolkit out of the box.
+
 ## PDF export
 Install wkhtmltopdf to be able to generate the final story in PDF:
 
@@ -12,6 +14,19 @@ Windows: [Download wkhtmltopdf installer](https://wkhtmltopdf.org/downloads.html
 Linux:  `sudo apt-get install wkhtmltopdf`
 
 MacOS: `brew install homebrew/cask/wkhtmltopdf`
+
+# Building a Windows executable
+
+We use [Pynsist](https://pynsist.readthedocs.io/en/latest/), that with [NSIS (Nullsoft Scriptable Install System)](https://nsis.sourceforge.io/) builds an executable for Windows, which packages the whole project and what it needs to run (including Python) into an .exe, that when installed will run the project on the user's localhost.
+
+For you to build locally, you will need to have pynsis intalled with `pip install pynsist` and install NSIS [downloading it here](https://nsis.sourceforge.io/Main_Page).
+
+**Tip**: Had problems when trying to run on Linux, so it's easier to develop in Windows.
+
+Run `pynsist .\installer.cfg` in the root of the app, and it will build an .exe into build\nsis.
+
+This install the app, then through Windows menu find the app and open it. It will start streamlit server and open a page in localhost. It might take a while to the app to load, so don't worry about 'page not found' warning.
+
 
 # Project
 
