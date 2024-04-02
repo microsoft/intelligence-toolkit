@@ -14,9 +14,9 @@ text_label = 'Report generated using Intelligence Toolkit (https://aka.ms/itk)'
 def add_download_pdf(name, text, button_text='Download PDF', is_markdown=True, disabled=False):
     if not name.endswith('.pdf'):
         name += '.pdf'
-    text = f'<style>{css}</style>{text}<hr>{text_label}'
     # Convert text to HTML if it's in Markdown format
     text = markdown2.markdown(text) if is_markdown else text
+    text = f'<style>{css}</style> \n\n {text} <hr>{text_label}'
 
     # Generate PDF from HTML string
     config_pdf = config_pdfkit()
