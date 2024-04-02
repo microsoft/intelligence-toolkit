@@ -1,4 +1,4 @@
-
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import streamlit as st
 import pandas as pd
 import plotly.io as pio
@@ -21,7 +21,6 @@ import util.df_functions
 
 def create():
     workflow = 'data_synthesis'
-    st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title='Intelligence Toolkit | Data Synthesis')
     sv = vars.SessionVariables('data_synthesis')
 
     intro_tab, prepare_tab, generate_tab, queries_tab = st.tabs(['Data synthesis workflow:', 'Upload deidentified sensitive data', 'Generate anonymous synthetic data', 'Query and visualize data'])

@@ -1,3 +1,4 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import streamlit as st
 import polars as pl
 import pandas as pd
@@ -18,7 +19,6 @@ import util.ui_components
 embedder = util.Embedder.create_embedder(config.cache_dir)
 
 def create():
-    st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title='Intelligence Toolkit | Record Matching')
     sv = vars.SessionVariables('record_matching')
 
     if not os.path.exists(config.outputs_dir):

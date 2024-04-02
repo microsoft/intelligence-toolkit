@@ -1,3 +1,4 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -21,7 +22,6 @@ import util.ui_components
 
 def create():
     workflow = 'attribute_patterns'
-    st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title='Intelligence Toolkit | Attribute Patterns')
     sv = vars.SessionVariables('attribute_patterns')
     intro_tab, uploader_tab, detect_tab, explain_tab = st.tabs(['Attribute patterns workflow:', 'Create graph model', 'Detect patterns', 'Generate AI pattern reports'])
     df = None

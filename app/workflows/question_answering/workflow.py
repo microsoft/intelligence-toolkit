@@ -1,3 +1,4 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import numpy as np
 import streamlit as st
 from collections import Counter
@@ -17,7 +18,6 @@ import util.ui_components
 embedder = util.Embedder.create_embedder(config.cache_dir)
 
 def create():
-    st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title='Intelligence Toolkit | Question Answering')
     sv = vars.SessionVariables('question_answering')
 
     intro_tab, uploader_tab, mining_tab, report_tab = st.tabs(['Question answering workflow:', 'Upload data', 'Mine & match questions', 'Generate AI answer reports'])

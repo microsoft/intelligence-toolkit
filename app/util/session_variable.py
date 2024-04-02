@@ -1,3 +1,4 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 from typing import Any
 import streamlit as st
 import traceback
