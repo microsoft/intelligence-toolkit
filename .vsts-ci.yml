@@ -1,0 +1,81 @@
+name: Intelligence Toolkit
+pool:
+  vmImage: ubuntu-latest
+
+trigger:
+  batch: true
+  branches:
+    include:
+      - main
+
+variables:
+  isMain: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
+
+stages:
+  - stage: Compliance
+    dependsOn: []
+    jobs:
+      - job: compliance
+        displayName: Compliance
+        pool:
+          vmImage: windows-latest
+        steps:
+          - task: CredScan@3
+            inputs:
+              outputFormat: sarif
+              debugMode: false
+
+          - task: ComponentGovernanceComponentDetection@0
+            inputs:
+              scanType: "Register"
+              verbosity: "Verbose"
+              alertWarningLevel: "High"
+
+          - task: PublishSecurityAnalysisLogs@3
+            inputs:
+              ArtifactName: "CodeAnalysisLogs"
+              ArtifactType: "Container"
+
+  - stage: Build_deploy
+    dependsOn: []
+    condition: eq(variables.isMain, 'true')
+    jobs:
+      - job: build
+        displayName: Build
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: "3.10"
+            displayName: "Use Python 3.10"
+          - task: Bash@3
+            displayName: Install Dependencies
+            inputs:
+              workingDirectory: ./
+              targetType: "inline"
+              script: pip install -r requirements.txt
+          - task: Bash@3
+            displayName: Build Docker Image
+            inputs:
+              workingDirectory: ./
+              targetType: "inline"
+              script: docker build . -t $(DOCKER_REGISTRY)/intel-toolkit:latest
+
+      - job: Deploy
+        displayName: Deploy
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: Bash@3
+            displayName: Docker Login
+            inputs:
+              targetType: "inline"
+              script: docker login -u $(DOCKER_USERNAME) -p $(DOCKER_PASSWORD) $(DOCKER_REGISTRY)
+
+          - task: Bash@3
+            displayName: Push Docker Image
+            inputs:
+              workingDirectory: ./
+              targetType: "inline"
+              script: docker push $(DOCKER_REGISTRY)/intel-toolkit:latest
