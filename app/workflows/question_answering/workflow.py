@@ -27,7 +27,7 @@ def create():
         st.markdown(config.intro)
     with uploader_tab:
         st.markdown('##### Upload data for processing')
-        files = st.file_uploader("Upload PDF text files", type=['pdf'], accept_multiple_files=True)
+        files = st.file_uploader("Upload PDF text files", type=['pdf', 'txt'], accept_multiple_files=True)
         if files != None:
             if st.button('Chunk and embed files'):
                 functions.chunk_files(sv, files)

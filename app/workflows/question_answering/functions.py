@@ -8,6 +8,9 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 import util.Embedder
 import workflows.question_answering.classes as classes
 import workflows.question_answering.config as config
+import tempfile
+import pdfkit
+from util.wkhtmltopdf import config_pdfkit, pdfkit_options
 
 embedder = util.Embedder.create_embedder(cache=f'{config.cache_dir}/qa_mine')
 encoder = tiktoken.get_encoding('cl100k_base')
@@ -32,29 +35,25 @@ def chunk_files(sv, files):
             file = classes.File(file_link.name, file_id)
             sv.answering_files.value[file_id] = file
             bytes = file_link.getvalue()
-            # path = f'{config.cache_dir}\\qa_mine\\raw_files'
-            # if not os.path.exists(path):
-            #     os.makedirs(path)
-            # path = os.path.join(path, file.name)
+            
+            txt_pdf_name = None
+            if file_link.name.endswith('.txt'):
+                config_pdf = config_pdfkit()
+                with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as temp_file:
+                    txt_pdf_name = temp_file.name
+                    pdfkit.from_string(bytes.decode('utf-8'), txt_pdf_name, options=pdfkit_options, configuration=config_pdf)
 
-            # with open(path, 'wb') as f:
-            #     f.write(bytes)
-            pdf_reader = pdfplumber.open(io.BytesIO(bytes))
+            pdf_reader = pdfplumber.open(txt_pdf_name if txt_pdf_name else io.BytesIO(bytes))
             for px in range(len(pdf_reader.pages)):
                 page_text = pdf_reader.pages[px].extract_text()
                 doc_text += f'\n[PAGE {px+1}]\n\n{page_text}\n\n'
                 chunks = [f'\n[PAGE {px+1}]\n\n{x.strip()}\n\n' for x in text_splitter.split_text(page_text)]
                 for chunk in chunks:
                     file_chunks.append((file, chunk))
-            file.set_text(doc_text)
-           
+                file.set_text(doc_text)
+
     for cx, (file, chunk) in enumerate(file_chunks):
         pb.progress((cx+1) / len(file_chunks), f'Embedding chunk {cx+1} of {len(file_chunks)}...')
-        # path = f'{config.cache_dir}\\qa_mine\\text_files'
-        # if not os.path.exists(path):
-        #     os.makedirs(path)
-        # with open(os.path.join(path, file.name+'.txt'), 'wb') as f:
-        #     f.write(doc_text.encode('utf-8'))
         chunk_vec = embedder.encode(chunk)
         file.add_chunk(chunk, np.array(chunk_vec), cx+1)   
 
