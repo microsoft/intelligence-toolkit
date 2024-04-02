@@ -61,12 +61,6 @@ stages:
               workingDirectory: ./
               targetType: "inline"
               script: docker build . -t $(DOCKER_REGISTRY)/intel-toolkit:latest
-
-      - job: Deploy
-        displayName: Deploy
-        pool:
-          vmImage: ubuntu-latest
-        steps:
           - task: Bash@3
             displayName: Docker Login
             inputs:
