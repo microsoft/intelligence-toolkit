@@ -1,3 +1,4 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import streamlit as st
 import pandas as pd
 
@@ -10,7 +11,6 @@ import util.ui_components
 
 def create():
     workflow = 'group_narratives'
-    st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title='Intelligence Toolkit | Group Narratives')
     sv = vars.SessionVariables('group_narratives')
 
     intro_tab, prepare_tab, summarize_tab, generate_tab = st.tabs(['Group narratives workflow:', 'Upload data to narrate', 'Prepare data summary', 'Generate AI group reports',])
@@ -205,4 +205,4 @@ def create():
                 is_download_disabled = report_data == ''
                 reports_name = 'narrative_report'
                 add_download_pdf(f'{reports_name}.pdf', report_data, button_text='Download PDF report', disabled=is_download_disabled)
-                st.download_button('Download markdown report', data=report_data, file_name=f'{reports_name}.md', mime='text/markdown', disabled=is_download_disabled)
+                st.download_button('Download MD report', data=report_data, file_name=f'{reports_name}.md', mime='text/markdown', disabled=is_download_disabled)

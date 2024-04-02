@@ -1,3 +1,4 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import numpy as np
 import tiktoken
 import scipy.spatial.distance

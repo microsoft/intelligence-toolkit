@@ -1,3 +1,4 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import streamlit as st
 import pandas as pd
 import networkx as nx
@@ -28,7 +29,6 @@ import util.ui_components
 embedder = util.Embedder.create_embedder(config.cache_dir)
 
 def create():
-    st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title='Intelligence Toolkit | Risk Networks')
     sv = vars.SessionVariables('risk_networks')
 
     if not os.path.exists(config.outputs_dir):

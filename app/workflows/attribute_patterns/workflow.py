@@ -1,3 +1,4 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -21,7 +22,6 @@ import util.ui_components
 
 def create():
     workflow = 'attribute_patterns'
-    st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title='Intelligence Toolkit | Attribute Patterns')
     sv = vars.SessionVariables('attribute_patterns')
     intro_tab, uploader_tab, detect_tab, explain_tab = st.tabs(['Attribute patterns workflow:', 'Create graph model', 'Detect patterns', 'Generate AI pattern reports'])
     df = None
@@ -178,4 +178,4 @@ def create():
                 is_download_disabled = report_data == ''
                 name = 'attribute_pattern_report'
                 add_download_pdf(f'{name}.pdf', report_data, 'Download PDF report', disabled=is_download_disabled)
-                st.download_button('Download markdown report', data=report_data, file_name=f'{name}.md', mime='text/markdown', disabled=is_download_disabled)
+                st.download_button('Download MD report', data=report_data, file_name=f'{name}.md', mime='text/markdown', disabled=is_download_disabled)

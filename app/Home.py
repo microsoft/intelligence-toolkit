@@ -1,36 +1,11 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import streamlit as st
+from components.app_loader import load_multipage_app
 import util.mermaid as mermaid
-from streamlit_javascript import st_javascript
-import util.session_variables
-
-def get_user(sv):
-    if sv.mode.value != 'cloud':
-        return
-    css='''
-            [data-testid="stSidebarNavItems"] {
-                max-height: 100vh
-            }
-        '''
-    st.markdown(f'<style>{css}</style>', unsafe_allow_html=True)
-    js_code = """await fetch("/.auth/me")
-    .then(function(response) {return response.json();})
-    """
-    return_value = st_javascript(js_code)
-
-    username = None
-    if return_value == 0:
-        pass # this is the result before the actual value is returned 
-    elif isinstance(return_value, list) and len(return_value) > 0:
-        username = return_value[0]["user_id"]
-        sv.username.value = username
-        st.sidebar.write(f"Logged in as {username}")
-    else:
-        st.warning(f"Could not directly read username from azure active directory: {return_value}.")     
 
 def main():
     st.set_page_config(layout="wide", initial_sidebar_state="expanded", page_title='Intelligence Toolkit | Home')
-    sv = util.session_variables.SessionVariables('home')
-    get_user(sv)
+    load_multipage_app()
 
     transparency_faq = open('./app/TransparencyFAQ.md', 'r').read()
     st.markdown(transparency_faq + '\n\n' + f"""\
