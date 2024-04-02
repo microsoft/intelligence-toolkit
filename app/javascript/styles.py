@@ -7,6 +7,11 @@ style_sidebar = '''
     }
 '''
 
+style_pdf = '''body {
+    font-family: 'helvetica';
+}
+'''
+
 def add_styles():
     st.markdown(f'''<style>
         {style_sidebar}

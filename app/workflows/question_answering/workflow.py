@@ -224,4 +224,4 @@ def create():
                 full_text = sv.answering_lazy_answer_text.value + '\n\n## Supporting FAQ\n\n' + re.sub(r' Q[\d]+: ', ' ', '\n\n'.join(sv.answering_matches.value.split('\n\n')[2:]), re.MULTILINE).replace('###### ', '### ')
                 
                 add_download_pdf(f'{name}.pdf', full_text, 'Download PDF report', disabled=is_download_disabled)
-                st.download_button('Download markdown report', data=full_text, file_name=f'{name}.md', mime='text/markdown', disabled=sv.answering_lazy_answer_text.value == '', key='lazy_download_button')      
+                st.download_button('Download MD report', data=full_text, file_name=f'{name}.md', mime='text/markdown', disabled=sv.answering_lazy_answer_text.value == '', key='lazy_download_button')      

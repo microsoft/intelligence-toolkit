@@ -3,11 +3,8 @@ import markdown2
 import pdfkit
 from util.wkhtmltopdf import config_pdfkit, pdfkit_options
 import streamlit as st
+from javascript.styles import style_pdf
 
-css = '''body {
-    font-family: 'helvetica';
-}
-'''
 #itk-label
 text_label = 'Report generated using Intelligence Toolkit (https://aka.ms/itk)'
 
@@ -16,7 +13,7 @@ def add_download_pdf(name, text, button_text='Download PDF', is_markdown=True, d
         name += '.pdf'
     # Convert text to HTML if it's in Markdown format
     text = markdown2.markdown(text) if is_markdown else text
-    text = f'<style>{css}</style> \n\n {text} <hr>{text_label}'
+    text = f'<style>{style_pdf}</style> \n\n {text} <hr>{text_label}'
 
     # Generate PDF from HTML string
     config_pdf = config_pdfkit()

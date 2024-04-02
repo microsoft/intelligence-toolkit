@@ -205,4 +205,4 @@ def create():
                 is_download_disabled = report_data == ''
                 reports_name = 'narrative_report'
                 add_download_pdf(f'{reports_name}.pdf', report_data, button_text='Download PDF report', disabled=is_download_disabled)
-                st.download_button('Download markdown report', data=report_data, file_name=f'{reports_name}.md', mime='text/markdown', disabled=is_download_disabled)
+                st.download_button('Download MD report', data=report_data, file_name=f'{reports_name}.md', mime='text/markdown', disabled=is_download_disabled)
