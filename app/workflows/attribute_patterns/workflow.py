@@ -10,13 +10,10 @@ from st_aggrid import (
     GridUpdateMode,
     ColumnsAutoSizeMode
 )   
-
+from util.download_pdf import add_download_pdf
 import workflows.attribute_patterns.functions as functions
 import workflows.attribute_patterns.classes as classes
-import workflows.attribute_patterns.config as config
-import workflows.attribute_patterns.prompts as prompts
 import workflows.attribute_patterns.variables as vars
-
 import workflows.attribute_patterns.config as config
 
 import util.AI_API
@@ -176,5 +173,9 @@ def create():
                         prefix=''
                     )
                     sv.attribute_report.value = result
-                report_placeholder.markdown(sv.attribute_report.value)
-                st.download_button('Download AI pattern report', data=sv.attribute_report.value, file_name='attribute_pattern_report.md', mime='text/markdown', disabled=sv.attribute_report.value == '')
+                report_data = sv.attribute_report.value
+                report_placeholder.markdown(report_data)
+                is_download_disabled = report_data == ''
+                name = 'attribute_pattern_report'
+                add_download_pdf(f'{name}.pdf', report_data, 'Download PDF report', disabled=is_download_disabled)
+                st.download_button('Download markdown report', data=report_data, file_name=f'{name}.md', mime='text/markdown', disabled=is_download_disabled)
