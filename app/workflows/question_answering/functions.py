@@ -39,10 +39,9 @@ def chunk_files(sv, files):
             txt_pdf_name = None
             if file_link.name.endswith('.txt'):
                 config_pdf = config_pdfkit()
-                txt_content = bytes.decode('utf-8')
                 with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as temp_file:
                     txt_pdf_name = temp_file.name
-                    pdfkit.from_string(txt_content, txt_pdf_name, options=pdfkit_options, configuration=config_pdf)
+                    pdfkit.from_string(bytes.decode('utf-8'), txt_pdf_name, options=pdfkit_options, configuration=config_pdf)
 
             pdf_reader = pdfplumber.open(txt_pdf_name if txt_pdf_name else io.BytesIO(bytes))
             for px in range(len(pdf_reader.pages)):
