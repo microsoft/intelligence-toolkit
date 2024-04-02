@@ -1,6 +1,6 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+import workflows.record_matching.workflow
 from components.app_loader import load_multipage_app
-import workflows.question_answering.workflow
 import streamlit as st
 
 def main():

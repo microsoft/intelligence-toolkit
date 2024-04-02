@@ -1,6 +1,6 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-from components.app_loader import load_multipage_app
 import workflows.data_synthesis.workflow
+from components.app_loader import load_multipage_app
 import streamlit as st
 
 def main():
