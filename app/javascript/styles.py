@@ -12,7 +12,14 @@ style_pdf = '''body {
 }
 '''
 
+style_iframes = '''
+    iframe {
+        display: none;
+    }
+'''
+
 def add_styles():
     st.markdown(f'''<style>
         {style_sidebar}
+        {style_iframes}
     </style>''', unsafe_allow_html=True)
