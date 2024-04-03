@@ -41,8 +41,11 @@ class Embedder:
         print(f'Got {len(new_texts)} new texts')
         # split into batches of 2000
         pb = st.progress(0, 'Embedding text batches...')
+        num_batches = len(new_texts) // 2000 + 1
+        bi = 1
         for i in range(0, len(new_texts), 2000):
-            pb.progress((i+1) / len(new_texts), f'Embedding text batch {i+1} of {len(new_texts)}...')
+            pb.progress((bi) / num_batches, f'Embedding text batch {bi} of {num_batches}...')
+            bi += 1
             batch = new_texts[i:i+2000]
             batch_texts = [x[1] for x in batch]
             embeddings = [x.embedding for x in client.embeddings.create(input = batch_texts, model=self.model).data]

@@ -12,6 +12,7 @@ from st_aggrid import (
     ColumnsAutoSizeMode
 )   
 from util.download_pdf import add_download_pdf
+
 import workflows.attribute_patterns.functions as functions
 import workflows.attribute_patterns.classes as classes
 import workflows.attribute_patterns.variables as vars

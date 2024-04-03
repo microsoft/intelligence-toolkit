@@ -15,6 +15,7 @@ from st_aggrid import (
     DataReturnMode,
     GridOptionsBuilder,
     GridUpdateMode,
+    ColumnsAutoSizeMode
 )   
 
 from util.download_pdf import add_download_pdf
@@ -348,6 +349,7 @@ def create():
                 with b3:
                     dl_button = st.empty()
                 show_df = sv.network_entity_df.value.copy()
+                
                 if show_groups != sv.network_last_show_groups.value:
                     sv.network_last_show_groups.value = show_groups
                     sv.network_table_index.value += 1
@@ -369,7 +371,6 @@ def create():
                 gb.configure_selection(selection_mode="single", use_checkbox=False)
                 gb.configure_side_bar()
                 gridoptions = gb.build()
-
                 response = AgGrid(
                     show_df,
                     key=f'report_grid_{sv.network_table_index.value}',
@@ -382,7 +383,8 @@ def create():
                     header_checkbox_selection_filtered_only=False,
                     use_checkbox=False,
                     enable_quicksearch=True,
-                    reload_data=False
+                    reload_data=False,
+                    columns_auto_size_mode=ColumnsAutoSizeMode.FIT_ALL_COLUMNS_TO_VIEW
                     )
            
             selected_entity = response['selected_rows'][0]['Entity ID'] if len(response['selected_rows']) > 0 and 'Entity ID' in response['selected_rows'][0] else ''
