@@ -19,6 +19,6 @@ The **Risk Networks** workflow generates intelligence reports on risk exposure f
 4. [**Process**] The system uses the entity relationships and shared attributes to infer networks of closely related entities.
 5. [**Output**] The system shows (a) the structure of any selected network, and (b) risk exposure paths for any selected entity. Can be created and used independently without any AI or embedding calls.
 6. [**AI Calls**] For entities or networks of interest selected by the user, generative AI is used to create AI network reports.
-7. [**Output**] AI network report MD file(s) describing the structure of the network and the nature of risk propagation within it.
+7. [**Output**] AI network report MD/PDF file(s) describing the structure of the network and the nature of risk propagation within it.
 
 """

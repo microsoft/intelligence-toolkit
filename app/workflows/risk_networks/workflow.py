@@ -315,9 +315,10 @@ def create():
                         unflagged = len(entities) - flagged
                         flaggedPerUnflagged = flagged / unflagged if unflagged > 0 else 0
                         flaggedPerUnflagged = round(flaggedPerUnflagged, 2)
-                    flags = sv.network_integrated_flags.value[sv.network_integrated_flags.value['qualified_entity'].isin(entities)]['count'].sum() if len(sv.network_integrated_flags.value) > 0 else 0
-                    flags_per_entity = round(flags / len(entities) if len(entities) > 0 else 0, 2)
+                    flags_per_entity = round(community_flags / len(entities) if len(entities) > 0 else 0, 2)
                     for n in entities:
+                        flags = sv.network_integrated_flags.value[sv.network_integrated_flags.value['qualified_entity']==n]['count'].sum() if len(sv.network_integrated_flags.value) > 0 else 0
+                    
                         entity_records.append((n.split(config.att_val_sep)[1], flags, ix, len(entities), community_flags, flagged, flags_per_entity, flaggedPerUnflagged))
                 sv.network_entity_df.value = pd.DataFrame(entity_records, columns=['Entity ID', 'Entity Flags', 'Network ID', 'Network Entities', 'Network Flags', 'Flagged', 'Flags/Entity', 'Flagged/Unflagged'])
                 sv.network_entity_df.value = sv.network_entity_df.value.sort_values(by=['Flagged/Unflagged'], ascending=False).reset_index(drop=True)
@@ -398,49 +399,51 @@ def create():
                 N = functions.build_network_from_entities(sv, sv.network_overall_graph.value, c_nodes)
                 if selected_entity != '':
                     qualified_selected = f'{config.entity_label}{config.att_val_sep}{selected_entity}'
-                    
-                    rdf = sv.network_integrated_flags.value.copy()
-                    rdf = rdf[rdf['qualified_entity'].isin(c_nodes)]
-                    rdf = rdf[['qualified_entity', 'flag', 'count']].groupby(['qualified_entity', 'flag']).sum().reset_index()
-                    all_flagged = rdf['qualified_entity'].unique()
-                    path_to_source = defaultdict(list)
-                    target_flags = rdf[rdf['qualified_entity'] == selected_entity]['count'].sum()
-                    net_flags = rdf['count'].sum() - target_flags
-                    net_flagged = len(all_flagged)
-                    if selected_entity in all_flagged:
-                        net_flagged -= 1
-                    context = '##### Risk Exposure Report\n\n'
-                    for flagged in all_flagged:
-                        path = list(nx.shortest_path(N, flagged, qualified_selected))
-                        if len(path) > 1:
-                            chain = ''
-                            for j, step in enumerate(path):
-                                indent = "".join(["  "] * j)
-                                if ']\n' in step:
-                                    step = ''.join(step.split(']\n')[1:])
-                                    step = '\n'.join(step.split('; '))
-                                if config.entity_label in step:
-                                    step_risks = rdf[rdf['qualified_entity'] == step]['count'].sum()
-                                    step = step.split(config.att_val_sep)[1] + f' [linked to {step_risks} flags]'
-                                else:
-                                    step_entities = nx.degree(N, step)
-                                    step = f"\n{indent}".join(step.split("\n")) + f' [linked to {step_entities} entities]'
-                                chain += indent + f'{step}\n'
-                                if j < len(path) - 1:
-                                    chain += indent + '--->\n'
-                            source = chain.split('\n--->')[0]
-                            path = chain.split('\n--->')[1]
-                            path_to_source[path].append(source)
-                    paths = len(path_to_source.keys())
-                    context += f'The selected entity **{selected_entity}** has **{target_flags}** direct flags and is linked to **{net_flags}** indirect flags via **{paths}** paths from **{net_flagged}** related entities:\n\n'
-                    
-                    for ix, (path, sources) in enumerate(path_to_source.items()):
-                        context += f'**Path {ix+1}**\n\n```\n'
-                        for source in sources:
-                            context += f'{source}\n'
-                        context += f'---> {path}\n```\n\n'
-                    context = context.replace('**1** steps', '**1** step')
-                    context = context.replace('**1** flags', '**1** flag')
+                    context = 'Upload risk flags to see risk exposure report.'
+                    if len(sv.network_integrated_flags.value) > 0:
+                        rdf = sv.network_integrated_flags.value.copy()
+                        rdf = rdf[rdf['qualified_entity'].isin(c_nodes)]
+                        rdf = rdf[['qualified_entity', 'flag', 'count']].groupby(['qualified_entity', 'flag']).sum().reset_index()
+                        all_flagged = rdf[rdf['count'] > 0]['qualified_entity'].unique()
+                        path_to_source = defaultdict(list)
+                        target_flags = rdf[rdf['qualified_entity'] == qualified_selected]['count'].sum()
+                        net_flags = rdf['count'].sum() - target_flags
+                        net_flagged = len(all_flagged)
+                        if qualified_selected in all_flagged:
+                            net_flagged -= 1
+                        context = '##### Risk Exposure Report\n\n'
+                        for flagged in all_flagged:
+                            path = list(nx.shortest_path(N, flagged, qualified_selected))
+                            if len(path) > 1:
+                                chain = ''
+                                for j, step in enumerate(path):
+                                    indent = "".join(["  "] * j)
+                                    if ']\n' in step:
+                                        step = ''.join(step.split(']\n')[1:])
+                                        step = '\n'.join(step.split('; '))
+                                    if config.entity_label in step:
+                                        step_risks = rdf[rdf['qualified_entity'] == step]['count'].sum()
+                                        step = step.split(config.att_val_sep)[1] + f' [linked to {step_risks} flags]'
+                                    else:
+                                        step_entities = nx.degree(N, step)
+                                        step = f"\n{indent}".join(step.split("\n")) + f' [linked to {step_entities} entities]'
+                                    chain += indent + f'{step}\n'
+                                    if j < len(path) - 1:
+                                        chain += indent + '--->\n'
+                                source = chain.split('\n--->')[0]
+                                path = chain.split('\n--->')[1]
+                                path_to_source[path].append(source)
+                        paths = len(path_to_source.keys())
+                        context += f'The selected entity **{selected_entity}** has **{target_flags}** direct flags and is linked to **{net_flags}** indirect flags via **{paths}** paths from **{net_flagged}** related entities:\n\n'
+                        if net_flagged == 0:
+                            context = context[:-3] + '.'
+                        for ix, (path, sources) in enumerate(path_to_source.items()):
+                            context += f'**Path {ix+1}**\n\n```\n'
+                            for source in sources:
+                                context += f'{source}\n'
+                            context += f'---> {path}\n```\n\n'
+                        context = context.replace('**1** steps', '**1** step')
+                        context = context.replace('**1** flags', '**1** flag')
                     sv.network_risk_exposure.value = context
                 else:
                     sv.network_risk_exposure.value = ''

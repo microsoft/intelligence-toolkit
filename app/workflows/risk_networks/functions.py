@@ -103,7 +103,6 @@ def merge_nodes(G, can_merge_fn):
     return G
 
 def merge_node_list(G, merge_list):
-    new_flags = []
     G1 = G.copy()
     m = config.list_sep.join(sorted(merge_list))
     t = config.list_sep.join(sorted([G.nodes[n]['type'] for n in merge_list]))
@@ -117,9 +116,7 @@ def merge_node_list(G, merge_list):
                 G1.add_edge(m, nn)
         G1.remove_node(n)
         has_flags = has_flags or G.nodes[n]['flags'] > 0
-    if has_flags:
-        new_flags.append(m)
-    return G1, new_flags
+    return G1
 
 def simplify_graph(C):
     S = C.copy()

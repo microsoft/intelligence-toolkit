@@ -68,9 +68,9 @@ def update_question(sv, question_history, new_questions, placeholder, prefix):
         
 
         system_message = """\
-You are a helpful assistant augmenting a user question with any relevant keywords (e.g., entities, concepts, or knowledge) found in a list of input questions, each of which is prefixed by the question ID.
+You are a helpful assistant augmenting a user question with any keywords (e.g., entities/concepts) found in a list of input questions, each of which is prefixed by the question ID.
 
-Any keywords that directly help answer the question should be inserted as a list, enclosed by parentheses, at the appropriate point in the question, with each keywords item referencing the supporting question IDs using "(<keywords 1> [Q<ID>, Q<ID>...], <keywords 2> [Q<ID>, Q<ID>...], ...)".
+Only keywords that clearly and directly help answer the question should be inserted as a list, enclosed by parentheses, at the appropriate point in the question, with each keywords item referencing the supporting question IDs using "(<keywords 1> [Q<ID>, Q<ID>...], <keywords 2> [Q<ID>, Q<ID>...], ...)".
 
 Do not insert any text indicating lack of relevant keywords, and do not remove any text (including question references) already present in the previous augmented question unless it is clearly irrelevant.
 

@@ -50,7 +50,6 @@ class Embedder:
             batch_texts = [x[1] for x in batch]
             embeddings = [x.embedding for x in client.embeddings.create(input = batch_texts, model=self.model).data]
             for j, (ix, text) in enumerate(batch):
-                print(j)
                 # hsh = hash(text)
                 # self.connection.insert_into_embeddings(hsh, embeddings[j]) 
                 final_embeddings[ix] = np.array(embeddings[j])

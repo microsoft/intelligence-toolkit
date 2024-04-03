@@ -9,5 +9,5 @@ def load_multipage_app():
     user.view_get_info()
 
     #load css
-    add_styles()
+    # add_styles()
 

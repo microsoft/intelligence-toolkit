@@ -119,8 +119,7 @@ def create():
                 b1, b2 = st.columns([1, 1])
                 with b1:
                     st.number_input('Matching record distance (max)', min_value=0.0, max_value=1.0, step=0.01, key=sv.matching_sentence_pair_embedding_threshold.key, value=sv.matching_sentence_pair_embedding_threshold.value)
-                # if st.button('Detect record matches', use_container_width=True):
-                #     with st.spinner('Detecting matches...'):
+
                 with b2:
                     st.number_input('Matching name similarity (min)', min_value=0.0, max_value=1.0, step=0.01, key=sv.matching_sentence_pair_jaccard_threshold.key, value=sv.matching_sentence_pair_jaccard_threshold.value)
                 if st.button('Detect record groups', use_container_width=True):
@@ -143,12 +142,13 @@ def create():
                                 aligned_dfs.append(rdf)
                             string_dfs = []
                             for df in aligned_dfs:
-                                print(df.columns)
                                 # convert all columns to strings
                                 for col in df.columns:
                                     df = df.with_columns(pl.col(col).cast(pl.Utf8))
                                 string_dfs.append(df)
                             sv.matching_merged_df.value = pl.concat(string_dfs)
+                            # filter out any rows with no entity name
+                            sv.matching_merged_df.value = sv.matching_merged_df.value.filter(pl.col('Entity name') != '')
                             sv.matching_merged_df.value = sv.matching_merged_df.value.with_columns((pl.col('Entity ID').cast(pl.Utf8)) + '::' + pl.col('Dataset').alias('Unique ID'))
                             all_sentences = functions.convert_to_sentences(sv.matching_merged_df.value, skip=['Unique ID', 'Entity ID', 'Dataset'])
                             # model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
@@ -187,7 +187,7 @@ def create():
                                     inter = len(igrams.intersection(ngrams))
                                     union = len(igrams.union(ngrams))
                                     score = inter/union if union > 0 else 0
-                                    print(ixn, nxn, score)
+
                                     sv.matching_sentence_pair_scores.value.append((ix, nx, score))
 
                 # st.markdown(f'Identified **{len(sv.matching_sentence_pair_scores.value)}** pairwise record matches.')

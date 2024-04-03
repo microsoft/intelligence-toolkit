@@ -21,6 +21,6 @@ The **Question Answering** workflow generates intelligence reports from an entit
 7. [**Embedding Calls**] The system embeds the questions, answers, and augmented question into the same space.
 8. [**Processing**] The cycle (steps 4-7) repeats until the augmented question matches a target number of questions/answers before an unmined chunk.
 9. [**AI Calls**] The system uses generative AI to produce an answer report from the augmented question and matching mined question-answer pairs.
-10. [**Output**] AI answer report MD file(s) including both a structured answer to the user's question and an FAQ of relevant question-answer pairs.
+10. [**Output**] AI answer report MD/PDF file(s) including both a structured answer to the user's question and an FAQ of relevant question-answer pairs.
 
 """
