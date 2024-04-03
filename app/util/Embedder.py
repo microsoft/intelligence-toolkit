@@ -3,6 +3,7 @@ import tiktoken
 import numpy as np
 from util.Database import Database
 import util.session_variables
+import streamlit as st
 
 gen_model = 'gpt-4-turbo-preview'
 embed_model = 'text-embedding-3-small'
@@ -39,14 +40,18 @@ class Embedder:
                 final_embeddings[ix] = np.array(embeddings)
         print(f'Got {len(new_texts)} new texts')
         # split into batches of 2000
+        pb = st.progress(0, 'Embedding text batches...')
         for i in range(0, len(new_texts), 2000):
+            pb.progress((i+1) / len(new_texts), f'Embedding text batch {i+1} of {len(new_texts)}...')
             batch = new_texts[i:i+2000]
             batch_texts = [x[1] for x in batch]
             embeddings = [x.embedding for x in client.embeddings.create(input = batch_texts, model=self.model).data]
             for j, (ix, text) in enumerate(batch):
-                hsh = hash(text)
-                self.connection.insert_into_embeddings(hsh, embeddings[j]) 
+                print(j)
+                # hsh = hash(text)
+                # self.connection.insert_into_embeddings(hsh, embeddings[j]) 
                 final_embeddings[ix] = np.array(embeddings[j])
+        pb.empty()
         return np.array(final_embeddings)
 
     def encode(self, text):

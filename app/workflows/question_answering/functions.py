@@ -21,9 +21,10 @@ text_splitter = RecursiveCharacterTextSplitter(
 )
 
 def chunk_files(sv, files):
-    pb = st.progress(0, 'Chunking and embedding files...')
+    pb = st.progress(0, 'Chunking files...')
     file_chunks = []
-    for file_link in files:
+    for fx, file_link in enumerate(files):
+        pb.progress((fx+1) / len(files), f'Chunking file {fx+1} of {len(files)}...')
         file_names = [f.name for f in sv.answering_files.value.values()]
         doc_text = ''
         if file_link.name not in file_names:
@@ -32,13 +33,7 @@ def chunk_files(sv, files):
             file = classes.File(file_link.name, file_id)
             sv.answering_files.value[file_id] = file
             bytes = file_link.getvalue()
-            # path = f'{config.cache_dir}\\qa_mine\\raw_files'
-            # if not os.path.exists(path):
-            #     os.makedirs(path)
-            # path = os.path.join(path, file.name)
 
-            # with open(path, 'wb') as f:
-            #     f.write(bytes)
             pdf_reader = pdfplumber.open(io.BytesIO(bytes))
             for px in range(len(pdf_reader.pages)):
                 page_text = pdf_reader.pages[px].extract_text()
@@ -70,7 +65,7 @@ def update_question(sv, question_history, new_questions, placeholder, prefix):
         system_message = """\
 You are a helpful assistant augmenting a user question with any relevant keywords (e.g., entities, concepts, or knowledge) found in a list of input questions, each of which is prefixed by the question ID.
 
-Any relevant keywords should be inserted as a list, enclosed by parentheses, at the appropriate point in the question, with each keywords item referencing the supporting question IDs using "(<keywords 1> [Q<ID>, Q<ID>...], <keywords 2> [Q<ID>, Q<ID>...], ...)".
+Any keywords that directly help answer the question should be inserted as a list, enclosed by parentheses, at the appropriate point in the question, with each keywords item referencing the supporting question IDs using "(<keywords 1> [Q<ID>, Q<ID>...], <keywords 2> [Q<ID>, Q<ID>...], ...)".
 
 Do not insert any text indicating lack of relevant keywords, and do not remove any text (including question references) already present in the previous augmented question unless it is clearly irrelevant.
 

@@ -56,6 +56,7 @@ def create():
                     pdf = pd.melt(pdf, id_vars=['Subject ID', 'Period'], value_vars=att_cols, var_name='Attribute Type', value_name='Attribute Value')
                     pdf = pdf[pdf['Attribute Value'] != '']
                     pdf['Full Attribute'] = pdf.apply(lambda x: str(x['Attribute Type']) + config.type_val_sep + str(x['Attribute Value']), axis=1)
+                    pdf = pdf[pdf['Period'] != '']
                 sv.attribute_dynamic_df.value = pdf
             if ready and len(sv.attribute_dynamic_df.value) > 0:
                 st.markdown(f'Graph model has **{len(sv.attribute_dynamic_df.value)}** links spanning **{len(sv.attribute_dynamic_df.value["Subject ID"].unique())}** cases, **{len(sv.attribute_dynamic_df.value["Full Attribute"].unique())}** attributes, and **{len(sv.attribute_dynamic_df.value["Period"].unique())}** periods.')
@@ -88,7 +89,7 @@ def create():
                 period_count = len(sv.attribute_pattern_df.value["period"].unique())
                 pattern_count = len(sv.attribute_pattern_df.value)
                 unique_count = len(sv.attribute_pattern_df.value['pattern'].unique())
-                st.markdown(f'Over **{period_count}** periods, detected **{pattern_count}** attribute patterns (**{unique_count}** unique) from **{sv.attribute_converging_pairs.value}**/**{sv.attribute_all_pairs.value}** converging attribute pairs (**{round(sv.attribute_converging_pairs.value / sv.attribute_all_pairs.value * 100, 2) if sv.attribute_all_pairs.value > 0 else 0}%**).')
+                st.markdown(f'Over **{period_count}** periods, detected **{pattern_count}** attribute patterns (**{unique_count}** unique) from **{sv.attribute_converging_pairs.value}**/**{sv.attribute_all_pairs.value}** converging attribute pairs (**{round(sv.attribute_converging_pairs.value / sv.attribute_all_pairs.value * 100, 2) if sv.attribute_all_pairs.value > 0 else 0}%**). Patterns ranked by ```overall_score = normalize(length * ln(count) * z_score * detections)```.')
                 show_df = sv.attribute_pattern_df.value
                 tdf = functions.create_time_series_df(sv.attribute_record_counter.value, sv.attribute_pattern_df.value)
                 gb = GridOptionsBuilder.from_dataframe(show_df)

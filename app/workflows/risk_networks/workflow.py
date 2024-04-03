@@ -202,22 +202,18 @@ def create():
             st.multiselect('Select node types to fuzzy match', options=sorted([config.entity_label] + list(sv.network_node_types.value)), key=sv.network_indexed_node_types.key)
             if st.button('Index nodes', disabled=len(sv.network_indexed_node_types.value) == 0):
                 
-                with st.spinner('Indexing nodes...'):
+                text_types = list([(n, d['type']) for n, d in sv.network_overall_graph.value.nodes(data=True) if d['type'] in sv.network_indexed_node_types.value])
+                texts = [t[0] for t in text_types]
+                
+                df = pd.DataFrame(text_types, columns=['text', 'type'])
+                embeddings = embedder.encode_all(texts)
+                vals = [(n, t, e) for (n, t), e in zip(text_types, embeddings)]
+                edf = pd.DataFrame(vals, columns=['text', 'type', 'vector'])
 
-                    text_types = list([(n, d['type']) for n, d in sv.network_overall_graph.value.nodes(data=True) if d['type'] in sv.network_indexed_node_types.value])
-                    texts = [t[0] for t in text_types]
-                    
-                    df = pd.DataFrame(text_types, columns=['text', 'type'])
-                    embeddings = embedder.encode_all(texts)
-                    vals = [(n, t, e) for (n, t), e in zip(text_types, embeddings)]
-                    edf = pd.DataFrame(vals, columns=['text', 'type', 'vector'])
-
-                    edf = edf[edf['text'].isin(texts)]
-                    sv.network_embedded_texts.value = edf['text'].tolist()
-                    # edf['vector'] = edf['vector'].apply(lambda x : np.array([np.float32(y) for y in x[1:-1].split(' ') if y != '']))
-                    # embeddings = np.array(edf['vector'].tolist())
-                    nbrs = NearestNeighbors(n_neighbors=20, n_jobs=1, algorithm='auto', leaf_size=20, metric='cosine').fit(embeddings)
-                    sv.network_nearest_text_distances.value, sv.network_nearest_text_indices.value = nbrs.kneighbors(embeddings)
+                edf = edf[edf['text'].isin(texts)]
+                sv.network_embedded_texts.value = edf['text'].tolist()
+                nbrs = NearestNeighbors(n_neighbors=20, n_jobs=1, algorithm='auto', leaf_size=20, metric='cosine').fit(embeddings)
+                sv.network_nearest_text_distances.value, sv.network_nearest_text_indices.value = nbrs.kneighbors(embeddings)
             st.markdown(f'*Number of nodes indexed*: {len(sv.network_embedded_texts.value)}')
             st.markdown('##### Infer links')
             st.number_input('Similarity threshold', min_value=0.0, max_value=1.0, key=sv.network_similarity_threshold.key, step=0.01, value=sv.network_similarity_threshold.value)

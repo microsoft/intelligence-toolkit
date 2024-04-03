@@ -96,7 +96,6 @@ def prepare_graph(sv, mi=False):
 def generate_embedding(sv, df, time_to_graph):
     period_embeddings = {}
     node_list = sorted(df['Full Attribute'].unique().tolist())
-    print(node_list)
     sorted_att_types = sorted(df['Attribute Type'].unique())
     node_to_ix = {n : i for i, n in enumerate(node_list)}
     node_to_label = {n : sorted_att_types.index(n.split(config.type_val_sep)[0]) for n in node_list}
@@ -230,7 +229,6 @@ def detect_patterns(sv):
             for (a, b) in period_pairs:
                 if len(pattern) > 0 and ((a in pattern and b in pattern) or (a not in pattern and b not in pattern)):
                     continue
-                # print(f'checking {a} and {b} in {pattern}')
                 candidate = None
                 if (a in pattern and b not in pattern):
                     candidate = [b]
@@ -253,7 +251,6 @@ def detect_patterns(sv):
                                 if pcount > sv.attribute_min_pattern_count.value:
                                     period_to_patterns[period].append((candidate_pattern, pcount))
                                     pattern_to_periods[tuple(candidate_pattern)].add(period)
-                                        # print(f'In {period} added {candidate_pattern} with count {pcount}')
     print('done combining pairs')
     # convert to df
     pattern_rows = []
@@ -263,11 +260,14 @@ def detect_patterns(sv):
                 mean, sd, mx = rc.compute_period_mean_sd_max(pattern)
                 score = (count - mean) / sd
                 if score >= 0:
-                    row = [period, ' & '.join(pattern), len(pattern), len(pattern_to_periods[tuple(pattern)]), count, round(mean, 0), round(score, 2)]
+                    row = [period, ' & '.join(pattern), len(pattern), count, round(mean, 0), round(score, 2)]
                     pattern_rows.append(row)
-    columns = ['period', 'pattern', 'length', 'detections', 'count', 'mean', 'z_score']
+    columns = ['period', 'pattern', 'length', 'count', 'mean', 'z_score']
     pattern_df = pd.DataFrame(pattern_rows, columns=columns)
-    pattern_df['overall_score'] = pattern_df['z_score'] * pattern_df['length'] * np.log(pattern_df['count']) * pattern_df['detections']
+    # count number of periods per pattern
+    detections = pattern_df.groupby('pattern')['period'].count().reset_index().rename(columns={'period' : 'detections'})
+    pattern_df = pattern_df.merge(detections, on='pattern')
+    pattern_df['overall_score'] = pattern_df['z_score'] * pattern_df['length'] * pattern_df['detections'] * np.log(pattern_df['count'] + 1)
     # normalize overall score
     max_score = pattern_df['overall_score'].max()
     pattern_df['overall_score'] = pattern_df['overall_score'].apply(lambda x: round((x) / (max_score), 2))

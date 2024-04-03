@@ -139,15 +139,19 @@ def multi_csv_uploader(upload_label, uploaded_files_var, outputs_dir, key, max_r
     st.number_input('Maximum rows to process (0 = all)', min_value=0, step=1000, key=max_rows_var.key)
     if files != None:
         for file in files:
-            if file.name not in uploaded_files_var.value:  
-                df = pd.read_csv(file, encoding='unicode-escape', encoding_errors='ignore')
-                df.to_csv(os.path.join(outputs_dir, file.name), index=False)              
+            if file.name not in uploaded_files_var.value:              
                 uploaded_files_var.value.append(file.name)
     selected_file = st.selectbox("Select a file to process", ['']+uploaded_files_var.value)
-    
+    with st.expander('File options'):
+        encoding = st.selectbox('File encoding', options=['unicode-escape', 'utf-8', 'utf-8-sig'], key=f'{key}_encoding')
+        reload = st.button('Reload', key=f'{key}_reload')
+
     df = pd.DataFrame()
-    if selected_file not in [None, '']:
-        df = pd.read_csv(os.path.join(outputs_dir, selected_file), encoding='unicode-escape', nrows=max_rows_var.value, encoding_errors='ignore') if max_rows_var.value > 0 else pd.read_csv(os.path.join(outputs_dir, selected_file), encoding='unicode-escape', encoding_errors='ignore')
+    if selected_file not in [None, ''] or reload:
+        for file in files:
+            if file.name == selected_file:
+                df = pd.read_csv(file, encoding='unicode-escape', nrows=max_rows_var.value, encoding_errors='ignore') if max_rows_var.value > 0 else pd.read_csv(file, encoding='unicode-escape', encoding_errors='ignore')
+                break
         st.dataframe(df[:show_rows], hide_index=True, use_container_width=True, height=height)
     return selected_file, df
 
@@ -163,7 +167,7 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
         st.session_state[f'{workflow}_binned_df'] = input_df_var.value.copy(deep=True)
 
     with st.expander('Set subject identifier', expanded=False):
-        identifier = st.radio('Subject identifier', options=['Row number', 'ID column'])
+        identifier = st.radio('Subject identifier', options=['Row number', 'ID column'], help='Select row number if each row of data represents a distinct individual, otherwise select ID column to link multiple rows to the same individual via their ID.')
         if identifier == 'ID column':
             options = ['']+list(input_df_var.value.columns.values)
             identifier_col = st.selectbox('Select subject identifier column', options=options)
