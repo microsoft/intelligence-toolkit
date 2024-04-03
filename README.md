@@ -1,29 +1,82 @@
-# Introduction 
+# Intelligence Toolkit
+The Intelligence Toolkit is a suite of interactive workflows for creating AI intelligence reports from real-world data sources. The toolkit is designed to help users identify patterns, answers, relationships, and risks within complex datasets, with generative AI ([OpenAI GPT models](https://platform.openai.com/docs/models/)) used to create reports on findings of interest.
 
-pip install -r requirements.txt
 
-streamlit run app/Home.py
+# Developing 
 
-## PDF export
-Install wkhtmltopdf to be able to generate the final reports in PDF:
+## Requirements
 
-Windows: [Download wkhtmltopdf installer](https://wkhtmltopdf.org/downloads.html)
+- Python 3.10 ([Download](https://www.python.org/downloads/))
 
-Linux:  `sudo apt-get install wkhtmltopdf`
+## Set up:
+1. Set up virtual environment:
 
-MacOS: `brew install homebrew/cask/wkhtmltopdf`
+    `python -m venv ./venv`
 
-# Project
+    or
+    
+    `python3 -m venv ./venv`
 
-> This repo has been populated by an initial template to help get you started. Please
-> make sure to update the content to build a great experience for community-building.
+2. Install wkhtmltopdf to be able to generate the final story in PDF:
 
-As the maintainer of this project, please make a few updates:
+    Windows: [Download wkhtmltopdf installer](https://wkhtmltopdf.org/downloads.html)
 
-- Improving this README.MD file to provide a great experience
-- Updating SUPPORT.MD with content about this project's support experience
-- Understanding the security reporting process in SECURITY.MD
-- Remove this section from the README
+    Linux:  `sudo apt-get install wkhtmltopdf`
+
+    MacOS: `brew install homebrew/cask/wkhtmltopdf`
+
+## OpenAI Key
+
+### Linux:
+Open /venv/bin/activate, add the following lines at the end of the file:
+```
+    # set environment variables
+    export OPENAI_API_KEY=<OPENAI_API_KEY>
+```
+
+### Windows:
+Open venv/Scripts/Activate.ps1, add the following lines after line 167:
+```
+    $env:OPENAI_API_KEY="<OPENAI_API_KEY>"
+``` 
+
+### Running
+
+1. Run the activate: 
+
+    `source venv/bin/activate`  (Linux)
+
+    `.\venv\Scripts\Activate` (Windows with Powershell)
+
+2. Install all the dependencies with pip:
+
+    `pip install -r requirements.txt`
+
+3. Run the project using streamlit: 
+
+    
+    `streamlit run app/Home.py`
+
+
+## Running with docker
+
+Download and install docker: https://www.docker.com/products/docker-desktop/
+
+Then, in the root folder, run:
+
+`docker build . -t intel-toolkit`
+
+After building, run the docker container with:
+
+`docker run -d -p 8501:8501 intel-toolkit`
+
+Open [localhost:8501](http://localhost:8501)
+
+
+# Deploying
+
+- In [this tutorial](https://dev.to/keneojiteli/deploy-a-docker-app-to-app-services-on-azure-5d3h), you can check how to create the services in azure.
+    - From there, you can deploy it manually like it's written, or use [our YAML file](/.vsts-ci.yml) to automatically deploy to your environment if you configure it. 
 
 ## Contributing
 

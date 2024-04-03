@@ -1,3 +1,4 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import numpy as np
 import streamlit as st
 from collections import Counter
@@ -17,7 +18,6 @@ import util.ui_components
 embedder = util.Embedder.create_embedder(config.cache_dir)
 
 def create():
-    st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title='Intelligence Toolkit | Question Answering')
     sv = vars.SessionVariables('question_answering')
 
     intro_tab, uploader_tab, mining_tab, report_tab = st.tabs(['Question answering workflow:', 'Upload data', 'Mine & match questions', 'Generate AI answer reports'])
@@ -27,7 +27,7 @@ def create():
         st.markdown(config.intro)
     with uploader_tab:
         st.markdown('##### Upload data for processing')
-        files = st.file_uploader("Upload PDF text files", type=['pdf'], accept_multiple_files=True)
+        files = st.file_uploader("Upload PDF text files", type=['pdf', 'txt'], accept_multiple_files=True)
         if files != None:
             if st.button('Chunk and embed files'):
                 functions.chunk_files(sv, files)
@@ -224,4 +224,4 @@ def create():
                 full_text = sv.answering_lazy_answer_text.value + '\n\n## Supporting FAQ\n\n' + re.sub(r' Q[\d]+: ', ' ', '\n\n'.join(sv.answering_matches.value.split('\n\n')[2:]), re.MULTILINE).replace('###### ', '### ')
                 
                 add_download_pdf(f'{name}.pdf', full_text, 'Download PDF report', disabled=is_download_disabled)
-                st.download_button('Download markdown report', data=full_text, file_name=f'{name}.md', mime='text/markdown', disabled=sv.answering_lazy_answer_text.value == '', key='lazy_download_button')      
+                st.download_button('Download MD report', data=full_text, file_name=f'{name}.md', mime='text/markdown', disabled=sv.answering_lazy_answer_text.value == '', key='lazy_download_button')      
