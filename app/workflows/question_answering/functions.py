@@ -1,10 +1,10 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import numpy as np
 import streamlit as st
-import os
 import io
 import tiktoken
 import pdfplumber
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 import util.Embedder
 import workflows.question_answering.classes as classes
 import workflows.question_answering.config as config
@@ -53,11 +53,15 @@ def chunk_files(sv, files):
                     file_chunks.append((file, chunk))
                 file.set_text(doc_text)
 
+    all_embeddings_list = []
     for cx, (file, chunk) in enumerate(file_chunks):
         pb.progress((cx+1) / len(file_chunks), f'Embedding chunk {cx+1} of {len(file_chunks)}...')
-        chunk_vec = embedder.encode(chunk)
+        formatted_chunk = chunk.replace("\n", " ")
+        chunk_vec = embedder.encode(formatted_chunk, False)
+        all_embeddings_list.append((hash(formatted_chunk), chunk_vec))
         file.add_chunk(chunk, np.array(chunk_vec), cx+1)   
-
+    pb.progress(99, 'Saving embeddings...')
+    embedder.connection.insert_multiple_into_embeddings(all_embeddings_list)
     pb.empty()
 
 def update_question(sv, question_history, new_questions, placeholder, prefix):

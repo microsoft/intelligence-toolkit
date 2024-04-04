@@ -84,7 +84,7 @@ def create():
             source_counts = Counter()
             used_chunks = set()
             while True:
-                qe = embedder.encode(question)
+                qe = np.array(embedder.encode(question))
                 iteration += 1
                 cosine_distances = sorted([(t, c, scipy.spatial.distance.cosine(qe, v)) for (t, c, v) in all_units], key=lambda x:x[2], reverse=False)
                 chunk_index = sv.answering_target_matches.value
@@ -165,11 +165,9 @@ def create():
                         raw_refs = qa['source']
                         file_page_refs = [tuple([int(x[1:]) for x in r.split(';')]) for r in raw_refs]
                         
-                        q_vec = embedder.encode(q)
-                        a_vec = embedder.encode(a)
+                        q_vec = np.array(embedder.encode(q))
+                        a_vec = np.array(embedder.encode(a))
 
-                        q_vec = np.array(q_vec)
-                        a_vec = np.array(a_vec)
                         qid = sv.answering_next_q_id.value
                         sv.answering_next_q_id.value += 1
                         q = classes.Question(f, q, q_vec, 0, qid)

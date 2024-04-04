@@ -1,6 +1,8 @@
-from openai import OpenAI
 import tiktoken
 import json
+from util.openai_instance import _OpenAI
+
+openai = _OpenAI()
 
 gen_model = 'gpt-4-turbo-preview'
 embed_model = 'text-embedding-3-small'
@@ -10,7 +12,6 @@ max_input_tokens = 128000
 default_temperature = 0
 max_embed_tokens = 8191
 
-client = OpenAI()
 encoder = tiktoken.get_encoding(text_encoder)
 
 def prepare_messages_from_message(system_message, variables):                
@@ -41,7 +42,7 @@ def count_tokens_in_message_list(messages):
 def generate_text_from_message_list(messages, placeholder=None, prefix='', model=gen_model, temperature=default_temperature, max_tokens=max_gen_tokens):     
     response = ''
     try:
-        responses = client.chat.completions.create(
+        responses = openai.client().chat.completions.create(
             model=model,
             temperature=temperature,
             max_tokens=max_tokens,

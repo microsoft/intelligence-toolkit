@@ -1,3 +1,4 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import os
 import duckdb
 
@@ -6,7 +7,7 @@ class Database:
         if not os.path.exists(cache):
             os.makedirs(cache)
 
-        db_path = os.path.join(cache, f'{db_name}.db')
+        db_path = os.path.join(cache, f'_{db_name}.db')
         self.connection = duckdb.connect(database=db_path)
 
     def create_table(self, name, attributes = []):
@@ -16,7 +17,12 @@ class Database:
         return self.connection.execute(f"SELECT embedding FROM embeddings WHERE hash_text = '{hash_text}' and username = '{username}'").fetchone()
 
     def insert_into_embeddings(self, hash_text, embedding, username = ''):
-        self.connection.execute(f"INSERT INTO embeddings VALUES ('{username}','{hash_text}', {embedding})")
+        self.connection.execute(f"INSERT OR IGNORE INTO embeddings VALUES ('{username}','{hash_text}', {embedding})")
+    
+
+    def insert_multiple_into_embeddings(self, embeddings, username = ""):
+        embeddings = ''.join([f"('{username}','{embedding[0]}', {embedding[1]}), " for embedding in embeddings])[:-2]
+        self.connection.execute(f"INSERT OR IGNORE INTO embeddings VALUES {embeddings}")
 
     def execute(self, query):
         return self.connection.execute(query)

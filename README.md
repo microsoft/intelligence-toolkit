@@ -1,7 +1,6 @@
 # Intelligence Toolkit
 The Intelligence Toolkit is a suite of interactive workflows for creating AI intelligence reports from real-world data sources. The toolkit is designed to help users identify patterns, answers, relationships, and risks within complex datasets, with generative AI ([OpenAI GPT models](https://platform.openai.com/docs/models/)) used to create reports on findings of interest.
 
-
 # Developing 
 
 ## Requirements
@@ -72,6 +71,16 @@ After building, run the docker container with:
 
 Open [localhost:8501](http://localhost:8501)
 
+## Building a Windows executable
+
+We use [Pynsist](https://pynsist.readthedocs.io/en/latest/), that with [NSIS (Nullsoft Scriptable Install System)](https://nsis.sourceforge.io/) builds an executable for Windows, which packages the whole project and what it needs to run (including Python) into an .exe, that when installed will run the project on the user's localhost.
+
+For you to build locally, you will need to have pynsis intalled with `pip install pynsist` and install NSIS [downloading it here](https://nsis.sourceforge.io/Main_Page).
+
+**Tip**: Use Windows to build it, not Linux.
+
+Run `.\installer_script.ps1` in the root of the app.
+It will download wkhtmltox from the source, that's needed to generate reports. Then it will build an .exe into build\nsis, that will include wkhtmltox package installation.
 
 # Deploying
 

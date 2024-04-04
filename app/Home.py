@@ -1,13 +1,19 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import streamlit as st
+import os
 from components.app_loader import load_multipage_app
 import util.mermaid as mermaid
 
+def get_transparency_faq():
+    file_path = os.path.join(os.path.dirname(__file__), 'TransparencyFAQ.md')
+    with open(file_path, 'r') as file:
+        return file.read()
+    
 def main():
     st.set_page_config(layout="wide", initial_sidebar_state="expanded", page_title='Intelligence Toolkit | Home')
     load_multipage_app()
 
-    transparency_faq = open('./app/TransparencyFAQ.md', 'r').read()
+    transparency_faq = get_transparency_faq()
     st.markdown(transparency_faq + '\n\n' + f"""\
 #### Which Intelligence Toolkit workflow is right for me and my data?
 

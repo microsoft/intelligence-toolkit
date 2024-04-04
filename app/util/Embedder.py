@@ -1,9 +1,9 @@
-from openai import OpenAI
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import tiktoken
 import numpy as np
 from util.Database import Database
 import util.session_variables
-import streamlit as st
+from util.openai_instance import _OpenAI
 
 gen_model = 'gpt-4-turbo-preview'
 embed_model = 'text-embedding-3-small'
@@ -13,8 +13,7 @@ max_input_tokens = 128000
 default_temperature = 0
 max_embed_tokens = 8191
 
-
-client = OpenAI()
+openai = _OpenAI()
 encoder = tiktoken.get_encoding(text_encoder)
 
 class Embedder:
@@ -25,7 +24,7 @@ class Embedder:
         self.encoder = tiktoken.get_encoding(encoder)
         self.max_tokens = max_tokens
         self.connection = Database(cache, 'embeddings')
-        self.connection.create_table('embeddings', ['username STRING','hash_text STRING', 'embedding DOUBLE[]'])
+        self.connection.create_table('embeddings', ['username STRING','hash_text STRING UNIQUE', 'embedding DOUBLE[]'])
 
     def encode_all(self, texts):
         final_embeddings = [None] * len(texts)
@@ -48,30 +47,34 @@ class Embedder:
             bi += 1
             batch = new_texts[i:i+2000]
             batch_texts = [x[1] for x in batch]
-            embeddings = [x.embedding for x in client.embeddings.create(input = batch_texts, model=self.model).data]
+            list_all_embeddings = []
+            embeddings = [x.embedding for x in openai.client().embeddings.create(input = batch_texts, model=self.model).data]
             for j, (ix, text) in enumerate(batch):
-                # hsh = hash(text)
-                # self.connection.insert_into_embeddings(hsh, embeddings[j]) 
+                hsh = hash(text)
+                list_all_embeddings.append((hsh, embeddings[j]))
                 final_embeddings[ix] = np.array(embeddings[j])
+            self.connection.insert_multiple_into_embeddings(list_all_embeddings) 
+            
         pb.empty()
         return np.array(final_embeddings)
 
-    def encode(self, text):
+    def encode(self, text, auto_save = True):
         text = text.replace("\n", " ")
         hsh = hash(text)
         embeddings = self.connection.select_embedding_from_hash(hsh)
 
         if embeddings:
-            return np.array(embeddings[0])
+            return embeddings[0]
         else:
             tokens = len(self.encoder.encode(text))
             if tokens > self.max_tokens:
                 text = text[:self.max_tokens]
                 print('Truncated text to max tokens')
             try:
-                embedding = client.embeddings.create(input = [text], model=self.model).data[0].embedding
-                self.connection.insert_into_embeddings(hsh, embedding)                
-                return np.array(embedding)
+                embedding = openai.client().embeddings.create(input = [text], model=self.model).data[0].embedding
+                if auto_save:
+                    self.connection.insert_into_embeddings(hsh, embedding)
+                return embedding
             except:
                 print(f'Error embedding text: {text}')
                 return None
