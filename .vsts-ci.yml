@@ -7,6 +7,12 @@ trigger:
   branches:
     include:
       - main
+      
+schedules:
+- cron: "0 0 * * 0"  # Runs every Sunday at midnight (UTC)
+  branches:
+    include:
+      - main
 
 variables:
   isMain: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
@@ -36,7 +42,7 @@ stages:
               ArtifactName: "CodeAnalysisLogs"
               ArtifactType: "Container"
 
-  - stage: Build_deploy
+  - stage: Build
     dependsOn: []
     condition: eq(variables.isMain, 'true')
     jobs:
@@ -62,6 +68,37 @@ stages:
               targetType: "inline"
               script: docker build . -t $(DOCKER_REGISTRY)/intel-toolkit:latest
           - task: Bash@3
+            displayName: Save Docker Image
+            inputs:
+              workingDirectory: ./
+              targetType: "inline"
+              script: docker save -o intel-toolkit.tar $(DOCKER_REGISTRY)/intel-toolkit:latest
+
+          - task: PublishPipelineArtifact@1
+            inputs:
+              targetPath: '$(System.DefaultWorkingDirectory)/intel-toolkit.tar'  # Path to the Docker container image
+              artifact: 'output'  # Name of the artifact
+
+  - stage: Deploy
+    dependsOn: Build
+    condition: eq(variables.isMain, 'true')
+    jobs:
+      - job: deploy
+        displayName: Deploy
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              artifactName: 'output' 
+              downloadPath: '$(System.ArtifactsDirectory)/output' 
+          - task: Bash@3
+            displayName: Load Docker container
+            inputs:
+              workingDirectory: ./
+              targetType: "inline"
+              script: docker load -i $(System.ArtifactsDirectory)/output/*.tar
+          - task: Bash@3
             displayName: Docker Login
             inputs:
               targetType: "inline"
@@ -71,4 +108,4 @@ stages:
             inputs:
               workingDirectory: ./
               targetType: "inline"
-              script: docker push $(DOCKER_REGISTRY)/intel-toolkit:latest
+              script: docker push $(DOCKER_REGISTRY)/intel-toolkit:latest      
