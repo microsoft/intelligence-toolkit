@@ -80,7 +80,11 @@ For you to build locally, you will need to have pynsis intalled with `pip instal
 **Tip**: Use Windows to build it, not Linux.
 
 Run `.\installer_script.ps1` in the root of the app.
-It will download wkhtmltox from the source, that's needed to generate reports. Then it will build an .exe into build\nsis, that will include wkhtmltox package installation.
+It will download wkhtmltox from the source, that's needed to generate reports. 
+Then it will download python-louvain wheel, because it's not on pypi and it's needed for pynsist.
+Then it will build an .exe into build\nsis.
+
+It takes a while to finish, but then you can install it and open the shortcut to open intelligence-toolkit into http://localhost:8501
 
 # Deploying
 
