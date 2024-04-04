@@ -23,7 +23,7 @@ def create():
     workflow = 'data_synthesis'
     sv = vars.SessionVariables('data_synthesis')
 
-    intro_tab, prepare_tab, generate_tab, queries_tab = st.tabs(['Data synthesis workflow:', 'Upload deidentified sensitive data', 'Generate anonymous synthetic data', 'Query and visualize data'])
+    intro_tab, prepare_tab, generate_tab, queries_tab = st.tabs(['Data synthesis workflow:', 'Upload sensitive data', 'Generate anonymous data', 'Query and visualize data'])
     df = None
     with intro_tab:
         st.markdown(config.intro)
@@ -70,7 +70,7 @@ def create():
                 st.markdown(f'Estimated synthesizability score: **{round(coverage, 4)}**', help=f'We define synthesizability as the proportion of observed pairs of values across selected columns that are common, appearing at least as many times as the number of columns. In this case, {num_common_pairs}/{num_observed_pairs} pairs appear at least {num_cols} times. The intuition here is that all combinations of attribute values in a synthetic record must be composed from common attribute pairs. **Rule of thumb**: Aim for a synthesizability score of **0.5** or higher.')
     with generate_tab:
         if len(sv.synthesis_sensitive_df.value) == 0:
-            st.markdown('Please upload and prepare data to continue.')
+            st.warning('Please upload and prepare data to continue.')
         else:
             c1, c2, c3 = st.columns([1, 1, 1])
             with c1:
@@ -152,7 +152,7 @@ def create():
                     st.dataframe(sv.synthesis_sen_agg_rep.value, hide_index=True, use_container_width=True)
                     st.markdown(f'###### Synthetic data quality')
                     st.dataframe(sv.synthesis_sen_syn_rep.value, hide_index=True, use_container_width=True)
-                    st.markdown('**Caution**: These reports are to evaluate the quality of data for release. Sharing these values compromises the privacy protection.')
+                    st.warning('**Caution**: These tables should only be used to evaluate the quality of data for release. Sharing them compromises privacy.')
 
             with c2:
                 st.markdown(f'##### Aggregate data')
@@ -169,7 +169,7 @@ def create():
         
     with queries_tab:
         if len(sv.synthesis_synthetic_df.value) == 0 or len(sv.synthesis_aggregate_df.value) == 0:
-            st.markdown('Please synthesize data to continue, or upload an existing synthetic dataset below.')
+            st.warning('Please synthesize data to continue, or upload an existing synthetic dataset below.')
             util.ui_components.single_csv_uploader(workflow, 'Upload synthetic data CSV', sv.synthesis_last_synthetic_file_name, sv.synthesis_synthetic_df, None, None, key='synthetic_data_uploader')
             util.ui_components.single_csv_uploader(workflow, 'Upload aggregate data CSV', sv.synthesis_last_aggregate_file_name, sv.synthesis_aggregate_df, None, None, key='aggregate_data_uploader')
             if len(sv.synthesis_synthetic_df.value) > 0 and len(sv.synthesis_aggregate_df.value) > 0:
@@ -275,7 +275,7 @@ def create():
                             chart = functions.flow_chart(export_df, selection, source_attribute, target_attribute, highlight_attribute, chart_width, chart_height, unit, scheme)
                             
                     if export_df is not None and chart is not None:
-                        st.markdown(f'##### Export')
+                        st.markdown(f'##### Export', help='Download the anonymized data and Plotly chart specification as CSV and JSON files, respectively.')
                         s1, s2 = st.columns([1, 1])
                         with s1:
                             st.download_button('Data CSV', data=export_df.to_csv(index=False), file_name='data.csv', mime='text/csv', use_container_width=True)

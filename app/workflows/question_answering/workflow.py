@@ -35,7 +35,7 @@ def create():
         num_files = len(sv.answering_files.value)
         num_chunks = sum([len(f.chunk_texts) for f in sv.answering_files.value.values()])
         if num_files > 0:
-            st.markdown(f'Chunked **{num_files}** files into **{num_chunks}** chunks of up to **{config.chunk_size}** characters.')
+            st.success(f'Chunked **{num_files}** files into **{num_chunks}** chunks of up to **{config.chunk_size}** characters.')
     with mining_tab:
         c1, c2, c3, c4 = st.columns([4, 1, 1, 1])
         with c1:
@@ -196,7 +196,7 @@ def create():
         # if 'generate_lazy_answer' in st.session_state:
         #     del st.session_state['generate_lazy_answer']
         if sv.answering_matches.value == '':
-            st.markdown('Mine question matches to continue.')    
+            st.warning('Mine question matches to continue.')    
         else:
             c1, c2 = st.columns([2, 3])
 
@@ -209,7 +209,7 @@ def create():
                 generate, messages = util.ui_components.generative_ai_component(sv.answering_system_prompt, sv.answering_instructions, variables)
             with c2:
                 report_placeholder = st.empty()
-            
+                gen_placeholder = st.empty()
                 if generate:
                     result = util.AI_API.generate_text_from_message_list(
                         placeholder=report_placeholder,
@@ -217,11 +217,24 @@ def create():
                         prefix=''
                     )
                     sv.answering_lazy_answer_text.value = result
+                else:
+                    if sv.answering_lazy_answer_text.value == '':
+                        gen_placeholder.warning('Press the Generate button to create an AI report for the current question.')
                 report_placeholder.markdown(sv.answering_lazy_answer_text.value)
                 report_data = sv.answering_lazy_answer_text.value
                 is_download_disabled = report_data == ''
                 name = sv.answering_lazy_answer_text.value.split('\n')[0].replace('#','').strip().replace(' ', '_')
                 full_text = sv.answering_lazy_answer_text.value + '\n\n## Supporting FAQ\n\n' + re.sub(r' Q[\d]+: ', ' ', '\n\n'.join(sv.answering_matches.value.split('\n\n')[2:]), re.MULTILINE).replace('###### ', '### ')
                 
-                add_download_pdf(f'{name}.pdf', full_text, 'Download PDF report', disabled=is_download_disabled)
-                st.download_button('Download MD report', data=full_text, file_name=f'{name}.md', mime='text/markdown', disabled=sv.answering_lazy_answer_text.value == '', key='lazy_download_button')      
+                if len(sv.answering_lazy_answer_text.value) > 0:
+                    report_data = sv.answering_lazy_answer_text.value
+                    is_download_disabled = report_data == ''
+                    name = sv.answering_lazy_answer_text.value.split('\n')[0].replace('#','').strip().replace(' ', '_')
+                    full_text = sv.answering_lazy_answer_text.value + '\n\n## Supporting FAQ\n\n' + re.sub(r' Q[\d]+: ', ' ', '\n\n'.join(sv.answering_matches.value.split('\n\n')[2:]), re.MULTILINE).replace('###### ', '### ')
+                
+                    c1, c2 = st.columns([1, 1])
+                    with c1:
+                        st.download_button('Download AI answer report as MD', data=full_text, file_name=f'{name}.md', mime='text/markdown', disabled=sv.answering_lazy_answer_text.value == '', key='lazy_download_button')      
+                    with c2:
+                        add_download_pdf(f'{name}.pdf', full_text, 'Download AI answer report as PDF', disabled=is_download_disabled)
+

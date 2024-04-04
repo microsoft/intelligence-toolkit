@@ -46,11 +46,11 @@ def create():
         with model_col:
             st.markdown('##### Map columns to model')
             if df is None:
-                st.markdown('Upload and select a file to continue')
+                st.warning('Upload and select a file to continue')
             else:
                 options = [''] + df.columns.values.tolist()
-                link_type = st.radio('Link type', ['Entity-Attribute', 'Entity-Entity', 'Entity-Flag', 'Entity-Group'], horizontal=True)
-                entity_col = st.selectbox("Entity ID column", options)
+                link_type = st.radio('Link type', ['Entity-Attribute', 'Entity-Entity', 'Entity-Flag', 'Entity-Group'], horizontal=True, help='Select the type of link to create. Entity-Attribute links connect entities with shared attributes, Entity-Entity links create direct connections between entities, Entity-Flag links connect entities to risk flags, and Entity-Group links enable filtering of detected networks by specified grouping attributes.')
+                entity_col = st.selectbox("Entity ID column", options, help='The column containing unique entity identifiers, shared across datasets.')
                 model_links = None
                 attribute_label = ''
                 if link_type == 'Entity-Entity':
@@ -58,33 +58,23 @@ def create():
                     attribute_col = st.selectbox("Relationship type", ['Use column name', 'Use custom name', 'Use related column'])
                     if attribute_col == 'Use custom name':
                         attribute_label = st.text_input('Relationship type', '')
-                    # direction = st.selectbox("Relationship direction", ['Undirected', 'Entity to related', 'Related to entity'])
-                    # if direction == 'Undirected':
-                    #     model_links = sv.network_entity_links.value
-                    # elif direction == 'Entity to related':
-                    #     model_links = sv.network_directed_entity_links.value
-                    # elif direction == 'Related to entity':
-                    #     tmp = entity_col
-                    #     entity_col = value_cols[0]
-                    #     value_cols = [tmp]
-                    #     model_links = sv.network_directed_entity_links.value
                     model_links = sv.network_entity_links.value
                 elif link_type == 'Entity-Attribute':
-                    value_cols = st.multiselect("Attribute value column(s) to link on", options)
-                    attribute_col = st.selectbox("Attribute type", ['Use column name', 'Use custom name', 'Use related column'])
+                    value_cols = st.multiselect("Attribute value column(s) to link on", options, help='The column(s) containing attribute values that would only be shared by closely related entities.')
+                    attribute_col = st.selectbox("Attribute type", ['Use column name', 'Use custom name', 'Use related column'], help='Where the name of the attribute comes from: the selected column, the user, or the values of another column.')
                     if attribute_col == 'Use custom name':
                         attribute_label = st.text_input('Attribute name', '')
                     model_links = sv.network_attribute_links.value
                 elif link_type == 'Entity-Flag':
-                    value_cols = st.multiselect("Flag value column(s)", options)
-                    attribute_col = st.selectbox("Flag type", ['Use column name', 'Use custom name', 'Use related column'])
+                    value_cols = st.multiselect("Flag value column(s)", options, help='The column(s) containing risk flags associated with entities.')
+                    attribute_col = st.selectbox("Flag type", ['Use column name', 'Use custom name', 'Use related column'], help='Where the name of the flag comes from: the selected column, the user, or the values of another column.')
                     if attribute_col == 'Use custom name':
                         attribute_label = st.text_input('Flag name', '')
-                    flag_agg = st.selectbox("Flag format", ['Instance', 'Count', 'List'])
+                    flag_agg = st.selectbox("Flag format", ['Instance', 'Count', 'List'], help='How flags are represented: as individual instances or as aggregate counts in a flag value column, or as a list of flagged entities in the entity ID column.')
                     model_links = sv.network_flag_links.value
                 elif link_type == 'Entity-Group':
-                    value_cols = st.multiselect("Group value column(s) to group on", options)
-                    attribute_col = st.selectbox("Group type", ['Use column name', 'Use custom name', 'Use related column'])
+                    value_cols = st.multiselect("Group value column(s) to group on", options, help='The column(s) containing group values that are shared by groups of broadly related entities.')
+                    attribute_col = st.selectbox("Group type", ['Use column name', 'Use custom name', 'Use related column'], help='Where the name of the group comes from: the selected column, the user, or the values of another column.')
                     if attribute_col == 'Use custom name':
                         attribute_label = st.text_input('Group name', '')
                     model_links = sv.network_group_links.value
@@ -154,7 +144,7 @@ def create():
                                         sv.network_group_types.value.update(df[attribute_label].unique().tolist())
                                         model_links.append(df[[entity_col, attribute_col, value_col]].values.tolist())
                 with b2:
-                    if st.button('Clear data model'):
+                    if st.button('Clear data model', disabled=entity_col == '' or attribute_col == '' or len(value_cols) == 0 or link_type == ''):
                         sv.network_entity_links.value = []
                         sv.network_directed_entity_links.value = []
                         sv.network_attribute_links.value = []
@@ -165,12 +155,7 @@ def create():
                         sv.network_merged_graph.value = None
                         sv.network_community_df.value = pd.DataFrame()
                         sv.network_integrated_flags.value = pd.DataFrame()
-
-
-            st.markdown('##### Data model summary')
             
-            # TODO: add other link types
-
             num_entities = 0
             num_attributes = 0
             num_edges = 0
@@ -188,19 +173,18 @@ def create():
                 num_edges = len(sv.network_overall_graph.value.edges())
             if len(sv.network_integrated_flags.value) > 0:
                 num_flags = sv.network_integrated_flags.value['count'].sum()
-            st.markdown(f'*Number of entities*: {num_entities}')
-            st.markdown(f'*Number of attributes*: {num_attributes}')
-            st.markdown(f'*Number of links*: {num_edges}')
-            st.markdown(f'*Number of flags*: {num_flags}')
-            st.markdown(f'*Number of groups*: {len(groups)}')
-            st.markdown('Advance to the next tab when you are ready to process the data model. You can always return to this tab to upload more data files and/or add more links from existing files.')
-
+            if num_entities > 0:
+                st.markdown('##### Data model summary')
+                st.markdown(f'*Number of entities*: {num_entities}<br/>*Number of attributes*: {num_attributes}<br/>*Number of links*: {num_edges}<br/>*Number of flags*: {num_flags}<br/>*Number of groups*: {len(groups)}', unsafe_allow_html=True)
+            else:
+                st.warning('Add links to the model to continue.')
+            
     with process_tab:
         index_col, part_col = st.columns([1, 1])
         components = None
         with index_col:
-            st.markdown('##### Index nodes')
-            st.multiselect('Select node types to fuzzy match', options=sorted([config.entity_label] + list(sv.network_node_types.value)), key=sv.network_indexed_node_types.key)
+            st.markdown('##### Index nodes (optional)')
+            st.multiselect('Select node types to fuzzy match', options=sorted([config.entity_label] + list(sv.network_node_types.value)), key=sv.network_indexed_node_types.key, help='Select the node types to embed into a multi-dimensional semantic space for fuzzy matching.')
             if st.button('Index nodes', disabled=len(sv.network_indexed_node_types.value) == 0):
                 
                 text_types = list([(n, d['type']) for n, d in sv.network_overall_graph.value.nodes(data=True) if d['type'] in sv.network_indexed_node_types.value])
@@ -215,10 +199,12 @@ def create():
                 sv.network_embedded_texts.value = edf['text'].tolist()
                 nbrs = NearestNeighbors(n_neighbors=20, n_jobs=1, algorithm='auto', leaf_size=20, metric='cosine').fit(embeddings)
                 sv.network_nearest_text_distances.value, sv.network_nearest_text_indices.value = nbrs.kneighbors(embeddings)
-            st.markdown(f'*Number of nodes indexed*: {len(sv.network_embedded_texts.value)}')
-            st.markdown('##### Infer links')
-            st.number_input('Similarity threshold', min_value=0.0, max_value=1.0, key=sv.network_similarity_threshold.key, step=0.01, value=sv.network_similarity_threshold.value)
-            if st.button('Infer links'):
+            nodes_indexed = len(sv.network_embedded_texts.value)
+            if nodes_indexed > 0:
+                st.markdown(f'*Number of nodes indexed*: {nodes_indexed}')
+            st.markdown('##### Infer links (optional)')
+            st.number_input('Similarity threshold for fuzzy matching (max)', min_value=0.0, max_value=1.0, key=sv.network_similarity_threshold.key, step=0.01, value=sv.network_similarity_threshold.value, help='The maximum cosine similarity threshold for inferring links between nodes based on their embeddings. Higher values will infer more links, but may also infer more false positives.')
+            if st.button('Infer links', disabled=len(sv.network_nearest_text_distances.value)==0):
                 sv.network_inferred_links.value = defaultdict(set)
                 texts = sv.network_embedded_texts.value
                 pb = st.progress(0, text = 'Inferring links...')
@@ -241,8 +227,9 @@ def create():
                     if text < n:
                         link_list.append((text, n))
             ilc = len(link_list)
-            st.markdown(f'*Number of links inferred*: {ilc}')
+
             if ilc > 0:
+                st.markdown(f'*Number of links inferred*: {ilc}')
                 idf = pd.DataFrame(link_list, columns=['text', 'similar'])
                 idf['text'] = idf['text'].str.replace(config.entity_label + config.att_val_sep, '')
                 idf['similar'] = idf['similar'].str.replace(config.entity_label + config.att_val_sep, '')
@@ -251,10 +238,6 @@ def create():
             
         with part_col:
             st.markdown('##### Identify networks')
-            # c1, c2 = st.columns([1, 1])
-            # with c1:
-            #     st.number_input('Maximum network entities', min_value=1, max_value=1000, key=sv.network_max_network_size.key)
-            # with c2:
             adf = pd.DataFrame(sv.network_attributes_list.value, columns=['Attribute'])
             search = st.text_input('Search for attributes to remove', '')
             if search != '':
@@ -263,9 +246,9 @@ def create():
             sv.network_additional_trimmed_attributes.value = selected_rows['Attribute'].tolist()
             c1, c2, c3 = st.columns([1, 1, 1])
             with c1:
-                st.number_input('Maximum attribute degree', min_value=1, key=sv.network_max_attribute_degree.key, value=sv.network_max_attribute_degree.value)
+                st.number_input('Maximum attribute degree', min_value=1, key=sv.network_max_attribute_degree.key, value=sv.network_max_attribute_degree.value, help='The maximum number of entities that can share an attribute before it is removed from the network.')
             with c2:
-                sv.network_supporting_attribute_types.value = st.multiselect('Supporting attribute types', options=sorted(sv.network_node_types.value))
+                sv.network_supporting_attribute_types.value = st.multiselect('Supporting attribute types', options=sorted(sv.network_node_types.value), help='Attribute types that should not be used to detect networks (e.g., because of potential noise/unreliability) but which should be added back into detected networks for context.')
             comm_count = 0
             with c3:    
                 identify = st.button('Identify networks')
@@ -339,7 +322,7 @@ def create():
             
     with view_tab:
         if len(sv.network_entity_df.value) == 0:
-            st.markdown('Detect networks to continue.')
+            st.warning('Detect networks to continue.')
         else:
             with st.expander('View entity networks', expanded=True):
                 b1, b2, b3, b4 = st.columns([1, 1, 1, 4])
@@ -476,10 +459,12 @@ def create():
                         functions.get_entity_graph(N1, f'{config.entity_label}{config.att_val_sep}{selected_entity}', merged_links_df, 1000, 700, [config.entity_label] + list(sv.network_node_types.value))
                 sv.network_merged_links_df.value = merged_links_df
                 sv.network_merged_nodes_df.value = merged_nodes_df
-                    
+            else:
+                st.warning('Select column headers to rank networks by that attribute. Use quickfilter or column filters to narrow down the list of networks. Select a network to continue.')
+            
     with report_tab:
         if sv.network_selected_entity.value == '' and sv.network_selected_community.value == '':
-            st.markdown('Select a network or entity to continue.')
+            st.warning('Select a network or entity to continue.')
         else:
             c1, c2 = st.columns([2, 3])
             with c1:
@@ -492,7 +477,6 @@ def create():
                     'network_nodes': sv.network_merged_nodes_df.value.to_csv(index=False),
                     'network_edges': sv.network_merged_links_df.value.to_csv(index=False)
                 }
-                print(variables)
                 generate, messages = util.ui_components.generative_ai_component(sv.network_system_prompt, sv.network_instructions, variables)
             with c2:
                 if sv.network_selected_entity.value != '':
@@ -500,6 +484,7 @@ def create():
                 else:
                     st.markdown(f'##### Selected network: {sv.network_selected_community.value}')
                 report_placeholder = st.empty()
+                gen_placeholder = st.empty()
                 if generate:
                     result = util.AI_API.generate_text_from_message_list(
                         placeholder=report_placeholder,
@@ -507,11 +492,9 @@ def create():
                         prefix=''
                     )
                     sv.network_report.value = result
+                else:
+                    if len(sv.network_report.value) == 0:
+                        gen_placeholder.warning('Press the Generate button to create an AI report for the current network.')
                 report_placeholder.markdown(sv.network_report.value)
 
-                report_data = sv.network_report.value
-                is_download_disabled = report_data == ''
-                name = 'network_report'
-                
-                add_download_pdf(f'{name}.pdf', report_data, 'Download PDF report', disabled=is_download_disabled)
-                st.download_button('Download AI network report', data=report_data, file_name=f'{name}.md', mime='text/markdown', disabled=is_download_disabled)
+                util.ui_components.report_download_ui(sv.network_report, 'network_report')

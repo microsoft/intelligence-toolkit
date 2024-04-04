@@ -35,17 +35,17 @@ def create():
         with model_col:
                 st.markdown('##### Map columns to data model')
                 if df is None:
-                    st.markdown('Upload and select a file to continue')
+                    st.warning('Upload and select a file to continue')
                 else:
                     df = pl.from_pandas(df).lazy()
                     cols = [''] + df.columns
                     entity_col = ''
                     ready = False
-                    dataset = st.text_input('Dataset name', key=f'{selected_file}_dataset_name')
-                    name_col = st.selectbox('Entity name column', cols)
-                    entity_col = st.selectbox('Entity ID column (optional)', cols)
+                    dataset = st.text_input('Dataset name', key=f'{selected_file}_dataset_name', help='Used to track which dataset each record came from; not used in the matching process itself.')
+                    name_col = st.selectbox('Entity name column', cols, help='The column containing the name of the entity to be matched. This column is required.')
+                    entity_col = st.selectbox('Entity ID column (optional)', cols, help='The column containing the unique identifier of the entity to be matched. If left blank, a unique ID will be generated for each entity based on the row number.')
                     filtered_cols = [c for c in cols if c not in [entity_col, name_col]]
-                    att_cols = st.multiselect('Entity attribute columns', filtered_cols)
+                    att_cols = st.multiselect('Entity attribute columns', filtered_cols, help='Columns containing attributes of the entity to be matched. These columns will be used to match entities based on their similarity.')
                     ready = dataset is not None and len(dataset) > 0 and len(att_cols) > 0 and name_col != ''
                     b1, b2 = st.columns([1, 1])
                     with b1:
@@ -66,10 +66,10 @@ def create():
                                 del sv.matching_dfs.value[dataset]
                     if len(sv.matching_dfs.value) > 0:
                         recs = sum([len(df) for df in sv.matching_dfs.value.values()])
-                        st.markdown(f'Data model has **{len(sv.matching_dfs.value)}** datasets with **{recs}** total records.')
+                        st.success(f'Data model has **{len(sv.matching_dfs.value)}** datasets with **{recs}** total records.')
     with process_tab:
         if len(sv.matching_dfs.value) == 0:
-            st.markdown('Upload data files to continue')
+            st.warning('Upload data files to continue')
         else:
             c1, c2 = st.columns([1, 1])
             with c1:
@@ -95,11 +95,11 @@ def create():
                     is_assigned = False
                     b1, b2 = st.columns([3, 1])
                     with b1:
-                        att_vals = st.multiselect(f'Values', key=f'att{i}_vals', options=options)
+                        att_vals = st.multiselect(f'Values', key=f'att{i}_vals', options=options, help='Select all columns that represent the same attribute across datasets.')
                         if len(att_vals) > 0:
                             is_assigned = True
                     with b2:
-                        att_name = st.text_input(f'Label (optional)', key=f'att{i}_name')
+                        att_name = st.text_input(f'Label (optional)', key=f'att{i}_name', help='The name to assign to this attribute in the merged dataset. If left blank, the first value selected will be used.')
                     if att_name == '' and len(att_vals) > 0:
                         att_name = att_vals[0].split('::')[0]
                     for val in att_vals:
@@ -118,10 +118,10 @@ def create():
                 st.markdown('##### Configure similarity thresholds')
                 b1, b2 = st.columns([1, 1])
                 with b1:
-                    st.number_input('Matching record distance (max)', min_value=0.0, max_value=1.0, step=0.01, key=sv.matching_sentence_pair_embedding_threshold.key, value=sv.matching_sentence_pair_embedding_threshold.value)
+                    st.number_input('Matching record distance (max)', min_value=0.0, max_value=1.0, step=0.01, key=sv.matching_sentence_pair_embedding_threshold.key, value=sv.matching_sentence_pair_embedding_threshold.value, help='The maximum cosine distance between two records in the embedding space for them to be considered a match. Lower values will result in fewer closer matches overall.')
 
                 with b2:
-                    st.number_input('Matching name similarity (min)', min_value=0.0, max_value=1.0, step=0.01, key=sv.matching_sentence_pair_jaccard_threshold.key, value=sv.matching_sentence_pair_jaccard_threshold.value)
+                    st.number_input('Matching name similarity (min)', min_value=0.0, max_value=1.0, step=0.01, key=sv.matching_sentence_pair_jaccard_threshold.key, value=sv.matching_sentence_pair_jaccard_threshold.value, help='The minimum Jaccard similarity between the character trigrams of the names of two records for them to be considered a match. Higher values will result in fewer closer name matches.')
                 if st.button('Detect record groups', use_container_width=True):
                     with st.spinner('Detecting groups...'):
                         if len(sv.matching_merged_df.value) == 0 or sv.matching_sentence_pair_embedding_threshold.value != sv.matching_last_sentence_pair_embedding_threshold.value:
@@ -288,6 +288,7 @@ def create():
             st.markdown('##### AI evaluation of record groups')
             prefix = '```\nGroup ID,Relatedness,Explanation\n'
             placeholder = st.empty()
+            gen_placeholder = st.empty()
             if generate:
                 for messages in batch_messages:
                     response = util.AI_API.generate_text_from_message_list(messages, placeholder, prefix=prefix)
@@ -295,6 +296,9 @@ def create():
                         prefix = prefix + response + '\n'
                 result = prefix.replace('```\n', '').strip()
                 sv.matching_evaluations.value = pl.read_csv(io.StringIO(result))
+            else:
+                if len(sv.matching_evaluations.value) == 0:
+                    gen_placeholder.warning('Press the Generate button to create an AI report for the current record matches.')
             placeholder.empty()
             if len(sv.matching_evaluations.value) > 0:
                 st.dataframe(sv.matching_evaluations.value.to_pandas(), height=700, use_container_width=True, hide_index=True)

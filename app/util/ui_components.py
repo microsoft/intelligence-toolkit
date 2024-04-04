@@ -9,26 +9,10 @@ import sys
 from dateutil import parser as dateparser
 from collections import defaultdict
 
+from util.download_pdf import add_download_pdf
 import util.AI_API
 import util.df_functions
 
-# def dataframe_with_selections(df, height=250):
-#     df_with_selections = df.copy()
-#     df_with_selections.insert(0, "Select", False)
-
-#     # Get dataframe row-selections from user with st.data_editor
-#     edited_df = st.data_editor(
-#         df_with_selections,
-#         hide_index=True,
-#         column_config={"Select": st.column_config.CheckboxColumn(required=True, )},
-#         disabled=df.columns,
-#         use_container_width=True,
-#         height=height
-#     )
-
-#     # Filter the dataframe using the temporary column, then drop the column
-#     selected_rows = edited_df[edited_df.Select]
-#     return selected_rows.drop('Select', axis=1)
 
 def dataframe_with_selections(df, selections, selection_col, label, key, height=250):
     if key not in st.session_state:
@@ -59,6 +43,16 @@ def dataframe_with_selections(df, selections, selection_col, label, key, height=
 
     return selected_rows
 
+def report_download_ui(report_var, name):
+    if len(report_var.value) > 0:
+        report_data = report_var.value
+        c1, c2 = st.columns([1, 1])
+        spaced_name = name.replace('_', ' ')
+        with c1:
+            st.download_button(f'Download AI {spaced_name} as MD', data=report_data, file_name=f'{name}.md', mime='text/markdown')
+        with c2:
+            add_download_pdf(f'{name}.pdf', report_data, f'Download AI {spaced_name} as PDF')
+
 def generative_ai_component(system_prompt_var, instructions_var, variables):
     st.markdown('##### Generative AI instructions')
     with st.expander('Edit AI System Prompt (advanced)', expanded=False):
@@ -72,7 +66,11 @@ def generative_ai_component(system_prompt_var, instructions_var, variables):
     with b1:
         generate = st.button('Generate', disabled=ratio > 100)
     with b2:
-        st.markdown(f'AI input uses {tokens}/{util.AI_API.max_input_tokens} ({round(ratio, 2)}%) of token limit')
+        message = f'AI input uses {tokens}/{util.AI_API.max_input_tokens} ({round(ratio, 2)}%) of token limit'
+        if ratio <= 100:
+            st.success(message)
+        else:
+            st.warning(message)
     return generate, messages
 
 def generative_batch_ai_component(system_prompt_var, instructions_var, variables, batch_name, batch_val, batch_size):
@@ -107,7 +105,7 @@ def single_csv_uploader(workflow, upload_label, last_uploaded_file_name_var, inp
         reload = st.button('Reload', key=f'{key}_reload')
     if file != None and (file.name != last_uploaded_file_name_var.value or reload):
         last_uploaded_file_name_var.value = file.name
-        df = pd.read_csv(file, encoding=encoding, encoding_errors='ignore')
+        df = pd.read_csv(file, encoding=encoding, encoding_errors='ignore', low_memory=False)
         # df.columns = df.columns.str.strip()
         # df = util.df_functions.fix_null_ints(df)
         input_df_var.value = df
@@ -150,7 +148,7 @@ def multi_csv_uploader(upload_label, uploaded_files_var, outputs_dir, key, max_r
     if selected_file not in [None, ''] or reload:
         for file in files:
             if file.name == selected_file:
-                df = pd.read_csv(file, encoding='unicode-escape', nrows=max_rows_var.value, encoding_errors='ignore') if max_rows_var.value > 0 else pd.read_csv(file, encoding='unicode-escape', encoding_errors='ignore')
+                df = pd.read_csv(file, encoding='unicode-escape', nrows=max_rows_var.value, encoding_errors='ignore', low_memory=False) if max_rows_var.value > 0 else pd.read_csv(file, encoding='unicode-escape', encoding_errors='ignore', low_memory=False)
                 break
         st.dataframe(df[:show_rows], hide_index=True, use_container_width=True, height=height)
     return selected_file, df
@@ -411,5 +409,9 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
             else:
                     wdf = processed_df_var.value.copy(deep=True)
                     output_df_var.value = wdf
+            
             st.rerun()
-    
+    if len(output_df_var.value) > 0:
+        st.success('Data preparation complete.')
+    else:
+        st.warning('Generate final dataset to continue.')
