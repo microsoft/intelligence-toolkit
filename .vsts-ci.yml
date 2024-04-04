@@ -76,7 +76,7 @@ stages:
 
           - task: PublishPipelineArtifact@1
             inputs:
-              targetPath: '$(System.DefaultWorkingDirectory)'  # Path to the Docker container image
+              targetPath: '$(System.DefaultWorkingDirectory)/intel-toolkit.tar'  # Path to the Docker container image
               artifact: 'output'  # Name of the artifact
 
   - stage: Deploy
