@@ -66,6 +66,11 @@ stages:
               workingDirectory: ./
               targetType: "inline"
               script: docker build . -t $(DOCKER_REGISTRY)/intel-toolkit:latest
+          - task: PublishPipelineArtifact@1
+            inputs:
+              targetPath: '$(System.DefaultWorkingDirectory)'  # Path to the Docker container image
+              artifact: 'DockerContainer'  # Name of the artifact
+
   - stage: Deploy
     dependsOn: Build
     condition: eq(variables.isMain, 'true')
@@ -75,6 +80,16 @@ stages:
         pool:
           vmImage: ubuntu-latest
         steps:
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              artifactName: 'DockerContainer' 
+              downloadPath: '$(System.ArtifactsDirectory)' 
+          - task: Bash@3
+            displayName: Load Docker container
+            inputs:
+              workingDirectory: ./
+              targetType: "inline"
+              script: docker load -i $(System.ArtifactsDirectory)/DockerContainer/*.tar
           - task: Bash@3
             displayName: Docker Login
             inputs:
