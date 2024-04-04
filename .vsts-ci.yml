@@ -43,6 +43,7 @@ stages:
               ArtifactType: "Container"
 
   - stage: Build
+    dependsOn: []
     condition: eq(variables.isMain, 'true')
     jobs:
       - job: build
@@ -66,10 +67,17 @@ stages:
               workingDirectory: ./
               targetType: "inline"
               script: docker build . -t $(DOCKER_REGISTRY)/intel-toolkit:latest
+          - task: Bash@3
+            displayName: Save Docker Image
+            inputs:
+              workingDirectory: ./
+              targetType: "inline"
+              script: docker save -o intel-toolkit.tar $(DOCKER_REGISTRY)/intel-toolkit:latest
+
           - task: PublishPipelineArtifact@1
             inputs:
               targetPath: '$(System.DefaultWorkingDirectory)'  # Path to the Docker container image
-              artifact: 'DockerContainer'  # Name of the artifact
+              artifact: 'output'  # Name of the artifact
 
   - stage: Deploy
     dependsOn: Build
@@ -82,14 +90,14 @@ stages:
         steps:
           - task: DownloadPipelineArtifact@2
             inputs:
-              artifactName: 'DockerContainer' 
+              artifactName: 'output' 
               downloadPath: '$(System.ArtifactsDirectory)' 
           - task: Bash@3
             displayName: Load Docker container
             inputs:
               workingDirectory: ./
               targetType: "inline"
-              script: docker load -i $(System.ArtifactsDirectory)/DockerContainer/*.tar
+              script: docker load -i $(System.ArtifactsDirectory)/output/*.tar
           - task: Bash@3
             displayName: Docker Login
             inputs:
