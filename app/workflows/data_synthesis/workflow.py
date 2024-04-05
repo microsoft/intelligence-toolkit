@@ -1,4 +1,5 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+from pygments import highlight
 import streamlit as st
 import pandas as pd
 import plotly.io as pio
@@ -78,9 +79,10 @@ def create():
                 b1, b2 = st.columns([1, 1])
                 reporting_length = 4 # fixed
                 with b1:
-                    epsilon = st.number_input('Epsilon', value=sv.synthesis_epsilon.value, key=sv.synthesis_epsilon.key, help='The privacy budget, under differential privacy, to use when synthesizing the aggregate dataset.\n\nLower values of epsilon correspond to greater privacy protection but lower data quality.\n\nThe delta parameter is set automatically as 1/(protected_records*ln(protected_records)), where protected_records is the count of sensitive records protected using 0.5% of the privacy budget.\n\n**Rule of thumb**: Aim to keep epsilon at **12** or below.')
+                    epsilon = st.number_input('Epsilon', value=sv.synthesis_epsilon.value, help='The privacy budget, under differential privacy, to use when synthesizing the aggregate dataset.\n\nLower values of epsilon correspond to greater privacy protection but lower data quality.\n\nThe delta parameter is set automatically as 1/(protected_records*ln(protected_records)), where protected_records is the count of sensitive records protected using 0.5% of the privacy budget.\n\n**Rule of thumb**: Aim to keep epsilon at **12** or below.')
                 with b2:
                     if st.button('Synthesize data'):
+                        sv.synthesis_epsilon.value = epsilon
                         with st.spinner('Synthesizing data...'):
                             # for col in sv.synthesis_wide_sensitive_df.value.columns:
                             #     distinct_values = tuple(sorted(sv.synthesis_wide_sensitive_df.value[col].astype(str).unique()))
@@ -143,7 +145,7 @@ def create():
 
                             sv.synthesis_sen_agg_rep.value = classes.ErrorReport(sensitive_aggregates_parsed, dp_aggregates_parsed).gen()
                             sv.synthesis_sen_syn_rep.value = classes.ErrorReport(sensitive_aggregates_parsed, synthetic_aggregates_parsed).gen()
-                 
+
                 st.markdown(f'#### Analyze data', help='Tables show three evaluation metrics for each **Length** of attribute combination up to 4, plus an **Overall** average.\n\n- **Count +/- Error** is the average number of records for the combination length +/- the average absolute error in the number of records.\n- **Suppressed %** is the percentage of the total attribute counts that were suppressed, i.e., present in the Sensitive data but not the Aggregate/Synthetic data.\n- **Fabricated %** is the percentage of the total attribute counts that were fabricated, i.e., present in the Aggregate/Synthetic data but not the Sensitive data.\n\nPercentages are calculated with respect to attribute counts in the Sensitive data.\n\n**Rule of thumb**: For the Synthetic data, aim to keep the Overall Error below the Overall Count, Suppressed % below 10%, and Fabricated % below 1%.')
                 
                 if len(sv.synthesis_sen_agg_rep.value) > 0:
@@ -173,8 +175,32 @@ def create():
             util.ui_components.single_csv_uploader(workflow, 'Upload synthetic data CSV', sv.synthesis_last_synthetic_file_name, sv.synthesis_synthetic_df, None, None, key='synthetic_data_uploader')
             util.ui_components.single_csv_uploader(workflow, 'Upload aggregate data CSV', sv.synthesis_last_aggregate_file_name, sv.synthesis_aggregate_df, None, None, key='aggregate_data_uploader')
             if len(sv.synthesis_synthetic_df.value) > 0 and len(sv.synthesis_aggregate_df.value) > 0:
+                print('do you rerun, man????')
                 st.rerun()
         else:
+            container = st.container(border=True)
+            scheme_options = sorted(config.color_schemes.keys())
+            chart_type_options = ['Top attributes', 'Time series', 'Flow (alluvial)']
+            
+            if f'{workflow}_query_selections' not in st.session_state:
+                st.session_state[f'{workflow}_query_selections'] = []
+            if f'{workflow}_unit' not in st.session_state:
+                st.session_state[f'{workflow}_unit'] = ''
+            if f'{workflow}_scheme' not in st.session_state:
+                st.session_state[f'{workflow}_scheme'] = scheme_options[0]
+            if f'{workflow}_chart_width' not in st.session_state:
+                st.session_state[f'{workflow}_chart_width'] = 800
+            if f'{workflow}_chart_height' not in st.session_state:
+                st.session_state[f'{workflow}_chart_height'] = 400
+            if f'{workflow}_chart_type' not in st.session_state:
+                st.session_state[f'{workflow}_chart_type'] = chart_type_options[0]
+            if f'{workflow}_chart_individual_configuration' not in st.session_state:
+                st.session_state[f'{workflow}_chart_individual_configuration'] = {}
+            if f'{workflow}_time_attributes' not in st.session_state:
+                st.session_state[f'{workflow}_time_attributes'] = ''
+            if f'{workflow}_series_attributes' not in st.session_state:
+                st.session_state[f'{workflow}_series_attributes'] = []
+                
             adf = sv.synthesis_aggregate_df.value
             adf['protected_count'] = adf['protected_count'].astype(int)
             sdf = sv.synthesis_synthetic_df.value.copy(deep=True)
@@ -188,7 +214,6 @@ def create():
             att_separator = ';'
             data_schema = defaultdict(list)
             data_schema_text = ''
-            
             with c1:
                 st.markdown(f'##### Constuct query')
                 if len(sdf) > 0:
@@ -201,8 +226,8 @@ def create():
                         data_schema[att].sort()
                     count_holder = st.empty()
                     
-                    filters = st.multiselect(label='Add attributes to query', options=options)
-                    
+                    filters = st.multiselect(label='Add attributes to query', options=options, default=st.session_state[f'{workflow}_query_selections'])
+
                     selection = []
                     for att, vals in data_schema.items():
                         filter_vals = [v for v in vals if f'{att}:{v}' in filters]
@@ -231,38 +256,66 @@ def create():
 
                     count_holder.markdown(count_text)
                     st.markdown(f'##### Configure charts')
-                    unit = st.text_input('Subject label', value='', help='The type of data subject. For example, if the data is about people, the unit could be "Person".')
-                    scheme = st.selectbox('Color scheme', options=sorted(config.color_schemes.keys()))
+                    unit = st.text_input('Subject label', value=st.session_state[f'{workflow}_unit'], help='The type of data subject. For example, if the data is about people, the unit could be "Person".')
+                    scheme = st.selectbox('Color scheme', options=scheme_options, index=scheme_options.index(st.session_state[f'{workflow}_scheme']))
                     s1, s2 = st.columns([1, 1])
                     with s1:
-                        chart_width = st.number_input('Chart width', value=800)
+                        chart_width = st.number_input('Chart width', value=st.session_state[f'{workflow}_chart_width'])
                     with s2:
-                        chart_height = st.number_input('Chart height', value=400)
+                        chart_height = st.number_input('Chart height', value=st.session_state[f'{workflow}_chart_height'])
                     
                     chart = None
                     export_df = None
-                    chart_type = st.selectbox('Chart type', options=['Top attributes', 'Time series', 'Flow (alluvial)'])
+                    chart_type = st.selectbox('Chart type', options=chart_type_options, index=chart_type_options.index(st.session_state[f'{workflow}_chart_type']))
                     if chart_type == 'Top attributes':
+                        if chart_type != st.session_state[f'{workflow}_chart_type']:
+                            st.session_state[f'{workflow}_chart_individual_configuration'] = {
+                                'show_attributes' : [],
+                                'num_values' : 10
+                            }
+                        chart_individual_configuration = st.session_state[f'{workflow}_chart_individual_configuration']
                         st.markdown(f'##### Configure top attributes chart')     
-                        show_attributes = st.multiselect('Types of top attributes to show', options=sdf.columns.values)
-                        num_values = st.number_input('Number of top attribute values to show', value=10)
-
-
+                        show_attributes = st.multiselect('Types of top attributes to show', options=sdf.columns.values, default=chart_individual_configuration['show_attributes'])
+                        num_values = st.number_input('Number of top attribute values to show', value=chart_individual_configuration['num_values'])
+                        chart_individual_configuration['show_attributes'] = show_attributes
+                        chart_individual_configuration['num_values'] = num_values
                         export_df = functions.compute_top_attributes_query(selection, sdf, adf, att_separator, val_separator, data_schema, show_attributes, num_values)
                         if len(export_df) > 0:
                             chart = functions.get_bar_chart(selection, show_attributes, unit, export_df, chart_width, chart_height, scheme)
                     elif chart_type == 'Time series':
+                        if chart_type != st.session_state[f'{workflow}_chart_type']:
+                            st.session_state[f'{workflow}_chart_individual_configuration'] = {
+                                'time_attribute' : '',
+                                'series_attributes' : []
+                            }
+                        chart_individual_configuration = st.session_state[f'{workflow}_chart_individual_configuration']
                         st.markdown(f'##### Configure time series chart')    
-                        time_attribute = st.selectbox('Time attribute', options=['']+list(sdf.columns.values))
-                        series_attributes = st.multiselect('Series attributes', options=list(sdf.columns.values))
+                        time_options = ['']+list(sdf.columns.values)
+                        time_attribute = st.selectbox('Time attribute', options=time_options, index=time_options.index(chart_individual_configuration['time_attribute']))
+                        series_attributes = st.multiselect('Series attributes', options=list(sdf.columns.values), values=chart_individual_configuration['series_attributes'])
+                        chart_individual_configuration['time_attribute'] = time_attribute
+                        chart_individual_configuration['series_attributes'] = series_attributes
+                        
                         if time_attribute != '' and len(series_attributes) > 0:
                             export_df = functions.compute_time_series_query(selection, sv.synthesis_synthetic_df.value, adf, att_separator, val_separator, data_schema, time_attribute, series_attributes)
                             chart = functions.get_line_chart(selection, series_attributes, unit, export_df, time_attribute, chart_width, chart_height, scheme)
                     elif chart_type == 'Flow (alluvial)':    
+                        if chart_type != st.session_state[f'{workflow}_chart_type']:
+                            st.session_state[f'{workflow}_chart_individual_configuration'] = {
+                                'source_attribute' : '',
+                                'target_attribute' : '',
+                                'highlight_attribute' : ''
+                            }
+                        chart_individual_configuration = st.session_state[f'{workflow}_chart_individual_configuration']
                         st.markdown(f'##### Configure flow (alluvial) chart')    
-                        source_attribute = st.selectbox('Source/origin attribute type', options=['']+list(sdf.columns.values))
-                        target_attribute = st.selectbox('Target/destination attribute type', options=['']+list(sdf.columns.values))
-                        highlight_attribute = st.selectbox('Highlight attribute', options=['']+options)
+                        attribute_type_options = ['']+list(sdf.columns.values)
+                        highlight_options = ['']+options
+                        source_attribute = st.selectbox('Source/origin attribute type', options=attribute_type_options, index=attribute_type_options.index(chart_individual_configuration['source_attribute']))
+                        target_attribute = st.selectbox('Target/destination attribute type', options=attribute_type_options, index=attribute_type_options.index(chart_individual_configuration['target_attribute']))
+                        highlight_attribute = st.selectbox('Highlight attribute', options=highlight_options, index=highlight_options.index(chart_individual_configuration['highlight_attribute']))
+                        chart_individual_configuration['source_attribute'] = source_attribute
+                        chart_individual_configuration['target_attribute'] = target_attribute
+                        chart_individual_configuration['highlight_attribute'] = highlight_attribute
 
                         if source_attribute != '' and target_attribute != '':
                             # export_df = compute_flow_query(selection, sv.synthesis_synthetic_df.value, adf, att_separator, val_separator, data_schema, source_attribute, target_attribute, highlight_attribute)
@@ -275,6 +328,17 @@ def create():
                             chart = functions.flow_chart(export_df, selection, source_attribute, target_attribute, highlight_attribute, chart_width, chart_height, unit, scheme)
                             
                     if export_df is not None and chart is not None:
+                        clear_btn = st.button('Clear configuration')
+                        if (clear_btn):
+                            st.session_state[f'{workflow}_query_selections'] = []
+                            st.session_state[f'{workflow}_unit'] = ''
+                            st.session_state[f'{workflow}_scheme'] = scheme_options[0]
+                            st.session_state[f'{workflow}_chart_width'] = 800
+                            st.session_state[f'{workflow}_chart_height'] = 400
+                            st.session_state[f'{workflow}_chart_type'] = chart_type_options[0]
+                            st.session_state[f'{workflow}_chart_individual_configuration'] = {}
+                            st.rerun()
+
                         st.markdown(f'##### Export', help='Download the anonymized data and Plotly chart specification as CSV and JSON files, respectively.')
                         s1, s2 = st.columns([1, 1])
                         with s1:
@@ -282,7 +346,23 @@ def create():
                         with s2:
                             st.download_button('Chart JSON', data=pio.to_json(chart), file_name='chart.json', mime='text/json', use_container_width=True)
                         # with s3:
-                        #     st.download_button('Chart PNG', data=pio.to_image(chart, format='png'), file_name='chart.png', mime='image/png', use_container_width=True)
+            
+                with container:
+                    ad1, ad2 = st.columns([4, 1])
+                    with ad1:
+                        st.write('This page is not being cached. If you change workflows, you will need to re-configure your visualization.')
+                    with ad2:
+                        cache = st.button('Cache visualization')
+                        if cache:
+                            print('chart_individual_configuration', chart_individual_configuration)
+                            st.session_state[f'{workflow}_query_selections'] = filters
+                            st.session_state[f'{workflow}_unit'] = unit
+                            st.session_state[f'{workflow}_scheme'] = scheme
+                            st.session_state[f'{workflow}_chart_width'] = chart_width
+                            st.session_state[f'{workflow}_chart_height'] = chart_height
+                            st.session_state[f'{workflow}_chart_type'] = chart_type
+                            st.session_state[f'{workflow}_chart_individual_configuration'] = chart_individual_configuration
+                            st.rerun()            #     st.download_button('Chart PNG', data=pio.to_image(chart, format='png'), file_name='chart.png', mime='image/png', use_container_width=True)
 
             with c2:
                 st.markdown(f'##### Chart')
