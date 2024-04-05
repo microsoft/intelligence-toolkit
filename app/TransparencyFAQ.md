@@ -23,14 +23,15 @@ The Intelligence Toolkit is designed to be used by domain experts who are famili
                 
 It supports a variety of interactive workflows, each designed to address a specific type of intelligence task:
 
-- Case Intelligence Workflows
-    - **Data Synthesis** generates differentially-private datasets and summaries from sensitive case records
-    - **Attribute Patterns** generates reports on attribute patterns detected in streams of case records
-    - **Group Narratives** generates reports by defining and comparing groups of case records
-- Entity Intelligence Workflows
-    - **Record Matching** generates reports on record matches detected across entity datasets
-    - **Risk Networks** generates reports on risk exposure for networks of related entities
-    - **Question Answering** generates reports from an entity-rich document collection
+Case Intelligence Workflows
+- **Data Synthesis** generates differentially-private datasets and summaries from sensitive case records
+- **Attribute Patterns** generates reports on attribute patterns detected in streams of case records
+- **Group Narratives** generates reports by defining and comparing groups of case records
+
+Entity Intelligence Workflows
+- **Record Matching** generates reports on record matches detected across entity datasets
+- **Risk Networks** generates reports on risk exposure for networks of related entities
+- **Question Answering** generates reports from an entity-rich document collection
 
 #### How was Intelligence Toolkit evaluated? 
 
@@ -50,3 +51,7 @@ The Intelligence Toolkit was designed, refined, and evaluated in the context of 
 - The Intelligence Toolkit is designed for moderate-sized datasets (e.g., 100s of thousands of records, 100s of PDF documents). Larger datasets will require longer to process and may exceed the memory limits of the execution environment.
 - Responsible use of personal case data requires that the data be de-identified prior to uploading and then converted into anonymous data using the Data Synthesis workflow. Any subsequent analysis of the case data should be done using the synthetic case data, not the original (sensitive/personal) case data.
 - It is the user's responsibility to ensure that any data sent to generative AI models is not personal/sensitive/secret/confidential, that use of generative AI models is consistent with the terms of service of the model provider, and that such use incurs per-token costs charged to the OpenAI account linked to the user-provided API key. Understanding [usage costs](https://openai.com/pricing#language-models) and setting a [billing cap](https://platform.openai.com/docs/guides/production-best-practices/setting-up-your-organization) is recommended.
+
+#### What data is collected?
+
+Intelligence Toolkit may be deployed as a desktop application or a cloud service. The application supports short, end-to-end workflows from input data to output reports. As such, it stores no record of data inputs or outputs beyond the use of a caching mechanism for text embeddings that avoids unnecessary recomputation costs.
