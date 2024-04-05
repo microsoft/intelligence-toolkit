@@ -12,7 +12,6 @@ class SessionVariables:
         self.attribute_dynamic_df = SessionVariable(pd.DataFrame(), prefix)
         self.attribute_min_pattern_count = SessionVariable(100, prefix)
         self.attribute_max_pattern_length = SessionVariable(5, prefix)
-        self.attribute_embedding_df = SessionVariable(pd.DataFrame(), prefix)
         self.attribute_node_to_centroid = SessionVariable({}, prefix)
         self.attribute_period_embeddings = SessionVariable([], prefix)
         self.attribute_embedding_df = SessionVariable(pd.DataFrame(), prefix)

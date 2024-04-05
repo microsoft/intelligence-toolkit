@@ -15,8 +15,6 @@ import util.df_functions
 
 
 def dataframe_with_selections(df, selections, selection_col, label, key, height=250):
-    if key not in st.session_state:
-        st.session_state[key] = pd.DataFrame()
     df_with_selections = df.copy()
     values = []
     for val in df[selection_col].to_list():
@@ -101,7 +99,9 @@ def generative_batch_ai_component(system_prompt_var, instructions_var, variables
 def single_csv_uploader(workflow, upload_label, last_uploaded_file_name_var, input_df_var, processed_df_var, final_df_var, key, show_rows=10000, height=250):
     file = st.file_uploader(upload_label, type=['csv'], accept_multiple_files=False, key=key)
     with st.expander('File options'):
-        encoding = st.selectbox('File encoding', options=['unicode-escape', 'utf-8', 'utf-8-sig'], key=f'{key}_encoding')
+        file_options = ['unicode-escape', 'utf-8', 'utf-8-sig']
+        encoding = st.selectbox('File encoding', options=file_options, key=f'{key}_encoding')
+        print('stststst', st.session_state[f'{key}_encoding'])
         reload = st.button('Reload', key=f'{key}_reload')
     if file != None and (file.name != last_uploaded_file_name_var.value or reload):
         last_uploaded_file_name_var.value = file.name
@@ -154,7 +154,6 @@ def multi_csv_uploader(upload_label, uploaded_files_var, outputs_dir, key, max_r
     return selected_file, df
 
 def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, identifier_var):
-    # processed_df_var.value = input_df_var.value.copy(deep=True)
     if f'{workflow}_last_identifier' not in st.session_state.keys():
         st.session_state[f'{workflow}_last_identifier'] = ''
     if f'{workflow}_last_attributes' not in st.session_state.keys():
@@ -163,12 +162,24 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
         st.session_state[f'{workflow}_last_suppress_zeros'] = False
     if f'{workflow}_binned_df' not in st.session_state.keys() or len(st.session_state[f'{workflow}_binned_df']) == 0:
         st.session_state[f'{workflow}_binned_df'] = input_df_var.value.copy(deep=True)
+    if f'{workflow}_selected_binned_cols' not in st.session_state.keys():
+        st.session_state[f'{workflow}_selected_binned_cols'] = []
+    if f'{workflow}_selected_binned_size' not in st.session_state:
+        st.session_state[f'{workflow}_selected_binned_size'] = 'Year'
+    if f'{workflow}_selected_num_attr' not in st.session_state:
+        st.session_state[f'{workflow}_selected_num_attr'] = []
+    if f'{workflow}_selected_num_bins' not in st.session_state:
+        st.session_state[f'{workflow}_selected_num_bins'] = 5
+    if f'{workflow}_selected_trim_percent' not in st.session_state:
+        st.session_state[f'{workflow}_selected_trim_percent'] = 0.05
 
     with st.expander('Set subject identifier', expanded=False):
-        identifier = st.radio('Subject identifier', options=['Row number', 'ID column'], help='Select row number if each row of data represents a distinct individual, otherwise select ID column to link multiple rows to the same individual via their ID.')
+
+        index_id = 1 if st.session_state[f'{workflow}_last_identifier'] and st.session_state[f'{workflow}_last_identifier'] != 'Subject ID' else 0
+        identifier = st.radio('Subject identifier', index=index_id, options=['Row number', 'ID column'], help='Select row number if each row of data represents a distinct individual, otherwise select ID column to link multiple rows to the same individual via their ID.')
         if identifier == 'ID column':
             options = ['']+list(input_df_var.value.columns.values)
-            identifier_col = st.selectbox('Select subject identifier column', options=options)
+            identifier_col = st.selectbox('Select subject identifier column', options=options, index=options.index(st.session_state[f'{workflow}_last_identifier']) if st.session_state[f'{workflow}_last_identifier'] in options else None, help='Select the column that contains the unique identifier for each individual in the dataset. This column will be used to link multiple rows to the same individual. If the dataset does not contain a unique identifier, select Row number. If the dataset contains multiple columns that could be used as the identifier, select the appropriate column.')
             if identifier_col != '' and identifier_col != st.session_state[f'{workflow}_last_identifier']:
                 st.session_state[f'{workflow}_last_identifier'] = identifier_col
                 identifier_var.value = identifier_col
@@ -218,11 +229,17 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
             if col != 'Subject ID':
                 binnable_cols.append(col)
 
-        selected_date_cols = st.multiselect('Select datetime attribute to quantize', binnable_cols, help='Select the datetime columns you want to quantize. Quantizing datetime columns into bins makes it easier to synthesize data, but reduces the amount of information in the data. If you do not select any columns, no binning will be performed.')
-        bin_size = st.radio('Select bin size', options=['Year', 'Half', 'Quarter', 'Month', 'Day'], help='Select the bin size for the datetime columns you want to quantize. Quantizing datetime columns into bins makes it easier to synthesize data, but reduces the amount of information in the data. If you do not select any columns, no binning will be performed.')
+        selected_date_cols = st.multiselect('Select datetime attribute to quantize', default=st.session_state[f'{workflow}_selected_binned_cols'], options=binnable_cols, help='Select the datetime columns you want to quantize. Quantizing datetime columns into bins makes it easier to synthesize data, but reduces the amount of information in the data. If you do not select any columns, no binning will be performed.')
+
+        bin_size_options = ['Year', 'Half', 'Quarter', 'Month', 'Day']
+        bin_size = st.radio('Select bin size', index=bin_size_options.index(st.session_state[f"{workflow}_selected_binned_size"]), options=bin_size_options, help='Select the bin size for the datetime columns you want to quantize. Quantizing datetime columns into bins makes it easier to synthesize data, but reduces the amount of information in the data. If you do not select any columns, no binning will be performed.')
+        
         # num_bins = st.number_input('Number of bins', value=5, help='Number of bins to use for each column. If 0, no binning will be performed. Fewer bins makes it easier to synthesize data, but reduces the amount of information in the data. More bins makes it harder to synthesize data, but preserves more information in the data.')
         # trim_percent = st.number_input('Trim percent', value=0.05, help='Percent of values to trim from the top and bottom of each column before binning. This helps to reduce the impact of outliers on the binning process. For example, if trim percent is 0.05, the top and bottom 5% of values will be trimmed from each column before binning. If 0, no trimming will be performed.')
         if st.button('Quantize selected columns', key='quantize_date'):
+            st.session_state[f"{workflow}_selected_binned_cols"] = selected_date_cols
+            st.session_state[f"{workflow}_selected_binned_size"] = bin_size
+        
             for col in selected_date_cols:
                 func = None
                 if bin_size == 'Year':
@@ -279,9 +296,10 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
             if col != 'Subject ID' and processed_df_var.value[col].dtype in ['float64', 'int64', 'Int64']:
                 binnable_cols.append(col)
 
-        selected_binnable_cols = st.multiselect('Select numeric attributes to quantize', binnable_cols, help='Select the numeric columns you want to quantize. Quantizing numeric columns into bins makes it easier to synthesize data, but reduces the amount of information in the data. If you do not select any columns, no binning will be performed.')
-        num_bins = st.number_input('Number of bins', value=5, help='Number of bins to use for each column. If 0, no binning will be performed. Fewer bins makes it easier to synthesize data, but reduces the amount of information in the data. More bins makes it harder to synthesize data, but preserves more information in the data.')
-        trim_percent = st.number_input('Trim percent', value=0.05, help='Percent of values to trim from the top and bottom of each column before binning. This helps to reduce the impact of outliers on the binning process. For example, if trim percent is 0.05, the top and bottom 5% of values will be trimmed from each column before binning. If 0, no trimming will be performed.')
+        selected_binnable_cols = st.multiselect('Select numeric attributes to quantize', binnable_cols, default=st.session_state[f'{workflow}_selected_num_attr'], help='Select the numeric columns you want to quantize. Quantizing numeric columns into bins makes it easier to synthesize data, but reduces the amount of information in the data. If you do not select any columns, no binning will be performed.')
+        num_bins = st.number_input('Number of bins', value=st.session_state[f'{workflow}_selected_num_bins'], help='Number of bins to use for each column. If 0, no binning will be performed. Fewer bins makes it easier to synthesize data, but reduces the amount of information in the data. More bins makes it harder to synthesize data, but preserves more information in the data.')
+        trim_percent = st.number_input('Trim percent', value=st.session_state[f'{workflow}_selected_trim_percent'], help='Percent of values to trim from the top and bottom of each column before binning. This helps to reduce the impact of outliers on the binning process. For example, if trim percent is 0.05, the top and bottom 5% of values will be trimmed from each column before binning. If 0, no trimming will be performed.')
+        
         if st.button('Quantize selected columns', key='quantize_numeric'):
             if num_bins == 0:
                 for col in selected_binnable_cols:
@@ -329,6 +347,10 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
                     results = ['' if type(v) == float else '(' + str(v.left) + '-' + str(v.right) + ']' for v in values]
                     # processed_df_var.value[col] = processed_df_var.value[col].astype('str')
                     st.session_state[f'{workflow}_binned_df'][col] = results
+
+            st.session_state[f'{workflow}_selected_num_attr'] = selected_binnable_cols
+            st.session_state[f'{workflow}_selected_num_bins'] = num_bins 
+            st.session_state[f'{workflow}_selected_trim_percent'] = trim_percent
             st.session_state[f'{workflow}_last_attributes'] = [] # hack to force second rerun and show any changes from binning
             st.rerun() 
 

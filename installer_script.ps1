@@ -47,5 +47,7 @@ if (Test-Path $wheelFilePath) {
         exit 1
     }
 }
+#split it here
 
+#code sign
 pynsist .\installer.cfg
