@@ -55,7 +55,8 @@ def generative_ai_component(system_prompt_var, instructions_var, variables):
     st.markdown('##### Generative AI instructions')
     with st.expander('Edit AI System Prompt (advanced)', expanded=False):
         st.text_area('Contents of System Prompt used to generate AI outputs. Do not edit {AI inputs} in curly brackets.', key=system_prompt_var.key, value=system_prompt_var.value, height=200)
-    st.text_area('Instructions (optional - use to guide output)', key=instructions_var.key, value=instructions_var.value, height=100)
+    value_area = st.text_area('Instructions (optional - use to guide output)', value=instructions_var.value, height=100)
+    instructions_var.value = value_area
     variables['instructions'] = instructions_var.value
     messages = util.AI_API.prepare_messages_from_message(system_prompt_var.value, variables)
     tokens = util.AI_API.count_tokens_in_message_list(messages)
@@ -96,14 +97,19 @@ def generative_batch_ai_component(system_prompt_var, instructions_var, variables
         st.markdown(f'AI input uses {tokens}/{util.AI_API.max_input_tokens} ({round(ratio, 2)}%) of token limit')
     return generate, batch_messages
 
+file_options = ['unicode-escape', 'utf-8', 'utf-8-sig']
+file_encoding_default = 'unicode-escape'
 def single_csv_uploader(workflow, upload_label, last_uploaded_file_name_var, input_df_var, processed_df_var, final_df_var, key, show_rows=10000, height=250):
     file = st.file_uploader(upload_label, type=['csv'], accept_multiple_files=False, key=key)
+    if f'{key}_encoding' not in st.session_state:
+        st.session_state[f'{key}_encoding'] = file_encoding_default
+
     with st.expander('File options'):
-        file_options = ['unicode-escape', 'utf-8', 'utf-8-sig']
-        encoding = st.selectbox('File encoding', options=file_options, key=f'{key}_encoding')
-        print('stststst', st.session_state[f'{key}_encoding'])
+        encoding = st.selectbox('File encoding', options=file_options, key=f'{key}_encoding_sb', index=file_options.index(st.session_state[f'{key}_encoding']))
+
         reload = st.button('Reload', key=f'{key}_reload')
     if file != None and (file.name != last_uploaded_file_name_var.value or reload):
+        st.session_state[f'{key}_encoding'] = encoding
         last_uploaded_file_name_var.value = file.name
         df = pd.read_csv(file, encoding=encoding, encoding_errors='ignore', low_memory=False)
         # df.columns = df.columns.str.strip()
@@ -113,6 +119,7 @@ def single_csv_uploader(workflow, upload_label, last_uploaded_file_name_var, inp
         final_df_var.value = pd.DataFrame()
         if f'{workflow}_binned_df' in st.session_state.keys():
             del st.session_state[f'{workflow}_binned_df']
+        st.rerun()
     options = []
     if input_df_var is not None:
         options += ['Raw']
@@ -133,6 +140,9 @@ def single_csv_uploader(workflow, upload_label, last_uploaded_file_name_var, inp
                 st.download_button('Download final dataset', final_df_var.value.to_csv(index=False), file_name='final_dataset.csv', disabled=len(final_df_var.value) == 0)
 
 def multi_csv_uploader(upload_label, uploaded_files_var, outputs_dir, key, max_rows_var=0, show_rows=1000, height=250):
+    if f'{key}_encoding' not in st.session_state:
+        st.session_state[f'{key}_encoding'] = file_encoding_default
+
     files = st.file_uploader(upload_label, type=['csv'], accept_multiple_files=True, key=key)
     st.number_input('Maximum rows to process (0 = all)', min_value=0, step=1000, key=max_rows_var.key)
     if files != None:
@@ -141,16 +151,18 @@ def multi_csv_uploader(upload_label, uploaded_files_var, outputs_dir, key, max_r
                 uploaded_files_var.value.append(file.name)
     selected_file = st.selectbox("Select a file to process", ['']+uploaded_files_var.value)
     with st.expander('File options'):
-        encoding = st.selectbox('File encoding', options=['unicode-escape', 'utf-8', 'utf-8-sig'], key=f'{key}_encoding')
+        encoding = st.selectbox('File encoding', options=file_options, key=f'{key}_encoding_db', index=file_options.index(st.session_state[f'{key}_encoding']))
         reload = st.button('Reload', key=f'{key}_reload')
 
     df = pd.DataFrame()
     if selected_file not in [None, ''] or reload:
+        st.session_state[f'{key}_encoding'] = encoding
         for file in files:
             if file.name == selected_file:
-                df = pd.read_csv(file, encoding='unicode-escape', nrows=max_rows_var.value, encoding_errors='ignore', low_memory=False) if max_rows_var.value > 0 else pd.read_csv(file, encoding='unicode-escape', encoding_errors='ignore', low_memory=False)
+                df = pd.read_csv(file, encoding=encoding, nrows=max_rows_var.value, encoding_errors='ignore', low_memory=False) if max_rows_var.value > 0 else pd.read_csv(file, encoding=encoding, encoding_errors='ignore', low_memory=False)
                 break
         st.dataframe(df[:show_rows], hide_index=True, use_container_width=True, height=height)
+        st.rerun()
     return selected_file, df
 
 def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, identifier_var):

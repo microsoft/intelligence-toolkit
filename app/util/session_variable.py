@@ -20,9 +20,10 @@ class SessionVariable:
 
         self._key = "_".join(arg for arg in [prefix, var_name] if arg != "")
         self._value = default
-
         if self._key not in st.session_state:
             st.session_state[self._key] = default
+        else:
+            self._value = st.session_state[self._key]
 
     @property
     def key(self) -> str:
