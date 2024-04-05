@@ -399,17 +399,17 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
                     # convert back to wide format
                     wdf = melted.pivot(index='Subject ID', columns='Attribute', values='Value').reset_index()
                     # wdf = wdf.drop(columns=['Subject ID'])
-                    wdf.replace({'<NA>': np.nan}, inplace=True)
-                    wdf.replace({'nan': ''}, inplace=True)
-                    wdf.replace({'1.0': '1'}, inplace=True)
+                    
                     output_df_var.value = wdf
                 else:
                     wdf = processed_df_var.value.copy(deep=True)
                     output_df_var.value = wdf
             else:
-                    wdf = processed_df_var.value.copy(deep=True)
-                    output_df_var.value = wdf
-            
+                wdf = processed_df_var.value.copy(deep=True)
+                output_df_var.value = wdf
+            output_df_var.value.replace({'<NA>': np.nan}, inplace=True)
+            output_df_var.value.replace({'nan': ''}, inplace=True)
+            output_df_var.value.replace({'1.0': '1'}, inplace=True)
             st.rerun()
     if len(output_df_var.value) > 0:
         st.success('Data preparation complete.')

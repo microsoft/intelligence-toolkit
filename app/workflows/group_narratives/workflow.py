@@ -8,6 +8,7 @@ import workflows.group_narratives.variables as vars
 
 import util.AI_API
 import util.ui_components
+import util.df_functions
 
 def create():
     workflow = 'group_narratives'
@@ -23,6 +24,8 @@ def create():
             util.ui_components.single_csv_uploader(workflow, 'Upload CSV to narrate', sv.narrative_last_file_name, sv.narrative_input_df, sv.narrative_binned_df, sv.narrative_final_df, key='narrative_uploader', height=400)
         with model_col:
             util.ui_components.prepare_input_df(workflow, sv.narrative_input_df, sv.narrative_binned_df, sv.narrative_final_df, sv.narrative_subject_identifier)
+            sv.narrative_final_df.value = util.df_functions.fix_null_ints(sv.narrative_final_df.value)
+            sv.narrative_final_df.value = sv.narrative_final_df.value.astype(str).replace('<NA>', '').replace('nan', '')
     with summarize_tab:
         if len(sv.narrative_final_df.value) == 0:
             st.warning('Upload data to continue.')
@@ -35,7 +38,7 @@ def create():
                 for col in sorted_cols:
                     if col == 'Subject ID':
                         continue
-                    vals = [f'{col}:{x}' for x in sorted(sv.narrative_final_df.value[col].astype(str).unique()) if x not in ['', 'nan', 'NaN', 'None', 'none', 'NULL', 'null']]
+                    vals = [f'{col}:{x}' for x in sorted(sv.narrative_final_df.value[col].astype(str).unique()) if x not in ['', '<NA>', 'nan', 'NaN', 'None', 'none', 'NULL', 'null']]
                     sorted_atts.extend(vals)
                 
                 st.multiselect('After filtering to records matching these values:', sorted_atts, key=sv.narrative_filters.key)
@@ -60,6 +63,7 @@ def create():
 
                     # wide df for model
                     wdf = sv.narrative_model_df.value
+                    print(wdf)
                     initial_row_count = len(wdf)
                     
                     if len(filters) > 0:
