@@ -54,4 +54,4 @@ The Intelligence Toolkit was designed, refined, and evaluated in the context of 
 
 #### What data is collected?
 
-Intelligence Toolkit may be deployed as a desktop application or a cloud service. The application supports short, end-to-end workflows from input data to output reports. As such, it stores no record of data inputs or outputs beyond the use of a caching mechanism for text embeddings that avoids unnecessary recomputation costs.
+Intelligence Toolkit may be deployed as a desktop application or a cloud service. The application supports short, end-to-end workflows from input data to output reports. As such, it stores no data beyond the use of a caching mechanism for text embeddings that avoids unnecessary recomputation costs.
