@@ -31,7 +31,7 @@ List seven competing hypotheses about why the pattern may have been observed in 
 
 List seven potential actions targeted at the specific details of the identified pattern. Do not make broad recommendations that would apply to all patterns. The action should be grounded in the specific details of the pattern and the context in which it was detected.
 
-TASK
+=== TASK ===
 
 Detected pattern: {pattern}
 

@@ -4,6 +4,7 @@ import numpy as np
 from util.Database import Database
 import util.session_variables
 from util.openai_instance import _OpenAI
+import streamlit as st
 
 gen_model = 'gpt-4-turbo-preview'
 embed_model = 'text-embedding-3-small'
@@ -73,7 +74,7 @@ class Embedder:
             try:
                 embedding = openai.client().embeddings.create(input = [text], model=self.model).data[0].embedding
                 if auto_save:
-                    self.connection.insert_into_embeddings(hsh, embedding)
+                    self.connection.insert_into_embeddings(hsh, embedding, self.username)
                 return embedding
             except:
                 print(f'Error embedding text: {text}')

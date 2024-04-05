@@ -41,6 +41,8 @@ The final report should:
 - be formatted in markdown, with headings indicated by # symbols and subheadings indicated by additional # symbols
 - use plain English accessible to non-native speakers and non-technical audiences
 
+=== TASK ===
+
 User question:
 
 {question}

@@ -19,6 +19,8 @@ Additional instructions:
 
 {instructions}
 
+=== TASK ===
+
 Group data:
 
 {data}
