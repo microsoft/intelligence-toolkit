@@ -23,7 +23,7 @@ if there is a selected entity, or else:
 
 "##### Evaluation of Entity Network <Network ID>"
 
-DATA:
+=== TASK ===
 
 Selected entity: {entity_id}
 
