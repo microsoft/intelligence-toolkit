@@ -61,7 +61,8 @@ def chunk_files(sv, files):
         all_embeddings_list.append((hash(formatted_chunk), chunk_vec))
         file.add_chunk(chunk, np.array(chunk_vec), cx+1)   
     pb.progress(99, 'Saving embeddings...')
-    embedder.connection.insert_multiple_into_embeddings(all_embeddings_list)
+    if len(all_embeddings_list) > 0:
+        embedder.connection.insert_multiple_into_embeddings(all_embeddings_list)
     pb.empty()
 
 def update_question(sv, question_history, new_questions, placeholder, prefix):
