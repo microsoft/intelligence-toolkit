@@ -162,7 +162,6 @@ def multi_csv_uploader(upload_label, uploaded_files_var, outputs_dir, key, max_r
                 df = pd.read_csv(file, encoding=encoding, nrows=max_rows_var.value, encoding_errors='ignore', low_memory=False) if max_rows_var.value > 0 else pd.read_csv(file, encoding=encoding, encoding_errors='ignore', low_memory=False)
                 break
         st.dataframe(df[:show_rows], hide_index=True, use_container_width=True, height=height)
-        st.rerun()
     return selected_file, df
 
 def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, identifier_var):
