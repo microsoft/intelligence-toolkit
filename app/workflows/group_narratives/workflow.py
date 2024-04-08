@@ -38,21 +38,21 @@ def create():
                     vals = [f'{col}:{x}' for x in sorted(sv.narrative_final_df.value[col].astype(str).unique()) if x not in ['', 'nan', 'NaN', 'None', 'none', 'NULL', 'null']]
                     sorted_atts.extend(vals)
                 
-                st.multiselect('After filtering to records matching these values:', sorted_atts, key=sv.narrative_filters.key)
-                st.multiselect('Compare groups of records with different combinations of these attributes:', sorted_cols, key=sv.narrative_groups.key)
-                st.multiselect('Using counts of these attributes:', sorted_cols, key=sv.narrative_aggregates.key)
-                st.selectbox('Across levels of this temporal/ordinal attribute (optional):', [''] + sorted_cols, key=sv.narrative_temporal.key)
-            
-                model = st.button('Create summary', disabled=len(sv.narrative_groups.value) == 0 or len(sv.narrative_aggregates.value) == 0)
+                filters = st.multiselect('After filtering to records matching these values:', sorted_atts, default=sv.narrative_filters.value)
+                groups = st.multiselect('Compare groups of records with different combinations of these attributes:', sorted_cols, default=sv.narrative_groups.value)
+                aggregates = st.multiselect('Using counts of these attributes:', sorted_cols, default=sv.narrative_aggregates.value)
+                temporal_options = [''] + sorted_cols
+                temporal = st.selectbox('Across levels of this temporal/ordinal attribute (optional):', temporal_options, index=temporal_options.index(sv.narrative_temporal.value))
+
+                model = st.button('Create summary', disabled=len(groups) == 0 or len(aggregates) == 0)
             with c2:
                 st.markdown('##### Data summary')
-                
-                
-                filters = sv.narrative_filters.value
-                groups = sv.narrative_groups.value
-                aggregates = sv.narrative_aggregates.value
-                temporal = sv.narrative_temporal.value
                 if model:
+                    sv.narrative_filters.value = filters
+                    sv.narrative_groups.value = groups
+                    sv.narrative_aggregates.value = aggregates
+                    sv.narrative_temporal.value = temporal
+
                     sv.narrative_model_df.value = sv.narrative_final_df.value.copy(deep=True)
                     sv.narrative_model_df.value['Subject ID'] = [str(x) for x in range(1, len(sv.narrative_model_df.value) + 1)]
 
@@ -71,7 +71,7 @@ def create():
                     # narrow df for model
                     id_vars = groups + [temporal] if temporal != '' else groups
                     ndf = wdf.melt(id_vars=id_vars, value_vars=aggregates, var_name='Attribute', value_name='Value')
-                    ndf['Attribute Value'] = ndf['Attribute'] + ':' + ndf['Value']
+                    ndf['Attribute Value'] = str(ndf['Attribute']) + ':' + str(ndf['Value'])
 
                     temporal_atts = []
                     
@@ -148,11 +148,13 @@ def create():
                         description += f'\n- The **{temporal} Level Count** of each **Attribute Value** for each **{temporal} Level** for all {groups_text} groups, and corresponding **{temporal} Level Rank**'
                         description += f'\n- The **{temporal} Level Delta**, or change in the **Attribute Value Count** for successive **{temporal} Level** values, within each {groups_text} group'
                     sv.narrative_description.value = description
+                    st.rerun()
                 if len(sv.narrative_model_df.value) > 0:
                     st.dataframe(sv.narrative_model_df.value, hide_index=True, use_container_width=True, height=500)
                     
                     st.markdown(sv.narrative_description.value)
                     st.download_button('Download data', data=sv.narrative_model_df.value.to_csv(index=False, encoding='utf-8-sig'), file_name='narrative_data_summary.csv', mime='text/csv')
+                
 
     with generate_tab:
         if len(sv.narrative_model_df.value) == 0:
@@ -164,9 +166,9 @@ def create():
                 groups = sorted(sv.narrative_model_df.value.groupby(sv.narrative_groups.value).groups.keys())
                 b1, b2 = st.columns([1, 1])
                 with b1:
-                    selected_groups = st.multiselect('Select specific groups to narrate:', list(groups), key=sv.narrative_selected_groups.key)
+                    selected_groups = st.multiselect('Select specific groups to narrate:', list(groups), default=sv.narrative_selected_groups.value)
                 with b2:
-                    top_group_ranks = st.number_input('OR Select top group ranks to narrate:', min_value=0, max_value=9999999999, key=sv.narrative_top_groups.key)
+                    top_group_ranks = st.number_input('OR Select top group ranks to narrate:', min_value=0, max_value=9999999999, value=sv.narrative_top_groups.value)
                 fdf = sv.narrative_model_df.value.copy(deep=True)
                 filter_description = ''
                 if len(selected_groups) > 0:
@@ -191,12 +193,16 @@ def create():
                 narrative_placeholder = st.empty()
                 gen_placeholder = st.empty()
                 if generate:
+                    print('1234123123messagesmessagesmessagesmessages', messages)
+                    sv.narrative_selected_groups.value = selected_groups
+                    sv.narrative_top_groups.value = top_group_ranks
                     result = util.AI_API.generate_text_from_message_list(
                         placeholder=narrative_placeholder,
                         messages=messages,
                         prefix=''
                     )
                     sv.narrative_report.value = result
+                    st.rerun()
                 else:
                     if sv.narrative_report.value == '':
                         gen_placeholder.warning('Press the Generate button to create an AI report for the selected groups.')

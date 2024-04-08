@@ -12,6 +12,7 @@ def on_change(handler, key = None, value = None):
     return change
 
 def main():
+    st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_icon="app/myapp.ico", page_title='Intelligence Toolkit | Settings')
     st.header("Settings")
     sv = SessionVariables('home')
 

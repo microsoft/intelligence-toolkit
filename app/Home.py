@@ -10,7 +10,7 @@ def get_transparency_faq():
         return file.read()
     
 def main():
-    st.set_page_config(layout="wide", initial_sidebar_state="expanded", page_title='Intelligence Toolkit | Home')
+    st.set_page_config(layout="wide", initial_sidebar_state="expanded", page_icon="app/myapp.ico", page_title='Intelligence Toolkit | Home')
     load_multipage_app()
 
     transparency_faq = get_transparency_faq()
