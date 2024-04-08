@@ -39,11 +39,11 @@ def create():
     with mining_tab:
         c1, c2, c3, c4 = st.columns([4, 1, 1, 1])
         with c1:
-            question = st.text_input('Question', key='lazy_question')
+            question = st.text_input('Question', value=sv.answering_last_lazy_question.value)
         with c2:
-            st.number_input('Target QA matches', min_value=1, step=1, value=sv.answering_target_matches.value, key=sv.answering_target_matches.key)
+            answering_target_matches = st.number_input('Target QA matches', min_value=1, step=1, value=sv.answering_target_matches.value)
         with c3:
-            st.number_input('Target source diversity', min_value=1, step=1, value=sv.answering_source_diversity.value, key=sv.answering_source_diversity.key)
+            answering_source_diversity = st.number_input('Target source diversity', min_value=1, step=1, value=sv.answering_source_diversity.value)
         with c4:
             regenerate = st.button('Mine matching questions', key='lazy_regenerate', use_container_width=True)
         c1, c2 = st.columns([2, 3])
@@ -62,6 +62,8 @@ def create():
             sv.answering_next_q_id.value = 1
             sv.answering_surface_questions.value = {}
             sv.answering_deeper_questions.value = {}
+            sv.answering_target_matches.value = answering_target_matches
+            sv.answering_source_diversity.value = answering_source_diversity
             sv.answering_last_lazy_question.value = question
             sv.answering_status_history.value = ''
             sv.answering_matches.value = f''

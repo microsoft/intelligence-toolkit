@@ -45,3 +45,4 @@ build/nsis/*
 !build/nsis/Intelligence Toolkit.exe
 
 app/wkhtmltox/wkhtmltox-0.12.6-1.msvc2015-win64_.exe
+/wheels
