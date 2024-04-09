@@ -28,6 +28,7 @@ class app_user:
         st.warning(f"Could not directly read username from azure active directory: {return_value}.")     
 
     def login(self):
+        return
         if self.sv.mode.value != 'cloud':
             return
         return_value = get_auth_user()
