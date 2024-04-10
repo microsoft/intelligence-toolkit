@@ -80,7 +80,9 @@ def generative_batch_ai_component(system_prompt_var, instructions_var, variables
     st.text_area('Instructions (optional - use to guide output)', key=instructions_var.key, value=instructions_var.value, height=100)
     
     batch_offset = 0
-    batch_count = (len(batch_val) // batch_size) + 1
+    batch_count_raw = (len(batch_val) // batch_size)
+    batch_count_remaining = (len(batch_val) % batch_size)
+    batch_count = batch_count_raw + 1 if batch_count_remaining != 0 else batch_count_raw
     batch_messages = []
     variables['instructions'] = instructions_var.value
     for i in range(batch_count):
@@ -89,7 +91,7 @@ def generative_batch_ai_component(system_prompt_var, instructions_var, variables
         batch_variables = dict(variables)
         batch_variables[batch_name] = batch.to_csv()
         batch_messages.append(util.AI_API.prepare_messages_from_message(system_prompt_var.value, batch_variables))
-    tokens = util.AI_API.count_tokens_in_message_list(batch_messages[0])
+    tokens = util.AI_API.count_tokens_in_message_list(batch_messages[0] if len(batch_messages) != 0 else [])
     b1, b2 = st.columns([1, 4])
     ratio = 100 * tokens/util.AI_API.max_input_tokens
     with b1:

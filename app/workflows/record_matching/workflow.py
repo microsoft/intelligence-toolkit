@@ -101,27 +101,31 @@ def create():
                     with b1:
                         att_vals = st.multiselect(f'Values', key=f"{i}_value", default=st.session_state[f'att{i}_vals'], options=options, help='Select all columns that represent the same attribute across datasets.')
                         if len(att_vals) > 0:
-                            st.session_state[f'att{i}_vals'] = att_vals
                             is_assigned = True
                     with b2:
                         att_name = st.text_input(f'Label (optional)', key=f'{i}_name', value=st.session_state[f'att{i}_name'], help='The name to assign to this attribute in the merged dataset. If left blank, the first value selected will be used.')
-                    if att_name == '' and len(att_vals) > 0:
-                        att_name = att_vals[0].split('::')[0]
-                    elif att_name != '':
-                        st.session_state[f'att{i}_name'] = att_name
+                        att_name_original = att_name
+                        if att_name == '' and len(att_vals) > 0:
+                            att_name = att_vals[0].split('::')[0]
+
                     for val in att_vals:
                         col, dataset = val.split('::')
                         renaming[dataset][col] = att_name
                         atts_to_datasets[att_name].append(dataset)
-                    return is_assigned 
+                    return is_assigned, att_vals, att_name_original
 
                 any_empty = False
                 for i in range(num_atts):
-                    is_assigned = att_ui(i)
+                    is_assigned, att_vals, att_name_original = att_ui(i)
+                    if st.session_state[f'att{i}_vals'] != att_vals:
+                        st.session_state[f'att{i}_vals'] = att_vals
+                    if st.session_state[f'att{i}_name'] != att_name_original:
+                        st.session_state[f'att{i}_name'] = att_name_original
                     if not is_assigned:
                         any_empty = True
                 if not any_empty:
                     att_ui(num_atts)
+
                 st.markdown('##### Configure similarity thresholds')
                 b1, b2 = st.columns([1, 1])
                 with b1:
@@ -312,6 +316,5 @@ def create():
             placeholder.empty()
             if len(sv.matching_evaluations.value) > 0:
                 st.dataframe(sv.matching_evaluations.value.to_pandas(), height=700, use_container_width=True, hide_index=True)
-                # sv.matching_matches_df.value = sv.matching_matches_df.value.with_columns(pl.col('Group ID').cast(pl.Utf8))
                 jdf = sv.matching_matches_df.value.join(sv.matching_evaluations.value, on='Group ID', how='inner')
                 st.download_button('Download AI match report', data=jdf.write_csv(), file_name='record_groups_evaluated.csv', mime='text/csv')
