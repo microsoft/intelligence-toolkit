@@ -7,6 +7,7 @@ trigger:
   branches:
     include:
       - main
+      - fix-st
       
 schedules:
 - cron: "0 0 * * 0"  # Runs every Sunday at midnight (UTC)
@@ -112,8 +113,9 @@ stages:
               script: docker push $(DOCKER_REGISTRY)/intel-toolkit:latest   
   
   - stage: Build NSIS
-    dependsOn: Build
-    condition: eq(variables.isTagged, 'true')
+    # dependsOn: Build
+    dependsOn: []
+    # condition: eq(variables.isTagged, 'true')
     jobs:
       - job: NSIS_Build
         pool:
