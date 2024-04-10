@@ -1,28 +1,26 @@
 import os
-import streamlit as st
 
 class SecretsHandler:
-    _instance = None
-    _directory = "/.streamlit"
+    _directory = ".streamlit"
+    _file_name = "app_secrets.toml"
+    _file_path = os.path.join(_directory, _file_name)
 
     def __init__(self):
         if not os.path.exists(self._directory):
             os.makedirs(self._directory)
-            with(open(os.path.join(self._directory, "secrets.toml"), "w")) as f:
+            with(open(self._file_path, "w+")) as f:
                 f.write("")
 
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            
-        return cls._instance
-
     def write_secret(self, key, value):
-        with(open(os.path.join(self._directory, "secrets.toml"), "w")) as f:
-            f.write(f"{key} = '{value}'")
+        with(open(self._file_path, "w")) as f:
+            f.write(f"{key}:{value};")
 
     def get_secret(self, key) -> str:
-        if st.secrets and key in st.secrets:
-            return st.secrets[key]
+        with(open(self._file_path, "r")) as f:
+            secrets = f.read()
+            secret_key = secrets.split(";")
+            for key_value in secret_key:
+                secret_key = key_value.split(":")[0]
+                if key == secret_key:
+                    return key_value.split(":")[1]
         return ''
-      

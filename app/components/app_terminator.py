@@ -24,7 +24,6 @@ class app_terminator:
         return click
 
     def terminate_app_btn(self):
-        #TODO: Use constants with mode 
         if self.sv.mode.value == 'exe':
             exit_app = st.sidebar.button("🔴 Terminate application", disabled=st.session_state.off_btn_disabled, on_click=self._on_click)
             if exit_app:

@@ -17,6 +17,5 @@ def load_multipage_app():
     app_openai = ao.app_openai()
     app_openai.api_info()
 
-    #load css
-    # add_styles()
+    add_styles()
 

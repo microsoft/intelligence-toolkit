@@ -147,7 +147,7 @@ stages:
               script: '.\installer_script.ps1'
           - task: PublishPipelineArtifact@1
             inputs:
-              targetPath: '$(System.DefaultWorkingDirectory)/build/nsis/Intelligence Toolkit.exe' 
+              targetPath: '$(System.DefaultWorkingDirectory)/build/nsis/Intelligence_toolkit_installer.exe' 
               artifact: 'executable'  # Name of the artifact
 
           
