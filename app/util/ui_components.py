@@ -54,7 +54,8 @@ def report_download_ui(report_var, name):
 def generative_ai_component(system_prompt_var, instructions_var, variables):
     st.markdown('##### Generative AI instructions')
     with st.expander('Edit AI System Prompt (advanced)', expanded=False):
-        st.text_area('Contents of System Prompt used to generate AI outputs. Do not edit {AI inputs} in curly brackets.', key=system_prompt_var.key, value=system_prompt_var.value, height=200)
+        instructions_text = st.text_area('Contents of System Prompt used to generate AI outputs. Do not edit {AI inputs} in curly brackets.', value=system_prompt_var.value, height=200)
+    system_prompt_var.value = instructions_text
     value_area = st.text_area('Instructions (optional - use to guide output)', value=instructions_var.value, height=100)
     instructions_var.value = value_area
     variables['instructions'] = instructions_var.value
