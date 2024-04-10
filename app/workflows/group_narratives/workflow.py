@@ -8,6 +8,7 @@ import workflows.group_narratives.variables as vars
 
 import util.AI_API
 import util.ui_components
+import util.df_functions
 
 def create():
     workflow = 'group_narratives'
@@ -23,6 +24,8 @@ def create():
             util.ui_components.single_csv_uploader(workflow, 'Upload CSV to narrate', sv.narrative_last_file_name, sv.narrative_input_df, sv.narrative_binned_df, sv.narrative_final_df, key='narrative_uploader', height=400)
         with model_col:
             util.ui_components.prepare_input_df(workflow, sv.narrative_input_df, sv.narrative_binned_df, sv.narrative_final_df, sv.narrative_subject_identifier)
+            sv.narrative_final_df.value = util.df_functions.fix_null_ints(sv.narrative_final_df.value)
+            sv.narrative_final_df.value = sv.narrative_final_df.value.astype(str).replace('<NA>', '').replace('nan', '')
     with summarize_tab:
         if len(sv.narrative_final_df.value) == 0:
             st.warning('Upload data to continue.')
@@ -35,7 +38,7 @@ def create():
                 for col in sorted_cols:
                     if col == 'Subject ID':
                         continue
-                    vals = [f'{col}:{x}' for x in sorted(sv.narrative_final_df.value[col].astype(str).unique()) if x not in ['', 'nan', 'NaN', 'None', 'none', 'NULL', 'null']]
+                    vals = [f'{col}:{x}' for x in sorted(sv.narrative_final_df.value[col].astype(str).unique()) if x not in ['', '<NA>', 'nan', 'NaN', 'None', 'none', 'NULL', 'null']]
                     sorted_atts.extend(vals)
                 
                 filters = st.multiselect('After filtering to records matching these values:', sorted_atts, default=sv.narrative_filters.value)
@@ -45,6 +48,7 @@ def create():
                 temporal = st.selectbox('Across levels of this temporal/ordinal attribute (optional):', temporal_options, index=temporal_options.index(sv.narrative_temporal.value))
 
                 model = st.button('Create summary', disabled=len(groups) == 0 or len(aggregates) == 0)
+            
             with c2:
                 st.markdown('##### Data summary')
                 if model:
@@ -60,6 +64,7 @@ def create():
 
                     # wide df for model
                     wdf = sv.narrative_model_df.value
+                    print(wdf)
                     initial_row_count = len(wdf)
                     
                     if len(filters) > 0:
@@ -97,13 +102,13 @@ def create():
 
                     ldf = None
 
-                    # create level df 
+                    # create Window df 
                     if temporal != '':
                         temporal_atts = sorted(sv.narrative_model_df.value[temporal].astype(str).unique())
                         ldf = wdf.melt(id_vars=groups + [temporal], value_vars=aggregates, var_name='Attribute', value_name='Value')
                         ldf['Attribute Value'] = ldf['Attribute'] + ':' + ldf['Value']
                         # group by groups and count attribute values
-                        ldf = ldf.groupby(groups + [temporal, 'Attribute Value']).size().reset_index(name=f'{temporal} Level Count')
+                        ldf = ldf.groupby(groups + [temporal, 'Attribute Value']).size().reset_index(name=f'{temporal} Window Count')
 
 
                     tdfs = []
@@ -112,17 +117,17 @@ def create():
                         for name, group in ldf.groupby(groups):
                             for att_val in ldf['Attribute Value'].unique():
                                 for time_val in ldf[temporal].unique():
-                                    if len(group[(group[temporal] == time_val) & (group[f'{temporal} Level Count'] == att_val)]) == 0:
+                                    if len(group[(group[temporal] == time_val) & (group[f'{temporal} Window Count'] == att_val)]) == 0:
                                         ldf.loc[len(ldf)] = [*name, time_val, att_val, 0]
 
                         # Calculate deltas in counts within each group and attribute value
                         for name, ddf in ldf.groupby(groups + ['Attribute Value']):
-                            ldf.loc[ddf.index, f'{temporal} Level Delta'] = ddf[f'{temporal} Level Count'].diff().fillna(0)
+                            ldf.loc[ddf.index, f'{temporal} Window Delta'] = ddf[f'{temporal} Window Count'].diff().fillna(0)
                         for tatt in temporal_atts:
                             tdf = ldf[ldf[temporal] == tatt].copy(deep=True)
                             # rank counts for each attribute value
                             for att_val in tdf['Attribute Value'].unique():
-                                tdf.loc[(tdf['Attribute Value'] == att_val), f'{temporal} Level Rank'] = tdf[tdf['Attribute Value'] == att_val][f'{temporal} Level Count'].rank(ascending=False, method='first')
+                                tdf.loc[(tdf['Attribute Value'] == att_val), f'{temporal} Window Rank'] = tdf[tdf['Attribute Value'] == att_val][f'{temporal} Window Count'].rank(ascending=False, method='first')
                             tdfs.append(tdf)
                         ldf = pd.concat(tdfs).sort_values(by=temporal)
 
@@ -131,13 +136,13 @@ def create():
                     odf = odf.merge(adf, on=[*groups, 'Attribute Value'], how='left', suffixes=['', '_r'])
                     odf = odf.sort_values(by=[*groups], ascending=True)
                     if temporal != '':
-                        odf.rename(columns={temporal: f'{temporal} Level'}, inplace=True)
-                        odf[f'{temporal} Level Rank'] = odf[f'{temporal} Level Rank'].astype(int)
-                        odf[f'{temporal} Level Delta'] = odf[f'{temporal} Level Delta'].astype(int)
+                        odf.rename(columns={temporal: f'{temporal} Window'}, inplace=True)
+                        odf[f'{temporal} Window Rank'] = odf[f'{temporal} Window Rank'].astype(int)
+                        odf[f'{temporal} Window Delta'] = odf[f'{temporal} Window Delta'].astype(int)
                     odf['Attribute Rank'] = odf['Attribute Rank'].astype(int)
                     odf['Group Rank'] = odf['Group Rank'].astype(int)
                     
-                    sv.narrative_model_df.value = odf[[*groups, 'Group Count', 'Group Rank', 'Attribute Value', 'Attribute Count', 'Attribute Rank', f'{temporal} Level', f'{temporal} Level Count', f'{temporal} Level Rank', f'{temporal} Level Delta']] if temporal != '' else odf[[*groups, 'Group Count', 'Group Rank', 'Attribute Value', 'Attribute Count', 'Attribute Rank']]
+                    sv.narrative_model_df.value = odf[[*groups, 'Group Count', 'Group Rank', 'Attribute Value', 'Attribute Count', 'Attribute Rank', f'{temporal} Window', f'{temporal} Window Count', f'{temporal} Window Rank', f'{temporal} Window Delta']] if temporal != '' else odf[[*groups, 'Group Count', 'Group Rank', 'Attribute Value', 'Attribute Count', 'Attribute Rank']]
                     groups_text = '['+ ', '.join(['**'+g+'**' for g in groups]) + ']'
                     filters_text = '['+ ', '.join(['**'+f.replace(':', '\\:')+'**' for f in filters]) + ']'
                     description = 'This table shows:'
@@ -145,8 +150,8 @@ def create():
                     description += f'\n- The **Group Count** of records for all {groups_text} groups, and corresponding **Group Rank**'
                     description += f'\n- The **Attribute Count** of each **Attribute Value** for all {groups_text} groups, and corresponding **Attribute Rank**'
                     if temporal != '':
-                        description += f'\n- The **{temporal} Level Count** of each **Attribute Value** for each **{temporal} Level** for all {groups_text} groups, and corresponding **{temporal} Level Rank**'
-                        description += f'\n- The **{temporal} Level Delta**, or change in the **Attribute Value Count** for successive **{temporal} Level** values, within each {groups_text} group'
+                        description += f'\n- The **{temporal} Window Count** of each **Attribute Value** for each **{temporal} Window** for all {groups_text} groups, and corresponding **{temporal} Window Rank**'
+                        description += f'\n- The **{temporal} Window Delta**, or change in the **Attribute Value Count** for successive **{temporal} Window** values, within each {groups_text} group'
                     sv.narrative_description.value = description
                     st.rerun()
                 if len(sv.narrative_model_df.value) > 0:
