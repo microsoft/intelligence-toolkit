@@ -112,7 +112,7 @@ stages:
               targetType: "inline"
               script: docker push $(DOCKER_REGISTRY)/intel-toolkit:latest   
   
-  - stage: Build NSIS
+  - stage: Build_NSIS
     # dependsOn: Build
     dependsOn: []
     # condition: eq(variables.isTagged, 'true')
