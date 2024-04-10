@@ -62,8 +62,7 @@ def create():
                             sv.matching_dfs.value[dataset] = df
                     with b2:
                         if st.button('Reset data model', disabled=len(sv.matching_dfs.value) == 0, use_container_width=True):
-                            if dataset in sv.matching_dfs.value.keys():
-                                del sv.matching_dfs.value[dataset]
+                            sv.matching_dfs.value = {}
                     if len(sv.matching_dfs.value) > 0:
                         recs = sum([len(df) for df in sv.matching_dfs.value.values()])
                         st.success(f'Data model has **{len(sv.matching_dfs.value)}** datasets with **{recs}** total records.')
