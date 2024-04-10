@@ -88,20 +88,27 @@ def create():
                     if f'att{num_atts}_vals' not in st.session_state.keys():
                         break
                     num_atts += 1
-                
 
                 def att_ui(i):
                     st.markdown(f'**Attribute {i+1}**')
                     is_assigned = False
                     b1, b2 = st.columns([3, 1])
+                    if f'att{i}_vals' not in st.session_state.keys():
+                        st.session_state[f'att{i}_vals'] = []
+                    if f'att{i}_name' not in st.session_state.keys():
+                        st.session_state[f'att{i}_name'] = ''
+
                     with b1:
-                        att_vals = st.multiselect(f'Values', key=f'att{i}_vals', options=options, help='Select all columns that represent the same attribute across datasets.')
+                        att_vals = st.multiselect(f'Values', key=f"{i}_value", default=st.session_state[f'att{i}_vals'], options=options, help='Select all columns that represent the same attribute across datasets.')
                         if len(att_vals) > 0:
+                            st.session_state[f'att{i}_vals'] = att_vals
                             is_assigned = True
                     with b2:
-                        att_name = st.text_input(f'Label (optional)', key=f'att{i}_name', help='The name to assign to this attribute in the merged dataset. If left blank, the first value selected will be used.')
+                        att_name = st.text_input(f'Label (optional)', key=f'{i}_name', value=st.session_state[f'att{i}_name'], help='The name to assign to this attribute in the merged dataset. If left blank, the first value selected will be used.')
                     if att_name == '' and len(att_vals) > 0:
                         att_name = att_vals[0].split('::')[0]
+                    elif att_name != '':
+                        st.session_state[f'att{i}_name'] = att_name
                     for val in att_vals:
                         col, dataset = val.split('::')
                         renaming[dataset][col] = att_name
@@ -118,11 +125,12 @@ def create():
                 st.markdown('##### Configure similarity thresholds')
                 b1, b2 = st.columns([1, 1])
                 with b1:
-                    st.number_input('Matching record distance (max)', min_value=0.0, max_value=1.0, step=0.01, key=sv.matching_sentence_pair_embedding_threshold.key, value=sv.matching_sentence_pair_embedding_threshold.value, help='The maximum cosine distance between two records in the embedding space for them to be considered a match. Lower values will result in fewer closer matches overall.')
-
+                    record_distance = st.number_input('Matching record distance (max)', min_value=0.0, max_value=1.0, step=0.01, value=sv.matching_sentence_pair_embedding_threshold.value, help='The maximum cosine distance between two records in the embedding space for them to be considered a match. Lower values will result in fewer closer matches overall.')
                 with b2:
-                    st.number_input('Matching name similarity (min)', min_value=0.0, max_value=1.0, step=0.01, key=sv.matching_sentence_pair_jaccard_threshold.key, value=sv.matching_sentence_pair_jaccard_threshold.value, help='The minimum Jaccard similarity between the character trigrams of the names of two records for them to be considered a match. Higher values will result in fewer closer name matches.')
+                    name_similarity = st.number_input('Matching name similarity (min)', min_value=0.0, max_value=1.0, step=0.01, value=sv.matching_sentence_pair_jaccard_threshold.value, help='The minimum Jaccard similarity between the character trigrams of the names of two records for them to be considered a match. Higher values will result in fewer closer name matches.')
                 if st.button('Detect record groups', use_container_width=True):
+                    sv.matching_sentence_pair_embedding_threshold.value = record_distance
+                    sv.matching_sentence_pair_jaccard_threshold.value = name_similarity
                     with st.spinner('Detecting groups...'):
                         if len(sv.matching_merged_df.value) == 0 or sv.matching_sentence_pair_embedding_threshold.value != sv.matching_last_sentence_pair_embedding_threshold.value:
                             sv.matching_last_sentence_pair_embedding_threshold.value = sv.matching_sentence_pair_embedding_threshold.value
@@ -270,6 +278,7 @@ def create():
                         sv.matching_matches_df.value = sv.matching_matches_df.value.sort(by=['Name similarity', 'Group ID'], descending=[False, False])
                         # # keep all records linked to a group ID if any record linked to that ID has dataset GD or ILM
                         # sv.matching_matches_df.value = sv.matching_matches_df.value.filter(pl.col('Group ID').is_in(sv.matching_matches_df.value.filter(pl.col('Dataset').is_in(['GD', 'ILM']))['Group ID'].unique()))
+                    st.rerun()
                 if len(sv.matching_matches_df.value) > 0:
                     st.markdown(f'Identified **{len(sv.matching_matches_df.value)}** record groups.')
             with c2:
@@ -296,11 +305,13 @@ def create():
                         prefix = prefix + response + '\n'
                 result = prefix.replace('```\n', '').strip()
                 sv.matching_evaluations.value = pl.read_csv(io.StringIO(result))
+                st.rerun()
             else:
                 if len(sv.matching_evaluations.value) == 0:
                     gen_placeholder.warning('Press the Generate button to create an AI report for the current record matches.')
             placeholder.empty()
             if len(sv.matching_evaluations.value) > 0:
                 st.dataframe(sv.matching_evaluations.value.to_pandas(), height=700, use_container_width=True, hide_index=True)
-                jdf = sv.matching_matches_df.value.join(sv.matching_evaluations.value, left_on='Group ID', right_on='Group ID', how='inner')
+                # sv.matching_matches_df.value = sv.matching_matches_df.value.with_columns(pl.col('Group ID').cast(pl.Utf8))
+                jdf = sv.matching_matches_df.value.join(sv.matching_evaluations.value, on='Group ID', how='inner')
                 st.download_button('Download AI match report', data=jdf.write_csv(), file_name='record_groups_evaluated.csv', mime='text/csv')

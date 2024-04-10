@@ -3,7 +3,7 @@ import streamlit as st
 
 class SecretsHandler:
     _instance = None
-    _directory = ".streamlit"
+    _directory = "/.streamlit"
 
     def __init__(self):
         if not os.path.exists(self._directory):

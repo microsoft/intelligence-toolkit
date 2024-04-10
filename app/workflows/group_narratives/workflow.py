@@ -193,7 +193,6 @@ def create():
                 narrative_placeholder = st.empty()
                 gen_placeholder = st.empty()
                 if generate:
-                    print('1234123123messagesmessagesmessagesmessages', messages)
                     sv.narrative_selected_groups.value = selected_groups
                     sv.narrative_top_groups.value = top_group_ranks
                     result = util.AI_API.generate_text_from_message_list(

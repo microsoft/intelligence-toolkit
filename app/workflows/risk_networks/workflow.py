@@ -184,9 +184,10 @@ def create():
         components = None
         with index_col:
             st.markdown('##### Index nodes (optional)')
-            st.multiselect('Select node types to fuzzy match', options=sorted([config.entity_label] + list(sv.network_node_types.value)), key=sv.network_indexed_node_types.key, help='Select the node types to embed into a multi-dimensional semantic space for fuzzy matching.')
-            if st.button('Index nodes', disabled=len(sv.network_indexed_node_types.value) == 0):
-                
+            fuzzy_options = sorted([config.entity_label] + list(sv.network_node_types.value))
+            network_indexed_node_types = st.multiselect('Select node types to fuzzy match', default = sv.network_indexed_node_types.value, options=fuzzy_options,  help='Select the node types to embed into a multi-dimensional semantic space for fuzzy matching.')
+            if st.button('Index nodes', disabled=len(network_indexed_node_types) == 0):
+                sv.network_indexed_node_types.value = network_indexed_node_types
                 text_types = list([(n, d['type']) for n, d in sv.network_overall_graph.value.nodes(data=True) if d['type'] in sv.network_indexed_node_types.value])
                 texts = [t[0] for t in text_types]
                 
@@ -199,12 +200,14 @@ def create():
                 sv.network_embedded_texts.value = edf['text'].tolist()
                 nbrs = NearestNeighbors(n_neighbors=20, n_jobs=1, algorithm='auto', leaf_size=20, metric='cosine').fit(embeddings)
                 sv.network_nearest_text_distances.value, sv.network_nearest_text_indices.value = nbrs.kneighbors(embeddings)
+                st.rerun()
             nodes_indexed = len(sv.network_embedded_texts.value)
             if nodes_indexed > 0:
                 st.markdown(f'*Number of nodes indexed*: {nodes_indexed}')
             st.markdown('##### Infer links (optional)')
-            st.number_input('Similarity threshold for fuzzy matching (max)', min_value=0.0, max_value=1.0, key=sv.network_similarity_threshold.key, step=0.01, value=sv.network_similarity_threshold.value, help='The maximum cosine similarity threshold for inferring links between nodes based on their embeddings. Higher values will infer more links, but may also infer more false positives.')
+            network_similarity_threshold = st.number_input('Similarity threshold for fuzzy matching (max)', min_value=0.0, max_value=1.0, step=0.01, value=sv.network_similarity_threshold.value, help='The maximum cosine similarity threshold for inferring links between nodes based on their embeddings. Higher values will infer more links, but may also infer more false positives.')
             if st.button('Infer links', disabled=len(sv.network_nearest_text_distances.value)==0):
+                sv.network_similarity_threshold.value = network_similarity_threshold
                 sv.network_inferred_links.value = defaultdict(set)
                 texts = sv.network_embedded_texts.value
                 pb = st.progress(0, text = 'Inferring links...')
@@ -220,6 +223,7 @@ def create():
                                 sv.network_inferred_links.value[texts[near_i]].add(texts[ix])
 
                 pb.empty()
+                st.rerun()
             
             link_list = []
             for text, near in sv.network_inferred_links.value.items():
@@ -246,13 +250,15 @@ def create():
             sv.network_additional_trimmed_attributes.value = selected_rows['Attribute'].tolist()
             c1, c2, c3 = st.columns([1, 1, 1])
             with c1:
-                st.number_input('Maximum attribute degree', min_value=1, key=sv.network_max_attribute_degree.key, value=sv.network_max_attribute_degree.value, help='The maximum number of entities that can share an attribute before it is removed from the network.')
+                network_max_attribute_degree = st.number_input('Maximum attribute degree', min_value=1, value=sv.network_max_attribute_degree.value, help='The maximum number of entities that can share an attribute before it is removed from the network.')
             with c2:
-                sv.network_supporting_attribute_types.value = st.multiselect('Supporting attribute types', options=sorted(sv.network_node_types.value), help='Attribute types that should not be used to detect networks (e.g., because of potential noise/unreliability) but which should be added back into detected networks for context.')
+                network_supporting_attribute_types = st.multiselect('Supporting attribute types', default = sv.network_supporting_attribute_types.value, options=sorted(sv.network_node_types.value), help='Attribute types that should not be used to detect networks (e.g., because of potential noise/unreliability) but which should be added back into detected networks for context.')
             comm_count = 0
             with c3:    
                 identify = st.button('Identify networks')
             if identify:
+                sv.network_max_attribute_degree.value = network_max_attribute_degree
+                sv.network_supporting_attribute_types.value = network_supporting_attribute_types
                 with st.spinner('Identifying networks...'):
                     sv.network_table_index.value += 1
                     # Create a new graph P in which entities are connected if they share an attribute
@@ -306,7 +312,7 @@ def create():
                 sv.network_entity_df.value = pd.DataFrame(entity_records, columns=['Entity ID', 'Entity Flags', 'Network ID', 'Network Entities', 'Network Flags', 'Flagged', 'Flags/Entity', 'Flagged/Unflagged'])
                 sv.network_entity_df.value = sv.network_entity_df.value.sort_values(by=['Flagged/Unflagged'], ascending=False).reset_index(drop=True)
                 sv.network_table_index.value += 1
-
+                st.rerun()
             comm_count = len(sv.network_community_nodes.value)
 
             if comm_count > 0:
@@ -327,9 +333,9 @@ def create():
             with st.expander('View entity networks', expanded=True):
                 b1, b2, b3, b4 = st.columns([1, 1, 1, 4])
                 with b1:
-                    show_entities = st.checkbox('Show entities', value=False)
+                    show_entities = st.checkbox('Show entities', value = sv.network_last_show_entities.value)
                 with b2:
-                    show_groups = st.checkbox('Show groups', value=False)
+                    show_groups = st.checkbox('Show groups', value = sv.network_last_show_groups.value)
                 with b3:
                     dl_button = st.empty()
                 show_df = sv.network_entity_df.value.copy()
@@ -337,9 +343,11 @@ def create():
                 if show_groups != sv.network_last_show_groups.value:
                     sv.network_last_show_groups.value = show_groups
                     sv.network_table_index.value += 1
+                    st.rerun()
                 if show_entities != sv.network_last_show_entities.value:
                     sv.network_last_show_entities.value = show_entities
                     sv.network_table_index.value += 1
+                    st.rerun()
                 if show_groups:
                     for group_links in sv.network_group_links.value:
                         df = pd.DataFrame(group_links, columns=['Entity ID', 'Group', 'Value']).replace('nan', '')
