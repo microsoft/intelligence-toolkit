@@ -8,6 +8,7 @@ class SecretsHandler:
     def __init__(self):
         if not os.path.exists(self._directory):
             os.makedirs(self._directory)
+        if not os.path.exists(self._file_path):
             with(open(self._file_path, "w+")) as f:
                 f.write("")
 

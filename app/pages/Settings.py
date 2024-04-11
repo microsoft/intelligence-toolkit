@@ -1,12 +1,11 @@
 import os
 from components.app_loader import load_multipage_app
-from util.openai_instance import get_key_env
+from util.openai_instance import get_key_env, key
 from util.SecretsHandler import SecretsHandler
 import streamlit as st
 import time
 from util.session_variables import SessionVariables
 
-key = 'openaikey'
 def on_change(handler, key = None, value = None):
     def change():
         handler.write_secret(key, value)
