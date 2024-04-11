@@ -7,7 +7,6 @@ trigger:
   branches:
     include:
       - main
-      - fix-st
       
 schedules:
 - cron: "0 0 * * 0"  # Runs every Sunday at midnight (UTC)
