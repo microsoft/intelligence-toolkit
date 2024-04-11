@@ -113,9 +113,11 @@ stages:
               script: docker push $(DOCKER_REGISTRY)/intel-toolkit:latest   
   
   - stage: Build_NSIS
-    # dependsOn: Build
-    dependsOn: []
-    # condition: eq(variables.isTagged, 'true')
+    dependsOn:
+        # If build_exe is true, dependsOn is empty, otherwise, depends on Build
+      - ${{ if eq($(BUILD_EXE), 'true') }} 
+      - Build
+    condition: or(eq(variables.isTagged, 'true'), eq($(BUILD_EXE), 'true'))
     jobs:
       - job: NSIS_Build
         pool:
