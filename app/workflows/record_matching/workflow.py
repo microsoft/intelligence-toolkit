@@ -63,6 +63,8 @@ def create():
                     with b2:
                         if st.button('Reset data model', disabled=len(sv.matching_dfs.value) == 0, use_container_width=True):
                             sv.matching_dfs.value = {}
+                            sv.matching_merged_df.value = pl.DataFrame()
+                            st.rerun()
                     if len(sv.matching_dfs.value) > 0:
                         recs = sum([len(df) for df in sv.matching_dfs.value.values()])
                         st.success(f'Data model has **{len(sv.matching_dfs.value)}** datasets with **{recs}** total records.')
@@ -98,7 +100,7 @@ def create():
                         st.session_state[f'att{i}_name'] = ''
 
                     with b1:
-                        att_vals = st.multiselect(f'Values', key=f"{i}_value", default=st.session_state[f'att{i}_vals'], options=options, help='Select all columns that represent the same attribute across datasets.')
+                        att_vals = st.multiselect(f'Values', key=f"{i}_value", default=st.session_state[f'att{i}_vals'] if st.session_state[f'att{i}_vals'] in options else [], options=options, help='Select all columns that represent the same attribute across datasets.')
                         if len(att_vals) > 0:
                             is_assigned = True
                     with b2:
@@ -114,16 +116,21 @@ def create():
                     return is_assigned, att_vals, att_name_original
 
                 any_empty = False
+                changed = False
                 for i in range(num_atts):
                     is_assigned, att_vals, att_name_original = att_ui(i)
                     if st.session_state[f'att{i}_vals'] != att_vals:
                         st.session_state[f'att{i}_vals'] = att_vals
+                        changed = True
                     if st.session_state[f'att{i}_name'] != att_name_original:
                         st.session_state[f'att{i}_name'] = att_name_original
+                        changed = True
                     if not is_assigned:
                         any_empty = True
                 if not any_empty:
                     att_ui(num_atts)
+                if changed:
+                    st.rerun()
 
                 st.markdown('##### Configure similarity thresholds')
                 b1, b2 = st.columns([1, 1])
@@ -132,8 +139,11 @@ def create():
                 with b2:
                     name_similarity = st.number_input('Matching name similarity (min)', min_value=0.0, max_value=1.0, step=0.01, value=sv.matching_sentence_pair_jaccard_threshold.value, help='The minimum Jaccard similarity between the character trigrams of the names of two records for them to be considered a match. Higher values will result in fewer closer name matches.')
                 if st.button('Detect record groups', use_container_width=True):
-                    sv.matching_sentence_pair_embedding_threshold.value = record_distance
-                    sv.matching_sentence_pair_jaccard_threshold.value = name_similarity
+                    if record_distance != sv.matching_sentence_pair_embedding_threshold.value:
+                        sv.matching_sentence_pair_embedding_threshold.value = record_distance
+                    if name_similarity != sv.matching_sentence_pair_jaccard_threshold.value:
+                        sv.matching_sentence_pair_jaccard_threshold.value = name_similarity
+
                     with st.spinner('Detecting groups...'):
                         if len(sv.matching_merged_df.value) == 0 or sv.matching_sentence_pair_embedding_threshold.value != sv.matching_last_sentence_pair_embedding_threshold.value:
                             sv.matching_last_sentence_pair_embedding_threshold.value = sv.matching_sentence_pair_embedding_threshold.value
@@ -281,7 +291,7 @@ def create():
                         sv.matching_matches_df.value = sv.matching_matches_df.value.sort(by=['Name similarity', 'Group ID'], descending=[False, False])
                         # # keep all records linked to a group ID if any record linked to that ID has dataset GD or ILM
                         # sv.matching_matches_df.value = sv.matching_matches_df.value.filter(pl.col('Group ID').is_in(sv.matching_matches_df.value.filter(pl.col('Dataset').is_in(['GD', 'ILM']))['Group ID'].unique()))
-                    st.rerun()
+                        st.rerun()
                 if len(sv.matching_matches_df.value) > 0:
                     st.markdown(f'Identified **{len(sv.matching_matches_df.value)}** record groups.')
             with c2:

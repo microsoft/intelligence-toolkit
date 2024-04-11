@@ -21,8 +21,8 @@ class Database:
     
 
     def insert_multiple_into_embeddings(self, embeddings, username = ""):
-        embeddings = ''.join([f"('{username}','{embedding[0]}', {embedding[1]}), " for embedding in embeddings])[:-2]
-        self.connection.execute(f"INSERT OR IGNORE INTO embeddings VALUES {embeddings}")
+        for embedding in embeddings:
+            self.connection.execute(f"INSERT OR IGNORE INTO embeddings VALUES ('{username}','{embedding[0]}', {embedding[1]})")
 
     def execute(self, query):
         return self.connection.execute(query)
