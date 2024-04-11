@@ -46,23 +46,13 @@ stages:
 
   - stage: Build
     dependsOn: []
-    condition: eq(variables.isMain, 'true')
+    condition: or(eq(variables.isTagged, 'true'), eq($(BUILD_EXE), 'true'))
     jobs:
       - job: build
         displayName: Build
         pool:
           vmImage: ubuntu-latest
         steps:
-          - task: UsePythonVersion@0
-            inputs:
-              versionSpec: "3.10"
-            displayName: "Use Python 3.10"
-          - task: Bash@3
-            displayName: Install Dependencies
-            inputs:
-              workingDirectory: ./
-              targetType: "inline"
-              script: pip install -r requirements.txt
           - task: Bash@3
             displayName: Build Docker Image
             inputs:
@@ -113,10 +103,7 @@ stages:
               script: docker push $(DOCKER_REGISTRY)/intel-toolkit:latest   
   
   - stage: Build_NSIS
-    dependsOn:
-        # If build_exe is true, dependsOn is empty, otherwise, depends on Build
-      - ${{ if eq($(BUILD_EXE), 'true') }} 
-      - Build
+    dependsOn: Build
     condition: or(eq(variables.isTagged, 'true'), eq($(BUILD_EXE), 'true'))
     jobs:
       - job: NSIS_Build
