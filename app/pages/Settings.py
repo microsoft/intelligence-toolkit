@@ -36,7 +36,7 @@ def main():
     if secret_input and secret_input != secret:
         secrets_handler.write_secret(key, secret_input)
         st.rerun()
-    elif get_key_env() == '':
+    elif get_key_env() == '' and len(secret) == 0:
         st.warning("No OpenAI key found in the environment. Please insert one above.")
     elif not secret_input and not secret: 
         st.info("Using key from the environment.")
