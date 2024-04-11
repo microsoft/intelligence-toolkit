@@ -46,7 +46,7 @@ stages:
 
   - stage: Build
     dependsOn: []
-    condition: or(eq(variables.isTagged, 'true'), eq(variables.BUILD_EXE, 'true'))
+    condition: or(eq(variables.isMain, 'true'), eq(variables.BUILD_EXE, 'true'))
     jobs:
       - job: build
         displayName: Build
