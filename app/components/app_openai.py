@@ -1,12 +1,12 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import streamlit as st
-from util.openai_instance import get_key_env
+from util.openai_instance import get_key_env, key
 from util.SecretsHandler import SecretsHandler
 
 class app_openai:
     def _is_api_key_configured(self):
         secrets = SecretsHandler()
-        if secrets.get_secret("api_key") != '':
+        if secrets.get_secret(key) != '':
             return True
         elif get_key_env() != '':
             return True

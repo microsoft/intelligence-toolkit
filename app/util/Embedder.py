@@ -37,7 +37,7 @@ class Embedder:
             if not embeddings:
                 new_texts.append((ix, text))
             else:
-                final_embeddings[ix] = np.array(embeddings)
+                final_embeddings[ix] = np.array(embeddings[0])
         print(f'Got {len(new_texts)} new texts')
         # split into batches of 2000
         pb = st.progress(0, 'Embedding text batches...')
@@ -49,12 +49,18 @@ class Embedder:
             batch = new_texts[i:i+2000]
             batch_texts = [x[1] for x in batch]
             list_all_embeddings = []
-            embeddings = [x.embedding for x in openai.client().embeddings.create(input = batch_texts, model=self.model).data]
-            for j, (ix, text) in enumerate(batch):
-                hsh = hash(text)
-                list_all_embeddings.append((hsh, embeddings[j]))
-                final_embeddings[ix] = np.array(embeddings[j])
-            self.connection.insert_multiple_into_embeddings(list_all_embeddings) 
+            try:
+                embeddings = [x.embedding for x in openai.client().embeddings.create(input = batch_texts, model=self.model).data]
+                for j, (ix, text) in enumerate(batch):
+                    hsh = hash(text)
+                    list_all_embeddings.append((hsh, embeddings[j]))
+                    final_embeddings[ix] = np.array(embeddings[j])
+                self.connection.insert_multiple_into_embeddings(list_all_embeddings) 
+            except Exception as e:
+                if '401' and 'invalid_api_key' in str(e):
+                    raise Exception('Error generating OpenAI response. Your key is invalid.')
+                else:
+                    raise Exception('Error generating OpenAI response.')
             
         pb.empty()
         return np.array(final_embeddings)
@@ -76,9 +82,11 @@ class Embedder:
                 if auto_save:
                     self.connection.insert_into_embeddings(hsh, embedding, self.username)
                 return embedding
-            except:
-                print(f'Error embedding text: {text}')
-                return None
+            except Exception as e:
+                if '401' and 'invalid_api_key' in str(e):
+                    raise Exception('Error generating OpenAI response. Your key is invalid.')
+                else:
+                    raise Exception('Error generating OpenAI response.')
 
 def create_embedder(cache, model=embed_model, encoder=text_encoder, max_tokens=max_embed_tokens):
     return Embedder(cache, model, encoder, max_tokens)

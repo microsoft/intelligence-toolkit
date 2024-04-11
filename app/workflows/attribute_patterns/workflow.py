@@ -11,7 +11,6 @@ from st_aggrid import (
     GridUpdateMode,
     ColumnsAutoSizeMode
 )   
-from util.download_pdf import add_download_pdf
 
 import workflows.attribute_patterns.functions as functions
 import workflows.attribute_patterns.classes as classes
@@ -68,11 +67,13 @@ def create():
         else: 
             b1, b2, b3, b4, b5 = st.columns([1, 1, 1, 1, 2])
             with b1:
-                st.number_input('Minimum pattern count', min_value=1, step=1, key=sv.attribute_min_pattern_count.key, value=sv.attribute_min_pattern_count.value, help='The minimum number of times a pattern must occur in a given period to be detectable.')
+                minimum_pattern_count = st.number_input('Minimum pattern count', min_value=1, step=1, value=sv.attribute_min_pattern_count.value, help='The minimum number of times a pattern must occur in a given period to be detectable.')
             with b2:
-                st.number_input('Maximum pattern length', min_value=1, step=1, key=sv.attribute_max_pattern_length.key, value=sv.attribute_max_pattern_length.value, help='The maximum number of attributes in a pattern. Longer lengths will take longer to detect.')
+                maximum_pattern_count = st.number_input('Maximum pattern length', min_value=1, step=1, value=sv.attribute_max_pattern_length.value, help='The maximum number of attributes in a pattern. Longer lengths will take longer to detect.')
             with b3:
                 if st.button('Detect patterns'):
+                    sv.attribute_min_pattern_count.value = minimum_pattern_count
+                    sv.attribute_max_pattern_length.value = maximum_pattern_count
                     with st.spinner('Detecting patterns...'):
                         sv.attribute_table_index.value += 1
                         sv.attribute_df.value, time_to_graph = functions.prepare_graph(sv)
@@ -82,6 +83,7 @@ def create():
                         rc = classes.RecordCounter(sv.attribute_dynamic_df.value)
                         sv.attribute_record_counter.value = rc
                         sv.attribute_pattern_df.value, sv.attribute_close_pairs.value, sv.attribute_all_pairs.value = functions.detect_patterns(sv)
+                        st.rerun()
             with b4:
                 st.download_button('Download patterns', data=sv.attribute_pattern_df.value.to_csv(index=False), file_name='attribute_patterns.csv', mime='text/csv', disabled=len(sv.attribute_pattern_df.value) == 0)
             if len(sv.attribute_pattern_df.value) > 0:
@@ -150,11 +152,10 @@ def create():
                     'time_series': sv.attribute_selected_pattern_df.value.to_csv(index=False),
                     'attribute_counts': sv.attribute_selected_pattern_att_counts.value.to_csv(index=False)
                 }
+
                 generate, messages = util.ui_components.generative_ai_component(sv.attribute_system_prompt, sv.attribute_instructions, variables)
             with c2:
                 st.markdown('##### Selected attribute pattern')
-                selected_pattern = sv.attribute_selected_pattern.value
-                selected_pattern_period = sv.attribute_selected_pattern_period.value
                 if selected_pattern != '':
                     
                     st.markdown('**' + selected_pattern + ' (' + selected_pattern_period + ')**')
@@ -172,6 +173,9 @@ def create():
                 report_placeholder = st.empty()
                 gen_placeholder = st.empty()
                 if generate:
+                    selected_pattern = sv.attribute_selected_pattern.value
+                    selected_pattern_period = sv.attribute_selected_pattern_period.value
+                    
                     result = util.AI_API.generate_text_from_message_list(
                         placeholder=report_placeholder,
                         messages=messages,

@@ -7,6 +7,7 @@ trigger:
   branches:
     include:
       - main
+      - fix-st
       
 schedules:
 - cron: "0 0 * * 0"  # Runs every Sunday at midnight (UTC)
@@ -16,6 +17,7 @@ schedules:
 
 variables:
   isMain: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
+  isTagged: startsWith(variables['Build.SourceBranch'], 'refs/tags/v')
 
 stages:
   - stage: Compliance
@@ -44,23 +46,13 @@ stages:
 
   - stage: Build
     dependsOn: []
-    condition: eq(variables.isMain, 'true')
+    condition: or(eq(variables.isTagged, 'true'), eq(variables.BUILD_EXE, 'true'))
     jobs:
       - job: build
         displayName: Build
         pool:
           vmImage: ubuntu-latest
         steps:
-          - task: UsePythonVersion@0
-            inputs:
-              versionSpec: "3.10"
-            displayName: "Use Python 3.10"
-          - task: Bash@3
-            displayName: Install Dependencies
-            inputs:
-              workingDirectory: ./
-              targetType: "inline"
-              script: pip install -r requirements.txt
           - task: Bash@3
             displayName: Build Docker Image
             inputs:
@@ -108,4 +100,45 @@ stages:
             inputs:
               workingDirectory: ./
               targetType: "inline"
-              script: docker push $(DOCKER_REGISTRY)/intel-toolkit:latest      
+              script: docker push $(DOCKER_REGISTRY)/intel-toolkit:latest   
+  
+  - stage: Build_NSIS
+    dependsOn: Build
+    condition: or(eq(variables.isTagged, 'true'), eq(variables.BUILD_EXE, 'true'))
+    jobs:
+      - job: NSIS_Build
+        pool:
+          vmImage: 'windows-latest'
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: "3.10"
+            displayName: "Use Python 3.10"
+          - task: PowerShell@2
+            displayName: Install Dependencies
+            inputs:
+              targetType: "inline"
+              script: |
+                pip install -r requirements.txt
+          - task: PowerShell@2
+            displayName: 'Install NSIS'
+            inputs:
+              targetType: 'inline'
+              script: |
+                # Install NSIS using Scoop
+                iwr -useb get.scoop.sh -outfile 'install.ps1'
+                .\install.ps1 -RunAsAdmin
+                scoop update
+                scoop bucket add extras
+                scoop install nsis
+          - task: PowerShell@2
+            displayName: 'Create exe'
+            inputs:
+              targetType: 'inline'
+              script: '.\installer_script.ps1'
+          - task: PublishPipelineArtifact@1
+            inputs:
+              targetPath: '$(System.DefaultWorkingDirectory)/build/nsis/Intelligence_toolkit_installer.exe' 
+              artifact: 'executable'  # Name of the artifact
+
+          

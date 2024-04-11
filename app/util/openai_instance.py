@@ -4,6 +4,7 @@ import streamlit as st
 import os
 from util.SecretsHandler import SecretsHandler
 
+key = 'openaikey'
 class _OpenAI:
     _instance = None
     _key = None
@@ -13,14 +14,14 @@ class _OpenAI:
         self._secrets = SecretsHandler()
 
     def client(self):
-        if self._secrets.get_secret("api_key") != '':
-            key = st.secrets["api_key"]
+        if self._secrets.get_secret(key) != '':
+            api_key = self._secrets.get_secret(key)
         else:
-            key = get_key_env()
-        if key != self._key:
-            self._key = key
+            api_key = get_key_env()
+        if api_key != self._key:
+            self._key = api_key
             try:
-                self._instance = OpenAI(api_key=key)
+                self._instance = OpenAI(api_key=self._key)
             except Exception as e:
                 print(f'Error creating OpenAI client: {e}')
 
