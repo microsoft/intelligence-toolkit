@@ -1,12 +1,11 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import tiktoken
 import json
+from util.session_variables import SessionVariables
 from util.openai_instance import _OpenAI
 
 openai = _OpenAI()
 
-gen_model = 'gpt-4-turbo-preview'
-embed_model = 'text-embedding-3-small'
 text_encoder = 'cl100k_base'
 max_gen_tokens = 4096
 max_input_tokens = 128000
@@ -14,6 +13,7 @@ default_temperature = 0
 max_embed_tokens = 8191
 
 encoder = tiktoken.get_encoding(text_encoder)
+session_var = SessionVariables('home')
 
 def prepare_messages_from_message(system_message, variables):                
     messages = [
@@ -40,7 +40,16 @@ def prepare_messages_from_message_pair(system_message, user_message, variables):
 def count_tokens_in_message_list(messages):
     return len(encoder.encode(json.dumps(messages)))
 
-def generate_text_from_message_list(messages, placeholder=None, prefix='', model=gen_model, temperature=default_temperature, max_tokens=max_gen_tokens):     
+
+def generate_embedding_from_text(text, model = None):
+    if not model:
+        model = session_var.embedding_model.value
+    return openai.client().embeddings.create(input = text, model=model)
+
+def generate_text_from_message_list(messages, placeholder=None, prefix='', model=None, temperature=default_temperature, max_tokens=max_gen_tokens):     
+    if not model:
+        model = session_var.generation_model.value
+    
     response = ''
     try:
         responses = openai.client().chat.completions.create(
@@ -64,10 +73,5 @@ def generate_text_from_message_list(messages, placeholder=None, prefix='', model
             placeholder.markdown(prefix + response, unsafe_allow_html=True)
     except Exception as e:
         print(f'Error generating from message list: {e}')
-        if '401' and 'invalid_api_key' in str(e):
-            raise Exception('Your OpenAI key is invalid.')
-        elif 'rate_limit_exceeded' in str(e):
-            raise Exception('Rate limit exceeded when generating OpenAI response. Try again in a few seconds.')
-        else:
-            raise Exception('Problem in OpenAI response.')
+        raise Exception(f'Problem in OpenAI response. {e.message}')
     return response

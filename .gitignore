@@ -41,7 +41,7 @@ data
 legacy
 
 # Exe installer builders
-build/nsis/*
+build/*
 
 app/wkhtmltox/*.exe
 /wheels

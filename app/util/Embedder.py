@@ -1,13 +1,12 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import tiktoken
 import numpy as np
+from util.AI_API import generate_embedding_from_text
 from util.Database import Database
 import util.session_variables
 from util.openai_instance import _OpenAI
 import streamlit as st
 
-gen_model = 'gpt-4-turbo-preview'
-embed_model = 'text-embedding-3-small'
 text_encoder = 'cl100k_base'
 max_gen_tokens = 4096
 max_input_tokens = 128000
@@ -18,10 +17,9 @@ openai = _OpenAI()
 encoder = tiktoken.get_encoding(text_encoder)
 
 class Embedder:
-    def __init__(self, cache, model=embed_model, encoder=text_encoder, max_tokens=max_embed_tokens) -> None:
+    def __init__(self, cache, encoder=text_encoder, max_tokens=max_embed_tokens) -> None:
         sv = util.session_variables.SessionVariables('home')
         self.username = sv.username.value
-        self.model = model
         self.encoder = tiktoken.get_encoding(encoder)
         self.max_tokens = max_tokens
         self.connection = Database(cache, 'embeddings')
@@ -50,14 +48,9 @@ class Embedder:
             batch_texts = [x[1] for x in batch]
             list_all_embeddings = []
             try:
-                embeddings = [x.embedding for x in openai.client().embeddings.create(input = batch_texts, model=self.model).data]
+                embeddings = [x.embedding for x in generate_embedding_from_text(batch_texts).data]
             except Exception as e:
-                if '401' and 'invalid_api_key' in str(e):
-                    raise Exception('Your OpenAI key is invalid.')
-                elif 'rate_limit_exceeded' in str(e):
-                    raise Exception('Rate limit exceeded when generating OpenAI response. Try again in a few seconds.')
-                else:
-                    raise Exception('Problem in OpenAI response.')
+                raise Exception(f'Problem in OpenAI response. {e}')
                 
             for j, (ix, text) in enumerate(batch):
                 hsh = hash(text)
@@ -80,18 +73,13 @@ class Embedder:
                 text = text[:self.max_tokens]
                 print('Truncated text to max tokens')
             try:
-                embedding = openai.client().embeddings.create(input = [text], model=self.model).data[0].embedding
+                embedding = generate_embedding_from_text([text]).data[0].embedding
             except Exception as e:
-                if '401' and 'invalid_api_key' in str(e):
-                    raise Exception('Your OpenAI key is invalid.')
-                elif 'rate_limit_exceeded' in str(e):
-                    raise Exception('Rate limit exceeded when generating OpenAI response. Try again in a few seconds.')
-                else:
-                    raise Exception('Problem in OpenAI response.')
+                raise Exception(f'Problem in OpenAI response. {e}')
                 
             if auto_save:
                 self.connection.insert_into_embeddings(hsh, embedding, self.username)
             return embedding
 
-def create_embedder(cache, model=embed_model, encoder=text_encoder, max_tokens=max_embed_tokens):
-    return Embedder(cache, model, encoder, max_tokens)
+def create_embedder(cache, encoder=text_encoder, max_tokens=max_embed_tokens):
+    return Embedder(cache, encoder, max_tokens)
