@@ -1,9 +1,9 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import os
 import pdfkit
+import util.constants as constants
 
 # Specify the name of the executable
-executable = 'wkhtmltopdf'
-
 # Check if the executable is in the system PATH
 def is_in_path(executable):
     for path in os.environ["PATH"].split(os.pathsep):
@@ -12,16 +12,19 @@ def is_in_path(executable):
     return False
 
 def config_pdfkit():
-    path_wkhtmltopdf = 'C:\\Program Files\\wkhtmltopdf\\bin\\wkhtmltopdf.exe'
+    path_wkhtmltopdf = constants.PDF_WKHTMLTOPDF_PATH
+
     # Verify if wkhtmltopdf is in PATH
-    if is_in_path(executable):
+    if is_in_path('wkhtmltopdf'):
         path_wkhtmltopdf=''
-    else:
-        path_wkhtmltopdf = 'C:\\Program Files\\wkhtmltopdf\\bin\\wkhtmltopdf.exe'
 
     return pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
 
 pdfkit_options = {
-    'encoding': 'UTF-8',
+    'margin-top': f'{constants.PDF_MARGIN_INCHES}in',
+    'margin-right': f'{constants.PDF_MARGIN_INCHES}in',
+    'margin-bottom': f'{constants.PDF_MARGIN_INCHES}in',
+    'margin-left': f'{constants.PDF_MARGIN_INCHES}in',
+    'encoding': constants.PDF_ENCODING,
     'enable-local-file-access': True,
 }
