@@ -1,7 +1,6 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import streamlit as st
 import polars as pl
-import pandas as pd
 
 import re
 import io
@@ -10,6 +9,7 @@ import os
 from collections import defaultdict
 from sklearn.neighbors import NearestNeighbors
 
+import workflows.record_matching.prompts as prompts
 import workflows.record_matching.functions as functions
 import workflows.record_matching.config as config
 import workflows.record_matching.variables as vars
@@ -305,7 +305,10 @@ def create():
         with b1:
             batch_size = 100
             data = sv.matching_matches_df.value.drop(['Entity ID', 'Dataset', 'Name similarity']).to_pandas()
-            generate, batch_messages = util.ui_components.generative_batch_ai_component(sv.matching_system_prompt, sv.matching_instructions, {}, 'data', data, batch_size)
+            generate, batch_messages, reset = util.ui_components.generative_batch_ai_component(sv.matching_system_prompt, sv.matching_instructions, {}, 'data', data, batch_size)
+            if reset:
+                sv.matching_system_prompt.value["user_prompt"] = prompts.user_prompt
+                st.rerun()
         with b2:
             st.markdown('##### AI evaluation of record groups')
             prefix = '```\nGroup ID,Relatedness,Explanation\n'

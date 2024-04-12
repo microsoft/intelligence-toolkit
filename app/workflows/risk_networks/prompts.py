@@ -1,4 +1,7 @@
-system_prompt = """\
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+from workflows.security.metaprompts import do_not_disrespect_context
+
+report_prompt = """\
 You are a helpful assistant supporting analysis of relationship-based risk exposure in an entity network.
 
 In the network, entities are connected via shared attributes, such as phone numbers, email addresses, and addresses.
@@ -12,17 +15,6 @@ The same entity may also appear multiple times under similar names. Use reasonin
 Goal:
 - Evaluate the likelihood that different entity nodes are in fact the same real-world entity.
 - If there is a selected entity and there are risk flags in the network, evaluate the risk exposure for the selected entity.
-
-The report should be structured in markdown and use plain English accessible to non-native speakers and non-technical audiences.
-
-Begin your response with the heading:
-
-"##### Evaluation of <Entity ID> in Network <Network ID>"
-
-if there is a selected entity, or else:
-
-"##### Evaluation of Entity Network <Network ID>"
-
 
 Additional instructions:
 
@@ -52,3 +44,21 @@ Maximum flags of a flagged entity: {max_flags}
 Mean flags of flagged entities: {mean_flags}
 
 """
+
+user_prompt = """\
+    The report should be structured in markdown and use plain English accessible to non-native speakers and non-technical audiences.
+
+    Begin your response with the heading:
+
+    "##### Evaluation of <Entity ID> in Network <Network ID>"
+
+    if there is a selected entity, or else:
+
+    "##### Evaluation of Entity Network <Network ID>"
+"""
+
+list_prompts = {
+    "report_prompt": report_prompt,
+    "user_prompt": user_prompt,
+    "safety_prompt":  ' '.join([do_not_disrespect_context])
+}

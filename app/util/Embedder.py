@@ -51,17 +51,19 @@ class Embedder:
             list_all_embeddings = []
             try:
                 embeddings = [x.embedding for x in openai.client().embeddings.create(input = batch_texts, model=self.model).data]
-                for j, (ix, text) in enumerate(batch):
-                    hsh = hash(text)
-                    list_all_embeddings.append((hsh, embeddings[j]))
-                    final_embeddings[ix] = np.array(embeddings[j])
-                self.connection.insert_multiple_into_embeddings(list_all_embeddings) 
             except Exception as e:
                 if '401' and 'invalid_api_key' in str(e):
-                    raise Exception('Error generating OpenAI response. Your key is invalid.')
+                    raise Exception('Your OpenAI key is invalid.')
+                elif 'rate_limit_exceeded' in str(e):
+                    raise Exception('Rate limit exceeded when generating OpenAI response. Try again in a few seconds.')
                 else:
-                    raise Exception('Error generating OpenAI response.')
-            
+                    raise Exception('Problem in OpenAI response.')
+                
+            for j, (ix, text) in enumerate(batch):
+                hsh = hash(text)
+                list_all_embeddings.append((hsh, embeddings[j]))
+                final_embeddings[ix] = np.array(embeddings[j])
+            self.connection.insert_multiple_into_embeddings(list_all_embeddings) 
         pb.empty()
         return np.array(final_embeddings)
 
@@ -79,14 +81,17 @@ class Embedder:
                 print('Truncated text to max tokens')
             try:
                 embedding = openai.client().embeddings.create(input = [text], model=self.model).data[0].embedding
-                if auto_save:
-                    self.connection.insert_into_embeddings(hsh, embedding, self.username)
-                return embedding
             except Exception as e:
                 if '401' and 'invalid_api_key' in str(e):
-                    raise Exception('Error generating OpenAI response. Your key is invalid.')
+                    raise Exception('Your OpenAI key is invalid.')
+                elif 'rate_limit_exceeded' in str(e):
+                    raise Exception('Rate limit exceeded when generating OpenAI response. Try again in a few seconds.')
                 else:
-                    raise Exception('Error generating OpenAI response.')
+                    raise Exception('Problem in OpenAI response.')
+                
+            if auto_save:
+                self.connection.insert_into_embeddings(hsh, embedding, self.username)
+            return embedding
 
 def create_embedder(cache, model=embed_model, encoder=text_encoder, max_tokens=max_embed_tokens):
     return Embedder(cache, model, encoder, max_tokens)

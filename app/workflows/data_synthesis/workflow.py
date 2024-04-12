@@ -175,7 +175,6 @@ def create():
             util.ui_components.single_csv_uploader(workflow, 'Upload synthetic data CSV', sv.synthesis_last_synthetic_file_name, sv.synthesis_synthetic_df, None, None, key='synthetic_data_uploader')
             util.ui_components.single_csv_uploader(workflow, 'Upload aggregate data CSV', sv.synthesis_last_aggregate_file_name, sv.synthesis_aggregate_df, None, None, key='aggregate_data_uploader')
             if len(sv.synthesis_synthetic_df.value) > 0 and len(sv.synthesis_aggregate_df.value) > 0:
-                print('do you rerun, man????')
                 st.rerun()
         else:
             container = st.container(border=True)
@@ -354,7 +353,6 @@ def create():
                     with ad2:
                         cache = st.button('Cache visualization')
                         if cache:
-                            print('chart_individual_configuration', chart_individual_configuration)
                             st.session_state[f'{workflow}_query_selections'] = filters
                             st.session_state[f'{workflow}_unit'] = unit
                             st.session_state[f'{workflow}_scheme'] = scheme

@@ -46,7 +46,7 @@ class SessionVariables:
         self.network_selected_community = SessionVariable('', prefix)
         self.network_attributes_list = SessionVariable([], prefix)
         self.network_additional_trimmed_attributes = SessionVariable([], prefix)
-        self.network_system_prompt = SessionVariable(prompts.system_prompt, prefix)
+        self.network_system_prompt = SessionVariable(prompts.list_prompts, prefix)
         self.network_instructions = SessionVariable('', prefix)
         self.network_report = SessionVariable('', prefix)
         self.network_merged_links_df = SessionVariable([], prefix)

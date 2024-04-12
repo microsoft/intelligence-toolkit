@@ -17,9 +17,11 @@ def add_download_pdf(name, text, button_text='Download PDF', is_markdown=True, d
 
     # Generate PDF from HTML string
     config_pdf = config_pdfkit()
-    with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as temp_file:
-        pdfkit.from_string(text, temp_file.name, options=pdfkit_options, configuration=config_pdf)
-        
-        # Provide download button for the generated PDF
-        with open(temp_file.name, 'rb') as f:
-            st.download_button(button_text, f, file_name=name, mime='application/pdf', disabled=disabled)
+    
+    with st.spinner('Preparing PDF download...'):
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as temp_file:
+            pdfkit.from_string(text, temp_file.name, options=pdfkit_options, configuration=config_pdf)
+            
+            # Provide download button for the generated PDF
+            with open(temp_file.name, 'rb') as f:
+                st.download_button(button_text, f, file_name=name, mime='application/pdf', disabled=disabled)

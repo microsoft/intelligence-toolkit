@@ -18,7 +18,6 @@ from st_aggrid import (
     ColumnsAutoSizeMode
 )   
 
-from util.download_pdf import add_download_pdf
 import workflows.risk_networks.functions as functions
 import workflows.risk_networks.classes as classes
 import workflows.risk_networks.config as config
@@ -485,7 +484,11 @@ def create():
                     'network_nodes': sv.network_merged_nodes_df.value.to_csv(index=False),
                     'network_edges': sv.network_merged_links_df.value.to_csv(index=False)
                 }
-                generate, messages = util.ui_components.generative_ai_component(sv.network_system_prompt, sv.network_instructions, variables)
+                sv.network_system_prompt.value = prompts.list_prompts
+                generate, messages, reset = util.ui_components.generative_ai_component(sv.network_system_prompt, sv.network_instructions, variables)
+                if reset:
+                    sv.network_system_prompt.value["user_prompt"] = prompts.user_prompt
+                    st.rerun()
             with c2:
                 if sv.network_selected_entity.value != '':
                     st.markdown(f'##### Selected entity: {sv.network_selected_entity.value}')

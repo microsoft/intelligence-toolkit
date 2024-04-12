@@ -1,3 +1,4 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 from util.session_variable import SessionVariable
 import pandas as pd
 
@@ -27,7 +28,7 @@ class SessionVariables:
         self.attribute_suppress_zeros = SessionVariable(False, prefix)
         self.attribute_last_suppress_zeros = SessionVariable(False, prefix)
         self.attribute_instructions = SessionVariable('', prefix)
-        self.attribute_system_prompt = SessionVariable(prompts.system_prompt, prefix)
+        self.attribute_system_prompt = SessionVariable(prompts.list_prompts, prefix)
         self.attribute_final_df = SessionVariable(pd.DataFrame(), prefix)
         self.attribute_report = SessionVariable('', prefix)
         self.attribute_time_col = SessionVariable('', prefix)
@@ -38,5 +39,7 @@ class SessionVariables:
         self.attribute_converging_pairs = SessionVariable(0, prefix)
         self.attribute_all_pairs = SessionVariable(0, prefix)
         self.attribute_table_index = SessionVariable(0, prefix)
+
+        self.atribute_period = SessionVariable('', prefix)
 
 

@@ -1,3 +1,4 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -54,12 +55,23 @@ def report_download_ui(report_var, name):
 def generative_ai_component(system_prompt_var, instructions_var, variables):
     st.markdown('##### Generative AI instructions')
     with st.expander('Edit AI System Prompt (advanced)', expanded=False):
-        instructions_text = st.text_area('Contents of System Prompt used to generate AI outputs. Do not edit {AI inputs} in curly brackets.', value=system_prompt_var.value, height=200)
-    system_prompt_var.value = instructions_text
+        instructions_text = st.text_area('Contents of System Prompt used to generate AI outputs.', value=system_prompt_var.value["user_prompt"], height=200)
+        if system_prompt_var.value["user_prompt"] != instructions_text:
+            system_prompt_var.value["user_prompt"] = instructions_text
+            st.rerun()
+        reset_prompt = st.button('Reset to default')
+    
     value_area = st.text_area('Instructions (optional - use to guide output)', value=instructions_var.value, height=100)
     instructions_var.value = value_area
     variables['instructions'] = instructions_var.value
-    messages = util.AI_API.prepare_messages_from_message(system_prompt_var.value, variables)
+
+    full_prompt = ' '.join([
+        system_prompt_var.value["report_prompt"],
+        system_prompt_var.value["user_prompt"],
+        system_prompt_var.value["safety_prompt"]
+    ])
+
+    messages = util.AI_API.prepare_messages_from_message(full_prompt, variables)
     tokens = util.AI_API.count_tokens_in_message_list(messages)
     b1, b2 = st.columns([1, 4])
     ratio = 100 * tokens/util.AI_API.max_input_tokens
@@ -71,13 +83,17 @@ def generative_ai_component(system_prompt_var, instructions_var, variables):
             st.success(message)
         else:
             st.warning(message)
-    return generate, messages
+    return generate, messages, reset_prompt
 
 def generative_batch_ai_component(system_prompt_var, instructions_var, variables, batch_name, batch_val, batch_size):
     st.markdown('##### Generative AI instructions')
     with st.expander('Edit AI System Prompt (advanced)', expanded=False):
-        st.text_area('Contents of System Prompt used to generate AI outputs. Do not edit {AI inputs} in curly brackets.', key=system_prompt_var.key, value=system_prompt_var.value, height=200)
-    st.text_area('Instructions (optional - use to guide output)', key=instructions_var.key, value=instructions_var.value, height=100)
+        instructions_text = st.text_area('Contents of System Prompt used to generate AI outputs.', value=system_prompt_var.value["user_prompt"], height=200)
+        system_prompt_var.value["user_prompt"] = instructions_text
+        reset_prompt = st.button('Reset to default')
+
+    value_area = st.text_area('Instructions (optional - use to guide output)', value=instructions_var.value, height=100)
+    instructions_var.value = value_area
     
     batch_offset = 0
     batch_count_raw = (len(batch_val) // batch_size)
@@ -85,12 +101,18 @@ def generative_batch_ai_component(system_prompt_var, instructions_var, variables
     batch_count = batch_count_raw + 1 if batch_count_remaining != 0 else batch_count_raw
     batch_messages = []
     variables['instructions'] = instructions_var.value
+
+    full_prompt = ' '.join([
+        system_prompt_var.value["report_prompt"],
+        system_prompt_var.value["user_prompt"],
+        system_prompt_var.value["safety_prompt"]
+    ])
     for i in range(batch_count):
         batch = batch_val[batch_offset:min(batch_offset+batch_size, len(batch_val))]
         batch_offset += batch_size
         batch_variables = dict(variables)
         batch_variables[batch_name] = batch.to_csv()
-        batch_messages.append(util.AI_API.prepare_messages_from_message(system_prompt_var.value, batch_variables))
+        batch_messages.append(util.AI_API.prepare_messages_from_message(full_prompt, batch_variables))
     tokens = util.AI_API.count_tokens_in_message_list(batch_messages[0] if len(batch_messages) != 0 else [])
     b1, b2 = st.columns([1, 4])
     ratio = 100 * tokens/util.AI_API.max_input_tokens
@@ -98,7 +120,7 @@ def generative_batch_ai_component(system_prompt_var, instructions_var, variables
         generate = st.button('Generate', disabled=ratio > 100)
     with b2:
         st.markdown(f'AI input uses {tokens}/{util.AI_API.max_input_tokens} ({round(ratio, 2)}%) of token limit')
-    return generate, batch_messages
+    return generate, batch_messages, reset_prompt
 
 file_options = ['unicode-escape', 'utf-8', 'utf-8-sig']
 file_encoding_default = 'unicode-escape'

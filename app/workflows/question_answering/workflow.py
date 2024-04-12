@@ -206,7 +206,10 @@ def create():
                     'outline': sv.answering_matches.value,
                     'source_diversity': sv.answering_source_diversity.value
                 }
-                generate, messages = util.ui_components.generative_ai_component(sv.answering_system_prompt, sv.answering_instructions, variables)
+                generate, messages, reset = util.ui_components.generative_ai_component(sv.answering_system_prompt, sv.answering_instructions, variables)
+                if reset:
+                    sv.answering_system_prompt.value["user_prompt"] = prompts.user_prompt
+                    st.rerun()
             with c2:
                 report_placeholder = st.empty()
                 gen_placeholder = st.empty()

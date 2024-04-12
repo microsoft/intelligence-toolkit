@@ -12,6 +12,7 @@ from st_aggrid import (
     ColumnsAutoSizeMode
 )   
 
+import workflows.attribute_patterns.prompts as prompts
 import workflows.attribute_patterns.functions as functions
 import workflows.attribute_patterns.classes as classes
 import workflows.attribute_patterns.variables as vars
@@ -74,13 +75,15 @@ def create():
                 if st.button('Detect patterns'):
                     sv.attribute_min_pattern_count.value = minimum_pattern_count
                     sv.attribute_max_pattern_length.value = maximum_pattern_count
+                    sv.attribute_selected_pattern.value = ''
+                    sv.attribute_selected_pattern_period.value = ''
+
                     with st.spinner('Detecting patterns...'):
                         sv.attribute_table_index.value += 1
                         sv.attribute_df.value, time_to_graph = functions.prepare_graph(sv)
-                        
                         sv.attribute_embedding_df.value, sv.attribute_node_to_centroid.value, sv.attribute_period_embeddings.value = functions.generate_embedding(sv, sv.attribute_df.value, time_to_graph)
-                            
                         rc = classes.RecordCounter(sv.attribute_dynamic_df.value)
+
                         sv.attribute_record_counter.value = rc
                         sv.attribute_pattern_df.value, sv.attribute_close_pairs.value, sv.attribute_all_pairs.value = functions.detect_patterns(sv)
                         st.rerun()
@@ -100,7 +103,7 @@ def create():
                 gb.configure_selection(selection_mode="single", use_checkbox=False)
                 gb.configure_side_bar()
                 gridoptions = gb.build()
-
+                
                 response = AgGrid(
                     show_df,
                     key=f'report_grid_{sv.attribute_table_index.value}',
@@ -117,14 +120,16 @@ def create():
                     columns_auto_size_mode=ColumnsAutoSizeMode.FIT_ALL_COLUMNS_TO_VIEW
                     ) # type: ignore
                
-                selected_pattern = response['selected_rows'][0]['pattern'] if len(response['selected_rows']) > 0 else ''
-                selected_pattern_period = response['selected_rows'][0]['period'] if len(response['selected_rows']) > 0 else ''
-
-
+                selected_pattern = response['selected_rows'][0]['pattern'] if len(response['selected_rows']) > 0 else sv.attribute_selected_pattern.value
+                selected_pattern_period = response['selected_rows'][0]['period'] if len(response['selected_rows']) > 0 else sv.attribute_selected_pattern_period.value
+                
                 if selected_pattern != '':
-                    sv.attribute_selected_pattern.value = selected_pattern
-                    sv.attribute_selected_pattern_period.value = selected_pattern_period
-                    sv.attribute_report.value = ''
+                    if selected_pattern != sv.attribute_selected_pattern.value:
+                        sv.attribute_selected_pattern.value = selected_pattern
+                        sv.attribute_selected_pattern_period.value = selected_pattern_period
+                        sv.attribute_report.value = ''
+                        st.rerun()
+
                     st.markdown('**Selected pattern: ' + selected_pattern + ' (' + selected_pattern_period + ')**')
                     tdf = tdf[tdf['pattern'] == selected_pattern]
                     sv.attribute_selected_pattern_df.value = tdf
@@ -140,6 +145,8 @@ def create():
                     st.altair_chart(count_ct, use_container_width=True)
                 else:
                     st.warning('Select column headers to rank patterns by that attribute. Use quickfilter or column filters to narrow down the list of patterns. Select a pattern to continue.')
+            elif sv.attribute_table_index.value > 0:
+                st.info('No patterns detected.')
     with explain_tab:
         if not ready or len(sv.attribute_final_df.value) == 0 or sv.attribute_selected_pattern.value == '':
             st.warning('Select a pattern to continue.')
@@ -153,12 +160,14 @@ def create():
                     'attribute_counts': sv.attribute_selected_pattern_att_counts.value.to_csv(index=False)
                 }
 
-                generate, messages = util.ui_components.generative_ai_component(sv.attribute_system_prompt, sv.attribute_instructions, variables)
+                generate, messages, reset = util.ui_components.generative_ai_component(sv.attribute_system_prompt, sv.attribute_instructions, variables)
+                if reset:
+                    sv.attribute_system_prompt.value["user_prompt"] = prompts.user_prompt
+                    st.rerun()
             with c2:
                 st.markdown('##### Selected attribute pattern')
-                if selected_pattern != '':
-                    
-                    st.markdown('**' + selected_pattern + ' (' + selected_pattern_period + ')**')
+                if sv.attribute_selected_pattern.value != '':
+                    st.markdown('**' + sv.attribute_selected_pattern.value + ' (' + sv.attribute_selected_pattern_period.value + ')**')
                     tdf = sv.attribute_selected_pattern_df.value
 
                     count_ct = alt.Chart(tdf).mark_line().encode(
@@ -173,9 +182,6 @@ def create():
                 report_placeholder = st.empty()
                 gen_placeholder = st.empty()
                 if generate:
-                    selected_pattern = sv.attribute_selected_pattern.value
-                    selected_pattern_period = sv.attribute_selected_pattern_period.value
-                    
                     result = util.AI_API.generate_text_from_message_list(
                         placeholder=report_placeholder,
                         messages=messages,

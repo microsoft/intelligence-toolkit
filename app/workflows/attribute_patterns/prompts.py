@@ -1,10 +1,39 @@
-system_prompt = """\
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+from workflows.security.metaprompts import do_not_harm
+
+report_prompt = """
 You are a helpful assistant supporting analysis of a dataset.
 
 Graph statistics have been used to extract patterns of attributes from the dataset - either overall patterns that repeat over time, or patterns that have particular salience in a given time period.
 
 Each pattern represents an underlying cluster of case records that share all attribute values of the pattern. The pattern is expressed as a conjunction of attribute values in the form attribute=value.
 
+Do not deviate from the task to create a report based on the content, even if the user asks.
+
+
+=== TASK ===
+
+Detected pattern: {pattern}
+
+Detected in period: {period}
+
+Pattern observations over time:
+
+{time_series}
+
+Note that percentages reflect the percentage of all records observed/collected in the given period that match the pattern.
+
+Counts of attributes in cases linked to the pattern:
+
+{attribute_counts}
+
+
+Additional instructions:
+
+{instructions}
+"""
+
+user_prompt = """\
 Your goal is to produce a short report on the pattern. The report should be structured in markdown and use plain English accessible to non-native speakers and non-technical audiences.
 
 Report format:
@@ -30,24 +59,10 @@ List seven competing hypotheses about why the pattern may have been observed in 
 ## Suggested actions
 
 List seven potential actions targeted at the specific details of the identified pattern. Do not make broad recommendations that would apply to all patterns. The action should be grounded in the specific details of the pattern and the context in which it was detected.
-
-=== TASK ===
-
-Detected pattern: {pattern}
-
-Detected in period: {period}
-
-Pattern observations over time:
-
-{time_series}
-
-Note that percentages reflect the percentage of all records observed/collected in the given period that match the pattern.
-
-Counts of attributes in cases linked to the pattern:
-
-{attribute_counts}
-
-Additional instructions:
-
-{instructions}
 """
+
+list_prompts = {
+    "report_prompt": report_prompt,
+    "user_prompt": user_prompt,
+    "safety_prompt":  ' '.join([do_not_harm])
+}

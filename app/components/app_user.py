@@ -2,6 +2,7 @@
 import streamlit as st
 from javascript.scripts import get_auth_user
 from util.session_variables import SessionVariables
+from util.enums import Mode
 
 class app_user:
     
@@ -29,7 +30,7 @@ class app_user:
 
     def login(self):
         return
-        if self.sv.mode.value != 'cloud':
+        if self.sv.mode.value != Mode.CLOUD.value:
             return
         return_value = get_auth_user()
         username = None

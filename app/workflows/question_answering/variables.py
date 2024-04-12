@@ -1,3 +1,4 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 from util.session_variable import SessionVariable
 import pandas as pd
 
@@ -35,4 +36,4 @@ class SessionVariables:
         self.answering_source_diversity = SessionVariable(1, prefix)
         self.answering_question_history = SessionVariable([], prefix)
         self.answering_instructions = SessionVariable('', prefix)
-        self.answering_system_prompt = SessionVariable(prompts.answering_system_prompt, prefix)
+        self.answering_system_prompt = SessionVariable(prompts.list_prompts, prefix)

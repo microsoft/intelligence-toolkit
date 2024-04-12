@@ -23,7 +23,8 @@ class _OpenAI:
             try:
                 self._instance = OpenAI(api_key=self._key)
             except Exception as e:
-                print(f'Error creating OpenAI client: {e}')
+                raise Exception(f'OpenAI client not created: {e}')
+
 
         return self._instance
     

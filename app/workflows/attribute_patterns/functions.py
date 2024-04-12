@@ -1,3 +1,4 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import pandas as pd
 import networkx as nx
 import numpy as np
@@ -251,7 +252,6 @@ def detect_patterns(sv):
                                 if pcount > sv.attribute_min_pattern_count.value:
                                     period_to_patterns[period].append((candidate_pattern, pcount))
                                     pattern_to_periods[tuple(candidate_pattern)].add(period)
-    print('done combining pairs')
     # convert to df
     pattern_rows = []
     for period, patterns in period_to_patterns.items():

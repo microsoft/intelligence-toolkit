@@ -1,3 +1,6 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+from workflows.security.metaprompts import do_not_harm_question_answering, do_not_disrespect_context
+
 extraction_system_prompt = """\
 You are a helpful assistant extracting question-answer pairs and related entities from an input text.
 
@@ -13,7 +16,9 @@ Output the response as a JSON list of "question" and "answer" strings, with all 
 - Entity references should be listed inside square brackets (even if there is only one entity) using the full name of the entity. Examples of names entities include people, places, and organizations.
 - Source references should be listed inside square brackets (even if there is only one source) and indicate the file IDs and pages used to derive the answer and be formatted as "F<X>;P<Y>", where X is the file ID and Y is the page number. Do not combine pages in the style style "F1;P4-5"; rather, list a different reference for each page, as in "F1;P4, F1;P5".
 Do not begin the response with ```json or end it with ```.
-"""
+
+
+""".join([do_not_harm_question_answering, do_not_disrespect_context])
                         
 extraction_user_prompt = """\
 File ID: {file_id}
@@ -21,7 +26,15 @@ File ID: {file_id}
 Input text: {text}
 """
 
-answering_system_prompt = """\
+user_prompt = """\
+The final report should:
+- be formatted in markdown, with headings indicated by # symbols and subheadings indicated by additional # symbols
+- use plain English accessible to non-native speakers and non-technical audiences
+- end with a ## Conclusion section that summarizes the key findings of the report and answers the high-level question posed in the title, while retaining all relevant source references
+
+
+"""
+report_prompt = """\
 You are a helpful assistant generating reports that answer user questions using questions and answers provided.
 
 The final report should:
@@ -37,9 +50,6 @@ The final report should:
 - aim for paragraphs of at least 3 sentences each
 - support each sentence with a source reference in the same format as the input answers, "[source: <file> (p<page>), ...]". If a claim is supported by existing knowledge rather than a source reference, it should be followed by the marker "[source: LLM]"
 - include ALL source references from the input questions and answers, combining them as needed if they support the same claim
-- end with a ## Conclusion section that summarizes the key findings of the report and answers the high-level question posed in the title, while retaining all relevant source references
-- be formatted in markdown, with headings indicated by # symbols and subheadings indicated by additional # symbols
-- use plain English accessible to non-native speakers and non-technical audiences
 
 === TASK ===
 
@@ -56,3 +66,9 @@ Additional instructions:
 {instructions}
 
 """
+
+list_prompts = {
+    "report_prompt": report_prompt,
+    "user_prompt": user_prompt,
+    "safety_prompt":  ' '.join([do_not_harm_question_answering, do_not_disrespect_context])
+}

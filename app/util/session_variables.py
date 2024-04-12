@@ -1,3 +1,4 @@
+from util.enums import Mode
 from util.session_variable import SessionVariable
 import pandas as pd
 import util.session_variable as sv
@@ -7,9 +8,5 @@ class SessionVariables:
 
     def __init__(self, prefix = ''):
         self.narrative_input_df = SessionVariable(pd.DataFrame(), prefix)
-        self.mode = sv.SessionVariable(os.environ.get("MODE", "dev"))
+        self.mode = sv.SessionVariable(os.environ.get("MODE", Mode.DEV.value))
         self.username = sv.SessionVariable('')
-
-
-
-      

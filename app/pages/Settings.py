@@ -5,6 +5,7 @@ from util.SecretsHandler import SecretsHandler
 import streamlit as st
 import time
 from util.session_variables import SessionVariables
+from util.enums import Mode
 
 def on_change(handler, key = None, value = None):
     def change():
@@ -20,7 +21,7 @@ def main():
     secrets_handler = SecretsHandler()
     placeholder = "Enter key here..."
     secret = secrets_handler.get_secret(key)
-    is_mode_cloud = sv.mode.value == 'cloud'
+    is_mode_cloud = sv.mode.value == Mode.CLOUD.value
 
     secret_input = st.text_input('Enter your OpenAI key', type="password", disabled=is_mode_cloud, placeholder=placeholder, value=secret)
     

@@ -1,3 +1,4 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 from util.session_variable import SessionVariable
 import polars as pl
 
@@ -17,6 +18,6 @@ class SessionVariables:
         self.matching_sentence_pair_embedding_threshold = SessionVariable(0.05, prefix)
         self.matching_last_sentence_pair_embedding_threshold = SessionVariable(0.05, prefix)
         self.matching_evaluations = SessionVariable(pl.DataFrame(), prefix)
-        self.matching_system_prompt = SessionVariable(prompts.system_prompt, prefix)
+        self.matching_system_prompt = SessionVariable(prompts.list_prompts, prefix)
         self.matching_instructions = SessionVariable('', prefix)
         

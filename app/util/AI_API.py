@@ -1,3 +1,4 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import tiktoken
 import json
 from util.openai_instance import _OpenAI
@@ -64,9 +65,9 @@ def generate_text_from_message_list(messages, placeholder=None, prefix='', model
     except Exception as e:
         print(f'Error generating from message list: {e}')
         if '401' and 'invalid_api_key' in str(e):
-            if placeholder is not None:
-                placeholder.error(f'Error generating OpenAI response. Your key is invalid.')
+            raise Exception('Your OpenAI key is invalid.')
+        elif 'rate_limit_exceeded' in str(e):
+            raise Exception('Rate limit exceeded when generating OpenAI response. Try again in a few seconds.')
         else:
-            if placeholder is not None:
-                placeholder.error(f'Error generating OpenAI response.')
+            raise Exception('Problem in OpenAI response.')
     return response
