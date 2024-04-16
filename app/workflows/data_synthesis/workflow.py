@@ -267,11 +267,14 @@ def create():
                     export_df = None
                     chart_type = st.selectbox('Chart type', options=chart_type_options, index=chart_type_options.index(st.session_state[f'{workflow}_chart_type']))
                     if chart_type == 'Top attributes':
-                        if chart_type != st.session_state[f'{workflow}_chart_type']:
+                        if chart_type != st.session_state[f'{workflow}_chart_type'] or st.session_state[f'{workflow}_chart_individual_configuration'] == {}:
                             st.session_state[f'{workflow}_chart_individual_configuration'] = {
                                 'show_attributes' : [],
                                 'num_values' : 10
                             }
+                            st.session_state[f'{workflow}_chart_type'] = chart_type
+                            st.rerun()
+                            
                         chart_individual_configuration = st.session_state[f'{workflow}_chart_individual_configuration']
                         st.markdown(f'##### Configure top attributes chart')     
                         show_attributes = st.multiselect('Types of top attributes to show', options=sdf.columns.values, default=chart_individual_configuration['show_attributes'])
@@ -287,6 +290,9 @@ def create():
                                 'time_attribute' : '',
                                 'series_attributes' : []
                             }
+                            st.session_state[f'{workflow}_chart_type'] = chart_type
+                            st.rerun()
+
                         chart_individual_configuration = st.session_state[f'{workflow}_chart_individual_configuration']
                         st.markdown(f'##### Configure time series chart')    
                         time_options = ['']+list(sdf.columns.values)
@@ -305,6 +311,8 @@ def create():
                                 'target_attribute' : '',
                                 'highlight_attribute' : ''
                             }
+                            st.session_state[f'{workflow}_chart_type'] = chart_type
+                            st.rerun()
                         chart_individual_configuration = st.session_state[f'{workflow}_chart_individual_configuration']
                         st.markdown(f'##### Configure flow (alluvial) chart')    
                         attribute_type_options = ['']+list(sdf.columns.values)
@@ -325,7 +333,7 @@ def create():
                             else:
                                 export_df = functions.compute_synthetic_graph(sdf, filters, source_attribute, target_attribute, highlight_attribute)
                             chart = functions.flow_chart(export_df, selection, source_attribute, target_attribute, highlight_attribute, chart_width, chart_height, unit, scheme)
-                            
+
                     if export_df is not None and chart is not None:
                         clear_btn = st.button('Clear configuration')
                         if (clear_btn):
