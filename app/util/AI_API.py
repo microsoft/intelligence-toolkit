@@ -73,5 +73,5 @@ def generate_text_from_message_list(messages, placeholder=None, prefix='', model
             placeholder.markdown(prefix + response, unsafe_allow_html=True)
     except Exception as e:
         print(f'Error generating from message list: {e}')
-        raise Exception(f'Problem in OpenAI response. {e.message}')
+        raise Exception(f'Problem in OpenAI response. {e}')
     return response
