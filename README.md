@@ -33,7 +33,7 @@ Open /venv/bin/activate, add the following lines at the end of the file:
     export OPENAI_API_KEY=<OPENAI_API_KEY>
 
     # if Azure OpenAI, include the following information too:
-    export OPENAI_TYPE=AZURE
+    export OPENAI_TYPE="Azure OpenAI"
     export AZURE_OPENAI_VERSION=2023-12-01-preview
     export AZURE_OPENAI_ENDPOINT="https://<ENDPOINT>.azure.com/"
 ```
@@ -45,7 +45,7 @@ Open venv/Scripts/Activate.ps1, add the following lines after line 167:
 
     # if Azure OpenAI, include the following information too:
 
-    $env:OPENAI_TYPE="AZURE"
+    $env:OPENAI_TYPE="Azure OpenAI"
     $env:AZURE_OPENAI_VERSION="2023-12-01-preview"
     $env:AZURE_OPENAI_ENDPOINT="https://<ENDPOINT>.openai.azure.com/"
 ``` 

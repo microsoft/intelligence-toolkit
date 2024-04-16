@@ -1,4 +1,6 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+import json
+import re
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -17,6 +19,7 @@ import workflows.attribute_patterns.functions as functions
 import workflows.attribute_patterns.classes as classes
 import workflows.attribute_patterns.variables as vars
 import workflows.attribute_patterns.config as config
+from util.session_variables import SessionVariables
 
 import util.AI_API
 import util.ui_components
@@ -24,6 +27,7 @@ import util.ui_components
 def create():
     workflow = 'attribute_patterns'
     sv = vars.SessionVariables('attribute_patterns')
+    sv_home = SessionVariables('home')
     intro_tab, uploader_tab, detect_tab, explain_tab = st.tabs(['Attribute patterns workflow:', 'Create graph model', 'Detect patterns', 'Generate AI pattern reports'])
     df = None
     with intro_tab:
@@ -181,6 +185,8 @@ def create():
                     st.altair_chart(count_ct, use_container_width=True)
                 report_placeholder = st.empty()
                 gen_placeholder = st.empty()
+                    
+                get_current_time = pd.Timestamp.now().strftime('%Y%m%d%H%M%S')
                 if generate:
                     result = util.AI_API.generate_text_from_message_list(
                         placeholder=report_placeholder,
@@ -188,10 +194,28 @@ def create():
                         prefix=''
                     )
                     sv.attribute_report.value = result
+
+                    validation, messages_to_llm = util.ui_components.validate_ai_report(messages, result)
+                    sv.attribute_report_validation.value = json.loads(validation)
+                    sv.attribute_report_validation_messages.value = messages_to_llm
+                    st.rerun()
                 else:
                     if sv.attribute_report.value == '':
                         gen_placeholder.warning('Press the Generate button to create an AI report for the selected attribute pattern.')
+                
                 report_data = sv.attribute_report.value
                 report_placeholder.markdown(report_data)
                 
                 util.ui_components.report_download_ui(sv.attribute_report, 'pattern_report')
+                if sv.attribute_report_validation.value != {}:
+                    validation_status = st.status(label=f"LLM faithfulness score: {sv.attribute_report_validation.value['score']}/5", state='complete')
+                    with validation_status:
+                        st.write(sv.attribute_report_validation.value['explanation'])
+
+                    if sv_home.mode.value == 'dev':
+                        obj = json.dumps({
+                            "message": sv.attribute_report_validation_messages.value,
+                            "result": sv.attribute_report_validation.value,
+                            "report": report_data
+                        }, indent=4)
+                        st.download_button('Download validation prompt', use_container_width=True, data=str(obj), file_name=f'attr_pattern_{get_current_time}_messages.json', mime='text/json')

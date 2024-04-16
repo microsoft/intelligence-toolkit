@@ -86,9 +86,10 @@ def create():
                                     attribute_label = value_col
                                 # remove punctuation but retain characters and digits in any language
                                 # compress whitespace to single space
-                                df[entity_col] = df[entity_col].apply(lambda x : re.sub(r'[^\w\s&@\+]', '', str(x)).strip())
+                                for index, row in df.iterrows():
+                                    df.at[index, entity_col] = f'Entity_{index}'
                                 df[value_col] = df[value_col].apply(lambda x : re.sub(r'[^\w\s&@\+]', '', str(x)).strip())
-                                df[entity_col] = df[entity_col].apply(lambda x : re.sub(r'\s+', ' ', str(x)).strip())
+                                df[value_col] = df[value_col].apply(lambda x : re.sub(r'\s+', ' ', str(x)).strip())
                                 df[value_col] = df[value_col].apply(lambda x : re.sub(r'\s+', ' ', str(x)).strip())
                                 if link_type == 'Entity-Attribute':
                                     if attribute_col in ['Use column name', 'Use custom name']:

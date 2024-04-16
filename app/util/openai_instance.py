@@ -49,7 +49,6 @@ class _OpenAI:
 
     def get_openai_api(self):
         if self.get_openai_type() == "Azure OpenAI":
-            print('self._key', self._key)
             return AzureOpenAI(api_key=self._key, azure_endpoint=self.get_azure_openai_endpoint(), api_version=self.get_azure_openai_version())
         else:
             return OpenAI(api_key=self._key)

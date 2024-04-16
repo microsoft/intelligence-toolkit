@@ -49,7 +49,8 @@ def main():
     st.header("OpenAI Type")
     st.markdown("Select the OpenAI type you want to use.")
     types = ["OpenAI", "Azure OpenAI"]
-    type_input = st.radio("OpenAI Type", types, index=types.index(openai.get_openai_type()) or 0)
+    index = types.index(openai.get_openai_type()) if openai.get_openai_type() in types else 0
+    type_input = st.radio("OpenAI Type", types, index=index)
     type = openai.get_openai_type()
     if type != type_input:
         on_change(secrets_handler, openai_type_key, type_input)()

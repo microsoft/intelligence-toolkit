@@ -1,4 +1,5 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+import re
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -468,3 +469,8 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
         st.success('Data preparation complete.')
     else:
         st.warning('Generate final dataset to continue.')
+
+def validate_ai_report(messages, result):
+    st.status('Validating AI report and generating groundedness score...', expanded=False, state='running')
+    validation, messages_to_llm = util.AI_API.validate_report(messages, result)
+    return re.sub(r"```json\n|\n```", "", validation), messages_to_llm

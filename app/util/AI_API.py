@@ -3,6 +3,7 @@ import tiktoken
 import json
 from util.session_variables import SessionVariables
 from util.openai_instance import _OpenAI
+from util.validation_prompt import GROUNDEDNESS_PROMPT
 
 openai = _OpenAI()
 
@@ -75,3 +76,24 @@ def generate_text_from_message_list(messages, placeholder=None, prefix='', model
         print(f'Error generating from message list: {e}')
         raise Exception(f'Problem in OpenAI response. {e}')
     return response
+
+def validate_report(messages, ai_response):
+    model = session_var.generation_model.value
+
+    message = [{
+        'role': 'system',
+        'content': GROUNDEDNESS_PROMPT.format(instructions=messages[0]['content'], report=ai_response)
+    }]
+    try:
+        responses = openai.client().chat.completions.create(
+            model=model,
+            temperature=default_temperature,
+            max_tokens=max_gen_tokens,
+            messages=message,
+
+        )
+        return responses.choices[0].message.content, message
+    except Exception as e:
+        print(f'Error validating report: {e}')
+        raise Exception(f'Problem in OpenAI response. {e}')
+        
