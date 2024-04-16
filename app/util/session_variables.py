@@ -10,5 +10,5 @@ class SessionVariables:
         self.narrative_input_df = SessionVariable(pd.DataFrame(), prefix)
         self.mode = sv.SessionVariable(os.environ.get("MODE", Mode.DEV.value))
         self.username = sv.SessionVariable('')
-        self.generation_model = sv.SessionVariable('gpt-4-turbo-preview')
-        self.embedding_model = sv.SessionVariable('text-embedding-3-small')
+        self.generation_model = sv.SessionVariable('gpt-4-turbo')
+        self.embedding_model = sv.SessionVariable('text-embedding-ada-002')
