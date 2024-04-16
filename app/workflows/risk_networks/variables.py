@@ -48,6 +48,8 @@ class SessionVariables:
         self.network_additional_trimmed_attributes = SessionVariable([], prefix)
         self.network_system_prompt = SessionVariable(prompts.list_prompts, prefix)
         self.network_report = SessionVariable('', prefix)
+        self.network_report_validation_messages = SessionVariable('', prefix)
+        self.network_report_validation = SessionVariable({}, prefix)
         self.network_merged_links_df = SessionVariable([], prefix)
         self.network_merged_nodes_df = SessionVariable([], prefix)
         self.network_group_types = SessionVariable(set(), prefix)

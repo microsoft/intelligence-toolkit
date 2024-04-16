@@ -1,10 +1,12 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+import json
 import streamlit as st
 import pandas as pd
 import networkx as nx
 
 from collections import defaultdict
 from sklearn.neighbors import NearestNeighbors
+from util.session_variables import SessionVariables
 
 import re
 import os
@@ -30,6 +32,7 @@ embedder = util.Embedder.create_embedder(config.cache_dir)
 
 def create():
     sv = vars.SessionVariables('risk_networks')
+    sv_home = SessionVariables('home')
 
     if not os.path.exists(config.outputs_dir):
         os.makedirs(config.outputs_dir)
@@ -497,6 +500,8 @@ def create():
                     st.markdown(f'##### Selected network: {sv.network_selected_community.value}')
                 report_placeholder = st.empty()
                 gen_placeholder = st.empty()
+                get_current_time = pd.Timestamp.now().strftime('%Y%m%d%H%M%S')
+
                 if generate:
                     result = util.AI_API.generate_text_from_message_list(
                         placeholder=report_placeholder,
@@ -504,9 +509,27 @@ def create():
                         prefix=''
                     )
                     sv.network_report.value = result
+
+                    validation, messages_to_llm = util.ui_components.validate_ai_report(messages, result)
+                    sv.network_report_validation.value = json.loads(validation)
+                    sv.network_report_validation_messages.value = messages_to_llm
+                    st.rerun()
                 else:
                     if len(sv.network_report.value) == 0:
                         gen_placeholder.warning('Press the Generate button to create an AI report for the current network.')
                 report_placeholder.markdown(sv.network_report.value)
 
                 util.ui_components.report_download_ui(sv.network_report, 'network_report')
+
+                if sv.network_report_validation.value != {}:
+                        validation_status = st.status(label=f"LLM faithfulness score: {sv.network_report_validation.value['score']}/5", state='complete')
+                        with validation_status:
+                            st.write(sv.network_report_validation.value['explanation'])
+
+                        if sv_home.mode.value == 'dev':
+                            obj = json.dumps({
+                                "message": sv.network_report_validation_messages.value,
+                                "result": sv.network_report_validation.value,
+                                "report": sv.network_report.value
+                            }, indent=4)
+                            st.download_button('Download validation prompt', use_container_width=True, data=str(obj), file_name=f'networks_{get_current_time}_messages.json', mime='text/json')

@@ -1,5 +1,6 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import numpy as np
+import pandas as pd
 import streamlit as st
 from collections import Counter
 import re
@@ -12,6 +13,7 @@ import workflows.question_answering.classes as classes
 import workflows.question_answering.config as config
 import workflows.question_answering.prompts as prompts
 import workflows.question_answering.variables as vars
+from util.session_variables import SessionVariables
 import util.Embedder
 import util.ui_components
 
@@ -19,7 +21,7 @@ embedder = util.Embedder.create_embedder(config.cache_dir)
 
 def create():
     sv = vars.SessionVariables('question_answering')
-
+    sv_home = SessionVariables('home')
     intro_tab, uploader_tab, mining_tab, report_tab = st.tabs(['Question answering workflow:', 'Upload data', 'Mine & match questions', 'Generate AI answer reports'])
     
     df = None
@@ -213,6 +215,7 @@ def create():
             with c2:
                 report_placeholder = st.empty()
                 gen_placeholder = st.empty()
+                get_current_time = pd.Timestamp.now().strftime('%Y%m%d%H%M%S')
                 if generate:
                     result = util.AI_API.generate_text_from_message_list(
                         placeholder=report_placeholder,
@@ -220,6 +223,11 @@ def create():
                         prefix=''
                     )
                     sv.answering_lazy_answer_text.value = result
+                    
+                    validation, messages_to_llm = util.ui_components.validate_ai_report(messages, result)
+                    sv.answering_report_validation.value = json.loads(validation)
+                    sv.answering_report_validation_messages.value = messages_to_llm
+                    st.rerun()
                 else:
                     if sv.answering_lazy_answer_text.value == '':
                         gen_placeholder.warning('Press the Generate button to create an AI report for the current question.')
@@ -240,4 +248,16 @@ def create():
                         st.download_button('Download AI answer report as MD', data=full_text, file_name=f'{name}.md', mime='text/markdown', disabled=sv.answering_lazy_answer_text.value == '', key='lazy_download_button')      
                     with c2:
                         add_download_pdf(f'{name}.pdf', full_text, 'Download AI answer report as PDF', disabled=is_download_disabled)
+                    
+                    if sv.answering_report_validation.value != {}:
+                        validation_status = st.status(label=f"LLM faithfulness score: {sv.answering_report_validation.value['score']}/5", state='complete')
+                        with validation_status:
+                            st.write(sv.answering_report_validation.value['explanation'])
 
+                        if sv_home.mode.value == 'dev':
+                            obj = json.dumps({
+                                "message": sv.answering_report_validation_messages.value,
+                                "result": sv.answering_report_validation.value,
+                                "report": sv.answering_lazy_answer_text.value
+                            }, indent=4)
+                            st.download_button('Download validation prompt', use_container_width=True, data=str(obj), file_name=f'qa_{get_current_time}_messages.json', mime='text/json')

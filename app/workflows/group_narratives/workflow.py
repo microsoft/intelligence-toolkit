@@ -234,4 +234,4 @@ def create():
                             "result": sv.narrative_report_validation.value,
                             "report": sv.narrative_report.value
                         }, indent=4)
-                        st.download_button('Download validation prompt', use_container_width=True, data=str(obj), file_name=f'attr_pattern_{get_current_time}_messages.json', mime='text/json')
+                        st.download_button('Download validation prompt', use_container_width=True, data=str(obj), file_name=f'narrative_{get_current_time}_messages.json', mime='text/json')

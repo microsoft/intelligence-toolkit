@@ -19,4 +19,3 @@ class SessionVariables:
         self.matching_last_sentence_pair_embedding_threshold = SessionVariable(0.05, prefix)
         self.matching_evaluations = SessionVariable(pl.DataFrame(), prefix)
         self.matching_system_prompt = SessionVariable(prompts.list_prompts, prefix)
-        
