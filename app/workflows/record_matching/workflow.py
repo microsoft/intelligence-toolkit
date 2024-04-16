@@ -13,6 +13,7 @@ import workflows.record_matching.prompts as prompts
 import workflows.record_matching.functions as functions
 import workflows.record_matching.config as config
 import workflows.record_matching.variables as vars
+import util.session_variables as home_vars
 import util.Embedder
 import util.ui_components
 
@@ -20,6 +21,7 @@ embedder = util.Embedder.create_embedder(config.cache_dir)
 
 def create():
     sv = vars.SessionVariables('record_matching')
+    sv_home = home_vars.SessionVariables('home')
 
     if not os.path.exists(config.outputs_dir):
         os.makedirs(config.outputs_dir)
@@ -138,6 +140,7 @@ def create():
                     record_distance = st.number_input('Matching record distance (max)', min_value=0.0, max_value=1.0, step=0.01, value=sv.matching_sentence_pair_embedding_threshold.value, help='The maximum cosine distance between two records in the embedding space for them to be considered a match. Lower values will result in fewer closer matches overall.')
                 with b2:
                     name_similarity = st.number_input('Matching name similarity (min)', min_value=0.0, max_value=1.0, step=0.01, value=sv.matching_sentence_pair_jaccard_threshold.value, help='The minimum Jaccard similarity between the character trigrams of the names of two records for them to be considered a match. Higher values will result in fewer closer name matches.')
+
                 if st.button('Detect record groups', use_container_width=True):
                     if record_distance != sv.matching_sentence_pair_embedding_threshold.value:
                         sv.matching_sentence_pair_embedding_threshold.value = record_distance
@@ -291,6 +294,16 @@ def create():
                         sv.matching_matches_df.value = sv.matching_matches_df.value.sort(by=['Name similarity', 'Group ID'], descending=[False, False])
                         # # keep all records linked to a group ID if any record linked to that ID has dataset GD or ILM
                         # sv.matching_matches_df.value = sv.matching_matches_df.value.filter(pl.col('Group ID').is_in(sv.matching_matches_df.value.filter(pl.col('Dataset').is_in(['GD', 'ILM']))['Group ID'].unique()))
+                        data = sv.matching_matches_df.value
+                        unique_names = data['Entity name'].unique()
+                        #verify if the names are already in this format: Entity_1, Entity_2, etc
+                        pattern = f'^Entity_\d+$'
+                        matches = unique_names.str.contains(pattern)
+                        all_matches = matches.all()
+                        if not all_matches and sv_home.protected_mode.value:
+                            for i, name in enumerate(unique_names, start=1):
+                                data = data.with_columns(data['Entity name'].replace(name, 'Entity_{}'.format(i)))
+                                sv.matching_matches_df.value = data
                         st.rerun()
                 if len(sv.matching_matches_df.value) > 0:
                     st.markdown(f'Identified **{len(sv.matching_matches_df.value)}** record groups.')
@@ -305,7 +318,7 @@ def create():
         with b1:
             batch_size = 100
             data = sv.matching_matches_df.value.drop(['Entity ID', 'Dataset', 'Name similarity']).to_pandas()
-            generate, batch_messages, reset = util.ui_components.generative_batch_ai_component(sv.matching_system_prompt, sv.matching_instructions, {}, 'data', data, batch_size)
+            generate, batch_messages, reset = util.ui_components.generative_batch_ai_component(sv.matching_system_prompt, {}, 'data', data, batch_size)
             if reset:
                 sv.matching_system_prompt.value["user_prompt"] = prompts.user_prompt
                 st.rerun()

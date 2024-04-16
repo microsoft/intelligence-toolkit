@@ -160,7 +160,7 @@ def create():
                     'attribute_counts': sv.attribute_selected_pattern_att_counts.value.to_csv(index=False)
                 }
 
-                generate, messages, reset = util.ui_components.generative_ai_component(sv.attribute_system_prompt, sv.attribute_instructions, variables)
+                generate, messages, reset = util.ui_components.generative_ai_component(sv.attribute_system_prompt, variables)
                 if reset:
                     sv.attribute_system_prompt.value["user_prompt"] = prompts.user_prompt
                     st.rerun()

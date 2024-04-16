@@ -190,7 +190,7 @@ def create():
                     'dataset': fdf.to_csv(index=False, encoding='utf-8-sig'),
                     'filters': filter_description
                 }
-                generate, messages, reset = util.ui_components.generative_ai_component(sv.narrative_system_prompt, sv.narrative_instructions, variables)
+                generate, messages, reset = util.ui_components.generative_ai_component(sv.narrative_system_prompt, variables)
                 if reset:
                     sv.narrative_system_prompt.value["user_prompt"] = prompts.user_prompt
                     st.rerun()

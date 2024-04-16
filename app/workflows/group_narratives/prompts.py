@@ -22,9 +22,6 @@ Dataset:
 
 {dataset}
 
-Additional instructions:
-
-{instructions}
 """
 
 user_prompt = """\

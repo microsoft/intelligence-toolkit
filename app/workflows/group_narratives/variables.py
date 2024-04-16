@@ -20,7 +20,6 @@ class SessionVariables:
         self.narrative_description = SessionVariable('', prefix)
         self.narrative_top_groups = SessionVariable(0, prefix)
         self.narrative_top_attributes = SessionVariable(0, prefix)
-        self.narrative_instructions = SessionVariable('', prefix)
         self.narrative_report = SessionVariable('', prefix)
         self.narrative_system_prompt = SessionVariable(prompts.list_prompts, prefix)
         self.narrative_subject_identifier = SessionVariable('', prefix)

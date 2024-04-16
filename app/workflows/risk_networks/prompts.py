@@ -16,9 +16,6 @@ Goal:
 - Evaluate the likelihood that different entity nodes are in fact the same real-world entity.
 - If there is a selected entity and there are risk flags in the network, evaluate the risk exposure for the selected entity.
 
-Additional instructions:
-
-{instructions}
 
 === TASK ===
 

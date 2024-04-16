@@ -27,7 +27,6 @@ class SessionVariables:
         self.attribute_min_count = SessionVariable(0, prefix)
         self.attribute_suppress_zeros = SessionVariable(False, prefix)
         self.attribute_last_suppress_zeros = SessionVariable(False, prefix)
-        self.attribute_instructions = SessionVariable('', prefix)
         self.attribute_system_prompt = SessionVariable(prompts.list_prompts, prefix)
         self.attribute_final_df = SessionVariable(pd.DataFrame(), prefix)
         self.attribute_report = SessionVariable('', prefix)

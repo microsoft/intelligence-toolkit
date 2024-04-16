@@ -27,10 +27,6 @@ Counts of attributes in cases linked to the pattern:
 
 {attribute_counts}
 
-
-Additional instructions:
-
-{instructions}
 """
 
 user_prompt = """\

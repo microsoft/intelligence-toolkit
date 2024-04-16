@@ -14,10 +14,6 @@ Factors that should be considered in the event of similar names: the more additi
 
 If names are in a language other than English, consider whether the English translations are generic descriptive terms (less likely to be related) or distinctive (more likely to be related).
 
-Additional instructions:
-
-{instructions}
-
 === TASK ===
 
 Group data:

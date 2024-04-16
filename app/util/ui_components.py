@@ -52,19 +52,17 @@ def report_download_ui(report_var, name):
         with c2:
             add_download_pdf(f'{name}.pdf', report_data, f'Download AI {spaced_name} as PDF')
 
-def generative_ai_component(system_prompt_var, instructions_var, variables):
+def generative_ai_component(system_prompt_var, variables):
     st.markdown('##### Generative AI instructions')
-    with st.expander('Edit AI System Prompt (advanced)', expanded=False):
+    with st.expander('Edit AI System Prompt (advanced)', expanded=True):
         instructions_text = st.text_area('Contents of System Prompt used to generate AI outputs.', value=system_prompt_var.value["user_prompt"], height=200)
         if system_prompt_var.value["user_prompt"] != instructions_text:
             system_prompt_var.value["user_prompt"] = instructions_text
             st.rerun()
         reset_prompt = st.button('Reset to default')
     
-    value_area = st.text_area('Instructions (optional - use to guide output)', value=instructions_var.value, height=100)
-    instructions_var.value = value_area
-    variables['instructions'] = instructions_var.value
-
+    st.warning('This app uses AI and may not be error-free. Please verify critical details independently.')
+    
     full_prompt = ' '.join([
         system_prompt_var.value["report_prompt"],
         system_prompt_var.value["user_prompt"],
@@ -85,22 +83,19 @@ def generative_ai_component(system_prompt_var, instructions_var, variables):
             st.warning(message)
     return generate, messages, reset_prompt
 
-def generative_batch_ai_component(system_prompt_var, instructions_var, variables, batch_name, batch_val, batch_size):
+def generative_batch_ai_component(system_prompt_var, variables, batch_name, batch_val, batch_size):
     st.markdown('##### Generative AI instructions')
-    with st.expander('Edit AI System Prompt (advanced)', expanded=False):
+    with st.expander('Edit AI System Prompt (advanced)', expanded=True):
         instructions_text = st.text_area('Contents of System Prompt used to generate AI outputs.', value=system_prompt_var.value["user_prompt"], height=200)
         system_prompt_var.value["user_prompt"] = instructions_text
         reset_prompt = st.button('Reset to default')
 
-    value_area = st.text_area('Instructions (optional - use to guide output)', value=instructions_var.value, height=100)
-    instructions_var.value = value_area
-    
+    st.warning('This app uses AI and may not be error-free. Please verify critical details independently.')
     batch_offset = 0
     batch_count_raw = (len(batch_val) // batch_size)
     batch_count_remaining = (len(batch_val) % batch_size)
     batch_count = batch_count_raw + 1 if batch_count_remaining != 0 else batch_count_raw
     batch_messages = []
-    variables['instructions'] = instructions_var.value
 
     full_prompt = ' '.join([
         system_prompt_var.value["report_prompt"],

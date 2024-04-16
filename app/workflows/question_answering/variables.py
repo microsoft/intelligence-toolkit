@@ -35,5 +35,4 @@ class SessionVariables:
         self.answering_matches = SessionVariable('', prefix)
         self.answering_source_diversity = SessionVariable(1, prefix)
         self.answering_question_history = SessionVariable([], prefix)
-        self.answering_instructions = SessionVariable('', prefix)
         self.answering_system_prompt = SessionVariable(prompts.list_prompts, prefix)

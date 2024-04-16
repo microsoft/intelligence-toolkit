@@ -61,10 +61,6 @@ Relevant questions:
 
 {outline}
 
-Additional instructions:
-
-{instructions}
-
 """
 
 list_prompts = {

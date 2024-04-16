@@ -485,7 +485,7 @@ def create():
                     'network_edges': sv.network_merged_links_df.value.to_csv(index=False)
                 }
                 sv.network_system_prompt.value = prompts.list_prompts
-                generate, messages, reset = util.ui_components.generative_ai_component(sv.network_system_prompt, sv.network_instructions, variables)
+                generate, messages, reset = util.ui_components.generative_ai_component(sv.network_system_prompt, variables)
                 if reset:
                     sv.network_system_prompt.value["user_prompt"] = prompts.user_prompt
                     st.rerun()
