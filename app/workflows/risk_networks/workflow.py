@@ -502,27 +502,33 @@ def create():
                 gen_placeholder = st.empty()
                 get_current_time = pd.Timestamp.now().strftime('%Y%m%d%H%M%S')
 
+                generated = False
                 if generate:
+                    generated = True
                     result = util.AI_API.generate_text_from_message_list(
                         placeholder=report_placeholder,
                         messages=messages,
                         prefix=''
                     )
                     sv.network_report.value = result
+                    validation_status = st.status('Validating AI report and generating groundedness score...', expanded=False, state='running')
 
-                    validation, messages_to_llm = util.ui_components.validate_ai_report(messages, result)
+                    validation, messages_to_llm = util.ui_components.validate_ai_report(messages, result, False)
                     sv.network_report_validation.value = json.loads(validation)
                     sv.network_report_validation_messages.value = messages_to_llm
-                    st.rerun()
                 else:
                     if len(sv.network_report.value) == 0:
                         gen_placeholder.warning('Press the Generate button to create an AI report for the current network.')
-                report_placeholder.markdown(sv.network_report.value)
+                report_data = sv.network_report.value
+                report_placeholder.markdown(report_data)
 
                 util.ui_components.report_download_ui(sv.network_report, 'network_report')
 
                 if sv.network_report_validation.value != {}:
-                        validation_status = st.status(label=f"LLM faithfulness score: {sv.network_report_validation.value['score']}/5", state='complete')
+                        if generated:
+                            validation_status.update(label=f"LLM faithfulness score: {sv.network_report_validation.value['score']}/5", state='complete')
+                        else:
+                            validation_status = st.status(label=f"LLM faithfulness score: {sv.network_report_validation.value['score']}/5", state='complete')
                         with validation_status:
                             st.write(sv.network_report_validation.value['explanation'])
 

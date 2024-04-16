@@ -79,7 +79,7 @@ def generative_ai_component(system_prompt_var, variables):
     with b2:
         message = f'AI input uses {tokens}/{util.AI_API.max_input_tokens} ({round(ratio, 2)}%) of token limit'
         if ratio <= 100:
-            st.success(message)
+            st.info(message)
         else:
             st.warning(message)
     return generate, messages, reset_prompt
@@ -470,7 +470,8 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
     else:
         st.warning('Generate final dataset to continue.')
 
-def validate_ai_report(messages, result):
-    st.status('Validating AI report and generating groundedness score...', expanded=False, state='running')
+def validate_ai_report(messages, result, show_status = True):
+    if show_status:
+        st.status('Validating AI report and generating groundedness score...', expanded=False, state='running')
     validation, messages_to_llm = util.AI_API.validate_report(messages, result)
     return re.sub(r"```json\n|\n```", "", validation), messages_to_llm

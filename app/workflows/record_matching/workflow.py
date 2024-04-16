@@ -1,4 +1,6 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+import json
+import pandas as pd
 import streamlit as st
 import polars as pl
 
@@ -327,6 +329,8 @@ def create():
             prefix = '```\nGroup ID,Relatedness,Explanation\n'
             placeholder = st.empty()
             gen_placeholder = st.empty()
+            get_current_time = pd.Timestamp.now().strftime('%Y%m%d%H%M%S')
+
             if generate:
                 for messages in batch_messages:
                     response = util.AI_API.generate_text_from_message_list(messages, placeholder, prefix=prefix)
@@ -334,6 +338,10 @@ def create():
                         prefix = prefix + response + '\n'
                 result = prefix.replace('```\n', '').strip()
                 sv.matching_evaluations.value = pl.read_csv(io.StringIO(result))
+
+                validation, messages_to_llm = util.ui_components.validate_ai_report(messages, sv.matching_evaluations.value)
+                sv.matching_report_validation.value = json.loads(validation)
+                sv.matching_report_validation_messages.value = messages_to_llm
                 st.rerun()
             else:
                 if len(sv.matching_evaluations.value) == 0:
@@ -343,3 +351,16 @@ def create():
                 st.dataframe(sv.matching_evaluations.value.to_pandas(), height=700, use_container_width=True, hide_index=True)
                 jdf = sv.matching_matches_df.value.join(sv.matching_evaluations.value, on='Group ID', how='inner')
                 st.download_button('Download AI match report', data=jdf.write_csv(), file_name='record_groups_evaluated.csv', mime='text/csv')
+
+                if sv.matching_report_validation.value != {}:
+                    validation_status = st.status(label=f"LLM faithfulness score: {sv.matching_report_validation.value['score']}/5", state='complete')
+                    with validation_status:
+                        st.write(sv.matching_report_validation.value['explanation'])
+
+                    if sv_home.mode.value == 'dev':
+                        obj = json.dumps({
+                            "message": sv.matching_report_validation_messages.value,
+                            "result": sv.matching_report_validation.value,
+                            "report": sv.matching_evaluations.value
+                        }, indent=4)
+                        st.download_button('Download validation prompt', use_container_width=True, data=str(obj), file_name=f'matching_{get_current_time}_messages.json', mime='text/json')
