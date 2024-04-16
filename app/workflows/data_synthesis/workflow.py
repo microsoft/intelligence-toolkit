@@ -291,7 +291,7 @@ def create():
                         st.markdown(f'##### Configure time series chart')    
                         time_options = ['']+list(sdf.columns.values)
                         time_attribute = st.selectbox('Time attribute', options=time_options, index=time_options.index(chart_individual_configuration['time_attribute']))
-                        series_attributes = st.multiselect('Series attributes', options=list(sdf.columns.values), values=chart_individual_configuration['series_attributes'])
+                        series_attributes = st.multiselect('Series attributes', options=list(sdf.columns.values), default=chart_individual_configuration['series_attributes'])
                         chart_individual_configuration['time_attribute'] = time_attribute
                         chart_individual_configuration['series_attributes'] = series_attributes
                         

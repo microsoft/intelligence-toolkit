@@ -1,5 +1,5 @@
 # Intelligence Toolkit
-The Intelligence Toolkit is a suite of interactive workflows for creating AI intelligence reports from real-world data sources. The toolkit is designed to help users identify patterns, answers, relationships, and risks within complex datasets, with generative AI ([OpenAI GPT models](https://platform.openai.com/docs/models/)) used to create reports on findings of interest.
+The Intelligence Toolkit is a suite of interactive workflows for creating AI intelligence reports from real-world data sources. The toolkit is designed to help users identify patterns, answers, relationships, and risks within complex datasets, with generative AI ([OpenAI models](https://platform.openai.com/docs/models/)) used to create reports on findings of interest.
 
 # Developing 
 
@@ -31,12 +31,23 @@ Open /venv/bin/activate, add the following lines at the end of the file:
 ```
     # set environment variables
     export OPENAI_API_KEY=<OPENAI_API_KEY>
+
+    # if Azure OpenAI, include the following information too:
+    export OPENAI_TYPE=AZURE
+    export AZURE_OPENAI_VERSION=2023-12-01-preview
+    export AZURE_OPENAI_ENDPOINT="https://<ENDPOINT>.azure.com/"
 ```
 
 ### Windows:
 Open venv/Scripts/Activate.ps1, add the following lines after line 167:
 ```
     $env:OPENAI_API_KEY="<OPENAI_API_KEY>"
+
+    # if Azure OpenAI, include the following information too:
+
+    $env:OPENAI_TYPE="AZURE"
+    $env:AZURE_OPENAI_VERSION="2023-12-01-preview"
+    $env:AZURE_OPENAI_ENDPOINT="https://<ENDPOINT>.openai.azure.com/"
 ``` 
 
 ### Running
