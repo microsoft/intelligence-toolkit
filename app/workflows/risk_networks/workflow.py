@@ -531,9 +531,9 @@ def create():
                                         node.title = rec[1] + '\n' + node.title.split('\n')[1]
 
                                 for rec in sv.network_attributes_renamed.value:
-                                    if rec[0] in node.label:
-                                        node.label = rec[1] + '\n' + node.label.split('\n')[1]
-                                        node.title = rec[1] + '\n' + node.title.split('\n')[1]
+                                    if rec[0].split('==')[1] in node.label:
+                                        node.label = rec[1].split('==')[1] + '\n' + node.label.split('\n')[1]
+                                        node.title = rec[1].split('==')[1] + '\n' + node.title.split('\n')[1]
                                 new_nodes.append(node)
                         else:
                             new_nodes = nodes
