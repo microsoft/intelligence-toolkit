@@ -89,8 +89,13 @@ def create():
                                     attribute_label = value_col
                                 # remove punctuation but retain characters and digits in any language
                                 # compress whitespace to single space
-                                for index, row in df.iterrows():
-                                    df.at[index, entity_col] = f'Entity_{index}'
+                                if sv_home.protected_mode.value:
+                                    for index, row in df.iterrows():
+                                        df.at[index, entity_col] = f'Entity_{index}'
+                                else:
+                                    df[entity_col] = df[entity_col].apply(lambda x : re.sub(r'[^\w\s&@\+]', '', str(x)).strip())
+                                    df[entity_col] = df[entity_col].apply(lambda x : re.sub(r'\s+', ' ', str(x)).strip())
+                                
                                 df[value_col] = df[value_col].apply(lambda x : re.sub(r'[^\w\s&@\+]', '', str(x)).strip())
                                 df[value_col] = df[value_col].apply(lambda x : re.sub(r'\s+', ' ', str(x)).strip())
                                 df[value_col] = df[value_col].apply(lambda x : re.sub(r'\s+', ' ', str(x)).strip())
