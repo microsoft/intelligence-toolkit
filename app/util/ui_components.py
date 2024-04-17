@@ -264,7 +264,6 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
                     st.session_state[f'{workflow}_{val}'] = False
                     processed_df_var.value[val] = values.apply(lambda x: 1 if val in x and val != 'nan' else None)
                     # processed_df_var.value[col][col+'_'+val] = values.apply(lambda x: 1 if val in x and val != 'nan' else None)
-                st.session_state[f'{workflow}_binned_df'] = processed_df_var.value.copy(deep=True)
                 processed_df_var.value.drop(columns=[col], inplace=True)
 
     if selected_cols != st.session_state[f'{workflow}_last_attributes']:
@@ -424,6 +423,8 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
         bdf = st.session_state[f'{workflow}_binned_df']
         for col in processed_df_var.value.columns:
             if col != 'Subject ID':
+                if col not in bdf:
+                    continue
                 value_counts = bdf[col].value_counts()
                 # convert to dict with value as key and count as value
                 value_counts = dict(zip(value_counts.index, value_counts.values))
