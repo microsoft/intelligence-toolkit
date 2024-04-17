@@ -259,8 +259,12 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
                 # add each value as a separate column with a 1 if the value is present in the compound column and None otherwise
                 values = processed_df_var.value[col].apply(lambda x: [y.strip() for y in x.split(delim)] if type(x) == str else [])
                 unique_values = set([v for vals in values for v in vals])
+                unique_values = [x for x in unique_values if x != '']
                 for val in unique_values:
-                    processed_df_var.value[col] [col+'_'+val] = values.apply(lambda x: 1 if val in x and val != 'nan' else None)
+                    st.session_state[f'{workflow}_{val}'] = False
+                    processed_df_var.value[val] = values.apply(lambda x: 1 if val in x and val != 'nan' else None)
+                    # processed_df_var.value[col][col+'_'+val] = values.apply(lambda x: 1 if val in x and val != 'nan' else None)
+                st.session_state[f'{workflow}_binned_df'] = processed_df_var.value.copy(deep=True)
                 processed_df_var.value.drop(columns=[col], inplace=True)
 
     if selected_cols != st.session_state[f'{workflow}_last_attributes']:
@@ -400,8 +404,6 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
             st.session_state[f'{workflow}_selected_trim_percent'] = trim_percent
             st.session_state[f'{workflow}_last_attributes'] = [] # hack to force second rerun and show any changes from binning
             st.rerun() 
-
-
 
     with st.expander('Expand compound values', expanded=False):
         options = [x for x in processed_df_var.value.columns.values if x != 'Subject ID']
