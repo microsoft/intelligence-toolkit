@@ -246,7 +246,8 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
     selected_cols = [col for col in input_df_var.value.columns.values if st.session_state[f'{workflow}_{col}'] == True]
     processed_df_var.value = processed_df_var.value[['Subject ID']].copy()
     for col in selected_cols:
-        processed_df_var.value[col] = st.session_state[f'{workflow}_binned_df'][col]
+        if col in st.session_state[f'{workflow}_binned_df'].columns.values:
+            processed_df_var.value[col] = st.session_state[f'{workflow}_binned_df'][col]
     
     if selected_cols != st.session_state[f'{workflow}_last_attributes']:
         processed_df_var.value = util.df_functions.fix_null_ints(processed_df_var.value)
@@ -386,6 +387,25 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
             st.session_state[f'{workflow}_last_attributes'] = [] # hack to force second rerun and show any changes from binning
             st.rerun() 
 
+    with st.expander('Expand compound values', expanded=False):
+        options = [x for x in processed_df_var.value.columns.values if x != 'Subject ID']
+        selected_compound_cols = st.multiselect('Select compound columns to expand', options, help='Select the columns you want to expand into separate columns. If you do not select any columns, no expansion will be performed.')
+        col_delimiter = st.text_input('Column delimiter', value='', help='The character used to separate values in compound columns. If the delimiter is not present in a cell, the cell will be left unchanged.')
+        if st.button('Expand selected columns', key='expand_compound'):
+            bdf = st.session_state[f'{workflow}_binned_df']
+            for col in selected_compound_cols:
+                if col_delimiter != '':
+                    # add each value as a separate column with a 1 if the value is present in the compound column and None otherwise
+                    values = processed_df_var.value[col].apply(lambda x: [y.strip() for y in x.split(col_delimiter)] if type(x) == str else [])
+                    unique_values = set([v for vals in values for v in vals])
+                    for val in unique_values:
+                        bdf[col+'_'+val] = values.apply(lambda x: 1 if val in x else None)
+                        processed_df_var.value[col+'_'+val] = bdf[col+'_'+val]
+                    bdf.drop(columns=[col], inplace=True)
+                    processed_df_var.value.drop(columns=[col], inplace=True)
+            st.rerun()
+
+
     with st.expander('Suppress insignificant attribute values', expanded=False):
         if f'{workflow}_min_count' not in st.session_state.keys():
             st.session_state[f'{workflow}_min_count'] = 0
@@ -400,13 +420,19 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
 
                 # remove any values that are less than the minimum count
                 if bdf[col].dtype == 'str':
+                    print(f'Processing {col} as string')
                     bdf[col] = bdf[col].apply(lambda x: '' if x in value_counts and value_counts[x] < min_value else str(x))
                 elif bdf[col].dtype == 'float64':
+                    print(f'Processing {col} as float')
                     bdf[col] = bdf[col].apply(lambda x: np.nan if x in value_counts and value_counts[x] < min_value else x)
                 elif bdf[col].dtype == 'int64':
+                    print(f'Processing {col} as int')
                     bdf[col] = bdf[col].apply(lambda x: -sys.maxsize if x in value_counts and value_counts[x] < min_value else x)
                     bdf[col] = bdf[col].astype('Int64')
                     bdf[col] = bdf[col].replace(-sys.maxsize, np.nan)
+                else:
+                    print(f'Processing {col} as string')
+                    bdf[col] = bdf[col].apply(lambda x: '' if x in value_counts and value_counts[x] < min_value else str(x))
 
         if f'{workflow}_suppress_zeros' not in st.session_state.keys():
             st.session_state[f'{workflow}_suppress_zeros'] = False
