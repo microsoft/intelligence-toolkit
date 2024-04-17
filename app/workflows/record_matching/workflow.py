@@ -341,7 +341,8 @@ def create():
                     for i, name in enumerate(unique_names, start=1):
                         result = result.replace(name, 'Entity_{}'.format(i))
 
-                sv.matching_evaluations.value = pl.read_csv(io.StringIO(result), read_csv_options={"truncate_ragged_lines": True})
+                csv = pl.read_csv(io.StringIO(result))
+                sv.matching_evaluations.value = csv.drop_nulls()
 
                 validation, messages_to_llm = util.ui_components.validate_ai_report(messages, sv.matching_evaluations.value)
                 sv.matching_report_validation.value = json.loads(validation)
@@ -366,6 +367,6 @@ def create():
                         obj = json.dumps({
                             "message": sv.matching_report_validation_messages.value,
                             "result": sv.matching_report_validation.value,
-                            "report": sv.matching_evaluations.value
+                            "report": pd.DataFrame(sv.matching_evaluations.value).to_json()
                         }, indent=4)
                         st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'matching_{get_current_time}_messages.json', mime='text/json')
