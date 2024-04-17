@@ -144,6 +144,8 @@ def create():
                     name_similarity = st.number_input('Matching name similarity (min)', min_value=0.0, max_value=1.0, step=0.01, value=sv.matching_sentence_pair_jaccard_threshold.value, help='The minimum Jaccard similarity between the character trigrams of the names of two records for them to be considered a match. Higher values will result in fewer closer name matches.')
 
                 if st.button('Detect record groups', use_container_width=True):
+                    sv.matching_evaluations.value = pl.DataFrame()
+                    sv.matching_report_validation.value = {}
                     if record_distance != sv.matching_sentence_pair_embedding_threshold.value:
                         sv.matching_sentence_pair_embedding_threshold.value = record_distance
                     if name_similarity != sv.matching_sentence_pair_jaccard_threshold.value:
@@ -296,24 +298,21 @@ def create():
                         sv.matching_matches_df.value = sv.matching_matches_df.value.sort(by=['Name similarity', 'Group ID'], descending=[False, False])
                         # # keep all records linked to a group ID if any record linked to that ID has dataset GD or ILM
                         # sv.matching_matches_df.value = sv.matching_matches_df.value.filter(pl.col('Group ID').is_in(sv.matching_matches_df.value.filter(pl.col('Dataset').is_in(['GD', 'ILM']))['Group ID'].unique()))
-                        data = sv.matching_matches_df.value
-                        unique_names = data['Entity name'].unique()
-                        #verify if the names are already in this format: Entity_1, Entity_2, etc
-                        pattern = f'^Entity_\d+$'
-                        matches = unique_names.str.contains(pattern)
-                        all_matches = matches.all()
-                        if not all_matches and sv_home.protected_mode.value:
-                            for i, name in enumerate(unique_names, start=1):
-                                data = data.with_columns(data['Entity name'].replace(name, 'Entity_{}'.format(i)))
-                                sv.matching_matches_df.value = data
+                        
                         st.rerun()
                 if len(sv.matching_matches_df.value) > 0:
                     st.markdown(f'Identified **{len(sv.matching_matches_df.value)}** record groups.')
             with c2:
+                data = sv.matching_matches_df.value
                 st.markdown('##### Record groups')
                 if len(sv.matching_matches_df.value) > 0:
-                    st.dataframe(sv.matching_matches_df.value, height=700, use_container_width=True, hide_index=True)
-                    st.download_button('Download record groups', data=sv.matching_matches_df.value.write_csv(), file_name='record_groups.csv', mime='text/csv')
+                    if sv_home.protected_mode.value:
+                        unique_names = sv.matching_matches_df.value['Entity name'].unique()
+                        for i, name in enumerate(unique_names, start=1):
+                            data = data.with_columns(data['Entity name'].replace(name, 'Entity_{}'.format(i)))
+
+                    st.dataframe(data, height=700, use_container_width=True, hide_index=True)
+                    st.download_button('Download record groups', data=data.write_csv(), file_name='record_groups.csv', mime='text/csv')
                            
     with evaluate_tab:
         b1, b2 = st.columns([2, 3])
@@ -336,10 +335,23 @@ def create():
                     response = util.AI_API.generate_text_from_message_list(messages, placeholder, prefix=prefix)
                     if len(response.strip()) > 0:
                         prefix = prefix + response + '\n'
-                result = prefix.replace('```\n', '').strip()
-                sv.matching_evaluations.value = pl.read_csv(io.StringIO(result), read_csv_options={"truncate_ragged_lines": True})
 
-                validation, messages_to_llm = util.ui_components.validate_ai_report(messages, sv.matching_evaluations.value)
+                result = prefix.replace('```\n', '').strip()
+
+                if sv_home.protected_mode.value:
+                    unique_names = sv.matching_matches_df.value['Entity name'].unique()
+                    for i, name in enumerate(unique_names, start=1):
+                        result = result.replace(name, 'Entity_{}'.format(i))
+
+                csv = pl.read_csv(io.StringIO(result))
+                sv.matching_evaluations.value = csv.drop_nulls()
+
+                #get 30 random dows to evaluate
+                data_to_validate = sv.matching_evaluations.value
+                if len(sv.matching_evaluations.value) > 30:
+                    data_to_validate = sv.matching_evaluations.value.sample(n=30)
+
+                validation, messages_to_llm = util.ui_components.validate_ai_report(messages, data_to_validate)
                 sv.matching_report_validation.value = json.loads(validation)
                 sv.matching_report_validation_messages.value = messages_to_llm
                 st.rerun()
@@ -347,6 +359,7 @@ def create():
                 if len(sv.matching_evaluations.value) == 0:
                     gen_placeholder.warning('Press the Generate button to create an AI report for the current record matches.')
             placeholder.empty()
+
             if len(sv.matching_evaluations.value) > 0:
                 st.dataframe(sv.matching_evaluations.value.to_pandas(), height=700, use_container_width=True, hide_index=True)
                 jdf = sv.matching_matches_df.value.join(sv.matching_evaluations.value, on='Group ID', how='inner')
@@ -361,6 +374,6 @@ def create():
                         obj = json.dumps({
                             "message": sv.matching_report_validation_messages.value,
                             "result": sv.matching_report_validation.value,
-                            "report": sv.matching_evaluations.value
+                            "report": pd.DataFrame(sv.matching_evaluations.value).to_json()
                         }, indent=4)
                         st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'matching_{get_current_time}_messages.json', mime='text/json')
