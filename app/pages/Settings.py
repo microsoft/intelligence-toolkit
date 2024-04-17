@@ -50,7 +50,7 @@ def main():
     st.markdown("Select the OpenAI type you want to use.")
     types = ["OpenAI", "Azure OpenAI"]
     index = types.index(openai.get_openai_type()) if openai.get_openai_type() in types else 0
-    type_input = st.radio("OpenAI Type", types, index=index)
+    type_input = st.radio("OpenAI Type", types, index=index, disabled=is_mode_cloud)
     type = openai.get_openai_type()
     if type != type_input:
         on_change(secrets_handler, openai_type_key, type_input)()
@@ -59,13 +59,13 @@ def main():
     if type_input == "Azure OpenAI":
         col1, col2 = st.columns(2)
         with col1:
-            endpoint = st.text_input("Azure OpenAI Endpoint", type="password", value=openai.get_azure_openai_endpoint())
+            endpoint = st.text_input("Azure OpenAI Endpoint", disabled=is_mode_cloud, type="password", value=openai.get_azure_openai_endpoint())
             if endpoint != openai.get_azure_openai_endpoint():
                 on_change(secrets_handler, openai_endpoint_key, endpoint)()
                 st.rerun()
                 
         with col2:
-            version = st.text_input("Azure OpenAI Version", value=openai.get_azure_openai_version())
+            version = st.text_input("Azure OpenAI Version", disabled=is_mode_cloud, value=openai.get_azure_openai_version())
             if version != openai.get_azure_openai_version():
                 on_change(secrets_handler, openai_version_key, version)()
                 st.rerun()
