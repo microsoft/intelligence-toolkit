@@ -346,7 +346,12 @@ def create():
                 csv = pl.read_csv(io.StringIO(result))
                 sv.matching_evaluations.value = csv.drop_nulls()
 
-                validation, messages_to_llm = util.ui_components.validate_ai_report(messages, sv.matching_evaluations.value)
+                #get 30 random dows to evaluate
+                data_to_validate = sv.matching_evaluations.value
+                if len(sv.matching_evaluations.value) > 30:
+                    data_to_validate = sv.matching_evaluations.value.sample(n=30)
+
+                validation, messages_to_llm = util.ui_components.validate_ai_report(messages, data_to_validate)
                 sv.matching_report_validation.value = json.loads(validation)
                 sv.matching_report_validation_messages.value = messages_to_llm
                 st.rerun()
