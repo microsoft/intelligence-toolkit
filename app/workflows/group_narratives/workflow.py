@@ -48,7 +48,7 @@ def create():
                 groups = st.multiselect('Compare groups of records with different combinations of these attributes:', sorted_cols, default=sv.narrative_groups.value)
                 aggregates = st.multiselect('Using counts of these attributes:', sorted_cols, default=sv.narrative_aggregates.value)
                 temporal_options = [''] + sorted_cols
-                temporal = st.selectbox('Across levels of this temporal/ordinal attribute (optional):', temporal_options, index=temporal_options.index(sv.narrative_temporal.value))
+                temporal = st.selectbox('Across windows of this temporal/ordinal attribute (optional):', temporal_options, index=temporal_options.index(sv.narrative_temporal.value))
 
                 model = st.button('Create summary', disabled=len(groups) == 0 or len(aggregates) == 0)
             
@@ -79,12 +79,13 @@ def create():
                     # narrow df for model
                     id_vars = groups + [temporal] if temporal != '' else groups
                     ndf = wdf.melt(id_vars=id_vars, value_vars=aggregates, var_name='Attribute', value_name='Value')
-                    ndf['Attribute Value'] = str(ndf['Attribute']) + ':' + str(ndf['Value'])
-
+                    ndf.dropna(subset=['Value'], inplace=True)
+                    ndf['Attribute Value'] = ndf.apply(lambda x : str(x['Attribute']) +  ':' + str(x['Value']), axis=1)
                     temporal_atts = []
                     
                     # create group df
                     gdf = wdf.melt(id_vars=groups, value_vars=['Subject ID'], var_name='Attribute', value_name='Value')
+                    
                     gdf['Attribute Value'] = gdf['Attribute'] + ':' + gdf['Value']
                     gdf = gdf.groupby(groups).size().reset_index(name='Group Count')
                     # Add group ranks
@@ -234,4 +235,4 @@ def create():
                             "result": sv.narrative_report_validation.value,
                             "report": sv.narrative_report.value
                         }, indent=4)
-                        st.download_button('Download validation prompt', use_container_width=True, data=str(obj), file_name=f'narrative_{get_current_time}_messages.json', mime='text/json')
+                        st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'narrative_{get_current_time}_messages.json', mime='text/json')

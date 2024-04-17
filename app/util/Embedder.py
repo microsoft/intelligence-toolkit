@@ -56,7 +56,7 @@ class Embedder:
                 hsh = hash(text)
                 list_all_embeddings.append((hsh, embeddings[j]))
                 final_embeddings[ix] = np.array(embeddings[j])
-            self.connection.insert_multiple_into_embeddings(list_all_embeddings) 
+            # self.connection.insert_multiple_into_embeddings(list_all_embeddings) 
         pb.empty()
         return np.array(final_embeddings)
 
