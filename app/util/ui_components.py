@@ -262,7 +262,7 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
                 unique_values = [x for x in unique_values if x != '']
                 for val in unique_values:
                     st.session_state[f'{workflow}_{val}'] = False
-                    processed_df_var.value[val] = values.apply(lambda x: 1 if val in x and val != 'nan' else None)
+                    processed_df_var.value[val] = values.apply(lambda x: 1 if val in x and val != 'nan' else '')
                     # processed_df_var.value[col][col+'_'+val] = values.apply(lambda x: 1 if val in x and val != 'nan' else None)
                 processed_df_var.value.drop(columns=[col], inplace=True)
 
