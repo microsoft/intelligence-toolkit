@@ -1,5 +1,6 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import json
+import numpy as np
 import streamlit as st
 import pandas as pd
 import networkx as nx
@@ -7,6 +8,7 @@ import networkx as nx
 from collections import defaultdict
 from sklearn.neighbors import NearestNeighbors
 from util.session_variables import SessionVariables
+from streamlit_agraph import agraph
 
 import re
 import os
@@ -85,20 +87,17 @@ def create():
                     if st.button("Add links to model", disabled=entity_col == '' or attribute_col == '' or len(value_cols) == 0 or link_type == ''):
                         with st.spinner('Adding links to model...'):
                             for value_col in value_cols:
-                                if attribute_col == 'Use column name':
-                                    attribute_label = value_col
                                 # remove punctuation but retain characters and digits in any language
                                 # compress whitespace to single space
-                                if sv_home.protected_mode.value:
-                                    for index, row in df.iterrows():
-                                        df.at[index, entity_col] = f'Entity_{index}'
-                                else:
-                                    df[entity_col] = df[entity_col].apply(lambda x : re.sub(r'[^\w\s&@\+]', '', str(x)).strip())
-                                    df[entity_col] = df[entity_col].apply(lambda x : re.sub(r'\s+', ' ', str(x)).strip())
-                                
+                                df[entity_col] = df[entity_col].apply(lambda x : re.sub(r'[^\w\s&@\+]', '', str(x)).strip())
+                                df[entity_col] = df[entity_col].apply(lambda x : re.sub(r'\s+', ' ', str(x)).strip())
                                 df[value_col] = df[value_col].apply(lambda x : re.sub(r'[^\w\s&@\+]', '', str(x)).strip())
                                 df[value_col] = df[value_col].apply(lambda x : re.sub(r'\s+', ' ', str(x)).strip())
                                 df[value_col] = df[value_col].apply(lambda x : re.sub(r'\s+', ' ', str(x)).strip())
+
+                                if attribute_col == 'Use column name':
+                                    attribute_label = value_col
+
                                 if link_type == 'Entity-Attribute':
                                     if attribute_col in ['Use column name', 'Use custom name']:
                                         df['attribute_col'] = attribute_label
@@ -254,6 +253,14 @@ def create():
             search = st.text_input('Search for attributes to remove', '')
             if search != '':
                 adf = adf[adf['Attribute'].str.contains(search, case=False)]
+
+            if sv_home.protected_mode.value:
+                unique_names = adf['Attribute'].unique()
+                for i, name in enumerate(unique_names, start=1):
+                    #get first part of == and remove any whitespace
+                    name_format = name.split('==')[0].strip()
+                    adf['Attribute'] = adf['Attribute'].apply(lambda x: f'{name_format}=={name_format}_{str(i)}' if name == x else x)
+                sv.network_attributes_protected.value = [(unique_names),(adf['Attribute'].tolist())]
             selected_rows = util.ui_components.dataframe_with_selections(adf, sv.network_additional_trimmed_attributes.value, 'Attribute', 'Remove', key='remove_attribute_table')
             sv.network_additional_trimmed_attributes.value = selected_rows['Attribute'].tolist()
             c1, c2, c3 = st.columns([1, 1, 1])
@@ -329,10 +336,18 @@ def create():
                 trimmed_atts = len(sv.network_trimmed_attributes.value)
                 st.markdown(f'*Networks identified: {comm_count} ({len(comm_sizes)} with multiple entities, maximum {max_comm_size})*')
                 st.markdown(f'*Attributes removed because of high degree*: {trimmed_atts}')
+                
+                if sv_home.protected_mode.value:
+                    adf = pd.DataFrame(sv.network_attributes_list.value, columns=['Attribute'])
+                    data = sv.network_trimmed_attributes.value.copy()
+                    unique_names = adf['Attribute'].unique()
+                    for i, name in enumerate(unique_names, start=1):
+                        name_format = name.split('==')[0].strip()
+                        data['Attribute'] = data['Attribute'].apply(lambda x: f'{name_format}=={name_format}_{str(i)}' if name == x else x)
+                else:
+                    data = sv.network_trimmed_attributes.value
                 if trimmed_atts > 0:
-                    st.dataframe(sv.network_trimmed_attributes.value, hide_index=True, use_container_width=True)
-
-
+                    st.dataframe(data, hide_index=True, use_container_width=True)
             
     with view_tab:
         if len(sv.network_entity_df.value) == 0:
@@ -346,8 +361,14 @@ def create():
                     show_groups = st.checkbox('Show groups', value = sv.network_last_show_groups.value)
                 with b3:
                     dl_button = st.empty()
-                show_df = sv.network_entity_df.value.copy()
-                
+
+                if sv_home.protected_mode.value:
+                    show_df = sv.network_entity_df.value.copy()
+                    for i, name in enumerate(show_df['Entity ID'], start=1):
+                        show_df['Entity ID'] = show_df['Entity ID'].apply(lambda x: f'Entity ID_{str(i)}' if name == x else x)
+                else:
+                    show_df = sv.network_entity_df.value.copy()
+                    
                 if show_groups != sv.network_last_show_groups.value:
                     sv.network_last_show_groups.value = show_groups
                     sv.network_table_index.value += 1
@@ -363,16 +384,17 @@ def create():
                         # Use group values as columns with values in them
                         df = df.pivot_table(index='Entity ID', columns='Group', values='Value', aggfunc='first').reset_index()
                         show_df = show_df.merge(df, on='Entity ID', how='left')
+                last_df = show_df.copy()
                 if not show_entities:
-                    show_df = show_df.drop(columns=['Entity ID', 'Entity Flags']).drop_duplicates().reset_index(drop=True)
-                dl_button.download_button('Download network data', show_df.to_csv(index=False), 'network_data.csv', 'Download network data')
-                gb = GridOptionsBuilder.from_dataframe(show_df)
+                    last_df = last_df.drop(columns=['Entity ID', 'Entity Flags']).drop_duplicates().reset_index(drop=True)
+                dl_button.download_button('Download network data', last_df.to_csv(index=False), 'network_data.csv', 'Download network data')
+                gb = GridOptionsBuilder.from_dataframe(last_df)
                 gb.configure_default_column(flex=1, wrapText=True, wrapHeaderText=True, enablePivot=False, enableValue=False, enableRowGroup=False)
                 gb.configure_selection(selection_mode="single", use_checkbox=False)
                 gb.configure_side_bar()
                 gridoptions = gb.build()
                 response = AgGrid(
-                    show_df,
+                    last_df,
                     key=f'report_grid_{sv.network_table_index.value}',
                     height=400,
                     gridOptions=gridoptions,
@@ -383,7 +405,7 @@ def create():
                     header_checkbox_selection_filtered_only=False,
                     use_checkbox=False,
                     enable_quicksearch=True,
-                    reload_data=False,
+                    reload_data=True,
                     columns_auto_size_mode=ColumnsAutoSizeMode.FIT_ALL_COLUMNS_TO_VIEW
                     )
            
@@ -466,13 +488,63 @@ def create():
                             gp.markdown(f'##### Entity {selected_entity} in Network {selected_network} (full)')
                         else:
                             gp.markdown(f'##### Network {selected_network} (full)')
-                        functions.get_entity_graph(N, f'{config.entity_label}{config.att_val_sep}{selected_entity}', full_links_df, 1000, 700, [config.entity_label] + list(sv.network_node_types.value))
+
+                        nodes, edges, g_config = functions.get_entity_graph(N, f'{config.entity_label}{config.att_val_sep}{selected_entity}', full_links_df, 1000, 700, [config.entity_label] + list(sv.network_node_types.value))
+                        if sv_home.protected_mode.value:
+                            new_nodes = []
+                            all_nodes = set(full_links_df["source"]).union(set(full_links_df["target"]))
+                            original = sv.network_attributes_protected.value[0]
+                            new = sv.network_attributes_protected.value[1]
+                            entities_new = sv.network_entity_df.value.copy()
+
+                            for node in nodes:
+                                sources = full_links_df["source"].tolist()
+                                targets = full_links_df["target"].tolist()
+
+                                for li in sources:
+                                    lia = li.split('==')
+                                    if lia[1] in node.label:
+                                        raw_label = '('+node.label.split('(')[1]
+                                        found_indices = [index for index, x in enumerate(original) if lia[1] in x]
+                                        if len(found_indices) == 0:
+                                            found_indices = [index for index, x in enumerate(entities_new['Entity ID'].tolist()) if lia[1] in x]
+                                            if len(found_indices) > 0:
+                                                node.label = show_df['Entity ID'].tolist()[found_indices[0]]+'\n'+raw_label
+                                                flags = node.title.split('\n')[1]
+                                                node.title = show_df['Entity ID'].tolist()[found_indices[0]]+'\n'+flags
+                                        elif len(found_indices) > 0:
+                                            node.label = new[found_indices[0]]+'\n'+raw_label
+                                            flags = node.title.split('\n')[1]
+                                            node.title = new[found_indices[0]]+'\n'+flags
+                                        new_nodes.append(node)
+
+                                for li in targets:
+                                    lia = li.split('==')
+                                    if lia[1] in node.label:
+                                        raw_label = '('+node.label.split('(')[1]
+                                        found_indices = [index for index, x in enumerate(original) if lia[1] in x]
+                                        if len(found_indices) == 0:
+                                            found_indices = [index for index, x in enumerate(entities_new['Entity ID'].tolist()) if lia[1] in x]
+                                            if len(found_indices) > 0:
+                                                node.label = show_df['Entity ID'].tolist()[found_indices[0]]+'\n'+raw_label
+                                                flags = node.title.split('\n')[1]
+                                                node.title = show_df['Entity ID'].tolist()[found_indices[0]]+'\n'+flags
+                                        elif len(found_indices) > 0:
+                                                node.label = new[found_indices[0]]+'\n'+raw_label
+                                                flags = node.title.split('\n')[1]
+                                                node.title = new[found_indices[0]]+'\n'+flags
+                                        new_nodes.append(node)
+                        else:
+                            new_nodes = nodes
+
+                        agraph(nodes=new_nodes, edges=edges, config=g_config) # type: ignore
                     elif graph_type == 'Simplified':
                         if selected_entity != '':
                             gp.markdown(f'##### Entity {selected_entity} in Network {selected_network} (simplified)')
                         else:
                             gp.markdown(f'##### Network {selected_network} (simplified)')
-                        functions.get_entity_graph(N1, f'{config.entity_label}{config.att_val_sep}{selected_entity}', merged_links_df, 1000, 700, [config.entity_label] + list(sv.network_node_types.value))
+                        nodes, edges, g_config =  functions.get_entity_graph(N1, f'{config.entity_label}{config.att_val_sep}{selected_entity}', merged_links_df, 1000, 700, [config.entity_label] + list(sv.network_node_types.value))
+                        agraph(nodes=nodes, edges=edges, config=g_config) # type: ignore
                 sv.network_merged_links_df.value = merged_links_df
                 sv.network_merged_nodes_df.value = merged_nodes_df
             else:
@@ -525,11 +597,12 @@ def create():
                     if len(sv.network_report.value) == 0:
                         gen_placeholder.warning('Press the Generate button to create an AI report for the current network.')
                 report_data = sv.network_report.value
+
                 report_placeholder.markdown(report_data)
 
                 util.ui_components.report_download_ui(sv.network_report, 'network_report')
 
-                if sv.network_report_validation.value != {}:
+                if sv.network_report_validation.value != {} and len(sv.network_report.value) > 0:
                         if generated:
                             validation_status.update(label=f"LLM faithfulness score: {sv.network_report_validation.value['score']}/5", state='complete')
                         else:

@@ -4,7 +4,7 @@ import networkx as nx
 import colorsys
 import numpy as np
 from collections import defaultdict
-from streamlit_agraph import Config, Edge, Node, agraph
+from streamlit_agraph import Config, Edge, Node
 
 import workflows.risk_networks.config as config
 
@@ -61,6 +61,7 @@ def get_entity_graph(G, selected, links_df, width, height, attribute_types):
             comm = G.nodes[node]['network'] if 'network' in G.nodes[node] else ''
             label = '\n'.join(vals) + '\n(' + config.list_sep.join(atts) + ')'
             d_risk = G.nodes[node]['flags']
+
             nodes.append(
                 Node(
                     title=node + f'\nFlags: {d_risk}',
@@ -82,8 +83,7 @@ def get_entity_graph(G, selected, links_df, width, height, attribute_types):
         physics=True,
         hierarchical=False
     )
-    return_value = agraph(nodes=nodes, edges=edges, config=g_config) # type: ignore
-    return return_value
+    return nodes, edges, g_config # type: ignore
 
 def merge_nodes(G, can_merge_fn):
     nodes = list(G.nodes()) # may change during iteration
