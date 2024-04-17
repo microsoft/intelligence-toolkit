@@ -416,6 +416,7 @@ def create():
                 sv.network_selected_entity.value = selected_entity
                 sv.network_selected_community.value = selected_network
                 sv.network_report.value = ''
+                sv.network_report_validation.value = {}
                 c_nodes = sv.network_community_nodes.value[selected_network]
                 N = functions.build_network_from_entities(sv, sv.network_overall_graph.value, c_nodes)
                 if selected_entity != '':
@@ -602,7 +603,7 @@ def create():
 
                 util.ui_components.report_download_ui(sv.network_report, 'network_report')
 
-                if sv.network_report_validation.value != {} and len(sv.network_report.value) > 0:
+                if sv.network_report_validation.value != {}:
                         if generated:
                             validation_status.update(label=f"LLM faithfulness score: {sv.network_report_validation.value['score']}/5", state='complete')
                         else:

@@ -145,6 +145,7 @@ def create():
 
                 if st.button('Detect record groups', use_container_width=True):
                     sv.matching_evaluations.value = pl.DataFrame()
+                    sv.matching_report_validation.value = {}
                     if record_distance != sv.matching_sentence_pair_embedding_threshold.value:
                         sv.matching_sentence_pair_embedding_threshold.value = record_distance
                     if name_similarity != sv.matching_sentence_pair_jaccard_threshold.value:

@@ -64,6 +64,7 @@ def create():
             sv.answering_next_q_id.value = 1
             sv.answering_surface_questions.value = {}
             sv.answering_deeper_questions.value = {}
+            sv.answering_report_validation.value = {}
             sv.answering_target_matches.value = answering_target_matches
             sv.answering_source_diversity.value = answering_source_diversity
             sv.answering_last_lazy_question.value = question

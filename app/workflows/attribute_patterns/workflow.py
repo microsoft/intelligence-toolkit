@@ -132,6 +132,7 @@ def create():
                         sv.attribute_selected_pattern.value = selected_pattern
                         sv.attribute_selected_pattern_period.value = selected_pattern_period
                         sv.attribute_report.value = ''
+                        sv.attribute_report_validation.value = {}
                         st.rerun()
 
                     st.markdown('**Selected pattern: ' + selected_pattern + ' (' + selected_pattern_period + ')**')
