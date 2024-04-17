@@ -541,7 +541,10 @@ def create():
                         agraph(nodes=new_nodes, edges=edges, config=g_config) # type: ignore
                     elif graph_type == 'Simplified':
                         if selected_entity != '':
-                            gp.markdown(f'##### Entity {selected_entity} in Network {selected_network} (simplified)')
+                            if sv_home.protected_mode.value:
+                                gp.markdown(f'##### Entity {renamed_selected_entity} in Network {selected_network} (simplified)')
+                            else:
+                                gp.markdown(f'##### Entity {selected_entity} in Network {selected_network} (simplified)')
                         else:
                             gp.markdown(f'##### Network {selected_network} (simplified)')
                         nodes, edges, g_config = functions.get_entity_graph(N1, f'{config.entity_label}{config.att_val_sep}{selected_entity}', merged_links_df, 1000, 700, [config.entity_label] + list(sv.network_node_types.value))
