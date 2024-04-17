@@ -512,9 +512,12 @@ def create():
                 with gp:
                     if graph_type == 'Full':
                         if selected_entity != '':
-                            gp.markdown(f'##### Entity {renamed_selected_entity} in Network {selected_network} (full)')
+                            if sv_home.protected_mode.value:
+                                gp.markdown(f'##### Entity {renamed_selected_entity} in Network {selected_network} (full)')
+                            else:
+                                gp.markdown(f'##### Entity {selected_entity} in Network {selected_network} (full)')
                         else:
-                            gp.markdown(f'##### Network {renamed_selected_entity} (full)')
+                            gp.markdown(f'##### Network {selected_network} (full)')
 
                         nodes, edges, g_config = functions.get_entity_graph(N, f'{config.entity_label}{config.att_val_sep}{selected_entity}', full_links_df, 1000, 700, [config.entity_label] + list(sv.network_node_types.value))
                         if sv_home.protected_mode.value:
@@ -531,39 +534,7 @@ def create():
                                     if rec[0] in node.label:
                                         node.label = rec[1] + '\n' + node.label.split('\n')[1]
                                         node.title = rec[1] + '\n' + node.title.split('\n')[1]
-                                # for li in sources:
-                                #     lia = li.split('==')
-                                #     if lia[1] in node.label:
-                                #         raw_label = '('+node.label.split('(')[1]
-                                #         found_indices = [index for index, x in enumerate(original) if lia[1] in x]
-                                #         if len(found_indices) == 0:
-                                #             found_indices = [index for index, x in enumerate(entities_new['Entity ID'].tolist()) if lia[1] in x]
-                                #             if len(found_indices) > 0:
-                                #                 node.label = show_df['Entity ID'].tolist()[found_indices[0]]+'\n'+raw_label
-                                #                 flags = node.title.split('\n')[1]
-                                #                 node.title = show_df['Entity ID'].tolist()[found_indices[0]]+'\n'+flags
-                                #         elif len(found_indices) > 0:
-                                #             node.label = new[found_indices[0]]+'\n'+raw_label
-                                #             flags = node.title.split('\n')[1]
-                                #             node.title = new[found_indices[0]]+'\n'+flags
                                 new_nodes.append(node)
-
-                        #         for li in targets:
-                        #             lia = li.split('==')
-                        #             if lia[1] in node.label:
-                        #                 raw_label = '('+node.label.split('(')[1]
-                        #                 found_indices = [index for index, x in enumerate(original) if lia[1] in x]
-                        #                 if len(found_indices) == 0:
-                        #                     found_indices = [index for index, x in enumerate(entities_new['Entity ID'].tolist()) if lia[1] in x]
-                        #                     if len(found_indices) > 0:
-                        #                         node.label = show_df['Entity ID'].tolist()[found_indices[0]]+'\n'+raw_label
-                        #                         flags = node.title.split('\n')[1]
-                        #                         node.title = show_df['Entity ID'].tolist()[found_indices[0]]+'\n'+flags
-                        #                 elif len(found_indices) > 0:
-                        #                         node.label = new[found_indices[0]]+'\n'+raw_label
-                        #                         flags = node.title.split('\n')[1]
-                        #                         node.title = new[found_indices[0]]+'\n'+flags
-                        #                 new_nodes.append(node)
                         else:
                             new_nodes = nodes
 
@@ -574,7 +545,24 @@ def create():
                         else:
                             gp.markdown(f'##### Network {selected_network} (simplified)')
                         nodes, edges, g_config = functions.get_entity_graph(N1, f'{config.entity_label}{config.att_val_sep}{selected_entity}', merged_links_df, 1000, 700, [config.entity_label] + list(sv.network_node_types.value))
-                        agraph(nodes=nodes, edges=edges, config=g_config) # type: ignore
+                        if sv_home.protected_mode.value:
+                            new_nodes = []
+                            all_nodes = set(full_links_df["source"]).union(set(full_links_df["target"]))
+                            for node in nodes:
+
+                                for rec in sv.network_entities_renamed.value:
+                                    if rec[0] in node.label:
+                                        node.label = rec[1] + '\n' + node.label.split('\n')[1]
+                                        node.title = rec[1] + '\n' + node.title.split('\n')[1]
+
+                                for rec in sv.network_attributes_renamed.value:
+                                    if rec[0] in node.label:
+                                        node.label = rec[1] + '\n' + node.label.split('\n')[1]
+                                        node.title = rec[1] + '\n' + node.title.split('\n')[1]
+                                new_nodes.append(node)
+                        else:
+                            new_nodes = nodes
+                        agraph(nodes=new_nodes, edges=edges, config=g_config) # type: ignore
                 sv.network_merged_links_df.value = merged_links_df
                 sv.network_merged_nodes_df.value = merged_nodes_df
             else:
