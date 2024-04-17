@@ -570,7 +570,7 @@ def create():
                 sv.network_merged_nodes_df.value = merged_nodes_df
             else:
                 st.warning('Select column headers to rank networks by that attribute. Use quickfilter or column filters to narrow down the list of networks. Select a network to continue.')
-            
+    
     with report_tab:
         if sv.network_selected_entity.value == '' and sv.network_selected_community.value == '':
             st.warning('Select a network or entity to continue.')
@@ -630,7 +630,8 @@ def create():
 
                 if sv_home.protected_mode.value:
                     for attribute in sv.network_attributes_renamed.value:
-                        report_data = report_data.replace(attribute[0], attribute[1])
+                        report_data = report_data.replace(attribute[0].split('==')[1], attribute[1].split('==')[1])
+
                     for entity in sv.network_entities_renamed.value:
                         report_data = report_data.replace(entity[0], entity[1])
                 report_placeholder.markdown(report_data)
