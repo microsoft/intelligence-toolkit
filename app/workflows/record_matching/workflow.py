@@ -335,6 +335,12 @@ def create():
                         prefix = prefix + response + '\n'
 
                 result = prefix.replace('```\n', '').strip()
+
+                if sv_home.protected_mode.value:
+                    unique_names = sv.matching_matches_df.value['Entity name'].unique()
+                    for i, name in enumerate(unique_names, start=1):
+                        result = result.replace(name, 'Entity_{}'.format(i))
+
                 sv.matching_evaluations.value = pl.read_csv(io.StringIO(result), read_csv_options={"truncate_ragged_lines": True})
 
                 validation, messages_to_llm = util.ui_components.validate_ai_report(messages, sv.matching_evaluations.value)
