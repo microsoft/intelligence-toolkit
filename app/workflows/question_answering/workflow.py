@@ -260,4 +260,4 @@ def create():
                                 "result": sv.answering_report_validation.value,
                                 "report": sv.answering_lazy_answer_text.value
                             }, indent=4)
-                            st.download_button('Download validation prompt', use_container_width=True, data=str(obj), file_name=f'qa_{get_current_time}_messages.json', mime='text/json')
+                            st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'qa_{get_current_time}_messages.json', mime='text/json')

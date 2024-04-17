@@ -218,4 +218,4 @@ def create():
                             "result": sv.attribute_report_validation.value,
                             "report": report_data
                         }, indent=4)
-                        st.download_button('Download validation prompt', use_container_width=True, data=str(obj), file_name=f'attr_pattern_{get_current_time}_messages.json', mime='text/json')
+                        st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'attr_pattern_{get_current_time}_messages.json', mime='text/json')

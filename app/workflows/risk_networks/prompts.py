@@ -43,15 +43,15 @@ Mean flags of flagged entities: {mean_flags}
 """
 
 user_prompt = """\
-    The report should be structured in markdown and use plain English accessible to non-native speakers and non-technical audiences.
+The report should be structured in markdown and use plain English accessible to non-native speakers and non-technical audiences.
 
-    Begin your response with the heading:
+Begin your response with the heading:
 
-    "##### Evaluation of <Entity ID> in Network <Network ID>"
+"##### Evaluation of <Entity ID> in Network <Network ID>"
 
-    if there is a selected entity, or else:
+if there is a selected entity, or else:
 
-    "##### Evaluation of Entity Network <Network ID>"
+"##### Evaluation of Entity Network <Network ID>"
 """
 
 list_prompts = {

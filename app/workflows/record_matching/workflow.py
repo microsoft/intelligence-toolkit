@@ -337,7 +337,7 @@ def create():
                     if len(response.strip()) > 0:
                         prefix = prefix + response + '\n'
                 result = prefix.replace('```\n', '').strip()
-                sv.matching_evaluations.value = pl.read_csv(io.StringIO(result))
+                sv.matching_evaluations.value = pl.read_csv(io.StringIO(result), read_csv_options={"truncate_ragged_lines": True})
 
                 validation, messages_to_llm = util.ui_components.validate_ai_report(messages, sv.matching_evaluations.value)
                 sv.matching_report_validation.value = json.loads(validation)
@@ -363,4 +363,4 @@ def create():
                             "result": sv.matching_report_validation.value,
                             "report": sv.matching_evaluations.value
                         }, indent=4)
-                        st.download_button('Download validation prompt', use_container_width=True, data=str(obj), file_name=f'matching_{get_current_time}_messages.json', mime='text/json')
+                        st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'matching_{get_current_time}_messages.json', mime='text/json')
