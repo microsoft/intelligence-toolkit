@@ -98,11 +98,27 @@ def create():
                                 if sv_home.protected_mode.value:
                                     unique_names = df[entity_col].unique()
                                     for i, name in enumerate(unique_names, start=1):
-                                        df[value_col] = df[value_col].apply(lambda x: f'Entity_{i}' if name == x else x)
+                                        original_name = name
+                                        new_name = f'Entity_{i}'
+                                        name_exists = [x for x in sv.network_entities_renamed.value if x[0] == name]
+                                        if len(name_exists) == 0:
+                                            sv.network_entities_renamed.value.append((original_name, new_name))
+                                        else:
+                                            new_name = name_exists[0][1]
 
+                                        df[entity_col] = df[entity_col].apply(lambda x: new_name if name == x else x)
+                                        
                                     unique_names = df[value_col].unique()
                                     for i, name in enumerate(unique_names, start=1):
-                                        df[value_col] = df[value_col].apply(lambda x: f'{value_col}_{str(i)}' if name == x else x)
+                                        original_name = name
+                                        new_name = f'{value_col}_{str(i)}'
+                                        name_exists = [x for x in sv.network_attributes_renamed.value if x[0] == name]
+                                        if len(name_exists) == 0:
+                                            sv.network_attributes_renamed.value.append((original_name, new_name))
+                                        else:
+                                            new_name = name_exists[0][1]
+
+                                        df[value_col] = df[value_col].apply(lambda x: new_name if name == x else x)
 
                                 if attribute_col == 'Use column name':
                                     attribute_label = value_col
