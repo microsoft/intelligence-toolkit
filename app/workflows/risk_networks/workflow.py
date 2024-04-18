@@ -674,6 +674,7 @@ def create():
                 if not sv_home.protected_mode.value:
                     for attribute in sv.network_attributes_renamed.value:
                         report_data = report_data.replace(attribute[1], attribute[0])
+                        report_data = report_data.replace(attribute[1].split('==')[1], attribute[0])
 
                     for entity in sv.network_entities_renamed.value:
                         report_data = report_data.replace(entity[1], entity[0])
