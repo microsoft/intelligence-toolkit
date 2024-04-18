@@ -643,7 +643,7 @@ def create():
                         entities_renamed = sv.network_entities_renamed.value
                         for entity in entities_renamed:
                             if entity[0].lower() == selected_entity.lower():
-                                renamed_selected_entity = entity[1].lower()
+                                renamed_selected_entity = entity[1]
                                 break
                     st.markdown(f'##### Selected entity: {renamed_selected_entity}')
                 else:
