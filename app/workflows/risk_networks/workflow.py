@@ -623,12 +623,11 @@ def create():
                             network_merged_links_df.loc[i, "target"] = found[0].split('==')[1]
                 
                 renamed_selected_entity = selected_entity
-                if sv_home.protected_mode.value:
-                    entities_renamed = sv.network_entities_renamed.value
-                    for entity in entities_renamed:
-                        if entity[0].lower() == selected_entity.lower():
-                            renamed_selected_entity = entity[1].lower()
-                            break
+                entities_renamed = sv.network_entities_renamed.value
+                for entity in entities_renamed:
+                    if entity[0].lower() == selected_entity.lower():
+                        renamed_selected_entity = entity[1]
+                        break
 
                 variables = {
                     'entity_id': renamed_selected_entity,
