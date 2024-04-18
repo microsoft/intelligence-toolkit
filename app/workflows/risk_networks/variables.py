@@ -2,12 +2,16 @@ from util.session_variable import SessionVariable
 import pandas as pd
 import polars as pl
 from collections import defaultdict
+import streamlit as st
 
 import workflows.risk_networks.prompts as prompts
 
 class SessionVariables:
 
     def __init__(self, prefix):
+        self.create_session(prefix)
+       
+    def create_session(self, prefix):
         self.network_max_rows_to_process = SessionVariable(0, prefix)
         self.network_uploaded_files = SessionVariable([], prefix)
         self.network_selected_file_name = SessionVariable('', prefix)
@@ -61,3 +65,9 @@ class SessionVariables:
         self.network_attributes_protected = SessionVariable([], prefix)
         self.network_entities_renamed = SessionVariable([], prefix)
         self.network_attributes_renamed = SessionVariable([], prefix)
+
+    def reset_workflow(self, prefix):
+        for key in st.session_state.keys():
+            if key.startswith(prefix):
+                del st.session_state[key]
+        self.create_session(prefix)

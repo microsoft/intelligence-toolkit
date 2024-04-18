@@ -1,5 +1,5 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-from workflows.security.metaprompts import do_not_harm
+from workflows.security.metaprompts import do_not_harm, do_not_disrespect_context
 
 report_prompt = """\
 Goal: evaluate the overall RELATEDNESS of the records in each record group provided on a scale of 0-10, where 0 is definitively different entities and 10 is definitivly the same entity or entity group (e.g., branches of a company).
@@ -32,5 +32,5 @@ Do not output ``` or the column headers - start directly with the row values and
 list_prompts = {
     "report_prompt": report_prompt,
     "user_prompt": user_prompt,
-    "safety_prompt":  ' '.join([do_not_harm])
+    "safety_prompt":  ' '.join([do_not_harm, do_not_disrespect_context])
 }

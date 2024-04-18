@@ -95,6 +95,15 @@ def create():
                                 df[value_col] = df[value_col].apply(lambda x : re.sub(r'\s+', ' ', str(x)).strip())
                                 df[value_col] = df[value_col].apply(lambda x : re.sub(r'\s+', ' ', str(x)).strip())
 
+                                if sv_home.protected_mode.value:
+                                    unique_names = df[entity_col].unique()
+                                    for i, name in enumerate(unique_names, start=1):
+                                        df[value_col] = df[value_col].apply(lambda x: f'Entity_{i}' if name == x else x)
+
+                                    unique_names = df[value_col].unique()
+                                    for i, name in enumerate(unique_names, start=1):
+                                        df[value_col] = df[value_col].apply(lambda x: f'{value_col}_{str(i)}' if name == x else x)
+
                                 if attribute_col == 'Use column name':
                                     attribute_label = value_col
 
@@ -185,6 +194,7 @@ def create():
                 for i, name in enumerate(unique_names, start=1):
                     name_format = name.split('==')[0].strip()
                     atributes_entities.append((name, f'{name_format}=={name_format}_{str(i)}'))
+
                 sv.network_attributes_renamed.value = atributes_entities
 
             if len(sv.network_integrated_flags.value) > 0:
@@ -265,9 +275,9 @@ def create():
                 adf = adf[adf['Attribute'].str.contains(search, case=False)]
 
             protected = adf.copy()
-            if sv_home.protected_mode.value:
-                entities_dict = {tup[0]: tup[1] for tup in sv.network_attributes_renamed.value}
-                protected['Attribute'] = protected['Attribute'].map(entities_dict)
+            # if sv_home.protected_mode.value:
+            #     entities_dict = {tup[0]: tup[1] for tup in sv.network_attributes_renamed.value}
+            #     protected['Attribute'] = protected['Attribute'].map(entities_dict)
             
             selected_rows = util.ui_components.dataframe_with_selections(protected, sv.network_additional_trimmed_attributes.value, 'Attribute', 'Remove', key='remove_attribute_table')
             sv.network_additional_trimmed_attributes.value = selected_rows['Attribute'].tolist()
@@ -346,15 +356,15 @@ def create():
                 st.markdown(f'*Attributes removed because of high degree*: {trimmed_atts}')
                 
                 adf = pd.DataFrame(sv.network_attributes_list.value, columns=['Attribute'])
-                if sv_home.protected_mode.value:
-                    data = sv.network_trimmed_attributes.value.copy()
-                    unique_names = adf['Attribute'].unique()
-                    for i, name in enumerate(unique_names, start=1):
-                        name_format = name.split('==')[0].strip()
+                # if sv_home.protected_mode.value:
+                #     data = sv.network_trimmed_attributes.value.copy()
+                #     unique_names = adf['Attribute'].unique()
+                #     for i, name in enumerate(unique_names, start=1):
+                #         name_format = name.split('==')[0].strip()
 
-                        data['Attribute'] = data['Attribute'].apply(lambda x: f'{name_format}=={name_format}_{str(i)}' if name == x else x)
-                else:
-                    data = sv.network_trimmed_attributes.value
+                #         data['Attribute'] = data['Attribute'].apply(lambda x: f'{name_format}=={name_format}_{str(i)}' if name == x else x)
+                # else:
+                data = sv.network_trimmed_attributes.value
                 if trimmed_atts > 0:
                     st.dataframe(data, hide_index=True, use_container_width=True)
 
@@ -377,12 +387,12 @@ def create():
                 with b3:
                     dl_button = st.empty()
 
-                if sv_home.protected_mode.value:
-                    show_df = sv.network_entity_df.value.copy()
-                    entities_dict = {tup[0]: tup[1] for tup in sv.network_entities_renamed.value}
-                    show_df['Entity ID'] = show_df['Entity ID'].map(entities_dict)
-                else:
-                    show_df = sv.network_entity_df.value.copy()
+                # if sv_home.protected_mode.value:
+                #     show_df = sv.network_entity_df.value.copy()
+                #     entities_dict = {tup[0]: tup[1] for tup in sv.network_entities_renamed.value}
+                #     show_df['Entity ID'] = show_df['Entity ID'].map(entities_dict)
+                # else:
+                show_df = sv.network_entity_df.value.copy()
                     
                 if show_groups != sv.network_last_show_groups.value:
                     sv.network_last_show_groups.value = show_groups
@@ -438,17 +448,17 @@ def create():
                 N = functions.build_network_from_entities(sv, sv.network_overall_graph.value, c_nodes)
 
                 if selected_entity != '':
-                    if sv_home.protected_mode.value:
-                        entities_renamed = sv.network_entities_renamed.value
-                        renamed_selected_entity = selected_entity
-                        for a in entities_renamed:
-                            if a[1].lower() == selected_entity.lower():
-                                selected_entity = a[0]
-                                renamed_selected_entity = a[1]
-                                sv.network_selected_entity.value = selected_entity
-                                break
-                    else:
-                        renamed_selected_entity = selected_entity
+                    # if sv_home.protected_mode.value:
+                    #     entities_renamed = sv.network_entities_renamed.value
+                    #     renamed_selected_entity = selected_entity
+                    #     for a in entities_renamed:
+                    #         if a[1].lower() == selected_entity.lower():
+                    #             selected_entity = a[0]
+                    #             renamed_selected_entity = a[1]
+                    #             sv.network_selected_entity.value = selected_entity
+                    #             break
+                    # else:
+                    renamed_selected_entity = selected_entity
 
                     qualified_selected = f'{config.entity_label}{config.att_val_sep}{selected_entity}'
                     context = 'Upload risk flags to see risk exposure report.'
@@ -493,18 +503,20 @@ def create():
                             context += f'**Path {ix+1}**\n\n```\n'
                             for source in sources:
                                 context += f'{source}\n'
-                                if sv_home.protected_mode.value:
-                                    for entity in sv.network_entities_renamed.value:
-                                        context = context.replace(entity[0], entity[1])
+                                # if sv_home.protected_mode.value:
+                                #     for entity in sv.network_entities_renamed.value:
+                                #         context = context.replace(entity[0], entity[1])
                             context += f'---> {path}\n```\n\n'
                         context = context.replace('**1** steps', '**1** step')
                         context = context.replace('**1** flags', '**1** flag')
-                        if sv_home.protected_mode.value:
-                            for attribute in sv.network_attributes_renamed.value:
-                                context = context.replace(attribute[0].split('==')[1], attribute[1].split('==')[1])
+                        # if sv_home.protected_mode.value:
+                        #     for attribute in sv.network_attributes_renamed.value:
+                        #         attribute = attribute[0].split('==')[1]
+                        #         pattern = r'\b{}\b'.format(re.escape(attribute))
+                        #         context = re.sub(pattern, attribute[1].split('==')[1], context)
 
-                            for entity in sv.network_entities_renamed.value:
-                                context = context.replace(entity[0], entity[1])
+                        #     for entity in sv.network_entities_renamed.value:
+                        #         context = context.replace(entity[0], entity[1])
                     sv.network_risk_exposure.value = context
                 else:
                     sv.network_risk_exposure.value = ''
@@ -525,58 +537,61 @@ def create():
                 with gp:
                     if graph_type == 'Full':
                         if selected_entity != '':
-                            if sv_home.protected_mode.value:
-                                gp.markdown(f'##### Entity {renamed_selected_entity} in Network {selected_network} (full)')
-                            else:
-                                gp.markdown(f'##### Entity {selected_entity} in Network {selected_network} (full)')
+                            # if sv_home.protected_mode.value:
+                            #     gp.markdown(f'##### Entity {renamed_selected_entity} in Network {selected_network} (full)')
+                            # else:
+                            gp.markdown(f'##### Entity {selected_entity} in Network {selected_network} (full)')
                         else:
                             gp.markdown(f'##### Network {selected_network} (full)')
 
                         nodes, edges, g_config = functions.get_entity_graph(N, f'{config.entity_label}{config.att_val_sep}{selected_entity}', full_links_df, 1000, 700, [config.entity_label] + list(sv.network_node_types.value))
-                        if sv_home.protected_mode.value:
-                            new_nodes = []
-                            all_nodes = set(full_links_df["source"]).union(set(full_links_df["target"]))
-                            for node in nodes:
-                                for rec in sv.network_entities_renamed.value:
-                                    if rec[0].lower() in node.label.lower():
-                                        node.label = rec[1] + '\n' + node.label.split('\n')[1]
-                                        node.title = 'ENTITY=='+rec[1] + '\n' + node.title.split('\n')[1]
+                        # if sv_home.protected_mode.value:
+                        #     new_nodes = []
+                        #     all_nodes = set(full_links_df["source"]).union(set(full_links_df["target"]))
+                        #     for node in nodes:
+                        #         for rec in sv.network_entities_renamed.value:
+                        #             if rec[0].lower() in node.label.lower():
+                        #                 node.label = rec[1] + '\n' + node.label.split('\n')[1]
+                        #                 node.title = 'ENTITY=='+rec[1] + '\n' + node.title.split('\n')[1]
 
-                                for rec in sv.network_attributes_renamed.value:
-                                    if rec[0].split('==')[1].lower() in node.label.lower():
-                                        node.label = rec[1].split('==')[1] + '\n' + node.label.split('\n')[1]
-                                        node.title = rec[1] + '\n' + node.title.split('\n')[1]
-                                new_nodes.append(node)
-                        else:
-                            new_nodes = nodes
+                        #         for rec in sv.network_attributes_renamed.value:
+                        #             attribute = rec[0].split('==')[1]
+                        #             pattern = r'\b{}\b'.format(re.escape(attribute))
+                        #             match = re.search(pattern, node.label)
+                        #             if match:
+                        #                 node.label = rec[1].split('==')[1] + '\n' + node.label.split('\n')[1]
+                        #                 node.title = rec[1] + '\n' + node.title.split('\n')[1]
+                        #         new_nodes.append(node)
+                        # else:
+                        new_nodes = nodes
 
                         agraph(nodes=new_nodes, edges=edges, config=g_config) # type: ignore
                     elif graph_type == 'Simplified':
                         if selected_entity != '':
-                            if sv_home.protected_mode.value:
-                                gp.markdown(f'##### Entity {renamed_selected_entity} in Network {selected_network} (simplified)')
-                            else:
-                                gp.markdown(f'##### Entity {selected_entity} in Network {selected_network} (simplified)')
+                            # if sv_home.protected_mode.value:
+                            #     gp.markdown(f'##### Entity {renamed_selected_entity} in Network {selected_network} (simplified)')
+                            # else:
+                            gp.markdown(f'##### Entity {selected_entity} in Network {selected_network} (simplified)')
                         else:
                             gp.markdown(f'##### Network {selected_network} (simplified)')
                         nodes, edges, g_config = functions.get_entity_graph(N1, f'{config.entity_label}{config.att_val_sep}{selected_entity}', merged_links_df, 1000, 700, [config.entity_label] + list(sv.network_node_types.value))
-                        if sv_home.protected_mode.value:
-                            new_nodes = []
-                            all_nodes = set(full_links_df["source"]).union(set(full_links_df["target"]))
-                            for node in nodes:
+                        # if sv_home.protected_mode.value:
+                        #     new_nodes = []
+                        #     all_nodes = set(full_links_df["source"]).union(set(full_links_df["target"]))
+                        #     for node in nodes:
 
-                                for rec in sv.network_entities_renamed.value:
-                                    if rec[0].lower() in node.label.lower():
-                                        node.label = rec[1] + '\n' + node.label.split('\n')[1]
-                                        node.title = 'ENTITY=='+rec[1] + '\n' + node.title.split('\n')[1]
+                        #         for rec in sv.network_entities_renamed.value:
+                        #             if rec[0].lower() in node.label.lower():
+                        #                 node.label = rec[1] + '\n' + node.label.split('\n')[1]
+                        #                 node.title = 'ENTITY=='+rec[1] + '\n' + node.title.split('\n')[1]
 
-                                for rec in sv.network_attributes_renamed.value:
-                                    if rec[0].split('==')[1].lower() in node.label.lower():
-                                        node.label = rec[1].split('==')[1] + '\n' + node.label.split('\n')[1]
-                                        node.title = rec[1] + '\n' + node.title.split('\n')[1]
-                                new_nodes.append(node)
-                        else:
-                            new_nodes = nodes
+                        #         for rec in sv.network_attributes_renamed.value:
+                        #             if rec[0].split('==')[1].lower() in node.label.lower():
+                        #                 node.label = rec[1].split('==')[1] + '\n' + node.label.split('\n')[1]
+                        #                 node.title = rec[1] + '\n' + node.title.split('\n')[1]
+                        #         new_nodes.append(node)
+                        # else:
+                        new_nodes = nodes
                         agraph(nodes=new_nodes, edges=edges, config=g_config) # type: ignore
                 sv.network_merged_links_df.value = merged_links_df
                 sv.network_merged_nodes_df.value = merged_nodes_df
@@ -596,39 +611,39 @@ def create():
                 attributes_renamed = sv.network_attributes_renamed.value
                 renamed_selected_entity = selected_entity
                 
-                if sv_home.protected_mode.value:
-                    for i, node in enumerate(network_merged_nodes_df['node']):
-                        found = [x[1] for x in entities_renamed if x[0].lower() == node.split('==')[1].lower()]
-                        if found:
-                            network_merged_nodes_df.loc[i, "node"] = found[0]
-                        else:
-                            found = [x[1] for x in attributes_renamed if x[0].split('==')[1].lower() == node.split('==')[1].lower()]
-                            if found:
-                                network_merged_nodes_df.loc[i, "node"] = found[0].split('==')[1]
+                # if sv_home.protected_mode.value:
+                #     for i, node in enumerate(network_merged_nodes_df['node']):
+                #         found = [x[1] for x in entities_renamed if x[0].lower() == node.split('==')[1].lower()]
+                #         if found:
+                #             network_merged_nodes_df.loc[i, "node"] = found[0]
+                #         else:
+                #             found = [x[1] for x in attributes_renamed if x[0].split('==')[1].lower() == node.split('==')[1].lower()]
+                #             if found:
+                #                 network_merged_nodes_df.loc[i, "node"] = found[0].split('==')[1]
 
-                    for i, node in enumerate(network_merged_links_df['source']):
-                        found = [x[1] for x in entities_renamed if x[0].lower() == node.split('==')[1].lower()]
-                        if found:
-                            network_merged_links_df.loc[i, "source"] = found[0]
-                        else:
-                            found = [x[1] for x in attributes_renamed if x[0].split('==')[1].lower() == node.split('==')[1].lower()]
-                            if found:
-                                network_merged_links_df.loc[i, "source"] = found[0].split('==')[1]
+                #     for i, node in enumerate(network_merged_links_df['source']):
+                #         found = [x[1] for x in entities_renamed if x[0].lower() == node.split('==')[1].lower()]
+                #         if found:
+                #             network_merged_links_df.loc[i, "source"] = found[0]
+                #         else:
+                #             found = [x[1] for x in attributes_renamed if x[0].split('==')[1].lower() == node.split('==')[1].lower()]
+                #             if found:
+                #                 network_merged_links_df.loc[i, "source"] = found[0].split('==')[1]
 
-                    for i, node in enumerate(network_merged_links_df['target']):
-                        found = [x[1] for x in entities_renamed if x[0].lower() == node.split('==')[1].lower()]
-                        if found:
-                            network_merged_links_df.loc[i, "target"] = found[0]
-                        else:
-                            found = [x[1] for x in attributes_renamed if x[0].split('==')[1].lower() == node.split('==')[1].lower()]
-                            if found:
-                                network_merged_links_df.loc[i, "target"] = found[0].split('==')[1]
+                #     for i, node in enumerate(network_merged_links_df['target']):
+                #         found = [x[1] for x in entities_renamed if x[0].lower() == node.split('==')[1].lower()]
+                #         if found:
+                #             network_merged_links_df.loc[i, "target"] = found[0]
+                #         else:
+                #             found = [x[1] for x in attributes_renamed if x[0].split('==')[1].lower() == node.split('==')[1].lower()]
+                #             if found:
+                #                 network_merged_links_df.loc[i, "target"] = found[0].split('==')[1]
                 
-                    entities_renamed = sv.network_entities_renamed.value
-                    for entity in entities_renamed:
-                        if entity[0].lower() == selected_entity.lower():
-                            renamed_selected_entity = entity[1]
-                            break
+                #     entities_renamed = sv.network_entities_renamed.value
+                #     for entity in entities_renamed:
+                #         if entity[0].lower() == selected_entity.lower():
+                #             renamed_selected_entity = entity[1]
+                #             break
 
                 variables = {
                     'entity_id': renamed_selected_entity,
@@ -652,14 +667,14 @@ def create():
                 report_placeholder = st.empty()
                 gen_placeholder = st.empty()
                 get_current_time = pd.Timestamp.now().strftime('%Y%m%d%H%M%S')
-                if sv_home.protected_mode.value:
-                    if renamed_selected_entity == selected_entity:
-                        sv.network_report.value = ''
-                        sv.network_report_validation.value = {}
-                else:
-                    if renamed_selected_entity != selected_entity:
-                        sv.network_report.value = ''
-                        sv.network_report_validation.value = {}
+                # if sv_home.protected_mode.value:
+                #     if renamed_selected_entity == selected_entity:
+                #         sv.network_report.value = ''
+                #         sv.network_report_validation.value = {}
+                # else:
+                if renamed_selected_entity != selected_entity:
+                    sv.network_report.value = ''
+                    sv.network_report_validation.value = {}
 
                 generated = False
                 if generate:

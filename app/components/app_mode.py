@@ -2,9 +2,11 @@
 import streamlit as st
 
 from util.session_variables import SessionVariables
+import workflows.risk_networks.variables as rn_vars
 
 class app_mode:
     sv = None
+    sv_network = None
     
     def __init__(self, sv = None):
         if sv is not None:
@@ -12,10 +14,13 @@ class app_mode:
         else:
             self.sv = SessionVariables('home')
 
+        self.sv_network = rn_vars.SessionVariables('risk_networks')
+
     def config(self):
         mode = st.sidebar.toggle("Protected mode", value=self.sv.protected_mode.value, help="Prevent entity identification on screen.")
-        st.sidebar.caption("Changing this value will reset the AI report on Risk Network.")
+        st.sidebar.caption("Changing this value will reset the whole workflow on Risk Network.")
         if mode != self.sv.protected_mode.value:
             self.sv.protected_mode.value = mode
+            self.sv_network.reset_workflow('risk_networks')
             st.rerun()
         
