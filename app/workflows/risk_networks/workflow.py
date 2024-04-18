@@ -99,7 +99,7 @@ def create():
                                     unique_names = df[entity_col].unique()
                                     for i, name in enumerate(unique_names, start=1):
                                         original_name = name
-                                        new_name = f'Entity_{i}'
+                                        new_name = f'Protected_Entity_{i}'
                                         name_exists = [x for x in sv.network_entities_renamed.value if x[0] == name]
                                         if len(name_exists) == 0:
                                             sv.network_entities_renamed.value.append((original_name, new_name))
