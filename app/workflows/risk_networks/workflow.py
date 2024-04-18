@@ -622,8 +622,16 @@ def create():
                         if found:
                             network_merged_links_df.loc[i, "target"] = found[0].split('==')[1]
                 
+                renamed_selected_entity = selected_entity
+                if sv_home.protected_mode.value:
+                    entities_renamed = sv.network_entities_renamed.value
+                    for entity in entities_renamed:
+                        if entity[0].lower() == selected_entity.lower():
+                            renamed_selected_entity = entity[1].lower()
+                            break
+
                 variables = {
-                    'entity_id': selected_entity,
+                    'entity_id': renamed_selected_entity,
                     'network_id': sv.network_selected_community.value,
                     'max_flags': sv.network_max_entity_flags.value,
                     'mean_flags': sv.network_mean_flagged_flags.value,
@@ -638,13 +646,6 @@ def create():
                     st.rerun()
             with c2:
                 if sv.network_selected_entity.value != '':
-                    renamed_selected_entity = selected_entity
-                    if sv_home.protected_mode.value:
-                        entities_renamed = sv.network_entities_renamed.value
-                        for entity in entities_renamed:
-                            if entity[0].lower() == selected_entity.lower():
-                                renamed_selected_entity = entity[1]
-                                break
                     st.markdown(f'##### Selected entity: {renamed_selected_entity}')
                 else:
                     st.markdown(f'##### Selected network: {sv.network_selected_community.value}')
