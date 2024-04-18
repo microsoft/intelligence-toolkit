@@ -44,7 +44,17 @@ def dataframe_with_selections(df, selections, selection_col, label, key, height=
     return selected_rows
 
 def report_download_ui(report_var, name):
-    if len(report_var.value) > 0:
+    if type(report_var) == str:
+        if len(report_var) == 0:
+            return
+        report_data = report_var
+        c1, c2 = st.columns([1, 1])
+        spaced_name = name.replace('_', ' ')
+        with c1:
+            st.download_button(f'Download AI {spaced_name} as MD', data=report_data, file_name=f'{name}.md', mime='text/markdown')
+        with c2:
+            add_download_pdf(f'{name}.pdf', report_data, f'Download AI {spaced_name} as PDF')
+    elif len(report_var.value) > 0:
         report_data = report_var.value
         c1, c2 = st.columns([1, 1])
         spaced_name = name.replace('_', ' ')
