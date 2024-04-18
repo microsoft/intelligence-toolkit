@@ -14,6 +14,7 @@ class app_mode:
 
     def config(self):
         mode = st.sidebar.toggle("Protected mode", value=self.sv.protected_mode.value, help="Prevent entity identification on screen.")
+        st.sidebar.caption("Changing this value will reset the AI report on Risk Network.")
         if mode != self.sv.protected_mode.value:
             self.sv.protected_mode.value = mode
             st.rerun()

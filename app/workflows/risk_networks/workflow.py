@@ -594,40 +594,41 @@ def create():
                 network_merged_links_df = sv.network_merged_links_df.value.copy()
                 entities_renamed = sv.network_entities_renamed.value
                 attributes_renamed = sv.network_attributes_renamed.value
-                
-                for i, node in enumerate(network_merged_nodes_df['node']):
-                    found = [x[1] for x in entities_renamed if x[0].lower() == node.split('==')[1].lower()]
-                    if found:
-                        network_merged_nodes_df.loc[i, "node"] = found[0]
-                    else:
-                        found = [x[1] for x in attributes_renamed if x[0].split('==')[1].lower() == node.split('==')[1].lower()]
-                        if found:
-                            network_merged_nodes_df.loc[i, "node"] = found[0].split('==')[1]
-
-                for i, node in enumerate(network_merged_links_df['source']):
-                    found = [x[1] for x in entities_renamed if x[0].lower() == node.split('==')[1].lower()]
-                    if found:
-                        network_merged_links_df.loc[i, "source"] = found[0]
-                    else:
-                        found = [x[1] for x in attributes_renamed if x[0].split('==')[1].lower() == node.split('==')[1].lower()]
-                        if found:
-                            network_merged_links_df.loc[i, "source"] = found[0].split('==')[1]
-
-                for i, node in enumerate(network_merged_links_df['target']):
-                    found = [x[1] for x in entities_renamed if x[0].lower() == node.split('==')[1].lower()]
-                    if found:
-                        network_merged_links_df.loc[i, "target"] = found[0]
-                    else:
-                        found = [x[1] for x in attributes_renamed if x[0].split('==')[1].lower() == node.split('==')[1].lower()]
-                        if found:
-                            network_merged_links_df.loc[i, "target"] = found[0].split('==')[1]
-                
                 renamed_selected_entity = selected_entity
-                entities_renamed = sv.network_entities_renamed.value
-                for entity in entities_renamed:
-                    if entity[0].lower() == selected_entity.lower():
-                        renamed_selected_entity = entity[1]
-                        break
+                
+                if sv_home.protected_mode.value:
+                    for i, node in enumerate(network_merged_nodes_df['node']):
+                        found = [x[1] for x in entities_renamed if x[0].lower() == node.split('==')[1].lower()]
+                        if found:
+                            network_merged_nodes_df.loc[i, "node"] = found[0]
+                        else:
+                            found = [x[1] for x in attributes_renamed if x[0].split('==')[1].lower() == node.split('==')[1].lower()]
+                            if found:
+                                network_merged_nodes_df.loc[i, "node"] = found[0].split('==')[1]
+
+                    for i, node in enumerate(network_merged_links_df['source']):
+                        found = [x[1] for x in entities_renamed if x[0].lower() == node.split('==')[1].lower()]
+                        if found:
+                            network_merged_links_df.loc[i, "source"] = found[0]
+                        else:
+                            found = [x[1] for x in attributes_renamed if x[0].split('==')[1].lower() == node.split('==')[1].lower()]
+                            if found:
+                                network_merged_links_df.loc[i, "source"] = found[0].split('==')[1]
+
+                    for i, node in enumerate(network_merged_links_df['target']):
+                        found = [x[1] for x in entities_renamed if x[0].lower() == node.split('==')[1].lower()]
+                        if found:
+                            network_merged_links_df.loc[i, "target"] = found[0]
+                        else:
+                            found = [x[1] for x in attributes_renamed if x[0].split('==')[1].lower() == node.split('==')[1].lower()]
+                            if found:
+                                network_merged_links_df.loc[i, "target"] = found[0].split('==')[1]
+                
+                    entities_renamed = sv.network_entities_renamed.value
+                    for entity in entities_renamed:
+                        if entity[0].lower() == selected_entity.lower():
+                            renamed_selected_entity = entity[1]
+                            break
 
                 variables = {
                     'entity_id': renamed_selected_entity,
@@ -651,6 +652,14 @@ def create():
                 report_placeholder = st.empty()
                 gen_placeholder = st.empty()
                 get_current_time = pd.Timestamp.now().strftime('%Y%m%d%H%M%S')
+                if sv_home.protected_mode.value:
+                    if renamed_selected_entity == selected_entity:
+                        sv.network_report.value = ''
+                        sv.network_report_validation.value = {}
+                else:
+                    if renamed_selected_entity != selected_entity:
+                        sv.network_report.value = ''
+                        sv.network_report_validation.value = {}
 
                 generated = False
                 if generate:
@@ -671,14 +680,14 @@ def create():
                         gen_placeholder.warning('Press the Generate button to create an AI report for the current network.')
                 
                 report_data = sv.network_report.value
-                if not sv_home.protected_mode.value:
-                    for attribute in sv.network_attributes_renamed.value:
-                        report_data = report_data.replace(attribute[1], attribute[0])
-                        report_data = report_data.replace(attribute[1].split('==')[1], attribute[0])
+                # if not sv_home.protected_mode.value:
+                #     for attribute in sv.network_attributes_renamed.value:
+                #         report_data = report_data.replace(attribute[1], attribute[0])
+                #         report_data = report_data.replace(attribute[1].split('==')[1], attribute[0])
 
-                    for entity in sv.network_entities_renamed.value:
-                        report_data = report_data.replace(entity[1], entity[0])
-                        report_data = report_data.replace(entity[1].split(' ')[1], entity[0])
+                #     for entity in sv.network_entities_renamed.value:
+                #         report_data = report_data.replace(entity[1], entity[0])
+                #         report_data = report_data.replace(entity[1].split(' ')[1], entity[0])
 
                 report_placeholder.markdown(report_data)
 
@@ -690,12 +699,12 @@ def create():
                         validation_status = st.status(label=f"LLM faithfulness score: {sv.network_report_validation.value['score']}/5", state='complete')
                     with validation_status:
                         explanation = sv.network_report_validation.value['explanation']
-                        if not sv_home.protected_mode.value:
-                            for attribute in sv.network_attributes_renamed.value:
-                                explanation = explanation.replace(attribute[1], attribute[0])
+                        # if not sv_home.protected_mode.value:
+                        #     for attribute in sv.network_attributes_renamed.value:
+                        #         explanation = explanation.replace(attribute[1], attribute[0])
 
-                            for entity in sv.network_entities_renamed.value:
-                                explanation = explanation.replace(entity[1], entity[0])
+                        #     for entity in sv.network_entities_renamed.value:
+                        #         explanation = explanation.replace(entity[1], entity[0])
                         st.write(explanation)
 
                     if sv_home.mode.value == 'dev':
