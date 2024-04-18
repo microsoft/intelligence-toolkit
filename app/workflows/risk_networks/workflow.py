@@ -493,6 +493,9 @@ def create():
                             context += f'**Path {ix+1}**\n\n```\n'
                             for source in sources:
                                 context += f'{source}\n'
+                                if sv_home.protected_mode.value:
+                                    for entity in sv.network_entities_renamed.value:
+                                        context = context.replace(entity[0], entity[1])
                             context += f'---> {path}\n```\n\n'
                         context = context.replace('**1** steps', '**1** step')
                         context = context.replace('**1** flags', '**1** flag')
