@@ -428,10 +428,12 @@ def create():
             selected_network = response['selected_rows'][0]['Network ID'] if len(response['selected_rows']) > 0 else ''
 
             if selected_network != "":
+                if selected_network != sv.network_selected_community.value or selected_entity != sv.network_selected_entity.value:
+                    sv.network_report.value = ''
+                    sv.network_report_validation.value = {}
+                
                 sv.network_selected_entity.value = selected_entity
                 sv.network_selected_community.value = selected_network
-                sv.network_report.value = ''
-                sv.network_report_validation.value = {}
                 c_nodes = sv.network_community_nodes.value[selected_network]
                 N = functions.build_network_from_entities(sv, sv.network_overall_graph.value, c_nodes)
 
@@ -587,29 +589,29 @@ def create():
                 for i, node in enumerate(network_merged_nodes_df['node']):
                     found = [x[1] for x in entities_renamed if x[0].lower() == node.split('==')[1].lower()]
                     if found:
-                        network_merged_nodes_df['node'][i] = found[0]
+                        network_merged_nodes_df.loc[i, "node"] = found[0]
                     else:
                         found = [x[1] for x in attributes_renamed if x[0].split('==')[1].lower() == node.split('==')[1].lower()]
                         if found:
-                            network_merged_nodes_df['node'][i] = found[0].split('==')[1]
+                            network_merged_nodes_df.loc[i, "node"] = found[0].split('==')[1]
 
                 for i, node in enumerate(network_merged_links_df['source']):
                     found = [x[1] for x in entities_renamed if x[0].lower() == node.split('==')[1].lower()]
                     if found:
-                        network_merged_links_df['source'][i] = found[0]
+                        network_merged_links_df.loc[i, "source"] = found[0]
                     else:
                         found = [x[1] for x in attributes_renamed if x[0].split('==')[1].lower() == node.split('==')[1].lower()]
                         if found:
-                            network_merged_links_df['source'][i] = found[0].split('==')[1]
+                            network_merged_links_df.loc[i, "source"] = found[0].split('==')[1]
 
                 for i, node in enumerate(network_merged_links_df['target']):
                     found = [x[1] for x in entities_renamed if x[0].lower() == node.split('==')[1].lower()]
                     if found:
-                        network_merged_links_df['target'][i] = found[0]
+                        network_merged_links_df.loc[i, "target"] = found[0]
                     else:
                         found = [x[1] for x in attributes_renamed if x[0].split('==')[1].lower() == node.split('==')[1].lower()]
                         if found:
-                            network_merged_links_df['target'][i] = found[0].split('==')[1]
+                            network_merged_links_df.loc[i, "target"] = found[0].split('==')[1]
                 
                 variables = {
                     'entity_id': selected_entity,
