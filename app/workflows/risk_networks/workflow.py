@@ -496,6 +496,12 @@ def create():
                             context += f'---> {path}\n```\n\n'
                         context = context.replace('**1** steps', '**1** step')
                         context = context.replace('**1** flags', '**1** flag')
+                        if sv_home.protected_mode.value:
+                            for attribute in sv.network_attributes_renamed.value:
+                                context = context.replace(attribute[0].split('==')[1], attribute[1].split('==')[1])
+
+                            for entity in sv.network_entities_renamed.value:
+                                context = context.replace(entity[0], entity[1])
                     sv.network_risk_exposure.value = context
                 else:
                     sv.network_risk_exposure.value = ''
