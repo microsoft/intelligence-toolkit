@@ -218,10 +218,10 @@ def create():
                     with validation_status:
                         st.write(sv.attribute_report_validation.value['explanation'])
 
-                    if sv_home.mode.value == 'dev':
-                        obj = json.dumps({
-                            "message": sv.attribute_report_validation_messages.value,
-                            "result": sv.attribute_report_validation.value,
-                            "report": report_data
-                        }, indent=4)
-                        st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'attr_pattern_{get_current_time}_messages.json', mime='text/json')
+                        if sv_home.mode.value == 'dev':
+                            obj = json.dumps({
+                                "message": sv.attribute_report_validation_messages.value,
+                                "result": sv.attribute_report_validation.value,
+                                "report": report_data
+                            }, indent=4)
+                            st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'attr_pattern_{get_current_time}_messages.json', mime='text/json')

@@ -613,10 +613,10 @@ def create():
                         explanation = sv.network_report_validation.value['explanation']
                         st.write(explanation)
 
-                    if sv_home.mode.value == 'dev':
-                        obj = json.dumps({
-                            "message": sv.network_report_validation_messages.value,
-                            "result": sv.network_report_validation.value,
-                            "report": sv.network_report.value
-                        }, indent=4)
-                        st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'networks_{get_current_time}_messages.json', mime='text/json')
+                        if sv_home.mode.value == 'dev':
+                            obj = json.dumps({
+                                "message": sv.network_report_validation_messages.value,
+                                "result": sv.network_report_validation.value,
+                                "report": sv.network_report.value
+                            }, indent=4)
+                            st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'networks_{get_current_time}_messages.json', mime='text/json')

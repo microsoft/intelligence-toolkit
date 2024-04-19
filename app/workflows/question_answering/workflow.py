@@ -262,10 +262,10 @@ def create():
                         with validation_status:
                             st.write(sv.answering_report_validation.value['explanation'])
 
-                        if sv_home.mode.value == 'dev':
-                            obj = json.dumps({
-                                "message": sv.answering_report_validation_messages.value,
-                                "result": sv.answering_report_validation.value,
-                                "report": sv.answering_lazy_answer_text.value
-                            }, indent=4)
-                            st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'qa_{get_current_time}_messages.json', mime='text/json')
+                            if sv_home.mode.value == 'dev':
+                                obj = json.dumps({
+                                    "message": sv.answering_report_validation_messages.value,
+                                    "result": sv.answering_report_validation.value,
+                                    "report": sv.answering_lazy_answer_text.value
+                                }, indent=4)
+                                st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'qa_{get_current_time}_messages.json', mime='text/json')
