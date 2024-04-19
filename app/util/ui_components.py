@@ -130,8 +130,8 @@ def generative_batch_ai_component(system_prompt_var, variables, batch_name, batc
 
 file_options = ['unicode-escape', 'utf-8', 'utf-8-sig']
 file_encoding_default = 'unicode-escape'
-def single_csv_uploader(workflow, upload_label, last_uploaded_file_name_var, input_df_var, processed_df_var, final_df_var, key, show_rows=10000, height=250):
-    file = st.file_uploader(upload_label, type=['csv'], accept_multiple_files=False, key=key)
+def single_csv_uploader(workflow, upload_label, last_uploaded_file_name_var, input_df_var, processed_df_var, final_df_var, uploader_key, key, show_rows=10000, height=250):
+    file = st.file_uploader(upload_label, type=['csv'], accept_multiple_files=False, key=uploader_key)
     if f'{key}_encoding' not in st.session_state:
         st.session_state[f'{key}_encoding'] = file_encoding_default
 
@@ -170,11 +170,11 @@ def single_csv_uploader(workflow, upload_label, last_uploaded_file_name_var, inp
                 st.dataframe(final_df_var.value[:show_rows], hide_index=True, use_container_width=True, height=height)
                 st.download_button('Download final dataset', final_df_var.value.to_csv(index=False), file_name='final_dataset.csv', disabled=len(final_df_var.value) == 0)
 
-def multi_csv_uploader(upload_label, uploaded_files_var, outputs_dir, key, max_rows_var=0, show_rows=1000, height=250):
+def multi_csv_uploader(upload_label, uploaded_files_var, outputs_dir, uploader_key, key, max_rows_var=0, show_rows=1000, height=250):
     if f'{key}_encoding' not in st.session_state:
         st.session_state[f'{key}_encoding'] = file_encoding_default
 
-    files = st.file_uploader(upload_label, type=['csv'], accept_multiple_files=True, key=key)
+    files = st.file_uploader(upload_label, type=['csv'], accept_multiple_files=True, key=uploader_key)
 
     if files != None:
         for file in files:

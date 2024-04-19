@@ -20,7 +20,8 @@ import util.ui_components
 embedder = util.Embedder.create_embedder(config.cache_dir)
 
 def create():
-    sv = vars.SessionVariables('question_answering')
+    workflow = 'question_answering'
+    sv = vars.SessionVariables(workflow)
     sv_home = SessionVariables('home')
     intro_tab, uploader_tab, mining_tab, report_tab = st.tabs(['Question answering workflow:', 'Upload data', 'Mine & match questions', 'Generate AI answer reports'])
     
@@ -29,7 +30,7 @@ def create():
         st.markdown(config.intro)
     with uploader_tab:
         st.markdown('##### Upload data for processing')
-        files = st.file_uploader("Upload PDF text files", type=['pdf', 'txt'], accept_multiple_files=True)
+        files = st.file_uploader("Upload PDF text files", type=['pdf', 'txt'], accept_multiple_files=True, key=sv.answering_upload_key.value)
         if files != None:
             if st.button('Chunk and embed files'):
                 functions.chunk_files(sv, files)
@@ -38,6 +39,12 @@ def create():
         num_chunks = sum([len(f.chunk_texts) for f in sv.answering_files.value.values()])
         if num_files > 0:
             st.success(f'Chunked **{num_files}** files into **{num_chunks}** chunks of up to **{config.chunk_size}** characters.')
+    
+        reset_workflow_button = st.button(":warning: Reset workflow", use_container_width=True, help='Clear all data on this workflow and start over. CAUTION: This action can\'t be undone.')
+        if reset_workflow_button:
+            sv.reset_workflow(workflow)
+            st.rerun()
+            
     with mining_tab:
         c1, c2, c3, c4 = st.columns([4, 1, 1, 1])
         with c1:

@@ -22,7 +22,8 @@ import util.ui_components
 embedder = util.Embedder.create_embedder(config.cache_dir)
 
 def create():
-    sv = vars.SessionVariables('record_matching')
+    workflow = 'record_matching'
+    sv = vars.SessionVariables(workflow)
     sv_home = home_vars.SessionVariables('home')
 
     if not os.path.exists(config.outputs_dir):
@@ -35,7 +36,7 @@ def create():
     with uploader_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:
-            selected_file, df = util.ui_components.multi_csv_uploader('Upload multiple CSVs', sv.matching_uploaded_files, config.outputs_dir, 'matching_uploader', sv.matching_max_rows_to_process)
+            selected_file, df = util.ui_components.multi_csv_uploader('Upload multiple CSVs', sv.matching_uploaded_files, config.outputs_dir, sv.matching_upload_key.value, 'matching_uploader', sv.matching_max_rows_to_process)
         with model_col:
                 st.markdown('##### Map columns to data model')
                 if df is None:
@@ -72,6 +73,12 @@ def create():
                     if len(sv.matching_dfs.value) > 0:
                         recs = sum([len(df) for df in sv.matching_dfs.value.values()])
                         st.success(f'Data model has **{len(sv.matching_dfs.value)}** datasets with **{recs}** total records.')
+        
+        reset_workflow_button = st.button(":warning: Reset workflow", use_container_width=True, help='Clear all data on this workflow and start over. CAUTION: This action can\'t be undone.')
+        if reset_workflow_button:
+            sv.reset_workflow(workflow)
+            st.rerun()
+
     with process_tab:
         if len(sv.matching_dfs.value) == 0:
             st.warning('Upload data files to continue')
@@ -347,12 +354,12 @@ def create():
                 sv.matching_evaluations.value = csv.drop_nulls()
 
                 #get 30 random dows to evaluate
-                data_to_validate = sv.matching_evaluations.value
-                if len(sv.matching_evaluations.value) > 30:
-                    data_to_validate = sv.matching_evaluations.value.sample(n=30)
+                data_to_validate = result
+                # if len(sv.matching_evaluations.value) > 30:
+                #     data_to_validate = data_to_validate.value.sample(n=30)
 
-                validation, messages_to_llm = util.ui_components.validate_ai_report(messages, data_to_validate)
-                sv.matching_report_validation.value = json.loads(validation)
+                validation, messages_to_llm = util.ui_components.validate_ai_report(batch_messages[0], data_to_validate)
+                sv.matching_report_validation.value = validation
                 sv.matching_report_validation_messages.value = messages_to_llm
                 st.rerun()
             else:
@@ -361,14 +368,15 @@ def create():
             placeholder.empty()
 
             if len(sv.matching_evaluations.value) > 0:
-                st.dataframe(sv.matching_evaluations.value.to_pandas(), height=700, use_container_width=True, hide_index=True)
-                jdf = sv.matching_matches_df.value.join(sv.matching_evaluations.value, on='Group ID', how='inner')
-                st.download_button('Download AI match report', data=jdf.write_csv(), file_name='record_groups_evaluated.csv', mime='text/csv')
+            #     st.dataframe(sv.matching_evaluations.value.to_pandas(), height=700, use_container_width=True, hide_index=True)
+            #     jdf = sv.matching_matches_df.value.join(sv.matching_evaluations.value, on='Group ID', how='inner')
+            #     st.download_button('Download AI match report', data=jdf.write_csv(), file_name='record_groups_evaluated.csv', mime='text/csv')
 
                 if sv.matching_report_validation.value != {}:
-                    validation_status = st.status(label=f"LLM faithfulness score: {sv.matching_report_validation.value['score']}/5", state='complete')
-                    with validation_status:
-                        st.write(sv.matching_report_validation.value['explanation'])
+                    print(sv.matching_report_validation.value)
+                    # validation_status = st.status(label=f"LLM faithfulness score: {sv.matching_report_validation.value['score']}/5", state='complete')
+                    # with validation_status:
+                    #     st.write(sv.matching_report_validation.value['explanation'])
 
                     if sv_home.mode.value == 'dev':
                         obj = json.dumps({

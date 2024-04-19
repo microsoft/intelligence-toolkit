@@ -1,12 +1,17 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+import random
 from util.session_variable import SessionVariable
 import pandas as pd
+import streamlit as st
 
 import workflows.group_narratives.prompts as prompts
 
 class SessionVariables:
 
     def __init__(self, prefix):
+        self.create_session(prefix)
+
+    def create_session(self, prefix):
         self.narrative_input_df = SessionVariable(pd.DataFrame(), prefix)
         self.narrative_binned_df = SessionVariable(pd.DataFrame(), prefix)
         self.narrative_final_df = SessionVariable(pd.DataFrame(), prefix)
@@ -25,3 +30,10 @@ class SessionVariables:
         self.narrative_report_validation = SessionVariable({}, prefix)
         self.narrative_system_prompt = SessionVariable(prompts.list_prompts, prefix)
         self.narrative_subject_identifier = SessionVariable('', prefix)
+        self.narrative_upload_key = SessionVariable(random.randint(1, 100), prefix)
+
+    def reset_workflow(self, prefix):
+        for key in st.session_state.keys():
+            if key.startswith(prefix):
+                del st.session_state[key]
+        self.create_session(prefix)

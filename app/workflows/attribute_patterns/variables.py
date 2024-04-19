@@ -1,12 +1,16 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+import random
 from util.session_variable import SessionVariable
 import pandas as pd
-
+import streamlit as st
 import workflows.attribute_patterns.prompts as prompts
 
 class SessionVariables:
 
     def __init__(self, prefix):
+        self.create_session(prefix)
+
+    def create_session(self, prefix):
         self.attribute_max_rows_to_process = SessionVariable(0, prefix)
         self.attribute_input_df = SessionVariable(pd.DataFrame(), prefix)
         self.attribute_last_file_name = SessionVariable('', prefix)
@@ -40,7 +44,12 @@ class SessionVariables:
         self.attribute_converging_pairs = SessionVariable(0, prefix)
         self.attribute_all_pairs = SessionVariable(0, prefix)
         self.attribute_table_index = SessionVariable(0, prefix)
+        self.attribute_upload_key = SessionVariable(random.randint(1, 100), prefix)
 
         self.atribute_period = SessionVariable('', prefix)
 
-
+    def reset_workflow(self, prefix):
+        for key in st.session_state.keys():
+            if key.startswith(prefix):
+                del st.session_state[key]
+        self.create_session(prefix)

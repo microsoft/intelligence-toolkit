@@ -22,7 +22,7 @@ import util.df_functions
 
 def create():
     workflow = 'data_synthesis'
-    sv = vars.SessionVariables('data_synthesis')
+    sv = vars.SessionVariables(workflow)
 
     intro_tab, prepare_tab, generate_tab, queries_tab = st.tabs(['Data synthesis workflow:', 'Upload sensitive data', 'Generate anonymous data', 'Query and visualize data'])
     df = None
@@ -31,7 +31,7 @@ def create():
     with prepare_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:
-            util.ui_components.single_csv_uploader(workflow, 'Upload sensitive data CSV', sv.synthesis_last_sensitive_file_name, sv.synthesis_raw_sensitive_df, sv.synthesis_processing_df, sv.synthesis_sensitive_df, key='sensitive_data_uploader', height=400)
+            util.ui_components.single_csv_uploader(workflow, 'Upload sensitive data CSV', sv.synthesis_last_sensitive_file_name, sv.synthesis_raw_sensitive_df, sv.synthesis_processing_df, sv.synthesis_sensitive_df, uploader_key=sv.synthesis_upload_key.value, key='sensitive_data_uploader', height=400)
         with model_col:
             util.ui_components.prepare_input_df(workflow, sv.synthesis_raw_sensitive_df, sv.synthesis_processing_df, sv.synthesis_sensitive_df, sv.synthesis_subject_identifier)
             
@@ -70,6 +70,12 @@ def create():
                 st.markdown(f'Number of distinct attribute values: **{overall_att_count}**', help='This is the total number of distinct attribute values across all selected columns. The more distinct values, the harder it will be to synthesize data.')
                 st.markdown(f'Common pair threshold: **{common_level}**', help='This is the minimum number of records that must appear in a pair of column values for the pair to be considered common. The higher this number, the harder it will be to synthesize data. The value is set as max(median value count, num selected columns).')
                 st.markdown(f'Estimated synthesizability score: **{round(coverage, 4)}**', help=f'We define synthesizability as the proportion of observed pairs of values across selected columns that are common, appearing at least as many times as the number of columns. In this case, {num_common_pairs}/{num_observed_pairs} pairs appear at least {num_cols} times. The intuition here is that all combinations of attribute values in a synthetic record must be composed from common attribute pairs. **Rule of thumb**: Aim for a synthesizability score of **0.5** or higher.')
+        
+        reset_workflow_button = st.button(":warning: Reset workflow", use_container_width=True, help='Clear all data on this workflow and start over. CAUTION: This action can\'t be undone.')
+        if reset_workflow_button:
+            sv.reset_workflow(workflow)
+            st.rerun()
+
     with generate_tab:
         if len(sv.synthesis_sensitive_df.value) == 0:
             st.warning('Please upload and prepare data to continue.')
@@ -173,8 +179,8 @@ def create():
     with queries_tab:
         if len(sv.synthesis_synthetic_df.value) == 0 or len(sv.synthesis_aggregate_df.value) == 0:
             st.warning('Please synthesize data to continue, or upload an existing synthetic dataset below.')
-            util.ui_components.single_csv_uploader(workflow, 'Upload synthetic data CSV', sv.synthesis_last_synthetic_file_name, sv.synthesis_synthetic_df, None, None, key='synthetic_data_uploader')
-            util.ui_components.single_csv_uploader(workflow, 'Upload aggregate data CSV', sv.synthesis_last_aggregate_file_name, sv.synthesis_aggregate_df, None, None, key='aggregate_data_uploader')
+            util.ui_components.single_csv_uploader(workflow, 'Upload synthetic data CSV', sv.synthesis_last_synthetic_file_name, sv.synthesis_synthetic_df, None, None, uploader_key=sv.synthesis_synthetic_upload_key.value,key='synthetic_data_uploader')
+            util.ui_components.single_csv_uploader(workflow, 'Upload aggregate data CSV', sv.synthesis_last_aggregate_file_name, sv.synthesis_aggregate_df, None, None, uploader_key=sv.synthesis_aggregate_upload_key.value, key='aggregate_data_uploader')
             if len(sv.synthesis_synthetic_df.value) > 0 and len(sv.synthesis_aggregate_df.value) > 0:
                 st.rerun()
         else:

@@ -1,9 +1,15 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+import random
+import streamlit as st
 from util.session_variable import SessionVariable
 import pandas as pd
 
 class SessionVariables:
 
     def __init__(self, prefix):
+        self.create_session(prefix)
+
+    def create_session(self, prefix):
         self.synthesis_raw_sensitive_df = SessionVariable(pd.DataFrame(), prefix)
         self.synthesis_processing_df = SessionVariable(pd.DataFrame(), prefix)
         self.synthesis_sensitive_df = SessionVariable(pd.DataFrame(), prefix)
@@ -21,4 +27,13 @@ class SessionVariables:
         self.synthesis_min_count = SessionVariable(0, prefix)
         self.synthesis_suppress_zeros = SessionVariable(False, prefix)
         self.synthesis_last_suppress_zeros = SessionVariable(False, prefix)  
+        self.synthesis_upload_key = SessionVariable(random.randint(1, 100), prefix)
+        self.synthesis_synthetic_upload_key = SessionVariable(random.randint(101, 200), prefix)
+        self.synthesis_aggregate_upload_key = SessionVariable(random.randint(201, 300), prefix)
 
+
+    def reset_workflow(self, prefix):
+        for key in st.session_state.keys():
+            if key.startswith(prefix):
+                del st.session_state[key]
+        self.create_session(prefix)

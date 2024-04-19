@@ -45,3 +45,5 @@ build/*
 
 app/wkhtmltox/*.exe
 /wheels
+*reports
+*.ipynb

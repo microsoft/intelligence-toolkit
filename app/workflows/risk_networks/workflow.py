@@ -87,57 +87,48 @@ def create():
                 with b1:
                     if st.button("Add links to model", disabled=entity_col == '' or attribute_col == '' or len(value_cols) == 0 or link_type == ''):
                         with st.spinner('Adding links to model...'):
-                            df[entity_col] = df[entity_col].apply(lambda x : re.sub(r'[^\w\s&@\+]', '', str(x)).strip())
-                            df[entity_col] = df[entity_col].apply(lambda x : re.sub(r'\s+', ' ', str(x)).strip())
-
-                            if sv_home.protected_mode.value:
-                                unique_names = df[entity_col].unique()
-                                for i, name in enumerate(unique_names, start=1):
-                                    original_name = name
-                                    new_name = f'Protected_Entity_{i}'
-                                    name_exists = [x for x in sv.network_entities_renamed.value if x[0] == name]
-                                    if len(name_exists) == 0:
-                                        sv.network_entities_renamed.value.append((original_name, new_name))
-                                    else:
-                                        new_name = name_exists[0][1]
-
-                                    df[entity_col] = df[entity_col].apply(lambda x: new_name if name == x else x)
-
                             for value_col in value_cols:
                                 # remove punctuation but retain characters and digits in any language
                                 # compress whitespace to single space
+                                df[entity_col] = df[entity_col].apply(lambda x : re.sub(r'[^\w\s&@\+]', '', str(x)).strip())
+                                df[entity_col] = df[entity_col].apply(lambda x : re.sub(r'\s+', ' ', str(x)).strip())
                                 df[value_col] = df[value_col].apply(lambda x : re.sub(r'[^\w\s&@\+]', '', str(x)).strip())
                                 df[value_col] = df[value_col].apply(lambda x : re.sub(r'\s+', ' ', str(x)).strip())
                                 df[value_col] = df[value_col].apply(lambda x : re.sub(r'\s+', ' ', str(x)).strip())
 
                                 if sv_home.protected_mode.value:
-                                #     unique_names = df[entity_col].unique()
-                                #     for i, name in enumerate(unique_names, start=1):
-                                #         original_name = name
-                                #         new_name = f'Protected_Entity_{i}'
-                                #         name_exists = [x for x in sv.network_entities_renamed.value if x[0] == name]
-                                #         if len(name_exists) == 0:
-                                #             sv.network_entities_renamed.value.append((original_name, new_name))
-                                #         else:
-                                #             new_name = name_exists[0][1]
+                                    unique_names = df[entity_col].unique()
+                                    for i, name in enumerate(unique_names, start=1):
+                                        original_name = name
+                                        new_name = f'Protected_Entity_{i}'
+                                        name_exists = [x for x in sv.network_entities_renamed.value if x[0] == name]
+                                        if len(name_exists) == 0:
+                                            sv.network_entities_renamed.value.append((original_name, new_name))
+                                        else:
+                                            new_name = name_exists[0][1]
 
-                                #         df[entity_col] = df[entity_col].apply(lambda x: new_name if name == x else x)
+                                        df[entity_col] = df[entity_col].apply(lambda x: new_name if name == x else x)
                                         
-                                    unique_names = df[value_col].unique()
+                                    unique_names_value = df[value_col].unique()
+
                                     numeric_pattern = r'^\d+(\.\d+)?$'
                                     def is_numeric_column(column):
                                         return all(re.match(numeric_pattern, str(value)) for value in column)
 
                                     is_numeric = is_numeric_column(df[value_col])
                                     if not is_numeric:
-                                        for i, name in enumerate(unique_names, start=1):
+                                        for i, name in enumerate(unique_names_value, start=1):
                                             new_name = f'{value_col}_{str(i)}'
                                             name_exists = [x for x in sv.network_attributes_renamed.value if x[0] == name]
+                                            name_exists_entity = [x for x in sv.network_entities_renamed.value if x[0] == name]
 
-                                            if len(name_exists) == 0:
+                                            if len(name_exists) == 0 and len(name_exists_entity) == 0:
                                                 sv.network_attributes_renamed.value.append((name, new_name))
                                             else:
-                                                new_name = name_exists[0][1]
+                                                if len(name_exists_entity) > 0:
+                                                    new_name = name_exists_entity[0][1]
+                                                else:
+                                                    new_name = name_exists[0][1]
 
                                             df[value_col] = df[value_col].apply(lambda x: new_name if name == x else x)
                                     else:
@@ -245,10 +236,10 @@ def create():
             else:
                 st.warning('Add links to the model to continue.')
 
-        # reset_workflow_button = st.button(":warning: Reset workflow", use_container_width=True, help='Clear all data on this workflow and start over. CAUTION: This action can\'t be undone.')
-        # if reset_workflow_button:
-        #     sv.reset_workflow('risk_networks')
-        #     st.rerun()
+        reset_workflow_button = st.button(":warning: Reset workflow", use_container_width=True, help='Clear all data on this workflow and start over. CAUTION: This action can\'t be undone.')
+        if reset_workflow_button:
+            sv.reset_workflow('risk_networks')
+            st.rerun()
 
     with process_tab:
         index_col, part_col = st.columns([1, 1])
