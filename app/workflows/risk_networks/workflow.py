@@ -588,7 +588,7 @@ def create():
                         prefix=''
                     )
                     sv.network_report.value = result
-                    validation_status = st.status('Validating AI report and generating groundedness score...', expanded=False, state='running')
+                    validation_status = st.status('Validating AI report and generating faithfulness score...', expanded=False, state='running')
 
                     validation, messages_to_llm = util.ui_components.validate_ai_report(messages, result, False)
                     sv.network_report_validation.value = json.loads(validation)

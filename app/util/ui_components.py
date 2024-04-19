@@ -175,13 +175,14 @@ def multi_csv_uploader(upload_label, uploaded_files_var, outputs_dir, key, max_r
         st.session_state[f'{key}_encoding'] = file_encoding_default
 
     files = st.file_uploader(upload_label, type=['csv'], accept_multiple_files=True, key=key)
-    st.number_input('Maximum rows to process (0 = all)', min_value=0, step=1000, key=max_rows_var.key)
+
     if files != None:
         for file in files:
             if file.name not in uploaded_files_var.value:              
                 uploaded_files_var.value.append(file.name)
     selected_file = st.selectbox("Select a file to process", options = ['']+uploaded_files_var.value if files else [])
     with st.expander('File options'):
+        st.number_input('Maximum rows to process (0 = all)', min_value=0, step=1000, key=max_rows_var.key)
         encoding = st.selectbox('File encoding', options=file_options, key=f'{key}_encoding_db', index=file_options.index(st.session_state[f'{key}_encoding']))
         reload = st.button('Reload', key=f'{key}_reload')
 
