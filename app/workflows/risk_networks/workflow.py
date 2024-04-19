@@ -47,7 +47,7 @@ def create():
     with uploader_tab:
         uploader_col, model_col = st.columns([3, 2])
         with uploader_col:
-            selected_file, df = util.ui_components.multi_csv_uploader('Upload multiple CSVs', sv.network_uploaded_files, config.outputs_dir, 'network_uploader', sv.network_max_rows_to_process)
+            selected_file, df = util.ui_components.multi_csv_uploader('Upload multiple CSVs', sv.network_uploaded_files, config.outputs_dir, sv.network_upload_key.value, 'network_uploader', sv.network_max_rows_to_process)
         with model_col:
             st.markdown('##### Map columns to model')
             if df is None:
@@ -87,50 +87,65 @@ def create():
                 with b1:
                     if st.button("Add links to model", disabled=entity_col == '' or attribute_col == '' or len(value_cols) == 0 or link_type == ''):
                         with st.spinner('Adding links to model...'):
+                            df[entity_col] = df[entity_col].apply(lambda x : re.sub(r'[^\w\s&@\+]', '', str(x)).strip())
+                            df[entity_col] = df[entity_col].apply(lambda x : re.sub(r'\s+', ' ', str(x)).strip())
+
+                            if sv_home.protected_mode.value:
+                                unique_names = df[entity_col].unique()
+                                for i, name in enumerate(unique_names, start=1):
+                                    original_name = name
+                                    new_name = f'Protected_Entity_{i}'
+                                    name_exists = [x for x in sv.network_entities_renamed.value if x[0] == name]
+                                    if len(name_exists) == 0:
+                                        sv.network_entities_renamed.value.append((original_name, new_name))
+                                    else:
+                                        new_name = name_exists[0][1]
+
+                                    df[entity_col] = df[entity_col].apply(lambda x: new_name if name == x else x)
+
                             for value_col in value_cols:
                                 # remove punctuation but retain characters and digits in any language
                                 # compress whitespace to single space
-                                df[entity_col] = df[entity_col].apply(lambda x : re.sub(r'[^\w\s&@\+]', '', str(x)).strip())
-                                df[entity_col] = df[entity_col].apply(lambda x : re.sub(r'\s+', ' ', str(x)).strip())
                                 df[value_col] = df[value_col].apply(lambda x : re.sub(r'[^\w\s&@\+]', '', str(x)).strip())
                                 df[value_col] = df[value_col].apply(lambda x : re.sub(r'\s+', ' ', str(x)).strip())
                                 df[value_col] = df[value_col].apply(lambda x : re.sub(r'\s+', ' ', str(x)).strip())
 
                                 if sv_home.protected_mode.value:
-                                    unique_names = df[entity_col].unique()
-                                    for i, name in enumerate(unique_names, start=1):
-                                        original_name = name
-                                        new_name = f'Protected_Entity_{i}'
-                                        name_exists = [x for x in sv.network_entities_renamed.value if x[0] == name]
-                                        if len(name_exists) == 0:
-                                            sv.network_entities_renamed.value.append((original_name, new_name))
-                                        else:
-                                            new_name = name_exists[0][1]
+                                #     unique_names = df[entity_col].unique()
+                                #     for i, name in enumerate(unique_names, start=1):
+                                #         original_name = name
+                                #         new_name = f'Protected_Entity_{i}'
+                                #         name_exists = [x for x in sv.network_entities_renamed.value if x[0] == name]
+                                #         if len(name_exists) == 0:
+                                #             sv.network_entities_renamed.value.append((original_name, new_name))
+                                #         else:
+                                #             new_name = name_exists[0][1]
 
-                                        df[entity_col] = df[entity_col].apply(lambda x: new_name if name == x else x)
+                                #         df[entity_col] = df[entity_col].apply(lambda x: new_name if name == x else x)
                                         
                                     unique_names = df[value_col].unique()
-
                                     numeric_pattern = r'^\d+(\.\d+)?$'
                                     def is_numeric_column(column):
                                         return all(re.match(numeric_pattern, str(value)) for value in column)
 
-                                    is_numeric = is_numeric_column(df[value_col])
+                                    # is_numeric = is_numeric_column(df[value_col])
+                                    # if not is_numeric:
+                                    print('len', len(df[value_col]))
+                                    for i, name in enumerate(unique_names, start=1):
+                                        new_name = f'{value_col}_{str(i)}'
+                                        name_exists = [x for x in sv.network_attributes_renamed.value if x[0] == name]
 
-                                    if not is_numeric:
-                                        for i, name in enumerate(unique_names, start=1):
-                                            original_name = name
-                                            new_name = f'{value_col}_{str(i)}'
-                                            name_exists = [x for x in sv.network_attributes_renamed.value if x[0] == name]
-                                            if len(name_exists) == 0:
-                                                sv.network_attributes_renamed.value.append((original_name, new_name))
-                                            else:
-                                                new_name = name_exists[0][1]
+                                        if len(name_exists) == 0:
+                                            sv.network_attributes_renamed.value.append((name, new_name))
+                                        else:
+                                            new_name = name_exists[0][1]
 
-                                            df[value_col] = df[value_col].apply(lambda x: new_name if name == x else x)
-                                    else:
-                                        for i, name in enumerate(unique_names, start=1):
-                                            sv.network_attributes_renamed.value.append((name, name))
+                                        df[value_col] = df[value_col].apply(lambda x: new_name if name == x else x)
+                                    print('len 2', len(df[value_col]))
+                                    
+                                    # else:
+                                    #     for i, name in enumerate(unique_names, start=1):
+                                    #         sv.network_attributes_renamed.value.append((name, name))
 
                                 if attribute_col == 'Use column name':
                                     attribute_label = value_col
