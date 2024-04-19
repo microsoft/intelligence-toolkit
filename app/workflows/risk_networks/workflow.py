@@ -128,24 +128,21 @@ def create():
                                     def is_numeric_column(column):
                                         return all(re.match(numeric_pattern, str(value)) for value in column)
 
-                                    # is_numeric = is_numeric_column(df[value_col])
-                                    # if not is_numeric:
-                                    print('len', len(df[value_col]))
-                                    for i, name in enumerate(unique_names, start=1):
-                                        new_name = f'{value_col}_{str(i)}'
-                                        name_exists = [x for x in sv.network_attributes_renamed.value if x[0] == name]
+                                    is_numeric = is_numeric_column(df[value_col])
+                                    if not is_numeric:
+                                        for i, name in enumerate(unique_names, start=1):
+                                            new_name = f'{value_col}_{str(i)}'
+                                            name_exists = [x for x in sv.network_attributes_renamed.value if x[0] == name]
 
-                                        if len(name_exists) == 0:
-                                            sv.network_attributes_renamed.value.append((name, new_name))
-                                        else:
-                                            new_name = name_exists[0][1]
+                                            if len(name_exists) == 0:
+                                                sv.network_attributes_renamed.value.append((name, new_name))
+                                            else:
+                                                new_name = name_exists[0][1]
 
-                                        df[value_col] = df[value_col].apply(lambda x: new_name if name == x else x)
-                                    print('len 2', len(df[value_col]))
-                                    
-                                    # else:
-                                    #     for i, name in enumerate(unique_names, start=1):
-                                    #         sv.network_attributes_renamed.value.append((name, name))
+                                            df[value_col] = df[value_col].apply(lambda x: new_name if name == x else x)
+                                    else:
+                                        for i, name in enumerate(unique_names, start=1):
+                                            sv.network_attributes_renamed.value.append((name, name))
 
                                 if attribute_col == 'Use column name':
                                     attribute_label = value_col
