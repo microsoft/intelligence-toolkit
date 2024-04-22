@@ -4,8 +4,9 @@ import os
 import pickle
 import tiktoken
 import numpy as np
+from util.constants import MAX_SIZE_EMBEDDINGS_KEY, EMBEDDINGS_FILE_NAME
+from util.SecretsHandler import SecretsHandler
 from util.AI_API import generate_embedding_from_text
-from util.Database import Database
 import util.session_variables
 from util.openai_instance import _OpenAI
 import streamlit as st
@@ -25,7 +26,8 @@ class Embedder:
         self.username = sv.username.value
         self.encoder = tiktoken.get_encoding(encoder)
         self.max_tokens = max_tokens
-        self.file_path = os.path.join(cache, 'embeddings.pickle')
+        self.file_path = os.path.join(cache, EMBEDDINGS_FILE_NAME)
+        self.secrets_handler = SecretsHandler()
 
     def encode_all(self, texts):
         final_embeddings = [None] * len(texts)
@@ -90,8 +92,17 @@ class Embedder:
         return {}
     
     def save_embeddings_list(self, embeddings_list):
+        embeddings_count = len(embeddings_list)
+        max_size = int(self.secrets_handler.get_secret(MAX_SIZE_EMBEDDINGS_KEY)) or 0
+        if max_size > 0 and embeddings_count > max_size:
+            embeddings_list = dict(list(embeddings_list.items())[-max_size:])
+
         with open(self.file_path, '+wb') as f:
             pickle.dump(embeddings_list, f)
+    
+    def reset_embeddings(self):
+        if os.path.exists(self.file_path):
+            os.remove(self.file_path)
 
     def return_existing_embedding(self, hsh, embeddings_list):
         if hsh in embeddings_list:

@@ -5,7 +5,7 @@ import os
 from util.SecretsHandler import SecretsHandler
 from openai import AzureOpenAI
 
-key = 'openaikey'
+key = 'openai_secretkey'
 openai_type_key = 'openai_typekey'
 openai_version_key = 'openai_versionkey'
 openai_endpoint_key = 'openai_endpointkey'
