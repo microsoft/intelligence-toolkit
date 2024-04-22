@@ -67,16 +67,13 @@ def generative_ai_component(system_prompt_var, variables):
     st.markdown('##### Generative AI instructions')
     with st.expander('Edit AI System Prompt (advanced)', expanded=True):
         instructions_text = st.text_area('Contents of System Prompt used to generate AI outputs.', value=system_prompt_var.value["user_prompt"], height=200)
-        if system_prompt_var.value["user_prompt"] != instructions_text:
-            system_prompt_var.value["user_prompt"] = instructions_text
-            st.rerun()
         reset_prompt = st.button('Reset to default')
     
     st.warning('This app uses AI and may not be error-free. Please verify critical details independently.')
     
     full_prompt = ' '.join([
         system_prompt_var.value["report_prompt"],
-        system_prompt_var.value["user_prompt"],
+        instructions_text,
         system_prompt_var.value["safety_prompt"]
     ])
 
@@ -86,6 +83,9 @@ def generative_ai_component(system_prompt_var, variables):
     ratio = 100 * tokens/util.AI_API.max_input_tokens
     with b1:
         generate = st.button('Generate', disabled=ratio > 100)
+        if generate:
+            system_prompt_var.value["user_prompt"] = instructions_text
+
     with b2:
         message = f'AI input uses {tokens}/{util.AI_API.max_input_tokens} ({round(ratio, 2)}%) of token limit'
         if ratio <= 100:
@@ -98,7 +98,6 @@ def generative_batch_ai_component(system_prompt_var, variables, batch_name, batc
     st.markdown('##### Generative AI instructions')
     with st.expander('Edit AI System Prompt (advanced)', expanded=True):
         instructions_text = st.text_area('Contents of System Prompt used to generate AI outputs.', value=system_prompt_var.value["user_prompt"], height=200)
-        system_prompt_var.value["user_prompt"] = instructions_text
         reset_prompt = st.button('Reset to default')
 
     st.warning('This app uses AI and may not be error-free. Please verify critical details independently.')
@@ -110,7 +109,7 @@ def generative_batch_ai_component(system_prompt_var, variables, batch_name, batc
 
     full_prompt = ' '.join([
         system_prompt_var.value["report_prompt"],
-        system_prompt_var.value["user_prompt"],
+        instructions_text,
         system_prompt_var.value["safety_prompt"]
     ])
     for i in range(batch_count):
@@ -124,6 +123,8 @@ def generative_batch_ai_component(system_prompt_var, variables, batch_name, batc
     ratio = 100 * tokens/util.AI_API.max_input_tokens
     with b1:
         generate = st.button('Generate', disabled=ratio > 100)
+        if generate:
+            system_prompt_var.value["user_prompt"] = instructions_text
     with b2:
         st.markdown(f'AI input uses {tokens}/{util.AI_API.max_input_tokens} ({round(ratio, 2)}%) of token limit')
     return generate, batch_messages, reset_prompt
@@ -272,7 +273,7 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
                 unique_values = set([v for vals in values for v in vals])
                 unique_values = [x for x in unique_values if x != '']
                 for val in unique_values:
-                    st.session_state[f'{workflow}_{val}'] = False
+                    st.session_state[f'{workflow}_{val}'] = True
                     processed_df_var.value[val] = values.apply(lambda x: '1' if val in x and val != 'nan' else '')
                     # processed_df_var.value[col][col+'_'+val] = values.apply(lambda x: 1 if val in x and val != 'nan' else None)
                 processed_df_var.value.drop(columns=[col], inplace=True)
@@ -417,12 +418,23 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
 
     with st.expander('Expand compound values', expanded=False):
         options = [x for x in processed_df_var.value.columns.values if x != 'Subject ID']
-        selected_compound_cols = st.multiselect('Select compound columns to expand', options, help='Select the columns you want to expand into separate columns. If you do not select any columns, no expansion will be performed.')
+        columns = [x for x in options if x not in st.session_state[f'{workflow}_selected_compound_cols']]
+        selected_compound_cols = st.multiselect('Select compound columns to expand', columns, help='Select the columns you want to expand into separate columns. If you do not select any columns, no expansion will be performed.')
         col_delimiter = st.text_input('Column delimiter', value='', help='The character used to separate values in compound columns. If the delimiter is not present in a cell, the cell will be left unchanged.')
         if st.button('Expand selected columns', key='expand_compound'):
             to_add = (selected_compound_cols, col_delimiter)
             if col_delimiter != '' and to_add not in st.session_state[f'{workflow}_selected_compound_cols']:
                 st.session_state[f'{workflow}_selected_compound_cols'].append(to_add)
+                for (cols, delim) in st.session_state[f'{workflow}_selected_compound_cols']:
+                    for col in cols:
+                        # add each value as a separate column with a 1 if the value is present in the compound column and None otherwise
+                        values = processed_df_var.value[col].apply(lambda x: [y.strip() for y in x.split(delim)] if type(x) == str else [])
+                        unique_values = set([v for vals in values for v in vals])
+                        unique_values = [x for x in unique_values if x != '']
+                        for val in unique_values:
+                            st.session_state[f'{workflow}_{val}'] = False
+                            processed_df_var.value[val] = values.apply(lambda x: '1' if val in x and val != 'nan' else '')
+                        processed_df_var.value.drop(columns=[col], inplace=True)
                 st.rerun() 
 
 

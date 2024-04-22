@@ -1,9 +1,7 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import json
-import numpy as np
 import streamlit as st
 import pandas as pd
-from pandas.api.types import is_numeric_dtype
 import networkx as nx
 
 from collections import defaultdict
