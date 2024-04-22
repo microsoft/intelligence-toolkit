@@ -39,8 +39,8 @@ def create():
         num_chunks = sum([len(f.chunk_texts) for f in sv.answering_files.value.values()])
         if num_files > 0:
             st.success(f'Chunked **{num_files}** files into **{num_chunks}** chunks of up to **{config.chunk_size}** characters.')
-    
-        reset_workflow_button = st.button(":warning: Reset workflow", use_container_width=True, help='Clear all data on this workflow and start over. CAUTION: This action can\'t be undone.')
+
+        reset_workflow_button = st.button(":warning: Reset workflow", key='btn_qa_reset', use_container_width=True, help='Clear all data on this workflow and start over. CAUTION: This action can\'t be undone.')
         if reset_workflow_button:
             sv.reset_workflow(workflow)
             st.rerun()

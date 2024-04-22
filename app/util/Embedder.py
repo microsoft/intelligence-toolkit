@@ -1,4 +1,7 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+import hashlib
+import os
+import pickle
 import tiktoken
 import numpy as np
 from util.AI_API import generate_embedding_from_text
@@ -22,20 +25,20 @@ class Embedder:
         self.username = sv.username.value
         self.encoder = tiktoken.get_encoding(encoder)
         self.max_tokens = max_tokens
-        self.connection = Database(cache, 'embeddings')
-        self.connection.create_table('embeddings', ['username STRING','hash_text STRING UNIQUE', 'embedding DOUBLE[]'])
+        self.file_path = os.path.join(cache, 'embeddings.pickle')
 
     def encode_all(self, texts):
         final_embeddings = [None] * len(texts)
         new_texts  = []
+        loaded_embeddings = self.return_embeddings_list()
         for ix, text in enumerate(texts):
             text = text.replace("\n", " ")
-            hsh = hash(text)
-            embeddings = self.connection.select_embedding_from_hash(hsh)
-            if not embeddings:
+            hsh = hashlib.sha256(text.encode()).hexdigest()
+            embedding = self.return_existing_embedding(hsh, loaded_embeddings)
+            if not len(embedding):
                 new_texts.append((ix, text))
             else:
-                final_embeddings[ix] = np.array(embeddings[0])
+                final_embeddings[ix] = np.array(embedding)
         print(f'Got {len(new_texts)} new texts')
         # split into batches of 2000
         pb = st.progress(0, 'Embedding text batches...')
@@ -46,7 +49,6 @@ class Embedder:
             bi += 1
             batch = new_texts[i:i+2000]
             batch_texts = [x[1] for x in batch]
-            list_all_embeddings = []
             try:
                 embeddings = [x.embedding for x in generate_embedding_from_text(batch_texts).data]
             except Exception as e:
@@ -54,20 +56,19 @@ class Embedder:
                 
             for j, (ix, text) in enumerate(batch):
                 hsh = hash(text)
-                list_all_embeddings.append((hsh, embeddings[j]))
+                loaded_embeddings.update({hsh: embeddings[j]})
                 final_embeddings[ix] = np.array(embeddings[j])
-            # self.connection.insert_multiple_into_embeddings(list_all_embeddings) 
+        self.save_embeddings_list(loaded_embeddings)
         pb.empty()
         return np.array(final_embeddings)
 
-    def encode(self, text, auto_save = True):
+    def encode(self, text):
         text = text.replace("\n", " ")
-        hsh = hash(text)
-        embeddings = self.connection.select_embedding_from_hash(hsh)
+        hsh = hashlib.sha256(text.encode()).hexdigest()
+        loaded_embeddings = self.return_embeddings_list()
+        embedding = self.return_existing_embedding(hsh, loaded_embeddings)
 
-        if embeddings:
-            return embeddings[0]
-        else:
+        if not embedding:
             tokens = len(self.encoder.encode(text))
             if tokens > self.max_tokens:
                 text = text[:self.max_tokens]
@@ -77,9 +78,26 @@ class Embedder:
             except Exception as e:
                 raise Exception(f'Problem in OpenAI response. {e}')
                 
-            if auto_save:
-                self.connection.insert_into_embeddings(hsh, embedding, self.username)
-            return embedding
+            loaded_embeddings.update({hsh: embedding})
+            self.save_embeddings_list(loaded_embeddings)
+
+        return embedding
+
+    def return_embeddings_list(self):
+        if os.path.exists(self.file_path):
+            with open(self.file_path, 'rb') as f:
+                return pickle.load(f)
+        return {}
+    
+    def save_embeddings_list(self, embeddings_list):
+        with open(self.file_path, '+wb') as f:
+            pickle.dump(embeddings_list, f)
+
+    def return_existing_embedding(self, hsh, embeddings_list):
+        if hsh in embeddings_list:
+            return embeddings_list[hsh]
+        return {}
 
 def create_embedder(cache, encoder=text_encoder, max_tokens=max_embed_tokens):
     return Embedder(cache, encoder, max_tokens)
+

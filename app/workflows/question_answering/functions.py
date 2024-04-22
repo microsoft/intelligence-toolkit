@@ -1,4 +1,5 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+import os
 import numpy as np
 import streamlit as st
 import io
@@ -12,7 +13,7 @@ import tempfile
 import pdfkit
 from util.wkhtmltopdf import config_pdfkit, pdfkit_options
 
-embedder = util.Embedder.create_embedder(cache=f'{config.cache_dir}/qa_mine')
+embedder = util.Embedder.create_embedder(cache=os.path.join(config.cache_dir, 'qa_mine'))
 encoder = tiktoken.get_encoding('cl100k_base')
 
 
@@ -53,16 +54,11 @@ def chunk_files(sv, files):
                     file_chunks.append((file, chunk))
                 file.set_text(doc_text)
 
-    all_embeddings_list = []
     for cx, (file, chunk) in enumerate(file_chunks):
         pb.progress((cx+1) / len(file_chunks), f'Embedding chunk {cx+1} of {len(file_chunks)}...')
         formatted_chunk = chunk.replace("\n", " ")
-        chunk_vec = embedder.encode(formatted_chunk, False)
-        all_embeddings_list.append((hash(formatted_chunk), chunk_vec))
+        chunk_vec = embedder.encode(formatted_chunk)
         file.add_chunk(chunk, np.array(chunk_vec), cx+1)   
-    pb.progress(99, 'Saving embeddings...')
-    if len(all_embeddings_list) > 0:
-        embedder.connection.insert_multiple_into_embeddings(all_embeddings_list)
     pb.empty()
 
 def update_question(sv, question_history, new_questions, placeholder, prefix):
