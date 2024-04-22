@@ -14,6 +14,7 @@ from st_aggrid import (
     ColumnsAutoSizeMode
 )   
 
+from util.df_functions import get_current_time
 import workflows.attribute_patterns.prompts as prompts
 import workflows.attribute_patterns.functions as functions
 import workflows.attribute_patterns.classes as classes
@@ -192,7 +193,6 @@ def create():
                 report_placeholder = st.empty()
                 gen_placeholder = st.empty()
                     
-                get_current_time = pd.Timestamp.now().strftime('%Y%m%d%H%M%S')
                 if generate:
                     result = util.AI_API.generate_text_from_message_list(
                         placeholder=report_placeholder,
@@ -224,4 +224,4 @@ def create():
                                 "result": sv.attribute_report_validation.value,
                                 "report": report_data
                             }, indent=4)
-                            st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'attr_pattern_{get_current_time}_messages.json', mime='text/json')
+                            st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'attr_pattern_{get_current_time()}_messages.json', mime='text/json')

@@ -7,7 +7,7 @@ import workflows.group_narratives.prompts as prompts
 import workflows.group_narratives.config as config
 import workflows.group_narratives.variables as vars
 from util.session_variables import SessionVariables
-
+from util.df_functions import get_current_time
 import util.AI_API
 import util.ui_components
 import util.df_functions
@@ -209,7 +209,6 @@ def create():
                 
                 narrative_placeholder = st.empty()
                 gen_placeholder = st.empty()
-                get_current_time = pd.Timestamp.now().strftime('%Y%m%d%H%M%S')
                 if generate:
                     sv.narrative_selected_groups.value = selected_groups
                     sv.narrative_top_groups.value = top_group_ranks
@@ -241,4 +240,4 @@ def create():
                                 "result": sv.narrative_report_validation.value,
                                 "report": sv.narrative_report.value
                             }, indent=4)
-                            st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'narrative_{get_current_time}_messages.json', mime='text/json')
+                            st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'narrative_{get_current_time()}_messages.json', mime='text/json')

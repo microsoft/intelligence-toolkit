@@ -10,7 +10,7 @@ import os
 
 from collections import defaultdict
 from sklearn.neighbors import NearestNeighbors
-
+from util.df_functions import get_current_time
 import workflows.record_matching.prompts as prompts
 import workflows.record_matching.functions as functions
 import workflows.record_matching.config as config
@@ -335,7 +335,6 @@ def create():
             prefix = '```\nGroup ID,Relatedness,Explanation\n'
             placeholder = st.empty()
             gen_placeholder = st.empty()
-            get_current_time = pd.Timestamp.now().strftime('%Y%m%d%H%M%S')
 
             if generate:
                 for messages in batch_messages:
@@ -384,4 +383,4 @@ def create():
                             "result": sv.matching_report_validation.value,
                             "report": pd.DataFrame(sv.matching_evaluations.value).to_json()
                         }, indent=4)
-                        st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'matching_{get_current_time}_messages.json', mime='text/json')
+                        st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'matching_{get_current_time()}_messages.json', mime='text/json')

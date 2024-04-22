@@ -34,7 +34,6 @@ env/
 Thumbs.db
 
 # IntelligenceToolkit
-qa_mine
 outputs
 cache
 data

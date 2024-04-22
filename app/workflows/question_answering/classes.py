@@ -8,7 +8,7 @@ import os
 
 import util.Embedder
 
-embedder = util.Embedder.create_embedder(cache=os.path.join(config.cache_dir,"qa_mine")) #SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+embedder = util.Embedder.create_embedder(cache=config.cache_dir) #SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 encoder = tiktoken.get_encoding('cl100k_base')
 
 class Question:

@@ -1,6 +1,9 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import numpy as np
 
 import sys
+
+import pandas as pd
 
 def fix_null_ints(in_df):
     df = in_df.copy()
@@ -18,3 +21,6 @@ def fix_null_ints(in_df):
                 df[col] = df[col].astype('Int64')
                 df[col] = df[col].replace(-sys.maxsize, np.nan)
     return df
+
+def get_current_time():
+    return pd.Timestamp.now().strftime('%Y%m%d%H%M%S')

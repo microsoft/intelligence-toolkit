@@ -21,6 +21,7 @@ from st_aggrid import (
     ColumnsAutoSizeMode
 )   
 
+from util.df_functions import get_current_time
 import workflows.risk_networks.functions as functions
 import workflows.risk_networks.classes as classes
 import workflows.risk_networks.config as config
@@ -575,7 +576,6 @@ def create():
                     st.markdown(f'##### Selected network: {sv.network_selected_community.value}')
                 report_placeholder = st.empty()
                 gen_placeholder = st.empty()
-                get_current_time = pd.Timestamp.now().strftime('%Y%m%d%H%M%S')
                 if selected_entity != selected_entity:
                     sv.network_report.value = ''
                     sv.network_report_validation.value = {}
@@ -617,4 +617,4 @@ def create():
                                 "result": sv.network_report_validation.value,
                                 "report": sv.network_report.value
                             }, indent=4)
-                            st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'networks_{get_current_time}_messages.json', mime='text/json')
+                            st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'networks_{get_current_time()}_messages.json', mime='text/json')

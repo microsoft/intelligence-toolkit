@@ -13,7 +13,7 @@ import tempfile
 import pdfkit
 from util.wkhtmltopdf import config_pdfkit, pdfkit_options
 
-embedder = util.Embedder.create_embedder(cache=os.path.join(config.cache_dir, 'qa_mine'))
+embedder = util.Embedder.create_embedder(cache=config.cache_dir)
 encoder = tiktoken.get_encoding('cl100k_base')
 
 

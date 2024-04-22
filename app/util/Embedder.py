@@ -26,6 +26,8 @@ class Embedder:
         self.username = sv.username.value
         self.encoder = tiktoken.get_encoding(encoder)
         self.max_tokens = max_tokens
+        if not os.path.exists(cache):
+            os.makedirs(cache)
         self.file_path = os.path.join(cache, EMBEDDINGS_FILE_NAME)
         self.secrets_handler = SecretsHandler()
 

@@ -8,6 +8,7 @@ import json
 import scipy.spatial.distance
 
 from util.download_pdf import add_download_pdf
+from util.df_functions import get_current_time
 import workflows.question_answering.functions as functions
 import workflows.question_answering.classes as classes
 import workflows.question_answering.config as config
@@ -64,10 +65,12 @@ def create():
         with c2:
             st.markdown('#### Question matching')
             lazy_matches_placeholder = st.empty()
+            if (len(sv.answering_matches.value) > 0):
+                add_download_pdf(f'question_matching_{get_current_time()}.pdf', sv.answering_matches.value, 'Download matched questions')
         lazy_answering_placeholder.markdown(sv.answering_status_history.value, unsafe_allow_html=True)
         lazy_matches_placeholder.markdown(sv.answering_matches.value, unsafe_allow_html=True)
-        lazy_answer_placeholder = st.empty()  
-        
+
+
         if question != '' and regenerate:
             sv.answering_question_history.value = []
             sv.answering_next_q_id.value = 1
@@ -226,7 +229,6 @@ def create():
             with c2:
                 report_placeholder = st.empty()
                 gen_placeholder = st.empty()
-                get_current_time = pd.Timestamp.now().strftime('%Y%m%d%H%M%S')
                 if generate:
                     result = util.AI_API.generate_text_from_message_list(
                         placeholder=report_placeholder,
@@ -271,4 +273,4 @@ def create():
                                     "result": sv.answering_report_validation.value,
                                     "report": sv.answering_lazy_answer_text.value
                                 }, indent=4)
-                                st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'qa_{get_current_time}_messages.json', mime='text/json')
+                                st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'qa_{get_current_time()}_messages.json', mime='text/json')
