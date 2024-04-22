@@ -43,6 +43,7 @@ class SessionVariables:
         self.answering_question_history = SessionVariable([], prefix)
         self.answering_system_prompt = SessionVariable(prompts.list_prompts, prefix)
         self.answering_upload_key = SessionVariable(random.randint(1, 100), prefix)
+        self.answering_max_iterations = SessionVariable(10, prefix)
 
     def reset_workflow(self, prefix):
         for key in st.session_state.keys():

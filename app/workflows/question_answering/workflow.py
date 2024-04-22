@@ -46,7 +46,7 @@ def create():
             st.rerun()
             
     with mining_tab:
-        c1, c2, c3, c4 = st.columns([4, 1, 1, 1])
+        c1, c2, c3, c4, c5 = st.columns([4, 1, 1, 1, 1])
         with c1:
             question = st.text_input('Question', value=sv.answering_last_lazy_question.value)
         with c2:
@@ -54,6 +54,8 @@ def create():
         with c3:
             answering_source_diversity = st.number_input('Target source diversity', min_value=1, step=1, value=sv.answering_source_diversity.value)
         with c4:
+            max_iterations = st.number_input('Max iterations', min_value=1, step=1, value=sv.answering_max_iterations.value)
+        with c5:
             regenerate = st.button('Mine matching questions', key='lazy_regenerate', use_container_width=True)
         c1, c2 = st.columns([2, 3])
         with c1:
@@ -74,6 +76,7 @@ def create():
             sv.answering_report_validation.value = {}
             sv.answering_target_matches.value = answering_target_matches
             sv.answering_source_diversity.value = answering_source_diversity
+            sv.answering_max_iterations.value = max_iterations
             sv.answering_last_lazy_question.value = question
             sv.answering_status_history.value = ''
             sv.answering_matches.value = f''
@@ -106,8 +109,9 @@ def create():
                         break
                         
                 matched_qs = [c for t, c, d in cosine_distances[:chunk_index]]
-                if len(matched_qs) == sv.answering_target_matches.value:
-                    status_history += f'Iteration **{iteration}**...<br/><br/>Matched user question to **{len(matched_qs)}** mined questions:<br/>- ' + '<br/>- '.join([f'Q{matched_q.id}: {matched_q.text}' for matched_q in matched_qs]) + '<br/><br/>'
+                if len(matched_qs) == sv.answering_target_matches.value or iteration > sv.answering_max_iterations.value:
+                    iteration_string = f'Iteration **{iteration}**' if iteration <= sv.answering_max_iterations.value else f'Exceeded maximum iterations of **{sv.answering_max_iterations.value}**'
+                    status_history += f'{iteration_string}...<br/><br/>Matched user question to **{len(matched_qs)}** mined questions:<br/>- ' + '<br/>- '.join([f'Q{matched_q.id}: {matched_q.text}' for matched_q in matched_qs]) + '<br/><br/>'
                     sv.answering_status_history.value = status_history
                     report_input = f'**User question**: {sv.answering_question_history.value[0]}\n\n**Augmented question**: {sv.answering_question_history.value[-1]}\n\n'
                     seen_qs = set()
@@ -126,7 +130,6 @@ def create():
                     sv.answering_matches.value = report_input
                     # st.session_state['generate_lazy_answer'] = True
                     st.rerun()
-                    break
                 status_history += f'**Iteration {iteration}**...<br/><br/>Matched user question to **{len(matched_qs)}** of **{sv.answering_target_matches.value}** mined questions before reaching an unmined chunk'
                 if len(matched_qs) > 0:
                     status_history += ':<br/>- ' + '<br/>- '.join([f'Q{matched_q.id}: {matched_q.text}' for matched_q in matched_qs])
