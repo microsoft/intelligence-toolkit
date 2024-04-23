@@ -476,26 +476,27 @@ def create():
                             net_flagged -= 1
                         context = '##### Risk Exposure Report\n\n'
                         for flagged in all_flagged:
-                            path = list(nx.shortest_path(N, flagged, qualified_selected))
-                            if len(path) > 1:
-                                chain = ''
-                                for j, step in enumerate(path):
-                                    indent = "".join(["  "] * j)
-                                    if ']\n' in step:
-                                        step = ''.join(step.split(']\n')[1:])
-                                        step = '\n'.join(step.split('; '))
-                                    if config.entity_label in step:
-                                        step_risks = rdf[rdf['qualified_entity'] == step]['count'].sum()
-                                        step = step.split(config.att_val_sep)[1] + f' [linked to {step_risks} flags]'
-                                    else:
-                                        step_entities = nx.degree(N, step)
-                                        step = f"\n{indent}".join(step.split("\n")) + f' [linked to {step_entities} entities]'
-                                    chain += indent + f'{step}\n'
-                                    if j < len(path) - 1:
-                                        chain += indent + '--->\n'
-                                source = chain.split('\n--->')[0]
-                                path = chain.split('\n--->')[1]
-                                path_to_source[path].append(source)
+                            all_paths = functions.merge_paths([list(x) for x in nx.all_shortest_paths(N, flagged, qualified_selected)])
+                            for path in all_paths:
+                                if len(path) > 1:
+                                    chain = ''
+                                    for j, step in enumerate(path):
+                                        indent = "".join(["  "] * j)
+                                        if ']\n' in step:
+                                            step = ''.join(step.split(']\n')[1:])
+                                            step = '\n'.join(step.split('; '))
+                                        if config.entity_label in step:
+                                            step_risks = rdf[rdf['qualified_entity'] == step]['count'].sum()
+                                            step = step.split(config.att_val_sep)[1] + f' [linked to {step_risks} flags]'
+                                        else:
+                                            step_entities = nx.degree(N, step)
+                                            step = f"\n{indent}".join(step.split("\n")) + f' [linked to {step_entities} entities]'
+                                        chain += indent + f'{step}\n'
+                                        if j < len(path) - 1:
+                                            chain += indent + '--->\n'
+                                    source = chain.split('\n--->')[0]
+                                    path = chain.split('\n--->')[1]
+                                    path_to_source[path].append(source)
                         paths = len(path_to_source.keys())
                         context += f'The selected entity **{selected_entity}** has **{target_flags}** direct flags and is linked to **{net_flags}** indirect flags via **{paths}** paths from **{net_flagged}** related entities:\n\n'
                         if net_flagged == 0:

@@ -17,8 +17,8 @@ class app_mode:
         self.sv_network = rn_vars.SessionVariables('risk_networks')
 
     def config(self):
-        mode = st.sidebar.toggle("Protected mode", value=self.sv.protected_mode.value, help="Prevent entity identification on screen.")
-        st.sidebar.caption("Changing this value will reset the whole workflow on Risk Network.")
+        mode = st.sidebar.toggle("Protected mode", value=self.sv.protected_mode.value, help="Prevent entity identification on screen. Changing this value will reset the whole workflow on Risk Networks.")
+
         if mode != self.sv.protected_mode.value:
             self.sv.protected_mode.value = mode
             self.sv_network.reset_workflow('risk_networks')
