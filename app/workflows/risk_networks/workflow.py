@@ -1,9 +1,7 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import json
-import numpy as np
 import streamlit as st
 import pandas as pd
-from pandas.api.types import is_numeric_dtype
 import networkx as nx
 
 from collections import defaultdict
@@ -23,6 +21,7 @@ from st_aggrid import (
     ColumnsAutoSizeMode
 )   
 
+from util.df_functions import get_current_time
 import workflows.risk_networks.functions as functions
 import workflows.risk_networks.classes as classes
 import workflows.risk_networks.config as config
@@ -47,7 +46,7 @@ def create():
     with uploader_tab:
         uploader_col, model_col = st.columns([3, 2])
         with uploader_col:
-            selected_file, df = util.ui_components.multi_csv_uploader('Upload multiple CSVs', sv.network_uploaded_files, config.outputs_dir, 'network_uploader', sv.network_max_rows_to_process)
+            selected_file, df = util.ui_components.multi_csv_uploader('Upload multiple CSVs', sv.network_uploaded_files, config.outputs_dir, sv.network_upload_key.value, 'network_uploader', sv.network_max_rows_to_process)
         with model_col:
             st.markdown('##### Map columns to model')
             if df is None:
@@ -109,23 +108,26 @@ def create():
 
                                         df[entity_col] = df[entity_col].apply(lambda x: new_name if name == x else x)
                                         
-                                    unique_names = df[value_col].unique()
+                                    unique_names_value = df[value_col].unique()
 
                                     numeric_pattern = r'^\d+(\.\d+)?$'
                                     def is_numeric_column(column):
                                         return all(re.match(numeric_pattern, str(value)) for value in column)
 
                                     is_numeric = is_numeric_column(df[value_col])
-
                                     if not is_numeric:
-                                        for i, name in enumerate(unique_names, start=1):
-                                            original_name = name
+                                        for i, name in enumerate(unique_names_value, start=1):
                                             new_name = f'{value_col}_{str(i)}'
                                             name_exists = [x for x in sv.network_attributes_renamed.value if x[0] == name]
-                                            if len(name_exists) == 0:
-                                                sv.network_attributes_renamed.value.append((original_name, new_name))
+                                            name_exists_entity = [x for x in sv.network_entities_renamed.value if x[0] == name]
+
+                                            if len(name_exists) == 0 and len(name_exists_entity) == 0:
+                                                sv.network_attributes_renamed.value.append((name, new_name))
                                             else:
-                                                new_name = name_exists[0][1]
+                                                if len(name_exists_entity) > 0:
+                                                    new_name = name_exists_entity[0][1]
+                                                else:
+                                                    new_name = name_exists[0][1]
 
                                             df[value_col] = df[value_col].apply(lambda x: new_name if name == x else x)
                                     else:
@@ -233,10 +235,10 @@ def create():
             else:
                 st.warning('Add links to the model to continue.')
 
-        # reset_workflow_button = st.button(":warning: Reset workflow", use_container_width=True, help='Clear all data on this workflow and start over. CAUTION: This action can\'t be undone.')
-        # if reset_workflow_button:
-        #     sv.reset_workflow('risk_networks')
-        #     st.rerun()
+        reset_workflow_button = st.button(":warning: Reset workflow", use_container_width=True, help='Clear all data on this workflow and start over. CAUTION: This action can\'t be undone.')
+        if reset_workflow_button:
+            sv.reset_workflow('risk_networks')
+            st.rerun()
 
     with process_tab:
         index_col, part_col = st.columns([1, 1])
@@ -575,7 +577,6 @@ def create():
                     st.markdown(f'##### Selected network: {sv.network_selected_community.value}')
                 report_placeholder = st.empty()
                 gen_placeholder = st.empty()
-                get_current_time = pd.Timestamp.now().strftime('%Y%m%d%H%M%S')
                 if selected_entity != selected_entity:
                     sv.network_report.value = ''
                     sv.network_report_validation.value = {}
@@ -611,10 +612,10 @@ def create():
                         explanation = sv.network_report_validation.value['explanation']
                         st.write(explanation)
 
-                    if sv_home.mode.value == 'dev':
-                        obj = json.dumps({
-                            "message": sv.network_report_validation_messages.value,
-                            "result": sv.network_report_validation.value,
-                            "report": sv.network_report.value
-                        }, indent=4)
-                        st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'networks_{get_current_time}_messages.json', mime='text/json')
+                        if sv_home.mode.value == 'dev':
+                            obj = json.dumps({
+                                "message": sv.network_report_validation_messages.value,
+                                "result": sv.network_report_validation.value,
+                                "report": sv.network_report.value
+                            }, indent=4)
+                            st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'networks_{get_current_time()}_messages.json', mime='text/json')

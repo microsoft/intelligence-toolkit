@@ -82,8 +82,9 @@ def validate_report(messages, ai_response):
 
     message = [{
         'role': 'system',
-        'content': GROUNDEDNESS_PROMPT.format(instructions=messages[0]['content'], report=ai_response)
+        'content': GROUNDEDNESS_PROMPT.format(instructions=messages, report=ai_response)
     }]
+    
     try:
         responses = openai.client().chat.completions.create(
             model=model,

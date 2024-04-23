@@ -1,3 +1,4 @@
+import random
 from util.session_variable import SessionVariable
 import pandas as pd
 import polars as pl
@@ -62,9 +63,9 @@ class SessionVariables:
         self.network_risk_exposure = SessionVariable('', prefix)
         self.network_last_show_entities = SessionVariable(False, prefix)
         self.network_last_show_groups = SessionVariable(False, prefix)
-        self.network_attributes_protected = SessionVariable([], prefix)
         self.network_entities_renamed = SessionVariable([], prefix)
         self.network_attributes_renamed = SessionVariable([], prefix)
+        self.network_upload_key = SessionVariable(random.randint(1, 100), prefix)
 
     def reset_workflow(self, prefix):
         for key in st.session_state.keys():

@@ -14,6 +14,7 @@ from st_aggrid import (
     ColumnsAutoSizeMode
 )   
 
+from util.df_functions import get_current_time
 import workflows.attribute_patterns.prompts as prompts
 import workflows.attribute_patterns.functions as functions
 import workflows.attribute_patterns.classes as classes
@@ -26,7 +27,7 @@ import util.ui_components
 
 def create():
     workflow = 'attribute_patterns'
-    sv = vars.SessionVariables('attribute_patterns')
+    sv = vars.SessionVariables(workflow)
     sv_home = SessionVariables('home')
     intro_tab, uploader_tab, detect_tab, explain_tab = st.tabs(['Attribute patterns workflow:', 'Create graph model', 'Detect patterns', 'Generate AI pattern reports'])
     df = None
@@ -35,7 +36,7 @@ def create():
     with uploader_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:
-            util.ui_components.single_csv_uploader(workflow, 'Upload CSV', sv.attribute_last_file_name, sv.attribute_input_df, sv.attribute_binned_df, sv.attribute_final_df, key='attributes_uploader', height=500)
+            util.ui_components.single_csv_uploader(workflow, 'Upload CSV', sv.attribute_last_file_name, sv.attribute_input_df, sv.attribute_binned_df, sv.attribute_final_df, sv.attribute_upload_key.value, key='attributes_uploader', height=500)
         with model_col:
             util.ui_components.prepare_input_df(workflow, sv.attribute_input_df, sv.attribute_binned_df, sv.attribute_final_df, sv.attribute_subject_identifier)
             options = [''] + [c for c in sv.attribute_final_df.value.columns.values if c != 'Subject ID']
@@ -66,6 +67,11 @@ def create():
             if ready and len(sv.attribute_dynamic_df.value) > 0:
                 st.success(f'Graph model has **{len(sv.attribute_dynamic_df.value)}** links spanning **{len(sv.attribute_dynamic_df.value["Subject ID"].unique())}** cases, **{len(sv.attribute_dynamic_df.value["Full Attribute"].unique())}** attributes, and **{len(sv.attribute_dynamic_df.value["Period"].unique())}** periods.')
 
+        reset_workflow_button = st.button(":warning: Reset workflow", use_container_width=True, help='Clear all data on this workflow and start over. CAUTION: This action can\'t be undone.')
+        if reset_workflow_button:
+            sv.reset_workflow(workflow)
+            st.rerun()
+            
     with detect_tab:
         if not ready or len(sv.attribute_final_df.value) == 0:
             st.warning('Generate a graph model to continue.')
@@ -187,7 +193,6 @@ def create():
                 report_placeholder = st.empty()
                 gen_placeholder = st.empty()
                     
-                get_current_time = pd.Timestamp.now().strftime('%Y%m%d%H%M%S')
                 if generate:
                     result = util.AI_API.generate_text_from_message_list(
                         placeholder=report_placeholder,
@@ -213,10 +218,10 @@ def create():
                     with validation_status:
                         st.write(sv.attribute_report_validation.value['explanation'])
 
-                    if sv_home.mode.value == 'dev':
-                        obj = json.dumps({
-                            "message": sv.attribute_report_validation_messages.value,
-                            "result": sv.attribute_report_validation.value,
-                            "report": report_data
-                        }, indent=4)
-                        st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'attr_pattern_{get_current_time}_messages.json', mime='text/json')
+                        if sv_home.mode.value == 'dev':
+                            obj = json.dumps({
+                                "message": sv.attribute_report_validation_messages.value,
+                                "result": sv.attribute_report_validation.value,
+                                "report": report_data
+                            }, indent=4)
+                            st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'attr_pattern_{get_current_time()}_messages.json', mime='text/json')

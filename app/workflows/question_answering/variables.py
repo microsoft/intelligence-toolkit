@@ -1,13 +1,17 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+import random
 from util.session_variable import SessionVariable
 import pandas as pd
+import streamlit as st
 
 import workflows.question_answering.prompts as prompts
 
 class SessionVariables:
 
     def __init__(self, prefix):
-        # Add a prefix to each SessionVariable
+        self.create_session(prefix)
+
+    def create_session(self, prefix):
         self.answering_raw_embedding_df = SessionVariable(pd.DataFrame(), prefix)
         self.answering_q_embedding_df = SessionVariable(pd.DataFrame(), prefix)
         self.answering_next_file_id = SessionVariable(1, prefix)
@@ -38,3 +42,11 @@ class SessionVariables:
         self.answering_source_diversity = SessionVariable(1, prefix)
         self.answering_question_history = SessionVariable([], prefix)
         self.answering_system_prompt = SessionVariable(prompts.list_prompts, prefix)
+        self.answering_upload_key = SessionVariable(random.randint(1, 100), prefix)
+        self.answering_max_iterations = SessionVariable(10, prefix)
+
+    def reset_workflow(self, prefix):
+        for key in st.session_state.keys():
+            if key.startswith(prefix):
+                del st.session_state[key]
+        self.create_session(prefix)

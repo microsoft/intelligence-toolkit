@@ -8,6 +8,7 @@ import json
 import scipy.spatial.distance
 
 from util.download_pdf import add_download_pdf
+from util.df_functions import get_current_time
 import workflows.question_answering.functions as functions
 import workflows.question_answering.classes as classes
 import workflows.question_answering.config as config
@@ -20,7 +21,8 @@ import util.ui_components
 embedder = util.Embedder.create_embedder(config.cache_dir)
 
 def create():
-    sv = vars.SessionVariables('question_answering')
+    workflow = 'question_answering'
+    sv = vars.SessionVariables(workflow)
     sv_home = SessionVariables('home')
     intro_tab, uploader_tab, mining_tab, report_tab = st.tabs(['Question answering workflow:', 'Upload data', 'Mine & match questions', 'Generate AI answer reports'])
     
@@ -29,7 +31,7 @@ def create():
         st.markdown(config.intro)
     with uploader_tab:
         st.markdown('##### Upload data for processing')
-        files = st.file_uploader("Upload PDF text files", type=['pdf', 'txt'], accept_multiple_files=True)
+        files = st.file_uploader("Upload PDF text files", type=['pdf', 'txt'], accept_multiple_files=True, key=sv.answering_upload_key.value)
         if files != None:
             if st.button('Chunk and embed files'):
                 functions.chunk_files(sv, files)
@@ -38,8 +40,14 @@ def create():
         num_chunks = sum([len(f.chunk_texts) for f in sv.answering_files.value.values()])
         if num_files > 0:
             st.success(f'Chunked **{num_files}** files into **{num_chunks}** chunks of up to **{config.chunk_size}** characters.')
+
+        reset_workflow_button = st.button(":warning: Reset workflow", key='btn_qa_reset', use_container_width=True, help='Clear all data on this workflow and start over. CAUTION: This action can\'t be undone.')
+        if reset_workflow_button:
+            sv.reset_workflow(workflow)
+            st.rerun()
+            
     with mining_tab:
-        c1, c2, c3, c4 = st.columns([4, 1, 1, 1])
+        c1, c2, c3, c4, c5 = st.columns([4, 1, 1, 1, 1])
         with c1:
             question = st.text_input('Question', value=sv.answering_last_lazy_question.value)
         with c2:
@@ -47,6 +55,8 @@ def create():
         with c3:
             answering_source_diversity = st.number_input('Target source diversity', min_value=1, step=1, value=sv.answering_source_diversity.value)
         with c4:
+            max_iterations = st.number_input('Max iterations', min_value=1, step=1, value=sv.answering_max_iterations.value)
+        with c5:
             regenerate = st.button('Mine matching questions', key='lazy_regenerate', use_container_width=True)
         c1, c2 = st.columns([2, 3])
         with c1:
@@ -55,10 +65,12 @@ def create():
         with c2:
             st.markdown('#### Question matching')
             lazy_matches_placeholder = st.empty()
+            if (len(sv.answering_matches.value) > 0):
+                add_download_pdf(f'question_matching_{get_current_time()}.pdf', sv.answering_matches.value, 'Download matched questions')
         lazy_answering_placeholder.markdown(sv.answering_status_history.value, unsafe_allow_html=True)
         lazy_matches_placeholder.markdown(sv.answering_matches.value, unsafe_allow_html=True)
-        lazy_answer_placeholder = st.empty()  
-        
+
+
         if question != '' and regenerate:
             sv.answering_question_history.value = []
             sv.answering_next_q_id.value = 1
@@ -67,6 +79,7 @@ def create():
             sv.answering_report_validation.value = {}
             sv.answering_target_matches.value = answering_target_matches
             sv.answering_source_diversity.value = answering_source_diversity
+            sv.answering_max_iterations.value = max_iterations
             sv.answering_last_lazy_question.value = question
             sv.answering_status_history.value = ''
             sv.answering_matches.value = f''
@@ -99,8 +112,9 @@ def create():
                         break
                         
                 matched_qs = [c for t, c, d in cosine_distances[:chunk_index]]
-                if len(matched_qs) == sv.answering_target_matches.value:
-                    status_history += f'Iteration **{iteration}**...<br/><br/>Matched user question to **{len(matched_qs)}** mined questions:<br/>- ' + '<br/>- '.join([f'Q{matched_q.id}: {matched_q.text}' for matched_q in matched_qs]) + '<br/><br/>'
+                if len(matched_qs) == sv.answering_target_matches.value or iteration > sv.answering_max_iterations.value:
+                    iteration_string = f'Iteration **{iteration}**' if iteration <= sv.answering_max_iterations.value else f'Exceeded maximum iterations of **{sv.answering_max_iterations.value}**'
+                    status_history += f'{iteration_string}...<br/><br/>Matched user question to **{len(matched_qs)}** mined questions:<br/>- ' + '<br/>- '.join([f'Q{matched_q.id}: {matched_q.text}' for matched_q in matched_qs]) + '<br/><br/>'
                     sv.answering_status_history.value = status_history
                     report_input = f'**User question**: {sv.answering_question_history.value[0]}\n\n**Augmented question**: {sv.answering_question_history.value[-1]}\n\n'
                     seen_qs = set()
@@ -119,7 +133,6 @@ def create():
                     sv.answering_matches.value = report_input
                     # st.session_state['generate_lazy_answer'] = True
                     st.rerun()
-                    break
                 status_history += f'**Iteration {iteration}**...<br/><br/>Matched user question to **{len(matched_qs)}** of **{sv.answering_target_matches.value}** mined questions before reaching an unmined chunk'
                 if len(matched_qs) > 0:
                     status_history += ':<br/>- ' + '<br/>- '.join([f'Q{matched_q.id}: {matched_q.text}' for matched_q in matched_qs])
@@ -216,7 +229,6 @@ def create():
             with c2:
                 report_placeholder = st.empty()
                 gen_placeholder = st.empty()
-                get_current_time = pd.Timestamp.now().strftime('%Y%m%d%H%M%S')
                 if generate:
                     result = util.AI_API.generate_text_from_message_list(
                         placeholder=report_placeholder,
@@ -255,10 +267,10 @@ def create():
                         with validation_status:
                             st.write(sv.answering_report_validation.value['explanation'])
 
-                        if sv_home.mode.value == 'dev':
-                            obj = json.dumps({
-                                "message": sv.answering_report_validation_messages.value,
-                                "result": sv.answering_report_validation.value,
-                                "report": sv.answering_lazy_answer_text.value
-                            }, indent=4)
-                            st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'qa_{get_current_time}_messages.json', mime='text/json')
+                            if sv_home.mode.value == 'dev':
+                                obj = json.dumps({
+                                    "message": sv.answering_report_validation_messages.value,
+                                    "result": sv.answering_report_validation.value,
+                                    "report": sv.answering_lazy_answer_text.value
+                                }, indent=4)
+                                st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'qa_{get_current_time()}_messages.json', mime='text/json')

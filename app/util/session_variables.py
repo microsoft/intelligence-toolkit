@@ -13,3 +13,4 @@ class SessionVariables:
         self.generation_model = sv.SessionVariable('gpt-4-turbo')
         self.embedding_model = sv.SessionVariable('text-embedding-ada-002')
         self.protected_mode = sv.SessionVariable(False)
+        self.max_embedding_size = sv.SessionVariable(500)

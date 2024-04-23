@@ -7,14 +7,14 @@ import workflows.group_narratives.prompts as prompts
 import workflows.group_narratives.config as config
 import workflows.group_narratives.variables as vars
 from util.session_variables import SessionVariables
-
+from util.df_functions import get_current_time
 import util.AI_API
 import util.ui_components
 import util.df_functions
 
 def create():
     workflow = 'group_narratives'
-    sv = vars.SessionVariables('group_narratives')
+    sv = vars.SessionVariables(workflow)
     sv_home = SessionVariables('home')
 
     intro_tab, prepare_tab, summarize_tab, generate_tab = st.tabs(['Group narratives workflow:', 'Upload data to narrate', 'Prepare data summary', 'Generate AI group reports',])
@@ -24,11 +24,17 @@ def create():
     with prepare_tab:
         uploader_col, model_col = st.columns([1, 1])
         with uploader_col:
-            util.ui_components.single_csv_uploader(workflow, 'Upload CSV to narrate', sv.narrative_last_file_name, sv.narrative_input_df, sv.narrative_binned_df, sv.narrative_final_df, key='narrative_uploader', height=400)
+            util.ui_components.single_csv_uploader(workflow, 'Upload CSV to narrate', sv.narrative_last_file_name, sv.narrative_input_df, sv.narrative_binned_df, sv.narrative_final_df, uploader_key=sv.narrative_upload_key.value,key='narrative_uploader', height=400)
         with model_col:
             util.ui_components.prepare_input_df(workflow, sv.narrative_input_df, sv.narrative_binned_df, sv.narrative_final_df, sv.narrative_subject_identifier)
             sv.narrative_final_df.value = util.df_functions.fix_null_ints(sv.narrative_final_df.value)
             sv.narrative_final_df.value = sv.narrative_final_df.value.astype(str).replace('<NA>', '').replace('nan', '')
+        
+        reset_workflow_button = st.button(":warning: Reset workflow", use_container_width=True, help='Clear all data on this workflow and start over. CAUTION: This action can\'t be undone.')
+        if reset_workflow_button:
+            sv.reset_workflow(workflow)
+            st.rerun()
+
     with summarize_tab:
         if len(sv.narrative_final_df.value) == 0:
             st.warning('Upload data to continue.')
@@ -203,7 +209,6 @@ def create():
                 
                 narrative_placeholder = st.empty()
                 gen_placeholder = st.empty()
-                get_current_time = pd.Timestamp.now().strftime('%Y%m%d%H%M%S')
                 if generate:
                     sv.narrative_selected_groups.value = selected_groups
                     sv.narrative_top_groups.value = top_group_ranks
@@ -229,10 +234,10 @@ def create():
                     with validation_status:
                         st.write(sv.narrative_report_validation.value['explanation'])
 
-                    if sv_home.mode.value == 'dev':
-                        obj = json.dumps({
-                            "message": sv.narrative_report_validation_messages.value,
-                            "result": sv.narrative_report_validation.value,
-                            "report": sv.narrative_report.value
-                        }, indent=4)
-                        st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'narrative_{get_current_time}_messages.json', mime='text/json')
+                        if sv_home.mode.value == 'dev':
+                            obj = json.dumps({
+                                "message": sv.narrative_report_validation_messages.value,
+                                "result": sv.narrative_report_validation.value,
+                                "report": sv.narrative_report.value
+                            }, indent=4)
+                            st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'narrative_{get_current_time()}_messages.json', mime='text/json')

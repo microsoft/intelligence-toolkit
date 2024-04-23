@@ -1,12 +1,17 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+import random
 from util.session_variable import SessionVariable
 import polars as pl
 
 import workflows.record_matching.prompts as prompts
+import streamlit as st
 
 class SessionVariables:
 
     def __init__(self, prefix):
+        self.create_session(prefix)
+
+    def create_session(self, prefix):
         self.matching_uploaded_files = SessionVariable([], prefix)
         self.matching_dfs = SessionVariable({}, prefix)
         self.matching_merged_df = SessionVariable(pl.DataFrame(), prefix)
@@ -21,3 +26,11 @@ class SessionVariables:
         self.matching_report_validation = SessionVariable({}, prefix)
         self.matching_report_validation_messages = SessionVariable('', prefix)
         self.matching_system_prompt = SessionVariable(prompts.list_prompts, prefix)
+        self.matching_upload_key = SessionVariable(random.randint(1, 100), prefix)
+
+
+    def reset_workflow(self, prefix):
+        for key in st.session_state.keys():
+            if key.startswith(prefix):
+                del st.session_state[key]
+        self.create_session(prefix)
