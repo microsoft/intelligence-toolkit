@@ -4,14 +4,18 @@ import workflows.record_matching.workflow
 from components.app_loader import load_multipage_app
 import streamlit as st
 from util.enums import Mode
+import workflows.record_matching.variables as vars
 
+workflow = 'record_matching'
 def main():
     st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_icon="app/myapp.ico", page_title='Intelligence Toolkit | Record Matching')
-    load_multipage_app()
+    sv = vars.SessionVariables(workflow)
+    load_multipage_app(sv)
+    
     sv_home = SessionVariables('home')
 
     try:
-        workflows.record_matching.workflow.create()
+        workflows.record_matching.workflow.create(sv)
     except Exception as e:
         if sv_home.mode.value == Mode.DEV.value:
             st.exception(e)

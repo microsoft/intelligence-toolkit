@@ -21,9 +21,8 @@ import util.ui_components
 
 embedder = util.Embedder.create_embedder(config.cache_dir)
 
-def create():
-    workflow = 'record_matching'
-    sv = vars.SessionVariables(workflow)
+def create(sv):
+
     sv_home = home_vars.SessionVariables('home')
 
     if not os.path.exists(config.outputs_dir):
@@ -74,11 +73,6 @@ def create():
                         recs = sum([len(df) for df in sv.matching_dfs.value.values()])
                         st.success(f'Data model has **{len(sv.matching_dfs.value)}** datasets with **{recs}** total records.')
         
-        reset_workflow_button = st.button(":warning: Reset workflow", use_container_width=True, help='Clear all data on this workflow and start over. CAUTION: This action can\'t be undone.')
-        if reset_workflow_button:
-            sv.reset_workflow(workflow)
-            st.rerun()
-
     with process_tab:
         if len(sv.matching_dfs.value) == 0:
             st.warning('Upload data files to continue')

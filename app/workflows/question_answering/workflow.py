@@ -13,16 +13,13 @@ import workflows.question_answering.functions as functions
 import workflows.question_answering.classes as classes
 import workflows.question_answering.config as config
 import workflows.question_answering.prompts as prompts
-import workflows.question_answering.variables as vars
 from util.session_variables import SessionVariables
 import util.Embedder
 import util.ui_components
 
 embedder = util.Embedder.create_embedder(config.cache_dir)
 
-def create():
-    workflow = 'question_answering'
-    sv = vars.SessionVariables(workflow)
+def create(sv: SessionVariables):
     sv_home = SessionVariables('home')
     intro_tab, uploader_tab, mining_tab, report_tab = st.tabs(['Question answering workflow:', 'Upload data', 'Mine & match questions', 'Generate AI answer reports'])
     
@@ -39,13 +36,7 @@ def create():
         num_files = len(sv.answering_files.value)
         num_chunks = sum([len(f.chunk_texts) for f in sv.answering_files.value.values()])
         if num_files > 0:
-            st.success(f'Chunked **{num_files}** files into **{num_chunks}** chunks of up to **{config.chunk_size}** characters.')
-
-        reset_workflow_button = st.button(":warning: Reset workflow", key='btn_qa_reset', use_container_width=True, help='Clear all data on this workflow and start over. CAUTION: This action can\'t be undone.')
-        if reset_workflow_button:
-            sv.reset_workflow(workflow)
-            st.rerun()
-            
+            st.success(f'Chunked **{num_files}** files into **{num_chunks}** chunks of up to **{config.chunk_size}** characters.')            
     with mining_tab:
         c1, c2, c3, c4, c5 = st.columns([4, 1, 1, 1, 1])
         with c1:

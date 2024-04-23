@@ -1,6 +1,5 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import json
-import re
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -25,9 +24,7 @@ from util.session_variables import SessionVariables
 import util.AI_API
 import util.ui_components
 
-def create():
-    workflow = 'attribute_patterns'
-    sv = vars.SessionVariables(workflow)
+def create(sv: vars.SessionVariables):
     sv_home = SessionVariables('home')
     intro_tab, uploader_tab, detect_tab, explain_tab = st.tabs(['Attribute patterns workflow:', 'Create graph model', 'Detect patterns', 'Generate AI pattern reports'])
     df = None
@@ -36,13 +33,13 @@ def create():
     with uploader_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:
-            util.ui_components.single_csv_uploader(workflow, 'Upload CSV', sv.attribute_last_file_name, sv.attribute_input_df, sv.attribute_binned_df, sv.attribute_final_df, sv.attribute_upload_key.value, key='attributes_uploader', height=500)
+            util.ui_components.single_csv_uploader('attribute_patterns', 'Upload CSV', sv.attribute_last_file_name, sv.attribute_input_df, sv.attribute_binned_df, sv.attribute_final_df, sv.attribute_upload_key.value, key='attributes_uploader', height=500)
         with model_col:
-            util.ui_components.prepare_input_df(workflow, sv.attribute_input_df, sv.attribute_binned_df, sv.attribute_final_df, sv.attribute_subject_identifier)
+            util.ui_components.prepare_input_df('attribute_patterns', sv.attribute_input_df, sv.attribute_binned_df, sv.attribute_final_df, sv.attribute_subject_identifier)
             options = [''] + [c for c in sv.attribute_final_df.value.columns.values if c != 'Subject ID']
             sv.attribute_time_col.value = st.selectbox('Period column', options, index=options.index(sv.attribute_time_col.value) if sv.attribute_time_col.value in options else 0)
             time_col = sv.attribute_time_col.value
-            att_cols = [col for col in sv.attribute_final_df.value.columns.values if col not in ['Subject ID', time_col] and st.session_state[f'{workflow}_{col}'] == True]
+            att_cols = [col for col in sv.attribute_final_df.value.columns.values if col not in ['Subject ID', time_col] and st.session_state[f'attribute_patterns_{col}'] == True]
             
             ready = len(att_cols) > 0 and sv.attribute_time_col.value != ''
 
@@ -67,11 +64,6 @@ def create():
             if ready and len(sv.attribute_dynamic_df.value) > 0:
                 st.success(f'Graph model has **{len(sv.attribute_dynamic_df.value)}** links spanning **{len(sv.attribute_dynamic_df.value["Subject ID"].unique())}** cases, **{len(sv.attribute_dynamic_df.value["Full Attribute"].unique())}** attributes, and **{len(sv.attribute_dynamic_df.value["Period"].unique())}** periods.')
 
-        reset_workflow_button = st.button(":warning: Reset workflow", use_container_width=True, help='Clear all data on this workflow and start over. CAUTION: This action can\'t be undone.')
-        if reset_workflow_button:
-            sv.reset_workflow(workflow)
-            st.rerun()
-            
     with detect_tab:
         if not ready or len(sv.attribute_final_df.value) == 0:
             st.warning('Generate a graph model to continue.')

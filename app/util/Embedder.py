@@ -95,7 +95,7 @@ class Embedder:
     
     def save_embeddings_list(self, embeddings_list):
         embeddings_count = len(embeddings_list)
-        max_size = int(self.secrets_handler.get_secret(MAX_SIZE_EMBEDDINGS_KEY)) or 0
+        max_size = int(self.secrets_handler.get_secret(MAX_SIZE_EMBEDDINGS_KEY) or 0)
         if max_size > 0 and embeddings_count > max_size:
             embeddings_list = dict(list(embeddings_list.items())[-max_size:])
 

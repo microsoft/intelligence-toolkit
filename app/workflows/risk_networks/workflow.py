@@ -32,8 +32,7 @@ import util.ui_components
 
 embedder = util.Embedder.create_embedder(config.cache_dir)
 
-def create():
-    sv = vars.SessionVariables('risk_networks')
+def create(sv: vars.SessionVariables):
     sv_home = SessionVariables('home')
 
     if not os.path.exists(config.outputs_dir):
@@ -234,11 +233,6 @@ def create():
                 st.markdown(f'*Number of entities*: {num_entities}<br/>*Number of attributes*: {num_attributes}<br/>*Number of links*: {num_edges}<br/>*Number of flags*: {num_flags}<br/>*Number of groups*: {len(groups)}', unsafe_allow_html=True)
             else:
                 st.warning('Add links to the model to continue.')
-
-        reset_workflow_button = st.button(":warning: Reset workflow", use_container_width=True, help='Clear all data on this workflow and start over. CAUTION: This action can\'t be undone.')
-        if reset_workflow_button:
-            sv.reset_workflow('risk_networks')
-            st.rerun()
 
     with process_tab:
         index_col, part_col = st.columns([1, 1])

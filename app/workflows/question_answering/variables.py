@@ -8,7 +8,9 @@ import workflows.question_answering.prompts as prompts
 
 class SessionVariables:
 
+    prefix = None
     def __init__(self, prefix):
+        self.prefix = prefix
         self.create_session(prefix)
 
     def create_session(self, prefix):
@@ -45,8 +47,8 @@ class SessionVariables:
         self.answering_upload_key = SessionVariable(random.randint(1, 100), prefix)
         self.answering_max_iterations = SessionVariable(10, prefix)
 
-    def reset_workflow(self, prefix):
+    def reset_workflow(self):
         for key in st.session_state.keys():
-            if key.startswith(prefix):
+            if key.startswith(self.prefix):
                 del st.session_state[key]
-        self.create_session(prefix)
+        self.create_session(self.prefix)

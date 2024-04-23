@@ -12,9 +12,7 @@ import util.AI_API
 import util.ui_components
 import util.df_functions
 
-def create():
-    workflow = 'group_narratives'
-    sv = vars.SessionVariables(workflow)
+def create(sv: vars.SessionVariables, workflow = None):
     sv_home = SessionVariables('home')
 
     intro_tab, prepare_tab, summarize_tab, generate_tab = st.tabs(['Group narratives workflow:', 'Upload data to narrate', 'Prepare data summary', 'Generate AI group reports',])
@@ -30,11 +28,6 @@ def create():
             sv.narrative_final_df.value = util.df_functions.fix_null_ints(sv.narrative_final_df.value)
             sv.narrative_final_df.value = sv.narrative_final_df.value.astype(str).replace('<NA>', '').replace('nan', '')
         
-        reset_workflow_button = st.button(":warning: Reset workflow", use_container_width=True, help='Clear all data on this workflow and start over. CAUTION: This action can\'t be undone.')
-        if reset_workflow_button:
-            sv.reset_workflow(workflow)
-            st.rerun()
-
     with summarize_tab:
         if len(sv.narrative_final_df.value) == 0:
             st.warning('Upload data to continue.')
