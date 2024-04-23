@@ -210,8 +210,6 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
         st.session_state[f'{workflow}_selected_binned_cols'] = []
     if f'{workflow}_selected_binned_size' not in st.session_state:
         st.session_state[f'{workflow}_selected_binned_size'] = 'Year'
-    if f'{workflow}_selected_num_attr' not in st.session_state:
-        st.session_state[f'{workflow}_selected_num_attr'] = []
     if f'{workflow}_selected_num_bins' not in st.session_state:
         st.session_state[f'{workflow}_selected_num_bins'] = 5
     if f'{workflow}_selected_trim_percent' not in st.session_state:
@@ -256,32 +254,14 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
             if col != 'Subject ID':
                 input = st.checkbox(col, key=f'{workflow}_{col}_input', value=st.session_state[f'{workflow}_{col}'])            
                 st.session_state[f'{workflow}_{col}'] = input
-    # set processed_df_var to input_df_var filtered by selected columns
 
-    #df to be running through the processing steps
     selected_cols = [col for col in input_df_var.value.columns.values if st.session_state[f'{workflow}_{col}'] == True]
-    processed_df_var.value = processed_df_var.value[['Subject ID']].copy()
-    for col in selected_cols:
-        
-        if col in st.session_state[f'{workflow}_binned_df'].columns.values:
-            processed_df_var.value[col] = list(st.session_state[f'{workflow}_binned_df'][col])
-            processed_df_var.value[col] = processed_df_var.value[col].replace('nan', '')
-
-    for (cols, delim) in st.session_state[f'{workflow}_selected_compound_cols']:
-        for col in cols:
-            if col in selected_cols:
-                # add each value as a separate column with a 1 if the value is present in the compound column and None otherwise
-                values = processed_df_var.value[col].apply(lambda x: [y.strip() for y in x.split(delim)] if type(x) == str else [])
-                unique_values = set([v for vals in values for v in vals])
-                unique_values = [x for x in unique_values if x != '']
-                for val in unique_values:
-                    st.session_state[f'{workflow}_{val}'] = True
-                    processed_df_var.value[val] = values.apply(lambda x: '1' if val in x and val != 'nan' else '')
-                    # processed_df_var.value[col][col+'_'+val] = values.apply(lambda x: 1 if val in x and val != 'nan' else None)
-                processed_df_var.value.drop(columns=[col], inplace=True)
-
     if selected_cols != st.session_state[f'{workflow}_last_attributes']:
-        processed_df_var.value = util.df_functions.fix_null_ints(processed_df_var.value)
+        processed_df_var.value = processed_df_var.value[['Subject ID']].copy()
+        for col in selected_cols:
+            if col in st.session_state[f'{workflow}_binned_df'].columns.values:
+                processed_df_var.value[col] = list(st.session_state[f'{workflow}_binned_df'][col])
+                processed_df_var.value[col] = processed_df_var.value[col].replace('nan', '')
         st.session_state[f'{workflow}_last_attributes'] = selected_cols
         st.rerun()
 
@@ -350,7 +330,8 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
                             return ''
                     func = convert
                 st.session_state[f'{workflow}_binned_df'][col] = input_df_var.value[col].apply(func)
-            st.session_state[f'{workflow}_last_attributes'] = [] # hack to force second rerun and show any changes from binning
+                processed_df_var.value[col] = list(st.session_state[f'{workflow}_binned_df'][col])
+                processed_df_var.value[col] = processed_df_var.value[col].replace('nan', '')
             st.rerun()
 
     with st.expander('Quantize numeric attributes', expanded=False):
@@ -360,7 +341,7 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
             if col != 'Subject ID' and processed_df_var.value[col].dtype in ['float64', 'int64', 'Int64']:
                 binnable_cols.append(col)
 
-        selected_binnable_cols = st.multiselect('Select numeric attributes to quantize', binnable_cols, default=st.session_state[f'{workflow}_selected_num_attr'], help='Select the numeric columns you want to quantize. Quantizing numeric columns into bins makes it easier to synthesize data, but reduces the amount of information in the data. If you do not select any columns, no binning will be performed.')
+        selected_binnable_cols = st.multiselect('Select numeric attributes to quantize', binnable_cols, help='Select the numeric columns you want to quantize. Quantizing numeric columns into bins makes it easier to synthesize data, but reduces the amount of information in the data. If you do not select any columns, no binning will be performed.')
         num_bins = st.number_input('Number of bins', value=st.session_state[f'{workflow}_selected_num_bins'], help='Number of bins to use for each column. If 0, no binning will be performed. Fewer bins makes it easier to synthesize data, but reduces the amount of information in the data. More bins makes it harder to synthesize data, but preserves more information in the data.')
         trim_percent = st.number_input('Trim percent', value=st.session_state[f'{workflow}_selected_trim_percent'], help='Percent of values to trim from the top and bottom of each column before binning. This helps to reduce the impact of outliers on the binning process. For example, if trim percent is 0.05, the top and bottom 5% of values will be trimmed from each column before binning. If 0, no trimming will be performed.')
         
@@ -412,7 +393,6 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
                     # processed_df_var.value[col] = processed_df_var.value[col].astype('str')
                     st.session_state[f'{workflow}_binned_df'][col] = results
 
-            st.session_state[f'{workflow}_selected_num_attr'] = selected_binnable_cols
             st.session_state[f'{workflow}_selected_num_bins'] = num_bins 
             st.session_state[f'{workflow}_selected_trim_percent'] = trim_percent
             st.session_state[f'{workflow}_last_attributes'] = [] # hack to force second rerun and show any changes from binning
