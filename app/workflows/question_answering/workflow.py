@@ -49,20 +49,31 @@ def create(sv: SessionVariables):
             max_iterations = st.number_input('Max iterations', min_value=1, step=1, value=sv.answering_max_iterations.value)
         with c5:
             regenerate = st.button('Mine matching questions', key='lazy_regenerate', use_container_width=True)
+            if regenerate:
+                sv.answering_matches.value = ''
+                # sv.answering_status_history.value = ''
+                # sv.answering_status_history.value = ''
         c1, c2 = st.columns([2, 3])
         with c1:
             st.markdown('#### Question mining')
+            if (len(sv.answering_matches.value) > 0):
+                txt = ''
+                seen_qs = set()
+                for d in sv.answering_context_list.value:
+                    if d.id not in seen_qs:
+                        txt += d.generate_outline(level=4) + '\n\n'
+                        seen_qs.update([d.id])
+                add_download_pdf(f'question_mining_{get_current_time()}.pdf', txt, 'Download mining questions')
             lazy_answering_placeholder = st.empty()
         with c2:
             st.markdown('#### Question matching')
             lazy_matches_placeholder = st.empty()
-            if (len(sv.answering_matches.value) > 0):
-                add_download_pdf(f'question_matching_{get_current_time()}.pdf', sv.answering_matches.value, 'Download matched questions')
         lazy_answering_placeholder.markdown(sv.answering_status_history.value, unsafe_allow_html=True)
         lazy_matches_placeholder.markdown(sv.answering_matches.value, unsafe_allow_html=True)
 
 
         if question != '' and regenerate:
+            sv.answering_context_list.value = []
             sv.answering_question_history.value = []
             sv.answering_next_q_id.value = 1
             sv.answering_surface_questions.value = {}
@@ -165,7 +176,6 @@ def create(sv: SessionVariables):
                 )
                 qas_raw = util.AI_API.generate_text_from_message_list(messages, placeholder=lazy_answering_placeholder, prefix=status_history)
                 status_history += qas_raw + '<br/><br/>'
-
                 try:
                     qas = json.loads(qas_raw)
                     for qa in qas:
@@ -180,6 +190,7 @@ def create(sv: SessionVariables):
                         qid = sv.answering_next_q_id.value
                         sv.answering_next_q_id.value += 1
                         q = classes.Question(f, q, q_vec, 0, qid)
+                        sv.answering_context_list.value.append(q)
                         new_questions.append(q)
                         print(f'Created question {qid} from file {f.id}.')
                         f.add_question(q)

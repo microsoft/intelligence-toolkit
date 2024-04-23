@@ -257,6 +257,8 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
                 input = st.checkbox(col, key=f'{workflow}_{col}_input', value=st.session_state[f'{workflow}_{col}'])            
                 st.session_state[f'{workflow}_{col}'] = input
     # set processed_df_var to input_df_var filtered by selected columns
+
+    #df to be running through the processing steps
     selected_cols = [col for col in input_df_var.value.columns.values if st.session_state[f'{workflow}_{col}'] == True]
     processed_df_var.value = processed_df_var.value[['Subject ID']].copy()
     for col in selected_cols:
