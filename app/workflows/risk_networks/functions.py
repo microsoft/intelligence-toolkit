@@ -118,6 +118,9 @@ def merge_node_list(G, merge_list):
         has_flags = has_flags or G.nodes[n]['flags'] > 0
     return G1
 
+def merge_paths(in_paths):
+    return in_paths
+
 def simplify_graph(C):
     S = C.copy()
     # remove single degree attributes
