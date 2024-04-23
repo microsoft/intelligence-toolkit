@@ -240,7 +240,7 @@ def create(sv: SessionVariables):
                     sv.answering_lazy_answer_text.value = result
                     
                     validation, messages_to_llm = util.ui_components.validate_ai_report(messages, result)
-                    sv.answering_report_validation.value = json.loads(validation)
+                    sv.answering_report_validation.value = validation
                     sv.answering_report_validation_messages.value = messages_to_llm
                     st.rerun()
                 else:

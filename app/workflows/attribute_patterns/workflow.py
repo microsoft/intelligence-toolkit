@@ -198,7 +198,7 @@ def create(sv: vars.SessionVariables):
                     sv.attribute_report.value = result
 
                     validation, messages_to_llm = util.ui_components.validate_ai_report(messages, result)
-                    sv.attribute_report_validation.value = json.loads(validation)
+                    sv.attribute_report_validation.value = validation
                     sv.attribute_report_validation_messages.value = messages_to_llm
                     st.rerun()
                 else:

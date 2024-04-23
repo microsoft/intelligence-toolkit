@@ -587,7 +587,7 @@ def create(sv: vars.SessionVariables):
                     validation_status = st.status('Validating AI report and generating faithfulness score...', expanded=False, state='running')
 
                     validation, messages_to_llm = util.ui_components.validate_ai_report(messages, result, False)
-                    sv.network_report_validation.value = json.loads(validation)
+                    sv.network_report_validation.value = validation
                     sv.network_report_validation_messages.value = messages_to_llm
                 else:
                     if len(sv.network_report.value) == 0:

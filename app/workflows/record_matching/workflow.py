@@ -10,6 +10,7 @@ import os
 
 from collections import defaultdict
 from sklearn.neighbors import NearestNeighbors
+from util.download_pdf import add_download_pdf
 from util.df_functions import get_current_time
 import workflows.record_matching.prompts as prompts
 import workflows.record_matching.functions as functions
@@ -331,27 +332,24 @@ def create(sv):
             gen_placeholder = st.empty()
 
             if generate:
+                unique_names = sv.matching_matches_df.value['Entity name'].unique()
                 for messages in batch_messages:
                     response = util.AI_API.generate_text_from_message_list(messages, placeholder, prefix=prefix)
                     if len(response.strip()) > 0:
                         prefix = prefix + response + '\n'
+                    if sv_home.protected_mode.value:
+                        for i, name in enumerate(unique_names, start=1):
+                            prefix = prefix.replace(name, 'Entity_{}'.format(i))
 
                 result = prefix.replace('```\n', '').strip()
+                sv.matching_evaluations.value = result
+                lines = result.split('\n')
 
-                if sv_home.protected_mode.value:
-                    unique_names = sv.matching_matches_df.value['Entity name'].unique()
-                    for i, name in enumerate(unique_names, start=1):
-                        result = result.replace(name, 'Entity_{}'.format(i))
+                if len(lines) > 30:
+                    lines = lines[:30]
+                    result = '\n'.join(lines)
 
-                csv = pl.read_csv(io.StringIO(result))
-                sv.matching_evaluations.value = csv.drop_nulls()
-
-                #get 30 random dows to evaluate
-                data_to_validate = result
-                # if len(sv.matching_evaluations.value) > 30:
-                #     data_to_validate = data_to_validate.value.sample(n=30)
-
-                validation, messages_to_llm = util.ui_components.validate_ai_report(batch_messages[0], data_to_validate)
+                validation, messages_to_llm = util.ui_components.validate_ai_report(batch_messages[0], result)
                 sv.matching_report_validation.value = validation
                 sv.matching_report_validation_messages.value = messages_to_llm
                 st.rerun()
@@ -361,20 +359,25 @@ def create(sv):
             placeholder.empty()
 
             if len(sv.matching_evaluations.value) > 0:
-            #     st.dataframe(sv.matching_evaluations.value.to_pandas(), height=700, use_container_width=True, hide_index=True)
-            #     jdf = sv.matching_matches_df.value.join(sv.matching_evaluations.value, on='Group ID', how='inner')
-            #     st.download_button('Download AI match report', data=jdf.write_csv(), file_name='record_groups_evaluated.csv', mime='text/csv')
+                try:
+                    csv = pl.read_csv(io.StringIO(sv.matching_evaluations.value))
+                    value = csv.drop_nulls()
+                    jdf = sv.matching_matches_df.value.join(value, on='Group ID', how='inner')
+                    st.dataframe(value.to_pandas(), height=700, use_container_width=True, hide_index=True)
+                    st.download_button('Download AI match report', data=jdf.write_csv(), file_name='record_groups_evaluated.csv', mime='text/csv')
+                except:
+                    st.markdown(sv.matching_evaluations.value)
+                    add_download_pdf(f'record_groups_evaluated.pdf', sv.matching_evaluations.value, f'Download AI match report')
 
                 if sv.matching_report_validation.value != {}:
-                    print(sv.matching_report_validation.value)
-                    # validation_status = st.status(label=f"LLM faithfulness score: {sv.matching_report_validation.value['score']}/5", state='complete')
-                    # with validation_status:
-                    #     st.write(sv.matching_report_validation.value['explanation'])
+                    validation_status = st.status(label=f"LLM faithfulness score: {sv.matching_report_validation.value['score']}/5", state='complete')
+                    with validation_status:
+                        st.write(sv.matching_report_validation.value['explanation'])
 
-                    if sv_home.mode.value == 'dev':
-                        obj = json.dumps({
-                            "message": sv.matching_report_validation_messages.value,
-                            "result": sv.matching_report_validation.value,
-                            "report": pd.DataFrame(sv.matching_evaluations.value).to_json()
-                        }, indent=4)
-                        st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'matching_{get_current_time()}_messages.json', mime='text/json')
+                        if sv_home.mode.value == 'dev':
+                            obj = json.dumps({
+                                "message": sv.matching_report_validation_messages.value,
+                                "result": sv.matching_report_validation.value,
+                                "report": pd.DataFrame(sv.matching_evaluations.value).to_json() if type(sv.matching_evaluations.value) == pl.DataFrame else sv.matching_evaluations.value
+                            }, indent=4)
+                            st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'matching_{get_current_time()}_messages.json', mime='text/json')

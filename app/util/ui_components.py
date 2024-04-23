@@ -1,4 +1,5 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+import json
 import re
 import streamlit as st
 import pandas as pd
@@ -516,4 +517,4 @@ def validate_ai_report(messages, result, show_status = True):
     if show_status:
         st.status('Validating AI report and generating faithfulness score...', expanded=False, state='running')
     validation, messages_to_llm = util.AI_API.validate_report(messages, result)
-    return re.sub(r"```json\n|\n```", "", validation), messages_to_llm
+    return json.loads(re.sub(r"```json\n|\n```", "", validation)), messages_to_llm
