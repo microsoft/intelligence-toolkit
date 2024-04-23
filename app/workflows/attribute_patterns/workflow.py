@@ -105,6 +105,9 @@ def create(sv: vars.SessionVariables):
                 gb.configure_selection(selection_mode="single", use_checkbox=False)
                 gb.configure_side_bar()
                 gridoptions = gb.build()
+                gridoptions['columnDefs'][0]['minWidth'] = 100
+                gridoptions['columnDefs'][1]['minWidth'] = 400
+                
                 
                 response = AgGrid(
                     show_df,
@@ -119,7 +122,8 @@ def create(sv: vars.SessionVariables):
                     use_checkbox=False,
                     enable_quicksearch=True,
                     reload_data=False,
-                    columns_auto_size_mode=ColumnsAutoSizeMode.FIT_ALL_COLUMNS_TO_VIEW
+                    columns_auto_size_mode=ColumnsAutoSizeMode.FIT_ALL_COLUMNS_TO_VIEW,
+                    
                     ) # type: ignore
                
                 selected_pattern = response['selected_rows'][0]['pattern'] if len(response['selected_rows']) > 0 else sv.attribute_selected_pattern.value
