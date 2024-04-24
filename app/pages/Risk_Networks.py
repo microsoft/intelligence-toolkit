@@ -1,11 +1,9 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-from sklearn.kernel_approximation import svd
-from util.session_variables import SessionVariables
-import workflows.risk_networks.workflow
-import workflows.risk_networks.variables as vars
-from components.app_loader import load_multipage_app
 import streamlit as st
-from util.enums import Mode
+import workflows.risk_networks.variables as vars
+import workflows.risk_networks.workflow
+from components.app_loader import load_multipage_app
+from util.helper_fn import appInDevMode
 
 workflow = 'risk_networks'
 def main():
@@ -13,12 +11,11 @@ def main():
     sv = vars.SessionVariables(workflow)
     
     load_multipage_app(sv)
-    sv_home = SessionVariables('home')
     
     try:
-        workflows.risk_networks.workflow.create(sv)
+        workflows.risk_networks.workflow.create(sv, workflow)
     except Exception as e:
-        if sv_home.mode.value == Mode.DEV.value:
+        if appInDevMode():
             st.exception(e)
         else:
             st.error(f"An error occurred: {e}")

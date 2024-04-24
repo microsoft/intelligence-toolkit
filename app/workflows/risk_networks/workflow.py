@@ -1,38 +1,27 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-import json
-import streamlit as st
-import pandas as pd
-import networkx as nx
-
-from collections import defaultdict
-from sklearn.neighbors import NearestNeighbors
-from util.session_variables import SessionVariables
-from streamlit_agraph import agraph
-
-import re
 import os
+import re
+from collections import defaultdict
+
 import community
-
-from st_aggrid import (
-    AgGrid,
-    DataReturnMode,
-    GridOptionsBuilder,
-    GridUpdateMode,
-    ColumnsAutoSizeMode
-)   
-
-from util.df_functions import get_current_time
-import workflows.risk_networks.functions as functions
-import workflows.risk_networks.classes as classes
+import networkx as nx
+import pandas as pd
+import streamlit as st
+import util.Embedder
 import workflows.risk_networks.config as config
+import workflows.risk_networks.functions as functions
 import workflows.risk_networks.prompts as prompts
 import workflows.risk_networks.variables as vars
-import util.Embedder
-import util.ui_components
+from sklearn.neighbors import NearestNeighbors
+from st_aggrid import (AgGrid, ColumnsAutoSizeMode, DataReturnMode,
+                       GridOptionsBuilder, GridUpdateMode)
+from streamlit_agraph import agraph
+from util import ui_components
+from util.session_variables import SessionVariables
 
 embedder = util.Embedder.create_embedder(config.cache_dir)
 
-def create(sv: vars.SessionVariables):
+def create(sv: vars.SessionVariables, workflow = None):
     sv_home = SessionVariables('home')
 
     if not os.path.exists(config.outputs_dir):
@@ -45,7 +34,7 @@ def create(sv: vars.SessionVariables):
     with uploader_tab:
         uploader_col, model_col = st.columns([3, 2])
         with uploader_col:
-            selected_file, df = util.ui_components.multi_csv_uploader('Upload multiple CSVs', sv.network_uploaded_files, config.outputs_dir, sv.network_upload_key.value, 'network_uploader', sv.network_max_rows_to_process)
+            selected_file, df = ui_components.multi_csv_uploader('Upload multiple CSVs', sv.network_uploaded_files, config.outputs_dir, sv.network_upload_key.value, 'network_uploader', sv.network_max_rows_to_process)
         with model_col:
             st.markdown('##### Map columns to model')
             if df is None:
@@ -303,7 +292,7 @@ def create(sv: vars.SessionVariables):
             if search != '':
                 adf = adf[adf['Attribute'].str.contains(search, case=False)]
 
-            selected_rows = util.ui_components.dataframe_with_selections(adf, sv.network_additional_trimmed_attributes.value, 'Attribute', 'Remove', key='remove_attribute_table')
+            selected_rows = ui_components.dataframe_with_selections(adf, sv.network_additional_trimmed_attributes.value, 'Attribute', 'Remove', key='remove_attribute_table')
             sv.network_additional_trimmed_attributes.value = selected_rows['Attribute'].tolist()
             c1, c2, c3 = st.columns([1, 1, 1])
             with c1:
@@ -560,7 +549,7 @@ def create(sv: vars.SessionVariables):
                     'network_edges': sv.network_merged_links_df.value.to_csv(index=False)
                 }
                 sv.network_system_prompt.value = prompts.list_prompts
-                generate, messages, reset = util.ui_components.generative_ai_component(sv.network_system_prompt, variables)
+                generate, messages, reset = ui_components.generative_ai_component(sv.network_system_prompt, variables)
                 if reset:
                     sv.network_system_prompt.value["user_prompt"] = prompts.user_prompt
                     st.rerun()
@@ -575,20 +564,18 @@ def create(sv: vars.SessionVariables):
                     sv.network_report.value = ''
                     sv.network_report_validation.value = {}
 
-                generated = False
                 if generate:
-                    generated = True
                     result = util.AI_API.generate_text_from_message_list(
                         placeholder=report_placeholder,
                         messages=messages,
                         prefix=''
                     )
                     sv.network_report.value = result
-                    validation_status = st.status('Validating AI report and generating faithfulness score...', expanded=False, state='running')
 
-                    validation, messages_to_llm = util.ui_components.validate_ai_report(messages, result, False)
+                    validation, messages_to_llm = ui_components.validate_ai_report(messages, result)
                     sv.network_report_validation.value = validation
                     sv.network_report_validation_messages.value = messages_to_llm
+                    st.rerun()
                 else:
                     if len(sv.network_report.value) == 0:
                         gen_placeholder.warning('Press the Generate button to create an AI report for the current network.')
@@ -596,20 +583,6 @@ def create(sv: vars.SessionVariables):
                 report_data = sv.network_report.value
                 report_placeholder.markdown(report_data)
 
-                util.ui_components.report_download_ui(report_data, 'network_report')
-                if sv.network_report_validation.value != {}:
-                    if generated:
-                        validation_status.update(label=f"LLM faithfulness score: {sv.network_report_validation.value['score']}/5", state='complete')
-                    else:
-                        validation_status = st.status(label=f"LLM faithfulness score: {sv.network_report_validation.value['score']}/5", state='complete')
-                    with validation_status:
-                        explanation = sv.network_report_validation.value['explanation']
-                        st.write(explanation)
+                ui_components.report_download_ui(report_data, 'network_report')
 
-                        if sv_home.mode.value == 'dev':
-                            obj = json.dumps({
-                                "message": sv.network_report_validation_messages.value,
-                                "result": sv.network_report_validation.value,
-                                "report": sv.network_report.value
-                            }, indent=4)
-                            st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'networks_{get_current_time()}_messages.json', mime='text/json')
+                ui_components.build_validation_ui(sv.network_report_validation.value, sv.network_report_validation_messages.value, sv.network_report.value, workflow)

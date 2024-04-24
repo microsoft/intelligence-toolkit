@@ -1,20 +1,15 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-import json
-import streamlit as st
 import pandas as pd
-
-import workflows.group_narratives.prompts as prompts
-import workflows.group_narratives.config as config
-import workflows.group_narratives.variables as vars
-from util.session_variables import SessionVariables
-from util.df_functions import get_current_time
+import streamlit as st
 import util.AI_API
-import util.ui_components
 import util.df_functions
+import workflows.group_narratives.config as config
+import workflows.group_narratives.prompts as prompts
+import workflows.group_narratives.variables as vars
+from util import ui_components
+
 
 def create(sv: vars.SessionVariables, workflow = None):
-    sv_home = SessionVariables('home')
-
     intro_tab, prepare_tab, summarize_tab, generate_tab = st.tabs(['Group narratives workflow:', 'Upload data to narrate', 'Prepare data summary', 'Generate AI group reports',])
 
     with intro_tab:
@@ -22,9 +17,9 @@ def create(sv: vars.SessionVariables, workflow = None):
     with prepare_tab:
         uploader_col, model_col = st.columns([1, 1])
         with uploader_col:
-            util.ui_components.single_csv_uploader(workflow, 'Upload CSV to narrate', sv.narrative_last_file_name, sv.narrative_input_df, sv.narrative_binned_df, sv.narrative_final_df, uploader_key=sv.narrative_upload_key.value,key='narrative_uploader', height=400)
+            ui_components.single_csv_uploader(workflow, 'Upload CSV to narrate', sv.narrative_last_file_name, sv.narrative_input_df, sv.narrative_binned_df, sv.narrative_final_df, uploader_key=sv.narrative_upload_key.value,key='narrative_uploader', height=400)
         with model_col:
-            util.ui_components.prepare_input_df(workflow, sv.narrative_input_df, sv.narrative_binned_df, sv.narrative_final_df, sv.narrative_subject_identifier)
+            ui_components.prepare_input_df(workflow, sv.narrative_input_df, sv.narrative_binned_df, sv.narrative_final_df, sv.narrative_subject_identifier)
             sv.narrative_final_df.value = util.df_functions.fix_null_ints(sv.narrative_final_df.value)
             sv.narrative_final_df.value = sv.narrative_final_df.value.astype(str).replace('<NA>', '').replace('nan', '')
         
@@ -193,7 +188,7 @@ def create(sv: vars.SessionVariables, workflow = None):
                     'dataset': fdf.to_csv(index=False, encoding='utf-8-sig'),
                     'filters': filter_description
                 }
-                generate, messages, reset = util.ui_components.generative_ai_component(sv.narrative_system_prompt, variables)
+                generate, messages, reset = ui_components.generative_ai_component(sv.narrative_system_prompt, variables)
                 if reset:
                     sv.narrative_system_prompt.value["user_prompt"] = prompts.user_prompt
                     st.rerun()
@@ -212,7 +207,7 @@ def create(sv: vars.SessionVariables, workflow = None):
                     )
                     sv.narrative_report.value = result
 
-                    validation, messages_to_llm = util.ui_components.validate_ai_report(messages, result)
+                    validation, messages_to_llm = ui_components.validate_ai_report(messages, result)
                     sv.narrative_report_validation.value = validation
                     sv.narrative_report_validation_messages.value = messages_to_llm
                     st.rerun()
@@ -221,16 +216,6 @@ def create(sv: vars.SessionVariables, workflow = None):
                         gen_placeholder.warning('Press the Generate button to create an AI report for the selected groups.')
                 narrative_placeholder.markdown(sv.narrative_report.value)
                 
-                util.ui_components.report_download_ui(sv.narrative_report, 'group_report')
-                if sv.narrative_report_validation.value != {}:
-                    validation_status = st.status(label=f"LLM faithfulness score: {sv.narrative_report_validation.value['score']}/5", state='complete')
-                    with validation_status:
-                        st.write(sv.narrative_report_validation.value['explanation'])
+                ui_components.report_download_ui(sv.narrative_report, 'group_report')
 
-                        if sv_home.mode.value == 'dev':
-                            obj = json.dumps({
-                                "message": sv.narrative_report_validation_messages.value,
-                                "result": sv.narrative_report_validation.value,
-                                "report": sv.narrative_report.value
-                            }, indent=4)
-                            st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'narrative_{get_current_time()}_messages.json', mime='text/json')
+                ui_components.build_validation_ui(sv.narrative_report_validation.value, sv.narrative_report_validation_messages.value, sv.narrative_report.value, workflow)

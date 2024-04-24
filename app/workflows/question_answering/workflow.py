@@ -1,25 +1,24 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-import numpy as np
-import pandas as pd
-import streamlit as st
-from collections import Counter
-import re
 import json
-import scipy.spatial.distance
+import re
+from collections import Counter
 
-from util.download_pdf import add_download_pdf
-from util.df_functions import get_current_time
-import workflows.question_answering.functions as functions
+import numpy as np
+import scipy.spatial.distance
+import streamlit as st
+import util.Embedder
 import workflows.question_answering.classes as classes
 import workflows.question_answering.config as config
+import workflows.question_answering.functions as functions
 import workflows.question_answering.prompts as prompts
+from util import ui_components
+from util.df_functions import get_current_time
+from util.download_pdf import add_download_pdf
 from util.session_variables import SessionVariables
-import util.Embedder
-import util.ui_components
 
 embedder = util.Embedder.create_embedder(config.cache_dir)
 
-def create(sv: SessionVariables):
+def create(sv: SessionVariables, workflow = None):
     sv_home = SessionVariables('home')
     intro_tab, uploader_tab, mining_tab, report_tab = st.tabs(['Question answering workflow:', 'Upload data', 'Mine & match questions', 'Generate AI answer reports'])
     
@@ -224,7 +223,7 @@ def create(sv: SessionVariables):
                     'outline': sv.answering_matches.value,
                     'source_diversity': sv.answering_source_diversity.value
                 }
-                generate, messages, reset = util.ui_components.generative_ai_component(sv.answering_system_prompt, variables)
+                generate, messages, reset = ui_components.generative_ai_component(sv.answering_system_prompt, variables)
                 if reset:
                     sv.answering_system_prompt.value["user_prompt"] = prompts.user_prompt
                     st.rerun()
@@ -239,7 +238,7 @@ def create(sv: SessionVariables):
                     )
                     sv.answering_lazy_answer_text.value = result
                     
-                    validation, messages_to_llm = util.ui_components.validate_ai_report(messages, result)
+                    validation, messages_to_llm = ui_components.validate_ai_report(messages, result)
                     sv.answering_report_validation.value = validation
                     sv.answering_report_validation_messages.value = messages_to_llm
                     st.rerun()
@@ -264,15 +263,4 @@ def create(sv: SessionVariables):
                     with c2:
                         add_download_pdf(f'{name}.pdf', full_text, 'Download AI answer report as PDF', disabled=is_download_disabled)
                     
-                    if sv.answering_report_validation.value != {}:
-                        validation_status = st.status(label=f"LLM faithfulness score: {sv.answering_report_validation.value['score']}/5", state='complete')
-                        with validation_status:
-                            st.write(sv.answering_report_validation.value['explanation'])
-
-                            if sv_home.mode.value == 'dev':
-                                obj = json.dumps({
-                                    "message": sv.answering_report_validation_messages.value,
-                                    "result": sv.answering_report_validation.value,
-                                    "report": sv.answering_lazy_answer_text.value
-                                }, indent=4)
-                                st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'qa_{get_current_time()}_messages.json', mime='text/json')
+                    ui_components.build_validation_ui(sv.answering_report_validation.value, sv.answering_report_validation_messages.value, sv.answering_lazy_answer_text.value, workflow)

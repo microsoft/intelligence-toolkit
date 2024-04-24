@@ -1,31 +1,20 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-import json
-import streamlit as st
-import pandas as pd
-import numpy as np
 import altair as alt
-
-from st_aggrid import (
-    AgGrid,
-    DataReturnMode,
-    GridOptionsBuilder,
-    GridUpdateMode,
-    ColumnsAutoSizeMode
-)   
-
-from util.df_functions import get_current_time
-import workflows.attribute_patterns.prompts as prompts
-import workflows.attribute_patterns.functions as functions
-import workflows.attribute_patterns.classes as classes
-import workflows.attribute_patterns.variables as vars
-import workflows.attribute_patterns.config as config
-from util.session_variables import SessionVariables
-
+import numpy as np
+import pandas as pd
+import streamlit as st
 import util.AI_API
-import util.ui_components
+import workflows.attribute_patterns.classes as classes
+import workflows.attribute_patterns.config as config
+import workflows.attribute_patterns.functions as functions
+import workflows.attribute_patterns.prompts as prompts
+import workflows.attribute_patterns.variables as vars
+from st_aggrid import (AgGrid, ColumnsAutoSizeMode, DataReturnMode,
+                       GridOptionsBuilder, GridUpdateMode)
+from util import ui_components
 
-def create(sv: vars.SessionVariables):
-    sv_home = SessionVariables('home')
+
+def create(sv: vars.SessionVariables, workflow):
     intro_tab, uploader_tab, detect_tab, explain_tab = st.tabs(['Attribute patterns workflow:', 'Create graph model', 'Detect patterns', 'Generate AI pattern reports'])
     df = None
     with intro_tab:
@@ -33,9 +22,9 @@ def create(sv: vars.SessionVariables):
     with uploader_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:
-            util.ui_components.single_csv_uploader('attribute_patterns', 'Upload CSV', sv.attribute_last_file_name, sv.attribute_input_df, sv.attribute_binned_df, sv.attribute_final_df, sv.attribute_upload_key.value, key='attributes_uploader', height=500)
+            ui_components.single_csv_uploader('attribute_patterns', 'Upload CSV', sv.attribute_last_file_name, sv.attribute_input_df, sv.attribute_binned_df, sv.attribute_final_df, sv.attribute_upload_key.value, key='attributes_uploader', height=500)
         with model_col:
-            util.ui_components.prepare_input_df('attribute_patterns', sv.attribute_input_df, sv.attribute_binned_df, sv.attribute_final_df, sv.attribute_subject_identifier)
+            ui_components.prepare_input_df('attribute_patterns', sv.attribute_input_df, sv.attribute_binned_df, sv.attribute_final_df, sv.attribute_subject_identifier)
             options = [''] + [c for c in sv.attribute_final_df.value.columns.values if c != 'Subject ID']
             sv.attribute_time_col.value = st.selectbox('Period column', options, index=options.index(sv.attribute_time_col.value) if sv.attribute_time_col.value in options else 0)
             time_col = sv.attribute_time_col.value
@@ -167,7 +156,7 @@ def create(sv: vars.SessionVariables):
                     'attribute_counts': sv.attribute_selected_pattern_att_counts.value.to_csv(index=False)
                 }
 
-                generate, messages, reset = util.ui_components.generative_ai_component(sv.attribute_system_prompt, variables)
+                generate, messages, reset = ui_components.generative_ai_component(sv.attribute_system_prompt, variables)
                 if reset:
                     sv.attribute_system_prompt.value["user_prompt"] = prompts.user_prompt
                     st.rerun()
@@ -197,7 +186,7 @@ def create(sv: vars.SessionVariables):
                     )
                     sv.attribute_report.value = result
 
-                    validation, messages_to_llm = util.ui_components.validate_ai_report(messages, result)
+                    validation, messages_to_llm = ui_components.validate_ai_report(messages, result)
                     sv.attribute_report_validation.value = validation
                     sv.attribute_report_validation_messages.value = messages_to_llm
                     st.rerun()
@@ -208,16 +197,7 @@ def create(sv: vars.SessionVariables):
                 report_data = sv.attribute_report.value
                 report_placeholder.markdown(report_data)
                 
-                util.ui_components.report_download_ui(sv.attribute_report, 'pattern_report')
-                if sv.attribute_report_validation.value != {}:
-                    validation_status = st.status(label=f"LLM faithfulness score: {sv.attribute_report_validation.value['score']}/5", state='complete')
-                    with validation_status:
-                        st.write(sv.attribute_report_validation.value['explanation'])
+                ui_components.report_download_ui(sv.attribute_report, 'pattern_report')
 
-                        if sv_home.mode.value == 'dev':
-                            obj = json.dumps({
-                                "message": sv.attribute_report_validation_messages.value,
-                                "result": sv.attribute_report_validation.value,
-                                "report": report_data
-                            }, indent=4)
-                            st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'attr_pattern_{get_current_time()}_messages.json', mime='text/json')
+                ui_components.build_validation_ui(sv.attribute_report_validation.value, 
+                                 sv.attribute_report_validation_messages.value, report_data, workflow)

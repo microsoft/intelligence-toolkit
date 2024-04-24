@@ -1,11 +1,13 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+import os
+import time
+
+import keyboard
+import psutil
 import streamlit as st
 from util.enums import Mode
 from util.session_variables import SessionVariables
-import psutil
-import keyboard
-import time
-import os
+
 
 class app_terminator:
     
@@ -25,7 +27,8 @@ class app_terminator:
         return click
 
     def terminate_app_btn(self):
-        if self.sv.mode.value == Mode.EXE.value:
+        mode = os.environ.get("MODE", Mode.DEV.value)
+        if mode == Mode.EXE.value:
             exit_app = st.sidebar.button("🔴 Terminate application", disabled=st.session_state.off_btn_disabled, on_click=self._on_click)
             if exit_app:
                 st.text("Shutting down application...")

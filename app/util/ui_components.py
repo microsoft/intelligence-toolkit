@@ -1,20 +1,20 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import json
-import re
-import streamlit as st
-import pandas as pd
-import numpy as np
-
-import os
 import math
+import os
+import re
 import sys
-
-from dateutil import parser as dateparser
 from collections import defaultdict
 
-from util.download_pdf import add_download_pdf
+import numpy as np
+import pandas as pd
+import streamlit as st
 import util.AI_API
 import util.df_functions
+from dateutil import parser as dateparser
+from util.df_functions import get_current_time
+from util.download_pdf import add_download_pdf
+from util.enums import Mode
 
 
 def dataframe_with_selections(df, selections, selection_col, label, key, height=250):
@@ -518,3 +518,18 @@ def validate_ai_report(messages, result, show_status = True):
         st.status('Validating AI report and generating faithfulness score...', expanded=False, state='running')
     validation, messages_to_llm = util.AI_API.validate_report(messages, result)
     return json.loads(re.sub(r"```json\n|\n```", "", validation)), messages_to_llm
+
+def build_validation_ui(report_validation, attribute_report_validation_messages, report_data, file_name):
+    mode = os.environ.get("MODE", Mode.DEV.value)
+    if report_validation != {}:
+        validation_status = st.status(label=f"LLM faithfulness score: {report_validation['score']}/5", state='complete')
+        with validation_status:
+            st.write(report_validation['explanation'])
+
+            if mode == Mode.DEV.value:
+                obj = json.dumps({
+                    "message": attribute_report_validation_messages,
+                    "result": report_validation,
+                    "report": report_data
+                }, indent=4)
+                st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'{file_name}_{get_current_time()}_messages.json', mime='text/json')

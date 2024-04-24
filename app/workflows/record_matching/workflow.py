@@ -1,28 +1,25 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-import json
-import pandas as pd
-import streamlit as st
-import polars as pl
-
-import re
 import io
 import os
-
+import re
 from collections import defaultdict
-from sklearn.neighbors import NearestNeighbors
-from util.download_pdf import add_download_pdf
-from util.df_functions import get_current_time
-import workflows.record_matching.prompts as prompts
-import workflows.record_matching.functions as functions
-import workflows.record_matching.config as config
-import workflows.record_matching.variables as vars
-import util.session_variables as home_vars
+
+import pandas as pd
+import polars as pl
+import streamlit as st
 import util.Embedder
-import util.ui_components
+import util.session_variables as home_vars
+import workflows.record_matching.config as config
+import workflows.record_matching.functions as functions
+import workflows.record_matching.prompts as prompts
+import workflows.record_matching.variables as vars
+from sklearn.neighbors import NearestNeighbors
+from util import ui_components
+from util.download_pdf import add_download_pdf
 
 embedder = util.Embedder.create_embedder(config.cache_dir)
 
-def create(sv):
+def create(sv: vars.SessionVariable, workflow = None):
 
     sv_home = home_vars.SessionVariables('home')
 
@@ -36,7 +33,7 @@ def create(sv):
     with uploader_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:
-            selected_file, df = util.ui_components.multi_csv_uploader('Upload multiple CSVs', sv.matching_uploaded_files, config.outputs_dir, sv.matching_upload_key.value, 'matching_uploader', sv.matching_max_rows_to_process)
+            selected_file, df = ui_components.multi_csv_uploader('Upload multiple CSVs', sv.matching_uploaded_files, config.outputs_dir, sv.matching_upload_key.value, 'matching_uploader', sv.matching_max_rows_to_process)
         with model_col:
                 st.markdown('##### Map columns to data model')
                 if df is None:
@@ -321,7 +318,7 @@ def create(sv):
         with b1:
             batch_size = 100
             data = sv.matching_matches_df.value.drop(['Entity ID', 'Dataset', 'Name similarity']).to_pandas()
-            generate, batch_messages, reset = util.ui_components.generative_batch_ai_component(sv.matching_system_prompt, {}, 'data', data, batch_size)
+            generate, batch_messages, reset = ui_components.generative_batch_ai_component(sv.matching_system_prompt, {}, 'data', data, batch_size)
             if reset:
                 sv.matching_system_prompt.value["user_prompt"] = prompts.user_prompt
                 st.rerun()
@@ -349,7 +346,7 @@ def create(sv):
                     lines = lines[:30]
                     result = '\n'.join(lines)
 
-                validation, messages_to_llm = util.ui_components.validate_ai_report(batch_messages[0], result)
+                validation, messages_to_llm = ui_components.validate_ai_report(batch_messages[0], result)
                 sv.matching_report_validation.value = validation
                 sv.matching_report_validation_messages.value = messages_to_llm
                 st.rerun()
@@ -369,15 +366,5 @@ def create(sv):
                     st.markdown(sv.matching_evaluations.value)
                     add_download_pdf(f'record_groups_evaluated.pdf', sv.matching_evaluations.value, f'Download AI match report')
 
-                if sv.matching_report_validation.value != {}:
-                    validation_status = st.status(label=f"LLM faithfulness score: {sv.matching_report_validation.value['score']}/5", state='complete')
-                    with validation_status:
-                        st.write(sv.matching_report_validation.value['explanation'])
-
-                        if sv_home.mode.value == 'dev':
-                            obj = json.dumps({
-                                "message": sv.matching_report_validation_messages.value,
-                                "result": sv.matching_report_validation.value,
-                                "report": pd.DataFrame(sv.matching_evaluations.value).to_json() if type(sv.matching_evaluations.value) == pl.DataFrame else sv.matching_evaluations.value
-                            }, indent=4)
-                            st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'matching_{get_current_time()}_messages.json', mime='text/json')
+                report = pd.DataFrame(sv.matching_evaluations.value).to_json() if type(sv.matching_evaluations.value) == pl.DataFrame else sv.matching_evaluations.value
+                ui_components.build_validation_ui(sv.matching_report_validation.value, sv.matching_report_validation_messages.value, report, workflow)
