@@ -10,7 +10,7 @@ import workflows.attribute_patterns.prompts as prompts
 import workflows.attribute_patterns.variables as vars
 from st_aggrid import (AgGrid, ColumnsAutoSizeMode, DataReturnMode,
                        GridOptionsBuilder, GridUpdateMode)
-from util import ui_components
+from util import ui_components, df_functions
 
 
 def create(sv: vars.SessionVariables, workflow):
@@ -35,7 +35,7 @@ def create(sv: vars.SessionVariables, workflow):
                 with st.spinner('Adding links to model...'):
                     time_col = sv.attribute_time_col.value
                     df = sv.attribute_final_df.value.copy(deep=True)
-                    df = util.df_functions.fix_null_ints(df).astype(str).replace('nan', '').replace('<NA>', '')
+                    df = df_functions.fix_null_ints(df).astype(str).replace('nan', '').replace('<NA>', '')
                 
                     df['Subject ID'] = [str(x) for x in range(1, len(df) + 1)]
                     df['Subject ID'] = df['Subject ID'].astype(str)
