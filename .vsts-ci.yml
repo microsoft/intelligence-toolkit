@@ -45,8 +45,30 @@ stages:
 
   - stage: Build
     dependsOn: []
-    condition: or(eq(variables.isMain, 'true'), eq(variables.BUILD_EXE, 'true'))
+    condition: []
     jobs:
+      - job: validate
+        displayName: Install and tests
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: "3.10"
+            displayName: "Use Python 3.10"
+          - task: Bash@3
+            displayName: Install Dependencies
+            inputs:
+              workingDirectory: ./
+              targetType: "inline"
+              script: pip install -r requirements.txt
+          - task: Bash@3
+            displayName: Run Tests
+            inputs:
+              workingDirectory: ./
+              targetType: "inline"
+              script: pytest
+              
       - job: build
         displayName: Build
         pool:
