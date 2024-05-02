@@ -2,9 +2,6 @@ import os
 
 cache_dir = os.path.join(os.environ.get("CACHE_DIR", "cache"), "question_answering")
 
-chunk_size = 5000
-chunk_overlap = 0
-
 intro = """ \
 # Question Answering
 

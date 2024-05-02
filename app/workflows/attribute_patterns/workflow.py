@@ -3,7 +3,6 @@ import altair as alt
 import numpy as np
 import pandas as pd
 import streamlit as st
-import util.AI_API
 import workflows.attribute_patterns.classes as classes
 import workflows.attribute_patterns.config as config
 import workflows.attribute_patterns.functions as functions
@@ -178,12 +177,10 @@ def create(sv: vars.SessionVariables, workflow):
                 report_placeholder = st.empty()
                 gen_placeholder = st.empty()
                     
+
                 if generate:
-                    result = util.AI_API.generate_text_from_message_list(
-                        placeholder=report_placeholder,
-                        messages=messages,
-                        prefix=''
-                    )
+                    on_callback = ui_components.create_markdown_callback(report_placeholder)
+                    result = ui_components.generate_text(messages, callbacks=[on_callback])
                     sv.attribute_report.value = result
 
                     validation, messages_to_llm = ui_components.validate_ai_report(messages, result)

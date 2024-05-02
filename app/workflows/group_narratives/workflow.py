@@ -1,7 +1,6 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import pandas as pd
 import streamlit as st
-import util.AI_API
 import util.df_functions
 import workflows.group_narratives.config as config
 import workflows.group_narratives.prompts as prompts
@@ -200,11 +199,9 @@ def create(sv: vars.SessionVariables, workflow = None):
                 if generate:
                     sv.narrative_selected_groups.value = selected_groups
                     sv.narrative_top_groups.value = top_group_ranks
-                    result = util.AI_API.generate_text_from_message_list(
-                        placeholder=narrative_placeholder,
-                        messages=messages,
-                        prefix=''
-                    )
+
+                    on_callback = ui_components.create_markdown_callback(narrative_placeholder)
+                    result = ui_components.generate_text(messages, callbacks=[on_callback])
                     sv.narrative_report.value = result
 
                     validation, messages_to_llm = ui_components.validate_ai_report(messages, result)

@@ -7,11 +7,11 @@ import community
 import networkx as nx
 import pandas as pd
 import streamlit as st
-import util.Embedder
 import workflows.risk_networks.config as config
 import workflows.risk_networks.functions as functions
 import workflows.risk_networks.prompts as prompts
 import workflows.risk_networks.variables as vars
+from AI import classes
 from sklearn.neighbors import NearestNeighbors
 from st_aggrid import (AgGrid, ColumnsAutoSizeMode, DataReturnMode,
                        GridOptionsBuilder, GridUpdateMode)
@@ -19,7 +19,6 @@ from streamlit_agraph import agraph
 from util import ui_components
 from util.session_variables import SessionVariables
 
-embedder = util.Embedder.create_embedder(config.cache_dir)
 
 def create(sv: vars.SessionVariables, workflow = None):
     sv_home = SessionVariables('home')
@@ -236,7 +235,16 @@ def create(sv: vars.SessionVariables, workflow = None):
                 texts = [t[0] for t in text_types]
                 
                 df = pd.DataFrame(text_types, columns=['text', 'type'])
-                embeddings = embedder.encode_all(texts)
+                pb = st.progress(0, 'Embedding text batches...')
+
+                def on_embedding_batch_change(current, total):
+                    pb.progress((current) / total, f'Embedding text batch {current} of {total}...')
+
+                callback = classes.BatchEmbeddingCallback()
+                callback.on_embedding_batch_change = on_embedding_batch_change
+                embeddings = functions.embedder.embed_store_many(texts,[callback])
+                pb.empty()
+                
                 vals = [(n, t, e) for (n, t), e in zip(text_types, embeddings)]
                 edf = pd.DataFrame(vals, columns=['text', 'type', 'vector'])
 
@@ -564,12 +572,9 @@ def create(sv: vars.SessionVariables, workflow = None):
                     sv.network_report.value = ''
                     sv.network_report_validation.value = {}
 
+                callback = ui_components.create_markdown_callback(report_placeholder)
                 if generate:
-                    result = util.AI_API.generate_text_from_message_list(
-                        placeholder=report_placeholder,
-                        messages=messages,
-                        prefix=''
-                    )
+                    result = ui_components.generate_text(messages, [callback])
                     sv.network_report.value = result
 
                     validation, messages_to_llm = ui_components.validate_ai_report(messages, result)

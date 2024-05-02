@@ -6,11 +6,13 @@ import re
 import sys
 from collections import defaultdict
 
+import AI.utils as utils
 import numpy as np
 import pandas as pd
 import streamlit as st
-import util.AI_API
-import util.df_functions
+from AI.classes import LLMCallback
+from AI.client import OpenAIClient
+from AI.defaults import DEFAULT_MAX_INPUT_TOKENS
 from dateutil import parser as dateparser
 from util.df_functions import get_current_time
 from util.download_pdf import add_download_pdf
@@ -64,6 +66,7 @@ def report_download_ui(report_var, name):
         with c2:
             add_download_pdf(f'{name}.pdf', report_data, f'Download AI {spaced_name} as PDF')
 
+
 def generative_ai_component(system_prompt_var, variables):
     st.markdown('##### Generative AI instructions')
     with st.expander('Edit AI System Prompt (advanced)', expanded=True):
@@ -78,17 +81,17 @@ def generative_ai_component(system_prompt_var, variables):
         system_prompt_var.value["safety_prompt"]
     ])
 
-    messages = util.AI_API.prepare_messages_from_message(full_prompt, variables)
-    tokens = util.AI_API.count_tokens_in_message_list(messages)
+    messages = utils.prepare_messages(full_prompt, variables)
+    tokens = utils.get_token_count(messages)
     b1, b2 = st.columns([1, 4])
-    ratio = 100 * tokens/util.AI_API.max_input_tokens
+    ratio = 100 * tokens/DEFAULT_MAX_INPUT_TOKENS  
     with b1:
         generate = st.button('Generate', disabled=ratio > 100)
         if generate:
             system_prompt_var.value["user_prompt"] = instructions_text
 
     with b2:
-        message = f'AI input uses {tokens}/{util.AI_API.max_input_tokens} ({round(ratio, 2)}%) of token limit'
+        message = f'AI input uses {tokens}/{DEFAULT_MAX_INPUT_TOKENS} ({round(ratio, 2)}%) of token limit'
         if ratio <= 100:
             st.info(message)
         else:
@@ -118,16 +121,16 @@ def generative_batch_ai_component(system_prompt_var, variables, batch_name, batc
         batch_offset += batch_size
         batch_variables = dict(variables)
         batch_variables[batch_name] = batch.to_csv()
-        batch_messages.append(util.AI_API.prepare_messages_from_message(full_prompt, batch_variables))
-    tokens = util.AI_API.count_tokens_in_message_list(batch_messages[0] if len(batch_messages) != 0 else [])
+        batch_messages.append(utils.prepare_messages(full_prompt, batch_variables))
+    tokens = utils.get_token_count(batch_messages[0] if len(batch_messages) != 0 else [])
     b1, b2 = st.columns([1, 4])
-    ratio = 100 * tokens/util.AI_API.max_input_tokens
+    ratio = 100 * tokens/DEFAULT_MAX_INPUT_TOKENS
     with b1:
         generate = st.button('Generate', disabled=ratio > 100)
         if generate:
             system_prompt_var.value["user_prompt"] = instructions_text
     with b2:
-        st.markdown(f'AI input uses {tokens}/{util.AI_API.max_input_tokens} ({round(ratio, 2)}%) of token limit')
+        st.markdown(f'AI input uses {tokens}/{DEFAULT_MAX_INPUT_TOKENS} ({round(ratio, 2)}%) of token limit')
     return generate, batch_messages, reset_prompt
 
 file_options = ['unicode-escape', 'utf-8', 'utf-8-sig']
@@ -516,8 +519,20 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
 def validate_ai_report(messages, result, show_status = True):
     if show_status:
         st.status('Validating AI report and generating faithfulness score...', expanded=False, state='running')
-    validation, messages_to_llm = util.AI_API.validate_report(messages, result)
+    messages_to_llm = utils.prepare_validation(messages, result)
+    validation = OpenAIClient().generate_chat(messages_to_llm)
     return json.loads(re.sub(r"```json\n|\n```", "", validation)), messages_to_llm
+
+def generate_text(messages, callbacks = []):
+    return OpenAIClient().generate_chat(messages, callbacks=callbacks)
+
+def create_markdown_callback(placeholder, prefix=''):
+    def on(text):
+        placeholder.markdown(prefix+text, unsafe_allow_html=True)
+
+    on_callback = LLMCallback()
+    on_callback.on_llm_new_token = on
+    return on_callback
 
 def build_validation_ui(report_validation, attribute_report_validation_messages, report_data, file_name):
     mode = os.environ.get("MODE", Mode.DEV.value)

@@ -1,4 +1,9 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 
+from AI.embedder import Embedder
+from workflows.record_matching import config
+
+embedder = Embedder(pickle_path=config.cache_dir)
 
 def convert_to_sentences(df, skip):
     sentences = []

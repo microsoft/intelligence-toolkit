@@ -6,23 +6,21 @@ from collections import Counter
 import numpy as np
 import scipy.spatial.distance
 import streamlit as st
-import util.Embedder
 import workflows.question_answering.classes as classes
 import workflows.question_answering.config as config
 import workflows.question_answering.functions as functions
 import workflows.question_answering.prompts as prompts
+from AI import utils
+from AI.defaults import CHUNK_SIZE
 from util import ui_components
 from util.df_functions import get_current_time
 from util.download_pdf import add_download_pdf
 from util.session_variables import SessionVariables
 
-embedder = util.Embedder.create_embedder(config.cache_dir)
 
 def create(sv: SessionVariables, workflow = None):
-    sv_home = SessionVariables('home')
     intro_tab, uploader_tab, mining_tab, report_tab = st.tabs(['Question answering workflow:', 'Upload data', 'Mine & match questions', 'Generate AI answer reports'])
     
-    df = None
     with intro_tab:
         st.markdown(config.intro)
     with uploader_tab:
@@ -35,7 +33,7 @@ def create(sv: SessionVariables, workflow = None):
         num_files = len(sv.answering_files.value)
         num_chunks = sum([len(f.chunk_texts) for f in sv.answering_files.value.values()])
         if num_files > 0:
-            st.success(f'Chunked **{num_files}** files into **{num_chunks}** chunks of up to **{config.chunk_size}** characters.')            
+            st.success(f'Chunked **{num_files}** files into **{num_chunks}** chunks of up to **{CHUNK_SIZE}** characters.')            
     with mining_tab:
         c1, c2, c3, c4, c5 = st.columns([4, 1, 1, 1, 1])
         with c1:
@@ -103,7 +101,7 @@ def create(sv: SessionVariables, workflow = None):
             source_counts = Counter()
             used_chunks = set()
             while True:
-                qe = np.array(embedder.encode(question))
+                qe = np.array(functions.embedder.embed_store_one(question))
                 iteration += 1
                 cosine_distances = sorted([(t, c, scipy.spatial.distance.cosine(qe, v)) for (t, c, v) in all_units], key=lambda x:x[2], reverse=False)
                 chunk_index = sv.answering_target_matches.value
@@ -125,7 +123,7 @@ def create(sv: SessionVariables, workflow = None):
                                 delta = c.generate_outline(level=6)
                                 qs = c.list_all_sub_questions()
                                 candidate = report_input + delta
-                                candidate_tokens = len(util.AI_API.encoder.encode(candidate))
+                                candidate_tokens = utils.get_token_count(candidate)
                                 if candidate_tokens <= sv.answering_outline_limit.value:
                                     report_input = candidate
                                     seen_qs.update([q.id for q in qs])
@@ -168,12 +166,13 @@ def create(sv: SessionVariables, workflow = None):
                     'text': f.chunk_texts[cx],
                     'file_id': f.id
                 }
-                messages = util.AI_API.prepare_messages_from_message_pair(
+                messages = utils.prepare_messages(
                     system_message=prompts.extraction_system_prompt,
                     user_message=prompts.extraction_user_prompt,
                     variables=variables
                 )
-                qas_raw = util.AI_API.generate_text_from_message_list(messages, placeholder=lazy_answering_placeholder, prefix=status_history)
+                on_callback = ui_components.create_markdown_callback(lazy_answering_placeholder, prefix=status_history)
+                qas_raw = ui_components.generate_text(messages, callbacks=[on_callback])
                 status_history += qas_raw + '<br/><br/>'
                 try:
                     qas = json.loads(qas_raw)
@@ -183,8 +182,8 @@ def create(sv: SessionVariables, workflow = None):
                         raw_refs = qa['source']
                         file_page_refs = [tuple([int(x[1:]) for x in r.split(';')]) for r in raw_refs]
                         
-                        q_vec = np.array(embedder.encode(q))
-                        a_vec = np.array(embedder.encode(a))
+                        q_vec = np.array(functions.embedder.embed_store_one(q))
+                        a_vec = np.array(functions.embedder.embed_store_one(a))
 
                         qid = sv.answering_next_q_id.value
                         sv.answering_next_q_id.value += 1
@@ -231,11 +230,8 @@ def create(sv: SessionVariables, workflow = None):
                 report_placeholder = st.empty()
                 gen_placeholder = st.empty()
                 if generate:
-                    result = util.AI_API.generate_text_from_message_list(
-                        placeholder=report_placeholder,
-                        messages=messages,
-                        prefix=''
-                    )
+                    on_callback = ui_components.create_markdown_callback(report_placeholder)
+                    result = ui_components.generate_text(messages, callbacks=[on_callback])
                     sv.answering_lazy_answer_text.value = result
                     
                     validation, messages_to_llm = ui_components.validate_ai_report(messages, result)

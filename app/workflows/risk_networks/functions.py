@@ -1,13 +1,13 @@
-import streamlit as st
-import pandas as pd
-import networkx as nx
 import colorsys
-import numpy as np
 from collections import defaultdict
+
+import networkx as nx
+import pandas as pd
+import workflows.risk_networks.config as config
+from AI.embedder import Embedder
 from streamlit_agraph import Config, Edge, Node
 
-import workflows.risk_networks.config as config
-
+embedder = Embedder(pickle_path=config.cache_dir)
 
 def hsl_to_hex(h, s, l):
     rgb = colorsys.hls_to_rgb(h / 360, l / 100, s / 100)

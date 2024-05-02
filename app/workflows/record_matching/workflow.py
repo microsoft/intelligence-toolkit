@@ -7,17 +7,17 @@ from collections import defaultdict
 import pandas as pd
 import polars as pl
 import streamlit as st
-import util.Embedder
 import util.session_variables as home_vars
 import workflows.record_matching.config as config
 import workflows.record_matching.functions as functions
 import workflows.record_matching.prompts as prompts
 import workflows.record_matching.variables as vars
+from AI import classes
+from AI.embedder import Embedder
 from sklearn.neighbors import NearestNeighbors
 from util import ui_components
 from util.download_pdf import add_download_pdf
 
-embedder = util.Embedder.create_embedder(config.cache_dir)
 
 def create(sv: vars.SessionVariable, workflow = None):
 
@@ -179,7 +179,17 @@ def create(sv: vars.SessionVariable, workflow = None):
                             sv.matching_merged_df.value = sv.matching_merged_df.value.with_columns((pl.col('Entity ID').cast(pl.Utf8)) + '::' + pl.col('Dataset').alias('Unique ID'))
                             all_sentences = functions.convert_to_sentences(sv.matching_merged_df.value, skip=['Unique ID', 'Entity ID', 'Dataset'])
                             # model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
-                            embeddings = embedder.encode_all(all_sentences)
+
+                            pb = st.progress(0, 'Embedding text batches...')
+
+                            def on_embedding_batch_change(current, total):
+                                pb.progress((current) / total, f'Embedding text batch {current} of {total}...')
+
+                            callback = classes.BatchEmbeddingCallback()
+                            callback.on_embedding_batch_change = on_embedding_batch_change
+                            embeddings = functions.embedder.embed_store_many(all_sentences,[callback])
+                            pb.empty()
+                            
                             nbrs = NearestNeighbors(n_neighbors=50, n_jobs=1, algorithm='auto', leaf_size=20, metric='cosine').fit(embeddings)
                             distances, indices = nbrs.kneighbors(embeddings)
                             threshold = sv.matching_sentence_pair_embedding_threshold.value
@@ -276,8 +286,7 @@ def create(sv: vars.SessionVariable, workflow = None):
                         sv.matching_matches_df.value = pl.DataFrame(list(matches), schema=['Group ID'] + sv.matching_merged_df.value.columns).sort(by=['Group ID','Entity name','Dataset'], descending=False)
                         group_to_size = sv.matching_matches_df.value.group_by('Group ID').agg(pl.count('Entity ID').alias('Size')).to_dict()
                         group_to_size = {k: v for k, v in zip(group_to_size['Group ID'], group_to_size['Size'])}
-                        sv.matching_matches_df.value = sv.matching_matches_df.value.with_columns(sv.matching_matches_df.value['Group ID'].map_elements(lambda x: group_to_size[x]).alias('Group size'))
-
+                        sv.matching_matches_df.value = sv.matching_matches_df.value.with_columns(sv.matching_matches_df.value['Group ID'].replace(group_to_size).alias('Group size'))
                         
                         sv.matching_matches_df.value = sv.matching_matches_df.value.select(['Group ID', 'Group size', 'Entity name', 'Dataset', 'Entity ID'] + [c for c in sv.matching_matches_df.value.columns if c not in ['Group ID', 'Group size', 'Entity name', 'Dataset', 'Entity ID']])
                         sv.matching_matches_df.value = sv.matching_matches_df.value.with_columns(sv.matching_matches_df.value['Entity ID'].map_elements(lambda x: x.split('::')[0]).alias('Entity ID'))
@@ -331,7 +340,9 @@ def create(sv: vars.SessionVariable, workflow = None):
             if generate:
                 unique_names = sv.matching_matches_df.value['Entity name'].unique()
                 for messages in batch_messages:
-                    response = util.AI_API.generate_text_from_message_list(messages, placeholder, prefix=prefix)
+                    callback = ui_components.create_markdown_callback(placeholder, prefix)
+                    response = ui_components.generate_text(messages, [callback])
+
                     if len(response.strip()) > 0:
                         prefix = prefix + response + '\n'
                     if sv_home.protected_mode.value:
