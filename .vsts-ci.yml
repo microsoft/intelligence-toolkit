@@ -45,7 +45,6 @@ stages:
 
   - stage: Build
     dependsOn: []
-    condition: []
     jobs:
       - job: validate
         displayName: Install and tests
