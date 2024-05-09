@@ -1,15 +1,7 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import numpy as np
-import tiktoken
 import scipy.spatial.distance
-import workflows.question_answering.config as config
-import os
 
-
-import util.Embedder
-
-embedder = util.Embedder.create_embedder(cache=config.cache_dir) #SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
-encoder = tiktoken.get_encoding('cl100k_base')
 
 class Question:
     def __init__(self, file, text, vector, tier, id) -> None:

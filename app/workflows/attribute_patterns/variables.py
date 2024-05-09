@@ -6,8 +6,10 @@ import streamlit as st
 import workflows.attribute_patterns.prompts as prompts
 
 class SessionVariables:
+    prefix = None
 
     def __init__(self, prefix):
+        self.prefix = prefix
         self.create_session(prefix)
 
     def create_session(self, prefix):
@@ -48,8 +50,8 @@ class SessionVariables:
 
         self.atribute_period = SessionVariable('', prefix)
 
-    def reset_workflow(self, prefix):
+    def reset_workflow(self):
         for key in st.session_state.keys():
-            if key.startswith(prefix):
+            if key.startswith(self.prefix):
                 del st.session_state[key]
-        self.create_session(prefix)
+        self.create_session(self.prefix)

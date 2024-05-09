@@ -1,15 +1,14 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-import pandas as pd
+from collections import Counter, defaultdict
+from itertools import combinations
+
 import networkx as nx
 import numpy as np
-from collections import Counter, defaultdict
-
-from itertools import combinations
+import pandas as pd
+import util.df_functions
+import workflows.attribute_patterns.config as config
 from util.SparseGraphEncoder import GraphEncoderEmbed
 
-import workflows.attribute_patterns.classes as classes
-import workflows.attribute_patterns.config as config
-import util.df_functions
 
 def create_time_series_df(rc, pattern_df):
     rows = []

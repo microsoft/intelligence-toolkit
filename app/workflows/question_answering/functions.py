@@ -1,32 +1,25 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-import os
-import numpy as np
-import streamlit as st
 import io
-import tiktoken
-import pdfplumber
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-import util.Embedder
-import workflows.question_answering.classes as classes
-import workflows.question_answering.config as config
 import tempfile
+
+import numpy as np
 import pdfkit
+import pdfplumber
+import streamlit as st
+import workflows.question_answering.classes as classes
+from AI import utils
+from AI.embedder import Embedder
+from AI.text_splitter import TextSplitter
+from util import ui_components
 from util.wkhtmltopdf import config_pdfkit, pdfkit_options
+from workflows.question_answering import config
 
-embedder = util.Embedder.create_embedder(cache=config.cache_dir)
-encoder = tiktoken.get_encoding('cl100k_base')
-
-
-text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=config.chunk_size,
-    chunk_overlap=config.chunk_overlap,
-    length_function=len,
-    is_separator_regex=False,
-)
+embedder = Embedder(pickle_path=config.cache_dir)
 
 def chunk_files(sv, files):
     pb = st.progress(0, 'Chunking files...')
     file_chunks = []
+    text_splitter = TextSplitter()
     for fx, file_link in enumerate(files):
         pb.progress((fx+1) / len(files), f'Chunking file {fx+1} of {len(files)}...')
         file_names = [f.name for f in sv.answering_files.value.values()]
@@ -49,7 +42,7 @@ def chunk_files(sv, files):
             for px in range(len(pdf_reader.pages)):
                 page_text = pdf_reader.pages[px].extract_text()
                 doc_text += f'\n[PAGE {px+1}]\n\n{page_text}\n\n'
-                chunks = [f'\n[PAGE {px+1}]\n\n{x.strip()}\n\n' for x in text_splitter.split_text(page_text)]
+                chunks = [f'\n[PAGE {px+1}]\n\n{x.strip()}\n\n' for x in text_splitter.split(page_text)]
                 for chunk in chunks:
                     file_chunks.append((file, chunk))
                 file.set_text(doc_text)
@@ -57,7 +50,7 @@ def chunk_files(sv, files):
     for cx, (file, chunk) in enumerate(file_chunks):
         pb.progress((cx+1) / len(file_chunks), f'Embedding chunk {cx+1} of {len(file_chunks)}...')
         formatted_chunk = chunk.replace("\n", " ")
-        chunk_vec = embedder.encode(formatted_chunk)
+        chunk_vec = embedder.embed_store_one(formatted_chunk)
         file.add_chunk(chunk, np.array(chunk_vec), cx+1)   
     pb.empty()
 
@@ -94,16 +87,14 @@ New augmented question adding to the prevous augmented question:
             'augmented_question': question_history[-1],
             'q_text': q_text
         }
-        messages = util.AI_API.prepare_messages_from_message_pair(
+        messages = utils.prepare_messages(
             system_message=system_message,
             user_message=user_message,
             variables=variables,
         )
-        response = util.AI_API.generate_text_from_message_list(
-            messages=messages,
-            placeholder=placeholder,
-            prefix=prefix
-        )
+
+        on_callback = ui_components.create_markdown_callback(placeholder, prefix)
+        response = ui_components.generate_text(messages, [on_callback])
     else:
         print('Got no new questions!')
     return response

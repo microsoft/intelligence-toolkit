@@ -1,19 +1,22 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-import re
-import streamlit as st
-import pandas as pd
-import numpy as np
-
-import os
+import json
 import math
+import os
+import re
 import sys
-
-from dateutil import parser as dateparser
 from collections import defaultdict
 
+import AI.utils as utils
+import numpy as np
+import pandas as pd
+import streamlit as st
+from AI.classes import LLMCallback
+from AI.client import OpenAIClient
+from AI.defaults import DEFAULT_MAX_INPUT_TOKENS
+from dateutil import parser as dateparser
+from util.df_functions import get_current_time
 from util.download_pdf import add_download_pdf
-import util.AI_API
-import util.df_functions
+from util.enums import Mode
 
 
 def dataframe_with_selections(df, selections, selection_col, label, key, height=250):
@@ -63,6 +66,7 @@ def report_download_ui(report_var, name):
         with c2:
             add_download_pdf(f'{name}.pdf', report_data, f'Download AI {spaced_name} as PDF')
 
+
 def generative_ai_component(system_prompt_var, variables):
     st.markdown('##### Generative AI instructions')
     with st.expander('Edit AI system prompt used to generate output report', expanded=True):
@@ -77,17 +81,17 @@ def generative_ai_component(system_prompt_var, variables):
         system_prompt_var.value["safety_prompt"]
     ])
 
-    messages = util.AI_API.prepare_messages_from_message(full_prompt, variables)
-    tokens = util.AI_API.count_tokens_in_message_list(messages)
+    messages = utils.prepare_messages(full_prompt, variables)
+    tokens = utils.get_token_count(messages)
     b1, b2 = st.columns([1, 4])
-    ratio = 100 * tokens/util.AI_API.max_input_tokens
+    ratio = 100 * tokens/DEFAULT_MAX_INPUT_TOKENS  
     with b1:
         generate = st.button('Generate', disabled=ratio > 100)
         if generate:
             system_prompt_var.value["user_prompt"] = instructions_text
 
     with b2:
-        message = f'AI input uses {tokens}/{util.AI_API.max_input_tokens} ({round(ratio, 2)}%) of token limit'
+        message = f'AI input uses {tokens}/{DEFAULT_MAX_INPUT_TOKENS} ({round(ratio, 2)}%) of token limit'
         if ratio <= 100:
             st.info(message)
         else:
@@ -117,16 +121,16 @@ def generative_batch_ai_component(system_prompt_var, variables, batch_name, batc
         batch_offset += batch_size
         batch_variables = dict(variables)
         batch_variables[batch_name] = batch.to_csv()
-        batch_messages.append(util.AI_API.prepare_messages_from_message(full_prompt, batch_variables))
-    tokens = util.AI_API.count_tokens_in_message_list(batch_messages[0] if len(batch_messages) != 0 else [])
+        batch_messages.append(utils.prepare_messages(full_prompt, batch_variables))
+    tokens = utils.get_token_count(batch_messages[0] if len(batch_messages) != 0 else [])
     b1, b2 = st.columns([1, 4])
-    ratio = 100 * tokens/util.AI_API.max_input_tokens
+    ratio = 100 * tokens/DEFAULT_MAX_INPUT_TOKENS
     with b1:
         generate = st.button('Generate', disabled=ratio > 100)
         if generate:
             system_prompt_var.value["user_prompt"] = instructions_text
     with b2:
-        st.markdown(f'AI input uses {tokens}/{util.AI_API.max_input_tokens} ({round(ratio, 2)}%) of token limit')
+        st.markdown(f'AI input uses {tokens}/{DEFAULT_MAX_INPUT_TOKENS} ({round(ratio, 2)}%) of token limit')
     return generate, batch_messages, reset_prompt
 
 file_options = ['unicode-escape', 'utf-8', 'utf-8-sig']
@@ -210,8 +214,6 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
         st.session_state[f'{workflow}_selected_binned_cols'] = []
     if f'{workflow}_selected_binned_size' not in st.session_state:
         st.session_state[f'{workflow}_selected_binned_size'] = 'Year'
-    if f'{workflow}_selected_num_attr' not in st.session_state:
-        st.session_state[f'{workflow}_selected_num_attr'] = []
     if f'{workflow}_selected_num_bins' not in st.session_state:
         st.session_state[f'{workflow}_selected_num_bins'] = 5
     if f'{workflow}_selected_trim_percent' not in st.session_state:
@@ -256,30 +258,14 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
             if col != 'Subject ID':
                 input = st.checkbox(col, key=f'{workflow}_{col}_input', value=st.session_state[f'{workflow}_{col}'])            
                 st.session_state[f'{workflow}_{col}'] = input
-    # set processed_df_var to input_df_var filtered by selected columns
+
     selected_cols = [col for col in input_df_var.value.columns.values if st.session_state[f'{workflow}_{col}'] == True]
-    processed_df_var.value = processed_df_var.value[['Subject ID']].copy()
-    for col in selected_cols:
-        
-        if col in st.session_state[f'{workflow}_binned_df'].columns.values:
-            processed_df_var.value[col] = list(st.session_state[f'{workflow}_binned_df'][col])
-            processed_df_var.value[col] = processed_df_var.value[col].replace('nan', '')
-
-    for (cols, delim) in st.session_state[f'{workflow}_selected_compound_cols']:
-        for col in cols:
-            if col in selected_cols:
-                # add each value as a separate column with a 1 if the value is present in the compound column and None otherwise
-                values = processed_df_var.value[col].apply(lambda x: [y.strip() for y in x.split(delim)] if type(x) == str else [])
-                unique_values = set([v for vals in values for v in vals])
-                unique_values = [x for x in unique_values if x != '']
-                for val in unique_values:
-                    st.session_state[f'{workflow}_{val}'] = True
-                    processed_df_var.value[val] = values.apply(lambda x: '1' if val in x and val != 'nan' else '')
-                    # processed_df_var.value[col][col+'_'+val] = values.apply(lambda x: 1 if val in x and val != 'nan' else None)
-                processed_df_var.value.drop(columns=[col], inplace=True)
-
     if selected_cols != st.session_state[f'{workflow}_last_attributes']:
-        processed_df_var.value = util.df_functions.fix_null_ints(processed_df_var.value)
+        processed_df_var.value = processed_df_var.value[['Subject ID']].copy()
+        for col in selected_cols:
+            if col in st.session_state[f'{workflow}_binned_df'].columns.values:
+                processed_df_var.value[col] = list(st.session_state[f'{workflow}_binned_df'][col])
+                processed_df_var.value[col] = processed_df_var.value[col].replace('nan', '')
         st.session_state[f'{workflow}_last_attributes'] = selected_cols
         st.rerun()
 
@@ -348,7 +334,8 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
                             return ''
                     func = convert
                 st.session_state[f'{workflow}_binned_df'][col] = input_df_var.value[col].apply(func)
-            st.session_state[f'{workflow}_last_attributes'] = [] # hack to force second rerun and show any changes from binning
+                processed_df_var.value[col] = list(st.session_state[f'{workflow}_binned_df'][col])
+                processed_df_var.value[col] = processed_df_var.value[col].replace('nan', '')
             st.rerun()
 
     with st.expander('Quantize numeric attributes', expanded=False):
@@ -358,7 +345,7 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
             if col != 'Subject ID' and processed_df_var.value[col].dtype in ['float64', 'int64', 'Int64']:
                 binnable_cols.append(col)
 
-        selected_binnable_cols = st.multiselect('Select numeric attributes to quantize', binnable_cols, default=st.session_state[f'{workflow}_selected_num_attr'], help='Select the numeric columns you want to quantize. Quantizing numeric columns into bins makes it easier to synthesize data, but reduces the amount of information in the data. If you do not select any columns, no binning will be performed.')
+        selected_binnable_cols = st.multiselect('Select numeric attributes to quantize', binnable_cols, help='Select the numeric columns you want to quantize. Quantizing numeric columns into bins makes it easier to synthesize data, but reduces the amount of information in the data. If you do not select any columns, no binning will be performed.')
         num_bins = st.number_input('Number of bins', value=st.session_state[f'{workflow}_selected_num_bins'], help='Number of bins to use for each column. If 0, no binning will be performed. Fewer bins makes it easier to synthesize data, but reduces the amount of information in the data. More bins makes it harder to synthesize data, but preserves more information in the data.')
         trim_percent = st.number_input('Trim percent', value=st.session_state[f'{workflow}_selected_trim_percent'], help='Percent of values to trim from the top and bottom of each column before binning. This helps to reduce the impact of outliers on the binning process. For example, if trim percent is 0.05, the top and bottom 5% of values will be trimmed from each column before binning. If 0, no trimming will be performed.')
         
@@ -410,7 +397,6 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
                     # processed_df_var.value[col] = processed_df_var.value[col].astype('str')
                     st.session_state[f'{workflow}_binned_df'][col] = results
 
-            st.session_state[f'{workflow}_selected_num_attr'] = selected_binnable_cols
             st.session_state[f'{workflow}_selected_num_bins'] = num_bins 
             st.session_state[f'{workflow}_selected_trim_percent'] = trim_percent
             st.session_state[f'{workflow}_last_attributes'] = [] # hack to force second rerun and show any changes from binning
@@ -533,5 +519,32 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
 def validate_ai_report(messages, result, show_status = True):
     if show_status:
         st.status('Validating AI report and generating faithfulness score...', expanded=False, state='running')
-    validation, messages_to_llm = util.AI_API.validate_report(messages, result)
-    return re.sub(r"```json\n|\n```", "", validation), messages_to_llm
+    messages_to_llm = utils.prepare_validation(messages, result)
+    validation = OpenAIClient().generate_chat(messages_to_llm)
+    return json.loads(re.sub(r"```json\n|\n```", "", validation)), messages_to_llm
+
+def generate_text(messages, callbacks = []):
+    return OpenAIClient().generate_chat(messages, callbacks=callbacks)
+
+def create_markdown_callback(placeholder, prefix=''):
+    def on(text):
+        placeholder.markdown(prefix+text, unsafe_allow_html=True)
+
+    on_callback = LLMCallback()
+    on_callback.on_llm_new_token = on
+    return on_callback
+
+def build_validation_ui(report_validation, attribute_report_validation_messages, report_data, file_name):
+    mode = os.environ.get("MODE", Mode.DEV.value)
+    if report_validation != {}:
+        validation_status = st.status(label=f"LLM faithfulness score: {report_validation['score']}/5", state='complete')
+        with validation_status:
+            st.write(report_validation['explanation'])
+
+            if mode == Mode.DEV.value:
+                obj = json.dumps({
+                    "message": attribute_report_validation_messages,
+                    "result": report_validation,
+                    "report": report_data
+                }, indent=4)
+                st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'{file_name}_{get_current_time()}_messages.json', mime='text/json')

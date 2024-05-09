@@ -1,34 +1,19 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-import json
-import re
-import streamlit as st
-import pandas as pd
-import numpy as np
 import altair as alt
-
-from st_aggrid import (
-    AgGrid,
-    DataReturnMode,
-    GridOptionsBuilder,
-    GridUpdateMode,
-    ColumnsAutoSizeMode
-)   
-
-from util.df_functions import get_current_time
-import workflows.attribute_patterns.prompts as prompts
-import workflows.attribute_patterns.functions as functions
+import numpy as np
+import pandas as pd
+import streamlit as st
 import workflows.attribute_patterns.classes as classes
-import workflows.attribute_patterns.variables as vars
 import workflows.attribute_patterns.config as config
-from util.session_variables import SessionVariables
+import workflows.attribute_patterns.functions as functions
+import workflows.attribute_patterns.prompts as prompts
+import workflows.attribute_patterns.variables as vars
+from st_aggrid import (AgGrid, ColumnsAutoSizeMode, DataReturnMode,
+                       GridOptionsBuilder, GridUpdateMode)
+from util import ui_components, df_functions
 
-import util.AI_API
-import util.ui_components
 
-def create():
-    workflow = 'attribute_patterns'
-    sv = vars.SessionVariables(workflow)
-    sv_home = SessionVariables('home')
+def create(sv: vars.SessionVariables, workflow):
     intro_tab, uploader_tab, detect_tab, explain_tab = st.tabs(['Attribute patterns workflow:', 'Create graph model', 'Detect patterns', 'Generate AI pattern reports'])
     df = None
     with intro_tab:
@@ -36,13 +21,13 @@ def create():
     with uploader_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:
-            util.ui_components.single_csv_uploader(workflow, 'Upload CSV', sv.attribute_last_file_name, sv.attribute_input_df, sv.attribute_binned_df, sv.attribute_final_df, sv.attribute_upload_key.value, key='attributes_uploader', height=500)
+            ui_components.single_csv_uploader('attribute_patterns', 'Upload CSV', sv.attribute_last_file_name, sv.attribute_input_df, sv.attribute_binned_df, sv.attribute_final_df, sv.attribute_upload_key.value, key='attributes_uploader', height=500)
         with model_col:
-            util.ui_components.prepare_input_df(workflow, sv.attribute_input_df, sv.attribute_binned_df, sv.attribute_final_df, sv.attribute_subject_identifier)
+            ui_components.prepare_input_df('attribute_patterns', sv.attribute_input_df, sv.attribute_binned_df, sv.attribute_final_df, sv.attribute_subject_identifier)
             options = [''] + [c for c in sv.attribute_final_df.value.columns.values if c != 'Subject ID']
             sv.attribute_time_col.value = st.selectbox('Period column', options, index=options.index(sv.attribute_time_col.value) if sv.attribute_time_col.value in options else 0)
             time_col = sv.attribute_time_col.value
-            att_cols = [col for col in sv.attribute_final_df.value.columns.values if col not in ['Subject ID', time_col] and st.session_state[f'{workflow}_{col}'] == True]
+            att_cols = [col for col in sv.attribute_final_df.value.columns.values if col not in ['Subject ID', time_col] and st.session_state[f'attribute_patterns_{col}'] == True]
             
             ready = len(att_cols) > 0 and sv.attribute_time_col.value != ''
 
@@ -50,7 +35,7 @@ def create():
                 with st.spinner('Adding links to model...'):
                     time_col = sv.attribute_time_col.value
                     df = sv.attribute_final_df.value.copy(deep=True)
-                    df = util.df_functions.fix_null_ints(df).astype(str).replace('nan', '').replace('<NA>', '')
+                    df = df_functions.fix_null_ints(df).astype(str).replace('nan', '').replace('<NA>', '')
                 
                     df['Subject ID'] = [str(x) for x in range(1, len(df) + 1)]
                     df['Subject ID'] = df['Subject ID'].astype(str)
@@ -67,11 +52,6 @@ def create():
             if ready and len(sv.attribute_dynamic_df.value) > 0:
                 st.success(f'Graph model has **{len(sv.attribute_dynamic_df.value)}** links spanning **{len(sv.attribute_dynamic_df.value["Subject ID"].unique())}** cases, **{len(sv.attribute_dynamic_df.value["Full Attribute"].unique())}** attributes, and **{len(sv.attribute_dynamic_df.value["Period"].unique())}** periods.')
 
-        reset_workflow_button = st.button(":warning: Reset workflow", use_container_width=True, help='Clear all data on this workflow and start over. CAUTION: This action can\'t be undone.')
-        if reset_workflow_button:
-            sv.reset_workflow(workflow)
-            st.rerun()
-            
     with detect_tab:
         if not ready or len(sv.attribute_final_df.value) == 0:
             st.warning('Generate a graph model to continue.')
@@ -113,6 +93,9 @@ def create():
                 gb.configure_selection(selection_mode="single", use_checkbox=False)
                 gb.configure_side_bar()
                 gridoptions = gb.build()
+                gridoptions['columnDefs'][0]['minWidth'] = 100
+                gridoptions['columnDefs'][1]['minWidth'] = 400
+                
                 
                 response = AgGrid(
                     show_df,
@@ -127,7 +110,8 @@ def create():
                     use_checkbox=False,
                     enable_quicksearch=True,
                     reload_data=False,
-                    columns_auto_size_mode=ColumnsAutoSizeMode.FIT_ALL_COLUMNS_TO_VIEW
+                    columns_auto_size_mode=ColumnsAutoSizeMode.FIT_ALL_COLUMNS_TO_VIEW,
+                    
                     ) # type: ignore
                
                 selected_pattern = response['selected_rows'][0]['pattern'] if len(response['selected_rows']) > 0 else sv.attribute_selected_pattern.value
@@ -171,7 +155,7 @@ def create():
                     'attribute_counts': sv.attribute_selected_pattern_att_counts.value.to_csv(index=False)
                 }
 
-                generate, messages, reset = util.ui_components.generative_ai_component(sv.attribute_system_prompt, variables)
+                generate, messages, reset = ui_components.generative_ai_component(sv.attribute_system_prompt, variables)
                 if reset:
                     sv.attribute_system_prompt.value["user_prompt"] = prompts.user_prompt
                     st.rerun()
@@ -193,16 +177,14 @@ def create():
                 report_placeholder = st.empty()
                 gen_placeholder = st.empty()
                     
+
                 if generate:
-                    result = util.AI_API.generate_text_from_message_list(
-                        placeholder=report_placeholder,
-                        messages=messages,
-                        prefix=''
-                    )
+                    on_callback = ui_components.create_markdown_callback(report_placeholder)
+                    result = ui_components.generate_text(messages, callbacks=[on_callback])
                     sv.attribute_report.value = result
 
-                    validation, messages_to_llm = util.ui_components.validate_ai_report(messages, result)
-                    sv.attribute_report_validation.value = json.loads(validation)
+                    validation, messages_to_llm = ui_components.validate_ai_report(messages, result)
+                    sv.attribute_report_validation.value = validation
                     sv.attribute_report_validation_messages.value = messages_to_llm
                     st.rerun()
                 else:
@@ -212,16 +194,7 @@ def create():
                 report_data = sv.attribute_report.value
                 report_placeholder.markdown(report_data)
                 
-                util.ui_components.report_download_ui(sv.attribute_report, 'pattern_report')
-                if sv.attribute_report_validation.value != {}:
-                    validation_status = st.status(label=f"LLM faithfulness score: {sv.attribute_report_validation.value['score']}/5", state='complete')
-                    with validation_status:
-                        st.write(sv.attribute_report_validation.value['explanation'])
+                ui_components.report_download_ui(sv.attribute_report, 'pattern_report')
 
-                        if sv_home.mode.value == 'dev':
-                            obj = json.dumps({
-                                "message": sv.attribute_report_validation_messages.value,
-                                "result": sv.attribute_report_validation.value,
-                                "report": report_data
-                            }, indent=4)
-                            st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'attr_pattern_{get_current_time()}_messages.json', mime='text/json')
+                ui_components.build_validation_ui(sv.attribute_report_validation.value, 
+                                 sv.attribute_report_validation_messages.value, report_data, workflow)

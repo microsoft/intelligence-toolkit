@@ -1,32 +1,26 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-import numpy as np
-import pandas as pd
-import streamlit as st
-from collections import Counter
-import re
 import json
-import scipy.spatial.distance
+import re
+from collections import Counter
 
-from util.download_pdf import add_download_pdf
-from util.df_functions import get_current_time
-import workflows.question_answering.functions as functions
+import numpy as np
+import scipy.spatial.distance
+import streamlit as st
 import workflows.question_answering.classes as classes
 import workflows.question_answering.config as config
+import workflows.question_answering.functions as functions
 import workflows.question_answering.prompts as prompts
-import workflows.question_answering.variables as vars
+from AI import utils
+from AI.defaults import CHUNK_SIZE
+from util import ui_components
+from util.df_functions import get_current_time
+from util.download_pdf import add_download_pdf
 from util.session_variables import SessionVariables
-import util.Embedder
-import util.ui_components
 
-embedder = util.Embedder.create_embedder(config.cache_dir)
 
-def create():
-    workflow = 'question_answering'
-    sv = vars.SessionVariables(workflow)
-    sv_home = SessionVariables('home')
+def create(sv: SessionVariables, workflow = None):
     intro_tab, uploader_tab, mining_tab, report_tab = st.tabs(['Question answering workflow:', 'Upload data', 'Mine & match questions', 'Generate AI answer reports'])
     
-    df = None
     with intro_tab:
         st.markdown(config.intro)
     with uploader_tab:
@@ -39,13 +33,7 @@ def create():
         num_files = len(sv.answering_files.value)
         num_chunks = sum([len(f.chunk_texts) for f in sv.answering_files.value.values()])
         if num_files > 0:
-            st.success(f'Chunked **{num_files}** files into **{num_chunks}** chunks of up to **{config.chunk_size}** characters.')
-
-        reset_workflow_button = st.button(":warning: Reset workflow", key='btn_qa_reset', use_container_width=True, help='Clear all data on this workflow and start over. CAUTION: This action can\'t be undone.')
-        if reset_workflow_button:
-            sv.reset_workflow(workflow)
-            st.rerun()
-            
+            st.success(f'Chunked **{num_files}** files into **{num_chunks}** chunks of up to **{CHUNK_SIZE}** characters.')            
     with mining_tab:
         c1, c2, c3, c4, c5 = st.columns([4, 1, 1, 1, 1])
         with c1:
@@ -58,20 +46,31 @@ def create():
             max_iterations = st.number_input('Max iterations', min_value=1, step=1, value=sv.answering_max_iterations.value)
         with c5:
             regenerate = st.button('Mine matching questions', key='lazy_regenerate', use_container_width=True)
+            if regenerate:
+                sv.answering_matches.value = ''
+                # sv.answering_status_history.value = ''
+                # sv.answering_status_history.value = ''
         c1, c2 = st.columns([2, 3])
         with c1:
             st.markdown('#### Question mining')
+            if (len(sv.answering_matches.value) > 0):
+                txt = ''
+                seen_qs = set()
+                for d in sv.answering_context_list.value:
+                    if d.id not in seen_qs:
+                        txt += d.generate_outline(level=4) + '\n\n'
+                        seen_qs.update([d.id])
+                add_download_pdf(f'question_mining_{get_current_time()}.pdf', txt, 'Download mining questions')
             lazy_answering_placeholder = st.empty()
         with c2:
             st.markdown('#### Question matching')
             lazy_matches_placeholder = st.empty()
-            if (len(sv.answering_matches.value) > 0):
-                add_download_pdf(f'question_matching_{get_current_time()}.pdf', sv.answering_matches.value, 'Download matched questions')
         lazy_answering_placeholder.markdown(sv.answering_status_history.value, unsafe_allow_html=True)
         lazy_matches_placeholder.markdown(sv.answering_matches.value, unsafe_allow_html=True)
 
 
         if question != '' and regenerate:
+            sv.answering_context_list.value = []
             sv.answering_question_history.value = []
             sv.answering_next_q_id.value = 1
             sv.answering_surface_questions.value = {}
@@ -102,7 +101,7 @@ def create():
             source_counts = Counter()
             used_chunks = set()
             while True:
-                qe = np.array(embedder.encode(question))
+                qe = np.array(functions.embedder.embed_store_one(question))
                 iteration += 1
                 cosine_distances = sorted([(t, c, scipy.spatial.distance.cosine(qe, v)) for (t, c, v) in all_units], key=lambda x:x[2], reverse=False)
                 chunk_index = sv.answering_target_matches.value
@@ -124,7 +123,7 @@ def create():
                                 delta = c.generate_outline(level=6)
                                 qs = c.list_all_sub_questions()
                                 candidate = report_input + delta
-                                candidate_tokens = len(util.AI_API.encoder.encode(candidate))
+                                candidate_tokens = utils.get_token_count(candidate)
                                 if candidate_tokens <= sv.answering_outline_limit.value:
                                     report_input = candidate
                                     seen_qs.update([q.id for q in qs])
@@ -167,14 +166,14 @@ def create():
                     'text': f.chunk_texts[cx],
                     'file_id': f.id
                 }
-                messages = util.AI_API.prepare_messages_from_message_pair(
+                messages = utils.prepare_messages(
                     system_message=prompts.extraction_system_prompt,
                     user_message=prompts.extraction_user_prompt,
                     variables=variables
                 )
-                qas_raw = util.AI_API.generate_text_from_message_list(messages, placeholder=lazy_answering_placeholder, prefix=status_history)
+                on_callback = ui_components.create_markdown_callback(lazy_answering_placeholder, prefix=status_history)
+                qas_raw = ui_components.generate_text(messages, callbacks=[on_callback])
                 status_history += qas_raw + '<br/><br/>'
-
                 try:
                     qas = json.loads(qas_raw)
                     for qa in qas:
@@ -183,12 +182,13 @@ def create():
                         raw_refs = qa['source']
                         file_page_refs = [tuple([int(x[1:]) for x in r.split(';')]) for r in raw_refs]
                         
-                        q_vec = np.array(embedder.encode(q))
-                        a_vec = np.array(embedder.encode(a))
+                        q_vec = np.array(functions.embedder.embed_store_one(q))
+                        a_vec = np.array(functions.embedder.embed_store_one(a))
 
                         qid = sv.answering_next_q_id.value
                         sv.answering_next_q_id.value += 1
                         q = classes.Question(f, q, q_vec, 0, qid)
+                        sv.answering_context_list.value.append(q)
                         new_questions.append(q)
                         print(f'Created question {qid} from file {f.id}.')
                         f.add_question(q)
@@ -222,7 +222,7 @@ def create():
                     'outline': sv.answering_matches.value,
                     'source_diversity': sv.answering_source_diversity.value
                 }
-                generate, messages, reset = util.ui_components.generative_ai_component(sv.answering_system_prompt, variables)
+                generate, messages, reset = ui_components.generative_ai_component(sv.answering_system_prompt, variables)
                 if reset:
                     sv.answering_system_prompt.value["user_prompt"] = prompts.user_prompt
                     st.rerun()
@@ -230,15 +230,12 @@ def create():
                 report_placeholder = st.empty()
                 gen_placeholder = st.empty()
                 if generate:
-                    result = util.AI_API.generate_text_from_message_list(
-                        placeholder=report_placeholder,
-                        messages=messages,
-                        prefix=''
-                    )
+                    on_callback = ui_components.create_markdown_callback(report_placeholder)
+                    result = ui_components.generate_text(messages, callbacks=[on_callback])
                     sv.answering_lazy_answer_text.value = result
                     
-                    validation, messages_to_llm = util.ui_components.validate_ai_report(messages, result)
-                    sv.answering_report_validation.value = json.loads(validation)
+                    validation, messages_to_llm = ui_components.validate_ai_report(messages, result)
+                    sv.answering_report_validation.value = validation
                     sv.answering_report_validation_messages.value = messages_to_llm
                     st.rerun()
                 else:
@@ -262,15 +259,4 @@ def create():
                     with c2:
                         add_download_pdf(f'{name}.pdf', full_text, 'Download AI answer report as PDF', disabled=is_download_disabled)
                     
-                    if sv.answering_report_validation.value != {}:
-                        validation_status = st.status(label=f"LLM faithfulness score: {sv.answering_report_validation.value['score']}/5", state='complete')
-                        with validation_status:
-                            st.write(sv.answering_report_validation.value['explanation'])
-
-                            if sv_home.mode.value == 'dev':
-                                obj = json.dumps({
-                                    "message": sv.answering_report_validation_messages.value,
-                                    "result": sv.answering_report_validation.value,
-                                    "report": sv.answering_lazy_answer_text.value
-                                }, indent=4)
-                                st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'qa_{get_current_time()}_messages.json', mime='text/json')
+                    ui_components.build_validation_ui(sv.answering_report_validation.value, sv.answering_report_validation_messages.value, sv.answering_lazy_answer_text.value, workflow)

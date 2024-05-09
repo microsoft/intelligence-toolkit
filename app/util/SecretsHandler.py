@@ -1,6 +1,6 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import os
 
-from httpx import delete
 
 class SecretsHandler:
     _directory = ".streamlit"

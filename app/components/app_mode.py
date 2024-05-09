@@ -21,6 +21,6 @@ class app_mode:
 
         if mode != self.sv.protected_mode.value:
             self.sv.protected_mode.value = mode
-            self.sv_network.reset_workflow('risk_networks')
+            self.sv_network.reset_workflow()
             st.rerun()
         

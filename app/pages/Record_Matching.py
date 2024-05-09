@@ -1,19 +1,20 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-from util.session_variables import SessionVariables
+import streamlit as st
+import workflows.record_matching.variables as vars
 import workflows.record_matching.workflow
 from components.app_loader import load_multipage_app
-import streamlit as st
-from util.enums import Mode
+from util.helper_fn import appInDevMode
 
+workflow = 'record_matching'
 def main():
     st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_icon="app/myapp.ico", page_title='Intelligence Toolkit | Record Matching')
-    load_multipage_app()
-    sv_home = SessionVariables('home')
+    sv = vars.SessionVariables(workflow)
+    load_multipage_app(sv)
 
     try:
-        workflows.record_matching.workflow.create()
+        workflows.record_matching.workflow.create(sv, workflow)
     except Exception as e:
-        if sv_home.mode.value == Mode.DEV.value:
+        if appInDevMode():
             st.exception(e)
         else:
             st.error(f"An error occurred: {e}")

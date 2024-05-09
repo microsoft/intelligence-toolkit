@@ -1,29 +1,26 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-import json
-import pandas as pd
-import streamlit as st
-import polars as pl
-
-import re
 import io
 import os
-
+import re
 from collections import defaultdict
-from sklearn.neighbors import NearestNeighbors
-from util.df_functions import get_current_time
-import workflows.record_matching.prompts as prompts
-import workflows.record_matching.functions as functions
-import workflows.record_matching.config as config
-import workflows.record_matching.variables as vars
+
+import pandas as pd
+import polars as pl
+import streamlit as st
 import util.session_variables as home_vars
-import util.Embedder
-import util.ui_components
+import workflows.record_matching.config as config
+import workflows.record_matching.functions as functions
+import workflows.record_matching.prompts as prompts
+import workflows.record_matching.variables as vars
+from AI import classes
+from AI.embedder import Embedder
+from sklearn.neighbors import NearestNeighbors
+from util import ui_components
+from util.download_pdf import add_download_pdf
 
-embedder = util.Embedder.create_embedder(config.cache_dir)
 
-def create():
-    workflow = 'record_matching'
-    sv = vars.SessionVariables(workflow)
+def create(sv: vars.SessionVariable, workflow = None):
+
     sv_home = home_vars.SessionVariables('home')
 
     if not os.path.exists(config.outputs_dir):
@@ -36,7 +33,7 @@ def create():
     with uploader_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:
-            selected_file, df = util.ui_components.multi_csv_uploader('Upload multiple CSVs', sv.matching_uploaded_files, config.outputs_dir, sv.matching_upload_key.value, 'matching_uploader', sv.matching_max_rows_to_process)
+            selected_file, df = ui_components.multi_csv_uploader('Upload multiple CSVs', sv.matching_uploaded_files, config.outputs_dir, sv.matching_upload_key.value, 'matching_uploader', sv.matching_max_rows_to_process)
         with model_col:
                 st.markdown('##### Map columns to data model')
                 if df is None:
@@ -74,11 +71,6 @@ def create():
                         recs = sum([len(df) for df in sv.matching_dfs.value.values()])
                         st.success(f'Data model has **{len(sv.matching_dfs.value)}** datasets with **{recs}** total records.')
         
-        reset_workflow_button = st.button(":warning: Reset workflow", use_container_width=True, help='Clear all data on this workflow and start over. CAUTION: This action can\'t be undone.')
-        if reset_workflow_button:
-            sv.reset_workflow(workflow)
-            st.rerun()
-
     with process_tab:
         if len(sv.matching_dfs.value) == 0:
             st.warning('Upload data files to continue')
@@ -187,7 +179,17 @@ def create():
                             sv.matching_merged_df.value = sv.matching_merged_df.value.with_columns((pl.col('Entity ID').cast(pl.Utf8)) + '::' + pl.col('Dataset').alias('Unique ID'))
                             all_sentences = functions.convert_to_sentences(sv.matching_merged_df.value, skip=['Unique ID', 'Entity ID', 'Dataset'])
                             # model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
-                            embeddings = embedder.encode_all(all_sentences)
+
+                            pb = st.progress(0, 'Embedding text batches...')
+
+                            def on_embedding_batch_change(current, total):
+                                pb.progress((current) / total, f'Embedding text batch {current} of {total}...')
+
+                            callback = classes.BatchEmbeddingCallback()
+                            callback.on_embedding_batch_change = on_embedding_batch_change
+                            embeddings = functions.embedder.embed_store_many(all_sentences,[callback])
+                            pb.empty()
+                            
                             nbrs = NearestNeighbors(n_neighbors=50, n_jobs=1, algorithm='auto', leaf_size=20, metric='cosine').fit(embeddings)
                             distances, indices = nbrs.kneighbors(embeddings)
                             threshold = sv.matching_sentence_pair_embedding_threshold.value
@@ -284,8 +286,7 @@ def create():
                         sv.matching_matches_df.value = pl.DataFrame(list(matches), schema=['Group ID'] + sv.matching_merged_df.value.columns).sort(by=['Group ID','Entity name','Dataset'], descending=False)
                         group_to_size = sv.matching_matches_df.value.group_by('Group ID').agg(pl.count('Entity ID').alias('Size')).to_dict()
                         group_to_size = {k: v for k, v in zip(group_to_size['Group ID'], group_to_size['Size'])}
-                        sv.matching_matches_df.value = sv.matching_matches_df.value.with_columns(sv.matching_matches_df.value['Group ID'].map_elements(lambda x: group_to_size[x]).alias('Group size'))
-
+                        sv.matching_matches_df.value = sv.matching_matches_df.value.with_columns(sv.matching_matches_df.value['Group ID'].replace(group_to_size).alias('Group size'))
                         
                         sv.matching_matches_df.value = sv.matching_matches_df.value.select(['Group ID', 'Group size', 'Entity name', 'Dataset', 'Entity ID'] + [c for c in sv.matching_matches_df.value.columns if c not in ['Group ID', 'Group size', 'Entity name', 'Dataset', 'Entity ID']])
                         sv.matching_matches_df.value = sv.matching_matches_df.value.with_columns(sv.matching_matches_df.value['Entity ID'].map_elements(lambda x: x.split('::')[0]).alias('Entity ID'))
@@ -326,7 +327,7 @@ def create():
         with b1:
             batch_size = 100
             data = sv.matching_matches_df.value.drop(['Entity ID', 'Dataset', 'Name similarity']).to_pandas()
-            generate, batch_messages, reset = util.ui_components.generative_batch_ai_component(sv.matching_system_prompt, {}, 'data', data, batch_size)
+            generate, batch_messages, reset = ui_components.generative_batch_ai_component(sv.matching_system_prompt, {}, 'data', data, batch_size)
             if reset:
                 sv.matching_system_prompt.value["user_prompt"] = prompts.user_prompt
                 st.rerun()
@@ -337,27 +338,26 @@ def create():
             gen_placeholder = st.empty()
 
             if generate:
+                unique_names = sv.matching_matches_df.value['Entity name'].unique()
                 for messages in batch_messages:
-                    response = util.AI_API.generate_text_from_message_list(messages, placeholder, prefix=prefix)
+                    callback = ui_components.create_markdown_callback(placeholder, prefix)
+                    response = ui_components.generate_text(messages, [callback])
+
                     if len(response.strip()) > 0:
                         prefix = prefix + response + '\n'
+                    if sv_home.protected_mode.value:
+                        for i, name in enumerate(unique_names, start=1):
+                            prefix = prefix.replace(name, 'Entity_{}'.format(i))
 
                 result = prefix.replace('```\n', '').strip()
+                sv.matching_evaluations.value = result
+                lines = result.split('\n')
 
-                if sv_home.protected_mode.value:
-                    unique_names = sv.matching_matches_df.value['Entity name'].unique()
-                    for i, name in enumerate(unique_names, start=1):
-                        result = result.replace(name, 'Entity_{}'.format(i))
+                if len(lines) > 30:
+                    lines = lines[:30]
+                    result = '\n'.join(lines)
 
-                csv = pl.read_csv(io.StringIO(result))
-                sv.matching_evaluations.value = csv.drop_nulls()
-
-                #get 30 random dows to evaluate
-                data_to_validate = result
-                # if len(sv.matching_evaluations.value) > 30:
-                #     data_to_validate = data_to_validate.value.sample(n=30)
-
-                validation, messages_to_llm = util.ui_components.validate_ai_report(batch_messages[0], data_to_validate)
+                validation, messages_to_llm = ui_components.validate_ai_report(batch_messages[0], result)
                 sv.matching_report_validation.value = validation
                 sv.matching_report_validation_messages.value = messages_to_llm
                 st.rerun()
@@ -367,20 +367,15 @@ def create():
             placeholder.empty()
 
             if len(sv.matching_evaluations.value) > 0:
-            #     st.dataframe(sv.matching_evaluations.value.to_pandas(), height=700, use_container_width=True, hide_index=True)
-            #     jdf = sv.matching_matches_df.value.join(sv.matching_evaluations.value, on='Group ID', how='inner')
-            #     st.download_button('Download AI match report', data=jdf.write_csv(), file_name='record_groups_evaluated.csv', mime='text/csv')
+                try:
+                    csv = pl.read_csv(io.StringIO(sv.matching_evaluations.value))
+                    value = csv.drop_nulls()
+                    jdf = sv.matching_matches_df.value.join(value, on='Group ID', how='inner')
+                    st.dataframe(value.to_pandas(), height=700, use_container_width=True, hide_index=True)
+                    st.download_button('Download AI match report', data=jdf.write_csv(), file_name='record_groups_evaluated.csv', mime='text/csv')
+                except:
+                    st.markdown(sv.matching_evaluations.value)
+                    add_download_pdf(f'record_groups_evaluated.pdf', sv.matching_evaluations.value, f'Download AI match report')
 
-                if sv.matching_report_validation.value != {}:
-                    print(sv.matching_report_validation.value)
-                    # validation_status = st.status(label=f"LLM faithfulness score: {sv.matching_report_validation.value['score']}/5", state='complete')
-                    # with validation_status:
-                    #     st.write(sv.matching_report_validation.value['explanation'])
-
-                    if sv_home.mode.value == 'dev':
-                        obj = json.dumps({
-                            "message": sv.matching_report_validation_messages.value,
-                            "result": sv.matching_report_validation.value,
-                            "report": pd.DataFrame(sv.matching_evaluations.value).to_json()
-                        }, indent=4)
-                        st.download_button('Download faithfulness evaluation', use_container_width=True, data=str(obj), file_name=f'matching_{get_current_time()}_messages.json', mime='text/json')
+                report = pd.DataFrame(sv.matching_evaluations.value).to_json() if type(sv.matching_evaluations.value) == pl.DataFrame else sv.matching_evaluations.value
+                ui_components.build_validation_ui(sv.matching_report_validation.value, sv.matching_report_validation_messages.value, report, workflow)
