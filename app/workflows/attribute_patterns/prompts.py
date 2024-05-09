@@ -30,7 +30,7 @@ Counts of attributes in cases linked to the pattern:
 """
 
 user_prompt = """\
-Your goal is to produce a short report on the pattern. The report should be structured in markdown and use plain English accessible to non-native speakers and non-technical audiences.
+Your goal is to produce a short report on the pattern. The report should be structured in markdown and use plain language accessible to non-native speakers and non-technical audiences.
 
 Report format:
 

@@ -65,8 +65,8 @@ def report_download_ui(report_var, name):
 
 def generative_ai_component(system_prompt_var, variables):
     st.markdown('##### Generative AI instructions')
-    with st.expander('Edit AI System Prompt (advanced)', expanded=True):
-        instructions_text = st.text_area('Contents of System Prompt used to generate AI outputs.', value=system_prompt_var.value["user_prompt"], height=200)
+    with st.expander('Edit AI system prompt used to generate output report', expanded=True):
+        instructions_text = st.text_area('Prompt text', value=system_prompt_var.value["user_prompt"], height=200)
         reset_prompt = st.button('Reset to default')
     
     st.warning('This app uses AI and may not be error-free. Please verify critical details independently.')
