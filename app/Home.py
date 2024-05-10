@@ -7,11 +7,11 @@ import util.mermaid as mermaid
 def get_readme():
     file_path = os.path.join('README.md')
     with open(file_path, 'r') as file:
-        content = file.read().split('Diving Deeper')[0]
+        content = file.read()
     folders = [f.name for f in os.scandir('app/workflows') if f.is_dir()]
     for f in folders:
         content = content.replace(f'/app/workflows/{f}/README.md',f'/{"_".join(word.capitalize() for word in f.split("_"))}')
-    return content
+    return content.split('## Diving Deeper')[0]
 
     
 def main():
