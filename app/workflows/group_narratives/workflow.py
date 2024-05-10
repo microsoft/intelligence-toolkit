@@ -1,18 +1,24 @@
-# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+# Copyright (c) Microsoft. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project.
+#
+import os
 import pandas as pd
 import streamlit as st
 import util.df_functions
-import workflows.group_narratives.config as config
 import workflows.group_narratives.prompts as prompts
 import workflows.group_narratives.variables as vars
 from util import ui_components
 
+def get_intro():
+    file_path = os.path.join(os.path.dirname(__file__), 'README.md')
+    with open(file_path, 'r') as file:
+        return file.read()
 
 def create(sv: vars.SessionVariables, workflow = None):
     intro_tab, prepare_tab, summarize_tab, generate_tab = st.tabs(['Group narratives workflow:', 'Upload data to narrate', 'Prepare data summary', 'Generate AI group reports',])
 
     with intro_tab:
-        st.markdown(config.intro)
+        st.markdown(get_intro())
     with prepare_tab:
         uploader_col, model_col = st.columns([1, 1])
         with uploader_col:

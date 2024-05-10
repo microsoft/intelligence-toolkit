@@ -1,120 +1,79 @@
 # Intelligence Toolkit
-The Intelligence Toolkit is a suite of interactive workflows for creating AI intelligence reports from real-world data sources. The toolkit is designed to help users identify patterns, answers, relationships, and risks within complex datasets, with generative AI ([OpenAI models](https://platform.openai.com/docs/models/)) used to create reports on findings of interest.
 
-# Developing 
+#### What is Intelligence Toolkit?
 
-## Requirements
+The Intelligence Toolkit is a suite of interactive workflows for creating AI intelligence reports from real-world data sources. The toolkit is designed to help users identify patterns, answers, relationships, and risks within complex datasets, with generative AI ([OpenAI GPT models](https://platform.openai.com/docs/models/)) used to create reports on findings of interest. The project page can be found at [github.com/microsoft/intelligence-toolkit](https://github.com/microsoft/intelligence-toolkit/).
 
-- Python 3.10 ([Download](https://www.python.org/downloads/))
+#### What can Intelligence Toolkit do?  
 
-## Set up:
-1. Set up virtual environment:
+The Intelligence Toolkit aims to help domain experts make sense of real-world data at a speed and scale that wouldn't otherwise be possible. It was specifically designed for analysis of case data and entity data:
 
-    `python -m venv ./venv`
+- **Case Data**
+  - Units are structured records describing individual people
+  - Examples include users, respondents, patients, victims
+  - Analysis aims to inform *policy* while preserving *privacy*
+- **Entity Data**
+  - Units are records or documents describing real-world entities
+  - Examples include organizations, countries, products, suppliers
+  - Analysis aims to understand *risks* carried by *relationships*
 
-    or
-    
-    `python3 -m venv ./venv`
+#### What are Intelligence Toolkit's intended uses?
 
-2. Install wkhtmltopdf to be able to generate the final story in PDF:
+The Intelligence Toolkit is designed to be used by domain experts who are familiar with the data and the intelligence they want to derive from it. Users should be independently capable of evaluating the quality of data insights and AI interpretations before taking action, e.g., sharing intelligence outputs or making decisions informed by these outputs.
 
-    Windows: [Download wkhtmltopdf installer](https://wkhtmltopdf.org/downloads.html)
+It supports a variety of interactive workflows, each designed to address a specific type of intelligence task:
 
-    Linux:  `sudo apt-get install wkhtmltopdf`
+- **Case Intelligence Workflows**
+  - [**Data Synthesis**](/app/workflows/data_synthesis/README.md) generates differentially-private datasets and summaries from sensitive case records
+  - [**Attribute Patterns**](/app/workflows/attribute_patterns/README.md) generates reports on attribute patterns detected in streams of case records
+  - [**Group Narratives**](/app/workflows/group_narratives/README.md) generates reports by defining and comparing groups of case records
+- **Entity Intelligence Workflows**
+  - [**Record Matching**](/app/workflows/record_matching/README.md) generates reports on record matches detected across entity datasets
+  - [**Risk Networks**](/app/workflows/risk_networks/README.md) generates reports on risk exposure for networks of related entities
+  - [**Question Answering**](/app/workflows/question_answering/README.md) generates reports from an entity-rich document collection
 
-    MacOS: `brew install homebrew/cask/wkhtmltopdf`
+#### How was Intelligence Toolkit evaluated?
 
-## OpenAI Key
+The Intelligence Toolkit was designed, refined, and evaluated in the context of the [Tech Against Trafficking (TAT)](https://techagainsttrafficking.org/) accelerator program with [Issara Institute](https://www.issarainstitute.org/) and [Polaris](https://polarisproject.org/) (2023-2024). It includes and builds on prior accelerator outputs developed with [Unseen](https://www.unseenuk.org/) (2021-2022) and [IOM](https://www.iom.int/)/[CTDC](https://www.ctdatacollaborative.org/) (2019-2020).
 
-### Linux:
-Open /venv/bin/activate, add the following lines at the end of the file:
-```
-    # set environment variables
-    export OPENAI_API_KEY=<OPENAI_API_KEY>
+#### What are the limitations of Intelligence Toolkit? How can users minimize the impact of these limitations when using the system?
 
-    # if Azure OpenAI, include the following information too:
-    export OPENAI_TYPE="Azure OpenAI"
-    export AZURE_OPENAI_VERSION=2023-12-01-preview
-    export AZURE_OPENAI_ENDPOINT="https://<ENDPOINT>.azure.com/"
-```
+- The Intelligence toolkit aims to detect and explain patterns, relationships, and risks in data provided by the user. It is not designed to make decisions or take actions based on these findings.
+- The statistical "insights" that it detects may not be insightful or useful in practice, and will inherit any biases, errors, or omissions present in the data collecting/generating process. These may be further amplified by the AI interpretations and reports generated by the toolkit.
+- The generative AI model may itself introduce additional statistical or societal biases, or fabricate information not present in its grounding data, as a consequence of its training and design.
+- Users should be experts in their domain, familiar with the data, and both able and willing to evaluate the quality of the insights and AI interpretations before taking action.
+- The system was designed and tested for the processing of English language data and the creation of English language outputs. Performance in other languages may vary and should be assessed by someone who is both an expert on the data and a native speaker of that language.
 
-### Windows:
-Open venv/Scripts/Activate.ps1, add the following lines after line 167:
-```
-    $env:OPENAI_API_KEY="<OPENAI_API_KEY>"
+#### What operational factors and settings allow for effective and responsible use of Intelligence Toolkit?
 
-    # if Azure OpenAI, include the following information too:
+- The Intelligence Toolkit is designed for moderate-sized datasets (e.g., 100s of thousands of records, 100s of PDF documents). Larger datasets will require longer to process and may exceed the memory limits of the execution environment.
+- Responsible use of personal case data requires that the data be de-identified prior to uploading and then converted into anonymous data using the Data Synthesis workflow. Any subsequent analysis of the case data should be done using the synthetic case data, not the original (sensitive/personal) case data.
+- It is the user's responsibility to ensure that any data sent to generative AI models is not personal/sensitive/secret/confidential, that use of generative AI models is consistent with the terms of service of the model provider, and that such use incurs per-token costs charged to the OpenAI account linked to the user-provided API key. Understanding [usage costs](https://openai.com/pricing#language-models) and setting a [billing cap](https://platform.openai.com/docs/guides/production-best-practices/setting-up-your-organization) is recommended.
 
-    $env:OPENAI_TYPE="Azure OpenAI"
-    $env:AZURE_OPENAI_VERSION="2023-12-01-preview"
-    $env:AZURE_OPENAI_ENDPOINT="https://<ENDPOINT>.openai.azure.com/"
-``` 
+#### What data is collected?
 
-### Running
+Intelligence Toolkit may be deployed as a desktop application or a cloud service. The application supports short, end-to-end workflows from input data to output reports. As such, it stores no data beyond the use of a caching mechanism for text embeddings that avoids unnecessary recomputation costs.
 
-1. Run the activate: 
+#### What AI model is used?
 
-    `source venv/bin/activate`  (Linux)
+The system uses the GPT-4-turbo model from OpenAI, either via OpenAI or Azure OpenAI APIs. See the [GPT-4 System Card]((https://cdn.openai.com/papers/gpt-4-system-card.pdf)) to understand the capabilities and limitations of this model.
 
-    `.\venv\Scripts\Activate` (Windows with Powershell)
+#### Disclaimer
 
-2. Install all the dependencies with pip:
+- Intelligence Toolkit is an AI system that generates text.
+- System outputs may include factual errors, fabrication, or speculation.
+- Users are responsible for determining the accuracy of generated content.
+- Synstem outputs do not represent the opinions of Microsoft.
+- All decisions leveraging outputs of the system should be made with human oversight and not be based solely on system outputs.
+- The system is only intended to be used for analysis by domain experts capable of evaluating the quality of data insights it generates.
+- System performance may otherwise vary.
+- Use of the system must comply with all applicable laws, regulations, and policies, including those pertaining to privacy and security.
+- The system should not be used in highly regulated domains where inaccurate outputs could suggest actions that lead to injury or negatively impact an individual's legal, financial, or life opportunities.
 
-    `pip install -r requirements.txt`
+## Diving Deeper
 
-3. Run the project using streamlit: 
-
-    
-    `streamlit run app/Home.py`
-
-
-## Running with docker
-
-Download and install docker: https://www.docker.com/products/docker-desktop/
-
-Then, in the root folder, run:
-
-`docker build . -t intel-toolkit`
-
-After building, run the docker container with:
-
-`docker run -d -p 8501:8501 intel-toolkit`
-
-Open [localhost:8501](http://localhost:8501)
-
-## Building a Windows executable
-
-We use [Pynsist](https://pynsist.readthedocs.io/en/latest/), that with [NSIS (Nullsoft Scriptable Install System)](https://nsis.sourceforge.io/) builds an executable for Windows, which packages the whole project and what it needs to run (including Python) into an .exe, that when installed will run the project on the user's localhost.
-
-For you to build locally, you will need to have pynsis intalled with `pip install pynsist` and install NSIS [downloading it here](https://nsis.sourceforge.io/Main_Page).
-
-**Tip**: Use Windows to build it, not Linux.
-
-Run `.\installer_script.ps1` in the root of the app.
-It will download wkhtmltox from the source, that's needed to generate reports. 
-Then it will download python-louvain wheel, because it's not on pypi and it's needed for pynsist.
-Then it will build an .exe into build\nsis.
-
-It takes a while to finish, but then you can install it and open the shortcut to open intelligence-toolkit into http://localhost:8501
-
-# Deploying
-
-- In [this tutorial](https://dev.to/keneojiteli/deploy-a-docker-app-to-app-services-on-azure-5d3h), you can check how to create the services in azure.
-    - From there, you can deploy it manually like it's written, or use [our YAML file](/.vsts-ci.yml) to automatically deploy to your environment if you configure it. 
-
-## Contributing
-
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
-Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
-
-When you submit a pull request, a CLA bot will automatically determine whether you need to provide
-a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions
-provided by the bot. You will only need to do this once across all repos using our CLA.
-
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
-For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
-contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+- To learn about our contribution guidelines, see [CONTRIBUTING.md](./CONTRIBUTING.md)
+- To start developing, see [DEVELOPING.md](./DEVELOPING.md)
 
 ## Trademarks
 
@@ -123,3 +82,7 @@ trademarks or logos is subject to and must follow
 [Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
 Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
 Any use of third-party trademarks or logos are subject to those third-party's policies.
+
+## Privacy
+
+[Microsoft Privacy Statement](https://privacy.microsoft.com/en-us/privacystatement)

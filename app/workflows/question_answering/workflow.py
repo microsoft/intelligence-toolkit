@@ -1,5 +1,8 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project.
+#
 import json
+import os
 import re
 from collections import Counter
 
@@ -17,12 +20,16 @@ from util.df_functions import get_current_time
 from util.download_pdf import add_download_pdf
 from util.session_variables import SessionVariables
 
+def get_intro():
+    file_path = os.path.join(os.path.dirname(__file__), 'README.md')
+    with open(file_path, 'r') as file:
+        return file.read()
 
 def create(sv: SessionVariables, workflow = None):
     intro_tab, uploader_tab, mining_tab, report_tab = st.tabs(['Question answering workflow:', 'Upload data', 'Mine & match questions', 'Generate AI answer reports'])
     
     with intro_tab:
-        st.markdown(config.intro)
+        st.markdown(get_intro())
     with uploader_tab:
         st.markdown('##### Upload data for processing')
         files = st.file_uploader("Upload PDF text files", type=['pdf', 'txt'], accept_multiple_files=True, key=sv.answering_upload_key.value)

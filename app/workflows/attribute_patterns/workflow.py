@@ -1,4 +1,7 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project.
+#
+import os
 import altair as alt
 import numpy as np
 import pandas as pd
@@ -12,12 +15,16 @@ from st_aggrid import (AgGrid, ColumnsAutoSizeMode, DataReturnMode,
                        GridOptionsBuilder, GridUpdateMode)
 from util import ui_components, df_functions
 
+def get_intro():
+    file_path = os.path.join(os.path.dirname(__file__), 'README.md')
+    with open(file_path, 'r') as file:
+        return file.read()
 
 def create(sv: vars.SessionVariables, workflow):
     intro_tab, uploader_tab, detect_tab, explain_tab = st.tabs(['Attribute patterns workflow:', 'Create graph model', 'Detect patterns', 'Generate AI pattern reports'])
     df = None
     with intro_tab:
-        st.markdown(config.intro)
+        st.markdown(get_intro())
     with uploader_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:

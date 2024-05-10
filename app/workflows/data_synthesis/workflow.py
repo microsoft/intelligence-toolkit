@@ -1,4 +1,7 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project.
+#
+import os
 import streamlit as st
 import pandas as pd
 import plotly.io as pio
@@ -18,11 +21,16 @@ import workflows.data_synthesis.variables as vars
 import util.ui_components
 import util.df_functions
 
+def get_intro():
+    file_path = os.path.join(os.path.dirname(__file__), 'README.md')
+    with open(file_path, 'r') as file:
+        return file.read()
+
 def create(sv: vars.SessionVariables, workflow: None):
     intro_tab, prepare_tab, generate_tab, queries_tab = st.tabs(['Data synthesis workflow:', 'Upload sensitive data', 'Generate anonymous data', 'Query and visualize data'])
     df = None
     with intro_tab:
-        st.markdown(config.intro)
+        st.markdown(get_intro())
     with prepare_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:

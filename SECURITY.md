@@ -1,5 +1,3 @@
-<!-- BEGIN MICROSOFT SECURITY.MD V0.0.9 BLOCK -->
-
 ## Security
 
 Microsoft takes the security of our software products and services seriously, which includes all source code repositories managed through our GitHub organizations, which include [Microsoft](https://github.com/Microsoft), [Azure](https://github.com/Azure), [DotNet](https://github.com/dotnet), [AspNet](https://github.com/aspnet) and [Xamarin](https://github.com/xamarin).
@@ -37,5 +35,3 @@ We prefer all communications to be in English.
 ## Policy
 
 Microsoft follows the principle of [Coordinated Vulnerability Disclosure](https://aka.ms/security.md/cvd).
-
-<!-- END MICROSOFT SECURITY.MD BLOCK -->

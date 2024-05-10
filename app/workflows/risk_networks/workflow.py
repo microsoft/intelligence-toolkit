@@ -19,7 +19,11 @@ from streamlit_agraph import agraph
 from util import ui_components
 from util.session_variables import SessionVariables
 
-
+def get_intro():
+    file_path = os.path.join(os.path.dirname(__file__), 'README.md')
+    with open(file_path, 'r') as file:
+        return file.read()
+    
 def create(sv: vars.SessionVariables, workflow = None):
     sv_home = SessionVariables('home')
 
@@ -29,7 +33,7 @@ def create(sv: vars.SessionVariables, workflow = None):
     intro_tab, uploader_tab, process_tab, view_tab, report_tab = st.tabs(['Network analysis workflow:', 'Create data model', 'Process data model', 'Explore networks', 'Generate AI network reports'])
     df = None
     with intro_tab:
-        st.markdown(config.intro)
+        st.markdown(get_intro())
     with uploader_tab:
         uploader_col, model_col = st.columns([3, 2])
         with uploader_col:
