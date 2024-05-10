@@ -51,3 +51,5 @@ app/wkhtmltox/*.exe
 
 # Test-related
 *.coverage
+**/messages
+**/xpia

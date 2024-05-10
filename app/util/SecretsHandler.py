@@ -20,8 +20,9 @@ class SecretsHandler:
             for line in file:
                 key_value_pairs = line.strip().split(';')
                 for pair in key_value_pairs:
-                    if pair == '': continue
-                    key, value = pair.split(':')
+                    if pair == '': 
+                        continue
+                    key, value = pair.split(':',1)
                     values[key] = value
         return values
     
