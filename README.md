@@ -63,7 +63,7 @@ The system uses the GPT-4-turbo model from OpenAI, either via OpenAI or Azure Op
 - Intelligence Toolkit is an AI system that generates text.
 - System outputs may include factual errors, fabrication, or speculation.
 - Users are responsible for determining the accuracy of generated content.
-- Synstem outputs do not represent the opinions of Microsoft.
+- System outputs do not represent the opinions of Microsoft.
 - All decisions leveraging outputs of the system should be made with human oversight and not be based solely on system outputs.
 - The system is only intended to be used for analysis by domain experts capable of evaluating the quality of data insights it generates.
 - System performance may otherwise vary.

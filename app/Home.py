@@ -4,16 +4,21 @@ import os
 from components.app_loader import load_multipage_app
 import util.mermaid as mermaid
 
-def get_transparency_faq():
-    file_path = os.path.join(os.path.dirname(__file__), 'TransparencyFAQ.md')
+def get_readme():
+    file_path = os.path.join('README.md')
     with open(file_path, 'r') as file:
-        return file.read()
+        content = file.read().split('Diving Deeper')[0]
+    folders = [f.name for f in os.scandir('app/workflows') if f.is_dir()]
+    for f in folders:
+        content = content.replace(f'/app/workflows/{f}/README.md',f'/{"_".join(word.capitalize() for word in f.split("_"))}')
+    return content
+
     
 def main():
     st.set_page_config(layout="wide", initial_sidebar_state="expanded", page_icon="app/myapp.ico", page_title='Intelligence Toolkit | Home')
     load_multipage_app()
+    transparency_faq = get_readme()
 
-    transparency_faq = get_transparency_faq()
     st.markdown(transparency_faq + '\n\n' + f"""\
 #### Which Intelligence Toolkit workflow is right for me and my data?
 
