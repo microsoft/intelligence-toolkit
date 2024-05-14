@@ -6,6 +6,7 @@ import numpy as np
 import pdfkit
 import pdfplumber
 import streamlit as st
+from util.session_variables import SessionVariables
 import workflows.question_answering.classes as classes
 from AI import utils
 from AI.embedder import Embedder
@@ -14,6 +15,7 @@ from util import ui_components
 from util.wkhtmltopdf import config_pdfkit, pdfkit_options
 from workflows.question_answering import config
 
+sv_home = SessionVariables('home')
 embedder = Embedder(pickle_path=config.cache_dir)
 
 def chunk_files(sv, files):
@@ -50,7 +52,7 @@ def chunk_files(sv, files):
     for cx, (file, chunk) in enumerate(file_chunks):
         pb.progress((cx+1) / len(file_chunks), f'Embedding chunk {cx+1} of {len(file_chunks)}...')
         formatted_chunk = chunk.replace("\n", " ")
-        chunk_vec = embedder.embed_store_one(formatted_chunk)
+        chunk_vec = embedder.embed_store_one(formatted_chunk, sv_home.save_cache.value)
         file.add_chunk(chunk, np.array(chunk_vec), cx+1)   
     pb.empty()
 

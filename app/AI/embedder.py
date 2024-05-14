@@ -14,16 +14,17 @@ logger = logging.getLogger(__name__)
 
 class Embedder:
     _openai_client = None
-    
+    pickle = None
+
     def __init__(self, configuration: OpenAIConfiguration = OpenAIConfiguration(), pickle_path = None) -> None:
         self.configuration = configuration
         self.openai_client = OpenAIClient(configuration)
         self.pickle = CachePickle(path=pickle_path)
 
-    def embed_store_one(self, text: str):
+    def embed_store_one(self, text: str, cache_data=True):
         hash = hash_text(text)
-        loaded_embeddings = self.pickle.get_all()
-        embedding = self.pickle.get(hash, loaded_embeddings)
+        loaded_embeddings = self.pickle.get_all() if cache_data else {}
+        embedding = self.pickle.get(hash, loaded_embeddings)  if cache_data else {}
 
         if not embedding:
             tokens = get_token_count(text)
@@ -36,17 +37,17 @@ class Embedder:
                 raise Exception(f'Problem in OpenAI response. {e}')
                 
             loaded_embeddings.update({hash: embedding})
-            self.pickle.save(loaded_embeddings)
+            self.pickle.save(loaded_embeddings) if cache_data else None
         return embedding
     
-    def embed_store_many(self, texts: List[str], callback=None):
+    def embed_store_many(self, texts: List[str], callback=None, cache_data=True):
         final_embeddings = [None] * len(texts)
         new_texts  = []
-        loaded_embeddings = self.pickle.get_all()
+        loaded_embeddings = self.pickle.get_all() if cache_data else {}
         count = 0
         for ix, text in enumerate(texts):
             hash = hash_text(text)
-            embedding = self.pickle.get(hash, loaded_embeddings)
+            embedding = self.pickle.get(hash, loaded_embeddings) if cache_data else {}
             if not len(embedding):
                 new_texts.append((ix, text))
             else:
@@ -76,5 +77,5 @@ class Embedder:
                 hsh = hash_text(text)
                 loaded_embeddings.update({hsh: embedding[j]})
                 final_embeddings[ix] = np.array(embedding[j])
-        self.pickle.save(loaded_embeddings)
+        self.pickle.save(loaded_embeddings) if cache_data else None
         return np.array(final_embeddings)

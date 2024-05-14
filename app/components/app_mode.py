@@ -18,9 +18,14 @@ class app_mode:
 
     def config(self):
         mode = st.sidebar.toggle("Protected mode", value=self.sv.protected_mode.value, help="Prevent entity identification on screen. Changing this value will reset the whole workflow on Risk Networks.")
+        cache = st.sidebar.toggle("Save embeddings", value=self.sv.save_cache.value, help="Enable caching of embeddings to speed up the application.")
 
         if mode != self.sv.protected_mode.value:
             self.sv.protected_mode.value = mode
             self.sv_network.reset_workflow()
+            st.rerun()
+
+        if cache != self.sv.save_cache.value:
+            self.sv.save_cache.value = mode
             st.rerun()
         

@@ -192,7 +192,7 @@ def create(sv: vars.SessionVariable, workflow = None):
 
                             callback = classes.BatchEmbeddingCallback()
                             callback.on_embedding_batch_change = on_embedding_batch_change
-                            embeddings = functions.embedder.embed_store_many(all_sentences,[callback])
+                            embeddings = functions.embedder.embed_store_many(all_sentences,[callback], sv_home.save_cache.value)
                             pb.empty()
                             
                             nbrs = NearestNeighbors(n_neighbors=50, n_jobs=1, algorithm='auto', leaf_size=20, metric='cosine').fit(embeddings)
