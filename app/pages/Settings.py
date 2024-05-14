@@ -4,7 +4,7 @@ import time
 import streamlit as st
 from AI.openai_configuration import (OpenAIConfiguration, key,
                                      openai_endpoint_key, openai_type_key,
-                                     openai_version_key)
+                                     openai_version_key, openai_azure_model_key)
 from components.app_loader import load_multipage_app
 from util.constants import EMBEDDINGS_FILE_NAME, MAX_SIZE_EMBEDDINGS_KEY
 from util.enums import Mode
@@ -69,7 +69,7 @@ def main():
         st.rerun()
 
     if type_input == "Azure OpenAI":
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
         with col1:
             endpoint = st.text_input("Azure OpenAI Endpoint", disabled=is_mode_cloud, type="password", value=openai_config.get_azure_api_base())
             if endpoint != openai_config.get_azure_api_base():
@@ -77,6 +77,12 @@ def main():
                 st.rerun()
                 
         with col2:
+            deployment_name = st.text_input("Azure OpenAI Deployment Name", disabled=is_mode_cloud, value=openai_config.get_azure_openai_model())
+            if deployment_name != openai_config.get_azure_openai_model():
+                on_change(secrets_handler, openai_azure_model_key, deployment_name)()
+                st.rerun()
+
+        with col3:
             version = st.text_input("Azure OpenAI Version", disabled=is_mode_cloud, value=openai_config.get_azure_openai_version())
             if version != openai_config.get_azure_openai_version():
                 on_change(secrets_handler, openai_version_key, version)()

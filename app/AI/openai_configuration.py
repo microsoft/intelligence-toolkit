@@ -4,7 +4,7 @@ import os
 from util.SecretsHandler import SecretsHandler
 
 from .defaults import (DEFAULT_LLM_MAX_TOKENS, DEFAULT_LLM_MODEL,
-                       DEFAULT_OPENAI_VERSION, DEFAULT_TEMPERATURE)
+                       DEFAULT_OPENAI_VERSION, DEFAULT_TEMPERATURE, DEFAULT_AZURE_LLM_MODEL)
 
 
 def _non_blank(value: str | None) -> str | None:
@@ -17,6 +17,7 @@ key = 'openai_secretkey'
 openai_type_key = 'openai_typekey'
 openai_version_key = 'openai_versionkey'
 openai_endpoint_key = 'openai_endpointkey'
+openai_azure_model_key = 'openai_azure_modelkey'
 
 class OpenAIConfiguration():
     """OpenAI Configuration class definition."""
@@ -39,13 +40,14 @@ class OpenAIConfiguration():
         self._secrets = SecretsHandler()
         
         """Init method definition."""
+        oai_type = self.get_openai_type()
         self._api_key = config.get("api_key", self.get_api_key())
-        self._model = config.get("model", DEFAULT_LLM_MODEL)
+        self._model = config.get("model", DEFAULT_LLM_MODEL if oai_type == 'OpenAI' else self.get_azure_openai_model())
         self._api_base = config.get("api_base", self.get_azure_api_base())
         self._api_version = config.get("api_version", DEFAULT_OPENAI_VERSION)
         self._temperature = config.get("temperature", DEFAULT_TEMPERATURE)
         self._max_tokens = config.get("max_tokens", DEFAULT_LLM_MAX_TOKENS)
-        self._api_type = config.get("api_type", self.get_openai_type())
+        self._api_type = config.get("api_type", oai_type)
 
 
     def is_key_stored(self):
@@ -59,6 +61,11 @@ class OpenAIConfiguration():
     def get_azure_openai_version(self):
         environ = os.environ['AZURE_OPENAI_VERSION'] if 'AZURE_OPENAI_VERSION' in os.environ else DEFAULT_OPENAI_VERSION
         secret = self._secrets.get_secret(openai_version_key)
+        return secret if len(secret) > 0 else environ
+    
+    def get_azure_openai_model(self):
+        environ = os.environ['AZURE_OPENAI_MODEL'] if 'AZURE_OPENAI_MODEL' in os.environ else DEFAULT_AZURE_LLM_MODEL
+        secret = self._secrets.get_secret(openai_azure_model_key)
         return secret if len(secret) > 0 else environ
 
     def get_azure_api_base(self):

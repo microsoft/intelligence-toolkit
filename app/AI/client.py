@@ -21,7 +21,6 @@ class OpenAIClient:
         self.configuration = configuration
         self.create_openai_client()
 
-    @cache
     def create_openai_client(self) -> None:
         """Create a new OpenAI client instance."""
         if self.configuration.api_type == 'Azure OpenAI':
