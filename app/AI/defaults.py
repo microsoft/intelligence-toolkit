@@ -2,7 +2,7 @@
 
 DEFAULT_ENCODING = "cl100k_base"
 #
-DEFAULT_LLM_MODEL = "gpt-4-turbo"
+DEFAULT_LLM_MODEL = "gpt-4o"
 DEFAULT_LLM_MAX_TOKENS = 4000
 #
 # Text Embedding Parameters
