@@ -19,24 +19,24 @@ class RecordCounter:
 
     def count_records(self, atts):
         key = ';'.join(sorted(atts))
-        if key in self.cache.keys():
-            return self.cache[key]
-        else:
-            type_to_vals = defaultdict(list)
-            for att in atts:
-                type_to_vals[att.split(config.att_val_sep)[0]].append(att)
-            ids = set()
-            for ix, (typ, vals) in enumerate(type_to_vals.items()):
-                combined_atts = set()
-                for val in vals:
-                    combined_atts.update(self.att_to_ids[val])
-                if ix == 0:
-                    ids.update(combined_atts)
-                else:
-                    ids.intersection_update(combined_atts)
-            count = len(ids)
-            self.cache[key] = count
-            return count
+        # if key in self.cache.keys():
+        #     return self.cache[key]
+        # else:
+        type_to_vals = defaultdict(list)
+        for att in atts:
+            type_to_vals[att.split(config.att_val_sep)[0]].append(att)
+        ids = set()
+        for ix, (typ, vals) in enumerate(type_to_vals.items()):
+            combined_atts = set()
+            for val in vals:
+                combined_atts.update(self.att_to_ids[val])
+            if ix == 0:
+                ids.update(combined_atts)
+            else:
+                ids.intersection_update(combined_atts)
+        count = len(ids)
+        # self.cache[key] = count
+        return count
 
     def compute_period_mean_sd_max(self, atts):
         counts = []
