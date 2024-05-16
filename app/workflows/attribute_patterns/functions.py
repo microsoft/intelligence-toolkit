@@ -253,9 +253,9 @@ def detect_patterns(sv):
                                     pattern_to_periods[tuple(candidate_pattern)].add(period)
     # convert to df
     pattern_rows = []
-    print('period_to_patterns len', len(period_to_patterns))
     for period, patterns in period_to_patterns.items():
         for (pattern, count) in patterns:
+            print('patternspatternspatterns',len(patterns))
             if count > 0:
                 mean, sd, mx = rc.compute_period_mean_sd_max(pattern)
                 score = (count - mean) / sd
