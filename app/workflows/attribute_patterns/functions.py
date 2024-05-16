@@ -149,7 +149,7 @@ def detect_patterns(sv):
     node_list = sorted(node_to_centroid.keys())
     node_to_ix = {n : i for i, n in enumerate(node_list)}
     centroid_dists = {}
-    sorted_nodes = sorted(node_to_centroid.keys())
+    sorted_nodes = node_list
 
     for ix, node1 in enumerate(sorted_nodes):
         for node2 in sorted_nodes[ix + 1:]:
@@ -253,6 +253,7 @@ def detect_patterns(sv):
                                     pattern_to_periods[tuple(candidate_pattern)].add(period)
     # convert to df
     pattern_rows = []
+    print('period_to_patterns len', len(period_to_patterns))
     for period, patterns in period_to_patterns.items():
         for (pattern, count) in patterns:
             if count > 0:
