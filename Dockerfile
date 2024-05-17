@@ -9,6 +9,7 @@ RUN apt-get install wkhtmltopdf -y
 # Install dependencies
 WORKDIR ./
 COPY ./app ./app
+COPY ./python ./python
 COPY ./README.md ./
 COPY ./.streamlit ./.streamlit
 COPY Dockerfile .
