@@ -1,9 +1,9 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-import numpy as np
-
 import sys
 
+import numpy as np
 import pandas as pd
+
 
 def fix_null_ints(in_df):
     df = in_df.copy()

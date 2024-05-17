@@ -93,7 +93,7 @@ def prepare_graph(sv, mi=False):
     pdf['Grouping ID'] = pdf['Subject ID'] + '@' + pdf['Period']
     return pdf, time_to_graph
 
-def generate_embedding(sv, df, time_to_graph):
+def generate_embedding(df, time_to_graph):
     period_embeddings = {}
     node_list = sorted(df['Full Attribute'].unique().tolist())
     sorted_att_types = sorted(df['Attribute Type'].unique())
@@ -143,7 +143,6 @@ def generate_embedding(sv, df, time_to_graph):
 
 
 def detect_patterns(sv):
-    df = sv.attribute_final_df.value
     node_to_centroid = sv.attribute_node_to_centroid.value
     period_embeddings = sv.attribute_period_embeddings.value
     node_list = sorted(node_to_centroid.keys())
@@ -190,14 +189,16 @@ def detect_patterns(sv):
                             close_pairs += 1
                             period_to_close_nodes[period].append((node1, node2))
 
-    sv.attribute_converging_pairs.value = close_pairs
-    sv.attribute_all_pairs.value = all_pairs
+    # sv.attribute_converging_pairs.value = close_pairs
+    # sv.attribute_all_pairs.value = all_pairs
+    print('close_pairs',close_pairs)
+    print('all_pairs',all_pairs)
     # convert to df
     close_node_rows = []
     for period, close_nodes in period_to_close_nodes.items():
         for node1, node2 in close_nodes:
             period_count = rc.count_records([period, node1, node2])
-            mean_count, sd, max = rc.compute_period_mean_sd_max([node1, node2])
+            mean_count, sd, _ = rc.compute_period_mean_sd_max([node1, node2])
             if period_count >= sv.attribute_min_pattern_count.value:
                 count_factor = period_count / mean_count
                 count_delta = period_count - mean_count
@@ -207,17 +208,7 @@ def detect_patterns(sv):
                 close_node_rows.append(row)
     columns = ['period', 'node1', 'node2', 'period_count', 'mean_count', 'count_delta', 'count_factor', 'cosine_shift', 'euclidean_shift']
     close_node_df = pd.DataFrame(close_node_rows, columns=columns)
-    # correlation between shift and delta
-    # corr1 = close_node_df[['count_delta', 'cosine_shift']].corr()
-    # corr2 = close_node_df[['count_delta', 'euclidean_shift']].corr()
-    # corr3 = close_node_df[['count_factor', 'cosine_shift']].corr()
-    # corr4 = close_node_df[['count_factor', 'euclidean_shift']].corr()
-    # print(f'count-cos delta corr: {corr1}')
-    # print(f'count-euc delta corr: {corr2}')
-    # print(f'count-cos factor corr: {corr3}')
-    # print(f'count-euc factor corr: {corr4}')
 
-    # for each period, combine overlapping similar pairs of nodes if they are supported by a positive count
     period_to_patterns = {}
     pattern_to_periods = defaultdict(set)
     for period in used_periods:
@@ -256,7 +247,7 @@ def detect_patterns(sv):
     for period, patterns in period_to_patterns.items():
         for (pattern, count) in patterns:
             if count > 0:
-                mean, sd, mx = rc.compute_period_mean_sd_max(pattern)
+                mean, sd, _ = rc.compute_period_mean_sd_max(pattern)
                 score = (count - mean) / sd
                 if score >= 0:
                     row = [period, ' & '.join(pattern), len(pattern), count, round(mean, 0), round(score, 2)]

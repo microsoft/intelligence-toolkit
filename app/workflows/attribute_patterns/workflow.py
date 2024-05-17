@@ -2,18 +2,29 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 import os
+
 import altair as alt
-import numpy as np
-import pandas as pd
 import streamlit as st
 import workflows.attribute_patterns.classes as classes
-import workflows.attribute_patterns.config as config
 import workflows.attribute_patterns.functions as functions
 import workflows.attribute_patterns.prompts as prompts
 import workflows.attribute_patterns.variables as vars
-from st_aggrid import (AgGrid, ColumnsAutoSizeMode, DataReturnMode,
-                       GridOptionsBuilder, GridUpdateMode)
-from util import ui_components, df_functions
+from attribute_patterns.classes import RecordCounter
+from attribute_patterns.embedding import generate_embedding
+from attribute_patterns.model import (
+    detect_patterns,
+    generate_graph_model,
+    prepare_graph,
+)
+from st_aggrid import (
+    AgGrid,
+    ColumnsAutoSizeMode,
+    DataReturnMode,
+    GridOptionsBuilder,
+    GridUpdateMode,
+)
+from util import ui_components
+
 
 def get_intro():
     file_path = os.path.join(os.path.dirname(__file__), 'README.md')
@@ -42,19 +53,7 @@ def create(sv: vars.SessionVariables, workflow):
                 with st.spinner('Adding links to model...'):
                     time_col = sv.attribute_time_col.value
                     df = sv.attribute_final_df.value.copy(deep=True)
-                    df = df_functions.fix_null_ints(df).astype(str).replace('nan', '').replace('<NA>', '')
-                
-                    df['Subject ID'] = [str(x) for x in range(1, len(df) + 1)]
-                    df['Subject ID'] = df['Subject ID'].astype(str)
-                    pdf = df.copy(deep=True)[[time_col, 'Subject ID'] + att_cols]
-                    pdf = pdf[pdf[time_col].notna() & pdf['Subject ID'].notna()]
-                    pdf.rename(columns={time_col : 'Period'}, inplace=True)
-                    
-                    pdf['Period'] = pdf['Period'].astype(str)
-                    pdf = pd.melt(pdf, id_vars=['Subject ID', 'Period'], value_vars=att_cols, var_name='Attribute Type', value_name='Attribute Value')
-                    pdf = pdf[pdf['Attribute Value'] != '']
-                    pdf['Full Attribute'] = pdf.apply(lambda x: str(x['Attribute Type']) + config.type_val_sep + str(x['Attribute Value']), axis=1)
-                    pdf = pdf[pdf['Period'] != '']
+                    pdf = generate_graph_model(df, time_col)
                 sv.attribute_dynamic_df.value = pdf
             if ready and len(sv.attribute_dynamic_df.value) > 0:
                 st.success(f'Graph model has **{len(sv.attribute_dynamic_df.value)}** links spanning **{len(sv.attribute_dynamic_df.value["Subject ID"].unique())}** cases, **{len(sv.attribute_dynamic_df.value["Full Attribute"].unique())}** attributes, and **{len(sv.attribute_dynamic_df.value["Period"].unique())}** periods.')
@@ -63,7 +62,7 @@ def create(sv: vars.SessionVariables, workflow):
         if not ready or len(sv.attribute_final_df.value) == 0:
             st.warning('Generate a graph model to continue.')
         else: 
-            b1, b2, b3, b4, b5 = st.columns([1, 1, 1, 1, 2])
+            b1, b2, b3, b4, _ = st.columns([1, 1, 1, 1, 2])
             with b1:
                 minimum_pattern_count = st.number_input('Minimum pattern count', min_value=1, step=1, value=sv.attribute_min_pattern_count.value, help='The minimum number of times a pattern must occur in a given period to be detectable.')
             with b2:
@@ -77,22 +76,21 @@ def create(sv: vars.SessionVariables, workflow):
 
                     with st.spinner('Detecting patterns...'):
                         sv.attribute_table_index.value += 1
-                        sv.attribute_df.value, time_to_graph = functions.prepare_graph(sv)
-                        sv.attribute_embedding_df.value, sv.attribute_node_to_centroid.value, sv.attribute_period_embeddings.value = functions.generate_embedding(sv, sv.attribute_df.value, time_to_graph)
-                        rc = classes.RecordCounter(sv.attribute_dynamic_df.value)
+                        sv.attribute_df.value, time_to_graph = prepare_graph(sv.attribute_dynamic_df.value)
+                        sv.attribute_embedding_df.value, sv.attribute_node_to_centroid.value, sv.attribute_period_embeddings.value = generate_embedding(sv.attribute_df.value, time_to_graph)
+                        sv.attribute_record_counter.value = RecordCounter(sv.attribute_dynamic_df.value)
 
-                        sv.attribute_record_counter.value = rc
-                        sv.attribute_pattern_df.value, sv.attribute_close_pairs.value, sv.attribute_all_pairs.value = functions.detect_patterns(sv)
+                        sv.attribute_pattern_df.value, sv.attribute_close_pairs.value, sv.attribute_all_pairs.value = detect_patterns(sv.attribute_node_to_centroid.value, 
+                                                                                                                                      sv.attribute_period_embeddings.value, sv.attribute_dynamic_df.value, 
+                                                                                                                                      sv.attribute_record_counter.value, sv.attribute_min_pattern_count.value, sv.attribute_max_pattern_length.value)
                         st.rerun()
             with b4:
                 st.download_button('Download patterns', data=sv.attribute_pattern_df.value.to_csv(index=False), file_name='attribute_patterns.csv', mime='text/csv', disabled=len(sv.attribute_pattern_df.value) == 0)
             if len(sv.attribute_pattern_df.value) > 0:
-                prop = sv.attribute_close_pairs.value / sv.attribute_all_pairs.value if sv.attribute_all_pairs.value > 0 else 0
-                prop = round(prop, -int(np.floor(np.log10(abs(prop))))) if prop > 0 else 0
                 period_count = len(sv.attribute_pattern_df.value["period"].unique())
                 pattern_count = len(sv.attribute_pattern_df.value)
                 unique_count = len(sv.attribute_pattern_df.value['pattern'].unique())
-                st.success(f'Over **{period_count}** periods, detected **{pattern_count}** attribute patterns (**{unique_count}** unique) from **{sv.attribute_converging_pairs.value}**/**{sv.attribute_all_pairs.value}** converging attribute pairs (**{round(sv.attribute_converging_pairs.value / sv.attribute_all_pairs.value * 100, 2) if sv.attribute_all_pairs.value > 0 else 0}%**). Patterns ranked by ```overall_score = normalize(length * ln(count) * z_score * detections)```.')
+                st.success(f'Over **{period_count}** periods, detected **{pattern_count}** attribute patterns (**{unique_count}** unique) from **{sv.attribute_close_pairs.value}**/**{sv.attribute_all_pairs.value}** converging attribute pairs (**{round(sv.attribute_close_pairs.value / sv.attribute_all_pairs.value * 100, 2) if sv.attribute_all_pairs.value > 0 else 0}%**). Patterns ranked by ```overall_score = normalize(length * ln(count) * z_score * detections)```.')
                 show_df = sv.attribute_pattern_df.value
                 tdf = functions.create_time_series_df(sv.attribute_record_counter.value, sv.attribute_pattern_df.value)
                 gb = GridOptionsBuilder.from_dataframe(show_df)
