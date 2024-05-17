@@ -5,13 +5,13 @@ import os
 
 import altair as alt
 import streamlit as st
-import workflows.attribute_patterns.classes as classes
-import workflows.attribute_patterns.functions as functions
-import workflows.attribute_patterns.prompts as prompts
 import workflows.attribute_patterns.variables as vars
+from attribute_patterns import prompts
 from attribute_patterns.classes import RecordCounter
 from attribute_patterns.embedding import generate_embedding
 from attribute_patterns.model import (
+    compute_attribute_counts,
+    create_time_series_df,
     detect_patterns,
     generate_graph_model,
     prepare_graph,
@@ -92,7 +92,7 @@ def create(sv: vars.SessionVariables, workflow):
                 unique_count = len(sv.attribute_pattern_df.value['pattern'].unique())
                 st.success(f'Over **{period_count}** periods, detected **{pattern_count}** attribute patterns (**{unique_count}** unique) from **{sv.attribute_close_pairs.value}**/**{sv.attribute_all_pairs.value}** converging attribute pairs (**{round(sv.attribute_close_pairs.value / sv.attribute_all_pairs.value * 100, 2) if sv.attribute_all_pairs.value > 0 else 0}%**). Patterns ranked by ```overall_score = normalize(length * ln(count) * z_score * detections)```.')
                 show_df = sv.attribute_pattern_df.value
-                tdf = functions.create_time_series_df(sv.attribute_record_counter.value, sv.attribute_pattern_df.value)
+                tdf = create_time_series_df(sv.attribute_record_counter.value, sv.attribute_pattern_df.value)
                 gb = GridOptionsBuilder.from_dataframe(show_df)
                 gb.configure_default_column(flex=1, wrapText=True, wrapHeaderText=True, enablePivot=False, enableValue=False, enableRowGroup=False)
                 gb.configure_selection(selection_mode="single", use_checkbox=False)
@@ -133,7 +133,7 @@ def create(sv: vars.SessionVariables, workflow):
                     st.markdown('**Selected pattern: ' + selected_pattern + ' (' + selected_pattern_period + ')**')
                     tdf = tdf[tdf['pattern'] == selected_pattern]
                     sv.attribute_selected_pattern_df.value = tdf
-                    sv.attribute_selected_pattern_att_counts.value = functions.compute_attribute_counts(sv.attribute_final_df.value, selected_pattern, time_col, selected_pattern_period)
+                    sv.attribute_selected_pattern_att_counts.value = compute_attribute_counts(sv.attribute_final_df.value, selected_pattern, time_col, selected_pattern_period)
                     count_ct = alt.Chart(tdf).mark_line().encode(
                         x='period:O',
                         y='count:Q',
