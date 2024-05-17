@@ -15,7 +15,9 @@ schedules:
       - main
 
 variables:
-  isMain: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
+  isMainBranch: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
+  isTrueShouldDeploy: $[eq(variables['shouldDeploy'], 'True')]
+  shouldDeploy: $[or(variables['isMainBranch'], variables['isTrueShouldDeploy'])]
   isTagged: startsWith(variables['Build.SourceBranch'], 'refs/tags/v')
 
 stages:
@@ -78,13 +80,13 @@ stages:
             inputs:
               workingDirectory: ./
               targetType: "inline"
-              script: docker build . -t $(DOCKER_REGISTRY)/intel-toolkit:latest
+              script: docker build . -t $(DOCKER_REGISTRY)/intel-toolkit:$(TAG)
           - task: Bash@3
             displayName: Save Docker Image
             inputs:
               workingDirectory: ./
               targetType: "inline"
-              script: docker save -o intel-toolkit.tar $(DOCKER_REGISTRY)/intel-toolkit:latest
+              script: docker save -o intel-toolkit.tar $(DOCKER_REGISTRY)/intel-toolkit:$(TAG)
 
           - task: PublishPipelineArtifact@1
             inputs:
@@ -93,7 +95,7 @@ stages:
 
   - stage: Deploy
     dependsOn: Build
-    condition: eq(variables.isMain, 'true')
+    condition: eq(variables.shouldDeploy, 'True')
     jobs:
       - job: deploy
         displayName: Deploy
@@ -120,11 +122,11 @@ stages:
             inputs:
               workingDirectory: ./
               targetType: "inline"
-              script: docker push $(DOCKER_REGISTRY)/intel-toolkit:latest   
+              script: docker push $(DOCKER_REGISTRY)/intel-toolkit:$(TAG)   
   
   - stage: Build_NSIS
     dependsOn: Build
-    condition: or(eq(variables.isTagged, 'true'), eq(variables.BUILD_EXE, 'true'))
+    condition: or(eq(variables.isTagged, 'True'), eq(variables.BUILD_EXE, 'True'))
     jobs:
       - job: NSIS_Build
         pool:
