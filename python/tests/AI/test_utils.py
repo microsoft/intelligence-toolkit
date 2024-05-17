@@ -1,8 +1,13 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import pytest
 
-from app.AI.utils import (get_token_count, hash_text, prepare_messages,
-                          prepare_validation, try_parse_json_object)
+from python.AI.utils import (
+    get_token_count,
+    hash_text,
+    prepare_messages,
+    prepare_validation,
+    try_parse_json_object,
+)
 
 
 def test_get_token_count():

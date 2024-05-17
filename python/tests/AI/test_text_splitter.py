@@ -1,6 +1,6 @@
 import pytest
 
-from app.AI.text_splitter import TextSplitter
+from python.AI.text_splitter import TextSplitter
 
 
 @pytest.fixture

@@ -1,9 +1,13 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-
-from AI.embedder import Embedder
+# Licensed under the MIT license. See LICENSE file in the project.
+#
+from util.openai_wrapper import UIOpenAIConfiguration
 from workflows.record_matching import config
 
-embedder = Embedder(pickle_path=config.cache_dir)
+from python.AI.embedder import Embedder
+
+ai_configuration = UIOpenAIConfiguration().get_configuration()
+embedder = Embedder(ai_configuration, config.cache_dir)
 
 def convert_to_sentences(df, skip):
     sentences = []

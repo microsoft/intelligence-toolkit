@@ -1,13 +1,19 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project.
+#
 import colorsys
 from collections import defaultdict
 
 import networkx as nx
 import pandas as pd
 import workflows.risk_networks.config as config
-from AI.embedder import Embedder
 from streamlit_agraph import Config, Edge, Node
+from util.openai_wrapper import UIOpenAIConfiguration
 
-embedder = Embedder(pickle_path=config.cache_dir)
+from python.AI.embedder import Embedder
+
+ai_configuration = UIOpenAIConfiguration().get_configuration()
+embedder = Embedder(ai_configuration, config.cache_dir)
 
 def hsl_to_hex(h, s, l):
     rgb = colorsys.hls_to_rgb(h / 360, l / 100, s / 100)

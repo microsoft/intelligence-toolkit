@@ -6,17 +6,20 @@ import re
 import sys
 from collections import defaultdict
 
-import AI.utils as utils
 import numpy as np
 import pandas as pd
 import streamlit as st
-from AI.classes import LLMCallback
-from AI.client import OpenAIClient
-from AI.defaults import DEFAULT_MAX_INPUT_TOKENS
 from dateutil import parser as dateparser
 from util.df_functions import get_current_time
 from util.download_pdf import add_download_pdf
 from util.enums import Mode
+from util.openai_wrapper import UIOpenAIConfiguration
+from util.SecretsHandler import SecretsHandler
+
+import python.AI.utils as utils
+from python.AI.classes import LLMCallback
+from python.AI.client import OpenAIClient
+from python.AI.defaults import DEFAULT_MAX_INPUT_TOKENS
 
 
 def dataframe_with_selections(df, selections, selection_col, label, key, height=250):
@@ -144,7 +147,7 @@ def single_csv_uploader(workflow, upload_label, last_uploaded_file_name_var, inp
         encoding = st.selectbox('File encoding', options=file_options, key=f'{key}_encoding_sb', index=file_options.index(st.session_state[f'{key}_encoding']))
 
         reload = st.button('Reload', key=f'{key}_reload')
-    if file != None and (file.name != last_uploaded_file_name_var.value or reload):
+    if file is not None and (file.name != last_uploaded_file_name_var.value or reload):
         st.session_state[f'{key}_encoding'] = encoding
         last_uploaded_file_name_var.value = file.name
         df = pd.read_csv(file, encoding=encoding, encoding_errors='ignore', low_memory=False)
@@ -181,7 +184,7 @@ def multi_csv_uploader(upload_label, uploaded_files_var, outputs_dir, uploader_k
 
     files = st.file_uploader(upload_label, type=['csv'], accept_multiple_files=True, key=uploader_key)
 
-    if files != None:
+    if files is not None:
         for file in files:
             if file.name not in uploaded_files_var.value:              
                 uploaded_files_var.value.append(file.name)
@@ -520,11 +523,13 @@ def validate_ai_report(messages, result, show_status = True):
     if show_status:
         st.status('Validating AI report and generating faithfulness score...', expanded=False, state='running')
     messages_to_llm = utils.prepare_validation(messages, result)
-    validation = OpenAIClient().generate_chat(messages_to_llm)
+    ai_configuration = UIOpenAIConfiguration().get_configuration()
+    validation = OpenAIClient(ai_configuration).generate_chat(messages_to_llm)
     return json.loads(re.sub(r"```json\n|\n```", "", validation)), messages_to_llm
 
 def generate_text(messages, callbacks = []):
-    return OpenAIClient().generate_chat(messages, callbacks=callbacks)
+    ai_configuration = UIOpenAIConfiguration().get_configuration()
+    return OpenAIClient(ai_configuration).generate_chat(messages, callbacks=callbacks)
 
 def create_markdown_callback(placeholder, prefix=''):
     def on(text):

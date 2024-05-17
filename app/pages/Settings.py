@@ -2,13 +2,22 @@ import os
 import time
 
 import streamlit as st
-from AI.openai_configuration import (OpenAIConfiguration, key,
-                                     openai_endpoint_key, openai_type_key,
-                                     openai_version_key, openai_azure_model_key)
 from components.app_loader import load_multipage_app
 from util.constants import EMBEDDINGS_FILE_NAME, MAX_SIZE_EMBEDDINGS_KEY
 from util.enums import Mode
+from util.openai_wrapper import (
+    UIOpenAIConfiguration,
+    key,
+    openai_azure_model_key,
+    openai_endpoint_key,
+    openai_type_key,
+    openai_version_key,
+)
 from util.SecretsHandler import SecretsHandler
+
+from python.AI.openai_configuration import (
+    OpenAIConfiguration,
+)
 
 
 def on_change(handler, key = None, value = None):
@@ -27,8 +36,7 @@ def delete_embeddings_pickle(root_dir):
 def main():
     st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_icon="app/myapp.ico", page_title='Intelligence Toolkit | Settings')
     load_multipage_app()
-    openai_config = OpenAIConfiguration()
-
+    openai_config = UIOpenAIConfiguration().get_configuration()
     st.header("Settings")
     secrets_handler = SecretsHandler()
     
@@ -51,7 +59,8 @@ def main():
     if secret_input and secret_input != secret:
         secrets_handler.write_secret(key, secret_input)
         st.rerun()
-    elif openai_config.get_api_key == '':
+    elif openai_config.api_key == '':
+        print(openai_config.api_key)
         st.warning("No OpenAI key found in the environment. Please insert one above.")
     elif not secret_input and not secret: 
         st.info("Using key from the environment.")
@@ -61,9 +70,9 @@ def main():
     st.subheader("OpenAI Type")
     st.markdown("Select the OpenAI type you want to use.")
     types = ["OpenAI", "Azure OpenAI"]
-    index = types.index(openai_config.get_openai_type()) if openai_config.get_openai_type() in types else 0
+    index = types.index(openai_config.api_type) if openai_config.api_type in types else 0
     type_input = st.radio("OpenAI Type", types, index=index, disabled=is_mode_cloud)
-    type = openai_config.get_openai_type()
+    type = openai_config.api_type
     if type != type_input:
         on_change(secrets_handler, openai_type_key, type_input)()
         st.rerun()
@@ -71,20 +80,20 @@ def main():
     if type_input == "Azure OpenAI":
         col1, col2, col3 = st.columns(3)
         with col1:
-            endpoint = st.text_input("Azure OpenAI Endpoint", disabled=is_mode_cloud, type="password", value=openai_config.get_azure_api_base())
-            if endpoint != openai_config.get_azure_api_base():
+            endpoint = st.text_input("Azure OpenAI Endpoint", disabled=is_mode_cloud, type="password", value=openai_config.api_base)
+            if endpoint != openai_config.api_base:
                 on_change(secrets_handler, openai_endpoint_key, endpoint)()
                 st.rerun()
                 
         with col2:
-            deployment_name = st.text_input("Azure OpenAI Deployment Name", disabled=is_mode_cloud, value=openai_config.get_azure_openai_model())
-            if deployment_name != openai_config.get_azure_openai_model():
+            deployment_name = st.text_input("Azure OpenAI Deployment Name", disabled=is_mode_cloud, value=openai_config.model)
+            if deployment_name != openai_config.model:
                 on_change(secrets_handler, openai_azure_model_key, deployment_name)()
                 st.rerun()
 
         with col3:
-            version = st.text_input("Azure OpenAI Version", disabled=is_mode_cloud, value=openai_config.get_azure_openai_version())
-            if version != openai_config.get_azure_openai_version():
+            version = st.text_input("Azure OpenAI Version", disabled=is_mode_cloud, value=openai_config.api_version)
+            if version != openai_config.api_version:
                 on_change(secrets_handler, openai_version_key, version)()
                 st.rerun()
 

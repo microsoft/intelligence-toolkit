@@ -17,4 +17,4 @@ RUN pip install -r requirements.txt
 
 # Run application
 EXPOSE 8501
-ENTRYPOINT ["streamlit", "run", "./app/Home.py"]
+ENTRYPOINT ["python", "-m", "streamlit", "run", "app/Home.py"]

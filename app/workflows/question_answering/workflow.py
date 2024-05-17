@@ -9,17 +9,18 @@ from collections import Counter
 import numpy as np
 import scipy.spatial.distance
 import streamlit as st
-from util.session_variable import SessionVariable
 import workflows.question_answering.classes as classes
 import workflows.question_answering.config as config
 import workflows.question_answering.functions as functions
 import workflows.question_answering.prompts as prompts
-from AI import utils
-from AI.defaults import CHUNK_SIZE
 from util import ui_components
 from util.df_functions import get_current_time
 from util.download_pdf import add_download_pdf
 from util.session_variables import SessionVariables
+
+from python.AI import utils
+from python.AI.defaults import CHUNK_SIZE
+
 
 def get_intro():
     file_path = os.path.join(os.path.dirname(__file__), 'README.md')
@@ -35,7 +36,7 @@ def create(sv: SessionVariables, workflow = None):
     with uploader_tab:
         st.markdown('##### Upload data for processing')
         files = st.file_uploader("Upload PDF text files", type=['pdf', 'txt'], accept_multiple_files=True, key=sv.answering_upload_key.value)
-        if files != None:
+        if files is not None:
             if st.button('Chunk and embed files'):
                 functions.chunk_files(sv, files)
 

@@ -53,3 +53,5 @@ app/wkhtmltox/*.exe
 *.coverage
 **/messages
 **/xpia
+
+app/transforming_notebooks/

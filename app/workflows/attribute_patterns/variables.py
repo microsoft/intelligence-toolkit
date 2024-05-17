@@ -3,8 +3,9 @@ import random
 
 import pandas as pd
 import streamlit as st
-import workflows.attribute_patterns.prompts as prompts
 from util.session_variable import SessionVariable
+
+import python.attribute_patterns.prompts as prompts
 
 
 class SessionVariables:

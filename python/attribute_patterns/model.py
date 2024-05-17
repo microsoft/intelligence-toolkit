@@ -3,7 +3,8 @@
 #
 import numpy as np
 import pandas as pd
-from util import df_functions
+
+from python.helpers import df_functions
 
 from .config import type_val_sep
 from .functions import (
@@ -65,7 +66,7 @@ def prepare_graph(dynamic_df, mi=False):
     dynamic_lcc = set()
     pdf = dynamic_df.copy()
     atts = sorted(pdf['Full Attribute'].unique())
-    pdf['Grouping ID'] = pdf['Subject ID'] + '@' + pdf['Period']
+    pdf['Grouping ID'] = str(pdf['Subject ID']) + '@' + str(pdf['Period'])
     
     periods = sorted(pdf['Period'].unique())
 
@@ -73,7 +74,7 @@ def prepare_graph(dynamic_df, mi=False):
         print(period)
         tdf = pdf.copy()
         tdf = tdf[tdf['Period'] == period]
-        tdf['Grouping ID'] = tdf['Subject ID'] + '@' + tdf['Period']
+        tdf['Grouping ID'] = str(tdf['Subject ID']) + '@' + str(tdf['Period'])
         tdf = tdf[['Grouping ID', 'Full Attribute']].groupby('Grouping ID').agg(list).reset_index()
         dedge_df = create_edge_df_from_atts(atts, tdf, mi)
         G, lcc = convert_edge_df_to_graph(dedge_df)

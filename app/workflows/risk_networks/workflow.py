@@ -1,4 +1,6 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project.
+#
 import os
 import re
 from collections import defaultdict
@@ -13,11 +15,17 @@ import workflows.risk_networks.prompts as prompts
 import workflows.risk_networks.variables as vars
 from AI import classes
 from sklearn.neighbors import NearestNeighbors
-from st_aggrid import (AgGrid, ColumnsAutoSizeMode, DataReturnMode,
-                       GridOptionsBuilder, GridUpdateMode)
+from st_aggrid import (
+    AgGrid,
+    ColumnsAutoSizeMode,
+    DataReturnMode,
+    GridOptionsBuilder,
+    GridUpdateMode,
+)
 from streamlit_agraph import agraph
 from util import ui_components
 from util.session_variables import SessionVariables
+
 
 def get_intro():
     file_path = os.path.join(os.path.dirname(__file__), 'README.md')
@@ -201,7 +209,7 @@ def create(sv: vars.SessionVariables, workflow = None):
             for link_list in sv.network_group_links.value:
                 for link in link_list:
                     groups.add(f'{link[1]}{config.att_val_sep}{link[2]}')
-            if sv.network_overall_graph.value != None:
+            if sv.network_overall_graph.value is not None:
                 all_nodes = sv.network_overall_graph.value.nodes()
                 entity_nodes = [node for node in all_nodes if node.startswith(config.entity_label)]
                 sv.network_attributes_list.value = [node for node in all_nodes if not node.startswith(config.entity_label)]

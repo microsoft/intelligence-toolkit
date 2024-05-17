@@ -4,7 +4,7 @@ import pickle
 
 import pytest
 
-from app.AI.cache_pickle import CachePickle
+from python.AI.cache_pickle import CachePickle
 
 
 @pytest.fixture

@@ -6,17 +6,21 @@ import numpy as np
 import pdfkit
 import pdfplumber
 import streamlit as st
-from util.session_variables import SessionVariables
 import workflows.question_answering.classes as classes
-from AI import utils
-from AI.embedder import Embedder
-from AI.text_splitter import TextSplitter
 from util import ui_components
+from util.openai_wrapper import UIOpenAIConfiguration
+from util.session_variables import SessionVariables
 from util.wkhtmltopdf import config_pdfkit, pdfkit_options
 from workflows.question_answering import config
 
+from python.AI import utils
+from python.AI.embedder import Embedder
+from python.AI.text_splitter import TextSplitter
+
 sv_home = SessionVariables('home')
-embedder = Embedder(pickle_path=config.cache_dir)
+ai_configuration = UIOpenAIConfiguration().get_configuration()
+
+embedder = Embedder(ai_configuration, config.cache_dir)
 
 def chunk_files(sv, files):
     pb = st.progress(0, 'Chunking files...')

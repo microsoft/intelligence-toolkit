@@ -3,18 +3,17 @@
 #
 import numpy as np
 import pandas as pd
-from attribute_patterns import config
-from attribute_patterns.SparseGraphEncoder import GraphEncoderEmbed
 
-# Assuming 'GraphEncoderEmbed' and 'config' are defined elsewhere in the code.  
-# Ensure that 'config' contains the required attributes.  
-  
+from .config import att_val_sep, correlation, diaga, laplacian, type_val_sep
+from .graph_encoder_embed import GraphEncoderEmbed
+
+
 def get_node_mappings(df):  
     """Create mappings for nodes to indices and labels."""  
     node_list = sorted(df['Full Attribute'].unique().tolist())  
     sorted_att_types = sorted(df['Attribute Type'].unique())  
     node_to_ix = {n: i for i, n in enumerate(node_list)}  
-    node_to_label = {n: sorted_att_types.index(n.split(config.type_val_sep)[0]) for n in node_list}  
+    node_to_label = {n: sorted_att_types.index(n.split(type_val_sep)[0]) for n in node_list}  
     return node_to_ix, node_to_label  
   
 def get_edge_list(graph, node_list, node_to_ix):  
@@ -26,7 +25,7 @@ def generate_embeddings_for_period(graph, node_list, node_to_ix, node_to_label):
     edge_list = get_edge_list(graph, node_list, node_to_ix)  
     num_nodes = len(node_list)  
     labels = np.array([node_to_label[node] for node in node_list]).reshape((num_nodes, 1))  
-    Z, _ = GraphEncoderEmbed().run(edge_list, labels, num_nodes, EdgeList=True, Laplacian=config.laplacian, DiagA=config.diaga, Correlation=config.correlation)  
+    Z, _ = GraphEncoderEmbed().run(edge_list, labels, num_nodes, EdgeList=True, Laplacian=laplacian, DiagA=diaga, Correlation=correlation)  
     return Z.toarray()  
   
 def serialize_embeddings(period_embeddings, period):  
@@ -61,7 +60,7 @@ def generate_embedding(df, time_to_graph):
     overall_embedding_df = pd.concat(embedding_dfs)  
     node_to_centroid = calculate_centroids(period_embeddings, node_list, node_to_ix, time_to_graph.keys())  
     overall_embedding_df['Full Attribute'] = overall_embedding_df['dynamic_node_id'].apply(  
-        lambda x: node_list[int(x.split(config.att_val_sep)[0])]  
+        lambda x: node_list[int(x.split(att_val_sep)[0])]  
     )  
   
     return overall_embedding_df, node_to_centroid, period_embeddings 

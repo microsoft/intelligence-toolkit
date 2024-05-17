@@ -39,8 +39,7 @@ def create_edge_df_from_atts(all_atts, pdf, mi):
 
     max_w = edge_df['weight'].max()
     min_w = edge_df['weight'].min()
-    min_t = min_edge_weight
-    edge_df['weight'] = edge_df['weight'].apply(lambda x: ((x - min_w) / (max_w - min_w)) * (1 - min_t) + min_t)
+    edge_df['weight'] = edge_df['weight'].apply(lambda x: ((x - min_w) / (max_w - min_w)) * (1 - min_edge_weight) + min_edge_weight)
 
     null_rows = []
     missing_w = missing_edge_prop * min_edge_weight

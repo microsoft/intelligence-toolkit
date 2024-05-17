@@ -6,16 +6,6 @@ import os
 import altair as alt
 import streamlit as st
 import workflows.attribute_patterns.variables as vars
-from attribute_patterns import prompts
-from attribute_patterns.classes import RecordCounter
-from attribute_patterns.embedding import generate_embedding
-from attribute_patterns.model import (
-    compute_attribute_counts,
-    create_time_series_df,
-    detect_patterns,
-    generate_graph_model,
-    prepare_graph,
-)
 from st_aggrid import (
     AgGrid,
     ColumnsAutoSizeMode,
@@ -24,6 +14,17 @@ from st_aggrid import (
     GridUpdateMode,
 )
 from util import ui_components
+
+from python.attribute_patterns import prompts
+from python.attribute_patterns.embedding import generate_embedding
+from python.attribute_patterns.model import (
+    compute_attribute_counts,
+    create_time_series_df,
+    detect_patterns,
+    generate_graph_model,
+    prepare_graph,
+)
+from python.attribute_patterns.record_counter import RecordCounter
 
 
 def get_intro():

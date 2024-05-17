@@ -1,20 +1,5 @@
-# Databricks notebook source
-# MAGIC %md
-# MAGIC #Package Section
-
-# COMMAND ----------
-
 import numpy as np
-
-# for sparse matrix
 from scipy import sparse
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC #Classes and functions
-
-# COMMAND ----------
 
 # invalide devide resutls will be nan
 np.seterr(divide='ignore', invalid='ignore')
