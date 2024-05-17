@@ -16,7 +16,6 @@ class SessionVariables:
         self.create_session(prefix)
 
     def create_session(self, prefix):
-        self.attribute_max_rows_to_process = SessionVariable(0, prefix)
         self.attribute_input_df = SessionVariable(pd.DataFrame(), prefix)
         self.attribute_last_file_name = SessionVariable('', prefix)
         self.attribute_dynamic_df = SessionVariable(pd.DataFrame(), prefix)
@@ -32,10 +31,6 @@ class SessionVariables:
         self.attribute_pattern_df = SessionVariable(pd.DataFrame(), prefix)
         self.attribute_subject_identifier = SessionVariable('', prefix)
         self.attribute_binned_df = SessionVariable(pd.DataFrame(), prefix)
-        self.attribute_wide_df = SessionVariable(pd.DataFrame(), prefix)
-        self.attribute_min_count = SessionVariable(0, prefix)
-        self.attribute_suppress_zeros = SessionVariable(False, prefix)
-        self.attribute_last_suppress_zeros = SessionVariable(False, prefix)
         self.attribute_system_prompt = SessionVariable(prompts.list_prompts, prefix)
         self.attribute_final_df = SessionVariable(pd.DataFrame(), prefix)
         self.attribute_report = SessionVariable('', prefix)
@@ -46,11 +41,8 @@ class SessionVariables:
         self.attribute_selected_pattern_period = SessionVariable('', prefix)
         self.attribute_selected_pattern_df = SessionVariable(pd.DataFrame(), prefix)
         self.attribute_selected_pattern_att_counts = SessionVariable(pd.DataFrame(), prefix)
-        self.attribute_all_pairs = SessionVariable(0, prefix)
         self.attribute_table_index = SessionVariable(0, prefix)
         self.attribute_upload_key = SessionVariable(random.randint(1, 100), prefix)
-
-        self.atribute_period = SessionVariable('', prefix)
 
     def reset_workflow(self):
         for key in st.session_state.keys():
