@@ -71,7 +71,6 @@ def prepare_graph(dynamic_df, mi=False):
     periods = sorted(pdf['Period'].unique())
 
     for ix, period in enumerate(periods):
-        print(period)
         tdf = pdf.copy()
         tdf = tdf[tdf['Period'] == period]
         tdf['Grouping ID'] = str(tdf['Subject ID']) + '@' + str(tdf['Period'])
@@ -119,6 +118,4 @@ def detect_patterns(node_to_centroid, period_embeddings, dynamic_df, record_coun
 
     # Sort the DataFrame by the overall score in descending order
     pattern_df = pattern_df.sort_values('overall_score', ascending=False)
-    print('close_pairs', close_pairs)
-    print('all_pairs', all_pairs)
     return pattern_df, close_pairs, all_pairs

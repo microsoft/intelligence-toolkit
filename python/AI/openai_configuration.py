@@ -36,7 +36,6 @@ class OpenAIConfiguration():
         self,
         config: dict = {},
     ):
-        print('ueee')
         """Init method definition."""
         oai_type = self._get_openai_type()
         self._api_key = config.get("api_key", self._get_api_key())

@@ -60,7 +60,6 @@ def main():
         secrets_handler.write_secret(key, secret_input)
         st.rerun()
     elif openai_config.api_key == '':
-        print(openai_config.api_key)
         st.warning("No OpenAI key found in the environment. Please insert one above.")
     elif not secret_input and not secret: 
         st.info("Using key from the environment.")

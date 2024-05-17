@@ -58,7 +58,6 @@ def sample_input_data():
     # Generate sample input data
     all_atts = ['A', 'B', 'C', 'D']
     pdf = pd.DataFrame({'Full Attribute': [['A', 'B'], ['B', 'C'], ['C', 'D'], ['A', 'C'], ['B', 'D']]})
-    print(pdf.to_csv())
     mi = True  # You can change this based on your testing requirements
     return all_atts, pdf, mi
 

@@ -32,5 +32,4 @@ class UIOpenAIConfiguration():
             'model': model
         }
         values = {k: v for k, v in config.items() if v is not None}
-        print('values', values)
         return OpenAIConfiguration(values)
