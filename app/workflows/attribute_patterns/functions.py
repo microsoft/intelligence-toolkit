@@ -190,7 +190,8 @@ def detect_patterns(sv):
                         if period_count >= sv.attribute_min_pattern_count.value:
                             close_pairs += 1
                             period_to_close_nodes[period].append((node1, node2))
-
+    print('close_pairs', close_pairs)
+    print('all_pairs', all_pairs)
     sv.attribute_converging_pairs.value = close_pairs
     sv.attribute_all_pairs.value = all_pairs
     # convert to df
