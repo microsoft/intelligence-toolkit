@@ -9,6 +9,7 @@ from collections import Counter
 import numpy as np
 import scipy.spatial.distance
 import streamlit as st
+from util.session_variable import SessionVariable
 import workflows.question_answering.classes as classes
 import workflows.question_answering.config as config
 import workflows.question_answering.functions as functions
@@ -26,6 +27,7 @@ def get_intro():
         return file.read()
 
 def create(sv: SessionVariables, workflow = None):
+    sv_home = SessionVariables('home')
     intro_tab, uploader_tab, mining_tab, report_tab = st.tabs(['Question answering workflow:', 'Upload data', 'Mine & match questions', 'Generate AI answer reports'])
     
     with intro_tab:
@@ -108,7 +110,7 @@ def create(sv: SessionVariables, workflow = None):
             source_counts = Counter()
             used_chunks = set()
             while True:
-                qe = np.array(functions.embedder.embed_store_one(question))
+                qe = np.array(functions.embedder.embed_store_one(question, sv_home.save_cache.value))
                 iteration += 1
                 cosine_distances = sorted([(t, c, scipy.spatial.distance.cosine(qe, v)) for (t, c, v) in all_units], key=lambda x:x[2], reverse=False)
                 chunk_index = sv.answering_target_matches.value
@@ -189,8 +191,8 @@ def create(sv: SessionVariables, workflow = None):
                         raw_refs = qa['source']
                         file_page_refs = [tuple([int(x[1:]) for x in r.split(';')]) for r in raw_refs]
                         
-                        q_vec = np.array(functions.embedder.embed_store_one(q))
-                        a_vec = np.array(functions.embedder.embed_store_one(a))
+                        q_vec = np.array(functions.embedder.embed_store_one(q, sv_home.save_cache.value))
+                        a_vec = np.array(functions.embedder.embed_store_one(a, sv_home.save_cache.value))
 
                         qid = sv.answering_next_q_id.value
                         sv.answering_next_q_id.value += 1

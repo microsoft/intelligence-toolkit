@@ -148,7 +148,7 @@ def detect_patterns(sv):
     node_list = sorted(node_to_centroid.keys())
     node_to_ix = {n : i for i, n in enumerate(node_list)}
     centroid_dists = {}
-    sorted_nodes = sorted(node_to_centroid.keys())
+    sorted_nodes = node_list
 
     for ix, node1 in enumerate(sorted_nodes):
         for node2 in sorted_nodes[ix + 1:]:
@@ -168,6 +168,7 @@ def detect_patterns(sv):
                 euclidean = np.linalg.norm(np.array(n1v) - np.array(n2v))
                 centroid_cosine, centroid_euclidean = centroid_dists[(node1, node2)]
                 period_shifts[period][(node1, node2)] = (centroid_cosine - cosine, centroid_euclidean - euclidean)
+        print('period_shifts', len(period_shifts[period]))
 
     rc = sv.attribute_record_counter.value
     close_pairs = 0
@@ -188,11 +189,10 @@ def detect_patterns(sv):
                         if period_count >= sv.attribute_min_pattern_count.value:
                             close_pairs += 1
                             period_to_close_nodes[period].append((node1, node2))
-
-    # sv.attribute_converging_pairs.value = close_pairs
-    # sv.attribute_all_pairs.value = all_pairs
-    print('close_pairs',close_pairs)
-    print('all_pairs',all_pairs)
+    print('close_pairs', close_pairs)
+    print('all_pairs', all_pairs)
+    sv.attribute_converging_pairs.value = close_pairs
+    sv.attribute_all_pairs.value = all_pairs
     # convert to df
     close_node_rows = []
     for period, close_nodes in period_to_close_nodes.items():
@@ -215,6 +215,7 @@ def detect_patterns(sv):
         period_pair_counts = close_node_df[close_node_df['period'] == period][['node1', 'node2', 'period_count']].values.tolist()
         period_to_patterns[period] = [([], 0)]
         period_pairs = [tuple(sorted([a, b])) for a, b, c in period_pair_counts]
+        print('pairs',len(period_pairs))
         print(F'Period {period}')
         for (pattern, count) in period_to_patterns[period]:
             for (a, b) in period_pairs:

@@ -5,7 +5,7 @@ from components.app_loader import load_multipage_app
 import util.mermaid as mermaid
 
 def get_readme():
-    file_path = os.path.join('README.md')
+    file_path = os.path.join('./README.md')
     with open(file_path, 'r') as file:
         content = file.read()
     folders = [f.name for f in os.scandir('app/workflows') if f.is_dir()]

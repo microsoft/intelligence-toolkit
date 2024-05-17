@@ -9,13 +9,11 @@ The Intelligence Toolkit is a suite of interactive workflows for creating AI int
 The Intelligence Toolkit aims to help domain experts make sense of real-world data at a speed and scale that wouldn't otherwise be possible. It was specifically designed for analysis of case data and entity data:
 
 - **Case Data**
-  - Units are structured records describing individual people
-  - Examples include users, respondents, patients, victims
-  - Analysis aims to inform *policy* while preserving *privacy*
+  - Units are structured records describing individual people.
+  - Analysis aims to inform *policy* while preserving *privacy*.
 - **Entity Data**
-  - Units are records or documents describing real-world entities
-  - Examples include organizations, countries, products, suppliers
-  - Analysis aims to understand *risks* carried by *relationships*
+  - Units are records or documents describing real-world entities.
+  - Analysis aims to understand *risks* represented by *relationships*.
 
 #### What are Intelligence Toolkit's intended uses?
 
@@ -24,13 +22,13 @@ The Intelligence Toolkit is designed to be used by domain experts who are famili
 It supports a variety of interactive workflows, each designed to address a specific type of intelligence task:
 
 - **Case Intelligence Workflows**
-  - [**Data Synthesis**](/app/workflows/data_synthesis/README.md) generates differentially-private datasets and summaries from sensitive case records
-  - [**Attribute Patterns**](/app/workflows/attribute_patterns/README.md) generates reports on attribute patterns detected in streams of case records
-  - [**Group Narratives**](/app/workflows/group_narratives/README.md) generates reports by defining and comparing groups of case records
+  - [**Data Synthesis**](/app/workflows/data_synthesis/README.md) generates differentially-private datasets and summaries from sensitive case records.
+  - [**Attribute Patterns**](/app/workflows/attribute_patterns/README.md) generates reports on attribute patterns detected in streams of case records.
+  - [**Group Narratives**](/app/workflows/group_narratives/README.md) generates reports by defining and comparing groups of case records.
 - **Entity Intelligence Workflows**
-  - [**Record Matching**](/app/workflows/record_matching/README.md) generates reports on record matches detected across entity datasets
-  - [**Risk Networks**](/app/workflows/risk_networks/README.md) generates reports on risk exposure for networks of related entities
-  - [**Question Answering**](/app/workflows/question_answering/README.md) generates reports from an entity-rich document collection
+  - [**Record Matching**](/app/workflows/record_matching/README.md) generates reports on record matches detected across entity datasets.
+  - [**Risk Networks**](/app/workflows/risk_networks/README.md) generates reports on risk exposure for networks of related entities.
+  - [**Question Answering**](/app/workflows/question_answering/README.md) generates reports from an entity-rich document collection.
 
 #### How was Intelligence Toolkit evaluated?
 
@@ -47,8 +45,8 @@ The Intelligence Toolkit was designed, refined, and evaluated in the context of 
 #### What operational factors and settings allow for effective and responsible use of Intelligence Toolkit?
 
 - The Intelligence Toolkit is designed for moderate-sized datasets (e.g., 100s of thousands of records, 100s of PDF documents). Larger datasets will require longer to process and may exceed the memory limits of the execution environment.
-- Responsible use of personal case data requires that the data be de-identified prior to uploading and then converted into anonymous data using the Data Synthesis workflow. Any subsequent analysis of the case data should be done using the synthetic case data, not the original (sensitive/personal) case data.
-- It is the user's responsibility to ensure that any data sent to generative AI models is not personal/sensitive/secret/confidential, that use of generative AI models is consistent with the terms of service of the model provider, and that such use incurs per-token costs charged to the OpenAI account linked to the user-provided API key. Understanding [usage costs](https://openai.com/pricing#language-models) and setting a [billing cap](https://platform.openai.com/docs/guides/production-best-practices/setting-up-your-organization) is recommended.
+- Responsible use of personal case data requires that the data be deidentified prior to uploading and then converted into anonymous data using the Data Synthesis workflow. Any subsequent analysis of the case data should be done using the synthetic case data, not the original (sensitive/personal) case data.
+- It is the user's responsibility to ensure that any data sent to generative AI models is not personal/sensitive/secret/confidential, that use of generative AI models is consistent with the terms of service of the model provider, and that such use incurs per-token costs charged to the account linked to the user-provided API key. Understanding usage costs ([OpenAI](https://openai.com/pricing#language-models), [Azure](https://azure.microsoft.com/en-us/pricing/details/cognitive-services/openai-service/)) and setting a billing cap ([OpenAI](https://platform.openai.com/docs/guides/production-best-practices/setting-up-your-organization)) or budget ([Azure](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/manage-costs)) is recommended.
 
 #### What data is collected?
 
@@ -56,33 +54,32 @@ Intelligence Toolkit may be deployed as a desktop application or a cloud service
 
 #### What AI model is used?
 
-The system uses the GPT-4-turbo model from OpenAI, either via OpenAI or Azure OpenAI APIs. See the [GPT-4 System Card]((https://cdn.openai.com/papers/gpt-4-system-card.pdf)) to understand the capabilities and limitations of this model.
+The system uses the GPT-4 model from OpenAI, either via OpenAI or Azure OpenAI APIs. See the [GPT-4 System Card]((https://cdn.openai.com/papers/gpt-4-system-card.pdf)) to understand the capabilities and limitations of this model.
 
 #### Disclaimer
 
 - Intelligence Toolkit is an AI system that generates text.
-- System outputs may include factual errors, fabrication, or speculation.
+- System performance may vary by workflow, dataset, query, and response.
+- Outputs may include factual errors, fabrication, or speculation.
 - Users are responsible for determining the accuracy of generated content.
 - System outputs do not represent the opinions of Microsoft.
 - All decisions leveraging outputs of the system should be made with human oversight and not be based solely on system outputs.
 - The system is only intended to be used for analysis by domain experts capable of evaluating the quality of data insights it generates.
-- System performance may otherwise vary.
 - Use of the system must comply with all applicable laws, regulations, and policies, including those pertaining to privacy and security.
 - The system should not be used in highly regulated domains where inaccurate outputs could suggest actions that lead to injury or negatively impact an individual's legal, financial, or life opportunities.
 
 ## Diving Deeper
 
-- To learn about our contribution guidelines, see [CONTRIBUTING.md](./CONTRIBUTING.md)
-- To start developing, see [DEVELOPING.md](./DEVELOPING.md)
+- To learn about our contribution guidelines, see [CONTRIBUTING.md](./CONTRIBUTING.md).
+- To start developing, see [DEVELOPING.md](./DEVELOPING.md).
 
 ## Trademarks
 
-This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft 
-trademarks or logos is subject to and must follow 
-[Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
-Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
-Any use of third-party trademarks or logos are subject to those third-party's policies.
+- This project may contain trademarks or logos for projects, products, or services.
+- Authorized use of Microsoft trademarks or logos is subject to and must follow [Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
+- Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
+- Any use of third-party trademarks or logos are subject to those third-party's policies.
 
 ## Privacy
 
-[Microsoft Privacy Statement](https://privacy.microsoft.com/en-us/privacystatement)
+See [Microsoft Privacy Statement](https://privacy.microsoft.com/en-us/privacystatement).
