@@ -2,7 +2,7 @@
 
 ## Requirements
 
-- Python 3.10 ([Download](https://www.python.org/downloads/))
+- Python 3.11 ([Download](https://www.python.org/downloads/))
 - wkhtmltopdf 
 
     - Windows: [Download wkhtmltopdf installer](https://wkhtmltopdf.org/downloads.html)
