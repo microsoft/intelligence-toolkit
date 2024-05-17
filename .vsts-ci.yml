@@ -129,6 +129,7 @@ stages:
               azureSubscription: $(SUBSCRIPTION_NAME)
               Action: 'Restart Azure App Service'
               WebAppName: $(WEBAPPNAME)
+              SlotName: $(SLOT_NAME)
 
   - stage: Build_NSIS
     dependsOn: Build
