@@ -169,6 +169,7 @@ def detect_patterns(sv):
                 euclidean = np.linalg.norm(np.array(n1v) - np.array(n2v))
                 centroid_cosine, centroid_euclidean = centroid_dists[(node1, node2)]
                 period_shifts[period][(node1, node2)] = (centroid_cosine - cosine, centroid_euclidean - euclidean)
+        print('period_shifts', len(period_shifts[period]))
 
     rc = sv.attribute_record_counter.value
     close_pairs = 0
@@ -224,6 +225,7 @@ def detect_patterns(sv):
         period_pair_counts = close_node_df[close_node_df['period'] == period][['node1', 'node2', 'period_count']].values.tolist()
         period_to_patterns[period] = [([], 0)]
         period_pairs = [tuple(sorted([a, b])) for a, b, c in period_pair_counts]
+        print('pairs',len(period_pairs))
         print(F'Period {period}')
         for (pattern, count) in period_to_patterns[period]:
             for (a, b) in period_pairs:
@@ -255,7 +257,6 @@ def detect_patterns(sv):
     pattern_rows = []
     for period, patterns in period_to_patterns.items():
         for (pattern, count) in patterns:
-            print('patternspatternspatterns',len(patterns))
             if count > 0:
                 mean, sd, mx = rc.compute_period_mean_sd_max(pattern)
                 score = (count - mean) / sd
