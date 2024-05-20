@@ -83,7 +83,7 @@ def create(sv: vars.SessionVariables, workflow):
 
                         sv.attribute_pattern_df.value, sv.attribute_close_pairs.value, sv.attribute_all_pairs.value = detect_patterns(sv.attribute_node_to_centroid.value, 
                                                                                                                                       sv.attribute_period_embeddings.value, sv.attribute_dynamic_df.value, 
-                                                                                                                                      sv.attribute_record_counter.value, sv.attribute_min_pattern_count.value, sv.attribute_max_pattern_length.value)
+                                                                                                                                      sv.attribute_min_pattern_count.value, sv.attribute_max_pattern_length.value)
                         st.rerun()
             with b4:
                 st.download_button('Download patterns', data=sv.attribute_pattern_df.value.to_csv(index=False), file_name='attribute_patterns.csv', mime='text/csv', disabled=len(sv.attribute_pattern_df.value) == 0)
@@ -93,7 +93,7 @@ def create(sv: vars.SessionVariables, workflow):
                 unique_count = len(sv.attribute_pattern_df.value['pattern'].unique())
                 st.success(f'Over **{period_count}** periods, detected **{pattern_count}** attribute patterns (**{unique_count}** unique) from **{sv.attribute_close_pairs.value}**/**{sv.attribute_all_pairs.value}** converging attribute pairs (**{round(sv.attribute_close_pairs.value / sv.attribute_all_pairs.value * 100, 2) if sv.attribute_all_pairs.value > 0 else 0}%**). Patterns ranked by ```overall_score = normalize(length * ln(count) * z_score * detections)```.')
                 show_df = sv.attribute_pattern_df.value
-                tdf = create_time_series_df(sv.attribute_record_counter.value, sv.attribute_pattern_df.value)
+                tdf = create_time_series_df(sv.attribute_dynamic_df.value, sv.attribute_pattern_df.value)
                 gb = GridOptionsBuilder.from_dataframe(show_df)
                 gb.configure_default_column(flex=1, wrapText=True, wrapHeaderText=True, enablePivot=False, enableValue=False, enableRowGroup=False)
                 gb.configure_selection(selection_mode="single", use_checkbox=False)

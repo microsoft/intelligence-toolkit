@@ -1,21 +1,70 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 #
+from collections import defaultdict
+
 import numpy as np
 import pandas as pd
 
+from python.AI.metaprompts import do_not_harm
+from python.AI.utils import generate_messages
 from python.helpers import df_functions
 
 from .config import type_val_sep
-from .functions import (
-    convert_edge_df_to_graph,
+from .detection_functions import (
     create_close_node_rows,
-    create_edge_df_from_atts,
     create_pattern_rows,
     create_period_shifts,
     create_period_to_patterns,
 )
+from .graph_functions import (
+    convert_edge_df_to_graph,
+    create_edge_df_from_atts,
+)
+from .prompts import report_prompt, user_prompt
+from .record_counter import RecordCounter
 
+
+def prepare_data(df):
+    # identifier_var = 'Subject ID'
+    df['Subject ID'] = [i for i in range(len(df))]
+
+    # Drop empty Subject ID rows
+    filtered = df.dropna(subset=['Subject ID'])
+    melted = filtered.melt(id_vars=['Subject ID'], var_name='Attribute', value_name='Value').drop_duplicates()
+    att_to_subject_to_vals = defaultdict(lambda: defaultdict(set))
+    for i, row in melted.iterrows():
+        att_to_subject_to_vals[row['Attribute']][row['Subject ID']].add(row['Value'])
+
+    # define expanded atts as all attributes with more than one value for a given subject
+    expanded_atts = []
+    for att, subject_to_vals in att_to_subject_to_vals.items():
+        max_count = max([len(vals) for vals in subject_to_vals.values()])
+        if max_count > 1:
+            expanded_atts.append(att)
+    if len(expanded_atts) > 0:
+        new_rows = []
+        for i, row in melted.iterrows():
+            if row['Attribute'] in expanded_atts:
+                if str(row['Value']) not in ['', '<NA>']:
+                    new_rows.append([row['Subject ID'], row['Attribute']+'_'+str(row['Value']), '1'])
+            else:
+                new_rows.append([row['Subject ID'], row['Attribute'], str(row['Value'])])
+        melted = pd.DataFrame(new_rows, columns=['Subject ID', 'Attribute', 'Value'])
+        # convert back to wide format
+        wdf = melted.pivot(index='Subject ID', columns='Attribute', values='Value').reset_index()
+        # wdf = wdf.drop(columns=['Subject ID'])
+        
+        output_df_var = wdf
+    else:
+        wdf = df.copy()
+
+    
+    output_df_var = wdf
+    output_df_var.replace({'<NA>': np.nan}, inplace=True)
+    output_df_var.replace({'nan': ''}, inplace=True)
+    output_df_var.replace({'1.0': '1'}, inplace=True)
+    return output_df_var
 
 def generate_graph_model(df, period_col):
     att_cols = [col for col in df.columns.values if col not in ['Subject ID', period_col]]
@@ -34,10 +83,10 @@ def generate_graph_model(df, period_col):
     pdf = pdf[pdf['Period'] != '']
     return pdf
 
-def compute_attribute_counts(df, pattern, time_col, period):
+def compute_attribute_counts(df, pattern, period_col, period):
     atts = pattern.split(' & ')
     fdf = df_functions.fix_null_ints(df).astype(str).replace('nan', '').replace('<NA>', '')
-    fdf = fdf[fdf[time_col] == period]
+    fdf = fdf[fdf[period_col] == period]
     for att in atts:
         if att == 'Subject ID':
             continue
@@ -47,13 +96,16 @@ def compute_attribute_counts(df, pattern, time_col, period):
             fdf = fdf[fdf[a] == v]
         else:
             print(f'Error parsing attribute {att}')
-    melted = pd.melt(fdf, id_vars=['Subject ID'], value_vars=[c for c in fdf.columns if c not in ['Subject ID', time_col]], var_name='Attribute', value_name='Value')
+            
+    melted = pd.melt(fdf, id_vars=['Subject ID'], value_vars=[c for c in fdf.columns if c not in ['Subject ID', period_col]], var_name='Attribute', value_name='Value')
     melted = melted[melted['Value'] != '']
     melted['AttributeValue'] = melted['Attribute'] + type_val_sep + melted['Value']
     att_counts = melted.groupby('AttributeValue').agg({'Subject ID' : 'nunique'}).rename(columns={'Subject ID' : 'Count'}).sort_values(by='Count', ascending=False).reset_index()
     return att_counts
 
-def create_time_series_df(record_counter, pattern_df):
+def create_time_series_df(model, pattern_df):
+    record_counter = RecordCounter(model)
+
     rows = []
     for _, row in pattern_df.iterrows():
         rows.extend(record_counter.create_time_series_rows(row['pattern'].split(' & ')))
@@ -84,8 +136,9 @@ def prepare_graph(dynamic_df, mi=False):
         time_to_graph[period] = G
     return pdf, time_to_graph
 
-def detect_patterns(node_to_centroid, period_embeddings, dynamic_df, record_counter, min_pattern_count, max_pattern_length):
+def detect_patterns(node_to_centroid, period_embeddings, dynamic_df, min_pattern_count = 5, max_pattern_length = 100) -> tuple[pd.DataFrame, int, int]:
     sorted_nodes = sorted(node_to_centroid.keys())
+    record_counter  = RecordCounter(dynamic_df)
 
     period_shifts = create_period_shifts(node_to_centroid, period_embeddings, dynamic_df)
     used_periods = sorted(dynamic_df['Period'].unique())
@@ -119,3 +172,14 @@ def detect_patterns(node_to_centroid, period_embeddings, dynamic_df, record_coun
     # Sort the DataFrame by the overall score in descending order
     pattern_df = pattern_df.sort_values('overall_score', ascending=False)
     return pattern_df, close_pairs, all_pairs
+
+def prepare_for_ai_report(pattern: str, period: str, time_series: pd.DataFrame, attribute_counts: pd.DataFrame, u_prompt: str = user_prompt) -> list[dict[str, str]]:
+    variables = {
+        'pattern': pattern,
+        'period': period,
+        'time_series': time_series.to_csv(index=False),
+        'attribute_counts': attribute_counts.to_csv(index=False)
+    }
+
+    safety_prompt = do_not_harm
+    return generate_messages(u_prompt, report_prompt, variables, safety_prompt)

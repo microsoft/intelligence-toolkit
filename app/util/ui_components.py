@@ -77,14 +77,7 @@ def generative_ai_component(system_prompt_var, variables):
         reset_prompt = st.button('Reset to default')
     
     st.warning('This app uses AI and may not be error-free. Please verify critical details independently.')
-    
-    full_prompt = ' '.join([
-        system_prompt_var.value["report_prompt"],
-        instructions_text,
-        system_prompt_var.value["safety_prompt"]
-    ])
-
-    messages = utils.prepare_messages(full_prompt, variables)
+    messages = utils.generate_messages(instructions_text, system_prompt_var.value["report_prompt"], variables, system_prompt_var.value["safety_prompt"])
     tokens = utils.get_token_count(messages)
     b1, b2 = st.columns([1, 4])
     ratio = 100 * tokens/DEFAULT_MAX_INPUT_TOKENS  

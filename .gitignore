@@ -45,7 +45,6 @@ build/*
 app/wkhtmltox/*.exe
 /wheels
 *reports
-*.ipynb
 **/app_secrets.toml
 
 
@@ -54,4 +53,4 @@ app/wkhtmltox/*.exe
 **/messages
 **/xpia
 
-app/transforming_notebooks/
+**/studio_tests/

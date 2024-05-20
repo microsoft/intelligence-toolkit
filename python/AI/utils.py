@@ -38,7 +38,7 @@ def prepare_messages(system_message: str, variables: dict[str, Any], user_messag
         
     return messages
 
-def prepare_validation(messages: str, ai_report: str):
+def prepare_validation(messages: str, ai_report: str) -> list[dict[str, str]]:
     return  [{
         'role': 'system',
         'content': GROUNDEDNESS_PROMPT.format(instructions=messages, report=ai_report)
@@ -60,3 +60,13 @@ def hash_text(text: str) -> str:
     """Function that hashes a string."""
     text = text.replace("\n", " ")
     return hashlib.sha256(text.encode()).hexdigest()
+
+
+def generate_messages(user_prompt, system_prompt, variables, safety_prompt = '' ) -> list[dict[str, str]]:
+    full_prompt = ' '.join([
+        system_prompt,
+        user_prompt,
+        safety_prompt
+    ])
+
+    return prepare_messages(full_prompt, variables)

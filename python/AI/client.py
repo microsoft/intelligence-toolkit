@@ -26,7 +26,6 @@ class OpenAIClient:
             api_base = self.configuration.api_base
             if api_base is None:
                 raise ValueError(API_BASE_REQUIRED_FOR_AZURE)
-
             log.info(
                 "Creating Azure OpenAI client api_base=%s",
                 api_base,
@@ -37,12 +36,12 @@ class OpenAIClient:
                 api_version=self.configuration.api_version,
                 azure_endpoint=api_base,
             )
-            return
-
-        log.info("Creating OpenAI client")
-        self._client = OpenAI(
-            api_key=self.configuration.api_key,
-        )
+        else:
+            log.info("Creating OpenAI client")
+            self._client = OpenAI(
+                api_key=self.configuration.api_key,
+            )
+        return self._client
 
     def generate_chat(self, messages: List[str], stream: bool = True, callbacks: List[LLMCallback] = None):
         try:
@@ -54,7 +53,7 @@ class OpenAIClient:
                 stream=stream,
             )
 
-            if stream:
+            if stream and callbacks is not None:
                 full_response = ""
                 for chunk in response:
                     delta = chunk.choices[0].delta.content or ""  # type: ignore
