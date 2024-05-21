@@ -14,7 +14,6 @@ from util.df_functions import get_current_time
 from util.download_pdf import add_download_pdf
 from util.enums import Mode
 from util.openai_wrapper import UIOpenAIConfiguration
-from util.SecretsHandler import SecretsHandler
 
 import python.AI.utils as utils
 from python.AI.classes import LLMCallback
@@ -77,6 +76,7 @@ def generative_ai_component(system_prompt_var, variables):
         reset_prompt = st.button('Reset to default')
     
     st.warning('This app uses AI and may not be error-free. Please verify critical details independently.')
+
     messages = utils.generate_messages(instructions_text, system_prompt_var.value["report_prompt"], variables, system_prompt_var.value["safety_prompt"])
     tokens = utils.get_token_count(messages)
     b1, b2 = st.columns([1, 4])
@@ -420,57 +420,57 @@ def prepare_input_df(workflow, input_df_var, processed_df_var, output_df_var, id
                 st.rerun() 
 
 
-    # with st.expander('Suppress insignificant attribute values', expanded=False):
-    #     if f'{workflow}_min_count' not in st.session_state.keys():
-    #         st.session_state[f'{workflow}_min_count'] = 0
-    #     min_value = st.number_input('Minimum value count', key=f'{workflow}_min_count_input', value=st.session_state[f'{workflow}_min_count'], help='Minimum count of an attribute value to be included in the sensitive dataset. If 0, no filtering will be performed.')
-    #     st.session_state[f'{workflow}_min_count'] = min_value
-    #     bdf = st.session_state[f'{workflow}_binned_df']
-    #     for col in processed_df_var.value.columns:
-    #         if col != 'Subject ID':
-    #             if col not in bdf:
-    #                 continue
-    #             value_counts = bdf[col].value_counts()
-    #             # convert to dict with value as key and count as value
-    #             value_counts = dict(zip(value_counts.index, value_counts.values))
+    with st.expander('Suppress insignificant attribute values', expanded=False):
+        if f'{workflow}_min_count' not in st.session_state.keys():
+            st.session_state[f'{workflow}_min_count'] = 0
+        min_value = st.number_input('Minimum value count', key=f'{workflow}_min_count_input', value=st.session_state[f'{workflow}_min_count'], help='Minimum count of an attribute value to be included in the sensitive dataset. If 0, no filtering will be performed.')
+        st.session_state[f'{workflow}_min_count'] = min_value
+        bdf = st.session_state[f'{workflow}_binned_df']
+        for col in processed_df_var.value.columns:
+            if col != 'Subject ID':
+                if col not in bdf:
+                    continue
+                value_counts = bdf[col].value_counts()
+                # convert to dict with value as key and count as value
+                value_counts = dict(zip(value_counts.index, value_counts.values))
 
-    #             # remove any values that are less than the minimum count
-    #             if bdf[col].dtype == 'str':
-    #                 print(f'Processing {col} as string')
-    #                 bdf[col] = bdf[col].apply(lambda x: '' if x in value_counts and value_counts[x] < min_value else str(x))
-    #             elif bdf[col].dtype == 'float64':
-    #                 print(f'Processing {col} as float')
-    #                 bdf[col] = bdf[col].apply(lambda x: np.nan if x in value_counts and value_counts[x] < min_value else x)
-    #             elif bdf[col].dtype == 'int64':
-    #                 print(f'Processing {col} as int')
-    #                 bdf[col] = bdf[col].apply(lambda x: -sys.maxsize if x in value_counts and value_counts[x] < min_value else x)
-    #                 bdf[col] = bdf[col].astype('Int64')
-    #                 bdf[col] = bdf[col].replace(-sys.maxsize, np.nan)
-    #             else:
-    #                 print(f'Processing {col} as string')
-    #                 bdf[col] = bdf[col].apply(lambda x: '' if x in value_counts and value_counts[x] < min_value else str(x))
+                # remove any values that are less than the minimum count
+                if bdf[col].dtype == 'str':
+                    print(f'Processing {col} as string')
+                    bdf[col] = bdf[col].apply(lambda x: '' if x in value_counts and value_counts[x] < min_value else str(x))
+                elif bdf[col].dtype == 'float64':
+                    print(f'Processing {col} as float')
+                    bdf[col] = bdf[col].apply(lambda x: np.nan if x in value_counts and value_counts[x] < min_value else x)
+                elif bdf[col].dtype == 'int64':
+                    print(f'Processing {col} as int')
+                    bdf[col] = bdf[col].apply(lambda x: -sys.maxsize if x in value_counts and value_counts[x] < min_value else x)
+                    bdf[col] = bdf[col].astype('Int64')
+                    bdf[col] = bdf[col].replace(-sys.maxsize, np.nan)
+                else:
+                    print(f'Processing {col} as string')
+                    bdf[col] = bdf[col].apply(lambda x: '' if x in value_counts and value_counts[x] < min_value else str(x))
 
-    #     if f'{workflow}_suppress_zeros' not in st.session_state.keys():
-    #         st.session_state[f'{workflow}_suppress_zeros'] = False
-    #     suppress_zeros = st.checkbox('Suppress binary 0s', key=f'{workflow}_suppress_zeros_input', value=st.session_state[f'{workflow}_suppress_zeros'], help='For binary columns, maps the number 0 to None. This is useful when only the presence of an attribute is important, not the absence.')
-    #     if suppress_zeros != st.session_state[f'{workflow}_suppress_zeros']:
-    #         st.session_state[f'{workflow}_suppress_zeros'] = suppress_zeros
-    #         if suppress_zeros:
-    #             for col in bdf.columns.values:
-    #                 if col != 'Entity ID' and len(bdf[col].unique()) <= 2:
-    #                     if 0 in [x for x in bdf[col].unique()]:
-    #                         bdf[col] = input_df_var.value[col].replace(0, np.nan)
-    #                         processed_df_var.value[col] = bdf[col]
-    #         else:
-    #             for col in bdf.columns.values:
-    #                 if col != 'Entity ID' and len(bdf[col].unique()) <= 2:
-    #                     bdf[col] = input_df_var.value[col]
-    #                     processed_df_var.value[col] = bdf[col]
-    #         st.rerun()
+        if f'{workflow}_suppress_zeros' not in st.session_state.keys():
+            st.session_state[f'{workflow}_suppress_zeros'] = False
+        suppress_zeros = st.checkbox('Suppress binary 0s', key=f'{workflow}_suppress_zeros_input', value=st.session_state[f'{workflow}_suppress_zeros'], help='For binary columns, maps the number 0 to None. This is useful when only the presence of an attribute is important, not the absence.')
+        if suppress_zeros != st.session_state[f'{workflow}_suppress_zeros']:
+            st.session_state[f'{workflow}_suppress_zeros'] = suppress_zeros
+            if suppress_zeros:
+                for col in bdf.columns.values:
+                    if col != 'Entity ID' and len(bdf[col].unique()) <= 2:
+                        if 0 in [x for x in bdf[col].unique()]:
+                            bdf[col] = input_df_var.value[col].replace(0, np.nan)
+                            processed_df_var.value[col] = bdf[col]
+            else:
+                for col in bdf.columns.values:
+                    if col != 'Entity ID' and len(bdf[col].unique()) <= 2:
+                        bdf[col] = input_df_var.value[col]
+                        processed_df_var.value[col] = bdf[col]
+            st.rerun()
 
     if st.button('Generate final dataset', disabled=len(processed_df_var.value.columns) < 2):
         with st.spinner('Transforming data...'):
-            if False:
+            if identifier == 'ID column' and identifier_col != '':
                 # Drop empty Subject ID rows
                 filtered = processed_df_var.value.dropna(subset=['Subject ID'])
                 melted = filtered.melt(id_vars=['Subject ID'], var_name='Attribute', value_name='Value').drop_duplicates()
