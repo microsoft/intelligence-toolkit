@@ -1,0 +1,29 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      python-version: "3.11"
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python-version }}
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build Docker Image
+        run: docker build . -t intel-toolkit:latest

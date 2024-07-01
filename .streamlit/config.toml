@@ -1,0 +1,6 @@
+[server]
+enableXsrfProtection = false
+maxUploadSize = 1000
+
+[client]
+toolbarMode = "viewer"

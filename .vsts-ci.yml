@@ -1,0 +1,208 @@
+name: Intelligence Toolkit
+pool:
+  vmImage: ubuntu-latest
+
+trigger:
+  batch: true
+  branches:
+    include:
+      - main
+      
+schedules:
+- cron: "0 0 * * 0"  # Runs every Sunday at midnight (UTC)
+  branches:
+    include:
+      - main
+
+variables:
+  isMainBranch: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
+  isTrueShouldDeploy: $[eq(variables['shouldDeploy'], 'True')]
+  shouldDeploy: $[or(variables['isMainBranch'], variables['isTrueShouldDeploy'])]
+  isTagged: startsWith(variables['Build.SourceBranch'], 'refs/tags/v')
+
+stages:
+  - stage: Compliance
+    dependsOn: []
+    jobs:
+      - job: compliance
+        displayName: Compliance
+        pool:
+          vmImage: windows-latest
+        steps:
+          - task: CredScan@3
+            inputs:
+              outputFormat: sarif
+              debugMode: false
+
+          - task: ComponentGovernanceComponentDetection@0
+            inputs:
+              scanType: "Register"
+              verbosity: "Verbose"
+              alertWarningLevel: "High"
+
+          - task: PublishSecurityAnalysisLogs@3
+            inputs:
+              ArtifactName: "CodeAnalysisLogs"
+              ArtifactType: "Container"
+
+  - stage: Build
+    dependsOn: []
+    jobs:
+      - job: validate
+        displayName: Install and tests
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: "3.11"
+            displayName: "Use Python 3.11"
+          - task: Bash@3
+            displayName: Install Dependencies
+            inputs:
+              workingDirectory: ./
+              targetType: "inline"
+              script: pip install -r requirements.txt
+          - task: Bash@3
+            displayName: Run Tests
+            inputs:
+              workingDirectory: ./
+              targetType: "inline"
+              script: pytest
+              
+      - job: build
+        displayName: Build
+        dependsOn: validate
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: Bash@3
+            displayName: Build Docker Image
+            inputs:
+              workingDirectory: ./
+              targetType: "inline"
+              script: docker build . -t $(DOCKER_REGISTRY)/intel-toolkit:$(TAG)
+          - task: Bash@3
+            displayName: Save Docker Image
+            inputs:
+              workingDirectory: ./
+              targetType: "inline"
+              script: docker save -o intel-toolkit.tar $(DOCKER_REGISTRY)/intel-toolkit:$(TAG)
+
+          - task: PublishPipelineArtifact@1
+            inputs:
+              targetPath: '$(System.DefaultWorkingDirectory)/intel-toolkit.tar'  # Path to the Docker container image
+              artifact: 'output'  # Name of the artifact
+
+  - stage: Deploy
+    dependsOn: build
+    condition: eq(variables.shouldDeploy, 'True')
+    jobs:
+      - job: deploy
+        displayName: Deploy
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              artifactName: 'output' 
+              downloadPath: '$(System.ArtifactsDirectory)/output' 
+          - task: Bash@3
+            displayName: Load Docker container
+            inputs:
+              workingDirectory: ./
+              targetType: "inline"
+              script: docker load -i $(System.ArtifactsDirectory)/output/*.tar
+          - task: Bash@3
+            displayName: Docker Login
+            inputs:
+              targetType: "inline"
+              script: docker login -u $(DOCKER_USERNAME) -p $(DOCKER_PASSWORD) $(DOCKER_REGISTRY)
+          - task: Bash@3
+            displayName: Push Docker Image
+            inputs:
+              workingDirectory: ./
+              targetType: "inline"
+              script: docker push $(DOCKER_REGISTRY)/intel-toolkit:$(TAG)   
+          - task: AzureAppServiceManage@0
+            displayName: Restart app Service
+            inputs:
+              azureSubscription: $(SUBSCRIPTION_NAME)
+              Action: 'Restart Azure App Service'
+              WebAppName: $(WEBAPPNAME)
+              SlotName: $(SLOT_NAME)
+
+  - stage: Build_NSIS
+    dependsOn: Build
+    condition: or(eq(variables.isTagged, 'True'), eq(variables.BUILD_EXE, 'True'))
+    jobs:
+      - job: NSIS_Build
+        pool:
+          vmImage: 'windows-latest'
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: "3.11"
+            displayName: "Use Python 3.11"
+          - task: PowerShell@2
+            displayName: Install Dependencies
+            inputs:
+              targetType: "inline"
+              script: |
+                pip install -r requirements.txt
+          - task: PowerShell@2
+            displayName: 'Install NSIS'
+            inputs:
+              targetType: 'inline'
+              script: |
+                # Install NSIS using Scoop
+                iwr -useb get.scoop.sh -outfile 'install.ps1'
+                .\install.ps1 -RunAsAdmin
+                scoop update
+                scoop bucket add extras
+                scoop install nsis
+          - task: PowerShell@2
+            displayName: 'Create exe'
+            inputs:
+              targetType: 'inline'
+              script: '.\installer_script.ps1'
+
+          - task: EsrpCodeSigning@4
+            inputs:
+              ConnectedServiceName: '$(CONNECTED_SERVICE_NAME)'
+              FolderPath: '$(System.DefaultWorkingDirectory)/build/nsis'
+              Pattern: '*.dll,*.exe'
+              signConfigType: 'inlineSignParams'
+              inlineOperation: |
+                [
+                {
+                  "KeyCode": "CP-230012",
+                  "OperationCode": "SigntoolSign",
+                  "ToolName": "sign",
+                  "ToolVersion": "1.0",
+                  "Parameters": {
+                  "OpusName": "Microsoft",
+                  "OpusInfo": "https://www.microsoft.com",
+                  "FileDigest": "/fd SHA256",
+                  "PageHash": "/NPH",
+                  "TimeStamp": "/tr \"http://rfc3161.gtm.corp.microsoft.com/TSS/HttpTspServer\" /td sha256"
+                  }
+                },
+                {
+                  "KeyCode": "CP-230012",
+                  "OperationCode": "SigntoolVerify",
+                  "ToolName": "sign",
+                  "ToolVersion": "1.0",
+                  "Parameters": {}
+                }
+                ]
+              SessionTimeout: '60'
+              MaxConcurrency: '50'
+              MaxRetryAttempts: '5'
+              PendingAnalysisWaitTimeoutMinutes: '5'
+          - task: PublishPipelineArtifact@1
+            inputs:
+              targetPath: '$(System.DefaultWorkingDirectory)/build/nsis/Intelligence_toolkit_installer.exe' 
+              artifact: 'executable'  # Name of the artifact
+
+          

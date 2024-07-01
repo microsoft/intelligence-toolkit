@@ -1,0 +1,57 @@
+# Python-related
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyz
+*.pyw
+
+# Virtual environment
+venv/
+env/
+
+# Streamlit
+.cache/
+.streamlit/*
+!.streamlit/config.toml
+
+# Other generated files
+*.log
+*.pyc
+*.pyo
+*.db
+*.sqlite
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+
+# Editor-specific files
+.vscode/
+.idea/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# IntelligenceToolkit
+outputs
+cache
+data
+legacy
+
+# Exe installer builders
+build/*
+
+app/wkhtmltox/*.exe
+/wheels
+*reports
+**/app_secrets.toml
+
+
+# Test-related
+*.coverage
+**/messages
+**/xpia*
+
+**/studio_tests/
+.venv
