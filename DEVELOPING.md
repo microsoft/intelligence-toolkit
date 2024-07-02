@@ -3,7 +3,7 @@
 ## Requirements
 
 - Python 3.11 ([Download](https://www.python.org/downloads/))
-- wkhtmltopdf 
+- wkhtmltopdf (used to generate PDF reports)
 
     - Windows: [Download wkhtmltopdf installer](https://wkhtmltopdf.org/downloads.html)
 
@@ -12,8 +12,9 @@
     - MacOS: `brew install homebrew/cask/wkhtmltopdf`   
 
 
-## Set up:
-1. Set up virtual environment:
+## Setup:
+
+1. Set up a virtual environment:
 
     `python -m venv ./venv`
 
@@ -21,16 +22,16 @@
     
     `python3 -m venv ./venv`
 
-## OpenAI
+## OpenAI API
 
-You can use OpenAI or Azure OpenAI.
-With Azure OpenAI, we use MSI instead of keys. Your account should have access to the endppoint, then run `az login` to be able to connect.
+You can use OpenAI with key-based access or Azure OpenAI with [Entra ID authentication](
+https://learn.microsoft.com/en-us/azure/ai-services/authentication#authenticate-with-microsoft-entra-id) access. For Azure OpenAI, ensure your account has access to the endpoint then run `az login` to connect.
 
-### Key
+### Key-based API access
 
-You can skip this and set this in the Settings page when running the app. 
-Or follow the instructions bellow to use environment variables.
+Use the following instructions to set up key-based API access using environment variables.
 
+This step is optional: you may also set up key-based API access via the Settings page of the app.
 
 #### Linux:
 Open /venv/bin/activate, add the following lines at the end of the file:
@@ -56,9 +57,11 @@ Open venv/Scripts/Activate.ps1, add the following lines after line 167:
     $env:AZURE_OPENAI_ENDPOINT="https://<ENDPOINT>.openai.azure.com/"
 ``` 
 
-## Running
+## Running 
 
-1. Run the activate: 
+### Running via shell
+
+1. Run the activate script: 
 
     `source venv/bin/activate`  (Linux)
 
@@ -70,11 +73,9 @@ Open venv/Scripts/Activate.ps1, add the following lines after line 167:
 
 3. Run the project using streamlit: 
 
-    
     `streamlit run app/Home.py`
 
-
-## Running with docker
+### Running with docker
 
 Download and install docker: https://www.docker.com/products/docker-desktop/
 
@@ -90,21 +91,21 @@ Open [localhost:8501](http://localhost:8501)
 
 ## Building a Windows executable
 
-**Can only build on Windows**
+**Note: can only build on Windows**
 
-We use [Pynsist](https://pynsist.readthedocs.io/en/latest/), that with [NSIS (Nullsoft Scriptable Install System)](https://nsis.sourceforge.io/) builds an executable for Windows, which packages the whole project and what it needs to run (including Python) into an .exe, that when installed will run the project on the user's localhost.
+We use [Pynsist](https://pynsist.readthedocs.io/en/latest/) together with [NSIS (Nullsoft Scriptable Install System)](https://nsis.sourceforge.io/) to build an executable for Windows. This packages the whole project and its dependencies (including Python) into an .exe, which when installed will run the Intelligence Toolkit on the user's localhost.
 
-For you to build locally, you will need to have pynsis intalled with `pip install pynsist` and install NSIS [downloading it here](https://nsis.sourceforge.io/Main_Page).
+To build the .exe locally, you need to install pynsis with `pip install pynsist` and NSIS by [downloading it here](https://nsis.sourceforge.io/Main_Page).
 
+Next, run `.\installer_script.ps1` in the root of the app to perform the following steps:
+- download wkhtmltox from the source (needed to generate PDF reports). 
+- download python-louvain wheel (which is not available on PyPI).
+- build an .exe into build\nsis.
 
-Run `.\installer_script.ps1` in the root of the app.
-It will download wkhtmltox from the source, that's needed to generate reports. 
-Then it will download python-louvain wheel, because it's not on pypi and it's needed for pynsist.
-Then it will build an .exe into build\nsis.
-
-It takes a while to finish, but then you can install it and open the shortcut to open intelligence-toolkit into http://localhost:8503
+Once finished building, you can install the application by running the .exe and open the shortcut to launch intelligence-toolkit at http://localhost:8503 in your web browser.
 
 ## Deploying with Azure
 
-- In [this tutorial](https://dev.to/keneojiteli/deploy-a-docker-app-to-app-services-on-azure-5d3h), you can check how to create the services in azure.
-    - From there, you can deploy it manually like it's written, or use [our YAML file](/.vsts-ci.yml) to automatically deploy to your environment if you configure it. 
+In [this tutorial](https://dev.to/keneojiteli/deploy-a-docker-app-to-app-services-on-azure-5d3h), you can learn how to create the necessary services in azure.
+
+From there, you can deploy it manually as described, or use [our YAML file](/.vsts-ci.yml) to automatically deploy to your environment. 
