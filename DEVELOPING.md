@@ -73,7 +73,7 @@ Open venv/Scripts/Activate.ps1, add the following lines after line 167:
 
 3. Run the project using streamlit: 
 
-    `streamlit run app/Home.py`
+    `python -m streamlit run app/Home.py`
 
 ### Running with docker
 
