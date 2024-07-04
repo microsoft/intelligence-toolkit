@@ -42,7 +42,7 @@ def main():
 
     st.subheader("OpenAI Type")
     st.markdown("Select the OpenAI type you want to use.")
-    types = ["OpenAI", "Azure OpenAI (with Azure MSI)"]
+    types = ["OpenAI", "Azure OpenAI"]
     index = types.index(openai_config.api_type) if openai_config.api_type in types else 0
     type_input = st.radio("OpenAI Type", types, index=index, disabled=is_mode_cloud)
     
@@ -50,7 +50,7 @@ def main():
         on_change(secrets_handler, openai_type_key, type_input)()
         st.rerun()
 
-    if type_input == "Azure OpenAI (with Azure MSI)":
+    if type_input == "Azure OpenAI":
         col1, col2, col3 = st.columns(3)
         with col1:
             endpoint = st.text_input("Azure OpenAI Endpoint", disabled=is_mode_cloud, type="password", value=openai_config.api_base)

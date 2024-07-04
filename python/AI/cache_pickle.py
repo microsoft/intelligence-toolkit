@@ -17,14 +17,17 @@ class CachePickle:
                 path = os.getcwd()
         self.file_path = os.path.join(path, file_name)
         if not os.path.exists(path):
-            os.mkdir(path)
+            os.makedirs(path, exist_ok=True)
             with open(self.file_path, 'wb') as f:
                 f.write(b'')
 
     def get_all(self):
         if os.path.exists(self.file_path):
             with open(self.file_path, 'rb') as f:
-                return pickle.load(f)
+                if os.path.getsize(self.file_path) > 0:
+                    return pickle.load(f)
+                else:
+                    return {}
         return {}
 
     def save(self, items: dict, max_size=0):
