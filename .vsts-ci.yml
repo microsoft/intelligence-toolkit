@@ -147,6 +147,12 @@ stages:
               versionSpec: "3.11"
             displayName: "Use Python 3.11"
           - task: PowerShell@2
+            displayName: Install Dependencies
+            inputs:
+              targetType: "inline"
+              script: |
+                pip install -r requirements.txt
+          - task: PowerShell@2
             displayName: 'Install NSIS'
             inputs:
               targetType: 'inline'
