@@ -2,6 +2,8 @@
 $exeUrl = "https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox-0.12.6-1.msvc2015-win64.exe"
 $wheelUrl = "https://github.com/dayesouza/python-louvain/raw/4be44746eca195eadc97e794b40984fd47420aa4/wheel/python_louvain-0.16-py3-none-any.whl"
 
+Write-Host "Init time: $(Get-Date)"
+
 $folderPath = "app/wkhtmltox"
 if (-not (Test-Path $folderPath)) {
     New-Item -Path $folderPath -ItemType Directory
@@ -48,4 +50,16 @@ if (Test-Path $wheelFilePath) {
     }
 }
 
+Write-Host "Copying readme file..."
+Copy-Item .\README.md "app/README.md"
+
+Write-Host "Creating installer...."
+
 pynsist .\installer.cfg
+
+#Delete readme file
+Remove-Item "app/README.md"
+
+# print end time
+Write-Host "Done!"
+Write-Host "End time: $(Get-Date)"
