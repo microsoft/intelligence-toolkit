@@ -10,7 +10,9 @@ filename = inspect.getframeinfo(inspect.currentframe()).filename
 path     = os.path.dirname(os.path.abspath(filename))
 
 def get_readme():
-    file_path = os.path.join(path,'..', 'README.md')
+    file_path = os.path.join(path, 'README.md')
+    if not os.path.exists(file_path):
+        file_path = os.path.join(path, '../README.md')
     with open(file_path, 'r') as file:
         content = file.read()
     folders = [f.name for f in os.scandir(f'{path}/workflows') if f.is_dir()]

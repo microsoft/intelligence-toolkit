@@ -73,6 +73,7 @@ stages:
       - job: build
         displayName: Build
         dependsOn: validate
+        condition: eq(variables.shouldDeploy, 'True')
         pool:
           vmImage: ubuntu-latest
         steps:
@@ -95,7 +96,8 @@ stages:
               artifact: 'output'  # Name of the artifact
 
   - stage: Deploy
-    dependsOn: build
+    dependsOn: 
+      - Build
     condition: eq(variables.shouldDeploy, 'True')
     jobs:
       - job: deploy
