@@ -17,7 +17,7 @@ schedules:
 variables:
   isMainBranch: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
   isTrueShouldDeploy: $[eq(variables['shouldDeploy'], 'True')]
-  shouldDeploy: $[or(variables['isMainBranch'], variables['isTrueShouldDeploy'])]
+  deploy: $[or(variables['isMainBranch'], variables['isTrueShouldDeploy'])]
   isTagged: startsWith(variables['Build.SourceBranch'], 'refs/tags/v')
 
 stages:
@@ -73,7 +73,7 @@ stages:
       - job: build
         displayName: Build
         dependsOn: validate
-        condition: eq(variables.shouldDeploy, 'True')
+        condition: eq(variables.deploy, 'True')
         pool:
           vmImage: ubuntu-latest
         steps:
@@ -98,7 +98,7 @@ stages:
   - stage: Deploy
     dependsOn: 
       - Build
-    condition: eq(variables.shouldDeploy, 'True')
+    condition: eq(variables.deploy, 'True')
     jobs:
       - job: deploy
         displayName: Deploy
@@ -147,12 +147,6 @@ stages:
               versionSpec: "3.11"
             displayName: "Use Python 3.11"
           - task: PowerShell@2
-            displayName: Install Dependencies
-            inputs:
-              targetType: "inline"
-              script: |
-                pip install -r requirements.txt
-          - task: PowerShell@2
             displayName: 'Install NSIS'
             inputs:
               targetType: 'inline'
@@ -168,43 +162,7 @@ stages:
             inputs:
               targetType: 'inline'
               script: '.\installer_script.ps1'
-
-          # - task: EsrpCodeSigning@4
-          #   inputs:
-          #     ConnectedServiceName: '$(CONNECTED_SERVICE_NAME)'
-          #     FolderPath: '$(System.DefaultWorkingDirectory)/build/nsis'
-          #     Pattern: '*.dll,*.exe'
-          #     signConfigType: 'inlineSignParams'
-          #     inlineOperation: |
-          #       [
-          #       {
-          #         "KeyCode": "CP-230012",
-          #         "OperationCode": "SigntoolSign",
-          #         "ToolName": "sign",
-          #         "ToolVersion": "1.0",
-          #         "Parameters": {
-          #         "OpusName": "Microsoft",
-          #         "OpusInfo": "https://www.microsoft.com",
-          #         "FileDigest": "/fd SHA256",
-          #         "PageHash": "/NPH",
-          #         "TimeStamp": "/tr \"http://rfc3161.gtm.corp.microsoft.com/TSS/HttpTspServer\" /td sha256"
-          #         }
-          #       },
-          #       {
-          #         "KeyCode": "CP-230012",
-          #         "OperationCode": "SigntoolVerify",
-          #         "ToolName": "sign",
-          #         "ToolVersion": "1.0",
-          #         "Parameters": {}
-          #       }
-          #       ]
-          #     SessionTimeout: '60'
-          #     MaxConcurrency: '50'
-          #     MaxRetryAttempts: '5'
-          #     PendingAnalysisWaitTimeoutMinutes: '5'
           - task: PublishPipelineArtifact@1
             inputs:
               targetPath: '$(System.DefaultWorkingDirectory)/build/nsis/Intelligence_toolkit_installer.exe' 
-              artifact: 'executable'  # Name of the artifact
-
-          
+              artifact: 'executable'
