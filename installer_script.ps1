@@ -50,12 +50,15 @@ if (Test-Path $wheelFilePath) {
     }
 }
 
+Write-Host "Copying readme file..."
+Copy-Item .\README.md "app/README.md"
+
 Write-Host "Creating installer...."
 
 pynsist .\installer.cfg
 
-Write-Host "Copying readme file..."
-Copy-Item .\README.md .\build\nsis\pkgs\app\README.md
+#Delete readme file
+Remove-Item "app/README.md"
 
 # print end time
 Write-Host "Done!"
