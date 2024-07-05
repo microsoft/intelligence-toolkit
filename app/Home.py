@@ -4,20 +4,23 @@ import os
 import streamlit as st
 import util.mermaid as mermaid
 from components.app_loader import load_multipage_app
+import inspect, os.path
 
+filename = inspect.getframeinfo(inspect.currentframe()).filename
+path     = os.path.dirname(os.path.abspath(filename))
 
 def get_readme():
-    file_path = os.path.join('./README.md')
+    file_path = os.path.join(path,'..', 'README.md')
     with open(file_path, 'r') as file:
         content = file.read()
-    folders = [f.name for f in os.scandir('app/workflows') if f.is_dir()]
+    folders = [f.name for f in os.scandir(f'{path}/workflows') if f.is_dir()]
     for f in folders:
-        content = content.replace(f'/app/workflows/{f}/README.md',f'/{"_".join(word.capitalize() for word in f.split("_"))}')
+        content = content.replace(f'{path}/workflows/{f}/README.md',f'/{"_".join(word.capitalize() for word in f.split("_"))}')
     return content.split('## Diving Deeper')[0]
 
     
 def main():
-    st.set_page_config(layout="wide", initial_sidebar_state="expanded", page_icon="app/myapp.ico", page_title='Intelligence Toolkit | Home')
+    st.set_page_config(layout="wide", initial_sidebar_state="expanded", page_icon=f"{path}/myapp.ico", page_title='Intelligence Toolkit | Home')
     load_multipage_app()
     transparency_faq = get_readme()
 

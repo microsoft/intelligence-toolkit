@@ -48,4 +48,12 @@ if (Test-Path $wheelFilePath) {
     }
 }
 
+Write-Host "Copy readme file."
+
 pynsist .\installer.cfg
+
+if (-not (Test-Path .\build\nsis\pkgs)) {
+    New-Item -Path .\build\nsis\pkgs -ItemType Directory
+}
+
+Copy-Item .\README.md .\build\nsis\pkgs\README.md
