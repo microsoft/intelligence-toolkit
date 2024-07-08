@@ -4,6 +4,7 @@
 import os
 
 from .defaults import (
+    DEFAULT_AZ_AUTH_TYPE,
     DEFAULT_AZURE_LLM_MODEL,
     DEFAULT_LLM_MAX_TOKENS,
     DEFAULT_LLM_MODEL,
@@ -31,6 +32,7 @@ class OpenAIConfiguration():
     _temperature: float | None
     _max_tokens: int | None
     _api_type: str
+    _az_auth_type: str
 
     def __init__(
         self,
@@ -44,6 +46,7 @@ class OpenAIConfiguration():
         self._api_version = config.get("api_version", self._get_azure_openai_version())
         self._temperature = config.get("temperature", DEFAULT_TEMPERATURE)
         self._max_tokens = config.get("max_tokens", DEFAULT_LLM_MAX_TOKENS)
+        self._az_auth_type = config.get("az_auth_type", DEFAULT_AZ_AUTH_TYPE)
         self._api_type = config.get("api_type", oai_type)
 
 
@@ -98,3 +101,8 @@ class OpenAIConfiguration():
     def api_type(self) -> str | None:
         """Type of the AI connection."""
         return self._api_type
+    
+    @property
+    def az_auth_type(self) -> str:
+        """Type of the Azure OpenAI connection."""
+        return self._az_auth_type

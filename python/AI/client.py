@@ -4,8 +4,9 @@
 import logging
 from typing import List
 
-from openai import AzureOpenAI, OpenAI
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+from openai import AzureOpenAI, OpenAI
+
 from .classes import LLMCallback
 from .defaults import API_BASE_REQUIRED_FOR_AZURE, DEFAULT_EMBEDDING_MODEL
 from .openai_configuration import OpenAIConfiguration
@@ -31,16 +32,24 @@ class OpenAIClient:
                 api_base,
             )
 
-            token_provider = get_bearer_token_provider(
-                DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
-            )
+            if self.configuration.az_auth_type == 'Managed Identity':
+                token_provider = get_bearer_token_provider(
+                    DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
+                )
 
-            self._client = AzureOpenAI(
-                api_version=self.configuration.api_version,
-                # Azure-Specifics
-                azure_ad_token_provider=token_provider,
-                azure_endpoint=api_base,
-            )
+                self._client = AzureOpenAI(
+                    api_version=self.configuration.api_version,
+                    # Azure-Specifics
+                    azure_ad_token_provider=token_provider,
+                    azure_endpoint=api_base,
+                )
+            else:
+                self._client = AzureOpenAI(
+                    api_version=self.configuration.api_version,
+                    # Azure-Specifics
+                    azure_endpoint=api_base,
+                    api_key=self.configuration.api_key,
+                )
         else:
             log.info("Creating OpenAI client")
             self._client = OpenAI(

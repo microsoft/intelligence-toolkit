@@ -255,7 +255,8 @@ def create(sv: vars.SessionVariables, workflow = None):
 
                 callback = classes.BatchEmbeddingCallback()
                 callback.on_embedding_batch_change = on_embedding_batch_change
-                embeddings = functions.embedder.embed_store_many(texts,[callback], sv_home.save_cache.value)
+                functions_embedder = functions.embedder()
+                embeddings = functions_embedder.embed_store_many(texts,[callback], sv_home.save_cache.value)
                 pb.empty()
                 
                 vals = [(n, t, e) for (n, t), e in zip(text_types, embeddings)]

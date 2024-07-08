@@ -18,9 +18,15 @@ from python.AI.embedder import Embedder
 from python.AI.text_splitter import TextSplitter
 
 sv_home = SessionVariables('home')
-ai_configuration = UIOpenAIConfiguration().get_configuration()
 
-embedder = Embedder(ai_configuration, config.cache_dir)
+
+def embedder():
+    try:
+        ai_configuration = UIOpenAIConfiguration().get_configuration()
+        return Embedder(ai_configuration, config.cache_dir)
+    except Exception as e:
+        st.error(f'Error creating connection: {e}')
+        st.stop()
 
 def chunk_files(sv, files):
     pb = st.progress(0, 'Chunking files...')
@@ -52,11 +58,11 @@ def chunk_files(sv, files):
                 for chunk in chunks:
                     file_chunks.append((file, chunk))
                 file.set_text(doc_text)
-
+    functions_embedder = embedder()
     for cx, (file, chunk) in enumerate(file_chunks):
         pb.progress((cx+1) / len(file_chunks), f'Embedding chunk {cx+1} of {len(file_chunks)}...')
         formatted_chunk = chunk.replace("\n", " ")
-        chunk_vec = embedder.embed_store_one(formatted_chunk, sv_home.save_cache.value)
+        chunk_vec = functions_embedder.embed_store_one(formatted_chunk, sv_home.save_cache.value)
         file.add_chunk(chunk, np.array(chunk_vec), cx+1)   
     pb.empty()
 

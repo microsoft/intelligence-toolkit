@@ -7,6 +7,7 @@ DEFAULT_ENCODING = "cl100k_base"
 DEFAULT_LLM_MODEL = "gpt-4o"
 DEFAULT_AZURE_LLM_MODEL = "gpt-4o"
 DEFAULT_LLM_MAX_TOKENS = 4000
+DEFAULT_AZ_AUTH_TYPE = "Managed Identity"
 #
 # Text Embedding Parameters
 DEFAULT_EMBEDDING_MODEL = "text-embedding-ada-002"

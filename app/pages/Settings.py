@@ -8,6 +8,7 @@ from util.enums import Mode
 from util.openai_wrapper import (
     UIOpenAIConfiguration,
     key,
+    openai_azure_auth_type,
     openai_azure_model_key,
     openai_endpoint_key,
     openai_type_key,
@@ -33,7 +34,6 @@ def main():
     st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_icon="app/myapp.ico", page_title='Intelligence Toolkit | Settings')
     load_multipage_app()
     openai_config = UIOpenAIConfiguration().get_configuration()
-    print('openai_config', openai_config.api_type)
     st.header("Settings")
     secrets_handler = SecretsHandler()
     
@@ -51,6 +51,14 @@ def main():
         st.rerun()
 
     if type_input == "Azure OpenAI":
+        types_az = ["Managed Identity", "Azure Key"]
+        index_az = types_az.index(openai_config.az_auth_type) if openai_config.az_auth_type in types_az else 0
+        type_input_az = st.radio("Azure OpenAI Auth Type", types_az, index=index_az, disabled=is_mode_cloud)
+        if type_input_az != openai_config.az_auth_type:
+            print('type_input_az', type_input_az)
+            print('openai_config.az_auth_type', openai_config.az_auth_type)
+            on_change(secrets_handler, openai_azure_auth_type, type_input_az)()
+            st.rerun()
         col1, col2, col3 = st.columns(3)
         with col1:
             endpoint = st.text_input("Azure OpenAI Endpoint", disabled=is_mode_cloud, type="password", value=openai_config.api_base)
@@ -69,9 +77,9 @@ def main():
             if version != openai_config.api_version:
                 on_change(secrets_handler, openai_version_key, version)()
                 st.rerun()
-    else:
+    if type_input == "OpenAI" or type_input_az != "Managed Identity":
         placeholder = "Enter key here..."
-        secret_input = st.text_input('Enter your OpenAI key', type="password", disabled=is_mode_cloud, placeholder=placeholder, value=secret)
+        secret_input = st.text_input('Enter your key', type="password", disabled=is_mode_cloud, placeholder=placeholder, value=secret)
         
         if secret and len(secret) > 0:
             st.info("Your key is saved securely.")

@@ -10,7 +10,6 @@ import numpy as np
 import scipy.spatial.distance
 import streamlit as st
 import workflows.question_answering.classes as classes
-import workflows.question_answering.config as config
 import workflows.question_answering.functions as functions
 import workflows.question_answering.prompts as prompts
 from util import ui_components
@@ -110,8 +109,10 @@ def create(sv: SessionVariables, workflow = None):
             iteration = 0
             source_counts = Counter()
             used_chunks = set()
+            functions_embedder = functions.embedder()
+
             while True:
-                qe = np.array(functions.embedder.embed_store_one(question, sv_home.save_cache.value))
+                qe = np.array(functions_embedder.embed_store_one(question, sv_home.save_cache.value))
                 iteration += 1
                 cosine_distances = sorted([(t, c, scipy.spatial.distance.cosine(qe, v)) for (t, c, v) in all_units], key=lambda x:x[2], reverse=False)
                 chunk_index = sv.answering_target_matches.value
@@ -185,6 +186,7 @@ def create(sv: SessionVariables, workflow = None):
                 qas_raw = ui_components.generate_text(messages, callbacks=[on_callback])
                 status_history += qas_raw + '<br/><br/>'
                 try:
+                    functions_embedder = functions.embedder()
                     qas = json.loads(qas_raw)
                     for qa in qas:
                         q = qa['question']
@@ -192,8 +194,8 @@ def create(sv: SessionVariables, workflow = None):
                         raw_refs = qa['source']
                         file_page_refs = [tuple([int(x[1:]) for x in r.split(';')]) for r in raw_refs]
                         
-                        q_vec = np.array(functions.embedder.embed_store_one(q, sv_home.save_cache.value))
-                        a_vec = np.array(functions.embedder.embed_store_one(a, sv_home.save_cache.value))
+                        q_vec = np.array(functions_embedder.embed_store_one(q, sv_home.save_cache.value))
+                        a_vec = np.array(functions_embedder.embedder.embed_store_one(a, sv_home.save_cache.value))
 
                         qid = sv.answering_next_q_id.value
                         sv.answering_next_q_id.value += 1
@@ -209,7 +211,7 @@ def create(sv: SessionVariables, workflow = None):
                         if t == 'chunk' and c[0].id == f.id and c[1] == cx:
                             all_units.remove((t, c, v))
 
-                    status_history += f'Augmenting user question with partial answers:<br/>'
+                    status_history += 'Augmenting user question with partial answers:<br/>'
                     new_question = functions.update_question(sv, sv.answering_question_history.value, new_questions, lazy_answering_placeholder, status_history)
                     status_history += new_question + '<br/><br/>'
                     sv.answering_question_history.value.append(new_question)
