@@ -126,13 +126,6 @@ stages:
               workingDirectory: ./
               targetType: "inline"
               script: docker push $(DOCKER_REGISTRY)/intel-toolkit:$(TAG)   
-          - task: AzureAppServiceManage@0
-            displayName: Restart app Service
-            inputs:
-              azureSubscription: $(SUBSCRIPTION_NAME)
-              Action: 'Restart Azure App Service'
-              WebAppName: $(WEBAPPNAME)
-              SlotName: $(SLOT_NAME)
 
   - stage: Build_NSIS
     dependsOn: Build
