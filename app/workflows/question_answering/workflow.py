@@ -195,7 +195,7 @@ def create(sv: SessionVariables, workflow = None):
                         file_page_refs = [tuple([int(x[1:]) for x in r.split(';')]) for r in raw_refs]
                         
                         q_vec = np.array(functions_embedder.embed_store_one(q, sv_home.save_cache.value))
-                        a_vec = np.array(functions_embedder.embedder.embed_store_one(a, sv_home.save_cache.value))
+                        a_vec = np.array(functions_embedder.embed_store_one(a, sv_home.save_cache.value))
 
                         qid = sv.answering_next_q_id.value
                         sv.answering_next_q_id.value += 1

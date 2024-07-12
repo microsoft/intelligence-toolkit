@@ -6,24 +6,17 @@ import os
 import altair as alt
 import streamlit as st
 import workflows.attribute_patterns.variables as vars
-from st_aggrid import (
-    AgGrid,
-    ColumnsAutoSizeMode,
-    DataReturnMode,
-    GridOptionsBuilder,
-    GridUpdateMode,
-)
+from st_aggrid import (AgGrid, ColumnsAutoSizeMode, DataReturnMode,
+                       GridOptionsBuilder, GridUpdateMode)
 from util import ui_components
 
 from python.attribute_patterns import prompts
 from python.attribute_patterns.embedding import generate_embedding
-from python.attribute_patterns.model import (
-    compute_attribute_counts,
-    create_time_series_df,
-    detect_patterns,
-    generate_graph_model,
-    prepare_graph,
-)
+from python.attribute_patterns.model import (compute_attribute_counts,
+                                             create_time_series_df,
+                                             detect_patterns,
+                                             generate_graph_model,
+                                             prepare_graph)
 from python.attribute_patterns.record_counter import RecordCounter
 
 
@@ -120,8 +113,11 @@ def create(sv: vars.SessionVariables, workflow):
                     
                     ) # type: ignore
                
-                selected_pattern = response['selected_rows'][0]['pattern'] if len(response['selected_rows']) > 0 else sv.attribute_selected_pattern.value
-                selected_pattern_period = response['selected_rows'][0]['period'] if len(response['selected_rows']) > 0 else sv.attribute_selected_pattern_period.value
+                selected_pattern=sv.attribute_selected_pattern.value
+                selected_pattern_period=sv.attribute_selected_pattern_period.value
+                if response and response.selected_rows is not None:
+                    selected_pattern = response.selected_rows["pattern"].item()
+                    selected_pattern_period = response.selected_rows['period'].item()
                 
                 if selected_pattern != '':
                     if selected_pattern != sv.attribute_selected_pattern.value:

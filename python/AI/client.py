@@ -58,7 +58,9 @@ class OpenAIClient:
         return self._client
 
     def generate_chat(self, messages: List[str], stream: bool = True, callbacks: List[LLMCallback] = None):
+        print('type', self.configuration.api_type)
         try:
+            print('type', self.configuration.api_type)
             response = self._client.chat.completions.create(
                 model=self.configuration.model,
                 temperature=self.configuration.temperature,
@@ -81,6 +83,7 @@ class OpenAIClient:
                                 callback.on_llm_new_token(show)
                 return full_response
             
+            print('response', response)
             return response.choices[0].message.content or ""  # type: ignore
         except Exception as e:
             print(f'Error validating report: {e}')
