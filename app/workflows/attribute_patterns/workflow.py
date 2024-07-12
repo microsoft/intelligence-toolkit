@@ -34,12 +34,14 @@ def get_intro():
 
 
 def create(sv: vars.SessionVariables, workflow):
-    intro_tab, uploader_tab, detect_tab, explain_tab = st.tabs([
-        "Attribute patterns workflow:",
-        "Create graph model",
-        "Detect patterns",
-        "Generate AI pattern reports",
-    ])
+    intro_tab, uploader_tab, detect_tab, explain_tab = st.tabs(
+        [
+            "Attribute patterns workflow:",
+            "Create graph model",
+            "Detect patterns",
+            "Generate AI pattern reports",
+        ]
+    )
     df = None
     with intro_tab:
         st.markdown(get_intro())
@@ -202,11 +204,16 @@ def create(sv: vars.SessionVariables, workflow):
                     columns_auto_size_mode=ColumnsAutoSizeMode.FIT_ALL_COLUMNS_TO_VIEW,
                 )  # type: ignore
 
-                selected_pattern = sv.attribute_selected_pattern.value
-                selected_pattern_period = sv.attribute_selected_pattern_period.value
-                if response and response.selected_rows is not None:
-                    selected_pattern = response.selected_rows["pattern"].item()
-                    selected_pattern_period = response.selected_rows["period"].item()
+                selected_pattern = (
+                    response["selected_rows"][0]["pattern"]
+                    if len(response["selected_rows"]) > 0
+                    else sv.attribute_selected_pattern.value
+                )
+                selected_pattern_period = (
+                    response["selected_rows"][0]["period"]
+                    if len(response["selected_rows"]) > 0
+                    else sv.attribute_selected_pattern_period.value
+                )
 
                 if selected_pattern != "":
                     if selected_pattern != sv.attribute_selected_pattern.value:
