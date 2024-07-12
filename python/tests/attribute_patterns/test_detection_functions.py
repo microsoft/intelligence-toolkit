@@ -38,52 +38,60 @@ def test_calculate_euclidean_distance():
     calculated_distance = _calculate_euclidean_distance(vec1, vec2)
     assert calculated_distance == expected_distance
 
+
 def test_compute_node_pair_distances():
-    period = 'period1'
+    period = "period1"
     attribute_period_embeddings = {
-        'period1': [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6], [0.7, 0.8, 0.9]],
-        'period2': [[0.2, 0.3, 0.4], [0.5, 0.6, 0.7], [0.8, 0.9, 1.0]]
+        "period1": [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6], [0.7, 0.8, 0.9]],
+        "period2": [[0.2, 0.3, 0.4], [0.5, 0.6, 0.7], [0.8, 0.9, 1.0]],
     }
-    sorted_nodes = ['node1', 'node2', 'node3']
-    node_to_ix = {'node1': 0, 'node2': 1, 'node3': 2}
-
-    expected_distances = {('node1', 'node2'): (0.025368153802923787, 0.5196152422706632), ('node1', 'node3'): (0.0405880544333298, 1.0392304845413265), ('node2', 'node3'): (0.001809107314273306, 0.5196152422706632)}
-
-
-    distances = _compute_node_pair_distances(period, attribute_period_embeddings, sorted_nodes, node_to_ix)
-    assert distances == expected_distances
-
-def test_create_centroid_dists():
-    node_to_centroid = {
-        'node1': [1, 2, 3],
-        'node2': [4, 5, 6],
-        'node3': [7, 8, 9]
-    }
+    sorted_nodes = ["node1", "node2", "node3"]
+    node_to_ix = {"node1": 0, "node2": 1, "node3": 2}
 
     expected_distances = {
-        ('node1', 'node2'): (0.025368153802923787, 5.196152422706632),
-        ('node1', 'node3'): (0.04058805443332969, 10.392304845413264),
-        ('node2', 'node3'): (0.001809107314273084, 5.196152422706632),
+        ("node1", "node2"): (0.025368153802923787, 0.5196152422706632),
+        ("node1", "node3"): (0.0405880544333298, 1.0392304845413265),
+        ("node2", "node3"): (0.001809107314273306, 0.5196152422706632),
+    }
+
+    distances = _compute_node_pair_distances(
+        period, attribute_period_embeddings, sorted_nodes, node_to_ix
+    )
+    assert distances == expected_distances
+
+
+def test_create_centroid_dists():
+    node_to_centroid = {"node1": [1, 2, 3], "node2": [4, 5, 6], "node3": [7, 8, 9]}
+
+    expected_distances = {
+        ("node1", "node2"): (0.025368153802923787, 5.196152422706632),
+        ("node1", "node3"): (0.04058805443332969, 10.392304845413264),
+        ("node2", "node3"): (0.001809107314273084, 5.196152422706632),
     }
 
     distances = _create_centroid_dists(node_to_centroid)
     assert distances == expected_distances
 
-# def test_create_period_shifts(mocker):
-#     node_to_centroid = {'node1': [1, 2, 3], 'node2': [4, 5, 6]}
-#     attribute_period_embeddings = {
-#         'period1': [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6], [0.7, 0.8, 0.9]],
-#         'period2': [[0.2, 0.3, 0.4], [0.5, 0.6, 0.7], [0.8, 0.9, 1.0]]
-#     }   
-#     attribute_dynamic_df = pd.DataFrame({'Period': ['period1', 'period2']})
-#     create_centroid_dists_mock = mocker.patch("python.attribute_patterns.detection_functions._create_centroid_dists")
-#     create_centroid_dists_mock.return_value = {('node1', 'node2'): (0.3, 0.4)}
-    
-#     result = create_period_shifts(node_to_centroid, attribute_period_embeddings, attribute_dynamic_df)
-    
-#     expected_result = {
-#         'period1': {('node1', 'node2'):  (0.2746318461970762, -0.11961524227066322)},
-#         'period2': {('node1', 'node2'): ( 0.29149992451511536, -0.11961524227066311)}
-#     }
-    
-#     assert result == expected_result
+
+def test_create_period_shifts(mocker):
+    node_to_centroid = {"node1": [1, 2, 3], "node2": [4, 5, 6]}
+    attribute_period_embeddings = {
+        "period1": [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6], [0.7, 0.8, 0.9]],
+        "period2": [[0.2, 0.3, 0.4], [0.5, 0.6, 0.7], [0.8, 0.9, 1.0]],
+    }
+    attribute_dynamic_df = pd.DataFrame({"Period": ["period1", "period2"]})
+    create_centroid_dists_mock = mocker.patch(
+        "python.attribute_patterns.detection_functions._create_centroid_dists"
+    )
+    create_centroid_dists_mock.return_value = {("node1", "node2"): (0.3, 0.4)}
+
+    result = create_period_shifts(
+        node_to_centroid, attribute_period_embeddings, attribute_dynamic_df
+    )
+
+    expected_result = {
+        "period1": {("node1", "node2"): (0.2746318461970762, -0.11961524227066322)},
+        "period2": {("node1", "node2"): (0.29149992451511536, -0.11961524227066311)},
+    }
+
+    assert result == expected_result

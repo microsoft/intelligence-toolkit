@@ -1,5 +1,8 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-from workflows.security.metaprompts import do_not_harm_question_answering, do_not_disrespect_context
+from workflows.security.metaprompts import (
+    do_not_disrespect_context,
+    do_not_harm_question_answering,
+)
 
 extraction_system_prompt = """\
 You are a helpful assistant extracting question-answer pairs and related entities from an input text.
@@ -19,7 +22,7 @@ Do not begin the response with ```json or end it with ```.
 
 
 """.join([do_not_harm_question_answering, do_not_disrespect_context])
-                        
+
 extraction_user_prompt = """\
 File ID: {file_id}
 
@@ -66,5 +69,8 @@ Relevant questions:
 list_prompts = {
     "report_prompt": report_prompt,
     "user_prompt": user_prompt,
-    "safety_prompt":  ' '.join([do_not_harm_question_answering, do_not_disrespect_context])
+    "safety_prompt": " ".join([
+        do_not_harm_question_answering,
+        do_not_disrespect_context,
+    ]),
 }

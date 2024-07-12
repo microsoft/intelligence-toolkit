@@ -8,24 +8,27 @@ import streamlit as st
 from javascript.styles import add_styles
 
 
-def load_multipage_app(sv = None):
-    #Load user if logged in
+def load_multipage_app(sv=None):
+    # Load user if logged in
     user = au.app_user()
     user.view_get_info()
 
-    #Terminate app (if needed for .exe)
+    # Terminate app (if needed for .exe)
     terminator = at.app_terminator()
     terminator.terminate_app_btn()
 
-    #Protected mode
+    # Protected mode
     app_mode = am.app_mode()
     app_mode.config()
 
     add_styles()
 
     if sv:
-        reset_workflow_button = st.sidebar.button(":warning: Reset workflow", use_container_width=True, help='Clear all data on this workflow and start over. CAUTION: This action can\'t be undone.')
+        reset_workflow_button = st.sidebar.button(
+            ":warning: Reset workflow",
+            use_container_width=True,
+            help="Clear all data on this workflow and start over. CAUTION: This action can't be undone.",
+        )
         if reset_workflow_button:
             sv.reset_workflow()
             st.rerun()
-

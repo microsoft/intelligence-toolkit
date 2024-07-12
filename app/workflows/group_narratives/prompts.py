@@ -35,5 +35,5 @@ Where possible, the text should add numeric counts, ranks, and deltas in parenth
 list_prompts = {
     "report_prompt": report_prompt,
     "user_prompt": user_prompt,
-    "safety_prompt":  ' '.join([do_not_harm])
+    "safety_prompt": " ".join([do_not_harm]),
 }

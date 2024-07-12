@@ -19,7 +19,8 @@ def _non_blank(value: str | None) -> str | None:
     stripped = value.strip()
     return None if stripped == "" else value
 
-class OpenAIConfiguration():
+
+class OpenAIConfiguration:
     """OpenAI Configuration class definition."""
 
     # Core Configuration
@@ -36,12 +37,19 @@ class OpenAIConfiguration():
 
     def __init__(
         self,
-        config: dict = {},
+        config: dict | None = None,
     ):
         """Init method definition."""
+        if config is None:
+            config = {}
         oai_type = self._get_openai_type()
         self._api_key = config.get("api_key", self._get_api_key())
-        self._model = config.get("model", DEFAULT_LLM_MODEL if oai_type == 'OpenAI' else self._get_azure_openai_model())
+        self._model = config.get(
+            "model",
+            DEFAULT_LLM_MODEL
+            if oai_type == "OpenAI"
+            else self._get_azure_openai_model(),
+        )
         self._api_base = config.get("api_base", self._get_azure_api_base())
         self._api_version = config.get("api_version", self._get_azure_openai_version())
         self._temperature = config.get("temperature", DEFAULT_TEMPERATURE)
@@ -49,21 +57,20 @@ class OpenAIConfiguration():
         self._az_auth_type = config.get("az_auth_type", DEFAULT_AZ_AUTH_TYPE)
         self._api_type = config.get("api_type", oai_type)
 
-
     def _get_openai_type(self):
-        return os.environ['OPENAI_TYPE'] if 'OPENAI_TYPE' in os.environ else "Azure OpenAI"
+        return os.environ.get("OPENAI_TYPE", "Azure OpenAI")
 
     def _get_azure_openai_version(self):
-        return os.environ['AZURE_OPENAI_VERSION'] if 'AZURE_OPENAI_VERSION' in os.environ else DEFAULT_OPENAI_VERSION
-    
+        return os.environ.get("AZURE_OPENAI_VERSION", DEFAULT_OPENAI_VERSION)
+
     def _get_azure_openai_model(self):
-        return os.environ['AZURE_OPENAI_MODEL'] if 'AZURE_OPENAI_MODEL' in os.environ else DEFAULT_AZURE_LLM_MODEL
+        return os.environ.get("AZURE_OPENAI_MODEL", DEFAULT_AZURE_LLM_MODEL)
 
     def _get_azure_api_base(self):
-        return os.environ['AZURE_OPENAI_ENDPOINT'] if 'AZURE_OPENAI_ENDPOINT' in os.environ else None
+        return os.environ.get("AZURE_OPENAI_ENDPOINT", None)
 
     def _get_api_key(self):
-        return os.environ['OPENAI_API_KEY'] if 'OPENAI_API_KEY' in os.environ else '' 
+        return os.environ.get("OPENAI_API_KEY", "")
 
     @property
     def api_key(self) -> str:
@@ -96,12 +103,12 @@ class OpenAIConfiguration():
     def max_tokens(self) -> int | None:
         """Max tokens property definition."""
         return self._max_tokens
-    
+
     @property
     def api_type(self) -> str | None:
         """Type of the AI connection."""
         return self._api_type
-    
+
     @property
     def az_auth_type(self) -> str:
         """Type of the Azure OpenAI connection."""

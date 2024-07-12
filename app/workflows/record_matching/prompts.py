@@ -33,5 +33,5 @@ Do not output ``` or the column headers - start directly with the row values and
 list_prompts = {
     "report_prompt": report_prompt,
     "user_prompt": user_prompt,
-    "safety_prompt":  ' '.join([do_not_harm, do_not_disrespect_context])
+    "safety_prompt": " ".join([do_not_harm, do_not_disrespect_context]),
 }

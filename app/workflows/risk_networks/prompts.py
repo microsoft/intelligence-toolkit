@@ -32,7 +32,7 @@ Network edges:
 
 {network_edges}
 
-Risk exposure: 
+Risk exposure:
 
 {exposure}
 
@@ -58,5 +58,5 @@ if there is a selected entity, or else:
 list_prompts = {
     "report_prompt": report_prompt,
     "user_prompt": user_prompt,
-    "safety_prompt":  ' '.join([do_not_disrespect_context])
+    "safety_prompt": " ".join([do_not_disrespect_context]),
 }

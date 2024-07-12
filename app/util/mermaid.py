@@ -1,5 +1,6 @@
 import streamlit.components.v1 as components
 
+
 def mermaid(code: str, height: int) -> None:
     components.html(
         f"""
@@ -12,7 +13,5 @@ def mermaid(code: str, height: int) -> None:
             mermaid.initialize({{ startOnLoad: true }});
         </script>
         """,
-        height=height
+        height=height,
     )
-
-

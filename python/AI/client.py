@@ -2,7 +2,6 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 import logging
-from typing import List
 
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from openai import AzureOpenAI, OpenAI
@@ -16,14 +15,18 @@ log = logging.getLogger(__name__)
 
 class OpenAIClient:
     """OpenAI Client class definition."""
+
     _client = None
-    def __init__(self, configuration: OpenAIConfiguration = OpenAIConfiguration()) -> None:
+
+    def __init__(
+        self, configuration: OpenAIConfiguration = OpenAIConfiguration()
+    ) -> None:
         self.configuration = configuration
         self.create_openai_client()
 
     def create_openai_client(self) -> None:
         """Create a new OpenAI client instance."""
-        if self.configuration.api_type == 'Azure OpenAI':
+        if self.configuration.api_type == "Azure OpenAI":
             api_base = self.configuration.api_base
             if api_base is None:
                 raise ValueError(API_BASE_REQUIRED_FOR_AZURE)
@@ -32,9 +35,10 @@ class OpenAIClient:
                 api_base,
             )
 
-            if self.configuration.az_auth_type == 'Managed Identity':
+            if self.configuration.az_auth_type == "Managed Identity":
                 token_provider = get_bearer_token_provider(
-                    DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
+                    DefaultAzureCredential(),
+                    "https://cognitiveservices.azure.com/.default",
                 )
 
                 self._client = AzureOpenAI(
@@ -57,10 +61,15 @@ class OpenAIClient:
             )
         return self._client
 
-    def generate_chat(self, messages: List[str], stream: bool = True, callbacks: List[LLMCallback] = None):
-        print('type', self.configuration.api_type)
+    def generate_chat(
+        self,
+        messages: list[str],
+        stream: bool = True,
+        callbacks: list[LLMCallback] | None = None,
+    ):
+        print("type", self.configuration.api_type)
         try:
-            print('type', self.configuration.api_type)
+            print("type", self.configuration.api_type)
             response = self._client.chat.completions.create(
                 model=self.configuration.model,
                 temperature=self.configuration.temperature,
@@ -78,20 +87,25 @@ class OpenAIClient:
                         if callbacks:
                             show = full_response
                             if len(delta) > 0:
-                                show += '▌'
+                                show += "▌"
                             for callback in callbacks:
                                 callback.on_llm_new_token(show)
                 return full_response
-            
-            print('response', response)
+
+            print("response", response)
             return response.choices[0].message.content or ""  # type: ignore
         except Exception as e:
-            print(f'Error validating report: {e}')
-            raise Exception(f'Problem in OpenAI response. {e}')
-        
-    def generate_embedding(self, text: str, model: str = DEFAULT_EMBEDDING_MODEL) -> List[float]:
-        embedding = self._client.embeddings.create(input = text, model=model)
+            print(f"Error validating report: {e}")
+            msg = f"Problem in OpenAI response. {e}"
+            raise Exception(msg)
+
+    def generate_embedding(
+        self, text: str, model: str = DEFAULT_EMBEDDING_MODEL
+    ) -> list[float]:
+        embedding = self._client.embeddings.create(input=text, model=model)
         return embedding.data[0].embedding
-    
-    def generate_embeddings(self, text: List[str], model: str = DEFAULT_EMBEDDING_MODEL) -> List[float]:
-        return self._client.embeddings.create(input = text, model=model)
+
+    def generate_embeddings(
+        self, text: list[str], model: str = DEFAULT_EMBEDDING_MODEL
+    ) -> list[float]:
+        return self._client.embeddings.create(input=text, model=model)

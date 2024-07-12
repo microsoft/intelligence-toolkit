@@ -1,13 +1,15 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-from typing import Any
-import streamlit as st
 import traceback
+from typing import Any
+
+import streamlit as st
+
 
 class SessionVariable:
-    def __init__(self, default: Any="", prefix:str=""):
+    def __init__(self, default: Any = "", prefix: str = ""):
         """Create a managed session variable with a default value and a prefix.
         The prefix is used to avoid collisions between variables with the same name.
-        
+
         To modify the variable use the value property, for example: `name.value = "Bob"`
         To get the value use the variable itself, for example: `name`
 
@@ -16,7 +18,7 @@ class SessionVariable:
         the same variable name and prefix.
         """
         (_, _, _, text) = traceback.extract_stack()[-2]
-        var_name = text[:text.find('=')].strip()
+        var_name = text[: text.find("=")].strip()
 
         self._key = "_".join(arg for arg in [prefix, var_name] if arg != "")
         self._value = default
@@ -31,7 +33,7 @@ class SessionVariable:
 
     @property
     def value(self) -> Any:
-        return st.session_state[self._key] 
+        return st.session_state[self._key]
 
     @value.setter
     def value(self, value: Any) -> None:
