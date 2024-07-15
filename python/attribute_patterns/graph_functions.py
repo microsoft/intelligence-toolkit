@@ -21,7 +21,7 @@ def convert_edge_df_to_graph(edge_df):
 def create_edge_df_from_atts(all_atts, pdf, mi):
     edge_counter = Counter()
     att_counter = Counter()
-    for ix, row in pdf.iterrows():
+    for _, row in pdf.iterrows():
         atts = row["Full Attribute"]
         edges = [(a, b) if a < b else (b, a) for a, b in combinations(atts, 2)]
         edge_counter.update(edges)
