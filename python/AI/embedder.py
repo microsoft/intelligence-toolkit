@@ -29,7 +29,9 @@ class Embedder:
     def embed_store_one(self, text: str, cache_data=True):
         text_hashed = hash_text(text)
         loaded_embeddings = self.pickle.get_all() if cache_data else {}
-        embedding = self.pickle.get(text_hashed, loaded_embeddings) if cache_data else {}
+        embedding = (
+            self.pickle.get(text_hashed, loaded_embeddings) if cache_data else {}
+        )
 
         if not embedding:
             tokens = get_token_count(text)
@@ -53,7 +55,9 @@ class Embedder:
         count = 0
         for ix, text in enumerate(texts):
             text_hashed = hash_text(text)
-            embedding = self.pickle.get(text_hashed, loaded_embeddings) if cache_data else {}
+            embedding = (
+                self.pickle.get(text_hashed, loaded_embeddings) if cache_data else {}
+            )
             if not len(embedding):
                 new_texts.append((ix, text))
             else:

@@ -20,7 +20,7 @@ class UIOpenAIConfiguration:
         self._secrets = SecretsHandler()
 
     def get_configuration(self):
-        type = self._secrets.get_secret(openai_type_key) or None
+        api_type = self._secrets.get_secret(openai_type_key) or None
         version = self._secrets.get_secret(openai_version_key) or None
         endpoint = self._secrets.get_secret(openai_endpoint_key) or None
         secret_key = self._secrets.get_secret(key) or None
@@ -28,7 +28,7 @@ class UIOpenAIConfiguration:
         az_auth_type = self._secrets.get_secret(openai_azure_auth_type) or None
 
         config = {
-            "api_type": type,
+            "api_type": api_type,
             "api_version": version,
             "api_base": endpoint,
             "api_key": secret_key,

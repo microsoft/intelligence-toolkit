@@ -3,7 +3,7 @@ import streamlit as st
 import workflows.attribute_patterns.variables as vars
 import workflows.attribute_patterns.workflow
 from components.app_loader import load_multipage_app
-from util.helper_fn import appInDevMode
+from util.helper_fn import app_in_dev_mode
 
 workflow = "attribute_patterns"
 
@@ -21,7 +21,7 @@ def main() -> None:
     try:
         workflows.attribute_patterns.workflow.create(sv, workflow)
     except Exception as e:
-        if appInDevMode():
+        if app_in_dev_mode():
             st.exception(e)
         else:
             st.error(f"An error occurred: {e}")

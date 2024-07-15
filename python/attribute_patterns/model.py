@@ -162,20 +162,16 @@ def prepare_graph(dynamic_df, mi=False):
     dynamic_lcc = set()
     pdf = dynamic_df.copy()
     atts = sorted(pdf["Full Attribute"].unique())
-    pdf["Grouping ID"] = str(pdf["Subject ID"]) + "@" + str(pdf["Period"])
+    pdf["Grouping ID"] = pdf["Subject ID"].astype(str) + "@" + pdf["Period"].astype(str)
 
     periods = sorted(pdf["Period"].unique())
 
     for ix, period in enumerate(periods):
-        tdf = pdf.copy()
-        tdf = tdf[tdf["Period"] == period]
-        tdf["Grouping ID"] = str(tdf["Subject ID"]) + "@" + str(tdf["Period"])
-        tdf = (
-            tdf[["Grouping ID", "Full Attribute"]]
-            .groupby("Grouping ID")
-            .agg(list)
-            .reset_index()
+        tdf = pdf[pdf["Period"] == period].copy()
+        tdf["Grouping ID"] = (
+            tdf["Subject ID"].astype(str) + "@" + tdf["Period"].astype(str)
         )
+        tdf = tdf.groupby("Grouping ID")["Full Attribute"].agg(list).reset_index()
         dedge_df = create_edge_df_from_atts(atts, tdf, mi)
         G, lcc = convert_edge_df_to_graph(dedge_df)
         if ix == 0:

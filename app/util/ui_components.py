@@ -47,7 +47,6 @@ def dataframe_with_selections(df, selections, selection_col, label, key, height=
     return selected_rows.drop(label, axis=1)
 
 
-
 def report_download_ui(report_var, name):
     if type(report_var) == str:
         if len(report_var) == 0:
@@ -605,9 +604,7 @@ def prepare_input_df(
                             n_bin_sizes[N] = N * pow(10, k + 1)
                         n_excess[N] = n_bin_sizes[N] - target_bin_width
                     # find the N that minimizes the excess
-                    min_excess_n = sorted(
-                        n_excess.items(), key=lambda x: x[1]
-                    )[0][0]
+                    min_excess_n = sorted(n_excess.items(), key=lambda x: x[1])[0][0]
                     selected_bin_size = n_bin_sizes[min_excess_n]
                     # next, calculate the bin edges
 

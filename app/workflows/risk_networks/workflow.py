@@ -466,9 +466,10 @@ def create(sv: vars.SessionVariables, workflow=None):
         components = None
         with index_col:
             st.markdown("##### Index nodes (optional)")
-            fuzzy_options = sorted(
-                [config.entity_label, *list(sv.network_node_types.value)]
-            )
+            fuzzy_options = sorted([
+                config.entity_label,
+                *list(sv.network_node_types.value),
+            ])
             network_indexed_node_types = st.multiselect(
                 "Select node types to fuzzy match",
                 default=sv.network_indexed_node_types.value,

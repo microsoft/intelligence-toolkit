@@ -57,8 +57,20 @@ Open venv/Scripts/Activate.ps1, add the following lines after line 167:
     $env:AZURE_OPENAI_VERSION="2023-12-01-preview"
     $env:AZURE_OPENAI_ENDPOINT="https://<ENDPOINT>.openai.azure.com/"
 ``` 
+## Running code-only 
+- [Attribute Patterns](./python/attribute_patterns/README.md)
 
-## Running 
+    - [Example](./examples/attribute_patterns.ipynb): See an example of how to run the code with your data to obtain results without the need to run the UI.
+
+:construction: Code-only workflows in progress: 
+
+- Data Synthesis
+- Group Narratives
+- Question Answering
+- Record Matching
+- Risk Networks.
+
+## Running the UI (Streamlit) 
 
 ### Running via shell
 
@@ -113,7 +125,7 @@ From there, you can deploy it manually as described, or use [our YAML file](/.vs
 
 # Lifecycle Scripts
 
-For Lifecycle scripts it utilizes Poetry [poethepoet](https://pypi.org/project/poethepoet/) to manage build scripts.
+For Lifecycle scripts it utilizes [Poetry](https://python-poetry.org/docs#installation) and [poethepoet](https://pypi.org/project/poethepoet/) to manage build scripts.
 
 
 Available scripts are:

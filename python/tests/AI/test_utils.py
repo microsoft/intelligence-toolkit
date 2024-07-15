@@ -20,7 +20,10 @@ def test_get_token_count():
 def test_hash_text():
     text = "example test \n\n example test two"
     hash_returned = hash_text(text)
-    assert hash_returned == "5aaa5f424725140ddfeb0f5747e7543a52dc18ebde854b83e554f155ba2abfab"
+    assert (
+        hash_returned
+        == "5aaa5f424725140ddfeb0f5747e7543a52dc18ebde854b83e554f155ba2abfab"
+    )
 
 
 def test_try_parse_json_object_ok():

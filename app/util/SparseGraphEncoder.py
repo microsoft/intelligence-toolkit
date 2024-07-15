@@ -1,9 +1,11 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project.
+#
 # Databricks notebook source
 # MAGIC %md
 # MAGIC #Package Section
 
 # COMMAND ----------
-
 import numpy as np
 
 # for sparse matrix
@@ -18,6 +20,7 @@ from scipy import sparse
 
 # invalide devide resutls will be nan
 np.seterr(divide="ignore", invalid="ignore")
+# ruff: noqa
 
 
 ############------------graph_encoder_embed_start----------------###############
@@ -113,7 +116,6 @@ class GraphEncoderEmbed:
         # I = sparse.identity(n)
         # L = I - _L
 
-
     def Correlation(self, Z):
         """
         input Z is sparse csr matrix of embedding matrix from the basic function
@@ -131,7 +133,6 @@ class GraphEncoderEmbed:
         diag = np.nan_to_num(1 / row_norm)
         N = sparse.diags(diag, 0)
         return N.dot(Z)
-
 
     def edge_list_size(self, X):
         """
@@ -161,4 +162,3 @@ class GraphEncoderEmbed:
                 X_new[node_i, node_j] = weight
 
         return sparse.csr_matrix(X_new)
-

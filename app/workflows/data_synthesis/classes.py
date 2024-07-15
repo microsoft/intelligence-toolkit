@@ -36,9 +36,7 @@ class ErrorReport:
             mean_by_len[len(o)].append(self.src_aggregates[o])
 
         self.mean_count = np.mean(mean)
-        self.mean_count_by_len = {
-            l: np.mean(mean_by_len[l]) for l in mean_by_len
-        }
+        self.mean_count_by_len = {l: np.mean(mean_by_len[l]) for l in mean_by_len}
 
     def calc_errors(self):
         errors = []
@@ -51,9 +49,7 @@ class ErrorReport:
                 errors_by_len[len(o)].append(err)
 
         self.mean_error = np.mean(errors)
-        self.mean_error_by_len = {
-            l: np.mean(errors_by_len[l]) for l in errors_by_len
-        }
+        self.mean_error_by_len = {l: np.mean(errors_by_len[l]) for l in errors_by_len}
 
     def calc_total(aggregates):
         total = 0

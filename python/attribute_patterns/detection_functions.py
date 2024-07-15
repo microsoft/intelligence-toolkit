@@ -178,9 +178,10 @@ def create_period_to_patterns(
                                     exclude = True
                                     break
                             if not exclude:
-                                pcount = rc.count_records(
-                                    [period, *list(candidate_pattern)]
-                                )
+                                pcount = rc.count_records([
+                                    period,
+                                    *list(candidate_pattern),
+                                ])
                                 if pcount > min_pattern_count:
                                     period_to_patterns[period].append((
                                         candidate_pattern,

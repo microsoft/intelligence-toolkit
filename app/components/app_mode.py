@@ -4,7 +4,7 @@ import workflows.risk_networks.variables as rn_vars
 from util.session_variables import SessionVariables
 
 
-class app_mode:
+class AppMode:
     sv = None
     sv_network = None
 

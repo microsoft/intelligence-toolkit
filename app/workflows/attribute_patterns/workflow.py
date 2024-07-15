@@ -34,14 +34,12 @@ def get_intro():
 
 
 def create(sv: vars.SessionVariables, workflow):
-    intro_tab, uploader_tab, detect_tab, explain_tab = st.tabs(
-        [
-            "Attribute patterns workflow:",
-            "Create graph model",
-            "Detect patterns",
-            "Generate AI pattern reports",
-        ]
-    )
+    intro_tab, uploader_tab, detect_tab, explain_tab = st.tabs([
+        "Attribute patterns workflow:",
+        "Create graph model",
+        "Detect patterns",
+        "Generate AI pattern reports",
+    ])
     df = None
     with intro_tab:
         st.markdown(get_intro())

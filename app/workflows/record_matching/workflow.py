@@ -439,12 +439,8 @@ def create(sv: vars.SessionVariable, workflow=None):
 
                                 ix_id = f"{ixn}::{ixp}"
                                 nx_id = f"{nxn}::{nxp}"
-                                matches.add(
-                                    (entity_to_group[ix_id], *list(df.row(ix)))
-                                )
-                                matches.add(
-                                    (entity_to_group[nx_id], *list(df.row(nx)))
-                                )
+                                matches.add((entity_to_group[ix_id], *list(df.row(ix))))
+                                matches.add((entity_to_group[nx_id], *list(df.row(nx))))
 
                                 pair_to_match[tuple(sorted([ix_id, nx_id]))] = score
 
@@ -459,11 +455,13 @@ def create(sv: vars.SessionVariable, workflow=None):
                             .agg(pl.count("Entity ID").alias("Size"))
                             .to_dict()
                         )
-                        group_to_size = dict(zip(
+                        group_to_size = dict(
+                            zip(
                                 group_to_size["Group ID"],
                                 group_to_size["Size"],
                                 strict=False,
-                            ))
+                            )
+                        )
                         sv.matching_matches_df.value = (
                             sv.matching_matches_df.value.with_columns(
                                 sv.matching_matches_df.value["Group ID"]

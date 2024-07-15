@@ -157,24 +157,20 @@ def simplify_graph(C):
             {
                 xv.split(config.att_val_sep)[0]
                 for xv in sorted(x.split(config.list_sep))
-            }.intersection(
-                {
-                    yv.split(config.att_val_sep)[0]
-                    for yv in sorted(y.split(config.list_sep))
-                }
-            )
+            }.intersection({
+                yv.split(config.att_val_sep)[0]
+                for yv in sorted(y.split(config.list_sep))
+            })
         )
         > 0
         or len(
             {
                 xv.split(config.att_val_sep)[1]
                 for xv in sorted(x.split(config.list_sep))
-            }.intersection(
-                {
-                    yv.split(config.att_val_sep)[1]
-                    for yv in sorted(y.split(config.list_sep))
-                }
-            )
+            }.intersection({
+                yv.split(config.att_val_sep)[1]
+                for yv in sorted(y.split(config.list_sep))
+            })
         )
         > 0,
     )
@@ -343,8 +339,8 @@ def build_network_from_entities(sv, G, nodes):
             if ent_neighbor not in trimmed_nodeset:
                 if ent_neighbor.startswith(config.entity_label):
                     if node != ent_neighbor:
-                        en_c = (
-                            sv.network_entity_to_community_ix.value.get(ent_neighbor, "")
+                        en_c = sv.network_entity_to_community_ix.value.get(
+                            ent_neighbor, ""
                         )
                         N.add_node(ent_neighbor, type=config.entity_label, network=en_c)
                         N.add_edge(node, ent_neighbor)

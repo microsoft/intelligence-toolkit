@@ -22,8 +22,18 @@ jobs:
         with:
           python-version: ${{ env.python-version }}
 
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v3.0.0
+        with:
+          poetry-version: $POETRY_VERSION
+
+      - name: Install dependencies
+        shell: bash
+        run: poetry install
+
+      - name: Tests
+        run: poetry run poe test
+
       - name: Install Dependencies
         run: pip install -r requirements.txt
 
-      - name: Build Docker Image
-        run: docker build . -t intel-toolkit:latest

@@ -14,11 +14,11 @@ def load_multipage_app(sv=None):
     user.view_get_info()
 
     # Terminate app (if needed for .exe)
-    terminator = at.app_terminator()
+    terminator = at.AppTerminator()
     terminator.terminate_app_btn()
 
     # Protected mode
-    app_mode = am.app_mode()
+    app_mode = am.AppMode()
     app_mode.config()
 
     add_styles()

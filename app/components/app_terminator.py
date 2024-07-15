@@ -7,11 +7,11 @@ import time
 import keyboard
 import psutil
 import streamlit as st
-from util.enums import Mode
+from util.helper_fn import app_in_exe_mode
 from util.session_variables import SessionVariables
 
 
-class app_terminator:
+class AppTerminator:
     sv = None
 
     def __init__(self, sv=None):
@@ -29,8 +29,7 @@ class app_terminator:
         return click
 
     def terminate_app_btn(self):
-        mode = os.environ.get("MODE", Mode.DEV.value)
-        if mode == Mode.EXE.value:
+        if app_in_exe_mode():
             exit_app = st.sidebar.button(
                 "🔴 Terminate application",
                 disabled=st.session_state.off_btn_disabled,
