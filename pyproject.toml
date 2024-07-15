@@ -19,10 +19,6 @@ poetry = "^1.8.3"
 coverage = "^7.6.0"
 ruff = "^0.4.7"
 pynsist = "^2.8"  
-pytest-cov = "^5.0.0"  
-pytest = "^8.2.2"  
-pytest-asyncio = "^0.23.7"  
-pytest-mock = "^3.14.0"  
 poethepoet = "^0.27.0"
 pyright = "^1.1.371"
 
@@ -35,15 +31,9 @@ _sort_imports = "ruff check --select I --fix . --preview"
 _format_code = "ruff format  . --preview"
 _ruff_check = 'ruff check . --preview'
 _pyright = "pyright"
-_test_all = "coverage run -m pytest ./python/tests"
-coverage_report = 'coverage report --omit "**/tests/**" --show-missing'
 check_format = 'ruff format . --check --preview'
 fix = "ruff  --preview check --fix ."
 fix_unsafe = "ruff check --preview --fix --unsafe-fixes ."
-
-[[tool.poe.tasks.test]]
-sequence = ['_test_all', 'coverage_report']
-ignore_fail = 'return_non_zero'
 
 [[tool.poe.tasks.format]]
 sequence = ['_sort_imports', '_format_code']

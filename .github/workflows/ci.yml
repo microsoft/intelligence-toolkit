@@ -28,13 +28,10 @@ jobs:
         with:
           poetry-version: ${{ env.poetry-version }}
 
-      - name: Install dependencies
-        shell: bash
-        run: poetry install
-
-      - name: Tests
-        run: poetry run poe test
-
       - name: Install Dependencies
         run: pip install -r requirements.txt
+      
+      - name: Tests
+        run: pytest
+
 
