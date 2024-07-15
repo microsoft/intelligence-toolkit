@@ -12,6 +12,7 @@ jobs:
 
     env:
       python-version: "3.11"
+      poetry-version: "1.8.3"
 
     steps:
       - name: Checkout Repository
@@ -25,7 +26,7 @@ jobs:
       - name: Install Poetry
         uses: abatilo/actions-poetry@v3.0.0
         with:
-          poetry-version: $POETRY_VERSION
+          poetry-version: ${{ env.poetry-version }}
 
       - name: Install dependencies
         shell: bash
