@@ -14,12 +14,6 @@ schedules:
     include:
       - main
 
-variables:
-  isMainBranch: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
-  isTrueShouldDeploy: $[eq(variables['shouldDeploy'], 'True')]
-  deploy: $[or(variables['isMainBranch'], variables['isTrueShouldDeploy'])]
-  isTagged: startsWith(variables['Build.SourceBranch'], 'refs/tags/v')
-
 stages:
   - stage: Compliance
     dependsOn: []
@@ -71,9 +65,9 @@ stages:
               script: pytest
               
       - job: build
-        displayName: Build
+        displayName: BuildArtifact
         dependsOn: validate
-        condition: eq(variables['deploy'], 'True')
+        condition: eq(variables['SHOULD_DEPLOY'], 'True')
         pool:
           vmImage: ubuntu-latest
         steps:
@@ -97,7 +91,7 @@ stages:
 
   - stage: Deploy
     dependsOn: Build
-    condition: eq(variables['deploy'], 'True')
+    condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['SHOULD_DEPLOY'], 'true')))
     jobs:
       - job: deploy
         displayName: Deploy
@@ -128,7 +122,7 @@ stages:
 
   - stage: Build_NSIS
     dependsOn: Build
-    condition: or(eq(variables['isTagged'], 'True'), eq(variables['BUILD_EXE'], 'True'))
+    condition: and(succeeded(), eq(variables['BUILD_EXE'], 'true'))
     jobs:
       - job: NSIS_Build
         pool:
