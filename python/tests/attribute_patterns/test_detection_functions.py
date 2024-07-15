@@ -73,25 +73,28 @@ def test_create_centroid_dists():
     assert distances == expected_distances
 
 
-# def test_create_period_shifts(mocker):
-#     node_to_centroid = {"node1": [1, 2, 3], "node2": [4, 5, 6]}
-#     attribute_period_embeddings = {
-#         "period1": [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6], [0.7, 0.8, 0.9]],
-#         "period2": [[0.2, 0.3, 0.4], [0.5, 0.6, 0.7], [0.8, 0.9, 1.0]],
-#     }
-#     attribute_dynamic_df = pd.DataFrame({"Period": ["period1", "period2"]})
-#     create_centroid_dists_mock = mocker.patch(
-#         "python.attribute_patterns.detection_functions._create_centroid_dists"
-#     )
-#     create_centroid_dists_mock.return_value = {("node1", "node2"): (0.3, 0.4)}
+def test_create_period_shifts(mocker):
+    node_to_centroid = {"node1": [1, 2, 3], "node2": [4, 5, 6]}
+    attribute_period_embeddings = {
+        "period1": [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6], [0.7, 0.8, 0.9]],
+        "period2": [[0.2, 0.3, 0.4], [0.5, 0.6, 0.7], [0.8, 0.9, 1.0]],
+    }
+    attribute_dynamic_df = pd.DataFrame({"Period": ["period1", "period2"]})
+    create_centroid_dists_mock = mocker.patch(
+        "python.attribute_patterns.detection_functions._create_centroid_dists"
+    )
+    create_centroid_dists_mock.return_value = {("node1", "node2"): (0.3, 0.4)}
 
-#     result = create_period_shifts(
-#         node_to_centroid, attribute_period_embeddings, attribute_dynamic_df
-#     )
+    result = create_period_shifts(
+        node_to_centroid, attribute_period_embeddings, attribute_dynamic_df
+    )
 
-#     expected_result = {
-#         "period1": {("node1", "node2"): (0.2746318461970762, -0.11961524227066322)},
-#         "period2": {("node1", "node2"): (0.29149992451511525, -0.11961524227066311)},
-#     }
+    expected_result = {
+        "period1": {("node1", "node2"): (0.2746318461970762, -0.11961524227066322)},
+        "period2": {("node1", "node2"): (0.29149992451511536, -0.11961524227066311)},
+    }
 
-#     assert result == expected_result
+    for period in expected_result:
+        for nodes, values in expected_result[period].items():
+            assert result[period][nodes][0] == pytest.approx(values[0], rel=1e-9)
+            assert result[period][nodes][1] == pytest.approx(values[1], rel=1e-9)

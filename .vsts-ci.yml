@@ -73,7 +73,7 @@ stages:
       - job: build
         displayName: Build
         dependsOn: validate
-        condition: eq(variables.deploy, 'True')
+        condition: eq(variables['deploy'], 'True')
         pool:
           vmImage: ubuntu-latest
         steps:
@@ -96,9 +96,8 @@ stages:
               artifact: 'output'  # Name of the artifact
 
   - stage: Deploy
-    dependsOn: 
-      - Build
-    condition: eq(variables.deploy, 'True')
+    dependsOn: Build
+    condition: eq(variables['deploy'], 'True')
     jobs:
       - job: deploy
         displayName: Deploy
@@ -129,7 +128,7 @@ stages:
 
   - stage: Build_NSIS
     dependsOn: Build
-    condition: or(eq(variables.isTagged, 'True'), eq(variables.BUILD_EXE, 'True'))
+    condition: or(eq(variables['isTagged'], 'True'), eq(variables['BUILD_EXE'], 'True'))
     jobs:
       - job: NSIS_Build
         pool:
