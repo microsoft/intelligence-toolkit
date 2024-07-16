@@ -3,4 +3,6 @@
 #
 import os
 
-cache_dir = os.path.join(os.environ.get("CACHE_DIR", "cache"), "question_answering")
+from python.helpers.constants import EMBEDDINGS_PATH
+
+cache_dir = os.path.join(EMBEDDINGS_PATH, "question_answering")
