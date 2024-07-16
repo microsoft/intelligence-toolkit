@@ -16,6 +16,8 @@ from util.openai_wrapper import (
 )
 from util.SecretsHandler import SecretsHandler
 
+from python.helpers.constants import EMBEDDINGS_PATH
+
 
 def on_change(handler, key=None, value=None):
     def change():
@@ -24,7 +26,7 @@ def on_change(handler, key=None, value=None):
     return change
 
 
-def delete_embeddings_pickle(root_dir):
+def delete_embeddings_pickle(root_dir=EMBEDDINGS_PATH):
     for root, _dirs, files in os.walk(root_dir):
         for file in files:
             if file == EMBEDDINGS_FILE_NAME:
@@ -158,7 +160,7 @@ def main():
         st.text("")
         clear = st.button("Clear all embeddings")
         if clear:
-            delete_embeddings_pickle(os.environ.get("CACHE_DIR", "cache"))
+            delete_embeddings_pickle(os.environ.get("LOCALAPPDATA"))
 
 
 if __name__ == "__main__":

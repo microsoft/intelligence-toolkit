@@ -4,16 +4,13 @@
 import os
 import pickle
 
+from python.helpers.constants import EMBEDDINGS_PATH
+
 from .defaults import PICKLE_FILE_NAME
 
 
 class CachePickle:
-    def __init__(self, file_name: str = PICKLE_FILE_NAME, path=None):
-        if not path:
-            if os.environ.get("CACHE_DIR"):
-                path = os.environ.get("CACHE_DIR")
-            else:
-                path = os.getcwd()
+    def __init__(self, file_name: str = PICKLE_FILE_NAME, path=EMBEDDINGS_PATH):
         self.file_path = os.path.join(path, file_name)
         if not os.path.exists(path):
             os.makedirs(path, exist_ok=True)
