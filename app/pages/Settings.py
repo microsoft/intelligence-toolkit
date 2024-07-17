@@ -1,9 +1,13 @@
+# noqa: N999
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project.
+#
 import os
 import time
 
 import streamlit as st
 from components.app_loader import load_multipage_app
-from util.constants import EMBEDDINGS_FILE_NAME, MAX_SIZE_EMBEDDINGS_KEY
+from util.constants import MAX_SIZE_EMBEDDINGS_KEY
 from util.enums import Mode
 from util.openai_wrapper import (
     UIOpenAIConfiguration,
@@ -14,9 +18,10 @@ from util.openai_wrapper import (
     openai_type_key,
     openai_version_key,
 )
-from util.SecretsHandler import SecretsHandler
+from util.secrets_handler import SecretsHandler
 
-from python.helpers.constants import EMBEDDINGS_PATH
+from python.AI.defaults import PICKLE_FILE_NAME
+from python.helpers.constants import CACHE_PATH
 
 
 def on_change(handler, key=None, value=None):
@@ -26,10 +31,10 @@ def on_change(handler, key=None, value=None):
     return change
 
 
-def delete_embeddings_pickle(root_dir=EMBEDDINGS_PATH):
+def delete_embeddings_pickle(root_dir=CACHE_PATH):
     for root, _dirs, files in os.walk(root_dir):
         for file in files:
-            if file == EMBEDDINGS_FILE_NAME:
+            if file == PICKLE_FILE_NAME:
                 file_path = os.path.join(root, file)
                 os.remove(file_path)
                 print(f"Deleted: {file_path}")

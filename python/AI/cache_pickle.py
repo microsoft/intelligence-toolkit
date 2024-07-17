@@ -4,16 +4,16 @@
 import os
 import pickle
 
-from python.helpers.constants import EMBEDDINGS_PATH
+from python.helpers.constants import CACHE_PATH
 
 from .defaults import PICKLE_FILE_NAME
 
 
 class CachePickle:
-    def __init__(self, file_name: str = PICKLE_FILE_NAME, path=EMBEDDINGS_PATH):
+    def __init__(self, file_name: str = PICKLE_FILE_NAME, path=CACHE_PATH):
         self.file_path = os.path.join(path, file_name)
         if not os.path.exists(path):
-            os.makedirs(path, exist_ok=True)
+            os.makedirs(path)
             with open(self.file_path, "wb") as f:
                 f.write(b"")
 

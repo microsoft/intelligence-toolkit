@@ -113,10 +113,12 @@ ignore = [
     # TODO RE-Enable when we get bandwidth
     "PERF203", # Needs restructuring of errors, we should bail-out on first error
     "C901",    # needs refactoring to remove cyclomatic complexity
-    "T201", # Initial run, disabled for too much noise
-    "S404", # Initial run, disabled for too much noise
-    "S603", # Initial run, disabled for too much noise
-    "N806", # Initial run, disabled for too much noise
+    "S311",    # random alert for use with cryptography. NA
+    # Initial run, disabled for too much noise
+    "T201", 
+    "S404",
+    "S603",
+    "N806",
 ]
 
 [tool.ruff.lint.per-file-ignores]

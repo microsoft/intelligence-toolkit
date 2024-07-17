@@ -10,10 +10,9 @@ import pandas as pd
 import polars as pl
 import streamlit as st
 import util.session_variables as home_vars
-import workflows.record_matching.config as config
 import workflows.record_matching.functions as functions
 import workflows.record_matching.prompts as prompts
-import workflows.record_matching.variables as vars
+import workflows.record_matching.variables as rm_variables
 from sklearn.neighbors import NearestNeighbors
 from util import ui_components
 from util.download_pdf import add_download_pdf
@@ -27,11 +26,8 @@ def get_intro():
         return file.read()
 
 
-def create(sv: vars.SessionVariable, workflow=None):
+def create(sv: rm_variables.SessionVariable, workflow=None):
     sv_home = home_vars.SessionVariables("home")
-
-    if not os.path.exists(config.outputs_dir):
-        os.makedirs(config.outputs_dir)
 
     intro_tab, uploader_tab, process_tab, evaluate_tab = st.tabs([
         "Record matching workflow:",
@@ -39,27 +35,26 @@ def create(sv: vars.SessionVariable, workflow=None):
         "Detect record groups",
         "Evaluate record groups",
     ])
-    df = None
+    selected_df = None
     with intro_tab:
         st.markdown(get_intro())
     with uploader_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:
-            selected_file, df = ui_components.multi_csv_uploader(
+            selected_file, selected_df = ui_components.multi_csv_uploader(
                 "Upload multiple CSVs",
                 sv.matching_uploaded_files,
-                config.outputs_dir,
                 sv.matching_upload_key.value,
                 "matching_uploader",
                 sv.matching_max_rows_to_process,
             )
         with model_col:
             st.markdown("##### Map columns to data model")
-            if df is None:
+            if selected_df is None:
                 st.warning("Upload and select a file to continue")
             else:
-                df = pl.from_pandas(df).lazy()
-                cols = ["", *df.columns]
+                selected_df = pl.from_pandas(selected_df).lazy()
+                cols = ["", *selected_df.columns]
                 entity_col = ""
                 ready = False
                 dataset = st.text_input(
@@ -97,21 +92,25 @@ def create(sv: vars.SessionVariable, workflow=None):
                         use_container_width=True,
                     ):
                         if entity_col == "":
-                            df = df.with_row_count(name="Entity ID")
-                            df = df.rename({name_col: "Entity name"})
+                            selected_df = selected_df.with_row_count(name="Entity ID")
+                            selected_df = selected_df.rename({name_col: "Entity name"})
                         else:
-                            df = df.rename({
+                            selected_df = selected_df.rename({
                                 entity_col: "Entity ID",
                                 name_col: "Entity name",
                             })
-                            df = df.with_columns(pl.col("Entity ID").cast(pl.Utf8))
-                        df = df.select(
+                            selected_df = selected_df.with_columns(
+                                pl.col("Entity ID").cast(pl.Utf8)
+                            )
+                        selected_df = selected_df.select(
                             [pl.col("Entity ID"), pl.col("Entity name")]
                             + [pl.col(c) for c in sorted(att_cols)]
                         ).collect()
                         if sv.matching_max_rows_to_process.value > 0:
-                            df = df.head(sv.matching_max_rows_to_process.value)
-                        sv.matching_dfs.value[dataset] = df
+                            selected_df = selected_df.head(
+                                sv.matching_max_rows_to_process.value
+                            )
+                        sv.matching_dfs.value[dataset] = selected_df
                 with b2:
                     if st.button(
                         "Reset data model",

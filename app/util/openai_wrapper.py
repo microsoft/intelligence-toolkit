@@ -3,7 +3,7 @@
 #
 from python.AI.openai_configuration import OpenAIConfiguration
 
-from .SecretsHandler import SecretsHandler
+from .secrets_handler import SecretsHandler
 
 key = "openai_secret"
 openai_type_key = "openai_type"

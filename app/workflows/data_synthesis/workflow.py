@@ -13,7 +13,7 @@ import util.ui_components
 import workflows.data_synthesis.classes as classes
 import workflows.data_synthesis.config as config
 import workflows.data_synthesis.functions as functions
-import workflows.data_synthesis.variables as vars
+import workflows.data_synthesis.variables as ds_variables
 from pacsynth import (
     AccuracyMode,
     Dataset,
@@ -29,7 +29,7 @@ def get_intro():
         return file.read()
 
 
-def create(sv: vars.SessionVariables, workflow: None):
+def create(sv: ds_variables.SessionVariables, workflow: None):
     intro_tab, prepare_tab, generate_tab, queries_tab = st.tabs([
         "Data synthesis workflow:",
         "Upload sensitive data",
@@ -68,7 +68,7 @@ def create(sv: vars.SessionVariables, workflow: None):
                 att_cols = [col for col in wdf.columns if col != "Subject ID"]
                 num_cols = len(att_cols)
 
-                for col in wdf.columns.values:
+                for col in wdf.columns.to_numpy():
                     if col == "Subject ID":
                         continue
                     distinct_values = tuple(sorted(wdf[col].astype(str).unique()))
@@ -353,7 +353,7 @@ def create(sv: vars.SessionVariables, workflow: None):
             adf["protected_count"] = adf["protected_count"].astype(int)
             sdf = sv.synthesis_synthetic_df.value.copy(deep=True)
             options = []
-            for att in sdf.columns.values:
+            for att in sdf.columns.to_numpy():
                 vals = [f"{att}:{x}" for x in sdf[att].unique() if len(str(x)) > 0]
                 vals.sort()
                 options.extend(vals)
@@ -365,7 +365,7 @@ def create(sv: vars.SessionVariables, workflow: None):
             with c1:
                 st.markdown("##### Constuct query")
                 if len(sdf) > 0:
-                    for att in sdf.columns.values:
+                    for att in sdf.columns.to_numpy():
                         vals = [str(x) for x in sdf[att].unique() if len(str(x)) > 0]
                         for val in vals:
                             data_schema[att].append(val)
@@ -471,7 +471,7 @@ def create(sv: vars.SessionVariables, workflow: None):
                         st.markdown("##### Configure top attributes chart")
                         show_attributes = st.multiselect(
                             "Types of top attributes to show",
-                            options=sdf.columns.values,
+                            options=sdf.columns.to_numpy(),
                             default=chart_individual_configuration["show_attributes"],
                         )
                         num_values = st.number_input(
@@ -514,7 +514,7 @@ def create(sv: vars.SessionVariables, workflow: None):
                             f"{workflow}_chart_individual_configuration"
                         ]
                         st.markdown("##### Configure time series chart")
-                        time_options = ["", *list(sdf.columns.values)]
+                        time_options = ["", list(sdf.columns.to_numpy())]
                         time_attribute = st.selectbox(
                             "Time attribute",
                             options=time_options,
@@ -524,7 +524,7 @@ def create(sv: vars.SessionVariables, workflow: None):
                         )
                         series_attributes = st.multiselect(
                             "Series attributes",
-                            options=list(sdf.columns.values),
+                            options=list(sdf.columns.to_numpy()),
                             default=chart_individual_configuration["series_attributes"],
                         )
                         chart_individual_configuration["time_attribute"] = (
@@ -570,7 +570,7 @@ def create(sv: vars.SessionVariables, workflow: None):
                             f"{workflow}_chart_individual_configuration"
                         ]
                         st.markdown("##### Configure flow (alluvial) chart")
-                        attribute_type_options = ["", *list(sdf.columns.values)]
+                        attribute_type_options = ["", list(sdf.columns.to_numpy())]
                         highlight_options = ["", *options]
                         source_attribute = st.selectbox(
                             "Source/origin attribute type",

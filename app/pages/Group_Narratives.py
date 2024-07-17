@@ -1,6 +1,9 @@
+# noqa: N999
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project.
+#
 import streamlit as st
-import workflows.group_narratives.variables as vars
+import workflows.group_narratives.variables as gn_variables
 import workflows.group_narratives.workflow
 from components.app_loader import load_multipage_app
 from util.helper_fn import app_in_dev_mode
@@ -15,7 +18,7 @@ def main():
         page_icon="app/myapp.ico",
         page_title="Intelligence Toolkit | Group Narratives",
     )
-    sv = vars.SessionVariables(workflow)
+    sv = gn_variables.SessionVariables(workflow)
     load_multipage_app(sv)
 
     try:
