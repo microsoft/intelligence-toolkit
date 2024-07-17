@@ -5,7 +5,6 @@ import os
 
 from .defaults import (
     DEFAULT_AZ_AUTH_TYPE,
-    DEFAULT_AZURE_LLM_MODEL,
     DEFAULT_LLM_MAX_TOKENS,
     DEFAULT_LLM_MODEL,
     DEFAULT_OPENAI_VERSION,
@@ -46,9 +45,7 @@ class OpenAIConfiguration:
         self._api_key = config.get("api_key", self._get_api_key())
         self._model = config.get(
             "model",
-            DEFAULT_LLM_MODEL
-            if oai_type == "OpenAI"
-            else self._get_azure_openai_model(),
+            self._get_chat_model(),
         )
         self._api_base = config.get("api_base", self._get_azure_api_base())
         self._api_version = config.get("api_version", self._get_azure_openai_version())
@@ -63,8 +60,8 @@ class OpenAIConfiguration:
     def _get_azure_openai_version(self):
         return os.environ.get("AZURE_OPENAI_VERSION", DEFAULT_OPENAI_VERSION)
 
-    def _get_azure_openai_model(self):
-        return os.environ.get("AZURE_OPENAI_MODEL", DEFAULT_AZURE_LLM_MODEL)
+    def _get_chat_model(self):
+        return os.environ.get("OPENAI_API_MODEL", DEFAULT_LLM_MODEL)
 
     def _get_azure_api_base(self):
         return os.environ.get("AZURE_OPENAI_ENDPOINT", None)

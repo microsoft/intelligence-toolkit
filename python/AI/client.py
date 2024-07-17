@@ -18,8 +18,8 @@ class OpenAIClient:
 
     _client = None
 
-    def __init__(self, configuration: OpenAIConfiguration | None) -> None:
-        self.configuration = configuration | OpenAIConfiguration()
+    def __init__(self, configuration: OpenAIConfiguration | None = None) -> None:
+        self.configuration = configuration or OpenAIConfiguration()
         self.create_openai_client()
 
     def create_openai_client(self) -> None:

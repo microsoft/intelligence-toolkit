@@ -161,16 +161,14 @@ def compute_aggregate_graph(
     for edge, count in edge_counts.items():
         if count > 0:
             highlight = edge_highlights[edge] if edge in edge_highlights else 0
-            edges.append(
-                [
-                    edge[0],
-                    edge[1],
-                    count,
-                    highlight,
-                    highlight / count,
-                    "Aggregate",
-                ]
-            )
+            edges.append([
+                edge[0],
+                edge[1],
+                count,
+                highlight,
+                highlight / count,
+                "Aggregate",
+            ])
 
     edges_df = pd.DataFrame(
         edges,
@@ -205,16 +203,14 @@ def compute_synthetic_graph(
                     hatt, hval = highlight_attribute.split(config.val_separator)
                     df = df[df[hatt] == hval]
                     highlight = len(df)
-                edges.append(
-                    [
-                        source,
-                        target,
-                        count,
-                        highlight,
-                        highlight / count,
-                        "Synthetic",
-                    ]
-                )
+                edges.append([
+                    source,
+                    target,
+                    count,
+                    highlight,
+                    highlight / count,
+                    "Synthetic",
+                ])
 
     edges_df = pd.DataFrame(
         edges,

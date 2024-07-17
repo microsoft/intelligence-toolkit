@@ -85,14 +85,12 @@ class ErrorReport:
             ]
             for l in sorted(self.mean_error_by_len.keys())
         ]
-        rows.append(
-            [
-                "Overall",
-                f"{self.mean_count:.2f} +/- {self.mean_error:.2f}",
-                f"{self.suppressed_count * 100.0 / self.src_total:.2f} %",
-                f"{self.fabricated_count * 100.0 / self.target_total:.2f} %",
-            ]
-        )
+        rows.append([
+            "Overall",
+            f"{self.mean_count:.2f} +/- {self.mean_error:.2f}",
+            f"{self.suppressed_count * 100.0 / self.src_total:.2f} %",
+            f"{self.fabricated_count * 100.0 / self.target_total:.2f} %",
+        ])
 
         return pd.DataFrame(
             rows,
