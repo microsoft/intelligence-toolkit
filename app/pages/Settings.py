@@ -1,22 +1,27 @@
+# noqa: N999
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project.
+#
 import os
 import time
 
 import streamlit as st
 from components.app_loader import load_multipage_app
-from util.constants import EMBEDDINGS_FILE_NAME, MAX_SIZE_EMBEDDINGS_KEY
+from util.constants import MAX_SIZE_EMBEDDINGS_KEY
 from util.enums import Mode
 from util.openai_wrapper import (
     UIOpenAIConfiguration,
     key,
     openai_azure_auth_type,
-    openai_azure_model_key,
     openai_endpoint_key,
+    openai_model_key,
     openai_type_key,
     openai_version_key,
 )
-from util.SecretsHandler import SecretsHandler
+from util.secrets_handler import SecretsHandler
 
-from python.helpers.constants import EMBEDDINGS_PATH
+from python.AI.defaults import PICKLE_FILE_NAME
+from python.helpers.constants import CACHE_PATH
 
 
 def on_change(handler, key=None, value=None):
@@ -26,10 +31,10 @@ def on_change(handler, key=None, value=None):
     return change
 
 
-def delete_embeddings_pickle(root_dir=EMBEDDINGS_PATH):
+def delete_embeddings_pickle(root_dir=CACHE_PATH):
     for root, _dirs, files in os.walk(root_dir):
         for file in files:
-            if file == EMBEDDINGS_FILE_NAME:
+            if file == PICKLE_FILE_NAME:
                 file_path = os.path.join(root, file)
                 os.remove(file_path)
                 print(f"Deleted: {file_path}")
@@ -90,16 +95,6 @@ def main():
                 st.rerun()
 
         with col2:
-            deployment_name = st.text_input(
-                "Azure OpenAI Deployment Name",
-                disabled=is_mode_cloud,
-                value=openai_config.model,
-            )
-            if deployment_name != openai_config.model:
-                on_change(secrets_handler, openai_azure_model_key, deployment_name)()
-                st.rerun()
-
-        with col3:
             version = st.text_input(
                 "Azure OpenAI Version",
                 disabled=is_mode_cloud,
@@ -108,34 +103,58 @@ def main():
             if version != openai_config.api_version:
                 on_change(secrets_handler, openai_version_key, version)()
                 st.rerun()
-    if type_input == "OpenAI" or type_input_az != "Managed Identity":
-        placeholder = "Enter key here..."
-        secret_input = st.text_input(
-            "Enter your key",
-            type="password",
-            disabled=is_mode_cloud,
-            placeholder=placeholder,
-            value=secret,
-        )
 
-        if secret and len(secret) > 0:
-            st.info("Your key is saved securely.")
-            clear_btn = st.button("Clear local key")
-
-            if clear_btn:
-                secrets_handler.delete_secret(key)
-                time.sleep(0.3)
+        with col3:
+            deployment_name = st.text_input(
+                "Azure OpenAI Deployment Name",
+                disabled=is_mode_cloud,
+                value=openai_config.model,
+            )
+            if deployment_name != openai_config.model:
+                on_change(secrets_handler, openai_model_key, deployment_name)()
                 st.rerun()
 
-        if secret_input and secret_input != secret:
-            secrets_handler.write_secret(key, secret_input)
-            st.rerun()
-        elif openai_config.api_key == "":
-            st.warning(
-                "No OpenAI key found in the environment. Please insert one above."
+    if type_input == "OpenAI" or type_input_az != "Managed Identity":
+        col1, col2 = st.columns(2)
+        with col1:
+            placeholder = "Enter key here..."
+            secret_input = st.text_input(
+                "Enter your key",
+                type="password",
+                disabled=is_mode_cloud,
+                placeholder=placeholder,
+                value=secret,
             )
-        elif not secret_input and not secret:
-            st.info("Using key from the environment.")
+
+            if secret and len(secret) > 0:
+                st.info("Your key is saved securely.")
+                clear_btn = st.button("Clear local key")
+
+                if clear_btn:
+                    secrets_handler.delete_secret(key)
+                    time.sleep(0.3)
+                    st.rerun()
+
+            if secret_input and secret_input != secret:
+                secrets_handler.write_secret(key, secret_input)
+                st.rerun()
+            elif openai_config.api_key == "":
+                st.warning(
+                    "No OpenAI key found in the environment. Please insert one above."
+                )
+            elif not secret_input and not secret:
+                st.info("Using key from the environment.")
+
+        if type_input == "OpenAI":
+            with col2:
+                deployment_name = st.text_input(
+                    "OpenAI Deployment Name",
+                    disabled=is_mode_cloud,
+                    value=openai_config.model,
+                )
+                if deployment_name != openai_config.model:
+                    on_change(secrets_handler, openai_model_key, deployment_name)()
+                    st.rerun()
     st.divider()
 
     st.subheader("Embeddings")

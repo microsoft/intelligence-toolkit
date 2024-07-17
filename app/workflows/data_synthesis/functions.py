@@ -1,3 +1,6 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project.
+#
 import colorsys
 import os
 import random
@@ -415,7 +418,7 @@ def compute_time_series_query(
         tdfs.append(tdf)
     final_tdf = pd.concat(tdfs, axis=0, ignore_index=True)
     missing = []
-    for i, row in final_tdf.iterrows():
+    for _, row in final_tdf.iterrows():
         att = row["Attribute"]
         val = row["Attribute Value"]
         for time in times:
@@ -447,14 +450,12 @@ def compute_time_series_query(
 
 
 def make_random_data_table(num_rows, num_cols):
-    df = pd.DataFrame()
+    random_df = pd.DataFrame()
     for i in range(num_cols):
         if random.random() < 0.5:
             limit = random.randint(1, 1000)
-            df[f"col{i}"] = [random.randint(0, limit) for _ in range(num_rows)]
+            random_df[f"col{i}"] = [random.randint(0, limit) for _ in range(num_rows)]
         else:
-            df[f"col{i}"] = [random.random() for _ in range(num_rows)]
+            random_df[f"col{i}"] = [random.random() for _ in range(num_rows)]
 
-    if not os.path.exists(config.outputs_dir):
-        os.makedirs(config.outputs_dir)
-    df.to_csv(os.path.join(config.outputs_dir, "random_data.csv"), index=False)
+    random_df.to_csv(os.path.join(config.outputs_dir, "random_data.csv"), index=False)

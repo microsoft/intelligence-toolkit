@@ -12,7 +12,7 @@ import streamlit as st
 import workflows.risk_networks.config as config
 import workflows.risk_networks.functions as functions
 import workflows.risk_networks.prompts as prompts
-import workflows.risk_networks.variables as vars
+import workflows.risk_networks.variables as rn_variables
 from sklearn.neighbors import NearestNeighbors
 from st_aggrid import (
     AgGrid,
@@ -34,7 +34,7 @@ def get_intro():
         return file.read()
 
 
-def create(sv: vars.SessionVariables, workflow=None):
+def create(sv: rn_variables.SessionVariables, workflow=None):
     sv_home = SessionVariables("home")
 
     if not os.path.exists(config.outputs_dir):
@@ -56,7 +56,6 @@ def create(sv: vars.SessionVariables, workflow=None):
             _selected_file, df = ui_components.multi_csv_uploader(
                 "Upload multiple CSVs",
                 sv.network_uploaded_files,
-                config.outputs_dir,
                 sv.network_upload_key.value,
                 "network_uploader",
                 sv.network_max_rows_to_process,
@@ -66,7 +65,7 @@ def create(sv: vars.SessionVariables, workflow=None):
             if df is None:
                 st.warning("Upload and select a file to continue")
             else:
-                options = ["", *df.columns.values.tolist()]
+                options = ["", *df.columns.to_numpy()]
                 link_type = st.radio(
                     "Link type",
                     [

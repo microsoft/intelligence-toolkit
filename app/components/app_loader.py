@@ -10,7 +10,7 @@ from javascript.styles import add_styles
 
 def load_multipage_app(sv=None):
     # Load user if logged in
-    user = au.app_user()
+    user = au.AppUser()
     user.view_get_info()
 
     # Terminate app (if needed for .exe)

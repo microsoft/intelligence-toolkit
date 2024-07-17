@@ -79,7 +79,7 @@ def prepare_data(data_df, identifier_col=None):
 
 def generate_graph_model(df, period_col):
     att_cols = [
-        col for col in df.columns.values if col not in ["Subject ID", period_col]
+        col for col in df.columns.to_numpy() if col not in ["Subject ID", period_col]
     ]
     model_df = (
         df_functions.fix_null_ints(df)

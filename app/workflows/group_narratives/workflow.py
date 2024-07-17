@@ -7,7 +7,7 @@ import pandas as pd
 import streamlit as st
 import util.df_functions
 import workflows.group_narratives.prompts as prompts
-import workflows.group_narratives.variables as vars
+import workflows.group_narratives.variables as gn_variables
 from util import ui_components
 
 
@@ -17,7 +17,7 @@ def get_intro():
         return file.read()
 
 
-def create(sv: vars.SessionVariables, workflow=None):
+def create(sv: gn_variables.SessionVariables, workflow=None):
     intro_tab, prepare_tab, summarize_tab, generate_tab = st.tabs([
         "Group narratives workflow:",
         "Upload data to narrate",

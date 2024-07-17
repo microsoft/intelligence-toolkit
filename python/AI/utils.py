@@ -68,6 +68,6 @@ def hash_text(text: str) -> str:
 def generate_messages(
     user_prompt, system_prompt, variables, safety_prompt=""
 ) -> list[dict[str, str]]:
-    full_prompt = " ".join([system_prompt, user_prompt, safety_prompt])
+    full_prompt = f"{system_prompt} {user_prompt} {safety_prompt}"
 
     return prepare_messages(full_prompt, variables)

@@ -5,7 +5,7 @@ import os
 
 import altair as alt
 import streamlit as st
-import workflows.attribute_patterns.variables as vars
+import workflows.attribute_patterns.variables as ap_variables
 from st_aggrid import (
     AgGrid,
     ColumnsAutoSizeMode,
@@ -33,14 +33,14 @@ def get_intro():
         return file.read()
 
 
-def create(sv: vars.SessionVariables, workflow):
+def create(sv: ap_variables.SessionVariables, workflow):
     intro_tab, uploader_tab, detect_tab, explain_tab = st.tabs([
         "Attribute patterns workflow:",
         "Create graph model",
         "Detect patterns",
         "Generate AI pattern reports",
     ])
-    df = None
+    graph_df = None
     with intro_tab:
         st.markdown(get_intro())
     with uploader_tab:
@@ -67,7 +67,7 @@ def create(sv: vars.SessionVariables, workflow):
             )
             options = [""] + [
                 c
-                for c in sv.attribute_final_df.value.columns.values
+                for c in sv.attribute_final_df.value.columns.to_numpy()
                 if c != "Subject ID"
             ]
             sv.attribute_time_col.value = st.selectbox(
@@ -80,7 +80,7 @@ def create(sv: vars.SessionVariables, workflow):
             time_col = sv.attribute_time_col.value
             att_cols = [
                 col
-                for col in sv.attribute_final_df.value.columns.values
+                for col in sv.attribute_final_df.value.columns.to_numpy()
                 if col not in ["Subject ID", time_col]
                 and st.session_state[f"attribute_patterns_{col}"] is True
             ]
@@ -90,8 +90,8 @@ def create(sv: vars.SessionVariables, workflow):
             if st.button("Generate graph model", disabled=not ready):
                 with st.spinner("Adding links to model..."):
                     time_col = sv.attribute_time_col.value
-                    df = sv.attribute_final_df.value.copy(deep=True)
-                    pdf = generate_graph_model(df, time_col)
+                    graph_df = sv.attribute_final_df.value.copy(deep=True)
+                    pdf = generate_graph_model(graph_df, time_col)
                 sv.attribute_dynamic_df.value = pdf
             if ready and len(sv.attribute_dynamic_df.value) > 0:
                 st.success(

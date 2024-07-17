@@ -5,6 +5,7 @@ import os
 import re
 import sys
 from collections import defaultdict
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -255,13 +256,12 @@ def single_csv_uploader(
 def multi_csv_uploader(
     upload_label,
     uploaded_files_var,
-    outputs_dir,
     uploader_key,
     key,
     max_rows_var=0,
     show_rows=1000,
     height=250,
-):
+) -> tuple[str | Any | None, pd.DataFrame]:
     if f"{key}_encoding" not in st.session_state:
         st.session_state[f"{key}_encoding"] = file_encoding_default
 
@@ -292,12 +292,12 @@ def multi_csv_uploader(
         )
         reload = st.button("Reload", key=f"{key}_reload")
 
-    df = pd.DataFrame()
+    selected_df = pd.DataFrame()
     if selected_file not in [None, ""] or reload:
         st.session_state[f"{key}_encoding"] = encoding
         for file in files:
             if file.name == selected_file:
-                df = (
+                selected_df = (
                     pd.read_csv(
                         file,
                         encoding=encoding,
@@ -315,9 +315,12 @@ def multi_csv_uploader(
                 )
                 break
         st.dataframe(
-            df[:show_rows], hide_index=True, use_container_width=True, height=height
+            selected_df[:show_rows],
+            hide_index=True,
+            use_container_width=True,
+            height=height,
         )
-    return selected_file, df
+    return selected_file, selected_df
 
 
 def prepare_input_df(
@@ -359,7 +362,7 @@ def prepare_input_df(
             help="Select row number if each row of data represents a distinct individual, otherwise select ID column to link multiple rows to the same individual via their ID.",
         )
         if identifier == "ID column":
-            options = ["", *list(input_df_var.value.columns.values)]
+            options = ["", *list(input_df_var.value.columns.to_numpy())]
             identifier_col = st.selectbox(
                 "Select subject identifier column",
                 options=options,
@@ -391,13 +394,13 @@ def prepare_input_df(
         b1, b2 = st.columns([1, 1])
         with b1:
             if st.button("Select all", use_container_width=True):
-                for col in input_df_var.value.columns.values:
+                for col in input_df_var.value.columns.to_numpy():
                     st.session_state[f"{workflow}_{col}"] = True
         with b2:
             if st.button("Deselect all", use_container_width=True):
-                for col in input_df_var.value.columns.values:
+                for col in input_df_var.value.columns.to_numpy():
                     st.session_state[f"{workflow}_{col}"] = False
-        for col in input_df_var.value.columns.values:
+        for col in input_df_var.value.columns.to_numpy():
             if f"{workflow}_{col}" not in st.session_state:
                 st.session_state[f"{workflow}_{col}"] = False
             if col != "Subject ID":
@@ -410,13 +413,13 @@ def prepare_input_df(
 
     selected_cols = [
         col
-        for col in input_df_var.value.columns.values
+        for col in input_df_var.value.columns.to_numpy()
         if st.session_state[f"{workflow}_{col}"] is True
     ]
     if selected_cols != st.session_state[f"{workflow}_last_attributes"]:
         processed_df_var.value = processed_df_var.value[["Subject ID"]].copy()
         for col in selected_cols:
-            if col in st.session_state[f"{workflow}_binned_df"].columns.values:
+            if col in st.session_state[f"{workflow}_binned_df"].columns.to_numpy():
                 processed_df_var.value[col] = list(
                     st.session_state[f"{workflow}_binned_df"][col]
                 )
@@ -645,7 +648,7 @@ def prepare_input_df(
 
     with st.expander("Expand compound values", expanded=False):
         options = [
-            x for x in processed_df_var.value.columns.values if x != "Subject ID"
+            x for x in processed_df_var.value.columns.to_numpy() if x != "Subject ID"
         ]
         columns = [
             x
@@ -753,13 +756,13 @@ def prepare_input_df(
         if suppress_zeros != st.session_state[f"{workflow}_suppress_zeros"]:
             st.session_state[f"{workflow}_suppress_zeros"] = suppress_zeros
             if suppress_zeros:
-                for col in bdf.columns.values:
+                for col in bdf.columns.to_numpy():
                     if col != "Entity ID" and len(bdf[col].unique()) <= 2:
                         if 0 in list(bdf[col].unique()):
                             bdf[col] = input_df_var.value[col].replace(0, np.nan)
                             processed_df_var.value[col] = bdf[col]
             else:
-                for col in bdf.columns.values:
+                for col in bdf.columns.to_numpy():
                     if col != "Entity ID" and len(bdf[col].unique()) <= 2:
                         bdf[col] = input_df_var.value[col]
                         processed_df_var.value[col] = bdf[col]

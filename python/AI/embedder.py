@@ -19,10 +19,10 @@ class Embedder:
 
     def __init__(
         self,
-        configuration: OpenAIConfiguration = OpenAIConfiguration(),
+        configuration: OpenAIConfiguration | None,
         pickle_path=None,
     ) -> None:
-        self.configuration = configuration
+        self.configuration = configuration or OpenAIConfiguration()
         self.openai_client = OpenAIClient(configuration)
         self.pickle = CachePickle(path=pickle_path)
 
@@ -64,9 +64,9 @@ class Embedder:
                 final_embeddings[ix] = np.array(embedding)
             count += 1
         print(f"Got {count} existing texts")
-        logger.info(f"Got {count} existing texts")
+        logger.info("Got %s existing texts", count)
         print(f"Got {len(new_texts)} new texts")
-        logger.info(f"Got {len(new_texts)} new texts")
+        logger.info("Got %s new texts", len(new_texts))
 
         num_batches = len(new_texts) // 2000 + 1
         batch_count = 1

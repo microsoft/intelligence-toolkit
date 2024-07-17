@@ -1,11 +1,13 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project.
+#
 import streamlit as st
 from javascript.scripts import get_auth_user
 from util.enums import Mode
 from util.session_variables import SessionVariables
 
 
-class app_user:
+class AppUser:
     sv = None
 
     def __init__(self, sv=None):
