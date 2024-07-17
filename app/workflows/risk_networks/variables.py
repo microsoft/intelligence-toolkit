@@ -4,8 +4,9 @@ from collections import defaultdict
 import pandas as pd
 import polars as pl
 import streamlit as st
-import workflows.risk_networks.prompts as prompts
 from util.session_variable import SessionVariable
+
+from python.risk_networks import prompts
 
 
 class SessionVariables:
@@ -74,4 +75,5 @@ class SessionVariables:
         for key in st.session_state:
             if key.startswith(self.prefix):
                 del st.session_state[key]
+        self.create_session(self.prefix)
         self.create_session(self.prefix)

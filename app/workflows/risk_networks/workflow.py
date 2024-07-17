@@ -9,9 +9,7 @@ import community
 import networkx as nx
 import pandas as pd
 import streamlit as st
-import workflows.risk_networks.config as config
 import workflows.risk_networks.functions as functions
-import workflows.risk_networks.prompts as prompts
 import workflows.risk_networks.variables as rn_variables
 from sklearn.neighbors import NearestNeighbors
 from st_aggrid import (
@@ -26,12 +24,9 @@ from util import ui_components
 from util.session_variables import SessionVariables
 
 from python.AI import classes
-
-
-def get_intro():
-    file_path = os.path.join(os.path.dirname(__file__), "README.md")
-    with open(file_path) as file:
-        return file.read()
+from python.risk_networks import config
+from python.risk_networks import get_readme as get_intro
+from python.risk_networks import prompts
 
 
 def create(sv: rn_variables.SessionVariables, workflow=None):
@@ -40,13 +35,15 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
     if not os.path.exists(config.outputs_dir):
         os.makedirs(config.outputs_dir)
 
-    intro_tab, uploader_tab, process_tab, view_tab, report_tab = st.tabs([
-        "Network analysis workflow:",
-        "Create data model",
-        "Process data model",
-        "Explore networks",
-        "Generate AI network reports",
-    ])
+    intro_tab, uploader_tab, process_tab, view_tab, report_tab = st.tabs(
+        [
+            "Network analysis workflow:",
+            "Create data model",
+            "Process data model",
+            "Explore networks",
+            "Generate AI network reports",
+        ]
+    )
     df = None
     with intro_tab:
         st.markdown(get_intro())
@@ -180,10 +177,12 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                                             if x[0] == name
                                         ]
                                         if len(name_exists) == 0:
-                                            sv.network_entities_renamed.value.append((
-                                                original_name,
-                                                new_name,
-                                            ))
+                                            sv.network_entities_renamed.value.append(
+                                                (
+                                                    original_name,
+                                                    new_name,
+                                                )
+                                            )
                                         else:
                                             new_name = name_exists[0][1]
 
@@ -222,10 +221,12 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                                                 len(name_exists) == 0
                                                 and len(name_exists_entity) == 0
                                             ):
-                                                sv.network_attributes_renamed.value.append((
-                                                    name,
-                                                    new_name,
-                                                ))
+                                                sv.network_attributes_renamed.value.append(
+                                                    (
+                                                        name,
+                                                        new_name,
+                                                    )
+                                                )
                                             else:
                                                 if len(name_exists_entity) > 0:
                                                     new_name = name_exists_entity[0][1]
@@ -237,10 +238,12 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                                             )
                                     else:
                                         for i, name in enumerate(unique_names, start=1):
-                                            sv.network_attributes_renamed.value.append((
-                                                name,
-                                                name,
-                                            ))
+                                            sv.network_attributes_renamed.value.append(
+                                                (
+                                                    name,
+                                                    name,
+                                                )
+                                            )
 
                                 if attribute_col == "Use column name":
                                     attribute_label = value_col
@@ -442,10 +445,12 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 unique_names = original_df["Attribute"].unique()
                 for i, name in enumerate(unique_names, start=1):
                     name_format = name.split("==")[0].strip()
-                    atributes_entities.append((
-                        name,
-                        f"{name_format}=={name_format}_{i!s}",
-                    ))
+                    atributes_entities.append(
+                        (
+                            name,
+                            f"{name_format}=={name_format}_{i!s}",
+                        )
+                    )
 
                 sv.network_attributes_renamed.value = atributes_entities
 
@@ -465,10 +470,12 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
         components = None
         with index_col:
             st.markdown("##### Index nodes (optional)")
-            fuzzy_options = sorted([
-                config.entity_label,
-                *list(sv.network_node_types.value),
-            ])
+            fuzzy_options = sorted(
+                [
+                    config.entity_label,
+                    *list(sv.network_node_types.value),
+                ]
+            )
             network_indexed_node_types = st.multiselect(
                 "Select node types to fuzzy match",
                 default=sv.network_indexed_node_types.value,
@@ -701,16 +708,18 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                             else 0
                         )
 
-                        entity_records.append((
-                            n.split(config.att_val_sep)[1],
-                            flags,
-                            ix,
-                            len(entities),
-                            community_flags,
-                            flagged,
-                            flags_per_entity,
-                            flaggedPerUnflagged,
-                        ))
+                        entity_records.append(
+                            (
+                                n.split(config.att_val_sep)[1],
+                                flags,
+                                ix,
+                                len(entities),
+                                community_flags,
+                                flagged,
+                                flags_per_entity,
+                                flaggedPerUnflagged,
+                            )
+                        )
                 sv.network_entity_df.value = pd.DataFrame(
                     entity_records,
                     columns=[
@@ -895,12 +904,12 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                             net_flagged -= 1
                         context = "##### Risk Exposure Report\n\n"
                         for flagged in all_flagged:
-                            all_paths = functions.merge_paths([
+                            all_paths = [
                                 list(x)
                                 for x in nx.all_shortest_paths(
                                     N, flagged, qualified_selected
                                 )
-                            ])
+                            ]
                             for path in all_paths:
                                 if len(path) > 1:
                                     chain = ""

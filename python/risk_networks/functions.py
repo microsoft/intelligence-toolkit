@@ -1,6 +1,7 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 #
+# ruff: noqa
 import colorsys
 from collections import defaultdict
 
@@ -11,7 +12,7 @@ from streamlit_agraph import Config, Edge, Node
 from util.openai_wrapper import UIOpenAIConfiguration
 
 from python.AI.embedder import Embedder
-from python.risk_networks import config
+from python.risk_networks.config import config
 
 
 def embedder():
