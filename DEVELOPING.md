@@ -3,13 +3,14 @@
 ## Requirements
 
 - Python 3.11 ([Download](https://www.python.org/downloads/))
+    - We use pip as dependency management
 - wkhtmltopdf (used to generate PDF reports)
 
     - Windows: [Download wkhtmltopdf installer](https://wkhtmltopdf.org/downloads.html)
 
     - Linux:  `sudo apt-get install wkhtmltopdf`
 
-    - MacOS: `brew install homebrew/cask/wkhtmltopdf`   
+    - MacOS: `brew install homebrew/cask/wkhtmltopdf`
 
 
 ## Setup:
@@ -56,8 +57,20 @@ Open venv/Scripts/Activate.ps1, add the following lines after line 167:
     $env:AZURE_OPENAI_VERSION="2023-12-01-preview"
     $env:AZURE_OPENAI_ENDPOINT="https://<ENDPOINT>.openai.azure.com/"
 ``` 
+## Running code-only 
+- [Attribute Patterns](./python/attribute_patterns/README.md)
 
-## Running 
+    - [Example](./examples/attribute_patterns.ipynb): See an example of how to run the code with your data to obtain results without the need to run the UI.
+
+:construction: Code-only workflows in progress: 
+
+- Data Synthesis
+- Group Narratives
+- Question Answering
+- Record Matching
+- Risk Networks.
+
+## Running the UI (Streamlit) 
 
 ### Running via shell
 
@@ -67,11 +80,11 @@ Open venv/Scripts/Activate.ps1, add the following lines after line 167:
 
     `.\venv\Scripts\Activate` (Windows with Powershell)
 
-2. Install all the dependencies with pip:
+2 Install all the dependencies with pip:
 
     `pip install -r requirements.txt`
 
-3. Run the project using streamlit: 
+3. Run the project using streamlit:
 
     `python -m streamlit run app/Home.py`
 
@@ -109,3 +122,22 @@ Once finished building, you can install the application by running the .exe and 
 In [this tutorial](https://dev.to/keneojiteli/deploy-a-docker-app-to-app-services-on-azure-5d3h), you can learn how to create the necessary services in azure.
 
 From there, you can deploy it manually as described, or use [our YAML file](/.vsts-ci.yml) to automatically deploy to your environment. 
+
+# Lifecycle Scripts
+
+For Lifecycle scripts it utilizes [Poetry](https://python-poetry.org/docs#installation) and [poethepoet](https://pypi.org/project/poethepoet/) to manage build scripts.
+
+
+Available scripts are:
+
+- `poetry run poe test` - This will execute unit tests.
+- `poetry run poe check` - This will perform a suite of static checks across the package, including:
+  - formatting
+  - documentation formatting
+  - linting
+  - security patterns
+  - type-checking
+- `poetry run poe fix` - This will apply any available auto-fixes to the package. Usually this is just formatting fixes.
+- `poetry run poe fix_unsafe` - This will apply any available auto-fixes to the package, including those that may be unsafe.
+- `poetry run poe format` - Explicitly run the formatter across the package.
+

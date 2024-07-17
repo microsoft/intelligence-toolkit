@@ -22,8 +22,7 @@ class CachePickle:
             with open(self.file_path, "rb") as f:
                 if os.path.getsize(self.file_path) > 0:
                     return pickle.load(f)
-                else:
-                    return {}
+                return {}
         return {}
 
     def save(self, items: dict, max_size=0):

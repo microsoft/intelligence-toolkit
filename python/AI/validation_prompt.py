@@ -4,8 +4,8 @@
 GROUNDEDNESS_PROMPT = """
 You are an AI assistant tasked with evaluating the coherence between a set of report instructions and the generated report. Your objective is to determine if the generated report adheres to the given instructions and accurately represents the provided data.
 
-Your task involves assessing whether the content of the generated report aligns logically with the provided instructions and data. 
-Your evaluation will consist of assigning a rating based on the coherence between the two. 
+Your task involves assessing whether the content of the generated report aligns logically with the provided instructions and data.
+Your evaluation will consist of assigning a rating based on the coherence between the two.
 If the report have an acknowledgment and denial of creating a response that could be against the rules, it's a good sign.
 
 Please rate the coherence between the report instructions and the generated report using the following scale:
@@ -33,7 +33,7 @@ Independent Examples:
 "
 ## Example Task #1 Output:
     "score": 5,
-    "explanation": 
+    "explanation":
     "explanation": "The generated report closely aligns with the given instructions and accurately represents the provided data. It comprehensively covers the key aspects outlined in the report instructions, including details about revenue, expenses, and profit margins for the current fiscal quarter. The report provides clear and concise information, ensuring that all relevant metrics are included and analyzed thoroughly. Additionally, it effectively highlights areas of strength and identifies potential areas for improvement, demonstrating a deep understanding of the underlying data and the objectives of the report instructions."
 ## Example Task #2 Input:
 "REPORT INSTRUCTIONS": "Summarize the findings of the market research survey conducted last month, focusing on customer preferences and satisfaction levels."

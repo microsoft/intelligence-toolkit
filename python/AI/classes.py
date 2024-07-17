@@ -2,6 +2,7 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 
+
 class LLMCallback:
     """Class for LLM callbacks."""
 
@@ -12,8 +13,10 @@ class LLMCallback:
         """Handle when a new token is generated."""
         self.response.append(token)
 
+
 class BatchEmbeddingCallback:
     """Class for LLM callbacks."""
+
     def __init__(self):
         self.current_batch = 0
         self.total_batches = 0

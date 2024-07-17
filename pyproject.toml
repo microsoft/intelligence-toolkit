@@ -1,0 +1,137 @@
+[tool.poetry]
+name = "intelligence-toolkit"
+version = "0.0.1"
+description = ""
+authors = [
+    "Dayenne Souza <ddesouza@microsoft.com>",
+    "Ha Trinh <trinhha@microsoft.com>",
+    "Darren Edge <daedge@microsoft.com>"
+    ]
+readme = "README.md"
+license = "MIT"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+[tool.poetry.group.dev.dependencies]
+poetry = "^1.8.3"
+coverage = "^7.6.0"
+ruff = "^0.4.7"
+pynsist = "^2.8"  
+poethepoet = "^0.27.0"
+pyright = "^1.1.371"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poe.tasks]
+_sort_imports = "ruff check --select I --fix . --preview"
+_format_code = "ruff format  . --preview"
+_ruff_check = 'ruff check . --preview'
+_pyright = "pyright"
+check_format = 'ruff format . --check --preview'
+fix = "ruff  --preview check --fix ."
+fix_unsafe = "ruff check --preview --fix --unsafe-fixes ."
+
+[[tool.poe.tasks.format]]
+sequence = ['_sort_imports', '_format_code']
+ignore_fail = 'return_non_zero'
+
+[[tool.poe.tasks.check]]
+sequence = ['check_format', '_ruff_check']
+ignore_fail = 'return_non_zero'
+
+[tool.ruff]
+target-version = "py310"
+extend-include = ["*.ipynb"]
+
+[tool.ruff.lint]
+select = [
+    "E4",
+    "E7",
+    "E9",
+    "W291",
+    "YTT",
+    "T10",
+    "ICN",
+    "INP",
+    "Q",
+    "RSE",
+    "SLOT",
+    "INT",
+    "FLY",
+    "LOG",
+    "C90",
+    "T20",
+    "RET",
+    "PD",
+    "N",
+    "PIE",
+    "SIM",
+    "S",
+    "G",
+    "ERA",
+    "ASYNC",
+    "TID",
+    "UP",
+    "SLF",
+    "BLE",
+    "C4",
+    "I",
+    "F",
+    "A",
+    "ARG",
+    "RUF",
+    "B",
+    "TCH",
+    "DTZ",
+    "PYI",
+    "PT",
+    "EM",
+    "TRY",
+    "PERF",
+    "CPY",
+    # "PTH", # Initial run, disabled for too much noise
+    # "D", # Initial run, disabled for too much noise
+    # "FBT", # use named arguments for boolean flags
+    # "TD", # todos
+    # "FIX", # fixme
+    # "FURB" # preview rules
+    # ANN # Type annotations, re-enable when we get bandwidth
+]
+ignore = [
+    # Deprecated Rules
+    "ANN101",
+    "ANN102",
+    # Conflicts with interface argument checking
+    "ARG002",
+    "ANN204",
+    # TODO: Inspect these pandas rules for validity
+    "PD002", # prevents inplace=True
+    # TODO RE-Enable when we get bandwidth
+    "PERF203", # Needs restructuring of errors, we should bail-out on first error
+    "C901",    # needs refactoring to remove cyclomatic complexity
+    "T201", # Initial run, disabled for too much noise
+    "S404", # Initial run, disabled for too much noise
+    "S603", # Initial run, disabled for too much noise
+    "N806", # Initial run, disabled for too much noise
+]
+
+[tool.ruff.lint.per-file-ignores]
+"python/tests/*" = ["S", "D", "ANN", "T201", "ASYNC", "ARG", "PTH", "TRY"]
+"examples/*" = ["S", "D", "ANN", "T201", "PTH", "TRY", "PERF"]
+"graphrag/index/config/*" = ["TCH"]
+"*.ipynb" = ["T201"]
+
+[tool.ruff.lint.flake8-builtins]
+builtins-ignorelist = ["input", "id", "bytes"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+# https://github.com/microsoft/pyright/blob/9f81564a4685ff5c55edd3959f9b39030f590b2f/docs/configuration.md#sample-pyprojecttoml-file
+[tool.pyright]
+include = ["app", "python", "examples"]
+exclude = ["**/__pycache__"]

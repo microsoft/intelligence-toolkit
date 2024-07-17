@@ -2,14 +2,14 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 
-#Set column ID
+# Set column ID
 
-#Choose columns
+# Choose columns
 
-#quantisize datetime
+# quantisize datetime
 
 # quantisize numeric
 
 # expand compound
 
-#supress insignificant
+# supress insignificant

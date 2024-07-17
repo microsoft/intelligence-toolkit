@@ -1,23 +1,26 @@
+# Copyright (c) 2024 Microsoft Corporation.
 import os
-from subprocess import Popen, PIPE, STDOUT
+import socket
 import sys
 import time
 import webbrowser
-import socket
+from subprocess import PIPE, STDOUT, Popen
 
 PORT = 8503
+
+
 def is_port_in_use(port: int) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex(('localhost', port)) == 0
+        return s.connect_ex(("localhost", port)) == 0
+
 
 def main():
-
     # Getting path to python executable (full path of deployed python on Windows)
     executable = sys.executable
     os.environ["DB_APP_DATA"] = os.environ["LOCALAPPDATA"]
     os.environ["MODE"] = "exe"
-    
-    path_to_main = os.path.join(os.path.dirname(__file__), "app","Home.py")
+
+    path_to_main = os.path.join(os.path.dirname(__file__), "app", "Home.py")
 
     port_use = is_port_in_use(PORT)
     print(f"Port {PORT} is in use: {port_use}")
@@ -37,7 +40,7 @@ def main():
             # but it should start without it. More investigations should be carried out.
             "--server.headless=true",
             "--global.developmentMode=false",
-            f"--server.port={PORT}"
+            f"--server.port={PORT}",
         ],
         stdin=PIPE,
         stdout=PIPE,

@@ -37,10 +37,9 @@ class Question:
                 distances.append(scipy.spatial.distance.cosine(self.vector, sq.vector))
             l = len(all_sub_qs)
             m = np.mean(distances)
-            s = l*m
+            s = l * m
             return l, m, s
-        else:
-            return 0, 0.0, 0.0
+        return 0, 0.0, 0.0
 
     def list_all_sub_questions(self):
         sub_qs = []
@@ -50,34 +49,37 @@ class Question:
         return sub_qs
 
     def generate_outline(self, level):
-        outline = ''
-        outline += level * '#' + f' Q{self.id}: {self.text}\n\n'
+        outline = ""
+        outline += level * "#" + f" Q{self.id}: {self.text}\n\n"
         if self.tier == 0:
-            sources = ', '.join([f'{self.file.name} (p{p})' for (f, p) in self.answer_references[0]])
-            outline += f'{self.answer_texts[0]} [sources: {sources}]\n\n'
+            sources = ", ".join([
+                f"{self.file.name} (p{p})" for (f, p) in self.answer_references[0]
+            ])
+            outline += f"{self.answer_texts[0]} [sources: {sources}]\n\n"
             for mq in self.merged_questions:
-                msources = ', '.join([f'{mq.file.name} (p{p})' for (f, p) in mq.answer_references[0]])
-                outline += f'{mq.answer_texts[0]} [sources: {msources}]\n\n'
+                msources = ", ".join([
+                    f"{mq.file.name} (p{p})" for (f, p) in mq.answer_references[0]
+                ])
+                outline += f"{mq.answer_texts[0]} [sources: {msources}]\n\n"
         merged_sqs = set(self.sub_qs)
         for mq in self.merged_questions:
             merged_sqs.update(mq.sub_qs)
         for sq in merged_sqs:
-            outline += sq.generate_outline(level=level+1)
+            outline += sq.generate_outline(level=level + 1)
         return outline
 
     def __str__(self):
-        return f'T{self.tier}Q{self.id}: {self.text}'
-    
+        return f"T{self.tier}Q{self.id}: {self.text}"
+
     def __repr__(self):
         return self.__str__()
 
 
 class File:
-
     def __init__(self, name, id) -> None:
         self.name = name
         self.id = id
-        self.text = ''
+        self.text = ""
         self.vector = []
         self.chunk_texts = {}
         self.chunk_vectors = {}
