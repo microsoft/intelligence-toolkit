@@ -1,3 +1,6 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project.
+#
 from collections import defaultdict
 
 import numpy as np
@@ -82,12 +85,14 @@ class ErrorReport:
             ]
             for l in sorted(self.mean_error_by_len.keys())
         ]
-        rows.append([
-            "Overall",
-            f"{self.mean_count:.2f} +/- {self.mean_error:.2f}",
-            f"{self.suppressed_count * 100.0 / self.src_total:.2f} %",
-            f"{self.fabricated_count * 100.0 / self.target_total:.2f} %",
-        ])
+        rows.append(
+            [
+                "Overall",
+                f"{self.mean_count:.2f} +/- {self.mean_error:.2f}",
+                f"{self.suppressed_count * 100.0 / self.src_total:.2f} %",
+                f"{self.fabricated_count * 100.0 / self.target_total:.2f} %",
+            ]
+        )
 
         return pd.DataFrame(
             rows,
