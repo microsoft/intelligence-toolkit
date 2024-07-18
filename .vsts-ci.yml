@@ -67,7 +67,6 @@ stages:
       - job: build
         displayName: BuildArtifact
         dependsOn: validate
-        condition: eq(variables['SHOULD_DEPLOY'], 'true')
         pool:
           vmImage: ubuntu-latest
         steps:
