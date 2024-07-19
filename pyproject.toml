@@ -125,7 +125,7 @@ ignore = [
 "python/tests/*" = ["S", "D", "ANN", "T201", "ASYNC", "ARG", "PTH", "TRY"]
 "examples/*" = ["S", "D", "ANN", "T201", "PTH", "TRY", "PERF"]
 "graphrag/index/config/*" = ["TCH"]
-"*.ipynb" = ["T201"]
+"*.ipynb" = ["S", "T201"]
 
 [tool.ruff.lint.flake8-builtins]
 builtins-ignorelist = ["input", "id", "bytes"]

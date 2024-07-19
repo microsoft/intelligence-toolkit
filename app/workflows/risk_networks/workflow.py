@@ -1,6 +1,9 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 #
+
+# ruff: noqa
+import json
 import os
 import re
 from collections import defaultdict
@@ -249,10 +252,13 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                                     attribute_label = value_col
 
                                 if link_type == "Entity-Attribute":
-                                    if attribute_col in [
-                                        "Use column name",
-                                        "Use custom name",
-                                    ]:
+                                    if (
+                                        attribute_col
+                                        in [
+                                            "Use column name",
+                                            "Use custom name",  # TODO: What about "Use related column"?
+                                        ]
+                                    ):
                                         df["attribute_col"] = attribute_label
                                         sv.network_node_types.value.add(attribute_label)
                                         model_links.append(
@@ -406,13 +412,11 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                         or link_type == "",
                     ):
                         sv.network_entity_links.value = []
-                        sv.network_directed_entity_links.value = []
                         sv.network_attribute_links.value = []
                         sv.network_flag_links.value = []
                         sv.network_group_links.value = []
                         sv.network_overall_graph.value = None
                         sv.network_entity_graph.value = None
-                        sv.network_merged_graph.value = None
                         sv.network_community_df.value = pd.DataFrame()
                         sv.network_integrated_flags.value = pd.DataFrame()
 

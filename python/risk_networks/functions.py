@@ -12,7 +12,7 @@ from streamlit_agraph import Config, Edge, Node
 from util.openai_wrapper import UIOpenAIConfiguration
 
 from python.AI.embedder import Embedder
-from python.risk_networks.config import config
+from python.risk_networks import config
 
 
 def embedder():
@@ -103,89 +103,6 @@ def get_entity_graph(G, selected, links_df, width, height, attribute_types):
         width=width, height=height, directed=False, physics=True, hierarchical=False
     )
     return nodes, edges, g_config  # type: ignore
-
-
-def merge_nodes(G, can_merge_fn):
-    nodes = list(G.nodes())  # may change during iteration
-    for _ix, node in enumerate(nodes):
-        if node not in G.nodes():
-            continue
-        neighbours = list(G.neighbors(node))
-        merge_list = [node]
-        for n in neighbours:
-            if n not in G.nodes():
-                continue
-            if can_merge_fn(node, n):
-                merge_list.append(n)
-        if len(merge_list) > 1:
-            G = merge_node_list(G, merge_list)
-
-    return G
-
-
-def merge_node_list(G, merge_list):
-    G1 = G.copy()
-    m = config.list_sep.join(sorted(merge_list))
-    t = config.list_sep.join(sorted([G.nodes[n]["type"] for n in merge_list]))
-    merged_risk = max(G.nodes[n]["flags"] for n in merge_list)
-    G1.add_node(m, type=t)
-    G1.nodes[m]["flags"] = merged_risk
-    has_flags = False
-    for n in merge_list:
-        for nn in G.neighbors(n):
-            if nn not in merge_list:
-                G1.add_edge(m, nn)
-        G1.remove_node(n)
-        has_flags = has_flags or G.nodes[n]["flags"] > 0
-    return G1
-
-
-def merge_paths(in_paths):
-    return in_paths
-
-
-def simplify_graph(C):
-    S = C.copy()
-    # remove single degree attributes
-    for node in list(S.nodes()):
-        if S.degree(node) < 2 and not node.startswith(config.entity_label):
-            S.remove_node(node)
-
-    S = merge_nodes(
-        S,
-        lambda x, y:  # merge if overlapping types or values
-        len(
-            {
-                xv.split(config.att_val_sep)[0]
-                for xv in sorted(x.split(config.list_sep))
-            }.intersection(
-                {
-                    yv.split(config.att_val_sep)[0]
-                    for yv in sorted(y.split(config.list_sep))
-                }
-            )
-        )
-        > 0
-        or len(
-            {
-                xv.split(config.att_val_sep)[1]
-                for xv in sorted(x.split(config.list_sep))
-            }.intersection(
-                {
-                    yv.split(config.att_val_sep)[1]
-                    for yv in sorted(y.split(config.list_sep))
-                }
-            )
-        )
-        > 0,
-    )
-
-    # remove single degree attributes
-    for node in list(S.nodes()):
-        if S.degree(node) < 2 and not node.startswith(config.entity_label):
-            S.remove_node(node)
-
-    return S
 
 
 def project_entity_graph(sv):
@@ -301,12 +218,10 @@ def build_undirected_graph(sv):
 
 
 def build_integrated_flags(sv):
-    sv.network_integrated_flags.value = pd.concat(
-        [
-            pd.DataFrame(link_list, columns=["entity", "type", "flag", "count"])
-            for link_list in sv.network_flag_links.value
-        ]
-    )
+    sv.network_integrated_flags.value = pd.concat([
+        pd.DataFrame(link_list, columns=["entity", "type", "flag", "count"])
+        for link_list in sv.network_flag_links.value
+    ])
     sv.network_integrated_flags.value = (
         sv.network_integrated_flags.value.groupby(["entity", "type", "flag"])
         .sum()
@@ -392,20 +307,3 @@ def build_network_from_entities(sv, G, nodes):
                     "count"
                 ].sum()
     return N
-
-
-def create_super_community(sv, community_nodes):
-    super_communities = set()
-    super_nodes = set()
-    for node in community_nodes:
-        print(node)
-        neighbours = set(sv.network_entity_graph.value.neighbors(node))
-        print(neighbours)
-        for n in neighbours:
-            if n in sv.network_entity_to_community_ix.value:
-                c = sv.network_entity_to_community_ix.value[n]
-                super_communities.add(c)
-    for c in super_communities:
-        super_nodes.update(sv.network_community_nodes.value[c])
-
-    return super_nodes

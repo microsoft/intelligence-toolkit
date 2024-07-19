@@ -4,6 +4,7 @@
 import colorsys
 from collections import defaultdict
 
+# ruff: noqa
 import networkx as nx
 import pandas as pd
 import streamlit as st
@@ -157,24 +158,20 @@ def simplify_graph(C):
             {
                 xv.split(config.att_val_sep)[0]
                 for xv in sorted(x.split(config.list_sep))
-            }.intersection(
-                {
-                    yv.split(config.att_val_sep)[0]
-                    for yv in sorted(y.split(config.list_sep))
-                }
-            )
+            }.intersection({
+                yv.split(config.att_val_sep)[0]
+                for yv in sorted(y.split(config.list_sep))
+            })
         )
         > 0
         or len(
             {
                 xv.split(config.att_val_sep)[1]
                 for xv in sorted(x.split(config.list_sep))
-            }.intersection(
-                {
-                    yv.split(config.att_val_sep)[1]
-                    for yv in sorted(y.split(config.list_sep))
-                }
-            )
+            }.intersection({
+                yv.split(config.att_val_sep)[1]
+                for yv in sorted(y.split(config.list_sep))
+            })
         )
         > 0,
     )
@@ -287,7 +284,7 @@ def build_undirected_graph(sv):
             n1 = f"{config.entity_label}{config.att_val_sep}{link[0]}"
             n2 = f"{config.entity_label}{config.att_val_sep}{link[2]}"
             edge = (n1, n2) if n1 < n2 else (n2, n1)
-            G.add_edge(edge[0], edge[2], type=link[1])
+            G.add_edge(edge[0], edge[1], type=link[1])
             G.add_node(n1, type=config.entity_label)
             G.add_node(n2, type=config.entity_label)
     for atts in value_to_atts.values():
@@ -300,12 +297,10 @@ def build_undirected_graph(sv):
 
 
 def build_integrated_flags(sv):
-    sv.network_integrated_flags.value = pd.concat(
-        [
-            pd.DataFrame(link_list, columns=["entity", "type", "flag", "count"])
-            for link_list in sv.network_flag_links.value
-        ]
-    )
+    sv.network_integrated_flags.value = pd.concat([
+        pd.DataFrame(link_list, columns=["entity", "type", "flag", "count"])
+        for link_list in sv.network_flag_links.value
+    ])
     sv.network_integrated_flags.value = (
         sv.network_integrated_flags.value.groupby(["entity", "type", "flag"])
         .sum()
@@ -391,20 +386,3 @@ def build_network_from_entities(sv, G, nodes):
                     "count"
                 ].sum()
     return N
-
-
-def create_super_community(sv, community_nodes):
-    super_communities = set()
-    super_nodes = set()
-    for node in community_nodes:
-        print(node)
-        neighbours = set(sv.network_entity_graph.value.neighbors(node))
-        print(neighbours)
-        for n in neighbours:
-            if n in sv.network_entity_to_community_ix.value:
-                c = sv.network_entity_to_community_ix.value[n]
-                super_communities.add(c)
-    for c in super_communities:
-        super_nodes.update(sv.network_community_nodes.value[c])
-
-    return super_nodes
