@@ -756,7 +756,9 @@ def prepare_input_df(
             help="For binary columns, maps the number 0 to None. This is useful when only the presence of an attribute is important, not the absence.",
         )
         if suppress_zeros:
-            for col in bdf.columns.to_numpy():
+            for col in processed_df_var.value.columns:
+                if col not in bdf:
+                    continue
                 if col != "Entity ID" and len(bdf[col].unique()) <= 2:
                     if 0 in list(bdf[col].unique()) or "0" in list(bdf[col].unique()):
                         bdf[col] = input_df_var.value[col].replace(0, np.nan)
@@ -764,7 +766,9 @@ def prepare_input_df(
         if suppress_zeros != st.session_state[f"{workflow}_suppress_zeros"]:
             st.session_state[f"{workflow}_suppress_zeros"] = suppress_zeros
             if not suppress_zeros:
-                for col in bdf.columns.to_numpy():
+                for col in processed_df_var.value.columns:
+                    if col not in bdf:
+                        continue
                     if col != "Entity ID" and len(bdf[col].unique()) <= 2:
                         bdf[col] = input_df_var.value[col]
                         processed_df_var.value[col] = bdf[col]
