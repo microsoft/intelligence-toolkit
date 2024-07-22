@@ -29,7 +29,10 @@ from util.session_variables import SessionVariables
 from python.AI import classes
 from python.risk_networks import config
 from python.risk_networks import get_readme as get_intro
-from python.risk_networks import prompts
+from python.risk_networks import graph_functions, prompts
+from python.risk_networks.model import prepare_entity_attribute
+from python.risk_networks.protected_mode import protect_data
+from python.risk_networks.text_format import format_data_columns
 
 
 def create(sv: rn_variables.SessionVariables, workflow=None):
@@ -38,15 +41,13 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
     if not os.path.exists(config.outputs_dir):
         os.makedirs(config.outputs_dir)
 
-    intro_tab, uploader_tab, process_tab, view_tab, report_tab = st.tabs(
-        [
-            "Network analysis workflow:",
-            "Create data model",
-            "Process data model",
-            "Explore networks",
-            "Generate AI network reports",
-        ]
-    )
+    intro_tab, uploader_tab, process_tab, view_tab, report_tab = st.tabs([
+        "Network analysis workflow:",
+        "Create data model",
+        "Process data model",
+        "Explore networks",
+        "Generate AI network reports",
+    ])
     df = None
     with intro_tab:
         st.markdown(get_intro())
@@ -150,259 +151,161 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                         or link_type == "",
                     ):
                         with st.spinner("Adding links to model..."):
-                            for value_col in value_cols:
-                                # remove punctuation but retain characters and digits in any language
-                                # compress whitespace to single space
-                                df[entity_col] = df[entity_col].apply(
-                                    lambda x: re.sub(r"[^\w\s&@\+]", "", str(x)).strip()
+                            value_col = ""
+                            df = format_data_columns(df, value_cols, entity_col)
+                            if sv_home.protected_mode.value:
+                                (
+                                    df,
+                                    entities_renamed,
+                                    attributes_renamed,
+                                ) = protect_data(
+                                    df,
+                                    value_cols,
+                                    entity_col,
+                                    sv.network_entities_renamed.value,
                                 )
-                                df[entity_col] = df[entity_col].apply(
-                                    lambda x: re.sub(r"\s+", " ", str(x)).strip()
+                                sv.network_entities_renamed.value = entities_renamed
+                                sv.network_attributes_renamed.value = attributes_renamed
+
+                            if link_type == "Entity-Attribute":
+                                attribute_links, node_types = prepare_entity_attribute(
+                                    df,
+                                    entity_col,
+                                    attribute_col,
+                                    value_cols,
+                                    attribute_label,
                                 )
-                                df[value_col] = df[value_col].apply(
-                                    lambda x: re.sub(r"[^\w\s&@\+]", "", str(x)).strip()
+                                sv.network_node_types.value = node_types
+                                sv.network_overall_graph.value = (
+                                    graph_functions.build_undirected_graph(
+                                        network_attribute_links=attribute_links
+                                    )
                                 )
-                                df[value_col] = df[value_col].apply(
-                                    lambda x: re.sub(r"\s+", " ", str(x)).strip()
-                                )
-                                df[value_col] = df[value_col].apply(
-                                    lambda x: re.sub(r"\s+", " ", str(x)).strip()
-                                )
-
-                                if sv_home.protected_mode.value:
-                                    unique_names = df[entity_col].unique()
-                                    for i, name in enumerate(unique_names, start=1):
-                                        original_name = name
-                                        new_name = f"Protected_Entity_{i}"
-                                        name_exists = [
-                                            x
-                                            for x in sv.network_entities_renamed.value
-                                            if x[0] == name
-                                        ]
-                                        if len(name_exists) == 0:
-                                            sv.network_entities_renamed.value.append(
-                                                (
-                                                    original_name,
-                                                    new_name,
-                                                )
-                                            )
-                                        else:
-                                            new_name = name_exists[0][1]
-
-                                        df[entity_col] = df[entity_col].apply(
-                                            lambda x: new_name if name == x else x
-                                        )
-
-                                    unique_names_value = df[value_col].unique()
-
-                                    numeric_pattern = r"^\d+(\.\d+)?$"
-
-                                    def is_numeric_column(column):
-                                        return all(
-                                            re.match(numeric_pattern, str(value))
-                                            for value in column
-                                        )
-
-                                    is_numeric = is_numeric_column(df[value_col])
-                                    if not is_numeric:
-                                        for i, name in enumerate(
-                                            unique_names_value, start=1
-                                        ):
-                                            new_name = f"{value_col}_{i!s}"
-                                            name_exists = [
-                                                x
-                                                for x in sv.network_attributes_renamed.value
-                                                if x[0] == name
-                                            ]
-                                            name_exists_entity = [
-                                                x
-                                                for x in sv.network_entities_renamed.value
-                                                if x[0] == name
-                                            ]
-
-                                            if (
-                                                len(name_exists) == 0
-                                                and len(name_exists_entity) == 0
-                                            ):
-                                                sv.network_attributes_renamed.value.append(
-                                                    (
-                                                        name,
-                                                        new_name,
-                                                    )
-                                                )
-                                            else:
-                                                if len(name_exists_entity) > 0:
-                                                    new_name = name_exists_entity[0][1]
-                                                else:
-                                                    new_name = name_exists[0][1]
-
-                                            df[value_col] = df[value_col].apply(
-                                                lambda x: new_name if name == x else x
-                                            )
-                                    else:
-                                        for i, name in enumerate(unique_names, start=1):
-                                            sv.network_attributes_renamed.value.append(
-                                                (
-                                                    name,
-                                                    name,
-                                                )
-                                            )
-
-                                if attribute_col == "Use column name":
-                                    attribute_label = value_col
-
-                                if link_type == "Entity-Attribute":
-                                    if (
-                                        attribute_col
-                                        in [
-                                            "Use column name",
-                                            "Use custom name",  # TODO: What about "Use related column"?
-                                        ]
-                                    ):
-                                        df["attribute_col"] = attribute_label
-                                        sv.network_node_types.value.add(attribute_label)
+                            elif link_type == "Entity-Flag":
+                                # groupby entity and sum flag counts
+                                gdf = df.groupby([entity_col]).sum().reset_index()
+                                gdf["attribute_col"] = attribute_label
+                                gdf["attribute_col2"] = attribute_label
+                                if attribute_col in [
+                                    "Use column name",
+                                    "Use custom name",
+                                ]:
+                                    sv.network_flag_types.value.add(attribute_label)
+                                    if flag_agg == "Instance":
+                                        gdf["count_col"] = 1
                                         model_links.append(
-                                            df[
-                                                [entity_col, "attribute_col", value_col]
+                                            gdf[
+                                                [
+                                                    entity_col,
+                                                    "attribute_col",
+                                                    value_col,
+                                                    "count_col",
+                                                ]
                                             ].values.tolist()
                                         )
-                                    else:
-                                        sv.network_node_types.value.update(
-                                            df[attribute_label].unique().tolist()
-                                        )
+                                    elif flag_agg == "Count":
+                                        gdf[value_col] = gdf[value_col].astype(int)
                                         model_links.append(
-                                            df[
-                                                [entity_col, attribute_col, value_col]
+                                            gdf[
+                                                [
+                                                    entity_col,
+                                                    "attribute_col",
+                                                    "attribute_col2",
+                                                    value_col,
+                                                ]
                                             ].values.tolist()
                                         )
-                                    functions.build_undirected_graph(sv)
-                                elif link_type == "Entity-Flag":
-                                    # groupby entity and sum flag counts
-                                    gdf = df.groupby([entity_col]).sum().reset_index()
-                                    gdf["attribute_col"] = attribute_label
-                                    gdf["attribute_col2"] = attribute_label
-                                    if attribute_col in [
-                                        "Use column name",
-                                        "Use custom name",
-                                    ]:
-                                        sv.network_flag_types.value.add(attribute_label)
-                                        if flag_agg == "Instance":
-                                            gdf["count_col"] = 1
-                                            model_links.append(
-                                                gdf[
-                                                    [
-                                                        entity_col,
-                                                        "attribute_col",
-                                                        value_col,
-                                                        "count_col",
-                                                    ]
-                                                ].values.tolist()
-                                            )
-                                        elif flag_agg == "Count":
-                                            gdf[value_col] = gdf[value_col].astype(int)
-                                            model_links.append(
-                                                gdf[
-                                                    [
-                                                        entity_col,
-                                                        "attribute_col",
-                                                        "attribute_col2",
-                                                        value_col,
-                                                    ]
-                                                ].values.tolist()
-                                            )
-                                        elif flag_agg == "List":
-                                            gdf["count_col"] = 1
-                                            model_links.append(
-                                                gdf[
-                                                    [
-                                                        entity_col,
-                                                        "attribute_col",
-                                                        "attribute_col2",
-                                                        "count_col",
-                                                    ]
-                                                ].values.tolist()
-                                            )
-                                    else:
-                                        sv.network_flag_types.value.update(
-                                            df[attribute_label].unique().tolist()
-                                        )
-                                        if flag_agg == "Instance":
-                                            model_links.append(
-                                                gdf[
-                                                    [
-                                                        entity_col,
-                                                        attribute_col,
-                                                        value_col,
-                                                    ]
-                                                ].values.tolist()
-                                            )
-                                        elif flag_agg == "Count":
-                                            gdf[value_col] = gdf[value_col].astype(int)
-                                            model_links.append(
-                                                gdf[
-                                                    [
-                                                        entity_col,
-                                                        attribute_col,
-                                                        "attribute_col2",
-                                                        value_col,
-                                                    ]
-                                                ].values.tolist()
-                                            )
-                                        elif flag_agg == "List":
-                                            gdf["count_col"] = 1
-                                            model_links.append(
-                                                gdf[
-                                                    [
-                                                        entity_col,
-                                                        "attribute_col",
-                                                        "attribute_col2",
-                                                        "count_col",
-                                                    ]
-                                                ].values.tolist()
-                                            )
-                                    functions.build_integrated_flags(sv)
-                                elif link_type == "Entity-Entity":
-                                    if attribute_col in [
-                                        "Use column name",
-                                        "Use custom name",
-                                    ]:
-                                        df["attribute_col"] = attribute_label
+                                    elif flag_agg == "List":
+                                        gdf["count_col"] = 1
                                         model_links.append(
-                                            df[
-                                                [entity_col, "attribute_col", value_col]
+                                            gdf[
+                                                [
+                                                    entity_col,
+                                                    "attribute_col",
+                                                    "attribute_col2",
+                                                    "count_col",
+                                                ]
                                             ].values.tolist()
                                         )
-                                    else:
+                                else:
+                                    sv.network_flag_types.value.update(
+                                        df[attribute_label].unique().tolist()
+                                    )
+                                    if flag_agg == "Instance":
                                         model_links.append(
-                                            df[
-                                                [entity_col, attribute_col, value_col]
+                                            gdf[
+                                                [
+                                                    entity_col,
+                                                    attribute_col,
+                                                    value_col,
+                                                ]
                                             ].values.tolist()
                                         )
-                                    functions.build_undirected_graph(sv)
-                                    # build_directed_graph(sv) TODO
-                                elif link_type == "Entity-Group":
-                                    if attribute_col in [
-                                        "Use column name",
-                                        "Use custom name",
-                                    ]:
-                                        df["attribute_col"] = attribute_label
-                                        sv.network_group_types.value.add(
-                                            attribute_label
-                                        )
+                                    elif flag_agg == "Count":
+                                        gdf[value_col] = gdf[value_col].astype(int)
                                         model_links.append(
-                                            df[
-                                                [entity_col, "attribute_col", value_col]
+                                            gdf[
+                                                [
+                                                    entity_col,
+                                                    attribute_col,
+                                                    "attribute_col2",
+                                                    value_col,
+                                                ]
                                             ].values.tolist()
                                         )
-                                    else:
-                                        sv.network_group_types.value.update(
-                                            df[attribute_label].unique().tolist()
-                                        )
+                                    elif flag_agg == "List":
+                                        gdf["count_col"] = 1
                                         model_links.append(
-                                            df[
-                                                [entity_col, attribute_col, value_col]
+                                            gdf[
+                                                [
+                                                    entity_col,
+                                                    "attribute_col",
+                                                    "attribute_col2",
+                                                    "count_col",
+                                                ]
                                             ].values.tolist()
                                         )
+                                functions.build_integrated_flags(sv)
+                            elif link_type == "Entity-Entity":
+                                if attribute_col in [
+                                    "Use column name",
+                                    "Use custom name",
+                                ]:
+                                    df["attribute_col"] = attribute_label
+                                    model_links.append(
+                                        df[
+                                            [entity_col, "attribute_col", value_col]
+                                        ].values.tolist()
+                                    )
+                                else:
+                                    model_links.append(
+                                        df[
+                                            [entity_col, attribute_col, value_col]
+                                        ].values.tolist()
+                                    )
+                                functions.build_undirected_graph(sv)
+                                # build_directed_graph(sv) TODO
+                            elif link_type == "Entity-Group":
+                                if attribute_col in [
+                                    "Use column name",
+                                    "Use custom name",
+                                ]:
+                                    df["attribute_col"] = attribute_label
+                                    sv.network_group_types.value.add(attribute_label)
+                                    model_links.append(
+                                        df[
+                                            [entity_col, "attribute_col", value_col]
+                                        ].values.tolist()
+                                    )
+                                else:
+                                    sv.network_group_types.value.update(
+                                        df[attribute_label].unique().tolist()
+                                    )
+                                    model_links.append(
+                                        df[
+                                            [entity_col, attribute_col, value_col]
+                                        ].values.tolist()
+                                    )
                 with b2:
                     if st.button(
                         "Clear data model",
@@ -449,12 +352,10 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 unique_names = original_df["Attribute"].unique()
                 for i, name in enumerate(unique_names, start=1):
                     name_format = name.split("==")[0].strip()
-                    atributes_entities.append(
-                        (
-                            name,
-                            f"{name_format}=={name_format}_{i!s}",
-                        )
-                    )
+                    atributes_entities.append((
+                        name,
+                        f"{name_format}=={name_format}_{i!s}",
+                    ))
 
                 sv.network_attributes_renamed.value = atributes_entities
 
@@ -474,12 +375,10 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
         components = None
         with index_col:
             st.markdown("##### Index nodes (optional)")
-            fuzzy_options = sorted(
-                [
-                    config.entity_label,
-                    *list(sv.network_node_types.value),
-                ]
-            )
+            fuzzy_options = sorted([
+                config.entity_label,
+                *list(sv.network_node_types.value),
+            ])
             network_indexed_node_types = st.multiselect(
                 "Select node types to fuzzy match",
                 default=sv.network_indexed_node_types.value,
@@ -712,18 +611,16 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                             else 0
                         )
 
-                        entity_records.append(
-                            (
-                                n.split(config.att_val_sep)[1],
-                                flags,
-                                ix,
-                                len(entities),
-                                community_flags,
-                                flagged,
-                                flags_per_entity,
-                                flaggedPerUnflagged,
-                            )
-                        )
+                        entity_records.append((
+                            n.split(config.att_val_sep)[1],
+                            flags,
+                            ix,
+                            len(entities),
+                            community_flags,
+                            flagged,
+                            flags_per_entity,
+                            flaggedPerUnflagged,
+                        ))
                 sv.network_entity_df.value = pd.DataFrame(
                     entity_records,
                     columns=[

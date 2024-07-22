@@ -24,7 +24,7 @@ class TestPrepareEntityAttribute:
         entity_links, node_types = prepare_entity_attribute(
             self.data,
             self.entity_id_column,
-            AttributeColumnType.ColumnName,
+            AttributeColumnType.ColumnName.value,
             self.columns_to_link,
         )
         assert node_types == {"attribute1", "attribute2"}
@@ -35,7 +35,7 @@ class TestPrepareEntityAttribute:
         entity_links, node_types = prepare_entity_attribute(
             self.data,
             self.entity_id_column,
-            AttributeColumnType.CustomName,
+            AttributeColumnType.CustomName.value,
             self.columns_to_link,
             attribute_name=custom_name,
         )

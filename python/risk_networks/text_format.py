@@ -17,7 +17,6 @@ def clean_text(text: str | int) -> str:
 def format_data_columns(
     values_df: pd.DataFrame, columns_to_link: list[str], entity_id_column: str | int
 ) -> pd.DataFrame:
-    values_df = values_df.copy()
     values_df[entity_id_column] = values_df[entity_id_column].apply(clean_text)
     for value_col in columns_to_link:
         values_df[value_col] = values_df[value_col].apply(clean_text)

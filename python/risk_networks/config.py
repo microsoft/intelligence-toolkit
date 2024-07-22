@@ -23,6 +23,6 @@ class LinkType(Enum):
 
 
 class AttributeColumnType(Enum):
-    ColumnName = "Column name"
-    CustomName = "Custom name"
-    RelatedColumn = "Related column"
+    ColumnName = "Use column name"
+    CustomName = "Use custom name"
+    RelatedColumn = "Use related column"

@@ -14,31 +14,13 @@ def _merge_condition(x, y) -> bool:
     """
     Merge condition function for merging nodes in the graph.
     """
-    return (
-        len(
-            {
-                xv.split(config.att_val_sep)[0]
-                for xv in sorted(x.split(config.list_sep))
-            }.intersection(
-                {
-                    yv.split(config.att_val_sep)[0]
-                    for yv in sorted(y.split(config.list_sep))
-                }
-            )
-        )
-        > 0
-        or len(
-            {
-                xv.split(config.att_val_sep)[1]
-                for xv in sorted(x.split(config.list_sep))
-            }.intersection(
-                {
-                    yv.split(config.att_val_sep)[1]
-                    for yv in sorted(y.split(config.list_sep))
-                }
-            )
-        )
-        > 0
+    x_parts = set(x.split(config.list_sep))
+    y_parts = set(y.split(config.list_sep))
+    return any(
+        x_part.split(config.att_val_sep)[i] == y_part.split(config.att_val_sep)[i]
+        for i in range(2)
+        for x_part in x_parts
+        for y_part in y_parts
     )
 
 

@@ -95,7 +95,7 @@ class OpenAIClient:
         except Exception as e:
             print(f"Error validating report: {e}")
             msg = f"Problem in OpenAI response. {e}"
-            raise Exception(msg)
+            raise Exception(msg) from e
 
     def generate_embedding(
         self, text: str, model: str = DEFAULT_EMBEDDING_MODEL
