@@ -141,11 +141,13 @@ def generative_batch_ai_component(
     batch_count = batch_count_raw + 1 if batch_count_remaining != 0 else batch_count_raw
     batch_messages = []
 
-    full_prompt = " ".join([
-        system_prompt_var.value["report_prompt"],
-        instructions_text,
-        system_prompt_var.value["safety_prompt"],
-    ])
+    full_prompt = " ".join(
+        [
+            system_prompt_var.value["report_prompt"],
+            instructions_text,
+            system_prompt_var.value["safety_prompt"],
+        ]
+    )
     for _i in range(batch_count):
         batch = batch_val[batch_offset : min(batch_offset + batch_size, len(batch_val))]
         batch_offset += batch_size
@@ -331,7 +333,7 @@ def prepare_input_df(
     if f"{workflow}_last_attributes" not in st.session_state:
         st.session_state[f"{workflow}_last_attributes"] = []
     if f"{workflow}_last_suppress_zeros" not in st.session_state:
-        st.session_state[f"{workflow}_last_suppress_zeros"] = False
+        st.session_state[f"{workflow}_last_suppress_zeros"] = True
     if (
         f"{workflow}_binned_df" not in st.session_state
         or len(st.session_state[f"{workflow}_binned_df"]) == 0
@@ -746,22 +748,22 @@ def prepare_input_df(
                     )
 
         if f"{workflow}_suppress_zeros" not in st.session_state:
-            st.session_state[f"{workflow}_suppress_zeros"] = False
+            st.session_state[f"{workflow}_suppress_zeros"] = True
         suppress_zeros = st.checkbox(
             "Suppress binary 0s",
             key=f"{workflow}_suppress_zeros_input",
             value=st.session_state[f"{workflow}_suppress_zeros"],
             help="For binary columns, maps the number 0 to None. This is useful when only the presence of an attribute is important, not the absence.",
         )
+        if suppress_zeros:
+            for col in bdf.columns.to_numpy():
+                if col != "Entity ID" and len(bdf[col].unique()) <= 2:
+                    if 0 in list(bdf[col].unique()) or "0" in list(bdf[col].unique()):
+                        bdf[col] = input_df_var.value[col].replace(0, np.nan)
+                        processed_df_var.value[col] = bdf[col]
         if suppress_zeros != st.session_state[f"{workflow}_suppress_zeros"]:
             st.session_state[f"{workflow}_suppress_zeros"] = suppress_zeros
-            if suppress_zeros:
-                for col in bdf.columns.to_numpy():
-                    if col != "Entity ID" and len(bdf[col].unique()) <= 2:
-                        if 0 in list(bdf[col].unique()):
-                            bdf[col] = input_df_var.value[col].replace(0, np.nan)
-                            processed_df_var.value[col] = bdf[col]
-            else:
+            if not suppress_zeros:
                 for col in bdf.columns.to_numpy():
                     if col != "Entity ID" and len(bdf[col].unique()) <= 2:
                         bdf[col] = input_df_var.value[col]
@@ -794,17 +796,21 @@ def prepare_input_df(
                     for _i, row in melted.iterrows():
                         if row["Attribute"] in expanded_atts:
                             if str(row["Value"]) not in ["", "<NA>"]:
-                                new_rows.append([
-                                    row["Subject ID"],
-                                    row["Attribute"] + "_" + str(row["Value"]),
-                                    "1",
-                                ])
+                                new_rows.append(
+                                    [
+                                        row["Subject ID"],
+                                        row["Attribute"] + "_" + str(row["Value"]),
+                                        "1",
+                                    ]
+                                )
                         else:
-                            new_rows.append([
-                                row["Subject ID"],
-                                row["Attribute"],
-                                str(row["Value"]),
-                            ])
+                            new_rows.append(
+                                [
+                                    row["Subject ID"],
+                                    row["Attribute"],
+                                    str(row["Value"]),
+                                ]
+                            )
                     melted = pd.DataFrame(
                         new_rows, columns=["Subject ID", "Attribute", "Value"]
                     )
