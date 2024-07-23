@@ -107,17 +107,12 @@ stages:
               workingDirectory: ./
               targetType: "inline"
               script: docker load -i $(System.ArtifactsDirectory)/output/*.tar
-          - task: Bash@3
-            displayName: Docker Login
+          - task: Docker@2
             inputs:
-              targetType: "inline"
-              script: docker login -u $(DOCKER_USERNAME) -p $(DOCKER_PASSWORD) $(DOCKER_REGISTRY)
-          - task: Bash@3
-            displayName: Push Docker Image
-            inputs:
-              workingDirectory: ./
-              targetType: "inline"
-              script: docker push $(DOCKER_REGISTRY)/intel-toolkit:$(TAG)   
+              containerRegistry: 'intelligenceappscontainerservice'
+              repository: '$(DOCKER_REGISTRY)/intelligence-toolkit'
+              command: 'push'
+              tags: '$(TAG)'
 
   - stage: Build_NSIS
     dependsOn: [Build]
