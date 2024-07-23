@@ -755,23 +755,38 @@ def prepare_input_df(
             value=st.session_state[f"{workflow}_suppress_zeros"],
             help="For binary columns, maps the number 0 to None. This is useful when only the presence of an attribute is important, not the absence.",
         )
+        reload = False
         if suppress_zeros:
             for col in processed_df_var.value.columns:
                 if col not in bdf:
                     continue
-                if col != "Entity ID" and len(bdf[col].unique()) <= 2:
-                    if 0 in list(bdf[col].unique()) or "0" in list(bdf[col].unique()):
+                unique_values = bdf[col].unique()
+                is_three_with_none = len(unique_values) == 3 and bdf[col].isna().any()
+
+                if col != "Entity ID" and (
+                    len(unique_values) <= 2 or is_three_with_none
+                ):
+                    if 0 in unique_values or str(0) in unique_values or float(0):
                         bdf[col] = input_df_var.value[col].replace(0, np.nan)
                         processed_df_var.value[col] = bdf[col]
+                        reload = True
         if suppress_zeros != st.session_state[f"{workflow}_suppress_zeros"]:
             st.session_state[f"{workflow}_suppress_zeros"] = suppress_zeros
             if not suppress_zeros:
                 for col in processed_df_var.value.columns:
                     if col not in bdf:
                         continue
-                    if col != "Entity ID" and len(bdf[col].unique()) <= 2:
+                    unique_values = bdf[col].unique()
+                    is_three_with_none = (
+                        len(unique_values) == 3 and bdf[col].isna().any()
+                    )
+                    if col != "Entity ID" and (
+                        len(unique_values) <= 2 or is_three_with_none
+                    ):
                         bdf[col] = input_df_var.value[col]
                         processed_df_var.value[col] = bdf[col]
+                    reload = True
+        if reload:
             st.rerun()
 
     if st.button(
