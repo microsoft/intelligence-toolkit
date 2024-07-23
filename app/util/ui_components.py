@@ -10,8 +10,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import streamlit as st
-from dateutil import parser as dateparser
-from util.df_functions import get_current_time
+from util.df_functions import get_current_time, quantize_numeric, quantize_datetime
 from util.download_pdf import add_download_pdf
 from util.enums import Mode
 from util.openai_wrapper import UIOpenAIConfiguration
@@ -346,7 +345,7 @@ def prepare_input_df(
     if f"{workflow}_selected_num_bins" not in st.session_state:
         st.session_state[f"{workflow}_selected_num_bins"] = 5
     if f"{workflow}_selected_trim_percent" not in st.session_state:
-        st.session_state[f"{workflow}_selected_trim_percent"] = 0.05
+        st.session_state[f"{workflow}_selected_trim_percent"] = 0.0
     if f"{workflow}_selected_compound_cols" not in st.session_state:
         st.session_state[f"{workflow}_selected_compound_cols"] = []
 
@@ -455,84 +454,13 @@ def prepare_input_df(
             help="Select the bin size for the datetime columns you want to quantize. Quantizing datetime columns into bins makes it easier to synthesize data, but reduces the amount of information in the data. If you do not select any columns, no binning will be performed.",
         )
 
-        # num_bins = st.number_input('Number of bins', value=5, help='Number of bins to use for each column. If 0, no binning will be performed. Fewer bins makes it easier to synthesize data, but reduces the amount of information in the data. More bins makes it harder to synthesize data, but preserves more information in the data.')
-        # trim_percent = st.number_input('Trim percent', value=0.05, help='Percent of values to trim from the top and bottom of each column before binning. This helps to reduce the impact of outliers on the binning process. For example, if trim percent is 0.05, the top and bottom 5% of values will be trimmed from each column before binning. If 0, no trimming will be performed.')
         if st.button("Quantize selected columns", key="quantize_date"):
             st.session_state[f"{workflow}_selected_binned_cols"] = selected_date_cols
             st.session_state[f"{workflow}_selected_binned_size"] = bin_size
 
             for col in selected_date_cols:
-                func = None
-                if bin_size == "Year":
-
-                    def convert(x):
-                        # parse as datetime using dateutil
-                        try:
-                            dt = dateparser.parse(str(x))
-                            return str(dt.year)
-                        except:
-                            return ""
-
-                    func = convert
-                elif bin_size == "Half":
-
-                    def convert(x):
-                        try:
-                            dt = dateparser.parse(str(x))
-                            half = "H1" if dt.month < 7 else "H2"
-                            return str(dt.year) + "-" + half
-                        except:
-                            return ""
-
-                    func = convert
-                elif bin_size == "Quarter":
-
-                    def convert(x):
-                        try:
-                            dt = dateparser.parse(str(x))
-                            quarter = (
-                                "Q1"
-                                if dt.month < 4
-                                else "Q2"
-                                if dt.month < 7
-                                else "Q3"
-                                if dt.month < 10
-                                else "Q4"
-                            )
-                            return str(dt.year) + "-" + quarter
-                        except:
-                            return ""
-
-                    func = convert
-                elif bin_size == "Month":
-
-                    def convert(x):
-                        try:
-                            dt = dateparser.parse(str(x))
-                            return str(dt.year) + "-" + str(dt.month).zfill(2)
-                        except:
-                            return ""
-
-                    func = convert
-                elif bin_size == "Day":
-
-                    def convert(x):
-                        try:
-                            dt = dateparser.parse(str(x))
-                            return (
-                                str(dt.year)
-                                + "-"
-                                + str(dt.month).zfill(2)
-                                + "-"
-                                + str(dt.day).zfill(2)
-                            )
-                        except:
-                            return ""
-
-                    func = convert
-                st.session_state[f"{workflow}_binned_df"][col] = input_df_var.value[
-                    col
-                ].apply(func)
+                result = quantize_datetime(st.session_state[f"{workflow}_binned_df"], col, bin_size)
+                st.session_state[f"{workflow}_binned_df"][col] = result
                 processed_df_var.value[col] = list(
                     st.session_state[f"{workflow}_binned_df"][col]
                 )
@@ -544,8 +472,8 @@ def prepare_input_df(
     with st.expander("Quantize numeric attributes", expanded=False):
         # quantize numeric columns into bins
         binnable_cols = []
-        for col in processed_df_var.value:
-            if col != "Subject ID" and processed_df_var.value[col].dtype in [
+        for col in input_df_var.value:
+            if col != "Subject ID" and input_df_var.value[col].dtype in [
                 "float64",
                 "int64",
                 "Int64",
@@ -558,13 +486,16 @@ def prepare_input_df(
             help="Select the numeric columns you want to quantize. Quantizing numeric columns into bins makes it easier to synthesize data, but reduces the amount of information in the data. If you do not select any columns, no binning will be performed.",
         )
         num_bins = st.number_input(
-            "Number of bins",
+            "Target bins",
             value=st.session_state[f"{workflow}_selected_num_bins"],
-            help="Number of bins to use for each column. If 0, no binning will be performed. Fewer bins makes it easier to synthesize data, but reduces the amount of information in the data. More bins makes it harder to synthesize data, but preserves more information in the data.",
+            help="Target number of bins to use for each column. If 0, no binning will be performed. Fewer bins makes it easier to synthesize data, but reduces the amount of information in the data. More bins makes it harder to synthesize data, but preserves more information in the data. Actual number of bins may vary from target based on preferred bin sizes.",
         )
         trim_percent = st.number_input(
             "Trim percent",
-            value=st.session_state[f"{workflow}_selected_trim_percent"],
+            min_value=0.0,
+            max_value=1.0,
+            step=0.01,
+            value=float(st.session_state[f"{workflow}_selected_trim_percent"]),
             help="Percent of values to trim from the top and bottom of each column before binning. This helps to reduce the impact of outliers on the binning process. For example, if trim percent is 0.05, the top and bottom 5% of values will be trimmed from each column before binning. If 0, no trimming will be performed.",
         )
 
@@ -576,71 +507,15 @@ def prepare_input_df(
                     ]
             else:
                 for col in selected_binnable_cols:
-                    distinct_values = tuple(sorted(input_df_var.value[col].unique()))
-                    if len(distinct_values) < 2:
-                        continue
-                    if distinct_values == (0, 1):
-                        continue
 
-                    sorted_values = sorted(input_df_var.value[col].values)
-                    # first, calculate the top and bottom trim_percent values and apply top and bottom coding
-                    top = min(
-                        len(sorted_values) - 1,
-                        math.floor(len(sorted_values) * (1 - trim_percent)),
+                    qd = quantize_numeric(
+                        input_df_var.value,
+                        col,
+                        num_bins,
+                        trim_percent
                     )
-                    top_trim = sorted_values[top]
-                    bottom_trim = sorted_values[
-                        math.floor(len(sorted_values) * trim_percent)
-                    ]
-                    processed_df_var.value.loc[
-                        input_df_var.value[col] > top_trim, col
-                    ] = top_trim
-                    processed_df_var.value.loc[
-                        input_df_var.value[col] < bottom_trim, col
-                    ] = bottom_trim
-                    target_bin_width = (top_trim - bottom_trim) / num_bins
-                    # round target bin width to a multiple of N x 10^k for N = [1, 2, 2.5, 5]. N and k should be chosen to exceed the target bin width by the least positive amount
-                    k = math.floor(math.log10(target_bin_width))
-                    n_bin_sizes = {}
-                    n_excess = {}
-                    for N in [1, 2, 2.5, 5]:
-                        n_bin_sizes[N] = N * pow(10, k)
-                        if n_bin_sizes[N] < target_bin_width:
-                            n_bin_sizes[N] = N * pow(10, k + 1)
-                        n_excess[N] = n_bin_sizes[N] - target_bin_width
-                    # find the N that minimizes the excess
-                    min_excess_n = sorted(n_excess.items(), key=lambda x: x[1])[0][0]
-                    selected_bin_size = n_bin_sizes[min_excess_n]
-                    # next, calculate the bin edges
-
-                    lower_bin_edge = (
-                        bottom_trim // selected_bin_size
-                    ) * selected_bin_size
-                    bin_edges = [lower_bin_edge * 0.999999999999]
-                    last_bin = lower_bin_edge
-                    while last_bin < top_trim:
-                        last_bin += selected_bin_size
-                        bin_edges.append(last_bin)
-                    st.session_state[f"{workflow}_binned_df"][col] = (
-                        input_df_var.value[col].copy(deep=True).astype("float64")
-                    )
-                    # finally, bin the values
-                    values, _bins = pd.cut(
-                        processed_df_var.value[col],
-                        bins=bin_edges,
-                        retbins=True,
-                        include_lowest=False,
-                    )
-
-                    results = [
-                        ""
-                        if type(v) == float
-                        else "(" + str(v.left) + "-" + str(v.right) + "]"
-                        for v in values
-                    ]
-                    # processed_df_var.value[col] = processed_df_var.value[col].astype('str')
-                    st.session_state[f"{workflow}_binned_df"][col] = results
-
+                    st.session_state[f"{workflow}_binned_df"][col] = qd
+                   
             st.session_state[f"{workflow}_selected_num_bins"] = num_bins
             st.session_state[f"{workflow}_selected_trim_percent"] = trim_percent
             st.session_state[
@@ -717,21 +592,18 @@ def prepare_input_df(
 
                 # remove any values that are less than the minimum count
                 if bdf[col].dtype == "str":
-                    print(f"Processing {col} as string")
                     bdf[col] = bdf[col].apply(
                         lambda x: ""
                         if x in value_counts and value_counts[x] < min_value
                         else str(x)
                     )
                 elif bdf[col].dtype == "float64":
-                    print(f"Processing {col} as float")
                     bdf[col] = bdf[col].apply(
                         lambda x: np.nan
                         if x in value_counts and value_counts[x] < min_value
                         else x
                     )
                 elif bdf[col].dtype == "int64":
-                    print(f"Processing {col} as int")
                     bdf[col] = bdf[col].apply(
                         lambda x: -sys.maxsize
                         if x in value_counts and value_counts[x] < min_value
@@ -740,7 +612,6 @@ def prepare_input_df(
                     bdf[col] = bdf[col].astype("Int64")
                     bdf[col] = bdf[col].replace(-sys.maxsize, np.nan)
                 else:
-                    print(f"Processing {col} as string")
                     bdf[col] = bdf[col].apply(
                         lambda x: ""
                         if x in value_counts and value_counts[x] < min_value
