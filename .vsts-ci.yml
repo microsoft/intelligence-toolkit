@@ -104,7 +104,7 @@ stages:
           - task: Bash@3
             displayName: Load Docker container
             inputs:
-              workingDirectory: ./
+              workingDirectory: ./output
               targetType: "inline"
               script: docker load -i $(System.ArtifactsDirectory)/output/*.tar
           - task: Docker@2
