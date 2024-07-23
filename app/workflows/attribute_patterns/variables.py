@@ -47,6 +47,7 @@ class SessionVariables:
         )
         self.attribute_table_index = SessionVariable(0, prefix)
         self.attribute_upload_key = SessionVariable(random.randint(1, 100), prefix)
+        self.attribute_time_series_df = SessionVariable(pd.DataFrame(), prefix)
 
     def reset_workflow(self):
         for key in st.session_state:

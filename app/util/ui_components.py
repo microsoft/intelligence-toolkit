@@ -840,7 +840,6 @@ def prepare_input_df(
     else:
         st.warning("Generate final dataset to continue.")
 
-
 def validate_ai_report(messages, result, show_status=True):
     if show_status:
         st.status(

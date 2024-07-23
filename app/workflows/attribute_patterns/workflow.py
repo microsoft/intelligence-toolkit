@@ -151,6 +151,10 @@ def create(sv: ap_variables.SessionVariables, workflow):
                             sv.attribute_min_pattern_count.value,
                             sv.attribute_max_pattern_length.value,
                         )
+                        tdf = create_time_series_df(
+                            sv.attribute_dynamic_df.value, sv.attribute_pattern_df.value
+                        )
+                        sv.attribute_time_series_df.value = tdf
                         st.rerun()
             with b4:
                 st.download_button(
@@ -168,9 +172,7 @@ def create(sv: ap_variables.SessionVariables, workflow):
                     f"Over **{period_count}** periods, detected **{pattern_count}** attribute patterns (**{unique_count}** unique) from **{sv.attribute_close_pairs.value}**/**{sv.attribute_all_pairs.value}** converging attribute pairs (**{round(sv.attribute_close_pairs.value / sv.attribute_all_pairs.value * 100, 2) if sv.attribute_all_pairs.value > 0 else 0}%**). Patterns ranked by ```overall_score = normalize(length * ln(count) * z_score * detections)```."
                 )
                 show_df = sv.attribute_pattern_df.value
-                tdf = create_time_series_df(
-                    sv.attribute_dynamic_df.value, sv.attribute_pattern_df.value
-                )
+                
                 gb = GridOptionsBuilder.from_dataframe(show_df)
                 gb.configure_default_column(
                     flex=1,
@@ -185,7 +187,6 @@ def create(sv: ap_variables.SessionVariables, workflow):
                 gridoptions = gb.build()
                 gridoptions["columnDefs"][0]["minWidth"] = 100
                 gridoptions["columnDefs"][1]["minWidth"] = 400
-
                 response = AgGrid(
                     show_df,
                     key=f"report_grid_{sv.attribute_table_index.value}",
@@ -207,6 +208,7 @@ def create(sv: ap_variables.SessionVariables, workflow):
                     if len(response["selected_rows"]) > 0
                     else sv.attribute_selected_pattern.value
                 )
+                print(f'selected_pattern: {selected_pattern}')
                 selected_pattern_period = (
                     response["selected_rows"][0]["period"]
                     if len(response["selected_rows"]) > 0
@@ -230,8 +232,10 @@ def create(sv: ap_variables.SessionVariables, workflow):
                         + selected_pattern_period
                         + ")**"
                     )
+                    tdf = sv.attribute_time_series_df.value
                     tdf = tdf[tdf["pattern"] == selected_pattern]
                     sv.attribute_selected_pattern_df.value = tdf
+                    print(f'Compute attribute counts')
                     sv.attribute_selected_pattern_att_counts.value = (
                         compute_attribute_counts(
                             sv.attribute_final_df.value,
@@ -240,6 +244,7 @@ def create(sv: ap_variables.SessionVariables, workflow):
                             selected_pattern_period,
                         )
                     )
+                    print(f'Computed attribute counts')
                     count_ct = (
                         alt.Chart(tdf)
                         .mark_line()
