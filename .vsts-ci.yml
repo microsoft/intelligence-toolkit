@@ -75,17 +75,17 @@ stages:
             inputs:
               workingDirectory: ./
               targetType: "inline"
-              script: docker build . -t $(DOCKER_REGISTRY)/intel-toolkit:$(TAG)
+              script: docker build . -t $(DOCKER_REGISTRY)/intelligence-toolkit:$(TAG)
           - task: Bash@3
             displayName: Save Docker Image
             inputs:
               workingDirectory: ./
               targetType: "inline"
-              script: docker save -o intel-toolkit.tar $(DOCKER_REGISTRY)/intel-toolkit:$(TAG)
+              script: docker save -o intelligence-toolkit.tar $(DOCKER_REGISTRY)/intelligence-toolkit:$(TAG)
 
           - task: PublishPipelineArtifact@1
             inputs:
-              targetPath: '$(System.DefaultWorkingDirectory)/intel-toolkit.tar'  # Path to the Docker container image
+              targetPath: '$(System.DefaultWorkingDirectory)/intelligence-toolkit.tar'  # Path to the Docker container image
               artifact: 'output'  # Name of the artifact
 
   - stage: Deploy
@@ -104,7 +104,7 @@ stages:
           - task: Bash@3
             displayName: Load Docker container
             inputs:
-              workingDirectory: ./output
+              workingDirectory: ./
               targetType: "inline"
               script: docker load -i $(System.ArtifactsDirectory)/output/*.tar
           - task: Docker@2
