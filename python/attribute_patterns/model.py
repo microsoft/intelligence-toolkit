@@ -112,38 +112,37 @@ def generate_graph_model(df, period_col):
 
 def compute_attribute_counts(df, pattern, period_col, period):
     atts = pattern.split(" & ")
-    fdf = (
-        df_functions.fix_null_ints(df)
-        .astype(str)
-        .replace("nan", "")
-        .replace("<NA>", "")
-    )
+    # Combine astype and replace operations
+    fdf = df_functions.fix_null_ints(df).replace({"nan": "", "<NA>": ""}).astype(str)
     fdf = fdf[fdf[period_col] == period]
-    for att in atts:
-        if att == "Subject ID":
-            continue
-        ps = att.split(type_val_sep)
-        if len(ps) == 2:
-            a, v = ps
-            fdf = fdf[fdf[a] == v]
-        else:
-            print(f"Error parsing attribute {att}")
 
+    # Pre-filter columns to avoid unnecessary processing
+    relevant_columns = [c for c in fdf.columns if c not in ["Subject ID", period_col]]
+    fdf = fdf[["Subject ID", period_col, *relevant_columns]]
+
+    for att in atts:
+        if att == "Subject ID" or type_val_sep not in att:
+            continue
+        attribute, value = att.split(type_val_sep)
+        fdf = fdf[fdf[attribute] == value]
+
+    # Melt with pre-filtered columns
     melted = pd.melt(
         fdf,
         id_vars=["Subject ID"],
-        value_vars=[c for c in fdf.columns if c not in ["Subject ID", period_col]],
+        value_vars=relevant_columns,
         var_name="Attribute",
         value_name="Value",
     )
     melted = melted[melted["Value"] != ""]
     melted["AttributeValue"] = melted["Attribute"] + type_val_sep + melted["Value"]
+
+    # Directly use nunique in groupby
     return (
-        melted.groupby("AttributeValue")
-        .agg({"Subject ID": "nunique"})
-        .rename(columns={"Subject ID": "Count"})
+        melted.groupby("AttributeValue")["Subject ID"]
+        .nunique()
+        .reset_index(name="Count")
         .sort_values(by="Count", ascending=False)
-        .reset_index()
     )
 
 

@@ -40,6 +40,7 @@ def create(sv: ap_variables.SessionVariables, workflow):
         "Detect patterns",
         "Generate AI pattern reports",
     ])
+    selected_pattern = ""
     graph_df = None
     with intro_tab:
         st.markdown(get_intro())
@@ -121,16 +122,21 @@ def create(sv: ap_variables.SessionVariables, workflow):
                 )
             with b3:
                 if st.button("Detect patterns"):
+                    progress_text = "Starting..."
+                    progress_bar = st.progress(0, text=progress_text)
                     sv.attribute_min_pattern_count.value = minimum_pattern_count
                     sv.attribute_max_pattern_length.value = maximum_pattern_count
                     sv.attribute_selected_pattern.value = ""
                     sv.attribute_selected_pattern_period.value = ""
 
-                    with st.spinner("Detecting patterns..."):
+                    with st.spinner("Processing..."):
                         sv.attribute_table_index.value += 1
+                        progress_bar.progress(20, text="Preparing graph...")
+
                         sv.attribute_df.value, time_to_graph = prepare_graph(
                             sv.attribute_dynamic_df.value
                         )
+                        progress_bar.progress(40, text="Generating embedding...")
                         (
                             sv.attribute_embedding_df.value,
                             sv.attribute_node_to_centroid.value,
@@ -139,7 +145,7 @@ def create(sv: ap_variables.SessionVariables, workflow):
                         sv.attribute_record_counter.value = RecordCounter(
                             sv.attribute_dynamic_df.value
                         )
-
+                        progress_bar.progress(60, text="Detecting data patterns...")
                         (
                             sv.attribute_pattern_df.value,
                             sv.attribute_close_pairs.value,
@@ -151,10 +157,14 @@ def create(sv: ap_variables.SessionVariables, workflow):
                             sv.attribute_min_pattern_count.value,
                             sv.attribute_max_pattern_length.value,
                         )
+                        progress_bar.progress(80, text="Creating time series...")
+
                         tdf = create_time_series_df(
                             sv.attribute_dynamic_df.value, sv.attribute_pattern_df.value
                         )
+                        progress_bar.progress(99, text="Finalizing...")
                         sv.attribute_time_series_df.value = tdf
+                        progress_bar.empty()
                         st.rerun()
             with b4:
                 st.download_button(
@@ -172,7 +182,7 @@ def create(sv: ap_variables.SessionVariables, workflow):
                     f"Over **{period_count}** periods, detected **{pattern_count}** attribute patterns (**{unique_count}** unique) from **{sv.attribute_close_pairs.value}**/**{sv.attribute_all_pairs.value}** converging attribute pairs (**{round(sv.attribute_close_pairs.value / sv.attribute_all_pairs.value * 100, 2) if sv.attribute_all_pairs.value > 0 else 0}%**). Patterns ranked by ```overall_score = normalize(length * ln(count) * z_score * detections)```."
                 )
                 show_df = sv.attribute_pattern_df.value
-                
+
                 gb = GridOptionsBuilder.from_dataframe(show_df)
                 gb.configure_default_column(
                     flex=1,
@@ -208,7 +218,7 @@ def create(sv: ap_variables.SessionVariables, workflow):
                     if len(response["selected_rows"]) > 0
                     else sv.attribute_selected_pattern.value
                 )
-                print(f'selected_pattern: {selected_pattern}')
+                print(f"selected_pattern: {selected_pattern}")
                 selected_pattern_period = (
                     response["selected_rows"][0]["period"]
                     if len(response["selected_rows"]) > 0
@@ -216,15 +226,6 @@ def create(sv: ap_variables.SessionVariables, workflow):
                 )
 
                 if selected_pattern != "":
-                    if selected_pattern != sv.attribute_selected_pattern.value:
-                        sv.attribute_selected_pattern.value = selected_pattern
-                        sv.attribute_selected_pattern_period.value = (
-                            selected_pattern_period
-                        )
-                        sv.attribute_report.value = ""
-                        sv.attribute_report_validation.value = {}
-                        st.rerun()
-
                     st.markdown(
                         "**Selected pattern: "
                         + selected_pattern
@@ -232,21 +233,31 @@ def create(sv: ap_variables.SessionVariables, workflow):
                         + selected_pattern_period
                         + ")**"
                     )
-                    tdf = sv.attribute_time_series_df.value
-                    tdf = tdf[tdf["pattern"] == selected_pattern]
-                    sv.attribute_selected_pattern_df.value = tdf
-                    print(f'Compute attribute counts')
-                    sv.attribute_selected_pattern_att_counts.value = (
-                        compute_attribute_counts(
-                            sv.attribute_final_df.value,
-                            selected_pattern,
-                            time_col,
-                            selected_pattern_period,
+                    if selected_pattern != sv.attribute_selected_pattern.value:
+                        sv.attribute_selected_pattern.value = selected_pattern
+                        sv.attribute_selected_pattern_period.value = (
+                            selected_pattern_period
                         )
-                    )
-                    print(f'Computed attribute counts')
+                        sv.attribute_report.value = ""
+                        sv.attribute_report_validation.value = {}
+
+                        tdf = sv.attribute_time_series_df.value
+                        tdf = tdf[tdf["pattern"] == selected_pattern]
+                        sv.attribute_selected_pattern_df.value = tdf
+
+                        print("Compute attribute counts")
+                        sv.attribute_selected_pattern_att_counts.value = (
+                            compute_attribute_counts(
+                                sv.attribute_final_df.value,
+                                selected_pattern,
+                                time_col,
+                                selected_pattern_period,
+                            )
+                        )
+                        print("Computed attribute counts")
+
                     count_ct = (
-                        alt.Chart(tdf)
+                        alt.Chart(sv.attribute_selected_pattern_df.value)
                         .mark_line()
                         .encode(x="period:O", y="count:Q", color=alt.ColorValue("blue"))
                         .properties(height=200, width=600)
@@ -313,17 +324,27 @@ def create(sv: ap_variables.SessionVariables, workflow):
                     on_callback = ui_components.create_markdown_callback(
                         report_placeholder
                     )
-                    result = ui_components.generate_text(
-                        messages, callbacks=[on_callback]
-                    )
-                    sv.attribute_report.value = result
+                    connection_bar = st.progress(10, text="Connecting to AI...")
 
-                    validation, messages_to_llm = ui_components.validate_ai_report(
-                        messages, result
-                    )
-                    sv.attribute_report_validation.value = validation
-                    sv.attribute_report_validation_messages.value = messages_to_llm
-                    st.rerun()
+                    def empty_connection_bar():
+                        connection_bar.empty()
+
+                    try:
+                        result = ui_components.generate_text(
+                            messages, callbacks=[on_callback, empty_connection_bar]
+                        )
+
+                        sv.attribute_report.value = result
+
+                        validation, messages_to_llm = ui_components.validate_ai_report(
+                            messages, result
+                        )
+                        sv.attribute_report_validation.value = validation
+                        sv.attribute_report_validation_messages.value = messages_to_llm
+                        st.rerun()
+                    except Exception as _e:
+                        empty_connection_bar()
+                        raise
                 else:
                     if sv.attribute_report.value == "":
                         gen_placeholder.warning(
