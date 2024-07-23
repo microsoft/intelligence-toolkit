@@ -110,7 +110,7 @@ stages:
           - task: Docker@2
             inputs:
               containerRegistry: 'intelligenceappscontainerservice'
-              repository: '$(DOCKER_REGISTRY)/intelligence-toolkit'
+              repository: 'intelligence-toolkit'
               command: 'push'
               tags: '$(TAG)'
 
