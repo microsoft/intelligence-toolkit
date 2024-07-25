@@ -10,14 +10,19 @@ import streamlit as st
 import workflows.risk_networks.config as config
 from streamlit_agraph import Config, Edge, Node
 from util.openai_wrapper import UIOpenAIConfiguration
+from util.session_variables import SessionVariables
 
 from python.AI.embedder import Embedder
+
+sv_home = SessionVariables("home")
 
 
 def embedder():
     try:
         ai_configuration = UIOpenAIConfiguration().get_configuration()
-        return Embedder(ai_configuration, config.cache_dir)
+        return Embedder(
+            ai_configuration, config.cache_dir, sv_home.local_embeddings.value
+        )
     except Exception as e:
         st.error(f"Error creating connection: {e}")
         st.stop()
@@ -157,20 +162,24 @@ def simplify_graph(C):
             {
                 xv.split(config.att_val_sep)[0]
                 for xv in sorted(x.split(config.list_sep))
-            }.intersection({
-                yv.split(config.att_val_sep)[0]
-                for yv in sorted(y.split(config.list_sep))
-            })
+            }.intersection(
+                {
+                    yv.split(config.att_val_sep)[0]
+                    for yv in sorted(y.split(config.list_sep))
+                }
+            )
         )
         > 0
         or len(
             {
                 xv.split(config.att_val_sep)[1]
                 for xv in sorted(x.split(config.list_sep))
-            }.intersection({
-                yv.split(config.att_val_sep)[1]
-                for yv in sorted(y.split(config.list_sep))
-            })
+            }.intersection(
+                {
+                    yv.split(config.att_val_sep)[1]
+                    for yv in sorted(y.split(config.list_sep))
+                }
+            )
         )
         > 0,
     )
@@ -296,10 +305,12 @@ def build_undirected_graph(sv):
 
 
 def build_integrated_flags(sv):
-    sv.network_integrated_flags.value = pd.concat([
-        pd.DataFrame(link_list, columns=["entity", "type", "flag", "count"])
-        for link_list in sv.network_flag_links.value
-    ])
+    sv.network_integrated_flags.value = pd.concat(
+        [
+            pd.DataFrame(link_list, columns=["entity", "type", "flag", "count"])
+            for link_list in sv.network_flag_links.value
+        ]
+    )
     sv.network_integrated_flags.value = (
         sv.network_integrated_flags.value.groupby(["entity", "type", "flag"])
         .sum()
