@@ -41,6 +41,7 @@ stages:
 
   - stage: Build
     dependsOn: []
+    condition: 
     jobs:
       - job: validate
         displayName: Install and tests
@@ -63,10 +64,10 @@ stages:
               workingDirectory: ./
               targetType: "inline"
               script: pytest
-              
       - job: buildAndPush
         displayName: BuildAndPushContainer
         dependsOn: validate
+        condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['SHOULD_DEPLOY'], 'true')))
         pool:
           vmImage: ubuntu-latest
         steps:
