@@ -80,6 +80,7 @@ stages:
               tags: '$(TAG)'
 
   - stage: Build_NSIS
+    dependsOn: []
     condition: eq(variables['BUILD_EXE'], 'true')
     jobs:
       - job: NSIS_Build
