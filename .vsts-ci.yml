@@ -64,59 +64,22 @@ stages:
               targetType: "inline"
               script: pytest
               
-      - job: build
-        displayName: BuildArtifact
+      - job: buildAndPush
+        displayName: BuildAndPushContainer
         dependsOn: validate
         pool:
           vmImage: ubuntu-latest
         steps:
-          - task: Bash@3
-            displayName: Build Docker Image
-            inputs:
-              workingDirectory: ./
-              targetType: "inline"
-              script: docker build . -t $(DOCKER_REGISTRY)/intelligence-toolkit:$(TAG)
-          - task: Bash@3
-            displayName: Save Docker Image
-            inputs:
-              workingDirectory: ./
-              targetType: "inline"
-              script: docker save -o intelligence-toolkit.tar $(DOCKER_REGISTRY)/intelligence-toolkit:$(TAG)
-
-          - task: PublishPipelineArtifact@1
-            inputs:
-              targetPath: '$(System.DefaultWorkingDirectory)/intelligence-toolkit.tar'  # Path to the Docker container image
-              artifact: 'output'  # Name of the artifact
-
-  - stage: Deploy
-    dependsOn: [Build]
-    condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['SHOULD_DEPLOY'], 'true')))
-    jobs:
-      - job: deploy
-        displayName: Deploy
-        pool:
-          vmImage: ubuntu-latest
-        steps:
-          - task: DownloadPipelineArtifact@2
-            inputs:
-              artifactName: 'output' 
-              downloadPath: '$(System.ArtifactsDirectory)/output' 
-          - task: Bash@3
-            displayName: Load Docker container
-            inputs:
-              workingDirectory: ./
-              targetType: "inline"
-              script: docker load -i $(System.ArtifactsDirectory)/output/*.tar
           - task: Docker@2
             inputs:
               containerRegistry: 'intelligenceappscontainerservice'
               repository: 'intelligence-toolkit'
-              command: 'push'
+              command: 'buildAndPush'
+              Dockerfile: '**/Dockerfile'
               tags: '$(TAG)'
 
   - stage: Build_NSIS
-    dependsOn: [Build]
-    condition: and(succeeded(), eq(variables['BUILD_EXE'], 'true'))
+    condition: eq(variables['BUILD_EXE'], 'true')
     jobs:
       - job: NSIS_Build
         pool:
