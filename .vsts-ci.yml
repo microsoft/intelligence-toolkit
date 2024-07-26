@@ -39,7 +39,7 @@ stages:
               ArtifactName: "CodeAnalysisLogs"
               ArtifactType: "Container"
 
-  - stage: Build
+  - stage: ValidateAndBuild
     dependsOn: []
     condition: 
     jobs:
