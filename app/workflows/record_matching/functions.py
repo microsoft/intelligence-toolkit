@@ -3,15 +3,20 @@
 #
 import streamlit as st
 from util.openai_wrapper import UIOpenAIConfiguration
+from util.session_variables import SessionVariables
 from workflows.record_matching import config
 
 from python.AI.embedder import Embedder
+
+sv_home = SessionVariables("home")
 
 
 def embedder():
     try:
         ai_configuration = UIOpenAIConfiguration().get_configuration()
-        return Embedder(ai_configuration, config.cache_dir)
+        return Embedder(
+            ai_configuration, config.cache_dir, sv_home.local_embeddings.value
+        )
     except Exception as e:
         st.error(f"Error creating connection: {e}")
         st.stop()
