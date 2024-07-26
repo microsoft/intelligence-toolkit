@@ -165,6 +165,7 @@ def create(sv: SessionVariables, workflow=None):
                         question, sv_home.save_cache.value
                     )
                 )
+
                 iteration += 1
                 cosine_distances = sorted(
                     [

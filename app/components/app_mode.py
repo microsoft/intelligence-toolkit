@@ -29,6 +29,11 @@ class AppMode:
             value=self.sv.save_cache.value,
             help="Enable caching of embeddings to speed up the application.",
         )
+        local_embed = st.sidebar.toggle(
+            "Use local embeddings (Group Narratives and Risk Networks)",
+            value=self.sv.local_embeddings.value,
+            help="Don't call OpenAI to embed, use a local library.",
+        )
 
         if mode != self.sv.protected_mode.value:
             self.sv.protected_mode.value = mode
@@ -37,4 +42,8 @@ class AppMode:
 
         if cache != self.sv.save_cache.value:
             self.sv.save_cache.value = mode
+            st.rerun()
+
+        if local_embed != self.sv.local_embeddings.value:
+            self.sv.local_embeddings.value = local_embed
             st.rerun()
