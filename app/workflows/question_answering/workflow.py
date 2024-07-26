@@ -29,14 +29,12 @@ def get_intro():
 
 def create(sv: SessionVariables, workflow=None):
     sv_home = SessionVariables("home")
-    intro_tab, uploader_tab, mining_tab, report_tab = st.tabs(
-        [
-            "Question answering workflow:",
-            "Upload data",
-            "Mine & match questions",
-            "Generate AI answer reports",
-        ]
-    )
+    intro_tab, uploader_tab, mining_tab, report_tab = st.tabs([
+        "Question answering workflow:",
+        "Upload data",
+        "Mine & match questions",
+        "Generate AI answer reports",
+    ])
 
     with intro_tab:
         st.markdown(get_intro())
@@ -197,12 +195,10 @@ def create(sv: SessionVariables, workflow=None):
                     )
                     status_history += (
                         f"{iteration_string}...<br/><br/>Matched user question to **{len(matched_qs)}** mined questions:<br/>- "
-                        + "<br/>- ".join(
-                            [
-                                f"Q{matched_q.id}: {matched_q.text}"
-                                for matched_q in matched_qs
-                            ]
-                        )
+                        + "<br/>- ".join([
+                            f"Q{matched_q.id}: {matched_q.text}"
+                            for matched_q in matched_qs
+                        ])
                         + "<br/><br/>"
                     )
                     sv.answering_status_history.value = status_history
@@ -225,12 +221,9 @@ def create(sv: SessionVariables, workflow=None):
                     st.rerun()
                 status_history += f"**Iteration {iteration}**...<br/><br/>Matched user question to **{len(matched_qs)}** of **{sv.answering_target_matches.value}** mined questions before reaching an unmined chunk"
                 if len(matched_qs) > 0:
-                    status_history += ":<br/>- " + "<br/>- ".join(
-                        [
-                            f"Q{matched_q.id}: {matched_q.text}"
-                            for matched_q in matched_qs
-                        ]
-                    )
+                    status_history += ":<br/>- " + "<br/>- ".join([
+                        f"Q{matched_q.id}: {matched_q.text}" for matched_q in matched_qs
+                    ])
                 status_history += "<br/><br/>"
 
                 new_questions = []
@@ -248,9 +241,9 @@ def create(sv: SessionVariables, workflow=None):
                         max_count = (
                             max_source_counts[0][1] if len(max_source_counts) > 0 else 0
                         )
-                        num_max = len(
-                            [x for x in max_source_counts if x[1] == max_count]
-                        )
+                        num_max = len([
+                            x for x in max_source_counts if x[1] == max_count
+                        ])
                         source_count = source_counts[source]
                         # print(f'Got a chunk with source count {source_count}. Max count is {max_count} and num max is {num_max}.')
                         if (

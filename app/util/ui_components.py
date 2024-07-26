@@ -10,7 +10,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import streamlit as st
-from util.df_functions import get_current_time, quantize_numeric, quantize_datetime
+from util.df_functions import get_current_time, quantize_datetime, quantize_numeric
 from util.download_pdf import add_download_pdf
 from util.enums import Mode
 from util.openai_wrapper import UIOpenAIConfiguration
@@ -140,13 +140,11 @@ def generative_batch_ai_component(
     batch_count = batch_count_raw + 1 if batch_count_remaining != 0 else batch_count_raw
     batch_messages = []
 
-    full_prompt = " ".join(
-        [
-            system_prompt_var.value["report_prompt"],
-            instructions_text,
-            system_prompt_var.value["safety_prompt"],
-        ]
-    )
+    full_prompt = " ".join([
+        system_prompt_var.value["report_prompt"],
+        instructions_text,
+        system_prompt_var.value["safety_prompt"],
+    ])
     for _i in range(batch_count):
         batch = batch_val[batch_offset : min(batch_offset + batch_size, len(batch_val))]
         batch_offset += batch_size
@@ -459,7 +457,9 @@ def prepare_input_df(
             st.session_state[f"{workflow}_selected_binned_size"] = bin_size
 
             for col in selected_date_cols:
-                result = quantize_datetime(st.session_state[f"{workflow}_binned_df"], col, bin_size)
+                result = quantize_datetime(
+                    st.session_state[f"{workflow}_binned_df"], col, bin_size
+                )
                 st.session_state[f"{workflow}_binned_df"][col] = result
                 processed_df_var.value[col] = list(
                     st.session_state[f"{workflow}_binned_df"][col]
@@ -507,15 +507,11 @@ def prepare_input_df(
                     ]
             else:
                 for col in selected_binnable_cols:
-
                     qd = quantize_numeric(
-                        input_df_var.value,
-                        col,
-                        num_bins,
-                        trim_percent
+                        input_df_var.value, col, num_bins, trim_percent
                     )
                     st.session_state[f"{workflow}_binned_df"][col] = qd
-                   
+
             st.session_state[f"{workflow}_selected_num_bins"] = num_bins
             st.session_state[f"{workflow}_selected_trim_percent"] = trim_percent
             st.session_state[
@@ -686,21 +682,17 @@ def prepare_input_df(
                     for _i, row in melted.iterrows():
                         if row["Attribute"] in expanded_atts:
                             if str(row["Value"]) not in ["", "<NA>"]:
-                                new_rows.append(
-                                    [
-                                        row["Subject ID"],
-                                        row["Attribute"] + "_" + str(row["Value"]),
-                                        "1",
-                                    ]
-                                )
-                        else:
-                            new_rows.append(
-                                [
+                                new_rows.append([
                                     row["Subject ID"],
-                                    row["Attribute"],
-                                    str(row["Value"]),
-                                ]
-                            )
+                                    row["Attribute"] + "_" + str(row["Value"]),
+                                    "1",
+                                ])
+                        else:
+                            new_rows.append([
+                                row["Subject ID"],
+                                row["Attribute"],
+                                str(row["Value"]),
+                            ])
                     melted = pd.DataFrame(
                         new_rows, columns=["Subject ID", "Attribute", "Value"]
                     )
@@ -725,6 +717,7 @@ def prepare_input_df(
         st.success("Data preparation complete.")
     else:
         st.warning("Generate final dataset to continue.")
+
 
 def validate_ai_report(messages, result, show_status=True):
     if show_status:

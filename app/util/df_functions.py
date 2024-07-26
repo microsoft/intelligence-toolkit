@@ -1,10 +1,11 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+import math
 import sys
 
 import numpy as np
 import pandas as pd
-import math
 from dateutil import parser as dateparser
+
 
 def fix_null_ints(in_df):
     df = in_df.copy()
@@ -28,6 +29,7 @@ def fix_null_ints(in_df):
 
 def get_current_time():
     return pd.Timestamp.now().strftime("%Y%m%d%H%M%S")
+
 
 def quantize_datetime(input_df, col, bin_size):
     func = None
@@ -101,15 +103,20 @@ def quantize_datetime(input_df, col, bin_size):
     result = input_df[col].apply(func)
     return result
 
+
 def quantize_numeric(input_df, col, num_bins, trim_percent):
-    distinct_values = tuple(sorted([x for x in input_df[col].unique() if str(x) != 'nan']))
+    distinct_values = tuple(
+        sorted([x for x in input_df[col].unique() if str(x) != "nan"])
+    )
     print([type(x) for x in distinct_values])
-    print(f'Quantizing {col} with distinct values: {distinct_values} into {num_bins} bins with {trim_percent} trim percent')
+    print(
+        f"Quantizing {col} with distinct values: {distinct_values} into {num_bins} bins with {trim_percent} trim percent"
+    )
     if len(distinct_values) < 2:
         return
     if distinct_values == (0, 1):
         return
-    sorted_values = sorted([x for x in input_df[col].values if str(x) != 'nan'])
+    sorted_values = sorted([x for x in input_df[col].values if str(x) != "nan"])
     processed_df = input_df.copy(deep=True)
     # first, calculate the top and bottom trim_percent values and apply top and bottom coding
     top = min(
@@ -118,16 +125,12 @@ def quantize_numeric(input_df, col, num_bins, trim_percent):
     )
     top_trim = sorted_values[top]
     bx = math.floor(len(sorted_values) * trim_percent)
-    print(f'bx: {bx}')
+    print(f"bx: {bx}")
     bottom_trim = sorted_values[bx]
-    print(f'bv: {sorted_values[bx]}')
+    print(f"bv: {sorted_values[bx]}")
     print(f"Top trim: {top_trim}, Bottom trim: {bottom_trim}")
-    processed_df.loc[
-        input_df[col] > top_trim, col
-    ] = top_trim
-    processed_df.loc[
-        input_df[col] < bottom_trim, col
-    ] = bottom_trim
+    processed_df.loc[input_df[col] > top_trim, col] = top_trim
+    processed_df.loc[input_df[col] < bottom_trim, col] = bottom_trim
     target_bin_width = (top_trim - bottom_trim) / num_bins
     # round target bin width to a multiple of N x 10^k for N = [1, 2, 2.5, 5]. N and k should be chosen to exceed the target bin width by the least positive amount
     k = math.floor(math.log10(target_bin_width))
@@ -143,9 +146,7 @@ def quantize_numeric(input_df, col, num_bins, trim_percent):
     selected_bin_size = n_bin_sizes[min_excess_n]
     # next, calculate the bin edges
 
-    lower_bin_edge = (
-        bottom_trim // selected_bin_size
-    ) * selected_bin_size
+    lower_bin_edge = (bottom_trim // selected_bin_size) * selected_bin_size
     bin_edges = [lower_bin_edge * 0.999999999999]
     last_bin = lower_bin_edge
     while last_bin < top_trim:
@@ -160,9 +161,7 @@ def quantize_numeric(input_df, col, num_bins, trim_percent):
     )
 
     results = [
-        ""
-        if str(v) == 'nan'
-        else "(" + str(v.left) + "-" + str(v.right) + "]"
+        "" if str(v) == "nan" else "(" + str(v.left) + "-" + str(v.right) + "]"
         for v in values
     ]
     print(set(results))
