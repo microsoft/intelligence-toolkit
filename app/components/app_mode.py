@@ -30,7 +30,7 @@ class AppMode:
             help="Enable caching of embeddings to speed up the application.",
         )
         local_embed = st.sidebar.toggle(
-            "Use local embeddings",
+            "Use local embeddings (Group Narratives and Risk Networks)",
             value=self.sv.local_embeddings.value,
             help="Don't call OpenAI to embed, use a local library.",
         )

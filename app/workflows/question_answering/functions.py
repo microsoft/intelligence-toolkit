@@ -24,8 +24,8 @@ def embedder():
     try:
         ai_configuration = UIOpenAIConfiguration().get_configuration()
         return Embedder(
-            ai_configuration, config.cache_dir, sv_home.local_embeddings.value
-        )
+            ai_configuration, config.cache_dir, False
+        )  # Local always false for QA because of longer texts
     except Exception as e:
         st.error(f"Error creating connection: {e}")
         st.stop()
