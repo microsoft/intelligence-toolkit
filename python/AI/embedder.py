@@ -5,6 +5,8 @@ import logging
 
 import numpy as np
 
+from python.AI.defaults import DEFAULT_LOCAL_EMBEDDING_MODEL
+
 from .cache_pickle import CachePickle
 from .client import OpenAIClient
 from .openai_configuration import OpenAIConfiguration
@@ -21,7 +23,7 @@ class Embedder:
         self.configuration = configuration or OpenAIConfiguration()
         self.openai_client = OpenAIClient(configuration)
         self.pickle = CachePickle(path=pickle_path)
-        self.model = SentenceTransformer("all-MiniLM-L6-v2")
+        self.model = SentenceTransformer(DEFAULT_LOCAL_EMBEDDING_MODEL)
         self.local = local
 
     def embed_store_one(self, text: str, cache_data=True):
@@ -32,7 +34,7 @@ class Embedder:
         )
         print(f"Got {len(embedding)} existing texts")
         if not embedding:
-            tokens = get_token_count(text)
+            tokens = get_token_count(text, None, self.model)
             if tokens > self.configuration.max_tokens:
                 text = text[: self.configuration.max_tokens]
                 logger.info("Truncated text to max tokens")

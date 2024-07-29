@@ -87,7 +87,7 @@ def chunk_files(sv, files):
     pb.empty()
 
 
-def update_question(sv, question_history, new_questions, placeholder, prefix):
+def update_question(question_history, new_questions, placeholder, prefix):
     response = question_history[-1]
     if len(new_questions) > 0:
         q_texts = [f"{q.id}: {q.text}\n\n{q.answer_texts[0]}" for q in new_questions]
