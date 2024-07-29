@@ -23,7 +23,7 @@ class Embedder:
         self.configuration = configuration or OpenAIConfiguration()
         self.openai_client = OpenAIClient(configuration)
         self.pickle = CachePickle(path=pickle_path)
-        self.model = SentenceTransformer(DEFAULT_LOCAL_EMBEDDING_MODEL)
+        self.local_client = SentenceTransformer(DEFAULT_LOCAL_EMBEDDING_MODEL)
         self.local = local
 
     def embed_store_one(self, text: str, cache_data=True):
@@ -34,13 +34,13 @@ class Embedder:
         )
         print(f"Got {len(embedding)} existing texts")
         if not embedding:
-            tokens = get_token_count(text, None, self.model)
+            tokens = get_token_count(text)
             if tokens > self.configuration.max_tokens:
                 text = text[: self.configuration.max_tokens]
                 logger.info("Truncated text to max tokens")
             try:
                 if self.local:
-                    embedding = self.model.encode(text).tolist()
+                    embedding = self.local_client.encode(text).tolist()
                 else:
                     embedding = self.openai_client.generate_embedding([text])
             except Exception as e:
@@ -81,7 +81,7 @@ class Embedder:
             batch_texts = [x[1] for x in batch]
             try:
                 if self.local:
-                    embeddings = self.model.encode(batch_texts).tolist()
+                    embeddings = self.local_client.encode(batch_texts).tolist()
                 else:
                     embeddings = [
                         x.embedding

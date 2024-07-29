@@ -23,7 +23,7 @@ from python.AI.defaults import DEFAULT_MAX_INPUT_TOKENS
 
 def return_token_count(text: str) -> int:
     ai_configuration = UIOpenAIConfiguration().get_configuration()
-    return utils.get_token_count(text, ai_configuration.model)
+    return utils.get_token_count(text, None, ai_configuration.model)
 
 
 def dataframe_with_selections(df, selections, selection_col, label, key, height=250):
