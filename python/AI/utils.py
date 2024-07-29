@@ -17,9 +17,11 @@ from .validation_prompt import GROUNDEDNESS_PROMPT
 log = logging.getLogger(__name__)
 
 
-def get_token_count(text: str, encoding=DEFAULT_ENCODING) -> int:
+def get_token_count(text: str, encoding=None, model=None) -> int:
     """Function that counts the number of tokens in a string."""
-    encoder = tiktoken.get_encoding(encoding)
+    encoder = tiktoken.get_encoding(encoding or DEFAULT_ENCODING)
+    if model:
+        encoder = tiktoken.encoding_for_model(model)
     return len(encoder.encode(json.dumps(text)))
 
 

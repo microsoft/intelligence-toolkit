@@ -65,9 +65,7 @@ class OpenAIClient:
         stream: bool = True,
         callbacks: list[LLMCallback] | None = None,
     ):
-        print("type", self.configuration.api_type)
         try:
-            print("type", self.configuration.api_type)
             response = self._client.chat.completions.create(
                 model=self.configuration.model,
                 temperature=self.configuration.temperature,
