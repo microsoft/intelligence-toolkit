@@ -23,7 +23,9 @@ sv_home = SessionVariables("home")
 def embedder():
     try:
         ai_configuration = UIOpenAIConfiguration().get_configuration()
-        return Embedder(ai_configuration, config.cache_dir)
+        return Embedder(
+            ai_configuration, config.cache_dir, sv_home.local_embeddings.value
+        )
     except Exception as e:
         st.error(f"Error creating connection: {e}")
         st.stop()
@@ -68,8 +70,7 @@ def chunk_files(sv, files):
                     f"\n[PAGE {px + 1}]\n\n{x.strip()}\n\n"
                     for x in text_splitter.split(page_text)
                 ]
-                for chunk in chunks:
-                    file_chunks.append((file, chunk))
+                file_chunks.extend([(file, chunk) for chunk in chunks])
                 file.set_text(doc_text)
     functions_embedder = embedder()
     for cx, (file, chunk) in enumerate(file_chunks):
@@ -85,7 +86,7 @@ def chunk_files(sv, files):
     pb.empty()
 
 
-def update_question(sv, question_history, new_questions, placeholder, prefix):
+def update_question(question_history, new_questions, placeholder, prefix):
     response = question_history[-1]
     if len(new_questions) > 0:
         q_texts = [f"{q.id}: {q.text}\n\n{q.answer_texts[0]}" for q in new_questions]

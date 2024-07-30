@@ -15,3 +15,4 @@ class SessionVariables:
         self.protected_mode = sv.SessionVariable(False)
         self.max_embedding_size = sv.SessionVariable(500)
         self.save_cache = sv.SessionVariable(True)
+        self.local_embeddings = sv.SessionVariable(False)

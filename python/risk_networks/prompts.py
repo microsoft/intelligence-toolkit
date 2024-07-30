@@ -13,6 +13,8 @@ Some entities are directly linked to risk flags, while others are indirectly lin
 
 However, not all connections are equally important. The extent to which flags elsewhere in the network raise the level of concern for a given entity depends on many factors, including the number, nature, lengths, and exclusiveness of the connections between the entity and related flagged entities.
 
+Ensure that your describe these connections using narrative text rather than reproducing the markdown input format.
+
 The same entity may also appear multiple times under similar names. Use reasoning to determine whether two entities are likely to be the same and what impact this should make on risk exposure assessment.
 
 Goal:

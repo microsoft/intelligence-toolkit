@@ -10,15 +10,20 @@ import pandas as pd
 import streamlit as st
 from streamlit_agraph import Config, Edge, Node
 from util.openai_wrapper import UIOpenAIConfiguration
+from util.session_variables import SessionVariables
 
 from python.AI.embedder import Embedder
 from python.risk_networks import config
+
+sv_home = SessionVariables("home")
 
 
 def embedder():
     try:
         ai_configuration = UIOpenAIConfiguration().get_configuration()
-        return Embedder(ai_configuration, config.cache_dir)
+        return Embedder(
+            ai_configuration, config.cache_dir, sv_home.local_embeddings.value
+        )
     except Exception as e:
         st.error(f"Error creating connection: {e}")
         st.stop()

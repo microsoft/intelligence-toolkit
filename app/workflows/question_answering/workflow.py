@@ -53,7 +53,7 @@ def create(sv: SessionVariables, workflow=None):
         num_chunks = sum(len(f.chunk_texts) for f in sv.answering_files.value.values())
         if num_files > 0:
             st.success(
-                f"Chunked **{num_files}** files into **{num_chunks}** chunks of up to **{CHUNK_SIZE}** characters."
+                f"Chunked **{num_files}** file{'s' if num_files > 1 else ''} into **{num_chunks}** chunks of up to **{CHUNK_SIZE}** tokens."
             )
     with mining_tab:
         c1, c2, c3, c4, c5 = st.columns([4, 1, 1, 1, 1])
@@ -165,6 +165,7 @@ def create(sv: SessionVariables, workflow=None):
                         question, sv_home.save_cache.value
                     )
                 )
+
                 iteration += 1
                 cosine_distances = sorted(
                     [
@@ -209,7 +210,9 @@ def create(sv: SessionVariables, workflow=None):
                                 delta = c.generate_outline(level=6)
                                 qs = c.list_all_sub_questions()
                                 candidate = report_input + delta
-                                candidate_tokens = utils.get_token_count(candidate)
+                                candidate_tokens = ui_components.return_token_count(
+                                    candidate
+                                )
                                 if candidate_tokens <= sv.answering_outline_limit.value:
                                     report_input = candidate
                                     seen_qs.update([q.id for q in qs])
@@ -311,7 +314,6 @@ def create(sv: SessionVariables, workflow=None):
                         "Augmenting user question with partial answers:<br/>"
                     )
                     new_question = functions.update_question(
-                        sv,
                         sv.answering_question_history.value,
                         new_questions,
                         lazy_answering_placeholder,

@@ -1,21 +1,18 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 #
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+import semchunk
+import tiktoken
 
-from .defaults import CHUNK_OVERLAP, CHUNK_SIZE
+from .defaults import CHUNK_SIZE, DEFAULT_LLM_MODEL
 
 
 class TextSplitter:
-    def __init__(
-        self, chunk_size: int = CHUNK_SIZE, chunk_overlap: int = CHUNK_OVERLAP
-    ):
-        self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap,
-            length_function=len,
-            is_separator_regex=False,
+    def __init__(self, chunk_size: int = CHUNK_SIZE, model: str = DEFAULT_LLM_MODEL):
+        self.chunk_size = chunk_size
+        self._chunk = semchunk.chunkerify(
+            tiktoken.encoding_for_model(model), chunk_size
         )
 
-    def split(self, text: str):
-        return self.text_splitter.split_text(text)
+    def split(self, text: str):  # -> Any:
+        return self._chunk(text)

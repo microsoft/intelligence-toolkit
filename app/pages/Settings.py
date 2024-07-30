@@ -179,7 +179,8 @@ def main():
         st.text("")
         clear = st.button("Clear all embeddings")
         if clear:
-            delete_embeddings_pickle(os.environ.get("LOCALAPPDATA"))
+            delete_embeddings_pickle()
+            st.success("Embeddings cleared.")
 
 
 if __name__ == "__main__":
