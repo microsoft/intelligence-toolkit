@@ -145,13 +145,11 @@ def generative_batch_ai_component(
     batch_count = batch_count_raw + 1 if batch_count_remaining != 0 else batch_count_raw
     batch_messages = []
 
-    full_prompt = " ".join(
-        [
-            system_prompt_var.value["report_prompt"],
-            instructions_text,
-            system_prompt_var.value["safety_prompt"],
-        ]
-    )
+    full_prompt = " ".join([
+        system_prompt_var.value["report_prompt"],
+        instructions_text,
+        system_prompt_var.value["safety_prompt"],
+    ])
     for _i in range(batch_count):
         batch = batch_val[batch_offset : min(batch_offset + batch_size, len(batch_val))]
         batch_offset += batch_size
@@ -687,21 +685,17 @@ def prepare_input_df(
                     for _i, row in melted.iterrows():
                         if row["Attribute"] in expanded_atts:
                             if str(row["Value"]) not in ["", "<NA>"]:
-                                new_rows.append(
-                                    [
-                                        row["Subject ID"],
-                                        row["Attribute"] + "_" + str(row["Value"]),
-                                        "1",
-                                    ]
-                                )
-                        else:
-                            new_rows.append(
-                                [
+                                new_rows.append([
                                     row["Subject ID"],
-                                    row["Attribute"],
-                                    str(row["Value"]),
-                                ]
-                            )
+                                    row["Attribute"] + "_" + str(row["Value"]),
+                                    "1",
+                                ])
+                        else:
+                            new_rows.append([
+                                row["Subject ID"],
+                                row["Attribute"],
+                                str(row["Value"]),
+                            ])
                     melted = pd.DataFrame(
                         new_rows, columns=["Subject ID", "Attribute", "Value"]
                     )
