@@ -4,6 +4,7 @@
 import logging
 
 import numpy as np
+from sentence_transformers import SentenceTransformer
 
 from python.AI.defaults import DEFAULT_LOCAL_EMBEDDING_MODEL
 
@@ -13,7 +14,6 @@ from .openai_configuration import OpenAIConfiguration
 from .utils import get_token_count, hash_text
 
 logger = logging.getLogger(__name__)
-from sentence_transformers import SentenceTransformer
 
 
 class Embedder:

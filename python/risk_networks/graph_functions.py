@@ -6,6 +6,11 @@ from collections import defaultdict
 from typing import Any
 
 import networkx as nx
+import pandas as pd
+from sklearn.neighbors import NearestNeighbors
+
+from python.AI import classes
+from python.AI.embedder import Embedder
 
 from . import config
 
@@ -109,27 +114,25 @@ def build_undirected_graph(
 def build_network_from_entities(
     G,  # noqa: N803
     nodes,
-    network_trimmed_attributes,
-    network_entity_to_community_ix,
-    network_inferred_links,
-    network_integrated_flags,
+    trimmed_attributes,
+    entity_to_community_ix,
+    inferred_links,
+    integrated_flags,
 ) -> tuple[nx.Graph, Any]:
     N = nx.Graph()
-    trimmed_nodeset = network_trimmed_attributes["Attribute"].unique().tolist()
+    trimmed_nodeset = trimmed_attributes["Attribute"].unique().tolist()
     for node in nodes:
         n_c = (
-            str(network_entity_to_community_ix[node])
-            if node in network_entity_to_community_ix
-            else ""
+            str(entity_to_community_ix[node]) if node in entity_to_community_ix else ""
         )
         N.add_node(node, type=config.entity_label, network=n_c, flags=0)
-        ent_neighbors = set(G.neighbors(node)).union(network_inferred_links[node])
+        ent_neighbors = set(G.neighbors(node)).union(inferred_links[node])
         for ent_neighbor in ent_neighbors:
             if ent_neighbor in trimmed_nodeset:
                 continue
 
             if ent_neighbor.startswith(config.entity_label) and node != ent_neighbor:
-                en_c = network_entity_to_community_ix.get(ent_neighbor, "")
+                en_c = entity_to_community_ix.get(ent_neighbor, "")
                 N.add_node(ent_neighbor, type=config.entity_label, network=en_c)
                 N.add_edge(node, ent_neighbor)
             else:  # att
@@ -140,7 +143,7 @@ def build_network_from_entities(
                 )
                 N.add_edge(node, ent_neighbor)
                 att_neighbors = set(G.neighbors(ent_neighbor)).union(
-                    network_inferred_links[ent_neighbor]
+                    inferred_links[ent_neighbor]
                 )
                 for att_neighbor in att_neighbors:
                     if att_neighbor in trimmed_nodeset or not att_neighbor.startswith(
@@ -154,7 +157,7 @@ def build_network_from_entities(
                         flags=0,
                     )
                     fuzzy_att_neighbors = set(G.neighbors(att_neighbor)).union(
-                        network_inferred_links[att_neighbor]
+                        inferred_links[att_neighbor]
                     )
                     for fuzzy_att_neighbor in fuzzy_att_neighbors:
                         if (
@@ -168,8 +171,8 @@ def build_network_from_entities(
                             flags=0,
                         )
                         N.add_edge(att_neighbor, fuzzy_att_neighbor)
-    if len(network_integrated_flags) > 0:
-        fdf = network_integrated_flags
+    if len(integrated_flags) > 0:
+        fdf = integrated_flags
         fdf = fdf[fdf["count"] > 0]
         flagged_nodes = fdf["qualified_entity"].unique().tolist()
         for node in flagged_nodes:
@@ -177,4 +180,48 @@ def build_network_from_entities(
                 N.nodes[node]["flags"] = fdf.loc[
                     fdf["qualified_entity"] == node, "count"
                 ].sum()
-    return N, network_integrated_flags  # change sv???
+    return N, integrated_flags  # change sv???
+
+
+def index_nodes(
+    indexed_node_types,
+    overall_graph,
+    on_embedding_batch_change=None,
+    use_local=False,
+    save_cache=True,
+):
+    if len(indexed_node_types) == 0:
+        msg = "No node types to index"
+        raise ValueError(msg)
+    text_types = [
+        (n, d["type"])
+        for n, d in overall_graph.nodes(data=True)
+        if d["type"] in indexed_node_types
+    ]
+    texts = [t[0] for t in text_types]
+
+    callback = classes.BatchEmbeddingCallback()
+    callback.on_embedding_batch_change = on_embedding_batch_change
+    functions_embedder = Embedder(None, config.cache_dir, use_local)
+    embeddings = functions_embedder.embed_store_many(
+        texts, [callback] if on_embedding_batch_change else None, save_cache
+    )
+
+    vals = [(n, t, e) for (n, t), e in zip(text_types, embeddings, strict=False)]
+    edf = pd.DataFrame(vals, columns=["text", "type", "vector"])
+
+    edf = edf[edf["text"].isin(texts)]
+    embedded_texts = edf["text"].tolist()
+    nbrs = NearestNeighbors(
+        n_neighbors=20,
+        n_jobs=1,
+        algorithm="auto",
+        leaf_size=20,
+        metric="cosine",
+    ).fit(embeddings)
+    (
+        nearest_text_distances,
+        nearest_text_indices,
+    ) = nbrs.kneighbors(embeddings)
+
+    return embedded_texts, nearest_text_distances, nearest_text_indices

@@ -386,15 +386,6 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 help="Select the node types to embed into a multi-dimensional semantic space for fuzzy matching.",
             )
             if st.button("Index nodes", disabled=len(network_indexed_node_types) == 0):
-                sv.network_indexed_node_types.value = network_indexed_node_types
-                text_types = [
-                    (n, d["type"])
-                    for n, d in sv.network_overall_graph.value.nodes(data=True)
-                    if d["type"] in sv.network_indexed_node_types.value
-                ]
-                texts = [t[0] for t in text_types]
-
-                df = pd.DataFrame(text_types, columns=["text", "type"])
                 pb = st.progress(0, "Embedding text batches...")
 
                 def on_embedding_batch_change(current, total):
@@ -403,32 +394,19 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                         f"Embedding text batch {current} of {total}...",
                     )
 
-                callback = classes.BatchEmbeddingCallback()
-                callback.on_embedding_batch_change = on_embedding_batch_change
-                functions_embedder = functions.embedder()
-                embeddings = functions_embedder.embed_store_many(
-                    texts, [callback], sv_home.save_cache.value
-                )
-                pb.empty()
+                sv.network_indexed_node_types.value = network_indexed_node_types
 
-                vals = [
-                    (n, t, e) for (n, t), e in zip(text_types, embeddings, strict=False)
-                ]
-                edf = pd.DataFrame(vals, columns=["text", "type", "vector"])
-
-                edf = edf[edf["text"].isin(texts)]
-                sv.network_embedded_texts.value = edf["text"].tolist()
-                nbrs = NearestNeighbors(
-                    n_neighbors=20,
-                    n_jobs=1,
-                    algorithm="auto",
-                    leaf_size=20,
-                    metric="cosine",
-                ).fit(embeddings)
                 (
+                    sv.network_embedded_texts.value,
                     sv.network_nearest_text_distances.value,
                     sv.network_nearest_text_indices.value,
-                ) = nbrs.kneighbors(embeddings)
+                ) = graph_functions.index_nodes(
+                    sv.network_indexed_node_types.value,
+                    sv.network_overall_graph.value,
+                    on_embedding_batch_change,
+                    sv_home.local_embeddings.value,
+                    sv_home.save_cache.value,
+                )
                 st.rerun()
             nodes_indexed = len(sv.network_embedded_texts.value)
             if nodes_indexed > 0:

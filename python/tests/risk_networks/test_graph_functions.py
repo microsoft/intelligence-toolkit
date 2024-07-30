@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock, patch
+
 import networkx as nx
 import pytest
 
@@ -6,6 +8,7 @@ from python.risk_networks.graph_functions import (
     _merge_node_list,
     _merge_nodes,
     build_undirected_graph,
+    index_nodes,
     simplify_graph,
 )
 
@@ -182,3 +185,76 @@ class TestBuildUndirectedGraph:
             assert result.has_node(node)
         for edge in expected_edges:
             assert result.has_edge(edge[0], edge[1])
+
+
+class TestIndexNodes:
+    @pytest.fixture()
+    def overall_graph_small(self):
+        G = nx.Graph()
+        G.add_node("Entity1", type="TypeA")
+        G.add_node("Entity2", type="TypeB")
+        G.add_node("Entity3", type="TypeA")
+        G.add_node("Entity4", type="TypeC")
+        G.add_edge("Entity1", "Entity2")
+        G.add_edge("Entity3", "Entity4")
+        return G
+
+    @pytest.fixture()
+    def overall_graph(self):
+        G = nx.Graph()
+        # Adding more nodes and edges to the graph
+        for i in range(1, 31):
+            G.add_node(
+                f"Entity{i}", type=f"Type{chr(65 + (i % 4))}"
+            )  # Types will be TypeA, TypeB, TypeC
+        for i in range(1, 31, 2):
+            G.add_edge(f"Entity{i}", f"Entity{i + 1}")
+        return G
+
+    def test_index_nodes_empty_types(self, overall_graph):
+        with pytest.raises(
+            ValueError,
+            match="No node types to index",
+        ):
+            index_nodes([], overall_graph)
+
+    @patch("python.risk_networks.graph_functions.Embedder")
+    def test_index_nodes_small_samples(self, mock_embedder, overall_graph_small):
+        mock_embedder_instance = MagicMock()
+        mock_embedder.return_value = mock_embedder_instance
+        mock_embedder_instance.embed_store_many.return_value = [[0.1, 0.3], [0.3, 0.4]]
+
+        indexed_node_types = ["TypeA", "TypeB"]
+        # Expect ValueError
+        with pytest.raises(
+            ValueError,
+            match="Expected n_neighbors <= n_samples_fit, but n_neighbors = 20, n_samples_fit = 2, n_samples = 2",
+        ):
+            index_nodes(indexed_node_types, overall_graph_small)
+
+    @patch("python.risk_networks.graph_functions.Embedder")
+    def test_index_nodes(self, mock_embedder, overall_graph):
+        mock_embedder_instance = MagicMock()
+        mock_embedder.return_value = mock_embedder_instance
+        # Simulate embedding for the expected number of nodes
+        mock_embedder_instance.embed_store_many.return_value = [
+            [0.1, 0.3],
+        ] * 23
+
+        indexed_node_types = ["TypeA", "TypeB", "TypeC"]
+        embedded_texts, nearest_text_distances, nearest_text_indices = index_nodes(
+            indexed_node_types, overall_graph
+        )
+
+        # Check if the embedded texts are correct
+        expected_texts = [
+            f"Entity{i}"
+            for i in range(1, 31)
+            if f"Type{chr(65 + (i % 4))}" in indexed_node_types
+        ]
+        assert embedded_texts == expected_texts
+
+        # Check the shape of the distances and indices
+        expected_shape = (len(expected_texts), 20)
+        assert nearest_text_distances.shape == expected_shape
+        assert nearest_text_indices.shape == expected_shape
