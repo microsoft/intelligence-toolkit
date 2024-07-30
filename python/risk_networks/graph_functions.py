@@ -184,8 +184,8 @@ def build_network_from_entities(
 
 
 def index_nodes(
-    indexed_node_types,
-    overall_graph,
+    indexed_node_types: list[str],
+    overall_graph: nx.Graph,
     on_embedding_batch_change=None,
     use_local=False,
     save_cache=True,
