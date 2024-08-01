@@ -4,7 +4,9 @@
 import numpy as np
 import pandas as pd
 
-from .config import att_val_sep, correlation, diaga, laplacian, type_val_sep
+from python.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
+
+from .config import correlation, diaga, laplacian, type_val_sep
 from .graph_encoder_embed import GraphEncoderEmbed
 
 
@@ -97,6 +99,6 @@ def generate_embedding(df, time_to_graph):
     )
     overall_embedding_df["Full Attribute"] = overall_embedding_df[
         "dynamic_node_id"
-    ].apply(lambda x: node_list[int(x.split(att_val_sep)[0])])
+    ].apply(lambda x: node_list[int(x.split(ATTRIBUTE_VALUE_SEPARATOR)[0])])
 
     return overall_embedding_df, node_to_centroid, period_embeddings

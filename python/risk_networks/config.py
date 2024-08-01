@@ -6,7 +6,6 @@ from enum import Enum
 
 from python.helpers.constants import CACHE_PATH
 
-att_val_sep = "=="
 list_sep = ";"
 max_rows_to_show = 1000
 entity_label = "ENTITY"
@@ -17,7 +16,6 @@ os.makedirs(outputs_dir, exist_ok=True)
 
 class LinkType(Enum):
     EntityAttribute = "Entity-Attribute"
-    EntityEntity = "Entity-Entity"
     EntityFlag = "Entity-Flag"
     EntityGroup = "Entity-Group"
 
@@ -25,4 +23,3 @@ class LinkType(Enum):
 class AttributeColumnType(Enum):
     ColumnName = "Use column name"
     CustomName = "Use custom name"
-    RelatedColumn = "Use related column"

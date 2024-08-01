@@ -7,6 +7,7 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 
 from python.AI.defaults import DEFAULT_LOCAL_EMBEDDING_MODEL
+from python.helpers.progress_batch_callback import ProgressBatchCallback
 
 from .cache_pickle import CachePickle
 from .client import OpenAIClient
@@ -50,7 +51,12 @@ class Embedder:
             self.pickle.save(loaded_embeddings) if cache_data else None
         return embedding
 
-    def embed_store_many(self, texts: list[str], callback=None, cache_data=True):
+    def embed_store_many(
+        self,
+        texts: list[str],
+        callbacks: list[ProgressBatchCallback] | None = None,
+        cache_data=True,
+    ):
         final_embeddings = [None] * len(texts)
         new_texts = []
         loaded_embeddings = self.pickle.get_all() if cache_data else {}
@@ -73,9 +79,9 @@ class Embedder:
         num_batches = len(new_texts) // 2000 + 1
         batch_count = 1
         for i in range(0, len(new_texts), 2000):
-            if callback:
-                for cb in callback:
-                    cb.on_embedding_batch_change(batch_count, num_batches)
+            if callbacks:
+                for cb in callbacks:
+                    cb.on_batch_change(batch_count, num_batches)
             batch_count += 1
             batch = new_texts[i : i + 2000]
             batch_texts = [x[1] for x in batch]

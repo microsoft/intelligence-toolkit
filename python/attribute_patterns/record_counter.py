@@ -5,7 +5,7 @@ from collections import defaultdict
 
 import numpy as np
 
-from .config import att_val_sep
+from python.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 
 
 class RecordCounter:
@@ -49,7 +49,7 @@ class RecordCounter:
 
         type_to_vals = defaultdict(list)
         for att in atts:
-            type_to_vals[att.split(att_val_sep)[0]].append(att)
+            type_to_vals[att.split(ATTRIBUTE_VALUE_SEPARATOR)[0]].append(att)
         ids = set()
         for ix, (_typ, vals) in enumerate(type_to_vals.items()):
             combined_atts = set()

@@ -1,24 +1,31 @@
-from unittest.mock import MagicMock, patch
+from collections import defaultdict
+from unittest.mock import MagicMock, Mock, patch
 
 import networkx as nx
 import pytest
 
+from python.helpers.progress_batch_callback import ProgressBatchCallback
+from python.risk_networks.constants import (
+    SIMILARITY_THRESHOLD_MAX,
+    SIMILARITY_THRESHOLD_MIN,
+)
 from python.risk_networks.graph_functions import (
     _merge_condition,
     _merge_node_list,
     _merge_nodes,
     build_undirected_graph,
+    create_links,
     index_nodes,
+    infer_nodes,
     simplify_graph,
 )
-
-# TODO: Tests with entity_label
 
 
 @pytest.fixture()
 def graph():
     G = nx.Graph()
     G.add_node("A", type="TypeA", flags=1)
+
     G.add_node("B", type="TypeB", flags=0)
     G.add_node("C", type="TypeC", flags=1)
     G.add_node("D", type="TypeC", flags=1)
@@ -151,41 +158,6 @@ class TestBuildUndirectedGraph:
         for edge in expected_edges:
             assert result.has_edge(edge[0], edge[1])
 
-    def test_network_entity_links(self):
-        network_entity_links = [
-            ("Entity1", "Parent", "Entity2"),
-            ("Entity2", "Parent", "Entity3"),
-            ("Entity3", "Parent", "Entity1"),
-            ("Entity4", "Parent", "Value1"),
-            ("Entity5", "Parent", "Value2"),
-            ("Entity1", "Parent", "Value3"),
-        ]
-        result = build_undirected_graph(network_entity_links=network_entity_links)
-
-        expected_edges = [
-            ("ENTITY==Entity1", "ENTITY==Entity2"),
-            ("ENTITY==Entity1", "ENTITY==Entity3"),
-            ("ENTITY==Entity1", "ENTITY==Value3"),
-            ("ENTITY==Entity2", "ENTITY==Entity3"),
-            ("ENTITY==Entity4", "ENTITY==Value1"),
-            ("ENTITY==Entity5", "ENTITY==Value2"),
-        ]
-        expected_nodes = [
-            "ENTITY==Entity1",
-            "ENTITY==Entity2",
-            "ENTITY==Entity3",
-            "ENTITY==Entity4",
-            "ENTITY==Value1",
-            "ENTITY==Entity5",
-            "ENTITY==Value2",
-            "ENTITY==Value3",
-        ]
-
-        for node in expected_nodes:
-            assert result.has_node(node)
-        for edge in expected_edges:
-            assert result.has_edge(edge[0], edge[1])
-
 
 class TestIndexNodes:
     @pytest.fixture()
@@ -258,3 +230,221 @@ class TestIndexNodes:
         expected_shape = (len(expected_texts), 20)
         assert nearest_text_distances.shape == expected_shape
         assert nearest_text_indices.shape == expected_shape
+        print("nearest_text_indices", nearest_text_indices)
+        print("nearest_text_distances", nearest_text_distances)
+
+
+class TestInferNodes:
+    def test_infer_nodes_min_threshold(self):
+        with pytest.raises(
+            ValueError,
+            match=f"Similarity threshold must be between {SIMILARITY_THRESHOLD_MIN} and {SIMILARITY_THRESHOLD_MAX}",
+        ):
+            infer_nodes(-0.1, [], [], [])
+
+    def test_infer_nodes_max_threshold(self):
+        with pytest.raises(
+            ValueError,
+            match=f"Similarity threshold must be between {SIMILARITY_THRESHOLD_MIN} and {SIMILARITY_THRESHOLD_MAX}",
+        ):
+            infer_nodes(2, [], [], [])
+
+    def test_infer_nodes_005(self):
+        similarity_threshold = 0.05
+        embedded_texts = [
+            "Entity==ABCDE",
+            "Entity==PLUS_ONE",
+            "Entity==PLUS ONE",
+        ]
+        nearest_text_indices = [[1, 2], [2, 1], [1, 2]]
+        nearest_text_distances = [
+            [0.1, 0.1, 0.3],
+            [0.02, 0.1, 0.3],
+            [0.02, 0.1, 0.3],
+        ]
+
+        inferred_links = infer_nodes(
+            similarity_threshold,
+            embedded_texts,
+            nearest_text_indices,
+            nearest_text_distances,
+        )
+
+        expected_links = defaultdict(set)
+        expected_links["Entity==PLUS ONE"].add("Entity==PLUS_ONE")
+        expected_links["Entity==PLUS_ONE"].add("Entity==PLUS ONE")
+
+        assert inferred_links == expected_links
+
+    def test_infer_nodes_1(self):
+        similarity_threshold = 1
+        embedded_texts = [
+            "Entity==ABCDE",
+            "Entity==PLUS_ONE",
+            "Entity==PLUS ONE",
+        ]
+        nearest_text_indices = [[1, 2], [2, 1], [1, 2]]
+        nearest_text_distances = [
+            [0.1, 0.1, 0.3],
+            [0.02, 0.1, 0.3],
+            [0.02, 0.1, 0.3],
+        ]
+
+        inferred_links = infer_nodes(
+            similarity_threshold,
+            embedded_texts,
+            nearest_text_indices,
+            nearest_text_distances,
+        )
+
+        expected_links = defaultdict(set)
+        expected_links["Entity==PLUS ONE"].add("Entity==PLUS_ONE")
+        expected_links["Entity==PLUS ONE"].add("Entity==ABCDE")
+        expected_links["Entity==PLUS_ONE"].add("Entity==PLUS ONE")
+        expected_links["Entity==PLUS_ONE"].add("Entity==ABCDE")
+        expected_links["Entity==ABCDE"].add("Entity==PLUS ONE")
+        expected_links["Entity==ABCDE"].add("Entity==PLUS_ONE")
+
+        assert inferred_links == expected_links
+
+    def test_infer_nodes_07(self):
+        similarity_threshold = 0.7
+        embedded_texts = [
+            "Entity==ABCDE",
+            "Entity==PLUS_ONE",
+            "Entity==PLUS ONE",
+        ]
+        nearest_text_indices = [[1, 2], [2, 1], [1, 2]]
+        nearest_text_distances = [
+            [0.8, 0.1, 0.3],
+            [0.02, 0.1, 0.3],
+            [0.02, 0.1, 0.3],
+        ]
+
+        inferred_links = infer_nodes(
+            similarity_threshold,
+            embedded_texts,
+            nearest_text_indices,
+            nearest_text_distances,
+        )
+
+        expected_links = defaultdict(set)
+        expected_links["Entity==PLUS ONE"].add("Entity==PLUS_ONE")
+        expected_links["Entity==PLUS ONE"].add("Entity==ABCDE")
+        expected_links["Entity==PLUS_ONE"].add("Entity==PLUS ONE")
+        expected_links["Entity==ABCDE"].add("Entity==PLUS ONE")
+
+        assert inferred_links == expected_links
+
+    def test_infer_nodes_progress_callbacks_empty(self):
+        similarity_threshold = 0.7
+        embedded_texts = [
+            "Entity==ABCDE",
+            "Entity==PLUS_ONE",
+            "Entity==PLUS ONE",
+        ]
+        nearest_text_indices = [[1, 2], [2, 1], [1, 2]]
+        nearest_text_distances = [
+            [0.8, 0.1, 0.3],
+            [0.02, 0.1, 0.3],
+            [0.02, 0.1, 0.3],
+        ]
+
+        inferred_links = infer_nodes(
+            similarity_threshold,
+            embedded_texts,
+            nearest_text_indices,
+            nearest_text_distances,
+            progress_callbacks=[],
+        )
+
+        expected_links = defaultdict(set)
+        expected_links["Entity==PLUS ONE"].add("Entity==PLUS_ONE")
+        expected_links["Entity==PLUS ONE"].add("Entity==ABCDE")
+        expected_links["Entity==PLUS_ONE"].add("Entity==PLUS ONE")
+        expected_links["Entity==ABCDE"].add("Entity==PLUS ONE")
+
+        assert inferred_links == expected_links
+
+    def test_infer_nodes_one_progress_callback(self):
+        similarity_threshold = 0.7
+        embedded_texts = [
+            "Entity==ABCDE",
+            "Entity==PLUS_ONE",
+            "Entity==PLUS ONE",
+        ]
+        nearest_text_indices = [[1, 2], [2, 1], [1, 2]]
+        nearest_text_distances = [
+            [0.8, 0.1, 0.3],
+            [0.02, 0.1, 0.3],
+            [0.02, 0.1, 0.3],
+        ]
+
+        callb1 = ProgressBatchCallback()
+        progress_callback = Mock()
+        callb1.on_batch_change = progress_callback
+
+        infer_nodes(
+            similarity_threshold,
+            embedded_texts,
+            nearest_text_indices,
+            nearest_text_distances,
+            progress_callbacks=[callb1],
+        )
+        progress_callback.assert_called_with(2, 3)
+
+    def test_infer_nodes_two_progress_callback(self):
+        similarity_threshold = 0.7
+        embedded_texts = [
+            "Entity==ABCDE",
+            "Entity==PLUS_ONE",
+            "Entity==PLUS ONE",
+        ]
+        nearest_text_indices = [[1, 2], [2, 1], [1, 2]]
+        nearest_text_distances = [
+            [0.8, 0.1, 0.3],
+            [0.02, 0.1, 0.3],
+            [0.02, 0.1, 0.3],
+        ]
+
+        callb1 = ProgressBatchCallback()
+        progress_callback = Mock()
+        callb1.on_batch_change = progress_callback
+
+        callb2 = ProgressBatchCallback()
+        progress_callback2 = Mock()
+        callb2.on_batch_change = progress_callback2
+
+        infer_nodes(
+            similarity_threshold,
+            embedded_texts,
+            nearest_text_indices,
+            nearest_text_distances,
+            progress_callbacks=[callb1, callb2],
+        )
+        progress_callback.assert_called_with(2, 3)
+        progress_callback2.assert_called_with(2, 3)
+
+
+class TestCreateLinks:
+    def test_create_links(self):
+        inferred_links = defaultdict(set)
+        inferred_links["Entity==PLUS ONE"].add("Entity==PLUS_ONE")
+        inferred_links["Entity==PLUS ONE"].add("Entity==ABCDE")
+        inferred_links["Entity==PLUS_ONE"].add("Entity==PLUS ONE")
+        inferred_links["Entity==ABCDE"].add("Entity==PLUS ONE")
+
+        created_links = create_links(inferred_links)
+
+        expected_links = [
+            ("Entity==PLUS ONE", "Entity==PLUS_ONE"),
+            ("Entity==ABCDE", "Entity==PLUS ONE"),
+        ]
+        assert created_links == expected_links
+
+    def test_create_links_return_empty(self):
+        inferred_links = defaultdict(set)
+
+        created_links = create_links(inferred_links)
+
+        assert created_links == []

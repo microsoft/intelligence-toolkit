@@ -64,7 +64,9 @@ class OpenAIConfiguration:
         return os.environ.get("OPENAI_API_MODEL", DEFAULT_LLM_MODEL)
 
     def _get_azure_api_base(self):
-        return os.environ.get("AZURE_OPENAI_ENDPOINT", None)
+        return os.environ.get(
+            "AZURE_OPENAI_ENDPOINT", "https://aoaiendpoint2.openai.azure.com"
+        )
 
     def _get_api_key(self):
         return os.environ.get("OPENAI_API_KEY", "")

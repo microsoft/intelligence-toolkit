@@ -14,7 +14,6 @@ import pandas as pd
 import streamlit as st
 import workflows.risk_networks.functions as functions
 import workflows.risk_networks.variables as rn_variables
-from sklearn.neighbors import NearestNeighbors
 from st_aggrid import (
     AgGrid,
     ColumnsAutoSizeMode,
@@ -26,7 +25,8 @@ from streamlit_agraph import agraph
 from util import ui_components
 from util.session_variables import SessionVariables
 
-from python.AI import classes
+from python.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
+from python.helpers.progress_batch_callback import ProgressBatchCallback
 from python.risk_networks import config
 from python.risk_networks import get_readme as get_intro
 from python.risk_networks import graph_functions, prompts
@@ -71,12 +71,11 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                     "Link type",
                     [
                         "Entity-Attribute",
-                        "Entity-Entity",
                         "Entity-Flag",
                         "Entity-Group",
                     ],
                     horizontal=True,
-                    help="Select the type of link to create. Entity-Attribute links connect entities with shared attributes, Entity-Entity links create direct connections between entities, Entity-Flag links connect entities to risk flags, and Entity-Group links enable filtering of detected networks by specified grouping attributes.",
+                    help="Select the type of link to create. Entity-Attribute links connect entities with shared attributes, Entity-Flag links connect entities to risk flags, and Entity-Group links enable filtering of detected networks by specified grouping attributes.",
                 )
                 entity_col = st.selectbox(
                     "Entity ID column",
@@ -85,16 +84,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 )
                 model_links = None
                 attribute_label = ""
-                if link_type == "Entity-Entity":
-                    value_cols = [st.selectbox("Related entity column", options)]
-                    attribute_col = st.selectbox(
-                        "Relationship type",
-                        ["Use column name", "Use custom name", "Use related column"],
-                    )
-                    if attribute_col == "Use custom name":
-                        attribute_label = st.text_input("Relationship type", "")
-                    model_links = sv.network_entity_links.value
-                elif link_type == "Entity-Attribute":
+                if link_type == "Entity-Attribute":
                     value_cols = st.multiselect(
                         "Attribute value column(s) to link on",
                         options,
@@ -102,11 +92,11 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                     )
                     attribute_col = st.selectbox(
                         "Attribute type",
-                        ["Use column name", "Use custom name", "Use related column"],
-                        help="Where the name of the attribute comes from: the selected column, the user, or the values of another column.",
+                        ["Use column name", "Use custom name"],
+                        disabled=True,
+                        index=0,
+                        help="Where the name of the attribute comes from: the selected column or the user.",
                     )
-                    if attribute_col == "Use custom name":
-                        attribute_label = st.text_input("Attribute name", "")
                     model_links = sv.network_attribute_links.value
                 elif link_type == "Entity-Flag":
                     value_cols = st.multiselect(
@@ -116,15 +106,15 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                     )
                     attribute_col = st.selectbox(
                         "Flag type",
-                        ["Use column name", "Use custom name", "Use related column"],
-                        help="Where the name of the flag comes from: the selected column, the user, or the values of another column.",
+                        ["Use column name", "Use custom name"],
+                        disabled=True,
+                        index=0,
+                        help="Where the name of the flag comes from: the selected column or the user.",
                     )
-                    if attribute_col == "Use custom name":
-                        attribute_label = st.text_input("Flag name", "")
                     flag_agg = st.selectbox(
                         "Flag format",
-                        ["Instance", "Count", "List"],
-                        help="How flags are represented: as individual instances or as aggregate counts in a flag value column, or as a list of flagged entities in the entity ID column.",
+                        ["Instance", "Count"],
+                        help="How flags are represented: as individual instances or as aggregate counts in a flag value column.",
                     )
                     model_links = sv.network_flag_links.value
                 elif link_type == "Entity-Group":
@@ -135,11 +125,9 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                     )
                     attribute_col = st.selectbox(
                         "Group type",
-                        ["Use column name", "Use custom name", "Use related column"],
-                        help="Where the name of the group comes from: the selected column, the user, or the values of another column.",
+                        ["Use column name", "Use custom name"],
+                        help="Where the name of the group comes from: the selected column or the user.",
                     )
-                    if attribute_col == "Use custom name":
-                        attribute_label = st.text_input("Group name", "")
                     model_links = sv.network_group_links.value
                 b1, b2 = st.columns([1, 1])
                 with b1:
@@ -215,18 +203,6 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                                                 ]
                                             ].values.tolist()
                                         )
-                                    elif flag_agg == "List":
-                                        gdf["count_col"] = 1
-                                        model_links.append(
-                                            gdf[
-                                                [
-                                                    entity_col,
-                                                    "attribute_col",
-                                                    "attribute_col2",
-                                                    "count_col",
-                                                ]
-                                            ].values.tolist()
-                                        )
                                 else:
                                     sv.network_flag_types.value.update(
                                         df[attribute_label].unique().tolist()
@@ -253,38 +229,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                                                 ]
                                             ].values.tolist()
                                         )
-                                    elif flag_agg == "List":
-                                        gdf["count_col"] = 1
-                                        model_links.append(
-                                            gdf[
-                                                [
-                                                    entity_col,
-                                                    "attribute_col",
-                                                    "attribute_col2",
-                                                    "count_col",
-                                                ]
-                                            ].values.tolist()
-                                        )
                                 functions.build_integrated_flags(sv)
-                            elif link_type == "Entity-Entity":
-                                if attribute_col in [
-                                    "Use column name",
-                                    "Use custom name",
-                                ]:
-                                    df["attribute_col"] = attribute_label
-                                    model_links.append(
-                                        df[
-                                            [entity_col, "attribute_col", value_col]
-                                        ].values.tolist()
-                                    )
-                                else:
-                                    model_links.append(
-                                        df[
-                                            [entity_col, attribute_col, value_col]
-                                        ].values.tolist()
-                                    )
-                                functions.build_undirected_graph(sv)
-                                # build_directed_graph(sv) TODO
                             elif link_type == "Entity-Group":
                                 if attribute_col in [
                                     "Use column name",
@@ -314,7 +259,6 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                         or len(value_cols) == 0
                         or link_type == "",
                     ):
-                        sv.network_entity_links.value = []
                         sv.network_attribute_links.value = []
                         sv.network_flag_links.value = []
                         sv.network_group_links.value = []
@@ -330,7 +274,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
             groups = set()
             for link_list in sv.network_group_links.value:
                 for link in link_list:
-                    groups.add(f"{link[1]}{config.att_val_sep}{link[2]}")
+                    groups.add(f"{link[1]}{ATTRIBUTE_VALUE_SEPARATOR}{link[2]}")
             if sv.network_overall_graph.value is not None:
                 all_nodes = sv.network_overall_graph.value.nodes()
                 entity_nodes = [
@@ -394,6 +338,9 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                         f"Embedding text batch {current} of {total}...",
                     )
 
+                callback = ProgressBatchCallback()
+                callback.on_batch_change = on_embedding_batch_change
+
                 sv.network_indexed_node_types.value = network_indexed_node_types
 
                 (
@@ -403,7 +350,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 ) = graph_functions.index_nodes(
                     sv.network_indexed_node_types.value,
                     sv.network_overall_graph.value,
-                    on_embedding_batch_change,
+                    [callback],
                     sv_home.local_embeddings.value,
                     sv_home.save_cache.value,
                 )
@@ -424,45 +371,39 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 "Infer links",
                 disabled=len(sv.network_nearest_text_distances.value) == 0,
             ):
-                sv.network_similarity_threshold.value = network_similarity_threshold
-                sv.network_inferred_links.value = defaultdict(set)
-                texts = sv.network_embedded_texts.value
                 pb = st.progress(0, text="Inferring links...")
-                for ix in range(len(texts)):
-                    pb.progress(int(ix * 100 / len(texts)), text="Inferring links...")
-                    near_is = sv.network_nearest_text_indices.value[ix]
-                    near_ds = sv.network_nearest_text_distances.value[ix]
-                    nearest = zip(near_is, near_ds, strict=False)
-                    for near_i, near_d in nearest:
-                        if (
-                            near_i != ix
-                            and near_d <= sv.network_similarity_threshold.value
-                        ) and texts[ix] != texts[near_i]:
-                            sv.network_inferred_links.value[texts[ix]].add(
-                                texts[near_i]
-                            )
-                            sv.network_inferred_links.value[texts[near_i]].add(
-                                texts[ix]
-                            )
 
+                def on_embedding_batch_change(current, total):
+                    print("current", current)
+                    print("total", total)
+                    pb.progress(int(current * 100 / total), text="Inferring links...")
+
+                callback = ProgressBatchCallback()
+                callback.on_batch_change = on_embedding_batch_change
+
+                sv.network_similarity_threshold.value = network_similarity_threshold
+
+                sv.network_inferred_links.value = graph_functions.infer_nodes(
+                    network_similarity_threshold,
+                    sv.network_embedded_texts.value,
+                    sv.network_nearest_text_indices.value,
+                    sv.network_nearest_text_distances.value,
+                    [callback],
+                )
                 pb.empty()
                 st.rerun()
 
-            link_list = []
-            for text, near in sv.network_inferred_links.value.items():
-                for n in near:
-                    if text < n:
-                        link_list.append((text, n))
+            link_list = graph_functions.create_links(sv.network_inferred_links.value)
             ilc = len(link_list)
 
             if ilc > 0:
                 st.markdown(f"*Number of links inferred*: {ilc}")
                 idf = pd.DataFrame(link_list, columns=["text", "similar"])
                 idf["text"] = idf["text"].str.replace(
-                    config.entity_label + config.att_val_sep, ""
+                    config.entity_label + ATTRIBUTE_VALUE_SEPARATOR, ""
                 )
                 idf["similar"] = idf["similar"].str.replace(
-                    config.entity_label + config.att_val_sep, ""
+                    config.entity_label + ATTRIBUTE_VALUE_SEPARATOR, ""
                 )
                 idf = idf.sort_values(by=["text", "similar"]).reset_index(drop=True)
                 st.dataframe(idf, hide_index=True, use_container_width=True)
@@ -590,7 +531,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                         )
 
                         entity_records.append((
-                            n.split(config.att_val_sep)[1],
+                            n.split(ATTRIBUTE_VALUE_SEPARATOR)[1],
                             flags,
                             ix,
                             len(entities),
@@ -759,9 +700,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 )
 
                 if selected_entity != "":
-                    qualified_selected = (
-                        f"{config.entity_label}{config.att_val_sep}{selected_entity}"
-                    )
+                    qualified_selected = f"{config.entity_label}{ATTRIBUTE_VALUE_SEPARATOR}{selected_entity}"
                     context = "Upload risk flags to see risk exposure report."
                     if len(sv.network_integrated_flags.value) > 0:
                         rdf = sv.network_integrated_flags.value.copy()
@@ -802,7 +741,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                                                 rdf["qualified_entity"] == step
                                             ]["count"].sum()
                                             step = (
-                                                step.split(config.att_val_sep)[1]
+                                                step.split(ATTRIBUTE_VALUE_SEPARATOR)[1]
                                                 + f" [linked to {step_risks} flags]"
                                             )
                                         else:
@@ -836,7 +775,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                     list(N.edges()), columns=["source", "target"]
                 )
                 full_links_df["attribute"] = full_links_df["target"].apply(
-                    lambda x: x.split(config.att_val_sep)[0]
+                    lambda x: x.split(ATTRIBUTE_VALUE_SEPARATOR)[0]
                 )
                 N1 = functions.simplify_graph(N)
                 merged_nodes_df = pd.DataFrame(
@@ -847,7 +786,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                     list(N1.edges()), columns=["source", "target"]
                 )
                 merged_links_df["attribute"] = merged_links_df["target"].apply(
-                    lambda x: x.split(config.att_val_sep)[0]
+                    lambda x: x.split(ATTRIBUTE_VALUE_SEPARATOR)[0]
                 )
                 c1, c2 = st.columns([2, 1])
 
@@ -869,7 +808,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
 
                         nodes, edges, g_config = functions.get_entity_graph(
                             N,
-                            f"{config.entity_label}{config.att_val_sep}{selected_entity}",
+                            f"{config.entity_label}{ATTRIBUTE_VALUE_SEPARATOR}{selected_entity}",
                             full_links_df,
                             1000,
                             700,
@@ -887,7 +826,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                             )
                         nodes, edges, g_config = functions.get_entity_graph(
                             N1,
-                            f"{config.entity_label}{config.att_val_sep}{selected_entity}",
+                            f"{config.entity_label}{ATTRIBUTE_VALUE_SEPARATOR}{selected_entity}",
                             merged_links_df,
                             1000,
                             700,

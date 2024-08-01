@@ -12,6 +12,7 @@ from streamlit_agraph import Config, Edge, Node
 from util.openai_wrapper import UIOpenAIConfiguration
 
 from python.AI.embedder import Embedder
+from python.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 from python.risk_networks import config
 
 
@@ -70,7 +71,9 @@ def get_entity_graph(G, selected, links_df, width, height, attribute_types):
                     l = 80
                 return str(hsl_to_hex(h, s, l))
 
-            parts = [p.split(config.att_val_sep) for p in node.split(config.list_sep)]
+            parts = [
+                p.split(ATTRIBUTE_VALUE_SEPARATOR) for p in node.split(config.list_sep)
+            ]
             atts = [p[0] for p in parts]
             # remove duplicate values while maintaining order
             atts = list(dict.fromkeys(atts))
@@ -135,7 +138,7 @@ def project_entity_graph(sv):
                             P.add_edge(node, ent_neighbor)
                     else:  # att
                         if (
-                            ent_neighbor.split(config.att_val_sep)[0]
+                            ent_neighbor.split(ATTRIBUTE_VALUE_SEPARATOR)[0]
                             not in sv.network_supporting_attribute_types.value
                         ):
                             att_neighbors = set(
@@ -143,7 +146,7 @@ def project_entity_graph(sv):
                             ).union(sv.network_inferred_links.value[ent_neighbor])
                             for att_neighbor in att_neighbors:
                                 if (
-                                    att_neighbor.split(config.att_val_sep)[0]
+                                    att_neighbor.split(ATTRIBUTE_VALUE_SEPARATOR)[0]
                                     not in sv.network_supporting_attribute_types.value
                                 ):
                                     if att_neighbor not in trimmed_nodeset:
@@ -165,7 +168,7 @@ def project_entity_graph(sv):
                                             ) in fuzzy_att_neighbors:
                                                 if (
                                                     fuzzy_att_neighbor.split(
-                                                        config.att_val_sep
+                                                        ATTRIBUTE_VALUE_SEPARATOR
                                                     )[0]
                                                     not in sv.network_supporting_attribute_types.value
                                                 ):
@@ -193,21 +196,13 @@ def build_undirected_graph(sv):
     value_to_atts = defaultdict(set)
     for link_list in sv.network_attribute_links.value:
         for link in link_list:
-            n1 = f"{config.entity_label}{config.att_val_sep}{link[0]}"
-            n2 = f"{link[1]}{config.att_val_sep}{link[2]}"
+            n1 = f"{config.entity_label}{ATTRIBUTE_VALUE_SEPARATOR}{link[0]}"
+            n2 = f"{link[1]}{ATTRIBUTE_VALUE_SEPARATOR}{link[2]}"
             edge = (n1, n2) if n1 < n2 else (n2, n1)
             G.add_edge(edge[0], edge[1], type=link[1])
             G.add_node(n1, type=config.entity_label)
             G.add_node(n2, type=link[1])
             value_to_atts[link[2]].add(n2)
-    for link_list in sv.network_entity_links.value:
-        for link in link_list:
-            n1 = f"{config.entity_label}{config.att_val_sep}{link[0]}"
-            n2 = f"{config.entity_label}{config.att_val_sep}{link[2]}"
-            edge = (n1, n2) if n1 < n2 else (n2, n1)
-            G.add_edge(edge[0], edge[2], type=link[1])
-            G.add_node(n1, type=config.entity_label)
-            G.add_node(n2, type=config.entity_label)
     for atts in value_to_atts.values():
         att_list = list(atts)
         for i, att1 in enumerate(att_list):
@@ -230,7 +225,7 @@ def build_integrated_flags(sv):
     sv.network_integrated_flags.value["qualified_entity"] = (
         sv.network_integrated_flags.value[
             "entity"
-        ].apply(lambda x: f"{config.entity_label}{config.att_val_sep}{x}")
+        ].apply(lambda x: f"{config.entity_label}{ATTRIBUTE_VALUE_SEPARATOR}{x}")
     )
     overall_df = (
         sv.network_integrated_flags.value[["qualified_entity", "count"]]
@@ -269,7 +264,7 @@ def build_network_from_entities(sv, G, nodes):
                 else:  # att
                     N.add_node(
                         ent_neighbor,
-                        type=ent_neighbor.split(config.att_val_sep)[0],
+                        type=ent_neighbor.split(ATTRIBUTE_VALUE_SEPARATOR)[0],
                         flags=0,
                     )
                     N.add_edge(node, ent_neighbor)
@@ -281,7 +276,9 @@ def build_network_from_entities(sv, G, nodes):
                             if not att_neighbor.startswith(config.entity_label):
                                 N.add_node(
                                     att_neighbor,
-                                    type=att_neighbor.split(config.att_val_sep)[0],
+                                    type=att_neighbor.split(ATTRIBUTE_VALUE_SEPARATOR)[
+                                        0
+                                    ],
                                     flags=0,
                                 )
                                 fuzzy_att_neighbors = set(
@@ -292,7 +289,7 @@ def build_network_from_entities(sv, G, nodes):
                                         N.add_node(
                                             fuzzy_att_neighbor,
                                             type=fuzzy_att_neighbor.split(
-                                                config.att_val_sep
+                                                ATTRIBUTE_VALUE_SEPARATOR
                                             )[0],
                                             flags=0,
                                         )

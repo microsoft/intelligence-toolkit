@@ -18,6 +18,7 @@ from util import ui_components
 from util.download_pdf import add_download_pdf
 
 from python.AI import classes
+from python.helpers.progress_batch_callback import ProgressBatchCallback
 
 
 def get_intro():
@@ -306,10 +307,9 @@ def create(sv: rm_variables.SessionVariable, workflow=None):
                                     f"Embedding text batch {current} of {total}...",
                                 )
 
-                            callback = classes.BatchEmbeddingCallback()
-                            callback.on_embedding_batch_change = (
-                                on_embedding_batch_change
-                            )
+                            callback = ProgressBatchCallback()
+                            callback.on_batch_change = on_embedding_batch_change
+
                             functions_embedder = functions.embedder()
 
                             embeddings = functions_embedder.embed_store_many(

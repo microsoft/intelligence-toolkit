@@ -9,8 +9,13 @@ import networkx as nx
 import pandas as pd
 from sklearn.neighbors import NearestNeighbors
 
-from python.AI import classes
 from python.AI.embedder import Embedder
+from python.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
+from python.helpers.progress_batch_callback import ProgressBatchCallback
+from python.risk_networks.constants import (
+    SIMILARITY_THRESHOLD_MAX,
+    SIMILARITY_THRESHOLD_MIN,
+)
 
 from . import config
 
@@ -22,7 +27,8 @@ def _merge_condition(x, y) -> bool:
     x_parts = set(x.split(config.list_sep))
     y_parts = set(y.split(config.list_sep))
     return any(
-        x_part.split(config.att_val_sep)[i] == y_part.split(config.att_val_sep)[i]
+        x_part.split(ATTRIBUTE_VALUE_SEPARATOR)[i]
+        == y_part.split(ATTRIBUTE_VALUE_SEPARATOR)[i]
         for i in range(2)
         for x_part in x_parts
         for y_part in y_parts
@@ -80,27 +86,18 @@ def simplify_graph(C) -> nx.Graph:  # noqa: N803
 
 def build_undirected_graph(
     network_attribute_links=[],  # noqa
-    network_entity_links=[],  # noqa
 ) -> nx.Graph:
     G = nx.Graph()
     value_to_atts = defaultdict(set)
     for link_list in network_attribute_links:
         for link in link_list:
-            n1 = f"{config.entity_label}{config.att_val_sep}{link[0]}"
-            n2 = f"{link[1]}{config.att_val_sep}{link[2]}"
+            n1 = f"{config.entity_label}{ATTRIBUTE_VALUE_SEPARATOR}{link[0]}"
+            n2 = f"{link[1]}{ATTRIBUTE_VALUE_SEPARATOR}{link[2]}"
             edge = (n1, n2) if n1 < n2 else (n2, n1)
             G.add_edge(edge[0], edge[1], type=link[1])
             G.add_node(n1, type=config.entity_label)
             G.add_node(n2, type=link[1])
             value_to_atts[link[2]].add(n2)
-
-    for link_list in network_entity_links:
-        n1 = f"{config.entity_label}{config.att_val_sep}{link_list[0]}"
-        n2 = f"{config.entity_label}{config.att_val_sep}{link_list[2]}"
-        edge = (n1, n2) if n1 < n2 else (n2, n1)
-        G.add_edge(edge[0], edge[1], type=link_list[1])
-        G.add_node(n1, type=config.entity_label)
-        G.add_node(n2, type=config.entity_label)
 
     for atts in value_to_atts.values():
         att_list = list(atts)
@@ -138,7 +135,7 @@ def build_network_from_entities(
             else:  # att
                 N.add_node(
                     ent_neighbor,
-                    type=ent_neighbor.split(config.att_val_sep)[0],
+                    type=ent_neighbor.split(ATTRIBUTE_VALUE_SEPARATOR)[0],
                     flags=0,
                 )
                 N.add_edge(node, ent_neighbor)
@@ -153,7 +150,7 @@ def build_network_from_entities(
 
                     N.add_node(
                         att_neighbor,
-                        type=att_neighbor.split(config.att_val_sep)[0],
+                        type=att_neighbor.split(ATTRIBUTE_VALUE_SEPARATOR)[0],
                         flags=0,
                     )
                     fuzzy_att_neighbors = set(G.neighbors(att_neighbor)).union(
@@ -167,7 +164,7 @@ def build_network_from_entities(
                             continue
                         N.add_node(
                             fuzzy_att_neighbor,
-                            type=fuzzy_att_neighbor.split(config.att_val_sep)[0],
+                            type=fuzzy_att_neighbor.split(ATTRIBUTE_VALUE_SEPARATOR)[0],
                             flags=0,
                         )
                         N.add_edge(att_neighbor, fuzzy_att_neighbor)
@@ -186,7 +183,7 @@ def build_network_from_entities(
 def index_nodes(
     indexed_node_types: list[str],
     overall_graph: nx.Graph,
-    on_embedding_batch_change=None,
+    callbacks: list[ProgressBatchCallback] | None = None,
     use_local=False,
     save_cache=True,
 ):
@@ -200,11 +197,11 @@ def index_nodes(
     ]
     texts = [t[0] for t in text_types]
 
-    callback = classes.BatchEmbeddingCallback()
-    callback.on_embedding_batch_change = on_embedding_batch_change
     functions_embedder = Embedder(None, config.cache_dir, use_local)
     embeddings = functions_embedder.embed_store_many(
-        texts, [callback] if on_embedding_batch_change else None, save_cache
+        texts,
+        callbacks,
+        save_cache,
     )
 
     vals = [(n, t, e) for (n, t), e in zip(text_types, embeddings, strict=False)]
@@ -219,9 +216,49 @@ def index_nodes(
         leaf_size=20,
         metric="cosine",
     ).fit(embeddings)
+
     (
         nearest_text_distances,
         nearest_text_indices,
     ) = nbrs.kneighbors(embeddings)
 
     return embedded_texts, nearest_text_distances, nearest_text_indices
+
+
+def create_links(inferred_links: defaultdict[Any, set]) -> list[tuple]:
+    return [
+        (text, n) for text, near in inferred_links.items() for n in near if text < n
+    ]
+
+
+def infer_nodes(
+    similarity_threshold: float,
+    embedded_texts: list[str],
+    nearest_text_indices: list[list[int]],
+    nearest_text_distances: list[list[float]],
+    progress_callbacks: list[ProgressBatchCallback] | None = None,
+) -> defaultdict[Any, set]:
+    inferred_links = defaultdict(set)
+    if (
+        similarity_threshold < SIMILARITY_THRESHOLD_MIN
+        or similarity_threshold > SIMILARITY_THRESHOLD_MAX
+    ):
+        msg = f"Similarity threshold must be between {SIMILARITY_THRESHOLD_MIN} and {SIMILARITY_THRESHOLD_MAX}"
+        raise ValueError(msg)
+    # pb = st.progress(0, text="Inferring links...")
+    for ix in range(len(embedded_texts)):
+        if progress_callbacks:
+            for cb in progress_callbacks:
+                cb.on_batch_change(ix, len(embedded_texts))
+        # pb.progress(int(ix * 100 / len(texts)), text="Inferring links...")
+        near_is = nearest_text_indices[ix]
+        near_ds = nearest_text_distances[ix]
+        nearest = zip(near_is, near_ds, strict=False)
+        for near_i, near_d in nearest:
+            if (near_i != ix and near_d <= similarity_threshold) and embedded_texts[
+                ix
+            ] != embedded_texts[near_i]:
+                inferred_links[embedded_texts[ix]].add(embedded_texts[near_i])
+                inferred_links[embedded_texts[near_i]].add(embedded_texts[ix])
+
+    return inferred_links

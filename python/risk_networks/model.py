@@ -19,18 +19,9 @@ def prepare_entity_attribute(
         if attribute_column_type == AttributeColumnType.CustomName.value:
             attribute_label = attribute_name
 
-        if str(attribute_column_type) in [
-            AttributeColumnType.ColumnName.value,
-            AttributeColumnType.CustomName.value,
-        ]:
-            data_df["attribute_col"] = attribute_label
-            node_types.add(attribute_label)
-            attribute_links.append(
-                data_df[[entity_id_column, "attribute_col", value_col]].to_numpy()
-            )
-        else:
-            node_types.update(data_df[attribute_label].unique().tolist())
-            attribute_links.append(
-                data_df[[entity_id_column, value_col, value_col]].to_numpy()
-            )
+        data_df["attribute_col"] = attribute_label
+        node_types.add(attribute_label)
+        attribute_links.append(
+            data_df[[entity_id_column, "attribute_col", value_col]].to_numpy()
+        )
     return attribute_links, node_types
