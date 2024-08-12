@@ -433,7 +433,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 "Attribute"
             ].tolist()
 
-            c1, c2, c3 = st.columns([1, 1, 1])
+            c1, c2, c3, c4 = st.columns([1, 1, 1, 1])
             with c1:
                 network_max_attribute_degree = st.number_input(
                     "Maximum attribute degree",
@@ -442,6 +442,13 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                     help="The maximum number of entities that can share an attribute before it is removed from the network.",
                 )
             with c2:
+                network_max_cluster_size = st.number_input(
+                    "Max network size",
+                    min_value=2,
+                    value=sv.network_max_cluster_size.value,
+                    help="Any network with edges >= max_cluster_size will be isolated into a subnetwork",
+                )
+            with c3:
                 network_supporting_attribute_types = st.multiselect(
                     "Supporting attribute types",
                     default=sv.network_supporting_attribute_types.value,
@@ -449,10 +456,13 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                     help="Attribute types that should not be used to detect networks (e.g., because of potential noise/unreliability) but which should be added back into detected networks for context.",
                 )
             comm_count = 0
-            with c3:
+            with c4:
+                st.text("")
+                st.text("")
                 identify = st.button("Identify networks")
             if identify:
                 sv.network_max_attribute_degree.value = network_max_attribute_degree
+                sv.network_max_cluster_size.value = network_max_cluster_size
                 sv.network_supporting_attribute_types.value = (
                     network_supporting_attribute_types
                 )
@@ -484,7 +494,11 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                     (
                         sv.network_community_nodes.value,
                         sv.network_entity_to_community_ix.value,
-                    ) = get_community_nodes(P, sv.network_max_network_size.value)
+                    ) = get_community_nodes(
+                        P,
+                        sv.network_max_network_size.value,
+                        sv.network_max_cluster_size.value,
+                    )
 
                     N = build_network_from_entities(
                         sv.network_overall_graph.value,
