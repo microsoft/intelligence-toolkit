@@ -11,6 +11,7 @@ def clean_text(text: str | int) -> str:
     # remove punctuation but retain characters and digits in any language
     # compress whitespace to single space
     cleaned_text = re.sub(r"[^\w\s&@\+]", "", str(text)).strip()
+    # cleaned_text = re.sub(r"[^\w\s&@+/]", "", str(text)).strip()
     return re.sub(r"\s+", " ", cleaned_text)
 
 

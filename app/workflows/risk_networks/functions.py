@@ -166,20 +166,24 @@ def simplify_graph(C):
             {
                 xv.split(ATTRIBUTE_VALUE_SEPARATOR)[0]
                 for xv in sorted(x.split(config.list_sep))
-            }.intersection({
-                yv.split(ATTRIBUTE_VALUE_SEPARATOR)[0]
-                for yv in sorted(y.split(config.list_sep))
-            })
+            }.intersection(
+                {
+                    yv.split(ATTRIBUTE_VALUE_SEPARATOR)[0]
+                    for yv in sorted(y.split(config.list_sep))
+                }
+            )
         )
         > 0
         or len(
             {
                 xv.split(ATTRIBUTE_VALUE_SEPARATOR)[1]
                 for xv in sorted(x.split(config.list_sep))
-            }.intersection({
-                yv.split(ATTRIBUTE_VALUE_SEPARATOR)[1]
-                for yv in sorted(y.split(config.list_sep))
-            })
+            }.intersection(
+                {
+                    yv.split(ATTRIBUTE_VALUE_SEPARATOR)[1]
+                    for yv in sorted(y.split(config.list_sep))
+                }
+            )
         )
         > 0,
     )
@@ -193,7 +197,7 @@ def simplify_graph(C):
 
 
 def project_entity_graph(sv):
-    # Remove high-degree attributes
+    # # Remove high-degree attributes
     trim = [
         (n, d)
         for (n, d) in sv.network_overall_graph.value.degree()
@@ -297,10 +301,12 @@ def build_undirected_graph(sv):
 
 
 def build_integrated_flags(sv):
-    sv.network_integrated_flags.value = pd.concat([
-        pd.DataFrame(link_list, columns=["entity", "type", "flag", "count"])
-        for link_list in sv.network_flag_links.value
-    ])
+    sv.network_integrated_flags.value = pd.concat(
+        [
+            pd.DataFrame(link_list, columns=["entity", "type", "flag", "count"])
+            for link_list in sv.network_flag_links.value
+        ]
+    )
     sv.network_integrated_flags.value = (
         sv.network_integrated_flags.value.groupby(["entity", "type", "flag"])
         .sum()
@@ -325,7 +331,9 @@ def build_integrated_flags(sv):
 
 def build_network_from_entities(sv, G, nodes):
     N = nx.Graph()
+    additional_trimmed_nodeset = set(sv.network_additional_trimmed_attributes.value)
     trimmed_nodeset = sv.network_trimmed_attributes.value["Attribute"].unique().tolist()
+    # trimmed_nodeset.extend(additional_trimmed_nodeset)
     for node in nodes:
         n_c = (
             str(sv.network_entity_to_community_ix.value[node])
@@ -336,6 +344,7 @@ def build_network_from_entities(sv, G, nodes):
         ent_neighbors = set(G.neighbors(node)).union(
             sv.network_inferred_links.value[node]
         )
+
         for ent_neighbor in ent_neighbors:
             if ent_neighbor not in trimmed_nodeset:
                 if ent_neighbor.startswith(config.entity_label):

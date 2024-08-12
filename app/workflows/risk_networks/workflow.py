@@ -8,7 +8,6 @@ import os
 import re
 from collections import defaultdict
 
-import community
 import networkx as nx
 import pandas as pd
 import streamlit as st
@@ -30,7 +29,10 @@ from python.helpers.progress_batch_callback import ProgressBatchCallback
 from python.risk_networks import config
 from python.risk_networks import get_readme as get_intro
 from python.risk_networks import graph_functions, prompts
+from python.risk_networks.identify import project_entity_graph, trim_nodeset
 from python.risk_networks.model import prepare_entity_attribute
+from python.risk_networks.network import build_network_from_entities, generate_final_df
+from python.risk_networks.node_community import get_community_nodes
 from python.risk_networks.protected_mode import protect_data
 from python.risk_networks.text_format import format_data_columns
 
@@ -41,13 +43,15 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
     if not os.path.exists(config.outputs_dir):
         os.makedirs(config.outputs_dir)
 
-    intro_tab, uploader_tab, process_tab, view_tab, report_tab = st.tabs([
-        "Network analysis workflow:",
-        "Create data model",
-        "Process data model",
-        "Explore networks",
-        "Generate AI network reports",
-    ])
+    intro_tab, uploader_tab, process_tab, view_tab, report_tab = st.tabs(
+        [
+            "Network analysis workflow:",
+            "Create data model",
+            "Process data model",
+            "Explore networks",
+            "Generate AI network reports",
+        ]
+    )
     df = None
     with intro_tab:
         st.markdown(get_intro())
@@ -296,10 +300,12 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 unique_names = original_df["Attribute"].unique()
                 for i, name in enumerate(unique_names, start=1):
                     name_format = name.split("==")[0].strip()
-                    atributes_entities.append((
-                        name,
-                        f"{name_format}=={name_format}_{i!s}",
-                    ))
+                    atributes_entities.append(
+                        (
+                            name,
+                            f"{name_format}=={name_format}_{i!s}",
+                        )
+                    )
 
                 sv.network_attributes_renamed.value = atributes_entities
 
@@ -319,10 +325,12 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
         components = None
         with index_col:
             st.markdown("##### Index nodes (optional)")
-            fuzzy_options = sorted([
-                config.entity_label,
-                *list(sv.network_node_types.value),
-            ])
+            fuzzy_options = sorted(
+                [
+                    config.entity_label,
+                    *list(sv.network_node_types.value),
+                ]
+            )
             network_indexed_node_types = st.multiselect(
                 "Select node types to fuzzy match",
                 default=sv.network_indexed_node_types.value,
@@ -374,8 +382,6 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 pb = st.progress(0, text="Inferring links...")
 
                 def on_embedding_batch_change(current, total):
-                    print("current", current)
-                    print("total", total)
                     pb.progress(int(current * 100 / total), text="Inferring links...")
 
                 callback = ProgressBatchCallback()
@@ -426,6 +432,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
             sv.network_additional_trimmed_attributes.value = selected_rows[
                 "Attribute"
             ].tolist()
+
             c1, c2, c3 = st.columns([1, 1, 1])
             with c1:
                 network_max_attribute_degree = st.number_input(
@@ -449,97 +456,49 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 sv.network_supporting_attribute_types.value = (
                     network_supporting_attribute_types
                 )
+
                 with st.spinner("Identifying networks..."):
                     sv.network_table_index.value += 1
                     # Create a new graph P in which entities are connected if they share an attribute
-                    P = functions.project_entity_graph(sv)
-
-                    components = sorted(
-                        nx.components.connected_components(P),
-                        key=lambda x: len(x),
-                        reverse=True,
-                    )
-                    comp_count = len(components)
-                    sv.network_components.value = range(comp_count)
-                    sv.network_component_to_nodes.value = dict(
-                        zip(sv.network_components.value, components, strict=False)
-                    )
-                    sv.network_community_nodes.value = []
-                    sv.network_entity_to_community_ix.value = {}
-                    for component in sv.network_components.value:
-                        nodes = sv.network_component_to_nodes.value[component]
-                        if len(nodes) > sv.network_max_network_size.value:
-                            S = nx.subgraph(P, nodes)
-                            node_to_network = community.best_partition(
-                                S, resolution=1.0, randomize=False, weight="weight"
-                            )
-                            network_to_nodes = defaultdict(set)
-                            for node, network in node_to_network.items():
-                                network_to_nodes[network].add(node)
-                            networks = [
-                                list(nodes) for nodes in network_to_nodes.values()
-                            ]
-                            for network in networks:
-                                sv.network_community_nodes.value.append(network)
-                                for node in network:
-                                    sv.network_entity_to_community_ix.value[node] = (
-                                        len(sv.network_community_nodes.value) - 1
-                                    )
-                        else:
-                            sv.network_community_nodes.value.append(nodes)
-                            for node in nodes:
-                                sv.network_entity_to_community_ix.value[node] = (
-                                    len(sv.network_community_nodes.value) - 1
-                                )
-
-                    N = functions.build_network_from_entities(
-                        sv,
+                    (trimmed_degrees, trimmed_nodes) = trim_nodeset(
                         sv.network_overall_graph.value,
-                        sv.network_overall_graph.value.nodes(),
+                        sv.network_additional_trimmed_attributes.value,
+                        sv.network_max_attribute_degree.value,
                     )
 
-                entity_records = []
-                for ix, entities in enumerate(sv.network_community_nodes.value):
-                    community_flags = 0
-                    flagged = 0
-                    unflagged = 0
-                    flaggedPerUnflagged = 0
-                    if len(sv.network_integrated_flags.value) > 0:
-                        flags_df = sv.network_integrated_flags.value[
-                            sv.network_integrated_flags.value["qualified_entity"].isin(
-                                entities
-                            )
-                        ]
-                        community_flags = flags_df["count"].sum()
-                        flagged = len(flags_df[flags_df["count"] > 0])
-                        unflagged = len(entities) - flagged
-                        flaggedPerUnflagged = (
-                            flagged / unflagged if unflagged > 0 else 0
+                    sv.network_trimmed_attributes.value = (
+                        pd.DataFrame(
+                            trimmed_degrees,
+                            columns=["Attribute", "Linked Entities"],
                         )
-                        flaggedPerUnflagged = round(flaggedPerUnflagged, 2)
-                    flags_per_entity = round(
-                        community_flags / len(entities) if len(entities) > 0 else 0, 2
+                        .sort_values("Linked Entities", ascending=False)
+                        .reset_index(drop=True)
                     )
-                    for n in entities:
-                        flags = (
-                            sv.network_integrated_flags.value[
-                                sv.network_integrated_flags.value["qualified_entity"]
-                                == n
-                            ]["count"].sum()
-                            if len(sv.network_integrated_flags.value) > 0
-                            else 0
-                        )
+                    P = project_entity_graph(
+                        sv.network_overall_graph.value,
+                        trimmed_nodes,
+                        sv.network_inferred_links.value,
+                        sv.network_supporting_attribute_types.value,
+                    )
 
-                        entity_records.append((
-                            n.split(ATTRIBUTE_VALUE_SEPARATOR)[1],
-                            flags,
-                            ix,
-                            len(entities),
-                            community_flags,
-                            flagged,
-                            flags_per_entity,
-                            flaggedPerUnflagged,
-                        ))
+                    (
+                        sv.network_community_nodes.value,
+                        sv.network_entity_to_community_ix.value,
+                    ) = get_community_nodes(P, sv.network_max_network_size.value)
+
+                    N = build_network_from_entities(
+                        sv.network_overall_graph.value,
+                        sv.network_entity_to_community_ix.value,
+                        sv.network_integrated_flags.value,
+                        sv.network_trimmed_attributes.value,
+                        sv.network_inferred_links.value,
+                    )
+
+                entity_records = generate_final_df(
+                    sv.network_community_nodes.value,
+                    sv.network_integrated_flags.value,
+                )
+
                 sv.network_entity_df.value = pd.DataFrame(
                     entity_records,
                     columns=[
