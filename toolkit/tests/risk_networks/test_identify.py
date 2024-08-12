@@ -3,6 +3,7 @@
 #
 from collections import defaultdict
 
+# ruff: noqa
 import networkx as nx
 import pytest
 
@@ -31,28 +32,36 @@ class TestTrimNodeset:
     def test_trim_nodeset_additional_empty(self, overall_graph):
         max_attribute_degree = 1
         additional_trimmed_attributes = set()
-        trimmed = trim_nodeset(
+        (trimmed_degrees, trimmed_nodes) = trim_nodeset(
             overall_graph, additional_trimmed_attributes, max_attribute_degree
         )
 
-        expected_output = {
+        trimmed_nodes_expected = {
             "Entity1",
             "Entity3",
             "Entity5",
             "Entity7",
             "Entity9",
         }
+        trimmed_degrees_expected = {
+            ("Entity1", 2),
+            ("Entity3", 3),
+            ("Entity5", 3),
+            ("Entity7", 3),
+            ("Entity9", 3),
+        }
 
-        assert trimmed == expected_output
+        assert trimmed_nodes == trimmed_nodes_expected
+        assert trimmed_degrees == trimmed_degrees_expected
 
     def test_trim_nodeset_additional(self, overall_graph):
         max_attribute_degree = 1
         additional_trimmed_attributes = {"Entity2"}
-        trimmed = trim_nodeset(
+        (trimmed_degrees, trimmed_nodes) = trim_nodeset(
             overall_graph, additional_trimmed_attributes, max_attribute_degree
         )
 
-        expected_output = {
+        trimmed_nodes_expected = {
             "Entity1",
             "Entity2",
             "Entity3",
@@ -61,7 +70,16 @@ class TestTrimNodeset:
             "Entity9",
         }
 
-        assert trimmed == expected_output
+        trimmed_degrees_expected = {
+            ("Entity1", 2),
+            ("Entity3", 3),
+            ("Entity5", 3),
+            ("Entity7", 3),
+            ("Entity9", 3),
+        }
+
+        assert trimmed_nodes == trimmed_nodes_expected
+        assert trimmed_degrees == trimmed_degrees_expected
 
 
 class TestProjectEntityGraph:
