@@ -3,7 +3,7 @@
 #
 import pytest
 
-from python.AI.text_splitter import TextSplitter
+from toolkit.AI.text_splitter import TextSplitter
 
 
 @pytest.fixture()

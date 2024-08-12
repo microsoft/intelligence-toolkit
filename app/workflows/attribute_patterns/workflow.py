@@ -13,26 +13,28 @@ from st_aggrid import (
 )
 from util import ui_components
 
-from python.attribute_patterns import get_readme as get_intro
-from python.attribute_patterns import prompts
-from python.attribute_patterns.embedding import generate_embedding
-from python.attribute_patterns.model import (
+from toolkit.attribute_patterns import get_readme as get_intro
+from toolkit.attribute_patterns import prompts
+from toolkit.attribute_patterns.embedding import generate_embedding
+from toolkit.attribute_patterns.model import (
     compute_attribute_counts,
     create_time_series_df,
     detect_patterns,
     generate_graph_model,
     prepare_graph,
 )
-from python.attribute_patterns.record_counter import RecordCounter
+from toolkit.attribute_patterns.record_counter import RecordCounter
 
 
 def create(sv: ap_variables.SessionVariables, workflow):
-    intro_tab, uploader_tab, detect_tab, explain_tab = st.tabs([
-        "Attribute patterns workflow:",
-        "Create graph model",
-        "Detect patterns",
-        "Generate AI pattern reports",
-    ])
+    intro_tab, uploader_tab, detect_tab, explain_tab = st.tabs(
+        [
+            "Attribute patterns workflow:",
+            "Create graph model",
+            "Detect patterns",
+            "Generate AI pattern reports",
+        ]
+    )
     selected_pattern = ""
     graph_df = None
     with intro_tab:

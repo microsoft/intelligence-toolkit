@@ -5,8 +5,8 @@
 import pandas as pd
 import pytest
 
-from python.risk_networks.config import AttributeColumnType
-from python.risk_networks.model import prepare_entity_attribute
+from toolkit.risk_networks.config import AttributeColumnType
+from toolkit.risk_networks.model import prepare_entity_attribute
 
 
 class TestPrepareEntityAttribute:

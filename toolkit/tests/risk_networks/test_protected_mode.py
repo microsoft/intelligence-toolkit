@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import pandas as pd
 
-from python.risk_networks.protected_mode import is_numeric_column, protect_data
+from toolkit.risk_networks.protected_mode import is_numeric_column, protect_data
 
 
 class TestProtectData:
@@ -21,10 +21,12 @@ class TestProtectData:
     def test_protect_data_with_numeric_column(self, mock_re_match):
         # Setup
         mock_re_match.side_effect = [True, True, True]
-        data_df = pd.DataFrame({
-            "entity_id": ["123", "456", "789"],
-            "value": [1, 2, 3],
-        })
+        data_df = pd.DataFrame(
+            {
+                "entity_id": ["123", "456", "789"],
+                "value": [1, 2, 3],
+            }
+        )
         value_cols = ["value"]
         entity_col = "entity_id"
         entities_renamed = []
@@ -35,14 +37,16 @@ class TestProtectData:
         )
 
         # Verify
-        expected_df = pd.DataFrame({
-            "entity_id": [
-                "Protected_Entity_1",
-                "Protected_Entity_2",
-                "Protected_Entity_3",
-            ],
-            "value": [1, 2, 3],
-        })
+        expected_df = pd.DataFrame(
+            {
+                "entity_id": [
+                    "Protected_Entity_1",
+                    "Protected_Entity_2",
+                    "Protected_Entity_3",
+                ],
+                "value": [1, 2, 3],
+            }
+        )
         expected_entities_renamed = [
             ("123", "Protected_Entity_1"),
             ("456", "Protected_Entity_2"),
@@ -59,10 +63,12 @@ class TestProtectData:
     def test_protect_data_with_existing_entity_name(self, mock_re_match):
         # Setup
         mock_re_match.side_effect = [True, True, True]
-        data_df = pd.DataFrame({
-            "entity_id": ["123", "456", "789"],
-            "value": [1, 2, 3],
-        })
+        data_df = pd.DataFrame(
+            {
+                "entity_id": ["123", "456", "789"],
+                "value": [1, 2, 3],
+            }
+        )
         value_cols = ["value"]
         entity_col = "entity_id"
         entities_renamed = [("123", "Protected_Entity_1")]
@@ -73,14 +79,16 @@ class TestProtectData:
         )
 
         # Verify
-        expected_df = pd.DataFrame({
-            "entity_id": [
-                "Protected_Entity_1",
-                "Protected_Entity_2",
-                "Protected_Entity_3",
-            ],
-            "value": [1, 2, 3],
-        })
+        expected_df = pd.DataFrame(
+            {
+                "entity_id": [
+                    "Protected_Entity_1",
+                    "Protected_Entity_2",
+                    "Protected_Entity_3",
+                ],
+                "value": [1, 2, 3],
+            }
+        )
         expected_entities_renamed = [
             ("123", "Protected_Entity_1"),
             ("456", "Protected_Entity_2"),
@@ -96,10 +104,12 @@ class TestProtectData:
     def test_protect_data_with_existing_attribute_name(self, mock_re_match):
         # Setup
         mock_re_match.side_effect = [True, True, False, True]
-        data_df = pd.DataFrame({
-            "entity_id": ["123", "456", "789"],
-            "value": [1, 2, 3],
-        })
+        data_df = pd.DataFrame(
+            {
+                "entity_id": ["123", "456", "789"],
+                "value": [1, 2, 3],
+            }
+        )
         value_cols = ["value"]
         entity_col = "entity_id"
         entities_renamed = []
@@ -111,14 +121,16 @@ class TestProtectData:
         )
 
         # Verify
-        expected_df = pd.DataFrame({
-            "entity_id": [
-                "Protected_Entity_1",
-                "Protected_Entity_2",
-                "Protected_Entity_3",
-            ],
-            "value": ["value_1", "value_2", "value_3"],
-        })
+        expected_df = pd.DataFrame(
+            {
+                "entity_id": [
+                    "Protected_Entity_1",
+                    "Protected_Entity_2",
+                    "Protected_Entity_3",
+                ],
+                "value": ["value_1", "value_2", "value_3"],
+            }
+        )
         expected_entities_renamed = [
             ("123", "Protected_Entity_1"),
             ("456", "Protected_Entity_2"),

@@ -6,9 +6,9 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 
-from python.AI.metaprompts import do_not_harm
-from python.AI.utils import generate_messages
-from python.helpers import df_functions
+from toolkit.AI.metaprompts import do_not_harm
+from toolkit.AI.utils import generate_messages
+from toolkit.helpers import df_functions
 
 from .config import type_val_sep
 from .detection_functions import (
@@ -48,17 +48,21 @@ def prepare_data(data_df, identifier_col=None):
         for _, row in melted.iterrows():
             if row["Attribute"] in expanded_atts:
                 if str(row["Value"]) not in ["", "<NA>"]:
-                    new_rows.append([
-                        row["Subject ID"],
-                        row["Attribute"] + "_" + str(row["Value"]),
-                        "1",
-                    ])
+                    new_rows.append(
+                        [
+                            row["Subject ID"],
+                            row["Attribute"] + "_" + str(row["Value"]),
+                            "1",
+                        ]
+                    )
             else:
-                new_rows.append([
-                    row["Subject ID"],
-                    row["Attribute"],
-                    str(row["Value"]),
-                ])
+                new_rows.append(
+                    [
+                        row["Subject ID"],
+                        row["Attribute"],
+                        str(row["Value"]),
+                    ]
+                )
         melted = pd.DataFrame(new_rows, columns=["Subject ID", "Attribute", "Value"])
         # convert back to wide format
         wdf = melted.pivot(

@@ -5,7 +5,7 @@ from collections import defaultdict
 
 import numpy as np
 
-from python.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
+from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 
 
 class RecordCounter:

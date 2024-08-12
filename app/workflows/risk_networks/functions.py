@@ -12,9 +12,9 @@ from streamlit_agraph import Config, Edge, Node
 from util.openai_wrapper import UIOpenAIConfiguration
 from util.session_variables import SessionVariables
 
-from python.AI.embedder import Embedder
-from python.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
-from python.risk_networks import config
+from toolkit.AI.embedder import Embedder
+from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
+from toolkit.risk_networks import config
 
 sv_home = SessionVariables("home")
 

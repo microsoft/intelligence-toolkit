@@ -5,8 +5,8 @@
 import networkx as nx
 import pandas as pd
 
-from python.attribute_patterns.config import type_val_sep
-from python.attribute_patterns.model import (
+from toolkit.attribute_patterns.config import type_val_sep
+from toolkit.attribute_patterns.model import (
     compute_attribute_counts,
     generate_graph_model,
     prepare_graph,
@@ -23,7 +23,7 @@ def test_generate_graph_model_basic(mocker):
 
     test_df = pd.DataFrame(data)
 
-    mocker.patch("python.helpers.df_functions.fix_null_ints").return_value = test_df
+    mocker.patch("toolkit.helpers.df_functions.fix_null_ints").return_value = test_df
     result = generate_graph_model(test_df, "Period")
 
     expected_data = {
@@ -54,7 +54,7 @@ def test_generate_graph_model_with_nans(mocker):
     test_df = pd.DataFrame(data)
 
     mocker.patch(
-        "python.helpers.df_functions.fix_null_ints"
+        "toolkit.helpers.df_functions.fix_null_ints"
     ).return_value = test_df.fillna("")
     result = generate_graph_model(test_df, "Period")
 
@@ -83,7 +83,7 @@ def test_generate_graph_model_column_rename(mocker):
 
     test_df = pd.DataFrame(data)
 
-    mocker.patch("python.helpers.df_functions.fix_null_ints").return_value = test_df
+    mocker.patch("toolkit.helpers.df_functions.fix_null_ints").return_value = test_df
     result = generate_graph_model(test_df, "Custom_Period")
 
     expected_data = {
@@ -113,7 +113,7 @@ def test_compute_attribute_counts_basic(mocker):
 
     test_df = pd.DataFrame(data)
 
-    mocker.patch("python.helpers.df_functions.fix_null_ints").return_value = test_df
+    mocker.patch("toolkit.helpers.df_functions.fix_null_ints").return_value = test_df
     result = compute_attribute_counts(
         test_df, f"Attribute1{type_val_sep}A", "Period", "P1"
     )
@@ -141,7 +141,7 @@ def test_compute_attribute_counts_with_multiple_patterns(mocker):
 
     test_df = pd.DataFrame(data)
 
-    mocker.patch("python.helpers.df_functions.fix_null_ints").return_value = test_df
+    mocker.patch("toolkit.helpers.df_functions.fix_null_ints").return_value = test_df
     result = compute_attribute_counts(
         test_df, "Attribute1::A & Attribute2::X", "Period", "P1"
     )
@@ -165,7 +165,7 @@ def test_compute_attribute_counts_with_nans(mocker):
 
     test_df = pd.DataFrame(data).fillna("")
 
-    mocker.patch("python.helpers.df_functions.fix_null_ints").return_value = test_df
+    mocker.patch("toolkit.helpers.df_functions.fix_null_ints").return_value = test_df
     result = compute_attribute_counts(test_df, "Attribute1::A", "Period", "P1")
 
     expected_data = {
@@ -187,7 +187,7 @@ def test_compute_attribute_counts_invalid_pattern(mocker):
 
     test_df = pd.DataFrame(data)
 
-    mocker.patch("python.helpers.df_functions.fix_null_ints").return_value = test_df
+    mocker.patch("toolkit.helpers.df_functions.fix_null_ints").return_value = test_df
     result = compute_attribute_counts(test_df, "InvalidPattern", "Period", "P1")
 
     expected_data = {
@@ -201,19 +201,23 @@ def test_compute_attribute_counts_invalid_pattern(mocker):
 
 def test_prepare_graph(mocker):
     create_edge_df_from_atts_mock = mocker.patch(
-        "python.attribute_patterns.graph_functions.create_edge_df_from_atts"
+        "toolkit.attribute_patterns.graph_functions.create_edge_df_from_atts"
     )
-    edge_df = pd.DataFrame({
-        "source": ["A", "B", "C", "A"],
-        "target": ["B", "C", "D", "A"],
-        "weight": [1, 2, 3, 3],
-    })
+    edge_df = pd.DataFrame(
+        {
+            "source": ["A", "B", "C", "A"],
+            "target": ["B", "C", "D", "A"],
+            "weight": [1, 2, 3, 3],
+        }
+    )
     create_edge_df_from_atts_mock.return_value = edge_df
-    test_df = pd.DataFrame({
-        "Subject ID": [1, 2, 2, 1],
-        "Period": [2020, 2021, 2021, 2020],
-        "Full Attribute": ["ab=1", "bc=2", "ab=2", "bc=1"],
-    })
+    test_df = pd.DataFrame(
+        {
+            "Subject ID": [1, 2, 2, 1],
+            "Period": [2020, 2021, 2021, 2020],
+            "Full Attribute": ["ab=1", "bc=2", "ab=2", "bc=1"],
+        }
+    )
     pdf, time_to_graph = prepare_graph(test_df)
     assert "Grouping ID" in pdf.columns
     assert pdf["Grouping ID"].str.contains("@").all()

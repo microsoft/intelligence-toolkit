@@ -15,10 +15,10 @@ from util.download_pdf import add_download_pdf
 from util.enums import Mode
 from util.openai_wrapper import UIOpenAIConfiguration
 
-import python.AI.utils as utils
-from python.AI.classes import LLMCallback
-from python.AI.client import OpenAIClient
-from python.AI.defaults import DEFAULT_MAX_INPUT_TOKENS
+import toolkit.AI.utils as utils
+from toolkit.AI.classes import LLMCallback
+from toolkit.AI.client import OpenAIClient
+from toolkit.AI.defaults import DEFAULT_MAX_INPUT_TOKENS
 
 
 def return_token_count(text: str) -> int:
@@ -145,11 +145,13 @@ def generative_batch_ai_component(
     batch_count = batch_count_raw + 1 if batch_count_remaining != 0 else batch_count_raw
     batch_messages = []
 
-    full_prompt = " ".join([
-        system_prompt_var.value["report_prompt"],
-        instructions_text,
-        system_prompt_var.value["safety_prompt"],
-    ])
+    full_prompt = " ".join(
+        [
+            system_prompt_var.value["report_prompt"],
+            instructions_text,
+            system_prompt_var.value["safety_prompt"],
+        ]
+    )
     for _i in range(batch_count):
         batch = batch_val[batch_offset : min(batch_offset + batch_size, len(batch_val))]
         batch_offset += batch_size
@@ -685,17 +687,21 @@ def prepare_input_df(
                     for _i, row in melted.iterrows():
                         if row["Attribute"] in expanded_atts:
                             if str(row["Value"]) not in ["", "<NA>"]:
-                                new_rows.append([
-                                    row["Subject ID"],
-                                    row["Attribute"] + "_" + str(row["Value"]),
-                                    "1",
-                                ])
+                                new_rows.append(
+                                    [
+                                        row["Subject ID"],
+                                        row["Attribute"] + "_" + str(row["Value"]),
+                                        "1",
+                                    ]
+                                )
                         else:
-                            new_rows.append([
-                                row["Subject ID"],
-                                row["Attribute"],
-                                str(row["Value"]),
-                            ])
+                            new_rows.append(
+                                [
+                                    row["Subject ID"],
+                                    row["Attribute"],
+                                    str(row["Value"]),
+                                ]
+                            )
                     melted = pd.DataFrame(
                         new_rows, columns=["Subject ID", "Attribute", "Value"]
                     )

@@ -1,6 +1,6 @@
 import networkx as nx
 
-from python.risk_networks.node_community import get_community_nodes, get_subgraph
+from toolkit.risk_networks.node_community import get_community_nodes, get_subgraph
 
 
 class TestSubgraph:

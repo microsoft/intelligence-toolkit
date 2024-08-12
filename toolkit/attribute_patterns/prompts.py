@@ -1,7 +1,7 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 #
-from python.AI.metaprompts import do_not_harm
+from toolkit.AI.metaprompts import do_not_harm
 
 report_prompt = """
 You are a helpful assistant supporting analysis of a dataset.

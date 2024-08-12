@@ -1,7 +1,7 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import pytest
 
-from python.AI.utils import (
+from toolkit.AI.utils import (
     get_token_count,
     hash_text,
     prepare_messages,

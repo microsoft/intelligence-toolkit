@@ -6,7 +6,7 @@ from collections import defaultdict
 import networkx as nx
 import pytest
 
-from python.risk_networks.identify import (
+from toolkit.risk_networks.identify import (
     get_entity_neighbors,
     neighbor_is_valid,
     project_entity_graph,

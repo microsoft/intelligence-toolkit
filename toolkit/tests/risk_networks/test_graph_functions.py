@@ -4,12 +4,12 @@ from unittest.mock import MagicMock, Mock, patch
 import networkx as nx
 import pytest
 
-from python.helpers.progress_batch_callback import ProgressBatchCallback
-from python.risk_networks.constants import (
+from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
+from toolkit.risk_networks.constants import (
     SIMILARITY_THRESHOLD_MAX,
     SIMILARITY_THRESHOLD_MIN,
 )
-from python.risk_networks.graph_functions import (
+from toolkit.risk_networks.graph_functions import (
     _merge_condition,
     _merge_node_list,
     _merge_nodes,
@@ -105,7 +105,7 @@ def test_empty_graph():
 
 def test_simplify_condition_false(mocker, graph):
     mocker.patch(
-        "python.risk_networks.graph_functions._merge_nodes"
+        "toolkit.risk_networks.graph_functions._merge_nodes"
     ).return_value = graph
 
     aba = simplify_graph(graph)
@@ -114,7 +114,7 @@ def test_simplify_condition_false(mocker, graph):
 
 def test_simplify_condition_true(mocker, graph):
     G = nx.Graph()
-    mocker.patch("python.risk_networks.graph_functions._merge_nodes").return_value = G
+    mocker.patch("toolkit.risk_networks.graph_functions._merge_nodes").return_value = G
 
     aba = simplify_graph(graph)
     assert len(aba.nodes()) == 0
@@ -190,7 +190,7 @@ class TestIndexNodes:
         ):
             index_nodes([], overall_graph)
 
-    @patch("python.risk_networks.graph_functions.Embedder")
+    @patch("toolkit.risk_networks.graph_functions.Embedder")
     def test_index_nodes_small_samples(self, mock_embedder, overall_graph_small):
         mock_embedder_instance = MagicMock()
         mock_embedder.return_value = mock_embedder_instance
@@ -204,7 +204,7 @@ class TestIndexNodes:
         ):
             index_nodes(indexed_node_types, overall_graph_small)
 
-    @patch("python.risk_networks.graph_functions.Embedder")
+    @patch("toolkit.risk_networks.graph_functions.Embedder")
     def test_index_nodes(self, mock_embedder, overall_graph):
         mock_embedder_instance = MagicMock()
         mock_embedder.return_value = mock_embedder_instance

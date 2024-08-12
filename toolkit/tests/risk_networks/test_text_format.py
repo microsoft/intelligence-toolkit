@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pandas as pd
 
-from python.risk_networks.text_format import clean_text, format_data_columns
+from toolkit.risk_networks.text_format import clean_text, format_data_columns
 
 
 class TestCleanText:
@@ -34,16 +34,20 @@ class TestCleanText:
 
 class TestFormatDataColumns:
     def test_multiple_columns(self):
-        initial_df = pd.DataFrame({
-            "entity_id": ["123 ", " 456"],
-            "name": ["John Doe", "Jane Doe"],
-            "email": ["john@doe.com", "jane@doe.com"],
-        })
-        expected_df = pd.DataFrame({
-            "entity_id": ["123", "456"],
-            "name": ["John Doe", "Jane Doe"],
-            "email": ["john@doecom", "jane@doecom"],
-        })
+        initial_df = pd.DataFrame(
+            {
+                "entity_id": ["123 ", " 456"],
+                "name": ["John Doe", "Jane Doe"],
+                "email": ["john@doe.com", "jane@doe.com"],
+            }
+        )
+        expected_df = pd.DataFrame(
+            {
+                "entity_id": ["123", "456"],
+                "name": ["John Doe", "Jane Doe"],
+                "email": ["john@doecom", "jane@doecom"],
+            }
+        )
         columns_to_link = ["name", "email"]
         entity_id_column = "entity_id"
 
@@ -71,10 +75,12 @@ class TestFormatDataColumns:
     def test_special_characters_in_entity_id(self, mock_clean_text):
         # Setup
         mock_clean_text.side_effect = lambda _x, _y, _z: "cleaned"
-        initial_df = pd.DataFrame({
-            "entity_id": ["@123!", "#456$"],
-            "name": ["John Doe", "Jane Doe"],
-        })
+        initial_df = pd.DataFrame(
+            {
+                "entity_id": ["@123!", "#456$"],
+                "name": ["John Doe", "Jane Doe"],
+            }
+        )
         columns_to_link = ["name"]
         entity_id_column = "entity_id"
 

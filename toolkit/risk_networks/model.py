@@ -2,7 +2,7 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 
-from python.risk_networks.config import AttributeColumnType
+from toolkit.risk_networks.config import AttributeColumnType
 
 
 def prepare_entity_attribute(

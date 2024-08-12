@@ -17,8 +17,8 @@ from sklearn.neighbors import NearestNeighbors
 from util import ui_components
 from util.download_pdf import add_download_pdf
 
-from python.AI import classes
-from python.helpers.progress_batch_callback import ProgressBatchCallback
+from toolkit.AI import classes
+from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 
 def get_intro():
@@ -30,12 +30,14 @@ def get_intro():
 def create(sv: rm_variables.SessionVariable, workflow=None):
     sv_home = home_vars.SessionVariables("home")
 
-    intro_tab, uploader_tab, process_tab, evaluate_tab = st.tabs([
-        "Record matching workflow:",
-        "Upload data to match",
-        "Detect record groups",
-        "Evaluate record groups",
-    ])
+    intro_tab, uploader_tab, process_tab, evaluate_tab = st.tabs(
+        [
+            "Record matching workflow:",
+            "Upload data to match",
+            "Detect record groups",
+            "Evaluate record groups",
+        ]
+    )
     selected_df = None
     with intro_tab:
         st.markdown(get_intro())
@@ -96,10 +98,12 @@ def create(sv: rm_variables.SessionVariable, workflow=None):
                             selected_df = selected_df.with_row_count(name="Entity ID")
                             selected_df = selected_df.rename({name_col: "Entity name"})
                         else:
-                            selected_df = selected_df.rename({
-                                entity_col: "Entity ID",
-                                name_col: "Entity name",
-                            })
+                            selected_df = selected_df.rename(
+                                {
+                                    entity_col: "Entity ID",
+                                    name_col: "Entity name",
+                                }
+                            )
                             selected_df = selected_df.with_columns(
                                 pl.col("Entity ID").cast(pl.Utf8)
                             )
@@ -137,11 +141,13 @@ def create(sv: rm_variables.SessionVariable, workflow=None):
                 # max_atts = max([len(df.columns) for df in sv.matching_dfs.value.values()])
                 all_atts = []
                 for dataset, df in sv.matching_dfs.value.items():
-                    all_atts.extend([
-                        f"{c}::{dataset}"
-                        for c in df.columns
-                        if c not in ["Entity ID", "Entity name"]
-                    ])
+                    all_atts.extend(
+                        [
+                            f"{c}::{dataset}"
+                            for c in df.columns
+                            if c not in ["Entity ID", "Entity name"]
+                        ]
+                    )
                     all_atts = sorted(all_atts)
                 options = sorted(all_atts)
                 renaming = defaultdict(dict)
@@ -364,11 +370,13 @@ def create(sv: rm_variables.SessionVariable, workflow=None):
                                     union = len(igrams.union(ngrams))
                                     score = inter / union if union > 0 else 0
 
-                                    sv.matching_sentence_pair_scores.value.append((
-                                        ix,
-                                        nx,
-                                        score,
-                                    ))
+                                    sv.matching_sentence_pair_scores.value.append(
+                                        (
+                                            ix,
+                                            nx,
+                                            score,
+                                        )
+                                    )
 
                         # st.markdown(f'Identified **{len(sv.matching_sentence_pair_scores.value)}** pairwise record matches.')
 
@@ -571,11 +579,13 @@ def create(sv: rm_variables.SessionVariable, workflow=None):
         b1, b2 = st.columns([2, 3])
         with b1:
             batch_size = 100
-            data = sv.matching_matches_df.value.drop([
-                "Entity ID",
-                "Dataset",
-                "Name similarity",
-            ]).to_pandas()
+            data = sv.matching_matches_df.value.drop(
+                [
+                    "Entity ID",
+                    "Dataset",
+                    "Name similarity",
+                ]
+            ).to_pandas()
             generate, batch_messages, reset = (
                 ui_components.generative_batch_ai_component(
                     sv.matching_system_prompt, {}, "data", data, batch_size

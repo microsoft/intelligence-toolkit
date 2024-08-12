@@ -9,10 +9,10 @@ import networkx as nx
 import pandas as pd
 from sklearn.neighbors import NearestNeighbors
 
-from python.AI.embedder import Embedder
-from python.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
-from python.helpers.progress_batch_callback import ProgressBatchCallback
-from python.risk_networks.constants import (
+from toolkit.AI.embedder import Embedder
+from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
+from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
+from toolkit.risk_networks.constants import (
     SIMILARITY_THRESHOLD_MAX,
     SIMILARITY_THRESHOLD_MIN,
 )

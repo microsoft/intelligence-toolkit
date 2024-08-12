@@ -20,8 +20,8 @@ from util.openai_wrapper import (
 )
 from util.secrets_handler import SecretsHandler
 
-from python.AI.defaults import PICKLE_FILE_NAME
-from python.helpers.constants import CACHE_PATH
+from toolkit.AI.defaults import PICKLE_FILE_NAME
+from toolkit.helpers.constants import CACHE_PATH
 
 
 def on_change(handler, key=None, value=None):

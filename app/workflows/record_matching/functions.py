@@ -6,7 +6,7 @@ from util.openai_wrapper import UIOpenAIConfiguration
 from util.session_variables import SessionVariables
 from workflows.record_matching import config
 
-from python.AI.embedder import Embedder
+from toolkit.AI.embedder import Embedder
 
 sv_home = SessionVariables("home")
 

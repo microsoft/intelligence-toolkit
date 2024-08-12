@@ -4,7 +4,7 @@
 import numpy as np
 import pandas as pd
 
-from python.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
+from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 
 from .config import correlation, diaga, laplacian, type_val_sep
 from .graph_encoder_embed import GraphEncoderEmbed
@@ -34,10 +34,12 @@ def generate_embeddings_for_period(graph, node_list, node_to_ix, node_to_label):
     """Generate embeddings for a single period."""
     edge_list = get_edge_list(graph, node_list, node_to_ix)
     num_nodes = len(node_list)
-    labels = np.array([node_to_label[node] for node in node_list]).reshape((
-        num_nodes,
-        1,
-    ))
+    labels = np.array([node_to_label[node] for node in node_list]).reshape(
+        (
+            num_nodes,
+            1,
+        )
+    )
     Z, _ = GraphEncoderEmbed().run(
         edge_list,
         labels,

@@ -24,17 +24,17 @@ from streamlit_agraph import agraph
 from util import ui_components
 from util.session_variables import SessionVariables
 
-from python.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
-from python.helpers.progress_batch_callback import ProgressBatchCallback
-from python.risk_networks import config
-from python.risk_networks import get_readme as get_intro
-from python.risk_networks import graph_functions, prompts
-from python.risk_networks.identify import project_entity_graph, trim_nodeset
-from python.risk_networks.model import prepare_entity_attribute
-from python.risk_networks.network import build_network_from_entities, generate_final_df
-from python.risk_networks.node_community import get_community_nodes
-from python.risk_networks.protected_mode import protect_data
-from python.risk_networks.text_format import format_data_columns
+from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
+from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
+from toolkit.risk_networks import config
+from toolkit.risk_networks import get_readme as get_intro
+from toolkit.risk_networks import graph_functions, prompts
+from toolkit.risk_networks.identify import project_entity_graph, trim_nodeset
+from toolkit.risk_networks.model import prepare_entity_attribute
+from toolkit.risk_networks.network import build_network_from_entities, generate_final_df
+from toolkit.risk_networks.node_community import get_community_nodes
+from toolkit.risk_networks.protected_mode import protect_data
+from toolkit.risk_networks.text_format import format_data_columns
 
 
 def create(sv: rn_variables.SessionVariables, workflow=None):

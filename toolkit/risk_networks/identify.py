@@ -7,8 +7,8 @@ import networkx as nx
 import pandas as pd
 from networkx import Graph
 
-from python.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
-from python.risk_networks import config
+from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
+from toolkit.risk_networks import config
 
 
 # ruff: noqa

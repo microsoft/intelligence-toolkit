@@ -7,7 +7,7 @@ import networkx as nx
 import polars as pl
 import pytest
 
-from python.risk_networks.network import (
+from toolkit.risk_networks.network import (
     build_fuzzy_neighbors,
     generate_final_df,
     get_integrated_flags,

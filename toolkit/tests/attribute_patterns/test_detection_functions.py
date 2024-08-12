@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from python.attribute_patterns.detection_functions import (
+from toolkit.attribute_patterns.detection_functions import (
     _calculate_cosine_distance,
     _calculate_euclidean_distance,
     _compute_node_pair_distances,
@@ -81,7 +81,7 @@ def test_create_period_shifts(mocker):
     }
     attribute_dynamic_df = pd.DataFrame({"Period": ["period1", "period2"]})
     create_centroid_dists_mock = mocker.patch(
-        "python.attribute_patterns.detection_functions._create_centroid_dists"
+        "toolkit.attribute_patterns.detection_functions._create_centroid_dists"
     )
     create_centroid_dists_mock.return_value = {("node1", "node2"): (0.3, 0.4)}
 

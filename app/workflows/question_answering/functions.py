@@ -13,9 +13,9 @@ from util.session_variables import SessionVariables
 from util.wkhtmltopdf import config_pdfkit, pdfkit_options
 from workflows.question_answering import config
 
-from python.AI import utils
-from python.AI.embedder import Embedder
-from python.AI.text_splitter import TextSplitter
+from toolkit.AI import utils
+from toolkit.AI.embedder import Embedder
+from toolkit.AI.text_splitter import TextSplitter
 
 sv_home = SessionVariables("home")
 

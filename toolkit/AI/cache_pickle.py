@@ -4,7 +4,7 @@
 import os
 import pickle
 
-from python.helpers.constants import CACHE_PATH
+from toolkit.helpers.constants import CACHE_PATH
 
 from .defaults import PICKLE_FILE_NAME
 

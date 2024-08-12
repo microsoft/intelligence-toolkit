@@ -7,8 +7,8 @@ from typing import Any
 import networkx as nx
 import polars as pl
 
-from python.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
-from python.risk_networks import config
+from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
+from toolkit.risk_networks import config
 
 
 # I don't have the flags yet

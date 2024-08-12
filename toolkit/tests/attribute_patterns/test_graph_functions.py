@@ -6,7 +6,7 @@ import networkx as nx
 import pandas as pd
 import pytest
 
-from python.attribute_patterns.graph_functions import (
+from toolkit.attribute_patterns.graph_functions import (
     convert_edge_df_to_graph,
     create_edge_df_from_atts,
 )
@@ -14,11 +14,13 @@ from python.attribute_patterns.graph_functions import (
 
 def test_convert_edge_df_to_graph_default():
     # Create a sample edge DataFrame
-    edge_df = pd.DataFrame({
-        "source": ["A", "B", "C", "A"],
-        "target": ["B", "C", "D", "A"],
-        "weight": [1, 2, 3, 3],
-    })
+    edge_df = pd.DataFrame(
+        {
+            "source": ["A", "B", "C", "A"],
+            "target": ["B", "C", "D", "A"],
+            "weight": [1, 2, 3, 3],
+        }
+    )
 
     # Call the function
     G, lcc = convert_edge_df_to_graph(edge_df)
@@ -33,11 +35,13 @@ def test_convert_edge_df_to_graph_default():
 
 def test_convert_edge_df_to_graph_more_nodes():
     # Create a sample edge DataFrame
-    edge_df = pd.DataFrame({
-        "source": [1, 2, 3, 4],
-        "target": [2, 3, 4, 5],
-        "weight": [0.5, 0.6, 0.7, 0.8],
-    })
+    edge_df = pd.DataFrame(
+        {
+            "source": [1, 2, 3, 4],
+            "target": [2, 3, 4, 5],
+            "weight": [0.5, 0.6, 0.7, 0.8],
+        }
+    )
 
     # Call the function
     G, lcc = convert_edge_df_to_graph(edge_df)
@@ -54,9 +58,9 @@ def test_convert_edge_df_to_graph_more_nodes():
 def sample_input_data():
     # Generate sample input data
     all_atts = ["A", "B", "C", "D"]
-    pdf = pd.DataFrame({
-        "Full Attribute": [["A", "B"], ["B", "C"], ["C", "D"], ["A", "C"], ["B", "D"]]
-    })
+    pdf = pd.DataFrame(
+        {"Full Attribute": [["A", "B"], ["B", "C"], ["C", "D"], ["A", "C"], ["B", "D"]]}
+    )
     mi = True  # You can change this based on your testing requirements
     return all_atts, pdf, mi
 

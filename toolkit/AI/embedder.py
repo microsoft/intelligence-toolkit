@@ -6,8 +6,8 @@ import logging
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
-from python.AI.defaults import DEFAULT_LOCAL_EMBEDDING_MODEL
-from python.helpers.progress_batch_callback import ProgressBatchCallback
+from toolkit.AI.defaults import DEFAULT_LOCAL_EMBEDDING_MODEL
+from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 from .cache_pickle import CachePickle
 from .client import OpenAIClient

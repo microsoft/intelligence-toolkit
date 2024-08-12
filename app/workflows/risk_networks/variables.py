@@ -6,7 +6,7 @@ import polars as pl
 import streamlit as st
 from util.session_variable import SessionVariable
 
-from python.risk_networks import prompts
+from toolkit.risk_networks import prompts
 
 
 class SessionVariables:
