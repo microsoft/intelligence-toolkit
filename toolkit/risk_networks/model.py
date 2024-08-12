@@ -11,8 +11,7 @@ def prepare_entity_attribute(
     attribute_column_type: AttributeColumnType,
     columns_to_link: list[str],
     attribute_name=None,
-) -> tuple[list, set]:
-    node_types = set()
+) -> list:
     attribute_links = []
     for value_col in columns_to_link:
         attribute_label = value_col
@@ -20,8 +19,7 @@ def prepare_entity_attribute(
             attribute_label = attribute_name
 
         data_df["attribute_col"] = attribute_label
-        node_types.add(attribute_label)
         attribute_links.append(
             data_df[[entity_id_column, "attribute_col", value_col]].to_numpy()
         )
-    return attribute_links, node_types
+    return attribute_links

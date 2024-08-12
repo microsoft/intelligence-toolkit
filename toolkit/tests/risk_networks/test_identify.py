@@ -3,7 +3,6 @@
 #
 from collections import defaultdict
 
-# ruff: noqa
 import networkx as nx
 import pytest
 

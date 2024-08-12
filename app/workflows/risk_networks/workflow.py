@@ -160,13 +160,17 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                                 sv.network_attributes_renamed.value = attributes_renamed
 
                             if link_type == "Entity-Attribute":
-                                attribute_links, node_types = prepare_entity_attribute(
+                                attribute_links = prepare_entity_attribute(
                                     df,
                                     entity_col,
                                     attribute_col,
                                     value_cols,
                                     attribute_label,
                                 )
+                                node_types = set()
+                                for attribute_link in attribute_links:
+                                    node_types.add(attribute_link[0][1])
+
                                 sv.network_node_types.value = node_types
                                 sv.network_overall_graph.value = (
                                     graph_functions.build_undirected_graph(

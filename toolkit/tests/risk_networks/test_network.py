@@ -2,7 +2,6 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 
-# ruff: noqa
 import networkx as nx
 import polars as pl
 import pytest
