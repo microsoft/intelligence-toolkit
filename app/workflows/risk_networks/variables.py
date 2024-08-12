@@ -64,7 +64,6 @@ class SessionVariables:
         self.network_entities_renamed = SessionVariable([], prefix)
         self.network_attributes_renamed = SessionVariable([], prefix)
         self.network_upload_key = SessionVariable(random.randint(1, 100), prefix)
-        self.network_max_cluster_size = SessionVariable(10, prefix)
 
     def reset_workflow(self):
         for key in st.session_state:

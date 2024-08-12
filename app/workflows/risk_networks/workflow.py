@@ -3,13 +3,12 @@
 #
 
 # ruff: noqa
-import json
 import os
-import re
 from collections import defaultdict
 
 import networkx as nx
 import pandas as pd
+import polars as pl
 import streamlit as st
 import workflows.risk_networks.functions as functions
 import workflows.risk_networks.variables as rn_variables
@@ -273,7 +272,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                         sv.network_overall_graph.value = None
                         sv.network_entity_graph.value = None
                         sv.network_community_df.value = pd.DataFrame()
-                        sv.network_integrated_flags.value = pd.DataFrame()
+                        sv.network_integrated_flags.value = pl.DataFrame()
 
             num_entities = 0
             num_attributes = 0
@@ -446,11 +445,11 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                     help="The maximum number of entities that can share an attribute before it is removed from the network.",
                 )
             with c2:
-                network_max_cluster_size = st.number_input(
+                network_max_network_size = st.number_input(
                     "Max network size",
                     min_value=2,
-                    value=sv.network_max_cluster_size.value,
-                    help="Any network with edges >= max_cluster_size will be isolated into a subnetwork",
+                    value=sv.network_max_network_size.value,
+                    help="Any network with edges >= network_max_network_size will be isolated into a subnetwork",
                 )
             with c3:
                 network_supporting_attribute_types = st.multiselect(
@@ -466,7 +465,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 identify = st.button("Identify networks")
             if identify:
                 sv.network_max_attribute_degree.value = network_max_attribute_degree
-                sv.network_max_cluster_size.value = network_max_cluster_size
+                sv.network_max_network_size.value = network_max_network_size
                 sv.network_supporting_attribute_types.value = (
                     network_supporting_attribute_types
                 )
@@ -501,7 +500,6 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                     ) = get_community_nodes(
                         P,
                         sv.network_max_network_size.value,
-                        sv.network_max_cluster_size.value,
                     )
 
                     N = build_network_from_entities(

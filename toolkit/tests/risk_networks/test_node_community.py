@@ -189,7 +189,7 @@ class TestCommunityNodes:
         nx.add_path(G, ["node_D", "node_P"])
         nx.add_path(G, ["node_D", "node_C"])
 
-        result = get_community_nodes(G, 2, 2)
+        result = get_community_nodes(G, 2)
 
         expected_communities = [
             {

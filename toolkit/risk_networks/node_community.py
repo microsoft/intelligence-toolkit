@@ -40,8 +40,7 @@ def get_subgraph(
 
 def get_community_nodes(
     entity_graph: nx.Graph,
-    max_network_size: int = 10,
-    max_cluster_size: int | None = None,
+    max_network_size: int = 50,
 ) -> tuple[list, dict]:
     # get set of connected nodes list
     sorted_components = sorted(
@@ -59,7 +58,7 @@ def get_community_nodes(
         nodes = component_to_nodes[sequence]
         if len(nodes) > max_network_size:
             community_nodes_sequence, entity_to_community = get_subgraph(
-                entity_graph, nodes, max_cluster_size
+                entity_graph, nodes, max_network_size
             )
             community_nodes.extend(community_nodes_sequence)
             entity_to_community_ix.update(entity_to_community)
