@@ -3,6 +3,7 @@
 #
 import os
 from enum import Enum
+from typing import TypedDict
 
 from toolkit.helpers.constants import CACHE_PATH
 
@@ -23,3 +24,34 @@ class LinkType(Enum):
 class AttributeColumnType(Enum):
     ColumnName = "Use column name"
     CustomName = "Use custom name"
+
+
+class FlagAggregatorType(Enum):
+    Instance = "Instance"
+    Count = "Count"
+
+
+class FlagsSummary(TypedDict):
+    direct: int
+    indirect: int
+    paths: int
+    entities: int
+
+
+class NodeFlag(TypedDict):
+    node: str
+    flags: int | None
+    entities: int | None
+
+
+class Steps(TypedDict):
+    source: NodeFlag
+    target: NodeFlag
+
+
+class FlagsPath(TypedDict):
+    steps: list[Steps]
+
+
+class FlagsReport(TypedDict):
+    paths: list[FlagsPath]

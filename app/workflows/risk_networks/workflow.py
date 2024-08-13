@@ -3,6 +3,7 @@
 #
 
 # ruff: noqa
+import json
 import os
 from collections import defaultdict
 
@@ -28,10 +29,11 @@ from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 from toolkit.risk_networks import config
 from toolkit.risk_networks import get_readme as get_intro
 from toolkit.risk_networks import graph_functions, prompts
+from toolkit.risk_networks.flags import build_exposure_data, build_flags, prepare_links
 from toolkit.risk_networks.identify import project_entity_graph, trim_nodeset
 from toolkit.risk_networks.model import prepare_entity_attribute
 from toolkit.risk_networks.network import build_network_from_entities, generate_final_df
-from toolkit.risk_networks.node_community import get_community_nodes
+from toolkit.risk_networks.nodes import get_community_nodes
 from toolkit.risk_networks.protected_mode import protect_data
 from toolkit.risk_networks.text_format import format_data_columns
 
@@ -177,87 +179,31 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                                     )
                                 )
                             elif link_type == "Entity-Flag":
-                                # groupby entity and sum flag counts
-                                gdf = df.groupby([entity_col]).sum().reset_index()
-                                gdf["attribute_col"] = attribute_label
-                                gdf["attribute_col2"] = attribute_label
-                                if attribute_col in [
-                                    "Use column name",
-                                    "Use custom name",
-                                ]:
-                                    sv.network_flag_types.value.add(attribute_label)
-                                    if flag_agg == "Instance":
-                                        gdf["count_col"] = 1
-                                        model_links.append(
-                                            gdf[
-                                                [
-                                                    entity_col,
-                                                    "attribute_col",
-                                                    value_col,
-                                                    "count_col",
-                                                ]
-                                            ].values.tolist()
-                                        )
-                                    elif flag_agg == "Count":
-                                        gdf[value_col] = gdf[value_col].astype(int)
-                                        model_links.append(
-                                            gdf[
-                                                [
-                                                    entity_col,
-                                                    "attribute_col",
-                                                    "attribute_col2",
-                                                    value_col,
-                                                ]
-                                            ].values.tolist()
-                                        )
-                                else:
-                                    sv.network_flag_types.value.update(
-                                        df[attribute_label].unique().tolist()
-                                    )
-                                    if flag_agg == "Instance":
-                                        model_links.append(
-                                            gdf[
-                                                [
-                                                    entity_col,
-                                                    attribute_col,
-                                                    value_col,
-                                                ]
-                                            ].values.tolist()
-                                        )
-                                    elif flag_agg == "Count":
-                                        gdf[value_col] = gdf[value_col].astype(int)
-                                        model_links.append(
-                                            gdf[
-                                                [
-                                                    entity_col,
-                                                    attribute_col,
-                                                    "attribute_col2",
-                                                    value_col,
-                                                ]
-                                            ].values.tolist()
-                                        )
-                                functions.build_integrated_flags(sv)
+                                sv.network_flag_links.value = prepare_links(
+                                    pl.from_pandas(df),
+                                    entity_col,
+                                    flag_agg,
+                                    value_cols,
+                                )
+
+                                (
+                                    flags,
+                                    sv.network_max_entity_flags.value,
+                                    sv.network_mean_flagged_flags.value,
+                                ) = build_flags(
+                                    sv.network_flag_links.value[0]
+                                    if len(sv.network_flag_links.value) > 0
+                                    else []
+                                )
+                                sv.network_integrated_flags.value = flags.to_pandas()
                             elif link_type == "Entity-Group":
-                                if attribute_col in [
-                                    "Use column name",
-                                    "Use custom name",
-                                ]:
-                                    df["attribute_col"] = attribute_label
-                                    sv.network_group_types.value.add(attribute_label)
-                                    model_links.append(
-                                        df[
-                                            [entity_col, "attribute_col", value_col]
-                                        ].values.tolist()
-                                    )
-                                else:
-                                    sv.network_group_types.value.update(
-                                        df[attribute_label].unique().tolist()
-                                    )
-                                    model_links.append(
-                                        df[
-                                            [entity_col, attribute_col, value_col]
-                                        ].values.tolist()
-                                    )
+                                df["attribute_col"] = attribute_label
+                                sv.network_group_types.value.add(attribute_label)
+                                model_links.append(
+                                    df[
+                                        [entity_col, "attribute_col", value_col]
+                                    ].values.tolist()
+                                )
                 with b2:
                     if st.button(
                         "Clear data model",
@@ -505,14 +451,14 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                     N = build_network_from_entities(
                         sv.network_overall_graph.value,
                         sv.network_entity_to_community_ix.value,
-                        sv.network_integrated_flags.value,
+                        pl.from_pandas(sv.network_integrated_flags.value),
                         sv.network_trimmed_attributes.value,
                         sv.network_inferred_links.value,
                     )
 
                 entity_records = generate_final_df(
                     sv.network_community_nodes.value,
-                    sv.network_integrated_flags.value,
+                    pl.from_pandas(sv.network_integrated_flags.value),
                 )
 
                 sv.network_entity_df.value = pd.DataFrame(
@@ -670,79 +616,45 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 sv.network_selected_entity.value = selected_entity
                 sv.network_selected_community.value = selected_network
                 c_nodes = sv.network_community_nodes.value[selected_network]
-                N = functions.build_network_from_entities(
-                    sv, sv.network_overall_graph.value, c_nodes
+                N = build_network_from_entities(
+                    sv.network_overall_graph.value,
+                    sv.network_entity_to_community_ix.value,
+                    pl.from_pandas(sv.network_integrated_flags.value),
+                    sv.network_trimmed_attributes.value,
+                    sv.network_inferred_links.value,
+                    c_nodes,
                 )
 
                 if selected_entity != "":
-                    qualified_selected = f"{config.entity_label}{ATTRIBUTE_VALUE_SEPARATOR}{selected_entity}"
                     context = "Upload risk flags to see risk exposure report."
                     if len(sv.network_integrated_flags.value) > 0:
-                        rdf = sv.network_integrated_flags.value.copy()
-                        rdf = rdf[rdf["qualified_entity"].isin(c_nodes)]
-                        rdf = (
-                            rdf[["qualified_entity", "flag", "count"]]
-                            .groupby(["qualified_entity", "flag"])
-                            .sum()
-                            .reset_index()
+                        selected_data, all_paths, nodes = build_exposure_data(
+                            pl.from_pandas(sv.network_integrated_flags.value),
+                            c_nodes,
+                            selected_entity,
+                            N,
                         )
-                        all_flagged = rdf[rdf["count"] > 0]["qualified_entity"].unique()
-                        path_to_source = defaultdict(list)
-                        target_flags = rdf[
-                            rdf["qualified_entity"] == qualified_selected
-                        ]["count"].sum()
-                        net_flags = rdf["count"].sum() - target_flags
-                        net_flagged = len(all_flagged)
-                        if qualified_selected in all_flagged:
-                            net_flagged -= 1
                         context = "##### Risk Exposure Report\n\n"
-                        for flagged in all_flagged:
-                            all_paths = [
-                                list(x)
-                                for x in nx.all_shortest_paths(
-                                    N, flagged, qualified_selected
-                                )
-                            ]
-                            for path in all_paths:
-                                if len(path) > 1:
-                                    chain = ""
-                                    for j, step in enumerate(path):
-                                        indent = "".join(["  "] * j)
-                                        if "]\n" in step:
-                                            step = "".join(step.split("]\n")[1:])
-                                            step = "\n".join(step.split("; "))
-                                        if config.entity_label in step:
-                                            step_risks = rdf[
-                                                rdf["qualified_entity"] == step
-                                            ]["count"].sum()
-                                            step = (
-                                                step.split(ATTRIBUTE_VALUE_SEPARATOR)[1]
-                                                + f" [linked to {step_risks} flags]"
-                                            )
-                                        else:
-                                            step_entities = nx.degree(N, step)
-                                            step = (
-                                                f"\n{indent}".join(step.split("\n"))
-                                                + f" [linked to {step_entities} entities]"
-                                            )
-                                        chain += indent + f"{step}\n"
-                                        if j < len(path) - 1:
-                                            chain += indent + "--->\n"
-                                    source = chain.split("\n--->")[0]
-                                    path = chain.split("\n--->")[1]
-                                    path_to_source[path].append(source)
-                        paths = len(path_to_source.keys())
-                        context += f"The selected entity **{selected_entity}** has **{target_flags}** direct flags and is linked to **{net_flags}** indirect flags via **{paths}** paths from **{net_flagged}** related entities:\n\n"
-                        if net_flagged == 0:
-                            context = context[:-3] + "."
-                        for ix, (path, sources) in enumerate(path_to_source.items()):
-                            context += f"**Path {ix + 1}**\n\n```\n"
-                            for source in sources:
-                                context += f"{source}\n"
-                            context += f"---> {path}\n```\n\n"
-                        context = context.replace("**1** steps", "**1** step")
-                        context = context.replace("**1** flags", "**1** flag")
-                    sv.network_risk_exposure.value = context
+                        context += f"The selected entity **{selected_entity}** has **{selected_data['direct']}** direct flags and is linked to **{selected_data['indirect']}** indirect flags via **{selected_data['paths']}** paths from **{selected_data['entities']}** related entities:\n\n"
+
+                        for i, path in enumerate(all_paths):
+                            context += f"**Path {i + 1}**\n\n```\n"
+                            for ix, node in enumerate(path):
+                                indent = "".join(["  "] * ix)
+                                for step in node:
+                                    node_value = [
+                                        val for val in nodes if val["node"] == step
+                                    ]
+                                    if config.entity_label in step:
+                                        step = f"{step} [linked to {node_value[0]['flags']} flags]"
+                                    else:
+                                        step = f"{step} [linked to {node_value[0]['entities']} entities]"
+                                    context += f"{indent}{step}\n"
+                                if ix < len(path) - 1:
+                                    context += f"{indent}--->\n"
+
+                            context += "\n```\n\n"
+                        sv.network_risk_exposure.value = context
                 else:
                     sv.network_risk_exposure.value = ""
 

@@ -3,7 +3,7 @@
 #
 import networkx as nx
 
-from toolkit.risk_networks.node_community import get_community_nodes, get_subgraph
+from toolkit.risk_networks.nodes import get_community_nodes, get_subgraph
 
 
 class TestSubgraph:
@@ -98,8 +98,8 @@ class TestSubgraph:
         assert entity_to_community == {}
 
 
-class TestCommunityNodes:
-    def test_community_nodes(self):
+class TestNodes:
+    def test_nodes(self):
         G = nx.Graph()
         nx.add_path(G, ["node_A", "node_B", "node_C", "node_E"])
         nx.add_path(G, ["node_V", "node_X"])
@@ -135,54 +135,7 @@ class TestCommunityNodes:
             },
         )
 
-    def test_community_nodes_max_size(self):
-        G = nx.Graph()
-        nx.add_path(G, ["node_A", "node_B", "node_C", "node_E"])
-        nx.add_path(G, ["node_V", "node_X"])
-        nx.add_path(G, ["node_D", "node_P"])
-        nx.add_path(G, ["node_D", "node_C"])
-
-        result = get_community_nodes(G, 2)
-
-        expected_communities = [
-            {
-                "node_B",
-                "node_A",
-            },
-            {
-                "node_E",
-                "node_C",
-            },
-            {
-                "node_D",
-                "node_P",
-            },
-            {
-                "node_V",
-                "node_X",
-            },
-        ]
-
-        expected_entity_to_community = {
-            "node_A": 0,
-            "node_B": 0,
-            "node_C": 1,
-            "node_D": 2,
-            "node_E": 1,
-            "node_P": 2,
-            "node_V": 3,
-            "node_X": 3,
-        }
-
-        result_communities = [set(community) for community in result[0]]
-
-        assert len(result_communities) == len(expected_communities)
-        for community in expected_communities:
-            assert community in result_communities
-
-        assert result[1] == expected_entity_to_community
-
-    def test_community_nodes_max_clusters(self):
+    def test_max_size(self):
         G = nx.Graph()
         nx.add_path(G, ["node_A", "node_B", "node_C", "node_E"])
         nx.add_path(G, ["node_V", "node_X"])

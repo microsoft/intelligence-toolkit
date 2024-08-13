@@ -9,22 +9,7 @@ import polars as pl
 
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 from toolkit.risk_networks import config
-
-
-# I don't have the flags yet
-def build_integrated_flags(
-    graph: nx.Graph, df_integrated_flags: pl.DataFrame
-) -> nx.Graph:
-    df_integrated_flags = df_integrated_flags[df_integrated_flags["count"] > 0]
-    flagged_nodes = df_integrated_flags["qualified_entity"].unique().tolist()
-    # get only nodes in graph.nodes()
-    # flagged_nodes = [node for node in flagged_nodes if node in graph.nodes()]
-    for node in flagged_nodes:
-        if node in graph.nodes():
-            graph.nodes[node]["flags"] = df_integrated_flags[
-                df_integrated_flags["qualified_entity"] == node
-            ]["count"].sum()
-    return graph
+from toolkit.risk_networks.flags import integrate_flags
 
 
 def build_fuzzy_neighbors(
@@ -62,10 +47,15 @@ def build_fuzzy_neighbors(
 
 
 def build_network_from_entities(
-    graph, entity_to_community, integrated_flags, trimmed_attributes, inferred_links
+    graph,
+    entity_to_community,
+    integrated_flags,
+    trimmed_attributes,
+    inferred_links,
+    selected_nodes=None,
 ) -> nx.Graph:
     network_graph = nx.Graph()
-    nodes = graph.nodes()
+    nodes = selected_nodes or graph.nodes()
     # additional_trimmed_nodeset = set(sv.network_additional_trimmed_attributes.value)
     trimmed_nodeset = trimmed_attributes["Attribute"].unique().tolist()
     # trimmed_nodeset.extend(additional_trimmed_nodeset)
@@ -121,7 +111,7 @@ def build_network_from_entities(
                     )
 
     if len(integrated_flags) > 0:
-        network_graph = build_integrated_flags(network_graph, integrated_flags)
+        network_graph = integrate_flags(network_graph, integrated_flags)
     return network_graph
 
 

@@ -38,7 +38,6 @@ class SessionVariables:
         self.network_nearest_text_distances = SessionVariable([], prefix)
         self.network_node_types = SessionVariable(set(), prefix)
         self.network_indexed_node_types = SessionVariable([], prefix)
-        self.network_flag_types = SessionVariable(set(), prefix)
         self.network_integrated_flags = SessionVariable(pl.DataFrame(), prefix)
         self.network_community_df = SessionVariable(pl.DataFrame(), prefix)
         self.network_supporting_attribute_types = SessionVariable([], prefix)

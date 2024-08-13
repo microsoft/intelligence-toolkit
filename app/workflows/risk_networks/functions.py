@@ -7,6 +7,7 @@ from collections import defaultdict
 # ruff: noqa
 import networkx as nx
 import pandas as pd
+import polars as pl
 import streamlit as st
 from streamlit_agraph import Config, Edge, Node
 from util.openai_wrapper import UIOpenAIConfiguration
@@ -300,11 +301,11 @@ def build_undirected_graph(sv):
     return G
 
 
-def build_integrated_flags(sv):
+def build_integrated_flags(sv, network_flag_links):
     sv.network_integrated_flags.value = pd.concat(
         [
             pd.DataFrame(link_list, columns=["entity", "type", "flag", "count"])
-            for link_list in sv.network_flag_links.value
+            for link_list in network_flag_links
         ]
     )
     sv.network_integrated_flags.value = (
@@ -326,6 +327,9 @@ def build_integrated_flags(sv):
     sv.network_max_entity_flags.value = overall_df["count"].max()
     sv.network_mean_flagged_flags.value = round(
         overall_df[overall_df["count"] > 0]["count"].mean(), 2
+    )
+    sv.network_integrated_flags.value = pl.from_pandas(
+        sv.network_integrated_flags.value
     )
 
 
