@@ -173,12 +173,12 @@ def infer_nodes(
     ):
         msg = f"Similarity threshold must be between {SIMILARITY_THRESHOLD_MIN} and {SIMILARITY_THRESHOLD_MAX}"
         raise ValueError(msg)
-    # pb = st.progress(0, text="Inferring links...")
+
     for ix in range(len(embedded_texts)):
         if progress_callbacks:
             for cb in progress_callbacks:
                 cb.on_batch_change(ix, len(embedded_texts))
-        # pb.progress(int(ix * 100 / len(texts)), text="Inferring links...")
+
         near_is = nearest_text_indices[ix]
         near_ds = nearest_text_distances[ix]
         nearest = zip(near_is, near_ds, strict=False)

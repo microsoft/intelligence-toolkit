@@ -123,14 +123,14 @@ def build_exposure_data(
     if qualified_selected in all_flagged:
         net_flagged -= 1
 
-    steps_list1 = []
+    steps_list = []
     nodes = []
     for flagged in all_flagged:
         all_paths = [
             list(x) for x in nx.all_shortest_paths(graph, flagged, qualified_selected)
         ]
         for path in all_paths:
-            steps_list = []
+            path_steps_list = []
             if len(path) <= 1:
                 continue
 
@@ -157,16 +157,16 @@ def build_exposure_data(
                     source = step
                     destination = path[j + 1]
                     step1 = {"source": source, "target": destination}
-                    steps_list.append(step1)
-            steps_list1.append(steps_list)
+                    path_steps_list.append(step1)
+            steps_list.append(path_steps_list)
 
     path_items = defaultdict(list)
     paths = []
-    for d in steps_list1:
-        source = d[0]["source"]
-        path = d[1:]
+    for step in steps_list:
+        source = step[0]["source"]
+        path = step[1:]
         if len(path) == 0:
-            path = [{"target": d[0]["target"]}]
+            path = [{"target": step[0]["target"]}]
         path_items[json.dumps(path)].append(source)
 
     for path, sources in path_items.items():
@@ -179,21 +179,43 @@ def build_exposure_data(
             path_list.append([node["target"]])
 
         paths.append(path_list)
-    paths_count = len(paths)
-    # if net_flagged == 0:
-    #     context = context[:-3] + "."
-    # for ix, (path, sources) in enumerate(path_to_source.items()):
-    #     context += f"**Path {ix + 1}**\n\n```\n"
-    #     for source in sources:
-    #         context += f"{source}\n"
-    #     context += f"---> {path}\n```\n\n"
-    # context = context.replace("**1** steps", "**1** step") ??
 
-    # print steps_list1 to a file
-    flags_summary = {
+    flags_summary_count = {
         "direct": target_flags,
         "indirect": net_flags,
-        "paths": paths_count,
+        "paths": len(paths),
         "entities": net_flagged,
     }
-    return flags_summary, paths, nodes
+    return flags_summary_count, paths, nodes
+
+
+def build_exposure_report(
+    integrated_flags: pl.DataFrame,
+    selected_entity: str,
+    c_nodes: list[str],
+    graph: nx.Graph,
+) -> str:
+    selected_data, all_paths, nodes = build_exposure_data(
+        integrated_flags,
+        c_nodes,
+        selected_entity,
+        graph,
+    )
+    context = "##### Risk Exposure Report\n\n"
+    context += f"The selected entity **{selected_entity}** has **{selected_data['direct']}** direct flags and is linked to **{selected_data['indirect']}** indirect flags via **{selected_data['paths']}** paths from **{selected_data['entities']}** related entities:\n\n"
+
+    for i, path in enumerate(all_paths):
+        context += f"**Path {i + 1}**\n\n```\n"
+        for ix, node in enumerate(path):
+            indent = "".join(["  "] * ix)
+            for step in node:
+                node_value = [val for val in nodes if val["node"] == step]
+                if config.entity_label in step:
+                    step = f"{step} [linked to {node_value[0]['flags']} flags]"
+                else:
+                    step = f"{step} [linked to {node_value[0]['entities']} entities]"
+                context += f"{indent}{step}\n"
+            if ix < len(path) - 1:
+                context += f"{indent}--->\n"
+
+    return context + "\n```\n\n"

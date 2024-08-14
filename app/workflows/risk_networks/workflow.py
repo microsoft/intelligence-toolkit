@@ -3,11 +3,8 @@
 #
 
 # ruff: noqa
-import json
 import os
-from collections import defaultdict
 
-import networkx as nx
 import pandas as pd
 import polars as pl
 import streamlit as st
@@ -29,7 +26,11 @@ from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 from toolkit.risk_networks import config
 from toolkit.risk_networks import get_readme as get_intro
 from toolkit.risk_networks import graph_functions, prompts
-from toolkit.risk_networks.flags import build_exposure_data, build_flags, prepare_links
+from toolkit.risk_networks.flags import (
+    build_exposure_report,
+    build_flags,
+    prepare_links,
+)
 from toolkit.risk_networks.identify import project_entity_graph, trim_nodeset
 from toolkit.risk_networks.model import prepare_entity_attribute
 from toolkit.risk_networks.network import build_network_from_entities, generate_final_df
@@ -628,32 +629,12 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 if selected_entity != "":
                     context = "Upload risk flags to see risk exposure report."
                     if len(sv.network_integrated_flags.value) > 0:
-                        selected_data, all_paths, nodes = build_exposure_data(
+                        context = build_exposure_report(
                             pl.from_pandas(sv.network_integrated_flags.value),
-                            c_nodes,
                             selected_entity,
+                            c_nodes,
                             N,
                         )
-                        context = "##### Risk Exposure Report\n\n"
-                        context += f"The selected entity **{selected_entity}** has **{selected_data['direct']}** direct flags and is linked to **{selected_data['indirect']}** indirect flags via **{selected_data['paths']}** paths from **{selected_data['entities']}** related entities:\n\n"
-
-                        for i, path in enumerate(all_paths):
-                            context += f"**Path {i + 1}**\n\n```\n"
-                            for ix, node in enumerate(path):
-                                indent = "".join(["  "] * ix)
-                                for step in node:
-                                    node_value = [
-                                        val for val in nodes if val["node"] == step
-                                    ]
-                                    if config.entity_label in step:
-                                        step = f"{step} [linked to {node_value[0]['flags']} flags]"
-                                    else:
-                                        step = f"{step} [linked to {node_value[0]['entities']} entities]"
-                                    context += f"{indent}{step}\n"
-                                if ix < len(path) - 1:
-                                    context += f"{indent}--->\n"
-
-                            context += "\n```\n\n"
                         sv.network_risk_exposure.value = context
                 else:
                     sv.network_risk_exposure.value = ""
