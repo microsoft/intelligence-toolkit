@@ -2,23 +2,15 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 
-from toolkit.risk_networks.config import AttributeColumnType
-
 
 def prepare_entity_attribute(
     data_df,
     entity_id_column: str,
-    attribute_column_type: AttributeColumnType,
     columns_to_link: list[str],
-    attribute_name=None,
 ) -> list:
     attribute_links = []
     for value_col in columns_to_link:
-        attribute_label = value_col
-        if attribute_column_type == AttributeColumnType.CustomName.value:
-            attribute_label = attribute_name
-
-        data_df["attribute_col"] = attribute_label
+        data_df["attribute_col"] = value_col
         attribute_links.append(
             data_df[[entity_id_column, "attribute_col", value_col]].to_numpy()
         )

@@ -63,7 +63,7 @@ stages:
             inputs:
               workingDirectory: ./
               targetType: "inline"
-              script: pytest
+              script: pytest -vv
       - job: buildAndPush
         displayName: BuildAndPushContainer
         dependsOn: validate

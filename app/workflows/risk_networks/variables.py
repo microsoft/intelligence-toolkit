@@ -54,7 +54,6 @@ class SessionVariables:
         self.network_report_validation = SessionVariable({}, prefix)
         self.network_merged_links_df = SessionVariable([], prefix)
         self.network_merged_nodes_df = SessionVariable([], prefix)
-        self.network_group_types = SessionVariable(set(), prefix)
         self.network_max_entity_flags = SessionVariable(0, prefix)
         self.network_mean_flagged_flags = SessionVariable(0, prefix)
         self.network_risk_exposure = SessionVariable("", prefix)

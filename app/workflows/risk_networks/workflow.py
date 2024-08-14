@@ -31,6 +31,7 @@ from toolkit.risk_networks.flags import (
     build_flags,
     prepare_links,
 )
+from toolkit.risk_networks.groups import build_groups
 from toolkit.risk_networks.identify import project_entity_graph, trim_nodeset
 from toolkit.risk_networks.model import prepare_entity_attribute
 from toolkit.risk_networks.network import build_network_from_entities, generate_final_df
@@ -88,64 +89,39 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                     options,
                     help="The column containing unique entity identifiers, shared across datasets.",
                 )
-                model_links = None
-                attribute_label = ""
                 if link_type == "Entity-Attribute":
                     value_cols = st.multiselect(
                         "Attribute value column(s) to link on",
                         options,
                         help="The column(s) containing attribute values that would only be shared by closely related entities.",
                     )
-                    attribute_col = st.selectbox(
-                        "Attribute type",
-                        ["Use column name", "Use custom name"],
-                        disabled=True,
-                        index=0,
-                        help="Where the name of the attribute comes from: the selected column or the user.",
-                    )
-                    model_links = sv.network_attribute_links.value
                 elif link_type == "Entity-Flag":
                     value_cols = st.multiselect(
                         "Flag value column(s)",
                         options,
                         help="The column(s) containing risk flags associated with entities.",
                     )
-                    attribute_col = st.selectbox(
-                        "Flag type",
-                        ["Use column name", "Use custom name"],
-                        disabled=True,
-                        index=0,
-                        help="Where the name of the flag comes from: the selected column or the user.",
-                    )
                     flag_agg = st.selectbox(
                         "Flag format",
                         ["Instance", "Count"],
                         help="How flags are represented: as individual instances or as aggregate counts in a flag value column.",
                     )
-                    model_links = sv.network_flag_links.value
                 elif link_type == "Entity-Group":
                     value_cols = st.multiselect(
                         "Group value column(s) to group on",
                         options,
                         help="The column(s) containing group values that are shared by groups of broadly related entities.",
                     )
-                    attribute_col = st.selectbox(
-                        "Group type",
-                        ["Use column name", "Use custom name"],
-                        help="Where the name of the group comes from: the selected column or the user.",
-                    )
-                    model_links = sv.network_group_links.value
                 b1, b2 = st.columns([1, 1])
                 with b1:
+                    groups = set()
                     if st.button(
                         "Add links to model",
                         disabled=entity_col == ""
-                        or attribute_col == ""
                         or len(value_cols) == 0
                         or link_type == "",
                     ):
                         with st.spinner("Adding links to model..."):
-                            value_col = ""
                             df = format_data_columns(df, value_cols, entity_col)
                             if sv_home.protected_mode.value:
                                 (
@@ -165,9 +141,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                                 attribute_links = prepare_entity_attribute(
                                     df,
                                     entity_col,
-                                    attribute_col,
                                     value_cols,
-                                    attribute_label,
                                 )
                                 node_types = set()
                                 for attribute_link in attribute_links:
@@ -198,18 +172,13 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                                 )
                                 sv.network_integrated_flags.value = flags.to_pandas()
                             elif link_type == "Entity-Group":
-                                df["attribute_col"] = attribute_label
-                                sv.network_group_types.value.add(attribute_label)
-                                model_links.append(
-                                    df[
-                                        [entity_col, "attribute_col", value_col]
-                                    ].values.tolist()
+                                sv.network_group_links.value, groups = build_groups(
+                                    value_cols, df, entity_col
                                 )
                 with b2:
                     if st.button(
                         "Clear data model",
                         disabled=entity_col == ""
-                        or attribute_col == ""
                         or len(value_cols) == 0
                         or link_type == "",
                     ):
@@ -225,10 +194,6 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
             num_attributes = 0
             num_edges = 0
             num_flags = 0
-            groups = set()
-            for link_list in sv.network_group_links.value:
-                for link in link_list:
-                    groups.add(f"{link[1]}{ATTRIBUTE_VALUE_SEPARATOR}{link[2]}")
             if sv.network_overall_graph.value is not None:
                 all_nodes = sv.network_overall_graph.value.nodes()
                 entity_nodes = [
@@ -393,10 +358,10 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 )
             with c2:
                 network_max_network_size = st.number_input(
-                    "Max network size",
-                    min_value=2,
+                    "Max network entities",
+                    min_value=1,
                     value=sv.network_max_network_size.value,
-                    help="Any network with edges >= network_max_network_size will be isolated into a subnetwork",
+                    help="Any network with entities >= network_max_network_entities will be isolated into a subnetwork",
                 )
             with c3:
                 network_supporting_attribute_types = st.multiselect(
@@ -754,15 +719,31 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
 
                 callback = ui_components.create_markdown_callback(report_placeholder)
                 if generate:
-                    result = ui_components.generate_text(messages, [callback])
-                    sv.network_report.value = result
+                    connection_bar = st.progress(10, text="Connecting to AI...")
 
-                    validation, messages_to_llm = ui_components.validate_ai_report(
-                        messages, result
+                    def empty_connection_bar(_):
+                        connection_bar.empty()
+
+                    callback_bar = ui_components.remove_connection_bar(
+                        empty_connection_bar
                     )
-                    sv.network_report_validation.value = validation
-                    sv.network_report_validation_messages.value = messages_to_llm
-                    st.rerun()
+
+                    try:
+                        result = ui_components.generate_text(
+                            messages, [callback, callback_bar]
+                        )
+
+                        sv.network_report.value = result
+
+                        validation, messages_to_llm = ui_components.validate_ai_report(
+                            messages, result
+                        )
+                        sv.network_report_validation.value = validation
+                        sv.network_report_validation_messages.value = messages_to_llm
+                        st.rerun()
+                    except Exception as _e:
+                        empty_connection_bar(_e)
+                        raise
                 else:
                     if len(sv.network_report.value) == 0:
                         gen_placeholder.warning(

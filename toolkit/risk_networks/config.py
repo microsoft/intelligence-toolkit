@@ -21,11 +21,6 @@ class LinkType(Enum):
     EntityGroup = "Entity-Group"
 
 
-class AttributeColumnType(Enum):
-    ColumnName = "Use column name"
-    CustomName = "Use custom name"
-
-
 class FlagAggregatorType(Enum):
     Instance = "Instance"
     Count = "Count"

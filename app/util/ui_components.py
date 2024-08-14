@@ -757,6 +757,15 @@ def create_markdown_callback(placeholder, prefix=""):
     return on_callback
 
 
+def remove_connection_bar(fn):
+    def on(_):
+        fn(_)
+
+    on_callback = LLMCallback()
+    on_callback.on_llm_new_token = on
+    return on_callback
+
+
 def build_validation_ui(
     report_validation, attribute_report_validation_messages, report_data, file_name
 ):

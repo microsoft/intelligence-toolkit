@@ -88,7 +88,6 @@ class OpenAIClient:
                                 callback.on_llm_new_token(show)
                 return full_response
 
-            print("response", response)
             return response.choices[0].message.content or ""  # type: ignore
         except Exception as e:
             print(f"Error validating report: {e}")
