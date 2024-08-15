@@ -7,6 +7,8 @@ from sklearn.neighbors import NearestNeighbors
 
 import toolkit.risk_networks.config as config
 from toolkit.AI.embedder import Embedder
+from toolkit.AI.openai_configuration import OpenAIConfiguration
+from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 from toolkit.risk_networks.constants import (
     SIMILARITY_THRESHOLD_MAX,
@@ -16,9 +18,10 @@ from toolkit.risk_networks.constants import (
 
 def index_nodes(
     indexed_node_types: list[str],
-    overall_graph: nx.Graph,
+    main_graph: nx.Graph,
     callbacks: list[ProgressBatchCallback] | None = None,
     functions_embedder: Embedder | None = None,
+    openai_configuration: OpenAIConfiguration | None = None,
     use_local=False,
     save_cache=True,
 ):
@@ -27,13 +30,13 @@ def index_nodes(
         raise ValueError(msg)
     text_types = [
         (n, d["type"])
-        for n, d in overall_graph.nodes(data=True)
+        for n, d in main_graph.nodes(data=True)
         if d["type"] in indexed_node_types
     ]
     texts = [t[0] for t in text_types]
 
     if functions_embedder is None:
-        functions_embedder = Embedder(None, config.cache_dir, use_local)
+        functions_embedder = Embedder(openai_configuration, config.cache_dir, use_local)
     embeddings = functions_embedder.embed_store_many(
         texts,
         callbacks,
@@ -98,3 +101,20 @@ def create_inferred_links(inferred_links: defaultdict[Any, set]) -> list[tuple]:
     return [
         (text, n) for text, near in inferred_links.items() for n in near if text < n
     ]
+
+
+def build_inferred_df(inferred_links_list: list[tuple[str]]) -> pl.DataFrame:
+    inferred_df = pl.DataFrame(inferred_links_list, schema=["text", "similar"])
+
+    inferred_df = inferred_df.with_columns(
+        [
+            pl.col("text").str.replace(
+                config.entity_label + ATTRIBUTE_VALUE_SEPARATOR, ""
+            ),
+            pl.col("similar").str.replace(
+                config.entity_label + ATTRIBUTE_VALUE_SEPARATOR, ""
+            ),
+        ]
+    )
+
+    return inferred_df.sort(["text", "similar"])

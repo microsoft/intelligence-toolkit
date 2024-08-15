@@ -10,13 +10,8 @@ import polars as pl
 import streamlit as st
 import workflows.risk_networks.functions as functions
 import workflows.risk_networks.variables as rn_variables
-from st_aggrid import (
-    AgGrid,
-    ColumnsAutoSizeMode,
-    DataReturnMode,
-    GridOptionsBuilder,
-    GridUpdateMode,
-)
+from st_aggrid import (AgGrid, ColumnsAutoSizeMode, DataReturnMode,
+                       GridOptionsBuilder, GridUpdateMode)
 from streamlit_agraph import agraph
 from util import ui_components
 from util.session_variables import SessionVariables
@@ -28,21 +23,16 @@ from toolkit.risk_networks import get_readme as get_intro
 from toolkit.risk_networks import prompts
 from toolkit.risk_networks.flags import build_exposure_report
 from toolkit.risk_networks.identify import project_entity_graph, trim_nodeset
-from toolkit.risk_networks.index_and_infer import (
-    create_inferred_links,
-    index_nodes,
-    infer_nodes,
-)
-from toolkit.risk_networks.network import build_network_from_entities, generate_final_df
+from toolkit.risk_networks.index_and_infer import (create_inferred_links,
+                                                   index_nodes, infer_nodes)
+from toolkit.risk_networks.network import (build_network_from_entities,
+                                           generate_final_df)
 from toolkit.risk_networks.nodes import get_community_nodes
-from toolkit.risk_networks.prepare_model import (
-    build_flag_links,
-    build_flags,
-    build_groups,
-    build_main_graph,
-    format_data_columns,
-    generate_attribute_links,
-)
+from toolkit.risk_networks.prepare_model import (build_flag_links, build_flags,
+                                                 build_groups,
+                                                 build_main_graph,
+                                                 format_data_columns,
+                                                 generate_attribute_links)
 from toolkit.risk_networks.protected_mode import protect_data
 
 
@@ -276,7 +266,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 callback.on_batch_change = on_embedding_batch_change
                 functions_embedder = functions.embedder()
                 sv.network_indexed_node_types.value = network_indexed_node_types
-
+                #index and infer all at once
                 (
                     sv.network_embedded_texts.value,
                     sv.network_nearest_text_distances.value,
@@ -331,19 +321,34 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
 
             st.markdown(f"*Number of links inferred*: {inferred_links_count}")
             if inferred_links_count > 0:
-                inferred_df = pd.DataFrame(
-                    inferred_links_list, columns=["text", "similar"]
+                inferred_df = pl.DataFrame(
+                    inferred_links_list, schema=["text", "similar"]
                 )
-                inferred_df["text"] = inferred_df["text"].str.replace(
-                    config.entity_label + ATTRIBUTE_VALUE_SEPARATOR, ""
+
+                inferred_df = inferred_df.with_columns(
+                    [
+                        pl.col("text").str.replace(
+                            config.entity_label + ATTRIBUTE_VALUE_SEPARATOR, ""
+                        )
+                    ]
                 )
-                inferred_df["similar"] = inferred_df["similar"].str.replace(
-                    config.entity_label + ATTRIBUTE_VALUE_SEPARATOR, ""
+
+                inferred_df = inferred_df.with_columns(
+                    [
+                        pl.col("similar").str.replace(
+                            config.entity_label + ATTRIBUTE_VALUE_SEPARATOR, ""
+                        )
+                    ]
                 )
-                inferred_df = inferred_df.sort_values(
-                    by=["text", "similar"]
-                ).reset_index(drop=True)
-                st.dataframe(inferred_df, hide_index=True, use_container_width=True)
+
+                inferred_df = inferred_df.sort(["text", "similar"]).with_row_count(
+                    "index"
+                )
+
+                inferred_df = inferred_df.drop("index")
+                st.dataframe(
+                    inferred_df.to_pandas(), hide_index=True, use_container_width=True
+                )
 
         with part_col:
             st.markdown("##### Identify networks")

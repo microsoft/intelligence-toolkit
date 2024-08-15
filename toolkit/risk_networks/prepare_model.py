@@ -111,7 +111,14 @@ def build_flag_links(
 ) -> list[Any]:
     flag_links = existing_flag_links or []
 
+    if entity_col not in df_flag.columns:
+        msg = f"Column {entity_col} not found in the DataFrame."
+        raise ValueError(msg)
+
     for value_col in flag_columns:
+        if value_col not in df_flag.columns:
+            msg = f"Column {value_col} not found in the DataFrame."
+            raise ValueError(msg)
         gdf = df_flag.with_columns([pl.col(value_col).cast(pl.Int32).alias(value_col)])
         gdf = gdf.group_by(entity_col).agg([pl.sum(col) for col in flag_columns])
         vals = (

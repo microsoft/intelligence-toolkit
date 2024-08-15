@@ -6,6 +6,7 @@ from collections import defaultdict
 from unittest.mock import MagicMock, Mock, patch
 
 import networkx as nx
+import polars as pl
 import pytest
 
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
@@ -14,6 +15,7 @@ from toolkit.risk_networks.constants import (
     SIMILARITY_THRESHOLD_MIN,
 )
 from toolkit.risk_networks.index_and_infer import (
+    build_inferred_df,
     create_inferred_links,
     index_nodes,
     infer_nodes,
@@ -314,3 +316,51 @@ class TestCreateInferredLinks:
         created_links = create_inferred_links(inferred_links)
 
         assert created_links == []
+
+
+class TestBuildInferredDF:
+    def test_build_inferred_entity_df(self) -> None:
+        inferred_links_list = [
+            ("ENTITY==PLUS ONE", "ENTITY==PLUS_ONE"),
+            ("ENTITY==ABCDE", "ENTITY==ABCDEF"),
+            ("ENTITY==ABCDEF_F", "ENTITY==ABCDEFF"),
+        ]
+        inferred_df = build_inferred_df(inferred_links_list)
+
+        expected_df = pl.DataFrame(
+            {
+                "text": ["ABCDE", "ABCDEF_F", "PLUS ONE"],
+                "similar": ["ABCDEF", "ABCDEFF", "PLUS_ONE"],
+            }
+        )
+
+        assert inferred_df.equals(expected_df)
+
+    def test_build_inferred_attribute_df(self) -> None:
+        inferred_links_list = [
+            ("attr1==PLUS ONE", "attr1==PLUS_ONE"),
+            ("attr1==ABCDE", "attr1==ABCDEF"),
+            ("attr1==ABCDEF_F", "attr1==ABCDEFF"),
+        ]
+        inferred_df = build_inferred_df(inferred_links_list)
+
+        expected_df = pl.DataFrame(
+            {
+                "text": ["attr1==ABCDE", "attr1==ABCDEF_F", "attr1==PLUS ONE"],
+                "similar": ["attr1==ABCDEF", "attr1==ABCDEFF", "attr1==PLUS_ONE"],
+            }
+        )
+
+        assert inferred_df.equals(expected_df)
+
+    def test_build_inferred_df_empty(self) -> None:
+        inferred_df = build_inferred_df([])
+
+        expected_df = pl.DataFrame(
+            {
+                "text": [],
+                "similar": [],
+            }
+        )
+
+        assert inferred_df.equals(expected_df)

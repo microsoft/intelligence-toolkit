@@ -188,6 +188,22 @@ class TestBuildFlagLinks:
 
         assert sorted(result) == sorted(expected)
 
+    def test_prepare_value_column_doesnt_exist(self, df_flag):
+        entity_col = "Entity_N"
+        flag_agg = FlagAggregatorType.Count.value
+        flag_columns = ["flags_numb123"]
+        msg = "Column flags_numb123 not found in the DataFrame."
+        with pytest.raises(ValueError, match=msg):
+            build_flag_links(df_flag, entity_col, flag_agg, flag_columns)
+
+    def test_prepare_entity_column_doesnt_exist(self, df_flag):
+        entity_col = "Entity_N12"
+        flag_agg = FlagAggregatorType.Count.value
+        flag_columns = ["flags_numb"]
+        msg = "Column Entity_N12 not found in the DataFrame."
+        with pytest.raises(ValueError, match=msg):
+            build_flag_links(df_flag, entity_col, flag_agg, flag_columns)
+
     def test_prepare_count_existing(self, df_flag):
         entity_col = "Entity_N"
         flag_agg = FlagAggregatorType.Count.value
