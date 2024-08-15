@@ -25,19 +25,25 @@ from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 from toolkit.risk_networks import config
 from toolkit.risk_networks import get_readme as get_intro
-from toolkit.risk_networks import graph_functions, prompts
-from toolkit.risk_networks.flags import (
-    build_exposure_report,
-    build_flags,
-    prepare_links,
-)
-from toolkit.risk_networks.groups import build_groups
+from toolkit.risk_networks import prompts
+from toolkit.risk_networks.flags import build_exposure_report
 from toolkit.risk_networks.identify import project_entity_graph, trim_nodeset
-from toolkit.risk_networks.model import prepare_entity_attribute
+from toolkit.risk_networks.index_and_infer import (
+    create_inferred_links,
+    index_nodes,
+    infer_nodes,
+)
 from toolkit.risk_networks.network import build_network_from_entities, generate_final_df
 from toolkit.risk_networks.nodes import get_community_nodes
+from toolkit.risk_networks.prepare_model import (
+    build_flag_links,
+    build_flags,
+    build_groups,
+    build_main_graph,
+    format_data_columns,
+    generate_attribute_links,
+)
 from toolkit.risk_networks.protected_mode import protect_data
-from toolkit.risk_networks.text_format import format_data_columns
 
 
 def create(sv: rn_variables.SessionVariables, workflow=None):
@@ -55,13 +61,13 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
             "Generate AI network reports",
         ]
     )
-    df = None
+    selected_df = None
     with intro_tab:
         st.markdown(get_intro())
     with uploader_tab:
         uploader_col, model_col = st.columns([3, 2])
         with uploader_col:
-            _selected_file, df = ui_components.multi_csv_uploader(
+            _, selected_df = ui_components.multi_csv_uploader(
                 "Upload multiple CSVs",
                 sv.network_uploaded_files,
                 sv.network_upload_key.value,
@@ -70,10 +76,10 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
             )
         with model_col:
             st.markdown("##### Map columns to model")
-            if df is None:
+            if selected_df is None:
                 st.warning("Upload and select a file to continue")
             else:
-                options = ["", *df.columns.to_numpy()]
+                options = ["", *selected_df.columns.to_numpy()]
                 link_type = st.radio(
                     "Link type",
                     [
@@ -122,14 +128,16 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                         or link_type == "",
                     ):
                         with st.spinner("Adding links to model..."):
-                            df = format_data_columns(df, value_cols, entity_col)
+                            selected_df = format_data_columns(
+                                pl.from_pandas(selected_df), value_cols, entity_col
+                            )
                             if sv_home.protected_mode.value:
                                 (
-                                    df,
+                                    selected_df,
                                     entities_renamed,
                                     attributes_renamed,
                                 ) = protect_data(
-                                    df,
+                                    selected_df,
                                     value_cols,
                                     entity_col,
                                     sv.network_entities_renamed.value,
@@ -138,42 +146,42 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                                 sv.network_attributes_renamed.value = attributes_renamed
 
                             if link_type == "Entity-Attribute":
-                                attribute_links = prepare_entity_attribute(
-                                    df,
+                                attribute_links = generate_attribute_links(
+                                    selected_df,
                                     entity_col,
                                     value_cols,
+                                    sv.network_attribute_links.value,
                                 )
+                                sv.network_attribute_links.value = attribute_links
                                 node_types = set()
                                 for attribute_link in attribute_links:
                                     node_types.add(attribute_link[0][1])
 
                                 sv.network_node_types.value = node_types
-                                sv.network_overall_graph.value = (
-                                    graph_functions.build_undirected_graph(
-                                        network_attribute_links=attribute_links
-                                    )
+                                sv.network_overall_graph.value = build_main_graph(
+                                    attribute_links
                                 )
                             elif link_type == "Entity-Flag":
-                                sv.network_flag_links.value = prepare_links(
-                                    pl.from_pandas(df),
+                                flag_links = build_flag_links(
+                                    selected_df,
                                     entity_col,
                                     flag_agg,
                                     value_cols,
+                                    sv.network_flag_links.value,
                                 )
+                                sv.network_flag_links.value = flag_links
 
                                 (
-                                    flags,
+                                    sv.network_integrated_flags.value,
                                     sv.network_max_entity_flags.value,
                                     sv.network_mean_flagged_flags.value,
-                                ) = build_flags(
-                                    sv.network_flag_links.value[0]
-                                    if len(sv.network_flag_links.value) > 0
-                                    else []
-                                )
-                                sv.network_integrated_flags.value = flags.to_pandas()
+                                ) = build_flags(sv.network_flag_links.value)
                             elif link_type == "Entity-Group":
-                                sv.network_group_links.value, groups = build_groups(
-                                    value_cols, df, entity_col
+                                sv.network_group_links.value = build_groups(
+                                    value_cols,
+                                    selected_df,
+                                    entity_col,
+                                    sv.network_group_links.value,
                                 )
                 with b2:
                     if st.button(
@@ -194,6 +202,10 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
             num_attributes = 0
             num_edges = 0
             num_flags = 0
+            groups = set()
+            for link_list in sv.network_group_links.value:
+                for link in link_list:
+                    groups.add(f"{link[1]}{ATTRIBUTE_VALUE_SEPARATOR}{link[2]}")
             if sv.network_overall_graph.value is not None:
                 all_nodes = sv.network_overall_graph.value.nodes()
                 entity_nodes = [
@@ -237,7 +249,6 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
 
     with process_tab:
         index_col, part_col = st.columns([1, 1])
-        components = None
         with index_col:
             st.markdown("##### Index nodes (optional)")
             fuzzy_options = sorted(
@@ -263,17 +274,18 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
 
                 callback = ProgressBatchCallback()
                 callback.on_batch_change = on_embedding_batch_change
-
+                functions_embedder = functions.embedder()
                 sv.network_indexed_node_types.value = network_indexed_node_types
 
                 (
                     sv.network_embedded_texts.value,
                     sv.network_nearest_text_distances.value,
                     sv.network_nearest_text_indices.value,
-                ) = graph_functions.index_nodes(
+                ) = index_nodes(
                     sv.network_indexed_node_types.value,
                     sv.network_overall_graph.value,
                     [callback],
+                    functions_embedder,
                     sv_home.local_embeddings.value,
                     sv_home.save_cache.value,
                 )
@@ -304,7 +316,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
 
                 sv.network_similarity_threshold.value = network_similarity_threshold
 
-                sv.network_inferred_links.value = graph_functions.infer_nodes(
+                sv.network_inferred_links.value = infer_nodes(
                     network_similarity_threshold,
                     sv.network_embedded_texts.value,
                     sv.network_nearest_text_indices.value,
@@ -314,31 +326,39 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 pb.empty()
                 st.rerun()
 
-            link_list = graph_functions.create_links(sv.network_inferred_links.value)
-            ilc = len(link_list)
+            inferred_links_list = create_inferred_links(sv.network_inferred_links.value)
+            inferred_links_count = len(inferred_links_list)
 
-            if ilc > 0:
-                st.markdown(f"*Number of links inferred*: {ilc}")
-                idf = pd.DataFrame(link_list, columns=["text", "similar"])
-                idf["text"] = idf["text"].str.replace(
+            st.markdown(f"*Number of links inferred*: {inferred_links_count}")
+            if inferred_links_count > 0:
+                inferred_df = pd.DataFrame(
+                    inferred_links_list, columns=["text", "similar"]
+                )
+                inferred_df["text"] = inferred_df["text"].str.replace(
                     config.entity_label + ATTRIBUTE_VALUE_SEPARATOR, ""
                 )
-                idf["similar"] = idf["similar"].str.replace(
+                inferred_df["similar"] = inferred_df["similar"].str.replace(
                     config.entity_label + ATTRIBUTE_VALUE_SEPARATOR, ""
                 )
-                idf = idf.sort_values(by=["text", "similar"]).reset_index(drop=True)
-                st.dataframe(idf, hide_index=True, use_container_width=True)
+                inferred_df = inferred_df.sort_values(
+                    by=["text", "similar"]
+                ).reset_index(drop=True)
+                st.dataframe(inferred_df, hide_index=True, use_container_width=True)
 
         with part_col:
             st.markdown("##### Identify networks")
-            adf = pd.DataFrame(sv.network_attributes_list.value, columns=["Attribute"])
+            attributes_df = pd.DataFrame(
+                sv.network_attributes_list.value, columns=["Attribute"]
+            )
 
             search = st.text_input("Search for attributes to remove", "")
             if search != "":
-                adf = adf[adf["Attribute"].str.contains(search, case=False)]
+                attributes_df = attributes_df[
+                    attributes_df["Attribute"].str.contains(search, case=False)
+                ]
 
             selected_rows = ui_components.dataframe_with_selections(
-                adf,
+                attributes_df,
                 sv.network_additional_trimmed_attributes.value,
                 "Attribute",
                 "Remove",
@@ -417,14 +437,14 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                     N = build_network_from_entities(
                         sv.network_overall_graph.value,
                         sv.network_entity_to_community_ix.value,
-                        pl.from_pandas(sv.network_integrated_flags.value),
+                        sv.network_integrated_flags.value,
                         sv.network_trimmed_attributes.value,
                         sv.network_inferred_links.value,
                     )
 
                 entity_records = generate_final_df(
                     sv.network_community_nodes.value,
-                    pl.from_pandas(sv.network_integrated_flags.value),
+                    sv.network_integrated_flags.value,
                 )
 
                 sv.network_entity_df.value = pd.DataFrame(
@@ -462,7 +482,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                     f"*Attributes removed because of high degree*: {trimmed_atts}"
                 )
 
-                adf = pd.DataFrame(
+                attributes_df = pd.DataFrame(
                     sv.network_attributes_list.value, columns=["Attribute"]
                 )
                 if trimmed_atts > 0:
@@ -506,18 +526,18 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                     st.rerun()
                 if show_groups:
                     for group_links in sv.network_group_links.value:
-                        df = pd.DataFrame(
+                        selected_df = pd.DataFrame(
                             group_links, columns=["Entity ID", "Group", "Value"]
                         ).replace("nan", "")
-                        df = df[df["Value"] != ""]
+                        selected_df = selected_df[selected_df["Value"] != ""]
                         # Use group values as columns with values in them
-                        df = df.pivot_table(
+                        selected_df = selected_df.pivot_table(
                             index="Entity ID",
                             columns="Group",
                             values="Value",
                             aggfunc="first",
                         ).reset_index()
-                        show_df = show_df.merge(df, on="Entity ID", how="left")
+                        show_df = show_df.merge(selected_df, on="Entity ID", how="left")
                 last_df = show_df.copy()
                 if not show_entities:
                     last_df = (
@@ -585,7 +605,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 N = build_network_from_entities(
                     sv.network_overall_graph.value,
                     sv.network_entity_to_community_ix.value,
-                    pl.from_pandas(sv.network_integrated_flags.value),
+                    sv.network_integrated_flags.value,
                     sv.network_trimmed_attributes.value,
                     sv.network_inferred_links.value,
                     c_nodes,
@@ -595,7 +615,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                     context = "Upload risk flags to see risk exposure report."
                     if len(sv.network_integrated_flags.value) > 0:
                         context = build_exposure_report(
-                            pl.from_pandas(sv.network_integrated_flags.value),
+                            sv.network_integrated_flags.value,
                             selected_entity,
                             c_nodes,
                             N,

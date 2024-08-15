@@ -6,11 +6,7 @@ import networkx as nx
 import polars as pl
 import pytest
 
-from toolkit.risk_networks.network import (
-    build_fuzzy_neighbors,
-    generate_final_df,
-    get_integrated_flags,
-)
+from toolkit.risk_networks.network import build_fuzzy_neighbors, generate_final_df
 
 
 class TestFuzzyNeighbors:
@@ -118,65 +114,6 @@ class TestFuzzyNeighbors:
         assert len(result.nodes()) == 5
         assert ("AttributeABCD==Type37", "Attr==Type1") in result.edges()
         assert ("Attr==Type108", "Attr==Type222") in result.edges()
-
-
-class TestIntegratedFlags:
-    # def get_integrated_flags(integrated_flags, entities) -> tuple[Any, int, float, int]:
-    # flags_df = integrated_flags[integrated_flags["qualified_entity"].isin(entities)]
-    # community_flags = flags_df["count"].sum()
-    # flagged = len(flags_df[flags_df["count"] > 0])2
-    # unflagged = len(entities) - flagged1
-    # flaggedPerUnflagged = flagged / unflagged if unflagged > 0 else 0
-    # flaggedPerUnflagged = round(flaggedPerUnflagged, 2)
-
-    # flags_per_entity = round(
-    #     community_flags / len(entities) if len(entities) > 0 else 0, 2
-    # )
-    # return community_flags, flagged, flaggedPerUnflagged, flags_per_entity
-
-    @pytest.fixture()
-    def qualified_entities(self):
-        return ["ENTITY==1", "ENTITY==2", "ENTITY==3"]
-
-    @pytest.fixture()
-    def integrated_flags(self, qualified_entities):
-        return pl.DataFrame(
-            {
-                "qualified_entity": qualified_entities,
-                "count": [1, 0, 3],
-            }
-        )
-
-    def test_empty_integrated_flags(self):
-        integrated_flags = pl.DataFrame()
-        entities = []
-        result = get_integrated_flags(integrated_flags, entities)
-        assert result == (0, 0, 0, 0)
-
-    def test_no_entities(self, integrated_flags):
-        entities = []
-        result = get_integrated_flags(integrated_flags, entities)
-        assert result == (0, 0, 0, 0)
-
-    def test_community_flags(self, integrated_flags, qualified_entities):
-        result = get_integrated_flags(integrated_flags, qualified_entities)
-
-        assert result[0] == 4
-
-    def test_flagged(self, integrated_flags, qualified_entities):
-        result = get_integrated_flags(integrated_flags, qualified_entities)
-
-        assert result[1] == 2
-
-    def test_flagged_per_unflagged(self, integrated_flags, qualified_entities):
-        result = get_integrated_flags(integrated_flags, qualified_entities)
-
-        assert result[2] == 2
-
-    def test_flags_per_entity(self, integrated_flags, qualified_entities):
-        result = get_integrated_flags(integrated_flags, qualified_entities)
-
-        assert result[3] == 1.33
 
 
 class TestFinalDf:

@@ -4,7 +4,6 @@
 from typing import Any
 
 import networkx as nx
-import pandas as pd
 from networkx import Graph
 
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
@@ -20,11 +19,6 @@ def trim_nodeset(
         if not node.startswith(config.entity_label) and degree > max_attribute_degree:
             trimmed_degrees.add((node, degree))
 
-    # network_trimmed_attributes = (  # sv.network_trimmed_attributes.value return
-    #     pd.DataFrame(trim, columns=["Attribute", "Linked Entities"])
-    #     .sort_values("Linked Entities", ascending=False)
-    #     .reset_index(drop=True)
-    # )
     trimmed_nodes = {t[0] for t in trimmed_degrees}.union(additional_trimmed_attributes)
     return trimmed_degrees, trimmed_nodes
 

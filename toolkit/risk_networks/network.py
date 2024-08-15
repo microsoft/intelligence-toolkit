@@ -9,7 +9,7 @@ import polars as pl
 
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 from toolkit.risk_networks import config
-from toolkit.risk_networks.flags import integrate_flags
+from toolkit.risk_networks.flags import get_integrated_flags, integrate_flags
 
 
 def build_fuzzy_neighbors(
@@ -113,25 +113,6 @@ def build_network_from_entities(
     if len(integrated_flags) > 0:
         network_graph = integrate_flags(network_graph, integrated_flags)
     return network_graph
-
-
-def get_integrated_flags(
-    integrated_flags: pl.DataFrame, entities: list[str]
-) -> tuple[Any, int, float, int]:
-    if integrated_flags.is_empty():
-        return 0, 0, 0, 0
-    # Assuming integrated_flags is a pl.DataFrame and entities is a list or pl.Series
-    flags_df = integrated_flags.filter(pl.col("qualified_entity").is_in(entities))
-    community_flags = flags_df.get_column("count").sum()
-    flagged = flags_df.filter(pl.col("count") > 0).height
-    unflagged = len(entities) - flagged
-    flagged_per_unflagged = flagged / unflagged if unflagged > 0 else 0
-    flagged_per_unflagged = round(flagged_per_unflagged, 2)
-
-    flags_per_entity = round(
-        community_flags / len(entities) if len(entities) > 0 else 0, 2
-    )
-    return community_flags, flagged, flagged_per_unflagged, flags_per_entity
 
 
 def generate_final_df(

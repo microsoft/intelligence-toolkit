@@ -6,12 +6,10 @@ import networkx as nx
 import polars as pl
 import pytest
 
-from toolkit.risk_networks.config import FlagAggregatorType
 from toolkit.risk_networks.flags import (
     build_exposure_data,
-    build_flags,
+    get_integrated_flags,
     integrate_flags,
-    prepare_links,
 )
 
 
@@ -89,248 +87,6 @@ class TestIntegrateFlags:
         assert "flags" not in result.nodes["E"]
         assert "flags" not in result.nodes["F"]
         assert "Z" not in result.nodes()
-
-
-class TestPrepareLinks:
-    @pytest.fixture()
-    def df_flag(self):
-        return pl.DataFrame(
-            {
-                "Entity_N": ["A", "C", "D", "F", "Z"],
-                "flags_numb": [1, 2, 3, 0, 3],
-            }
-        )
-
-    def test_prepare_count(self, df_flag):
-        entity_col = "Entity_N"
-        flag_agg = FlagAggregatorType.Count.value
-        flag_columns = ["flags_numb"]
-
-        result = prepare_links(df_flag, entity_col, flag_agg, flag_columns)
-
-        expected = [
-            [
-                ["A", "flags_numb", "flags_numb", 1],
-                ["C", "flags_numb", "flags_numb", 2],
-                ["D", "flags_numb", "flags_numb", 3],
-                ["F", "flags_numb", "flags_numb", 0],
-                ["Z", "flags_numb", "flags_numb", 3],
-            ]
-        ]
-
-        assert sorted(result[0]) == sorted(expected[0])
-
-    def test_prepare_instance(self, df_flag):
-        entity_col = "Entity_N"
-        flag_agg = FlagAggregatorType.Instance.value
-        flag_columns = ["flags_numb"]
-
-        result = prepare_links(df_flag, entity_col, flag_agg, flag_columns)
-
-        expected = [
-            [
-                ["A", "flags_numb", 1, 1],
-                ["C", "flags_numb", 2, 1],
-                ["D", "flags_numb", 3, 1],
-                ["F", "flags_numb", 0, 1],
-                ["Z", "flags_numb", 3, 1],
-            ]
-        ]
-
-        assert sorted(result[0]) == sorted(expected[0])
-
-    def test_prepare_instance_agg(self, df_flag):
-        # add one row to the dataframe
-        df_flag = pl.concat(
-            [df_flag, pl.DataFrame({"Entity_N": ["A"], "flags_numb": [2]})]
-        )
-
-        entity_col = "Entity_N"
-        flag_agg = FlagAggregatorType.Instance.value
-        flag_columns = ["flags_numb"]
-
-        result = prepare_links(df_flag, entity_col, flag_agg, flag_columns)
-
-        expected = [
-            [
-                ["A", "flags_numb", 3, 1],
-                ["C", "flags_numb", 2, 1],
-                ["D", "flags_numb", 3, 1],
-                ["F", "flags_numb", 0, 1],
-                ["Z", "flags_numb", 3, 1],
-            ]
-        ]
-
-        assert sorted(result[0]) == sorted(expected[0])
-
-
-class TestBuildFlags:
-    @pytest.fixture()
-    def link_list(self):
-        return [
-            ["A", "flags_numb", 3, 1],
-            ["C", "flags_numb", 2, 1],
-            ["D", "flags_numb", 3, 1],
-            ["F", "flags_numb", 0, 1],
-            ["Z", "flags_numb", 3, 1],
-        ]
-
-    @pytest.fixture()
-    def link_list_count(self):
-        return [
-            ["A", "flags_numb", "flags_numb", 3],
-            ["C", "flags_numb", "flags_numb", 2],
-            ["D", "flags_numb", "flags_numb", 3],
-            ["F", "flags_numb", "flags_numb", 0],
-            ["Z", "flags_numb", "flags_numb", 3],
-        ]
-
-    def test_flags_integrated(self, link_list):
-        flags, _, _ = build_flags(link_list)
-
-        expected = pl.DataFrame(
-            {
-                "entity": ["A", "C", "D", "F", "Z"],
-                "type": [
-                    "flags_numb",
-                    "flags_numb",
-                    "flags_numb",
-                    "flags_numb",
-                    "flags_numb",
-                ],
-                "flag": [3, 2, 3, 0, 3],
-                "count": [1, 1, 1, 1, 1],
-                "qualified_entity": [
-                    "ENTITY==A",
-                    "ENTITY==C",
-                    "ENTITY==D",
-                    "ENTITY==F",
-                    "ENTITY==Z",
-                ],
-            }
-        )
-
-        df1_sorted = flags.sort(by=["entity"])
-        df2_sorted = expected.sort(by=["entity"])
-
-        assert df1_sorted.frame_equal(df2_sorted)
-
-    def test_max_entity_flags_integrated(self, link_list):
-        _, max_entity_flags, _ = build_flags(link_list)
-
-        expected = 1
-
-        assert max_entity_flags == expected
-
-    def test_mean_entity_flags_integrated(self, link_list):
-        _, _, mean_entity_flags = build_flags(link_list)
-
-        expected = 1
-
-        assert mean_entity_flags == expected
-
-    def test_flags_count(self, link_list_count):
-        flags, _, _ = build_flags(link_list_count)
-
-        expected = pl.DataFrame(
-            {
-                "entity": ["A", "C", "D", "F", "Z"],
-                "type": [
-                    "flags_numb",
-                    "flags_numb",
-                    "flags_numb",
-                    "flags_numb",
-                    "flags_numb",
-                ],
-                "flag": [
-                    "flags_numb",
-                    "flags_numb",
-                    "flags_numb",
-                    "flags_numb",
-                    "flags_numb",
-                ],
-                "count": [3, 2, 3, 0, 3],
-                "qualified_entity": [
-                    "ENTITY==A",
-                    "ENTITY==C",
-                    "ENTITY==D",
-                    "ENTITY==F",
-                    "ENTITY==Z",
-                ],
-            }
-        )
-
-        df1_sorted = flags.sort(by=["entity"])
-        df2_sorted = expected.sort(by=["entity"])
-
-        assert df1_sorted.frame_equal(df2_sorted)
-
-    def test_flags_count_sum(self, link_list_count):
-        link_list_count.append(["A", "flags_numb", "flags_numb", 5])
-        flags, _, _ = build_flags(link_list_count)
-
-        expected = pl.DataFrame(
-            {
-                "entity": ["A", "C", "D", "F", "Z"],
-                "type": [
-                    "flags_numb",
-                    "flags_numb",
-                    "flags_numb",
-                    "flags_numb",
-                    "flags_numb",
-                ],
-                "flag": [
-                    "flags_numb",
-                    "flags_numb",
-                    "flags_numb",
-                    "flags_numb",
-                    "flags_numb",
-                ],
-                "count": [8, 2, 3, 0, 3],
-                "qualified_entity": [
-                    "ENTITY==A",
-                    "ENTITY==C",
-                    "ENTITY==D",
-                    "ENTITY==F",
-                    "ENTITY==Z",
-                ],
-            }
-        )
-
-        df1_sorted = flags.sort(by=["entity"])
-        df2_sorted = expected.sort(by=["entity"])
-
-        assert df1_sorted.frame_equal(df2_sorted)
-
-    def test_max_entity_flags_count_sum(self, link_list_count):
-        link_list_count.append(["A", "flags_numb", "flags_numb", 5])
-        result = build_flags(link_list_count)
-
-        expected = 8
-
-        assert result[1] == expected
-
-    def test_mean_entity_flags_count_sum(self, link_list_count):
-        link_list_count.append(["A", "flags_numb", "flags_numb", 5])
-        result = build_flags(link_list_count)
-
-        expected = 4.0
-
-        assert result[2] == expected
-
-    def test_max_entity_flags_count(self, link_list_count):
-        result = build_flags(link_list_count)
-
-        expected = 3
-
-        assert result[1] == expected
-
-    def test_mean_entity_flags_count(self, link_list_count):
-        result = build_flags(link_list_count)
-
-        expected = 2.75
-
-        assert result[2] == expected
 
 
 class TestExposureData:
@@ -414,3 +170,55 @@ class TestExposureData:
         assert len(nodes) == len(expected_nodes)
         for ex in expected_nodes:
             assert ex in nodes
+
+
+class TestIntegratedFlags:
+    @pytest.fixture()
+    def qualified_entities(self):
+        return ["ENTITY==1", "ENTITY==2", "ENTITY==3"]
+
+    @pytest.fixture()
+    def integrated_flags(self, qualified_entities):
+        return pl.DataFrame(
+            {
+                "qualified_entity": qualified_entities,
+                "count": [1, 0, 3],
+            }
+        )
+
+    def test_empty_integrated_flags(self):
+        integrated_flags = pl.DataFrame()
+        entities = []
+        result = get_integrated_flags(integrated_flags, entities)
+        assert result == (0, 0, 0, 0)
+
+    def test_no_entities(self, integrated_flags):
+        entities = []
+        result = get_integrated_flags(integrated_flags, entities)
+        assert result == (0, 0, 0, 0)
+
+    def test_community_flags(self, integrated_flags, qualified_entities):
+        community_flags, _, _, _ = get_integrated_flags(
+            integrated_flags, qualified_entities
+        )
+
+        assert community_flags == 4
+
+    def test_flagged(self, integrated_flags, qualified_entities):
+        _, flagged, _, _ = get_integrated_flags(integrated_flags, qualified_entities)
+
+        assert flagged == 2
+
+    def test_flagged_per_unflagged(self, integrated_flags, qualified_entities):
+        _, _, flagged_per_unflagged, _ = get_integrated_flags(
+            integrated_flags, qualified_entities
+        )
+
+        assert flagged_per_unflagged == 2
+
+    def test_flags_per_entity(self, integrated_flags, qualified_entities):
+        _, _, _, flags_per_entity = get_integrated_flags(
+            integrated_flags, qualified_entities
+        )
+
+        assert flags_per_entity == 1.33

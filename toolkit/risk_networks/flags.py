@@ -4,13 +4,13 @@
 
 import json
 from collections import defaultdict
+from typing import Any
 
 import networkx as nx
 import polars as pl
 
 import toolkit.risk_networks.config as config
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
-from toolkit.risk_networks.config import FlagAggregatorType
 
 
 def integrate_flags(graph: nx.Graph, df_integrated_flags: pl.DataFrame) -> nx.Graph:
@@ -30,63 +30,23 @@ def integrate_flags(graph: nx.Graph, df_integrated_flags: pl.DataFrame) -> nx.Gr
     return graph
 
 
-def transform_entity(entity):
-    return f"{config.entity_label}{ATTRIBUTE_VALUE_SEPARATOR}{entity}"
+def get_integrated_flags(
+    integrated_flags: pl.DataFrame, entities: list[str]
+) -> tuple[Any, int, float, int]:
+    if integrated_flags.is_empty():
+        return 0, 0, 0, 0
 
+    flags_df = integrated_flags.filter(pl.col("qualified_entity").is_in(entities))
+    community_flags = flags_df.get_column("count").sum()
+    flagged = flags_df.filter(pl.col("count") > 0).height
+    unflagged = len(entities) - flagged
+    flagged_per_unflagged = flagged / unflagged if unflagged > 0 else 0
+    flagged_per_unflagged = round(flagged_per_unflagged, 2)
 
-def build_flags(
-    network_flag_links: list,
-) -> tuple:
-    print("network_flag_links", network_flag_links)
-    flags = pl.DataFrame(
-        {
-            "entity": [item[0] for item in network_flag_links],
-            "type": [item[1] for item in network_flag_links],
-            "flag": [item[2] for item in network_flag_links],
-            "count": [item[3] for item in network_flag_links],
-        }
+    flags_per_entity = round(
+        community_flags / len(entities) if len(entities) > 0 else 0, 2
     )
-    flags = flags.groupby(["entity", "type", "flag"]).agg(pl.sum("count"))
-    flags = flags.with_columns(
-        [flags["entity"].apply(transform_entity).alias("qualified_entity")]
-    )
-    overall_df = flags.groupby("qualified_entity").agg(pl.sum("count"))
-    max_entity_flags = overall_df["count"].max()
-    mean_flagged_flags = round(
-        overall_df.filter(pl.col("count") > 0)["count"].mean(), 2
-    )
-
-    return flags, max_entity_flags, mean_flagged_flags
-
-
-def prepare_links(
-    df_flag: pl.DataFrame,
-    entity_col: str,
-    flag_agg: FlagAggregatorType,
-    flag_columns: list[str],
-) -> list:
-    model_links = []
-
-    for value_col in flag_columns:
-        gdf = df_flag.with_columns([pl.col(value_col).cast(pl.Int32).alias(value_col)])
-        gdf = gdf.group_by(entity_col).agg([pl.sum(col) for col in flag_columns])
-        vals = (
-            gdf[
-                [
-                    entity_col,
-                    value_col,
-                ]
-            ]
-            .to_numpy()
-            .tolist()
-        )
-        if flag_agg == FlagAggregatorType.Instance.value:
-            gdf = gdf.with_columns([pl.lit(1).alias("count_col")])
-            model_links.extend([[val[0], value_col, val[1], 1] for val in vals])
-        elif flag_agg == FlagAggregatorType.Count.value:
-            model_links.extend([[val[0], value_col, value_col, val[1]] for val in vals])
-
-    return [model_links]
+    return community_flags, flagged, flagged_per_unflagged, flags_per_entity
 
 
 def build_exposure_data(
@@ -103,7 +63,7 @@ def build_exposure_data(
     )
     rdf = integrated_flags
     rdf = rdf.filter(pl.col("qualified_entity").is_in(c_nodes))
-    rdf = rdf.groupby(["qualified_entity", "flag"]).agg(pl.col("count").sum())
+    rdf = rdf.group_by(["qualified_entity", "flag"]).agg(pl.col("count").sum())
     all_flagged = (
         rdf.filter(pl.col("count") > 0)
         .select("qualified_entity")

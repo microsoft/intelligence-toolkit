@@ -42,11 +42,3 @@ class NodeFlag(TypedDict):
 class Steps(TypedDict):
     source: NodeFlag
     target: NodeFlag
-
-
-class FlagsPath(TypedDict):
-    steps: list[Steps]
-
-
-class FlagsReport(TypedDict):
-    paths: list[FlagsPath]
