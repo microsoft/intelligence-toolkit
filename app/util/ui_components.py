@@ -735,12 +735,17 @@ def validate_ai_report(messages, result, show_status=True):
     return json.loads(re.sub(r"```json\n|\n```", "", validation)), messages_to_llm
 
 
-def generate_text(messages, callbacks=None):
+def generate_text(messages, callbacks=None, **kwargs):
     if callbacks is None:
         callbacks = []
     ai_configuration = UIOpenAIConfiguration().get_configuration()
-    return OpenAIClient(ai_configuration).generate_chat(messages, callbacks=callbacks)
+    return OpenAIClient(ai_configuration).generate_chat(messages, callbacks=callbacks, **kwargs)
 
+def map_generate_text(messages_list, callbacks=None, **kwargs):
+    if callbacks is None:
+        callbacks = []
+    ai_configuration = UIOpenAIConfiguration().get_configuration()
+    return OpenAIClient(ai_configuration).map_generate_text(messages_list, callbacks=callbacks, **kwargs)
 
 def create_markdown_callback(placeholder, prefix=""):
     def on(text):

@@ -32,7 +32,6 @@ class Embedder:
         embedding = (
             self.pickle.get(text_hashed, loaded_embeddings) if cache_data else {}
         )
-        print(f"Got {len(embedding)} existing texts")
         if not embedding:
             tokens = get_token_count(text)
             if tokens > self.configuration.max_tokens:
