@@ -3,11 +3,14 @@
 #
 import logging
 
+
 import numpy as np
+import pyarrow as pa
 
 from python.AI.defaults import DEFAULT_LOCAL_EMBEDDING_MODEL
+from python.AI.vector_store import VectorStore
+from python.helpers.constants import CACHE_PATH
 
-from .cache_pickle import CachePickle
 from .client import OpenAIClient
 from .openai_configuration import OpenAIConfiguration
 from .utils import get_token_count, hash_text
@@ -15,56 +18,74 @@ from .utils import get_token_count, hash_text
 logger = logging.getLogger(__name__)
 from sentence_transformers import SentenceTransformer
 
+schema = pa.schema(
+    [
+        pa.field("hash", pa.string()),
+        pa.field("text", pa.string()),
+        pa.field("vector", pa.list_(pa.float64())),
+    ]
+)
+
 
 class Embedder:
     def __init__(
-        self, configuration: OpenAIConfiguration | None, pickle_path=None, local=False
+        self,
+        configuration: OpenAIConfiguration | None,
+        db_name: str | None = "embeddings",
+        db_path=CACHE_PATH,
+        local=False,
     ) -> None:
         self.configuration = configuration or OpenAIConfiguration()
         self.openai_client = OpenAIClient(configuration)
-        self.pickle = CachePickle(path=pickle_path)
         self.local_client = SentenceTransformer(DEFAULT_LOCAL_EMBEDDING_MODEL)
         self.local = local
+        self.vector_store = VectorStore(db_name, db_path, schema)
 
     def embed_store_one(self, text: str, cache_data=True):
         text_hashed = hash_text(text)
-        loaded_embeddings = self.pickle.get_all() if cache_data else {}
-        embedding = (
-            self.pickle.get(text_hashed, loaded_embeddings) if cache_data else {}
+        existing_embedding = (
+            self.vector_store.search_one_by_column(text_hashed, "hash")
+            if cache_data
+            else []
         )
-        print(f"Got {len(embedding)} existing texts")
-        if not embedding:
-            tokens = get_token_count(text)
-            if tokens > self.configuration.max_tokens:
-                text = text[: self.configuration.max_tokens]
-                logger.info("Truncated text to max tokens")
-            try:
-                if self.local:
-                    embedding = self.local_client.encode(text).tolist()
-                else:
-                    embedding = self.openai_client.generate_embedding([text])
-            except Exception as e:
-                msg = f"Problem in OpenAI response. {e}"
-                raise Exception(msg)
-            loaded_embeddings.update({text_hashed: embedding})
-            self.pickle.save(loaded_embeddings) if cache_data else None
+        if len(existing_embedding) > 0:
+            return existing_embedding.get("vector")[0]
+
+        tokens = get_token_count(text)
+        if tokens > self.configuration.max_tokens:
+            text = text[: self.configuration.max_tokens]
+            logger.info("Truncated text to max tokens")
+        try:
+            if self.local:
+                embedding = self.local_client.encode(text).tolist()
+            else:
+                embedding = self.openai_client.generate_embedding([text])
+            data = {"hash": text_hashed, "text": text, "vector": embedding}
+            self.vector_store.save([data]) if cache_data else None
+        except Exception as e:
+            msg = f"Problem in OpenAI response. {e}"
+            raise Exception(msg)
         return embedding
 
     def embed_store_many(self, texts: list[str], callback=None, cache_data=True):
         final_embeddings = [None] * len(texts)
         new_texts = []
-        loaded_embeddings = self.pickle.get_all() if cache_data else {}
         existing_texts_count = 0
         for ix, text in enumerate(texts):
             text_hashed = hash_text(text)
-            embedding = (
-                self.pickle.get(text_hashed, loaded_embeddings) if cache_data else {}
+
+            existing_embedding = (
+                self.vector_store.search_one_by_column(text_hashed, "hash")
+                if cache_data
+                else []
             )
-            if not len(embedding):
+
+            if not len(existing_embedding):
                 new_texts.append((ix, text))
             else:
-                final_embeddings[ix] = np.array(embedding)
+                final_embeddings[ix] = existing_embedding.get("vector")[0]
                 existing_texts_count += 1
+
         print(f"Got {existing_texts_count} existing texts")
         logger.info("Got %s existing texts", existing_texts_count)
         print(f"Got {len(new_texts)} new texts")
@@ -72,6 +93,7 @@ class Embedder:
 
         num_batches = len(new_texts) // 2000 + 1
         batch_count = 1
+        loaded_embeddings = []
         for i in range(0, len(new_texts), 2000):
             if callback:
                 for cb in callback:
@@ -89,13 +111,18 @@ class Embedder:
                             batch_texts
                         ).data
                     ]
+
             except Exception as e:
                 msg = f"Problem in OpenAI response. {e}"
                 raise Exception(msg)
 
             for j, (ix, text) in enumerate(batch):
                 text_hashed = hash_text(text)
-                loaded_embeddings.update({text_hashed: embeddings[j]})
+                loaded_embeddings.add(
+                    {"hash": text_hashed, "text": text, "vector": embeddings[j]}
+                )
                 final_embeddings[ix] = np.array(embeddings[j])
-        self.pickle.save(loaded_embeddings) if cache_data else None
+
+        self.vector_store.save(loaded_embeddings) if cache_data else None
+        self.vector_store.update_duckdb_data()
         return np.array(final_embeddings)

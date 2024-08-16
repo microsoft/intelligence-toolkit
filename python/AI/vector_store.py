@@ -1,0 +1,66 @@
+# # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+# # Licensed under the MIT license. See LICENSE file in the project.
+# #
+from typing import Any
+
+import duckdb
+import lancedb
+import pyarrow as pa
+
+from python.helpers.constants import CACHE_PATH
+
+table_missing_msg = "Table not initialized"
+
+
+class VectorStore:
+    table = None
+    duckdb_data = None
+
+    def __init__(
+        self,
+        table_name: str | None = None,
+        path: str = CACHE_PATH,
+        schema: pa.Schema = None,
+        db_index: list[str] | None = None,
+    ):
+        self.db_connection = lancedb.connect(path)
+        self.db_index = db_index
+        if table_name is not None:
+            self.table = self.db_connection.create_table(
+                table_name, schema=schema, exist_ok=True
+            )
+            self.duckdb_data = self.table.to_lance()
+
+        if self.table is not None and db_index is not None:
+            self.table.create_fts_index(db_index, replace=True)
+
+    def save(self, items: list[Any]) -> None:
+        if self.table is None:
+            raise ValueError(table_missing_msg)
+        self.table.add(items, mode="append")
+
+    def search_one_by_column(self, text: str, column: str) -> list[dict]:
+        if self.table is None:
+            raise ValueError(table_missing_msg)
+        arrow_data = self.duckdb_data
+        query = "SELECT * FROM arrow_data WHERE {} = ?".format(column)
+        return duckdb.execute(query, [text]).df()
+
+    def search_by_vector(self, vector: list[float], k: int = 10) -> list[dict]:
+        if self.table is None:
+            raise ValueError(table_missing_msg)
+
+        return self.table.search(vector).limit(k).to_list()
+
+    def update_duckdb_data(self) -> None:
+        if self.table is None:
+            raise ValueError(table_missing_msg)
+        self.duckdb_data = self.table.to_lance()
+
+    def drop_table(self) -> None:
+        if self.table is None:
+            raise ValueError(table_missing_msg)
+        self.db_connection.drop_table(self.table_name)
+
+    def drop_db(self):
+        self.db_connection.drop_database()

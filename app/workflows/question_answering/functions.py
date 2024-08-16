@@ -20,11 +20,13 @@ from python.AI.text_splitter import TextSplitter
 sv_home = SessionVariables("home")
 
 
-def embedder():
+def embedder() -> Embedder:
     try:
         ai_configuration = UIOpenAIConfiguration().get_configuration()
         return Embedder(
-            ai_configuration, config.cache_dir, sv_home.local_embeddings.value
+            configuration=ai_configuration,
+            db_name=config.cache_name,
+            local=sv_home.local_embeddings.value,
         )
     except Exception as e:
         st.error(f"Error creating connection: {e}")
@@ -83,6 +85,7 @@ def chunk_files(sv, files):
             formatted_chunk, sv_home.save_cache.value
         )
         file.add_chunk(chunk, np.array(chunk_vec), cx + 1)
+    functions_embedder.vector_store.update_duckdb_data()
     pb.empty()
 
 

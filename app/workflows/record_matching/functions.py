@@ -11,11 +11,13 @@ from python.AI.embedder import Embedder
 sv_home = SessionVariables("home")
 
 
-def embedder():
+def embedder() -> Embedder:
     try:
         ai_configuration = UIOpenAIConfiguration().get_configuration()
         return Embedder(
-            ai_configuration, config.cache_dir, sv_home.local_embeddings.value
+            configuration=ai_configuration,
+            db_name=config.cache_name,
+            local=sv_home.local_embeddings.value,
         )
     except Exception as e:
         st.error(f"Error creating connection: {e}")
