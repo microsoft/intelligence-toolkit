@@ -1,13 +1,7 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import numpy as np
-from collections import defaultdict
+from collections import defaultdict, Counter
 import asyncio
-import pdfkit
-import pdfplumber
-import tempfile
-import io
-from textblob import TextBlob
-import networkx as nx
 import scipy.spatial.distance
 import app.util.ui_components as ui_components
 import python.AI.utils as utils
@@ -26,14 +20,43 @@ def get_adjacent_chunks(closest, previous_chunk, next_chunk):
     next_chunk = next_chunk.get(closest, None)
     return [x for x in [prev_chunk, next_chunk] if x is not None]
 
+def should_switch(test_history, switch_on_successive_irrelevant):
+    last_results = test_history[-switch_on_successive_irrelevant:]
+    return len(last_results) == switch_on_successive_irrelevant and all([r == 'No' for (c, r) in last_results])
+
+def should_terminate(test_history, terminate_on_chunks_tested, terminate_on_relevant_chunks, terminate_on_successive_irrelevant):
+    should_terminate = False
+    if terminate_on_chunks_tested != 0 and len(test_history) >= terminate_on_chunks_tested:
+        should_terminate = True
+    if terminate_on_relevant_chunks != 0 and len([x for x in test_history if x[1] == 'Yes']) >= terminate_on_relevant_chunks:
+        should_terminate = True
+    if terminate_on_successive_irrelevant != 0:
+        last_results = [x[1] for x in test_history[-terminate_on_successive_irrelevant:]]
+        if len(last_results) == terminate_on_successive_irrelevant and all([r == 'No' for r in last_results]):
+            should_terminate = True
+    return should_terminate
+
+def should_switch(test_history, switch_on_successive_irrelevant):
+    last_results = test_history[-switch_on_successive_irrelevant:]
+    return len(last_results) == switch_on_successive_irrelevant and all([r == 'No' for (c, r) in last_results])
+
+def get_progress(test_history):
+    chunks_tested = len(test_history)
+    relevant_chunks = len([x for x in test_history if x[1] == 'Yes'])
+    successive_irrelevant_list = list(reversed([x[1] for x in test_history]))
+    successive_irrelevant = successive_irrelevant_list.index('Yes') if 'Yes' in successive_irrelevant_list else len(successive_irrelevant_list)
+    response = {
+        'chunks_tested': chunks_tested,
+        'relevant_chunks': relevant_chunks,
+        'successive_irrelevant': successive_irrelevant
+    }
+    return response
+
 def generate_answer(
         process_chunks,
-        sorted_chunks,
         answer_batch_size,
         question,
         chunk_to_metadata,
-        progress_stream,
-        progress_callback,
         answer_stream,
         answer_callback
         ):
@@ -43,49 +66,40 @@ def generate_answer(
     answer_response = ui_components.generate_text(answer_messages)
     answer_stream = [answer_response] + answer_stream
     answer_callback(answer_stream)
-    return selected_chunks, progress_stream, answer_stream
+    return selected_chunks, answer_stream
 
 def check_generate_answer(
         process_chunks,
-        sorted_chunks,
         use_all,
         answer_batch_size,
         question,
         chunk_to_metadata,
-        progress_stream,
-        progress_callback,
         answer_stream,
         answer_callback
         ):
     all_selected_chunks = []
     if use_all:
-        remaining_chunks = set(process_chunks) - set(all_selected_chunks)
+        remaining_chunks = list(set(process_chunks) - set(all_selected_chunks))
         while len(remaining_chunks) > 0:
-            selected_chunks, progress_stream, answer_stream = generate_answer(
+            selected_chunks, answer_stream = generate_answer(
                 remaining_chunks,
-                sorted_chunks,
                 answer_batch_size,
                 question, chunk_to_metadata,
-                progress_stream,
-                progress_callback,
                 answer_stream,
                 answer_callback
             )
             all_selected_chunks.extend(selected_chunks)
-            remaining_chunks = set(process_chunks) - set(all_selected_chunks)
+            remaining_chunks = list(set(process_chunks) - set(all_selected_chunks))
     if len(process_chunks) >= answer_batch_size:
-        selected_chunks, progress_stream, answer_stream = generate_answer(
+        selected_chunks, answer_stream = generate_answer(
             process_chunks,
-            sorted_chunks,
             answer_batch_size,
             question, chunk_to_metadata,
-            progress_stream,
-            progress_callback,
             answer_stream,
             answer_callback
         )
         all_selected_chunks.extend(selected_chunks)
-    return all_selected_chunks, progress_stream, answer_stream
+    return all_selected_chunks, answer_stream
 
 def search_answers(
         question,
@@ -93,21 +107,22 @@ def search_answers(
         chunk_to_concepts,
         concept_to_chunks,
         text_to_vectors,
-        concept_graph,
         community_to_concepts,
         concept_to_community,
         previous_chunk,
         next_chunk,
         embedder,
         embedding_cache,
-        max_outer_iterations,
         relevance_batch_size,
         answer_batch_size,
         select_logit_bias,
-        chunk_successive_no_break,
-        community_successive_no_break,
-        community_chunk_successive_no_break,
+        terminate_on_chunks_tested,
+        terminate_on_relevant_chunks,
+        terminate_on_successive_irrelevant,
+        switch_on_successive_irrelevant,
+        augment_top_concepts,
         progress_callback,
+        chunk_callback,
         answer_callback,
     ):
     progress_stream = []
@@ -116,12 +131,13 @@ def search_answers(
     chunk_status = defaultdict(lambda: ChunkStatus.UNSEEN)
     processing_queue = []
     sorted_chunks = []
+    test_history = []
     for text, chunks in text_to_chunks.items():
         for cx, chunk in enumerate(chunks):
             chunk_to_metadata[chunk] = f'File: {text}; Chunk: {cx+1})'
             sorted_chunks.append(chunk)
-    sorted_chunks.sort()
     all_units = []
+    all_matched_concepts = Counter()
     for text, chunks in text_to_chunks.items():
         for cx, chunk in enumerate(chunks):
             all_units.append(
@@ -131,13 +147,15 @@ def search_answers(
                     text_to_vectors[text][cx]
                 )
             )
-    scratchpad = ''
-    primary_results = []
+
     yes_id = tiktoken.get_encoding('o200k_base').encode('Yes')[0]
     no_id = tiktoken.get_encoding('o200k_base').encode('No')[0]
     logit_bias = {yes_id: select_logit_bias, no_id: select_logit_bias}
-    for i in range(max_outer_iterations):
-        augmented_question = f'Question: {question} {scratchpad}'
+
+    progress_callback(get_progress(test_history))
+    while not should_terminate(test_history, terminate_on_chunks_tested, terminate_on_relevant_chunks, terminate_on_successive_irrelevant):
+        augmented_question = f'Question: {question} Concepts: {"; ".join([x[0] for x in all_matched_concepts.most_common(augment_top_concepts)])}'
+        print(augmented_question)
         aq_embedding = np.array(
             embedder.embed_store_one(
                 augmented_question, embedding_cache
@@ -146,7 +164,7 @@ def search_answers(
         cosine_distances = sorted(
             [
                 (t, c, scipy.spatial.distance.cosine(aq_embedding, v))
-                for (t, c, v) in all_units if chunk_status[c] in [ChunkStatus.UNSEEN]
+                for (t, c, v) in all_units if chunk_status[c] == ChunkStatus.UNSEEN
             ],
             key=lambda x: x[2],
             reverse=False,
@@ -158,30 +176,34 @@ def search_answers(
                                    for chunk in closest_batch]
         primary_mapped_responses = asyncio.run(ui_components.map_generate_text(primary_mapped_messages, logit_bias=logit_bias, max_tokens=1))
         for r, c in zip(primary_mapped_responses, closest_batch):
+            if c not in [x[0] for x in test_history]:
+                test_history.append((c, r))
             if r == 'Yes':
                 chunk_status[c] = ChunkStatus.RELEVANT_UNPROCESSED
             else:
                 chunk_status[c] = ChunkStatus.IRRELEVANT
+        progress_callback(get_progress(test_history))
         yes_chunks = [c for c in closest_batch if chunk_status[c] == ChunkStatus.RELEVANT_UNPROCESSED]
         primary_response = "Yes" if len(yes_chunks) > 0 else "No"
         yes_id = sorted_chunks.index(yes_chunks[0]) if len(yes_chunks) > 0 else '-'
-        primary_results.append(primary_response)
 
         if primary_response == 'Yes':
             closest = yes_chunks[0]
             if closest not in processing_queue and chunk_status[closest] != ChunkStatus.RELEVANT_PROCESSED:
                 processing_queue.append(closest)
                 progress_stream = [closest] + progress_stream
-                progress_callback(progress_stream)
+                chunk_callback(progress_stream)
             adjacent = get_adjacent_chunks(closest, previous_chunk, next_chunk)
             for adj in adjacent:
                 if chunk_status[adj] != ChunkStatus.RELEVANT_PROCESSED:
                     chunk_status[adj] = ChunkStatus.RELEVANT_UNPROCESSED
                     if adj not in processing_queue and chunk_status[adj] != ChunkStatus.RELEVANT_PROCESSED:
                         processing_queue.append(adj)
+                        all_matched_concepts.update(chunk_to_concepts[adj])
                         progress_stream = [adj] + progress_stream
-                        progress_callback(progress_stream)
+                        chunk_callback(progress_stream)
             concepts = chunk_to_concepts[closest]
+            all_matched_concepts.update(concepts)
             community_concept_counts = defaultdict(int)
             for concept in concepts:
                 if concept not in concept_to_community.keys():
@@ -193,7 +215,7 @@ def search_answers(
                 key=lambda x: x[1],
                 reverse=True
             )
-            secondary_results = []
+
             for community, community_concept_count in sorted_communities:
                 linked_chunks = set()
                 for concept in community_to_concepts[community]:
@@ -219,12 +241,15 @@ def search_answers(
                     for ri, mapped_response in enumerate(mapped_responses):
                         tertiary_results.append(mapped_response)
                     for r, c in zip(mapped_responses, batch):
+                        if c not in [x[0] for x in test_history]:
+                            test_history.append((c, r))
                         if r == 'Yes':
                             chunk_status[c] = ChunkStatus.RELEVANT_UNPROCESSED
                             if c not in processing_queue and chunk_status[c] != ChunkStatus.RELEVANT_PROCESSED:
                                 processing_queue.append(c)
                                 progress_stream = [c] + progress_stream
-                                progress_callback(progress_stream)
+                                chunk_callback(progress_stream)
+                                all_matched_concepts.update(chunk_to_concepts[c])
                             adjacent = get_adjacent_chunks(closest, previous_chunk, next_chunk)
                             for adj in adjacent:
                                 if chunk_status[adj] != ChunkStatus.RELEVANT_PROCESSED:
@@ -232,21 +257,20 @@ def search_answers(
                                     if adj not in processing_queue and chunk_status[adj] != ChunkStatus.RELEVANT_PROCESSED:
                                         processing_queue.append(adj)
                                         progress_stream = [adj] + progress_stream
-                                        progress_callback(progress_stream)
+                                        chunk_callback(progress_stream)
+                                        all_matched_concepts.update(chunk_to_concepts[adj])
                         else:
                             chunk_status[c] = ChunkStatus.IRRELEVANT
-
-                    last_results = tertiary_results[-community_chunk_successive_no_break:]
-                    if len(last_results) == community_chunk_successive_no_break and all([r == 'No' for r in last_results]):
-                        processed_chunks, progress_stream, answer_stream = check_generate_answer(
+                    progress_callback(get_progress(test_history))
+                    if should_terminate(test_history, terminate_on_chunks_tested, terminate_on_relevant_chunks, terminate_on_successive_irrelevant):
+                        break
+                    if should_switch(test_history, switch_on_successive_irrelevant):
+                        processed_chunks, answer_stream = check_generate_answer(
                             process_chunks=processing_queue,
-                            sorted_chunks=sorted_chunks,
                             use_all=False,
                             answer_batch_size=answer_batch_size,
                             question=question,
                             chunk_to_metadata=chunk_to_metadata,
-                            progress_stream=progress_stream,
-                            progress_callback=progress_callback,
                             answer_stream=answer_stream,
                             answer_callback=answer_callback
                         )
@@ -255,41 +279,26 @@ def search_answers(
                             processing_queue.remove(c)
                         break
                         
-                if len(tertiary_results) > community_chunk_successive_no_break: # must have had at least one relevant chunk
-                    secondary_results.append('Yes')
-                else:
-                    secondary_results.append('No')
-                    last_results = secondary_results[-community_successive_no_break:]
-                    if len(last_results) == community_successive_no_break and all([r == 'No' for r in last_results]):
-                        break
-            processed_chunks, progress_stream, answer_stream = check_generate_answer(
+            processed_chunks, answer_stream = check_generate_answer(
                 process_chunks=processing_queue,
-                sorted_chunks=sorted_chunks,
                 use_all=False,
                 answer_batch_size=answer_batch_size,
                 question=question,
                 chunk_to_metadata=chunk_to_metadata,
-                progress_stream=progress_stream,
-                progress_callback=progress_callback,
                 answer_stream=answer_stream,
                 answer_callback=answer_callback
             )
             for c in processed_chunks:
                 chunk_status[c] = ChunkStatus.RELEVANT_PROCESSED
                 processing_queue.remove(c)
-        else:
-            last_results = primary_results[-chunk_successive_no_break:]
-            if len(last_results) == chunk_successive_no_break and all([r == '--No' for r in last_results]):
-                break
-    processed_chunks, progress_stream, answer_stream = check_generate_answer(
+        progress_callback(get_progress(test_history))
+    processed_chunks, answer_stream = check_generate_answer(
         process_chunks=processing_queue,
         sorted_chunks=sorted_chunks,
         use_all=True,
         answer_batch_size=answer_batch_size,
         question=question,
         chunk_to_metadata=chunk_to_metadata,
-        progress_stream=progress_stream,
-        progress_callback=progress_callback,
         answer_stream=answer_stream,
         answer_callback=answer_callback
     )
