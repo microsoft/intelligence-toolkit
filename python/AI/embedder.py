@@ -3,7 +3,6 @@
 #
 import logging
 
-
 import numpy as np
 import pyarrow as pa
 
@@ -118,7 +117,7 @@ class Embedder:
 
             for j, (ix, text) in enumerate(batch):
                 text_hashed = hash_text(text)
-                loaded_embeddings.add(
+                loaded_embeddings.append(
                     {"hash": text_hashed, "text": text, "vector": embeddings[j]}
                 )
                 final_embeddings[ix] = np.array(embeddings[j])

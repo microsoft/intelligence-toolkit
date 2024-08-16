@@ -37,9 +37,6 @@ def get_intro():
 def create(sv: rn_variables.SessionVariables, workflow=None):
     sv_home = SessionVariables("home")
 
-    if not os.path.exists(config.outputs_dir):
-        os.makedirs(config.outputs_dir)
-
     intro_tab, uploader_tab, process_tab, view_tab, report_tab = st.tabs([
         "Network analysis workflow:",
         "Create data model",
