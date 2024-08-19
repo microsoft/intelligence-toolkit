@@ -26,14 +26,17 @@ class SessionVariables:
         self.partial_answers = SessionVariable([], prefix)
         self.last_question = SessionVariable("", prefix)
         self.final_report = SessionVariable("", prefix)
-        self.progress_message = SessionVariable("", prefix)
-        self.terminate_on_chunks_tested = SessionVariable(100, prefix)
-        self.terminate_on_relevant_chunks = SessionVariable(25, prefix)
-        self.terminate_on_successive_irrelevant = SessionVariable(25, prefix)
-        self.switch_on_successive_irrelevant = SessionVariable(5, prefix)
+        self.semantic_search_depth = SessionVariable(10, prefix)
+        self.structural_search_steps = SessionVariable(1, prefix)
+        self.relational_search_depth = SessionVariable(10, prefix)
+        self.relevance_test_batch_size = SessionVariable(5, prefix)
+        self.relevance_test_limit = SessionVariable(30, prefix)
         self.report_validation_messages = SessionVariable("", prefix)
         self.report_validation = SessionVariable({}, prefix)
         self.system_prompt = SessionVariable(prompts.list_prompts, prefix)
+        self.chunk_progress = SessionVariable("", prefix)
+        self.answer_progress = SessionVariable("", prefix)
+        self.answer_update_batch_size = SessionVariable(5, prefix)
 
     def reset_workflow(self):
         for key in st.session_state:

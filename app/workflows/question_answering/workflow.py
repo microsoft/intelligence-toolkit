@@ -60,7 +60,7 @@ def get_concept_graph(placeholder, G, concept_to_community, community_to_concept
                 size=size,
                 color=color,
                 shape='dot',
-                timestep=0.1,
+                timestep=0.001,
                 font={"vadjust": vadjust, "size": size},
             )
         )
@@ -184,33 +184,47 @@ def create(sv: SessionVariables, workflow=None):
                 st.markdown(f"**Selected concept: {selection}**")
                 st.dataframe(selected_chunks_df, hide_index=True, height=650)
     with search_tab:
-        c1, c2, c3, c4 = st.columns([1, 1, 1, 1])
+        c1, c2, c3, c4, c5, c6 = st.columns([1, 1, 1, 1, 1, 1])
         with c1:
             st.number_input(
-                "Terminate on chunks tested",
-                value=sv.terminate_on_chunks_tested.value,
-                key=sv.terminate_on_chunks_tested.key,
+                "Semantic search depth",
+                value=sv.semantic_search_depth.value,
+                key=sv.semantic_search_depth.key,
                 min_value=0,
             )
         with c2:
             st.number_input(
-                "Terminate on relevant chunks",
-                value=sv.terminate_on_relevant_chunks.value,
-                key=sv.terminate_on_relevant_chunks.key,
+                "Structural search steps",
+                value=sv.structural_search_steps.value,
+                key=sv.structural_search_steps.key,
                 min_value=0,
             )
         with c3:
             st.number_input(
-                "Terminate on successive irrelevant",
-                value=sv.terminate_on_successive_irrelevant.value,
-                key=sv.terminate_on_successive_irrelevant.key,
+                "Relational search depth",
+                value=sv.relational_search_depth.value,
+                key=sv.relational_search_depth.key,
                 min_value=0,
             )
         with c4:
             st.number_input(
-                "Switch on successive irrelevant",
-                value=sv.switch_on_successive_irrelevant.value,
-                key=sv.switch_on_successive_irrelevant.key,
+                "Relevance test batch size",
+                value=sv.relevance_test_batch_size.value,
+                key=sv.relevance_test_batch_size.key,
+                min_value=0,
+            )
+        with c5:
+            st.number_input(
+                "Maximum relevance tests",
+                value=sv.relevance_test_limit.value,
+                key=sv.relevance_test_limit.key,
+                min_value=0,
+            )
+        with c6:
+            st.number_input(
+                "Answer update batch size",
+                value=sv.answer_update_batch_size.value,
+                key=sv.answer_update_batch_size.key,
                 min_value=0,
             )
         c1, c2 = st.columns([6, 1])
@@ -226,27 +240,49 @@ def create(sv: SessionVariables, workflow=None):
             )
         
         c1, c2 = st.columns([1, 1])
-        progress_placeholder = st.markdown('Answer search progress')
+        
         with c1:
             chunk_placeholder = st.empty()
+            chunk_progress_placeholder = st.empty()
+            answer_progress_placeholder = st.empty()
         with c2:
             answer_placeholder = st.empty()
 
-        chunk_placeholder.dataframe(pd.DataFrame(columns=["Relevant text chunks (double click to expand)"], data=sv.relevant_chunks.value), hide_index=True, height=500, use_container_width=True)
-        answer_placeholder.dataframe(pd.DataFrame(columns=["Partial answers (double click to expand)"], data=sv.partial_answers.value), hide_index=True, height=500, use_container_width=True)
+        def on_chunk_progress(message):
+            chunk_progress_placeholder.markdown(message)
+
+        def on_answer_progress(message):
+            answer_progress_placeholder.markdown(message)
+    
+        def on_chunk_relevant(message):
+            chunk_placeholder.dataframe(pd.DataFrame(columns=["Relevant text chunks (double click to expand)"],
+                                                        data=message),
+                                                        hide_index=True, height=400, use_container_width=True)
+            
+        def on_answer(message):
+            answer_placeholder.markdown(message[0])
+
+        chunk_progress_placeholder.markdown(sv.chunk_progress.value)
+        answer_progress_placeholder.markdown(sv.answer_progress.value)
+        chunk_placeholder.dataframe(pd.DataFrame(columns=["Relevant text chunks (double click to expand)"],
+                                                    data=sv.relevant_chunks.value),
+                                                    hide_index=True, height=400, use_container_width=True)
+        answer_text = sv.partial_answers.value[0] if len(sv.partial_answers.value) > 0 else ""
+        answer_placeholder.markdown(answer_text)
+
         if sv.last_question.value != "" and regenerate:
-            def on_progress(message):
-                progress_text = f"Chunks tested: {message['chunks_tested']}, Relevant chunks: {message['relevant_chunks']}, Successive irrelevant: {message['successive_irrelevant']}"
-                sv.progress_message.value = progress_text
-                progress_placeholder.markdown(progress_text)
-            def on_chunk_relevant(message):
-                chunk_placeholder.dataframe(pd.DataFrame(columns=["Relevant text chunks (double click to expand)"], data=message), hide_index=True, height=500, use_container_width=True)
-            def on_answer(message):
-                answer_placeholder.dataframe(pd.DataFrame(columns=["Partial answers (double click to expand)"], data=message), hide_index=True, height=500, use_container_width=True)
-
-
-
-            sv.relevant_chunks.value, sv.partial_answers.value = search_answers.search_answers(
+            sv.relevant_chunks.value = []
+            sv.partial_answers.value = []
+            sv.chunk_progress.value = ""
+            sv.answer_progress.value = ""
+            chunk_progress_placeholder.markdown(sv.chunk_progress.value)
+            answer_progress_placeholder.markdown(sv.answer_progress.value)
+            chunk_placeholder.dataframe(pd.DataFrame(columns=["Relevant text chunks (double click to expand)"],
+                                                        data=sv.relevant_chunks.value),
+                                                        hide_index=True, height=400, use_container_width=True)
+            answer_text = sv.partial_answers.value[0] if len(sv.partial_answers.value) > 0 else ""
+            answer_placeholder.markdown(answer_text)
+            sv.relevant_chunks.value, sv.partial_answers.value, sv.chunk_progress.value, sv.answer_progress.value = search_answers.search_answers(
                 sv.last_question.value,
                 sv.text_to_chunks.value,
                 sv.chunk_to_concepts.value,
@@ -259,18 +295,20 @@ def create(sv: SessionVariables, workflow=None):
                 embedder=embedder(),
                 embedding_cache=sv_home.save_cache.value,
                 select_logit_bias=5,
-                terminate_on_chunks_tested=sv.terminate_on_chunks_tested.value,
-                terminate_on_relevant_chunks=sv.terminate_on_relevant_chunks.value,
-                terminate_on_successive_irrelevant=sv.terminate_on_successive_irrelevant.value,
-                switch_on_successive_irrelevant=sv.switch_on_successive_irrelevant.value,
-                relevance_batch_size=5,
+                semantic_search_depth=sv.semantic_search_depth.value,
+                structural_search_steps=sv.structural_search_steps.value,
+                relational_search_depth=sv.relational_search_depth.value,
+                relevance_test_limit=sv.relevance_test_limit.value,
+                relevance_test_batch_size=sv.relevance_test_batch_size.value,
                 answer_batch_size=5,
-                augment_top_concepts=20,
-                progress_callback=on_progress,
+                augment_top_concepts=10,
+                chunk_progress_callback=on_chunk_progress,
+                answer_progress_callback=on_answer_progress,
                 chunk_callback=on_chunk_relevant,
                 answer_callback=on_answer
             )
         
+
 
    
     with report_tab:
