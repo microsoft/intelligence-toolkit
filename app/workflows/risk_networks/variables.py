@@ -4,9 +4,19 @@ from collections import defaultdict
 import pandas as pd
 import polars as pl
 import streamlit as st
+from streamlit_agraph import Config
 from util.session_variable import SessionVariable
 
 from toolkit.risk_networks import prompts
+
+agraph_config = Config(
+    width=1000,
+    height=700,
+    directed=False,
+    physics=True,
+    hierarchical=False,
+    timestep=0.1,
+)
 
 
 class SessionVariables:

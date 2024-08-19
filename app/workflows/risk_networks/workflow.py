@@ -5,43 +5,35 @@
 import os
 
 # ruff: noqa
-from collections import defaultdict
-
 import pandas as pd
 import polars as pl
 import streamlit as st
 import workflows.risk_networks.functions as functions
 import workflows.risk_networks.variables as rn_variables
-from st_aggrid import (
-    AgGrid,
-    ColumnsAutoSizeMode,
-    DataReturnMode,
-    GridOptionsBuilder,
-    GridUpdateMode,
-)
-from streamlit_agraph import agraph
+from st_aggrid import (AgGrid, ColumnsAutoSizeMode, DataReturnMode,
+                       GridOptionsBuilder, GridUpdateMode)
+from streamlit_agraph import Edge, Node, agraph
 from util import ui_components
 from util.session_variables import SessionVariables
 
-import toolkit.risk_networks.graph_functions as graph_functions
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 from toolkit.risk_networks import config
 from toolkit.risk_networks import get_readme as get_intro
 from toolkit.risk_networks import prompts
-from toolkit.risk_networks.flags import build_exposure_report
-from toolkit.risk_networks.identify import project_entity_graph, trim_nodeset
-from toolkit.risk_networks.index_and_infer import build_inferred_df, index_and_infer
-from toolkit.risk_networks.network import build_network_from_entities, generate_final_df
-from toolkit.risk_networks.nodes import get_community_nodes
-from toolkit.risk_networks.prepare_model import (
-    build_flag_links,
-    build_flags,
-    build_groups,
-    build_main_graph,
-    format_data_columns,
-    generate_attribute_links,
-)
+from toolkit.risk_networks.explore_networks import (
+    build_network_from_entities, get_entity_graph, simplify_entities_graph)
+from toolkit.risk_networks.exposure_report import build_exposure_report
+from toolkit.risk_networks.identify_networks import (build_entity_records,
+                                                     build_networks,
+                                                     trim_nodeset)
+from toolkit.risk_networks.index_and_infer import (build_inferred_df,
+                                                   index_and_infer)
+from toolkit.risk_networks.prepare_model import (build_flag_links, build_flags,
+                                                 build_groups,
+                                                 build_main_graph,
+                                                 format_data_columns,
+                                                 generate_attribute_links)
 from toolkit.risk_networks.protected_mode import protect_data
 
 
@@ -249,7 +241,6 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
     with process_tab:
         index_col, part_col = st.columns([1, 1])
         with index_col:
-            embedded_count = 0
             st.markdown("##### Index and infer nodes (optional)")
             fuzzy_options = sorted(
                 [
@@ -271,9 +262,23 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 value=sv.network_similarity_threshold.value,
                 help="The maximum cosine similarity threshold for inferring links between nodes based on their embeddings. Higher values will infer more links, but may also infer more false positives.",
             )
-            if st.button(
-                "Index and infer nodes", disabled=len(network_indexed_node_types) == 0
-            ):
+
+            c_1, _, c_3 = st.columns([2, 3, 2])
+            with c_1:
+                index_infer = st.button(
+                    "Index and infer nodes",
+                    disabled=len(network_indexed_node_types) == 0,
+                )
+            with c_3:
+                clear_inferring = st.button(
+                    "Clear inferred links",
+                    disabled=len(sv.network_inferred_links.value) == 0,
+                )
+            if clear_inferring:
+                sv.network_inferred_links.value = []
+                st.rerun()
+
+            if index_infer:
                 pb = st.progress(0, "Embedding text batches...")
 
                 def on_embedding_batch_change(
@@ -290,35 +295,33 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 sv.network_indexed_node_types.value = network_indexed_node_types
                 sv.network_similarity_threshold.value = network_similarity_threshold
 
-                # (
-                #     sv.network_inferred_links.value,
-                #     sv.network_embedded_texts_count.value,
-                # ) = index_and_infer(
-                #     network_indexed_node_types,
-                #     sv.network_overall_graph.value,
-                #     network_similarity_threshold,
-                #     [callback],
-                #     functions_embedder,
-                #     None,
-                #     sv_home.local_embeddings.value,
-                #     sv_home.save_cache.value,
-                # )
-                print("WHY IS IT INFERRING???????")
+                (
+                    sv.network_inferred_links.value,
+                    sv.network_embedded_texts_count.value,
+                ) = index_and_infer(
+                    network_indexed_node_types,
+                    sv.network_overall_graph.value,
+                    network_similarity_threshold,
+                    [callback],
+                    functions_embedder,
+                    None,
+                    sv_home.local_embeddings.value,
+                    sv_home.save_cache.value,
+                )
                 pb.empty()
 
             inferred_links_count = len(sv.network_inferred_links.value)
-            print("inferred_links_count", inferred_links_count)
-            # if inferred_links_count > 0:
-            #     st.markdown(
-            #         f"*Number of nodes indexed*: {sv.network_embedded_texts_count.value}"
-            #     )
-            #     st.markdown(f"*Number of links inferred*: {inferred_links_count}")
-            #     inferred_df = build_inferred_df(sv.network_inferred_links.value)
-            #     st.dataframe(
-            #         inferred_df.to_pandas(), hide_index=True, use_container_width=True
-            #     )
-            # else:
-            #     st.markdown(f"*No inferred links*")
+            if inferred_links_count > 0:
+                st.markdown(
+                    f"*Number of nodes indexed*: {sv.network_embedded_texts_count.value}"
+                )
+                st.markdown(f"*Number of links inferred*: {inferred_links_count}")
+                inferred_df = build_inferred_df(sv.network_inferred_links.value)
+                st.dataframe(
+                    inferred_df.to_pandas(), hide_index=True, use_container_width=True
+                )
+            else:
+                st.markdown(f"*No inferred links*")
 
         with part_col:
             st.markdown("##### Identify networks")
@@ -379,7 +382,6 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
 
                 with st.spinner("Identifying networks..."):
                     sv.network_table_index.value += 1
-                    # Create a new graph P in which entities are connected if they share an attribute
                     (trimmed_degrees, trimmed_nodes) = trim_nodeset(
                         sv.network_overall_graph.value,
                         sv.network_additional_trimmed_attributes.value,
@@ -394,34 +396,19 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                         .sort_values("Linked Entities", ascending=False)
                         .reset_index(drop=True)
                     )
-                    print(
-                        "sv.network_inferred_links.value",
-                        sv.network_inferred_links.value,
-                    )
-                    P = project_entity_graph(
-                        sv.network_overall_graph.value,
-                        trimmed_nodes,
-                        sv.network_inferred_links.value,
-                        sv.network_supporting_attribute_types.value,
-                    )
 
                     (
                         sv.network_community_nodes.value,
                         sv.network_entity_to_community_ix.value,
-                    ) = get_community_nodes(
-                        P,
+                    ) = build_networks(
+                        sv.network_overall_graph.value,
+                        trimmed_nodes,
+                        sv.network_inferred_links.value,
+                        sv.network_supporting_attribute_types.value,
                         sv.network_max_network_size.value,
                     )
 
-                    N = build_network_from_entities(
-                        sv.network_overall_graph.value,
-                        sv.network_entity_to_community_ix.value,
-                        sv.network_integrated_flags.value,
-                        sv.network_trimmed_attributes.value,
-                        sv.network_inferred_links.value,
-                    )
-
-                entity_records = generate_final_df(
+                entity_records = build_entity_records(
                     sv.network_community_nodes.value,
                     sv.network_integrated_flags.value,
                 )
@@ -581,7 +568,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 sv.network_selected_entity.value = selected_entity
                 sv.network_selected_community.value = selected_network
                 c_nodes = sv.network_community_nodes.value[selected_network]
-                N = build_network_from_entities(
+                network_entities_graph = build_network_from_entities(
                     sv.network_overall_graph.value,
                     sv.network_entity_to_community_ix.value,
                     sv.network_integrated_flags.value,
@@ -597,25 +584,31 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                             sv.network_integrated_flags.value,
                             selected_entity,
                             c_nodes,
-                            N,
+                            network_entities_graph,
                         )
                         sv.network_risk_exposure.value = context
                 else:
                     sv.network_risk_exposure.value = ""
 
                 full_links_df = pd.DataFrame(
-                    list(N.edges()), columns=["source", "target"]
+                    list(network_entities_graph.edges()), columns=["source", "target"]
                 )
                 full_links_df["attribute"] = full_links_df["target"].apply(
                     lambda x: x.split(ATTRIBUTE_VALUE_SEPARATOR)[0]
                 )
-                N1 = graph_functions.simplify_graph(N)
+                network_entities_simplified_graph = simplify_entities_graph(
+                    network_entities_graph
+                )
                 merged_nodes_df = pd.DataFrame(
-                    [(n, d["type"], d["flags"]) for n, d in N1.nodes(data=True)],
+                    [
+                        (n, d["type"], d["flags"])
+                        for n, d in network_entities_simplified_graph.nodes(data=True)
+                    ],
                     columns=["node", "type", "flags"],
                 )
                 merged_links_df = pd.DataFrame(
-                    list(N1.edges()), columns=["source", "target"]
+                    list(network_entities_simplified_graph.edges()),
+                    columns=["source", "target"],
                 )
                 merged_links_df["attribute"] = merged_links_df["target"].apply(
                     lambda x: x.split(ATTRIBUTE_VALUE_SEPARATOR)[0]
@@ -623,48 +616,54 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 c1, c2 = st.columns([2, 1])
 
                 with c1:
-                    gp = st.container()
+                    container = st.container()
                 with c2:
                     graph_type = st.radio(
                         "Graph type", ["Full", "Simplified"], horizontal=True
                     )
                     st.markdown(sv.network_risk_exposure.value)
-                with gp:
-                    if graph_type == "Full":
-                        if selected_entity != "":
-                            gp.markdown(
-                                f"##### Entity {selected_entity} in Network {selected_network} (full)"
-                            )
-                        else:
-                            gp.markdown(f"##### Network {selected_network} (full)")
+                with container:
+                    entity_selected = f"{config.entity_label}{ATTRIBUTE_VALUE_SEPARATOR}{selected_entity}"
+                    attribute_types = [
+                        config.entity_label,
+                        *list(sv.network_node_types.value),
+                    ]
 
-                        nodes, edges, g_config = functions.get_entity_graph(
-                            N,
-                            f"{config.entity_label}{ATTRIBUTE_VALUE_SEPARATOR}{selected_entity}",
+                    if graph_type == "Full":
+                        nodes, edges = get_entity_graph(
+                            network_entities_graph,
+                            entity_selected,
                             full_links_df,
-                            1000,
-                            700,
-                            [config.entity_label, *list(sv.network_node_types.value)],
+                            attribute_types,
                         )
-                        agraph(nodes=nodes, edges=edges, config=g_config)  # type: ignore
-                    elif graph_type == "Simplified":
-                        if selected_entity != "":
-                            gp.markdown(
-                                f"##### Entity {selected_entity} in Network {selected_network} (simplified)"
-                            )
-                        else:
-                            gp.markdown(
-                                f"##### Network {selected_network} (simplified)"
-                            )
-                        nodes, edges, g_config = functions.get_entity_graph(
-                            N1,
-                            f"{config.entity_label}{ATTRIBUTE_VALUE_SEPARATOR}{selected_entity}",
+
+                        nodes_agraph = [Node(**node) for node in nodes]
+                        edges_agraph = [Edge(**edge) for edge in edges]
+                    else:
+                        nodes, edges = get_entity_graph(
+                            network_entities_simplified_graph,
+                            entity_selected,
                             merged_links_df,
-                            1000,
-                            700,
-                            [config.entity_label, *list(sv.network_node_types.value)],
+                            attribute_types,
                         )
-                        agraph(nodes=nodes, edges=edges, config=g_config)  # type: ignore
+
+                    if selected_entity != "":
+                        container.markdown(
+                            f"##### Entity {selected_entity} in Network {selected_network} ({graph_type.lower()})"
+                        )
+                    else:
+                        container.markdown(
+                            f"##### Network {selected_network} ({graph_type.lower()})"
+                        )
+
+                    nodes_agraph = [Node(**node) for node in nodes]
+                    edges_agraph = [Edge(**edge) for edge in edges]
+
+                    agraph(
+                        nodes=nodes_agraph,
+                        edges=edges_agraph,
+                        config=rn_variables.agraph_config,
+                    )
                 sv.network_merged_links_df.value = merged_links_df
                 sv.network_merged_nodes_df.value = merged_nodes_df
             else:

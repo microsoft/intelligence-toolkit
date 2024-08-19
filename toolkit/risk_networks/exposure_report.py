@@ -4,49 +4,12 @@
 
 import json
 from collections import defaultdict
-from typing import Any
 
 import networkx as nx
 import polars as pl
 
 import toolkit.risk_networks.config as config
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
-
-
-def integrate_flags(graph: nx.Graph, df_integrated_flags: pl.DataFrame) -> nx.Graph:
-    if not graph.nodes() or df_integrated_flags.is_empty():
-        return nx.Graph()
-
-    df_integrated_flags = df_integrated_flags.filter(pl.col("count") > 0)
-    flagged_nodes = (
-        df_integrated_flags.select("qualified_entity").unique().to_series().to_list()
-    )
-
-    flagged_nodes = [node for node in flagged_nodes if node in graph.nodes()]
-    for node in flagged_nodes:
-        graph.nodes[node]["flags"] = df_integrated_flags.filter(
-            pl.col("qualified_entity") == node
-        )["count"].sum()
-    return graph
-
-
-def get_integrated_flags(
-    integrated_flags: pl.DataFrame, entities: list[str]
-) -> tuple[Any, int, float, int]:
-    if integrated_flags.is_empty():
-        return 0, 0, 0, 0
-
-    flags_df = integrated_flags.filter(pl.col("qualified_entity").is_in(entities))
-    community_flags = flags_df.get_column("count").sum()
-    flagged = flags_df.filter(pl.col("count") > 0).height
-    unflagged = len(entities) - flagged
-    flagged_per_unflagged = flagged / unflagged if unflagged > 0 else 0
-    flagged_per_unflagged = round(flagged_per_unflagged, 2)
-
-    flags_per_entity = round(
-        community_flags / len(entities) if len(entities) > 0 else 0, 2
-    )
-    return community_flags, flagged, flagged_per_unflagged, flags_per_entity
 
 
 def build_exposure_data(

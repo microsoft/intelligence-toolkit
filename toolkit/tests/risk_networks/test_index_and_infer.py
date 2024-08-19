@@ -10,7 +10,7 @@ import polars as pl
 import pytest
 
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
-from toolkit.risk_networks.constants import (
+from toolkit.risk_networks.config import (
     SIMILARITY_THRESHOLD_MAX,
     SIMILARITY_THRESHOLD_MIN,
 )
@@ -320,41 +320,42 @@ class TestCreateInferredLinks:
 
 class TestBuildInferredDF:
     def test_build_inferred_entity_df(self) -> None:
-        inferred_links_list = [
-            ("ENTITY==PLUS ONE", "ENTITY==PLUS_ONE"),
-            ("ENTITY==ABCDE", "ENTITY==ABCDEF"),
-            ("ENTITY==ABCDEF_F", "ENTITY==ABCDEFF"),
-        ]
-        inferred_df = build_inferred_df(inferred_links_list)
+        inferred_links = defaultdict(set)
+        inferred_links["ENTITY==ABCDE"].add("ENTITY==ABCDEF")
+        inferred_links["ENTITY==ABCDEFGR"].add("ENTITY==ABCDEFGRA")
+        inferred_links["ENTITY==PLUS ONE"].add("ENTITY==PLUS_ONE")
+
+        inferred_df = build_inferred_df(inferred_links)
 
         expected_df = pl.DataFrame(
             {
-                "text": ["ABCDE", "ABCDEF_F", "PLUS ONE"],
-                "similar": ["ABCDEF", "ABCDEFF", "PLUS_ONE"],
+                "text": ["ABCDE", "PLUS ONE", "ABCDEFGR"],
+                "similar": ["ABCDEF", "PLUS_ONE", "ABCDEFGRA"],
             }
-        )
+        ).sort(["text", "similar"])
 
         assert inferred_df.equals(expected_df)
 
     def test_build_inferred_attribute_df(self) -> None:
-        inferred_links_list = [
-            ("attr1==PLUS ONE", "attr1==PLUS_ONE"),
-            ("attr1==ABCDE", "attr1==ABCDEF"),
-            ("attr1==ABCDEF_F", "attr1==ABCDEFF"),
-        ]
-        inferred_df = build_inferred_df(inferred_links_list)
+        inferred_links = defaultdict(set)
+        inferred_links["attr1==ABCDE"].add("attr1==ABCDEF")
+        inferred_links["attr1==PLUS ONE"].add("attr1==PLUS_ONE")
+        inferred_links["attr1==ABCDEF F"].add("attr1==ABCDEFF_FA")
+
+        inferred_df = build_inferred_df(inferred_links)
 
         expected_df = pl.DataFrame(
             {
-                "text": ["attr1==ABCDE", "attr1==ABCDEF_F", "attr1==PLUS ONE"],
-                "similar": ["attr1==ABCDEF", "attr1==ABCDEFF", "attr1==PLUS_ONE"],
+                "text": ["attr1==ABCDE", "attr1==ABCDEF F", "attr1==PLUS ONE"],
+                "similar": ["attr1==ABCDEF", "attr1==ABCDEFF_FA", "attr1==PLUS_ONE"],
             }
-        )
+        ).sort(["text", "similar"])
 
         assert inferred_df.equals(expected_df)
 
     def test_build_inferred_df_empty(self) -> None:
-        inferred_df = build_inferred_df([])
+        inferred_links = defaultdict(set)
+        inferred_df = build_inferred_df(inferred_links)
 
         expected_df = pl.DataFrame(
             {
@@ -376,6 +377,11 @@ class TestIndexAndInfer:
         for i in range(1, 31, 2):
             G.add_edge(f"Entity{i}", f"Entity{i + 1}")
         return G
+
+    def test_empty_graph(self):
+        indexed_node_types = ["TypeA", "TypeB", "TypeC"]
+        with pytest.raises(ValueError, match="Graph is empty"):
+            index_and_infer(indexed_node_types, nx.Graph(), 0)
 
     @patch("toolkit.risk_networks.index_and_infer.index_nodes")
     @patch("toolkit.risk_networks.index_and_infer.infer_nodes")
@@ -399,9 +405,7 @@ class TestIndexAndInfer:
 
         link_list, _ = index_and_infer(indexed_node_types, overall_graph, 0.5)
 
-        expected_links = [("Entity1", "Entity2")]
-
-        assert link_list == expected_links
+        assert link_list == inferred_links
 
         mock_index_nodes.assert_called_once_with(
             indexed_node_types, overall_graph, None, None, None, False, True

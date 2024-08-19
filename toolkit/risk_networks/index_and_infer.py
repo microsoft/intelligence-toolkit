@@ -10,7 +10,7 @@ from toolkit.AI.embedder import Embedder
 from toolkit.AI.openai_configuration import OpenAIConfiguration
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
-from toolkit.risk_networks.constants import (
+from toolkit.risk_networks.config import (
     SIMILARITY_THRESHOLD_MAX,
     SIMILARITY_THRESHOLD_MIN,
 )
@@ -103,9 +103,15 @@ def create_inferred_links(inferred_links: defaultdict[Any, set]) -> list[tuple]:
     ]
 
 
-def build_inferred_df(inferred_links_list: list[tuple[str]]) -> pl.DataFrame:
-    inferred_df = pl.DataFrame(inferred_links_list, schema=["text", "similar"])
-
+def build_inferred_df(inferred_links_list: defaultdict[set]) -> pl.DataFrame:
+    link_list = [
+        (text, n)
+        for text, near in inferred_links_list.items()
+        for n in near
+        if text < n
+    ]
+    print("link_listlink_list", link_list)
+    inferred_df = pl.DataFrame(link_list, schema=["text", "similar"])
     inferred_df = inferred_df.with_columns(
         [
             pl.col("text").str.replace(
@@ -129,7 +135,11 @@ def index_and_infer(
     openai_configuration: OpenAIConfiguration | None = None,
     use_local=False,
     save_cache=True,
-) -> tuple[list[Any], int]:
+) -> tuple[defaultdict[set], int]:
+    if not len(main_graph.nodes()):
+        msg = "Graph is empty"
+        raise ValueError(msg)
+
     (
         embedded_texts,
         nearest_text_distances,
@@ -152,9 +162,5 @@ def index_and_infer(
         callbacks,
     )
 
-    link_list = [
-        (text, n) for text, near in inferred_links.items() for n in near if text < n
-    ]
-
     # Remove None values from link_list
-    return link_list, len(embedded_texts)
+    return inferred_links, len(embedded_texts)
