@@ -33,7 +33,7 @@ The output object should update the input JSON object in a way that:
 - incudes a title and structured headings as appropriate
 - includes prose between all headings to explain the context and significance of the information presented
 - includes bridging text that makes connections between topic areas, explaining how they relate to each other
-- supports each sentence with a source reference to the file and text chunk: "[source: <file> (<chunk_id>), ...]. Always use the full name of the file - do not abbreviate."
+- supports each sentence with a source reference to the file and text chunk: "[source: <file> (<chunk_id>), <file> (<chunk_id>)]. Always use the full name of the file - do not abbreviate - and enter the full filename before each chunk id, even if the same file contains multiple relevant chunks."
 
 --FORMAT--
 
@@ -65,6 +65,8 @@ The content items field should include any new or updated content, but does not 
 The introduction and conclusion fields must be updated to reflect the new and updated content items.
 
 Content items may be reordered, merged, or split as needed to create a coherent narrative.
+
+ALL new text chunks MUST be included and referenced in the final report PROVIDED they are relevant to the question.
 
 --TASK--
 

@@ -56,10 +56,10 @@ def get_test_progress(test_history):
     return response
 
 def extract_chunk_references(text):
-    source_spans = re.findall(r'\[source: (.+)\]', text, re.MULTILINE)
+    source_spans = re.finditer(r'\[source: (.+)\]', text, re.MULTILINE)
     references = set()
     for source_span in source_spans:
-        parts = source_span.split(',')
+        parts = [x.strip() for x in source_span.group(1).split(',')]
         print(parts)
         references.update(parts)
     return references
@@ -132,7 +132,8 @@ def generate_answer(
     )
     answer_response = ui_components.generate_text(answer_messages, response_format=answer_format)
     update_answer_object(answer_object, loads(answer_response))
-    references = extract_chunk_references(answer_response)
+    answer_text = '\n\n'.join([x['content'] for x in answer_object['content_items']])
+    references = extract_chunk_references(answer_text)
     answer_stream.insert(0, convert_answer_object_to_text(answer_object))
     answer_callback(answer_stream)
     return selected_chunks, references
@@ -162,8 +163,6 @@ def generate_answers(
             answer_callback
         )
         selected_metadata = set([chunk_to_metadata[c] for c in selected_chunks])
-        print(f'Selected metadata: {selected_metadata}')
-        print(f'References: {references}')
         used_references = [r for r in references if r in selected_metadata]
         answer_history.append((len(used_references), len(selected_chunks)))
         progress_callback(get_answer_progress(answer_history))
