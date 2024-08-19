@@ -21,18 +21,13 @@ class VectorStore:
         table_name: str | None = None,
         path: str = CACHE_PATH,
         schema: pa.Schema = None,
-        db_index: list[str] | None = None,
     ):
         self.db_connection = lancedb.connect(path)
-        self.db_index = db_index
         if table_name is not None:
             self.table = self.db_connection.create_table(
                 table_name, schema=schema, exist_ok=True
             )
             self.duckdb_data = self.table.to_lance()
-
-        if self.table is not None and db_index is not None:
-            self.table.create_fts_index(db_index, replace=True)
 
     def save(self, items: list[Any]) -> None:
         if self.table is None:

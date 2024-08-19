@@ -14,19 +14,25 @@ from util.wkhtmltopdf import config_pdfkit, pdfkit_options
 from workflows.question_answering import config
 
 from python.AI import utils
-from python.AI.embedder import Embedder
+from python.AI.base_embedder import BaseEmbedder
+from python.AI.local_embedder import LocalEmbedder
+from python.AI.openai_embedder import OpenAIEmbedder
 from python.AI.text_splitter import TextSplitter
 
 sv_home = SessionVariables("home")
 
 
-def embedder() -> Embedder:
+def embedder() -> BaseEmbedder:
     try:
         ai_configuration = UIOpenAIConfiguration().get_configuration()
-        return Embedder(
+        if sv_home.local_embeddings.value:
+            return LocalEmbedder(
+                db_name=config.cache_name,
+                max_tokens=ai_configuration.max_tokens,
+            )
+        return OpenAIEmbedder(
             configuration=ai_configuration,
             db_name=config.cache_name,
-            local=sv_home.local_embeddings.value,
         )
     except Exception as e:
         st.error(f"Error creating connection: {e}")
