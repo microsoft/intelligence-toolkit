@@ -10,7 +10,8 @@ class ProgressBatchCallback:
         self.current_batch = 0
         self.total_batches = 0
 
-    def on_batch_change(self, current: int, total: int):
+    def on_batch_change(self, current: int, total: int, message: str = ""):
         """Handle when a new token is generated."""
         self.current_batch = current
         self.total_batches = total
+        self.message = message

@@ -17,6 +17,7 @@ from toolkit.risk_networks.constants import (
 from toolkit.risk_networks.index_and_infer import (
     build_inferred_df,
     create_inferred_links,
+    index_and_infer,
     index_nodes,
     infer_nodes,
 )
@@ -254,7 +255,7 @@ class TestInferNodes:
             nearest_text_distances,
             progress_callbacks=[callb1],
         )
-        progress_callback.assert_called_with(2, 3)
+        progress_callback.assert_called_with(2, 3, "Infering links...")
 
     def test_infer_nodes_two_progress_callback(self):
         similarity_threshold = 0.7
@@ -285,9 +286,8 @@ class TestInferNodes:
             nearest_text_distances,
             progress_callbacks=[callb1, callb2],
         )
-        progress_callback.assert_called_with(2, 3)
-        progress_callback2.assert_called_with(2, 3)
-        progress_callback2.assert_called_with(2, 3)
+        progress_callback.assert_called_with(2, 3, "Infering links...")
+        progress_callback2.assert_called_with(2, 3, "Infering links...")
 
 
 class TestCreateInferredLinks:
@@ -364,3 +364,48 @@ class TestBuildInferredDF:
         )
 
         assert inferred_df.equals(expected_df)
+
+
+class TestIndexAndInfer:
+    @pytest.fixture()
+    def overall_graph(self):
+        G = nx.Graph()
+        # Adding more nodes and edges to the graph
+        for i in range(1, 31):
+            G.add_node(f"Entity{i}", type=f"Type{chr(65 + (i % 4))}")
+        for i in range(1, 31, 2):
+            G.add_edge(f"Entity{i}", f"Entity{i + 1}")
+        return G
+
+    @patch("toolkit.risk_networks.index_and_infer.index_nodes")
+    @patch("toolkit.risk_networks.index_and_infer.infer_nodes")
+    def test_index_and_infer(
+        self, mock_infer_nodes, mock_index_nodes, overall_graph
+    ) -> None:
+        indexed_node_types = ["TypeA", "TypeB", "TypeC"]
+        embedded_texts = ["Entity1", "Entity2", "Entity3"]
+        nearest_text_distances = [[0.1, 0.3], [0.3, 0.4]]
+        nearest_text_indices = [[0, 1], [1, 0]]
+
+        mock_index_nodes.return_value = (
+            embedded_texts,
+            nearest_text_distances,
+            nearest_text_indices,
+        )
+
+        inferred_links = defaultdict(set)
+        inferred_links["Entity1"].add("Entity2")
+        mock_infer_nodes.return_value = inferred_links
+
+        link_list, _ = index_and_infer(indexed_node_types, overall_graph, 0.5)
+
+        expected_links = [("Entity1", "Entity2")]
+
+        assert link_list == expected_links
+
+        mock_index_nodes.assert_called_once_with(
+            indexed_node_types, overall_graph, None, None, None, False, True
+        )
+        mock_infer_nodes.assert_called_once_with(
+            0.5, embedded_texts, nearest_text_indices, nearest_text_distances, None
+        )

@@ -2,20 +2,28 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 
-# ruff: noqa
 import os
+
+# ruff: noqa
+from collections import defaultdict
 
 import pandas as pd
 import polars as pl
 import streamlit as st
 import workflows.risk_networks.functions as functions
 import workflows.risk_networks.variables as rn_variables
-from st_aggrid import (AgGrid, ColumnsAutoSizeMode, DataReturnMode,
-                       GridOptionsBuilder, GridUpdateMode)
+from st_aggrid import (
+    AgGrid,
+    ColumnsAutoSizeMode,
+    DataReturnMode,
+    GridOptionsBuilder,
+    GridUpdateMode,
+)
 from streamlit_agraph import agraph
 from util import ui_components
 from util.session_variables import SessionVariables
 
+import toolkit.risk_networks.graph_functions as graph_functions
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 from toolkit.risk_networks import config
@@ -23,16 +31,17 @@ from toolkit.risk_networks import get_readme as get_intro
 from toolkit.risk_networks import prompts
 from toolkit.risk_networks.flags import build_exposure_report
 from toolkit.risk_networks.identify import project_entity_graph, trim_nodeset
-from toolkit.risk_networks.index_and_infer import (create_inferred_links,
-                                                   index_nodes, infer_nodes)
-from toolkit.risk_networks.network import (build_network_from_entities,
-                                           generate_final_df)
+from toolkit.risk_networks.index_and_infer import build_inferred_df, index_and_infer
+from toolkit.risk_networks.network import build_network_from_entities, generate_final_df
 from toolkit.risk_networks.nodes import get_community_nodes
-from toolkit.risk_networks.prepare_model import (build_flag_links, build_flags,
-                                                 build_groups,
-                                                 build_main_graph,
-                                                 format_data_columns,
-                                                 generate_attribute_links)
+from toolkit.risk_networks.prepare_model import (
+    build_flag_links,
+    build_flags,
+    build_groups,
+    build_main_graph,
+    format_data_columns,
+    generate_attribute_links,
+)
 from toolkit.risk_networks.protected_mode import protect_data
 
 
@@ -240,7 +249,8 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
     with process_tab:
         index_col, part_col = st.columns([1, 1])
         with index_col:
-            st.markdown("##### Index nodes (optional)")
+            embedded_count = 0
+            st.markdown("##### Index and infer nodes (optional)")
             fuzzy_options = sorted(
                 [
                     config.entity_label,
@@ -253,37 +263,6 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 options=fuzzy_options,
                 help="Select the node types to embed into a multi-dimensional semantic space for fuzzy matching.",
             )
-            if st.button("Index nodes", disabled=len(network_indexed_node_types) == 0):
-                pb = st.progress(0, "Embedding text batches...")
-
-                def on_embedding_batch_change(current, total):
-                    pb.progress(
-                        (current) / total,
-                        f"Embedding text batch {current} of {total}...",
-                    )
-
-                callback = ProgressBatchCallback()
-                callback.on_batch_change = on_embedding_batch_change
-                functions_embedder = functions.embedder()
-                sv.network_indexed_node_types.value = network_indexed_node_types
-                #index and infer all at once
-                (
-                    sv.network_embedded_texts.value,
-                    sv.network_nearest_text_distances.value,
-                    sv.network_nearest_text_indices.value,
-                ) = index_nodes(
-                    sv.network_indexed_node_types.value,
-                    sv.network_overall_graph.value,
-                    [callback],
-                    functions_embedder,
-                    sv_home.local_embeddings.value,
-                    sv_home.save_cache.value,
-                )
-                st.rerun()
-            nodes_indexed = len(sv.network_embedded_texts.value)
-            if nodes_indexed > 0:
-                st.markdown(f"*Number of nodes indexed*: {nodes_indexed}")
-            st.markdown("##### Infer links (optional)")
             network_similarity_threshold = st.number_input(
                 "Similarity threshold for fuzzy matching (max)",
                 min_value=0.0,
@@ -293,62 +272,53 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 help="The maximum cosine similarity threshold for inferring links between nodes based on their embeddings. Higher values will infer more links, but may also infer more false positives.",
             )
             if st.button(
-                "Infer links",
-                disabled=len(sv.network_nearest_text_distances.value) == 0,
+                "Index and infer nodes", disabled=len(network_indexed_node_types) == 0
             ):
-                pb = st.progress(0, text="Inferring links...")
+                pb = st.progress(0, "Embedding text batches...")
 
-                def on_embedding_batch_change(current, total):
-                    pb.progress(int(current * 100 / total), text="Inferring links...")
+                def on_embedding_batch_change(
+                    current, total, message="In progress...."
+                ):
+                    pb.progress(
+                        (current) / total,
+                        f"{message} {current} of {total}",
+                    )
 
                 callback = ProgressBatchCallback()
                 callback.on_batch_change = on_embedding_batch_change
-
+                functions_embedder = functions.embedder()
+                sv.network_indexed_node_types.value = network_indexed_node_types
                 sv.network_similarity_threshold.value = network_similarity_threshold
 
-                sv.network_inferred_links.value = infer_nodes(
-                    network_similarity_threshold,
-                    sv.network_embedded_texts.value,
-                    sv.network_nearest_text_indices.value,
-                    sv.network_nearest_text_distances.value,
-                    [callback],
-                )
+                # (
+                #     sv.network_inferred_links.value,
+                #     sv.network_embedded_texts_count.value,
+                # ) = index_and_infer(
+                #     network_indexed_node_types,
+                #     sv.network_overall_graph.value,
+                #     network_similarity_threshold,
+                #     [callback],
+                #     functions_embedder,
+                #     None,
+                #     sv_home.local_embeddings.value,
+                #     sv_home.save_cache.value,
+                # )
+                print("WHY IS IT INFERRING???????")
                 pb.empty()
-                st.rerun()
 
-            inferred_links_list = create_inferred_links(sv.network_inferred_links.value)
-            inferred_links_count = len(inferred_links_list)
-
-            st.markdown(f"*Number of links inferred*: {inferred_links_count}")
-            if inferred_links_count > 0:
-                inferred_df = pl.DataFrame(
-                    inferred_links_list, schema=["text", "similar"]
-                )
-
-                inferred_df = inferred_df.with_columns(
-                    [
-                        pl.col("text").str.replace(
-                            config.entity_label + ATTRIBUTE_VALUE_SEPARATOR, ""
-                        )
-                    ]
-                )
-
-                inferred_df = inferred_df.with_columns(
-                    [
-                        pl.col("similar").str.replace(
-                            config.entity_label + ATTRIBUTE_VALUE_SEPARATOR, ""
-                        )
-                    ]
-                )
-
-                inferred_df = inferred_df.sort(["text", "similar"]).with_row_count(
-                    "index"
-                )
-
-                inferred_df = inferred_df.drop("index")
-                st.dataframe(
-                    inferred_df.to_pandas(), hide_index=True, use_container_width=True
-                )
+            inferred_links_count = len(sv.network_inferred_links.value)
+            print("inferred_links_count", inferred_links_count)
+            # if inferred_links_count > 0:
+            #     st.markdown(
+            #         f"*Number of nodes indexed*: {sv.network_embedded_texts_count.value}"
+            #     )
+            #     st.markdown(f"*Number of links inferred*: {inferred_links_count}")
+            #     inferred_df = build_inferred_df(sv.network_inferred_links.value)
+            #     st.dataframe(
+            #         inferred_df.to_pandas(), hide_index=True, use_container_width=True
+            #     )
+            # else:
+            #     st.markdown(f"*No inferred links*")
 
         with part_col:
             st.markdown("##### Identify networks")
@@ -423,6 +393,10 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                         )
                         .sort_values("Linked Entities", ascending=False)
                         .reset_index(drop=True)
+                    )
+                    print(
+                        "sv.network_inferred_links.value",
+                        sv.network_inferred_links.value,
                     )
                     P = project_entity_graph(
                         sv.network_overall_graph.value,
@@ -635,7 +609,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 full_links_df["attribute"] = full_links_df["target"].apply(
                     lambda x: x.split(ATTRIBUTE_VALUE_SEPARATOR)[0]
                 )
-                N1 = functions.simplify_graph(N)
+                N1 = graph_functions.simplify_graph(N)
                 merged_nodes_df = pd.DataFrame(
                     [(n, d["type"], d["flags"]) for n, d in N1.nodes(data=True)],
                     columns=["node", "type", "flags"],

@@ -82,7 +82,7 @@ def infer_nodes(
     for ix in range(len(embedded_texts)):
         if progress_callbacks:
             for cb in progress_callbacks:
-                cb.on_batch_change(ix, len(embedded_texts))
+                cb.on_batch_change(ix, len(embedded_texts), "Infering links...")
 
         near_is = nearest_text_indices[ix]
         near_ds = nearest_text_distances[ix]
@@ -118,3 +118,43 @@ def build_inferred_df(inferred_links_list: list[tuple[str]]) -> pl.DataFrame:
     )
 
     return inferred_df.sort(["text", "similar"])
+
+
+def index_and_infer(
+    indexed_node_types: list[str],
+    main_graph: nx.Graph,
+    network_similarity_threshold: float,
+    callbacks: list[ProgressBatchCallback] | None = None,
+    functions_embedder: Embedder | None = None,
+    openai_configuration: OpenAIConfiguration | None = None,
+    use_local=False,
+    save_cache=True,
+) -> tuple[list[Any], int]:
+    (
+        embedded_texts,
+        nearest_text_distances,
+        nearest_text_indices,
+    ) = index_nodes(
+        indexed_node_types,
+        main_graph,
+        callbacks,
+        functions_embedder,
+        openai_configuration,
+        use_local,
+        save_cache,
+    )
+
+    inferred_links = infer_nodes(
+        network_similarity_threshold,
+        embedded_texts,
+        nearest_text_indices,
+        nearest_text_distances,
+        callbacks,
+    )
+
+    link_list = [
+        (text, n) for text, near in inferred_links.items() for n in near if text < n
+    ]
+
+    # Remove None values from link_list
+    return link_list, len(embedded_texts)

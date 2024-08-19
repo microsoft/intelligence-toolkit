@@ -81,7 +81,9 @@ class Embedder:
         for i in range(0, len(new_texts), 2000):
             if callbacks:
                 for cb in callbacks:
-                    cb.on_batch_change(batch_count, num_batches)
+                    cb.on_batch_change(
+                        batch_count, num_batches, "Embedding text batches..."
+                    )
             batch_count += 1
             batch = new_texts[i : i + 2000]
             batch_texts = [x[1] for x in batch]

@@ -135,5 +135,5 @@ convention = "numpy"
 
 # https://github.com/microsoft/pyright/blob/9f81564a4685ff5c55edd3959f9b39030f590b2f/docs/configuration.md#sample-pyprojecttoml-file
 [tool.pyright]
-include = ["app", "python", "examples"]
+include = ["app", "toolkit", "examples"]
 exclude = ["**/__pycache__"]

@@ -5,17 +5,14 @@ import colorsys
 from collections import defaultdict
 
 # ruff: noqa
-import networkx as nx
-import pandas as pd
-import polars as pl
 import streamlit as st
-from streamlit_agraph import Config, Edge, Node
+from streamlit_agraph import Config, ConfigBuilder, Edge, Node
 from util.openai_wrapper import UIOpenAIConfiguration
 from util.session_variables import SessionVariables
 
+import toolkit.risk_networks.config as config
 from toolkit.AI.embedder import Embedder
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
-from toolkit.risk_networks import config
 
 sv_home = SessionVariables("home")
 
@@ -109,6 +106,11 @@ def get_entity_graph(G, selected, links_df, width, height, attribute_types):
             target = row["target"]
             edges.append(Edge(source=source, target=target, color="mediumgray", size=1))
     g_config = Config(
-        width=width, height=height, directed=False, physics=True, hierarchical=False
+        width=width,
+        height=height,
+        directed=False,
+        physics=True,
+        hierarchical=False,
+        timestep=0.1,
     )
     return nodes, edges, g_config  # type: ignore
