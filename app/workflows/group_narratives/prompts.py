@@ -1,5 +1,5 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-from workflows.security.metaprompts import do_not_harm
+from app.workflows.security.metaprompts import do_not_harm
 
 report_prompt = """\
 You are a data analyst preparing a detailed report on a given dataset.

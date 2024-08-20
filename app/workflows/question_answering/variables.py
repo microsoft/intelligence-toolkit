@@ -1,7 +1,7 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import random
 import streamlit as st
-from util.session_variable import SessionVariable
+from app.util.session_variable import SessionVariable
 import python.question_answering.prompts as prompts
 
 class SessionVariables:

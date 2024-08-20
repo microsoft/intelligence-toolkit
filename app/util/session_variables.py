@@ -2,8 +2,8 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 import pandas as pd
-import util.session_variable as sv
-from util.session_variable import SessionVariable
+import app.util.session_variable as sv
+from app.util.session_variable import SessionVariable
 
 
 class SessionVariables:

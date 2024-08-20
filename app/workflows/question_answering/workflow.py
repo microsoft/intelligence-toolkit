@@ -6,25 +6,24 @@ import re
 import pandas as pd
 
 import streamlit as st
-from util import ui_components
-from util.download_pdf import add_download_pdf
-from util.session_variables import SessionVariables
-from util.openai_wrapper import UIOpenAIConfiguration
+from app.util import ui_components
+from app.util.download_pdf import add_download_pdf
+from app.util.session_variables import SessionVariables
+from app.util.openai_wrapper import UIOpenAIConfiguration
 from python.AI.embedder import Embedder
 from streamlit_agraph import Config, Edge, Node, agraph
-from python.AI import utils, text_splitter
 from python.AI.defaults import CHUNK_SIZE
 import python.question_answering.prompts as prompts
-import python.question_answering.process_texts as process_texts
-import python.question_answering.search_answers as search_answers
+import python.question_answering.process_inputs as process_inputs
+import python.question_answering.generate_answer as generate_answer
 from seaborn import color_palette
-from workflows.question_answering import config
+from app.workflows.question_answering import config
 
 sv_home = SessionVariables("home")
+ai_configuration = UIOpenAIConfiguration().get_configuration()
 
 def embedder():
     try:
-        ai_configuration = UIOpenAIConfiguration().get_configuration()
         return Embedder(
             ai_configuration, config.cache_dir, sv_home.local_embeddings.value
         )
@@ -127,9 +126,8 @@ def create(sv: SessionVariables, workflow=None):
 
             file_callback = ProgressBatchCallback()
             file_callback.on_batch_change = on_file_batch_change
-            text_to_pages = process_texts.process_files(
+            sv.text_to_chunks.value = process_inputs.process_file_bytes(
                 input_file_bytes={file.name: file.getvalue() for file in files},
-                text_splitter=text_splitter.TextSplitter(), # type: ignore
                 callbacks=[file_callback]
             )
             
@@ -141,7 +139,6 @@ def create(sv: SessionVariables, workflow=None):
             chunk_callback.on_batch_change = on_chunk_batch_change
 
             (
-                sv.text_to_chunks.value,
                 sv.text_to_vectors.value,
                 sv.concept_graph.value,
                 sv.community_to_concepts.value,
@@ -150,8 +147,8 @@ def create(sv: SessionVariables, workflow=None):
                 sv.chunk_to_concepts.value,
                 sv.previous_chunk.value,
                 sv.next_chunk.value
-            ) = process_texts.process_chunks(
-                text_to_chunks=text_to_pages,
+            ) = process_inputs.process_chunks(
+                text_to_chunks=sv.text_to_chunks.value,
                 embedder=embedder(),
                 embedding_cache=sv_home.save_cache.value,
                 max_cluster_size=50,
@@ -282,7 +279,8 @@ def create(sv: SessionVariables, workflow=None):
                                                         hide_index=True, height=400, use_container_width=True)
             answer_text = sv.partial_answers.value[0] if len(sv.partial_answers.value) > 0 else ""
             answer_placeholder.markdown(answer_text)
-            sv.relevant_chunks.value, sv.partial_answers.value, sv.chunk_progress.value, sv.answer_progress.value = search_answers.search_answers(
+            sv.relevant_chunks.value, sv.partial_answers.value, sv.chunk_progress.value, sv.answer_progress.value = generate_answer.answer_question(
+                ai_configuration,
                 sv.last_question.value,
                 sv.text_to_chunks.value,
                 sv.chunk_to_concepts.value,

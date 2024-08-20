@@ -7,8 +7,8 @@ import time
 import keyboard
 import psutil
 import streamlit as st
-from util.helper_fn import app_in_exe_mode
-from util.session_variables import SessionVariables
+from app.util.helper_fn import app_in_exe_mode
+from app.util.session_variables import SessionVariables
 
 
 class AppTerminator:

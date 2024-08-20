@@ -3,10 +3,10 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 import streamlit as st
-import workflows.group_narratives.variables as gn_variables
-import workflows.group_narratives.workflow
-from components.app_loader import load_multipage_app
-from util.helper_fn import app_in_dev_mode
+import app.workflows.group_narratives.variables as gn_variables
+import app.workflows.group_narratives.workflow
+from app.components.app_loader import load_multipage_app
+from app.util.helper_fn import app_in_dev_mode
 
 workflow = "group_narratives"
 
@@ -22,7 +22,7 @@ def main():
     load_multipage_app(sv)
 
     try:
-        workflows.group_narratives.workflow.create(sv, workflow)
+        app.workflows.group_narratives.workflow.create(sv, workflow)
     except Exception as e:
         if app_in_dev_mode():
             st.exception(e)

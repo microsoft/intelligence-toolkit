@@ -97,7 +97,6 @@ class OpenAIClient:
                                 callback.on_llm_new_token(show)
                 return full_response
 
-            print("response", response)
             return response.choices[0].message.content or ""  # type: ignore
         except Exception as e:
             print(f"Error validating report: {e}")
@@ -107,7 +106,6 @@ class OpenAIClient:
     async def agenerate_chat(
         self,
         messages: list[str],
-        stream: bool = False,
         callbacks: list[LLMCallback] | None = None,
         **kwargs,
     ):
@@ -117,29 +115,16 @@ class OpenAIClient:
                 kwargs.pop('max_tokens')
             else:
                 max_tokens = self.configuration.max_tokens
+            if 'stream' in kwargs.keys():
+                kwargs.pop('stream')
             response = self._client.chat.completions.create(
                 model=self.configuration.model,
                 temperature=self.configuration.temperature,
                 max_tokens=max_tokens,
                 messages=messages,
-                stream=stream,
+                stream=False,
                 **kwargs,
             )
-
-            if stream and callbacks is not None:
-                full_response = ""
-                for chunk in response:
-                    delta = chunk.choices[0].delta.content or ""  # type: ignore
-                    if delta is not None:
-                        full_response += delta
-                        if callbacks:
-                            show = full_response
-                            if len(delta) > 0:
-                                show += "▌"
-                            for callback in callbacks:
-                                callback.on_llm_new_token(show)
-                return full_response
-
             return response.choices[0].message.content or ""  # type: ignore
         except Exception as e:
             print(f"Error validating report: {e}")
@@ -164,7 +149,7 @@ class OpenAIClient:
     ):
         map_responses = await asyncio.gather(
             *[
-                self.agenerate_chat(messages, stream=False, **llm_kwargs)
+                self.agenerate_chat(messages, **llm_kwargs)
                 for messages in messages_list
             ]
         )

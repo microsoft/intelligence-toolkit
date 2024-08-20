@@ -3,12 +3,20 @@ import numpy as np
 from collections import defaultdict, Counter
 import asyncio
 import scipy.spatial.distance
-import app.util.ui_components as ui_components
 import python.AI.utils as utils
+from python.AI.openai_configuration import OpenAIConfiguration
+from python.AI.client import OpenAIClient
 import python.question_answering.prompts as prompts
+import python.question_answering.answer_schema as answer_schema
 import tiktoken
 import re
-from json import dumps, loads
+from json import loads
+
+def generate_text(ai_configuration, messages, **kwargs):
+    return OpenAIClient(ai_configuration).generate_chat(messages, stream=False, **kwargs)
+
+def map_generate_text(ai_configuration, messages_list, **kwargs):
+    return OpenAIClient(ai_configuration).map_generate_text(messages_list, **kwargs)
 
 def get_adjacent_chunks(source, previous_chunk_dict, next_chunk_dict, steps):
     prev_chunks = []
@@ -60,7 +68,6 @@ def extract_chunk_references(text):
     references = set()
     for source_span in source_spans:
         parts = [x.strip() for x in source_span.group(1).split(',')]
-        print(parts)
         references.update(parts)
     return references
 
@@ -79,6 +86,7 @@ def get_answer_progress(answer_history):
 
 
 def assess_relevance(
+        ai_configuration,
         search_label,
         search_chunks,
         question,
@@ -95,7 +103,7 @@ def assess_relevance(
     for mapped_messages in batched_messages:
         if len(test_history) + len(mapped_messages) > relevance_test_limit:
             mapped_messages = mapped_messages[:relevance_test_limit - len(test_history)]
-        mapped_responses = asyncio.run(ui_components.map_generate_text(mapped_messages, logit_bias=logit_bias, max_tokens=1))
+        mapped_responses = asyncio.run(map_generate_text(ai_configuration, mapped_messages, logit_bias=logit_bias, max_tokens=1))
         break_now = process_relevance_responses(
             search_label,
             search_chunks,
@@ -113,6 +121,7 @@ def test_history_elements(test_history):
     return relevant_list, seen_list
 
 def generate_answer(
+        ai_configuration,
         answer_object,
         answer_format,
         processing_queue,
@@ -130,16 +139,18 @@ def generate_answer(
         prompts.chunk_summarization_prompt, 
         {'chunks': formatted_chunks, 'answer_object': answer_object}
     )
-    answer_response = ui_components.generate_text(answer_messages, response_format=answer_format)
+    answer_response = generate_text(ai_configuration, answer_messages, response_format=answer_format)
     update_answer_object(answer_object, loads(answer_response))
     answer_text = '\n\n'.join([x['content'] for x in answer_object['content_items']])
     references = extract_chunk_references(answer_text)
     answer_stream.insert(0, convert_answer_object_to_text(answer_object))
-    answer_callback(answer_stream)
+    if answer_callback is not None:
+        answer_callback(answer_stream)
     return selected_chunks, references
 
 
 def generate_answers(
+        ai_configuration,
         answer_object,
         answer_format,
         process_chunks,
@@ -154,6 +165,7 @@ def generate_answers(
     remaining_chunks = list(set(process_chunks) - set(all_selected_chunks))
     while len(remaining_chunks) > 0:
         selected_chunks, references = generate_answer(
+            ai_configuration,
             answer_object,
             answer_format,
             remaining_chunks,
@@ -165,7 +177,8 @@ def generate_answers(
         selected_metadata = set([chunk_to_metadata[c] for c in selected_chunks])
         used_references = [r for r in references if r in selected_metadata]
         answer_history.append((len(used_references), len(selected_chunks)))
-        progress_callback(get_answer_progress(answer_history))
+        if progress_callback is not None:
+            progress_callback(get_answer_progress(answer_history))
         all_selected_chunks.extend(selected_chunks)
         remaining_chunks = list(set(process_chunks) - set(all_selected_chunks))
 
@@ -183,7 +196,6 @@ def update_answer_object(answer_object, answer_update):
     answer_object['title'] = answer_update['title']
     answer_object['introduction'] = answer_update['introduction']
     answer_object['content_id_sequence'] = answer_update['content_id_sequence']
-    print(answer_object['content_id_sequence'])
     updated_content_items = []
     for item_id in answer_object['content_id_sequence']:
         if item_id in new_and_updated_ids:
@@ -214,12 +226,15 @@ def process_relevance_responses(
             test_history.append((search_label, c, r))
             if r == 'Yes':
                 break_now = False
-    progress_callback(get_test_progress(test_history))
+    if progress_callback is not None:
+        progress_callback(get_test_progress(test_history))
     relevant_list = [x[1] for x in test_history if x[2] == 'Yes']
-    chunk_callback(relevant_list)
+    if chunk_callback is not None:
+        chunk_callback(relevant_list)
     return break_now
 
-def search_answers(
+def answer_question(
+        ai_configuration,
         question,
         text_to_chunks,
         chunk_to_concepts,
@@ -239,62 +254,12 @@ def search_answers(
         relevance_test_limit,
         relevance_test_batch_size,
         augment_top_concepts,
-        chunk_progress_callback,
-        answer_progress_callback,
-        chunk_callback,
-        answer_callback
+        chunk_progress_callback=None,
+        answer_progress_callback=None,
+        chunk_callback=None,
+        answer_callback=None
     ):
-    answer_format = {
-        "type": "json_schema",
-        "json_schema": {
-            "name": "answer_object",
-            "strict": True,
-            "schema": {
-                "type": "object",
-                "properties": {
-                    "question": {
-                        "type": "string"
-                    },
-                    "title": {
-                        "type": "string"
-                    },
-                    "introduction": {
-                        "type": "string"
-                    },
-                    "content_id_sequence": {
-                        "type": "array",
-                        "items": {
-                            "type": "number"
-                        }
-                    },
-                    "content_items": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "id": {
-                                    "type": "number"
-                                },
-                                "title": {
-                                    "type": "string"
-                                },
-                                "content": {
-                                    "type": "string"
-                                }
-                            },
-                            "required": ["id", "title", "content"],
-                            "additionalProperties": False,
-                        }
-                    },
-                    "conclusion": {
-                        "type": "string"
-                    },
-                },
-                "required": ["question", "title", "introduction", "content_id_sequence", "content_items", "conclusion"],
-                "additionalProperties": False,
-            }
-        }
-    }
+    answer_format = answer_schema.answer_format
     answer_object = {
         "question": question,
         "title": "",
@@ -328,7 +293,8 @@ def search_answers(
     yes_id = tiktoken.get_encoding('o200k_base').encode('Yes')[0]
     no_id = tiktoken.get_encoding('o200k_base').encode('No')[0]
     logit_bias = {yes_id: select_logit_bias, no_id: select_logit_bias}
-    chunk_progress_callback(get_test_progress(test_history))
+    if chunk_progress_callback is not None:
+        chunk_progress_callback(get_test_progress(test_history))
     last_round_matched_concepts = Counter()
 
     # We repeat the query matching process for a fixed number of iterations, each time with a potentially different augmented question.
@@ -359,6 +325,7 @@ def search_answers(
         # We first do semantic search, analyze the matching chunks for relevance, and .
         semantic_search_chunks = [x[1] for x in cosine_distances[:semantic_search_depth]]
         assess_relevance(
+            ai_configuration=ai_configuration,
             search_label='semantic',
             search_chunks=semantic_search_chunks,
             question=question,
@@ -379,6 +346,7 @@ def search_answers(
         structural_processed.update(structural_search_chunks)
 
         assess_relevance(
+            ai_configuration=ai_configuration,
             search_label='structural',
             search_chunks=structural_search_chunks,
             question=question,
@@ -428,6 +396,7 @@ def search_answers(
         relational_search_chunks = [chunk for chunk, _ in sorted_chunk_concept_matches if chunk not in seen][:relational_search_depth]
 
         assess_relevance(
+            ai_configuration=ai_configuration,
             search_label='relational',
             search_chunks=relational_search_chunks,
             question=question,
@@ -440,9 +409,9 @@ def search_answers(
         )
     relevant, seen = test_history_elements(test_history)
     relevant.sort(key=lambda x: sorted_chunks.index(x))
-    print(len(relevant))
-    print([sorted_chunks.index(x) for x in relevant])
+
     generate_answers(
+        ai_configuration=ai_configuration,
         answer_object=answer_object,
         answer_format=answer_format,
         process_chunks=relevant,
