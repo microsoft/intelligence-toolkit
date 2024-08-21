@@ -14,8 +14,13 @@ from toolkit.risk_networks import config
 
 # ruff: noqa
 def trim_nodeset(
-    graph: nx.Graph, additional_trimmed_attributes: list[str], max_attribute_degree: int
+    graph: nx.Graph,
+    additional_trimmed_attributes: list[str] | None = None,
+    max_attribute_degree: int = 10,
 ) -> tuple[set, set[Any | str]]:
+    if additional_trimmed_attributes is None:
+        additional_trimmed_attributes = []
+
     trimmed_degrees = set()
     for node, degree in graph.degree():
         if not node.startswith(config.entity_label) and degree > max_attribute_degree:
@@ -177,9 +182,9 @@ def get_community_nodes(
 def build_networks(
     main_graph: nx.Graph,
     trimmed_nodes: set,
-    inferred_links: set,
-    supporting_attribute_types: list[str],
-    max_network_entities: int,
+    inferred_links: set | None = None,
+    supporting_attribute_types: list[str] | None = None,
+    max_network_entities: int = 20,
 ) -> tuple[list, dict]:
     P = project_entity_graph(
         main_graph, trimmed_nodes, inferred_links, supporting_attribute_types

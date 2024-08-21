@@ -237,6 +237,9 @@ def get_entity_graph(
     nodes = []
     edges = []
 
+    if not network_entities_graph.edges():
+        return nodes, edges
+
     links_df = pl.DataFrame(
         list(network_entities_graph.edges()), schema=["source", "target"]
     )
@@ -244,7 +247,7 @@ def get_entity_graph(
     links_df.with_columns(
         [
             pl.col("target")
-            .apply(lambda x: x.split(ATTRIBUTE_VALUE_SEPARATOR)[0])
+            .map_elements(lambda x: x.split(ATTRIBUTE_VALUE_SEPARATOR)[0])
             .alias("attribute")
         ]
     )
@@ -265,23 +268,22 @@ def get_entity_graph(
             p.split(ATTRIBUTE_VALUE_SEPARATOR) for p in node.split(config.list_sep)
         ]
         atts = [p[0] for p in parts]
-        # remove duplicate values while maintaining order
         atts = list(dict.fromkeys(atts))
+
+        flags = network_entities_graph.nodes[node].get("flags", 0)
         color = get_type_color(
             atts[0],
-            network_entities_graph.nodes[node]["flags"] > 0,
+            flags > 0,
             attribute_types,
         )
+
         vals = [p[1] for p in parts if len(p) > 1]
-        # remove duplicate values while maintaining order
         vals = list(dict.fromkeys(vals))
-        network_entities_graph.nodes[node].get("network", "")
         label = "\n".join(vals) + "\n(" + config.list_sep.join(atts) + ")"
-        d_risk = network_entities_graph.nodes[node]["flags"]
 
         nodes.append(
             {
-                "title": node + f"\nFlags: {d_risk}",
+                "title": node + f"\nFlags: {flags}",
                 "id": node,
                 "label": label,
                 "size": size,
@@ -300,5 +302,4 @@ def get_entity_graph(
                 "size": 1,
             }
         )
-
     return nodes, edges
