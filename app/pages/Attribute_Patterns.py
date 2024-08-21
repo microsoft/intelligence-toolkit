@@ -3,10 +3,10 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 import streamlit as st
-import workflows.attribute_patterns.variables as ap_variables
-import workflows.attribute_patterns.workflow
+import app.workflows.attribute_patterns.variables as ap_variables
+import app.workflows.attribute_patterns.workflow
 from components.app_loader import load_multipage_app
-from util.helper_fn import app_in_dev_mode
+from app.util.helper_fn import app_in_dev_mode
 
 workflow = "attribute_patterns"
 
@@ -22,7 +22,7 @@ def main() -> None:
     load_multipage_app(sv)
 
     try:
-        workflows.attribute_patterns.workflow.create(sv, workflow)
+        app.workflows.attribute_patterns.workflow.create(sv, workflow)
     except Exception as e:
         if app_in_dev_mode():
             st.exception(e)

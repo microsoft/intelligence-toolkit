@@ -4,10 +4,10 @@
 #
 
 import streamlit as st
-import workflows.risk_networks.variables as rn_variables
-import workflows.risk_networks.workflow
-from components.app_loader import load_multipage_app
-from util.helper_fn import app_in_dev_mode
+import app.workflows.risk_networks.variables as rn_variables
+import app.workflows.risk_networks.workflow
+from app.components.app_loader import load_multipage_app
+from app.util.helper_fn import app_in_dev_mode
 
 workflow = "risk_networks"
 
@@ -24,7 +24,7 @@ def main():
     load_multipage_app(sv)
 
     try:
-        workflows.risk_networks.workflow.create(sv, workflow)
+        app.workflows.risk_networks.workflow.create(sv, workflow)
     except Exception as e:
         if app_in_dev_mode():
             st.exception(e)

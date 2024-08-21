@@ -18,7 +18,10 @@ from sentence_transformers import SentenceTransformer
 
 class Embedder:
     def __init__(
-        self, configuration: OpenAIConfiguration | None, pickle_path=None, local=False
+        self,
+        configuration: OpenAIConfiguration | None,
+        pickle_path: str | None = None,
+        local=False,
     ) -> None:
         self.configuration = configuration or OpenAIConfiguration()
         self.openai_client = OpenAIClient(configuration)
@@ -32,7 +35,6 @@ class Embedder:
         embedding = (
             self.pickle.get(text_hashed, loaded_embeddings) if cache_data else {}
         )
-        print(f"Got {len(embedding)} existing texts")
         if not embedding:
             tokens = get_token_count(text)
             if tokens > self.configuration.max_tokens:

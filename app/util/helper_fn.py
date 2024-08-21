@@ -3,7 +3,7 @@
 #
 import os
 
-from util.enums import Mode
+from app.util.enums import Mode
 
 mode = os.getenv("MODE", Mode.DEV.value)
 

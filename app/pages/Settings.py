@@ -6,10 +6,10 @@ import os
 import time
 
 import streamlit as st
-from components.app_loader import load_multipage_app
-from util.constants import MAX_SIZE_EMBEDDINGS_KEY
-from util.enums import Mode
-from util.openai_wrapper import (
+from app.components.app_loader import load_multipage_app
+from app.util.constants import MAX_SIZE_EMBEDDINGS_KEY
+from app.util.enums import Mode
+from app.util.openai_wrapper import (
     UIOpenAIConfiguration,
     key,
     openai_azure_auth_type,
@@ -18,7 +18,7 @@ from util.openai_wrapper import (
     openai_type_key,
     openai_version_key,
 )
-from util.secrets_handler import SecretsHandler
+from app.util.secrets_handler import SecretsHandler
 
 from python.AI.defaults import PICKLE_FILE_NAME
 from python.helpers.constants import CACHE_PATH

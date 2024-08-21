@@ -2,8 +2,8 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 import streamlit as st
-import workflows.risk_networks.variables as rn_variables
-from util.session_variables import SessionVariables
+import app.workflows.risk_networks.variables as rn_variables
+from app.util.session_variables import SessionVariables
 
 
 class AppMode:
