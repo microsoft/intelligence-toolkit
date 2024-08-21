@@ -10,10 +10,12 @@ from .defaults import PICKLE_FILE_NAME
 
 
 class CachePickle:
-    def __init__(self, file_name: str = PICKLE_FILE_NAME, path=CACHE_PATH):
-        self.file_path = os.path.join(path, file_name)
-        if not os.path.exists(path):
-            os.makedirs(path)
+    def __init__(self, file_name: str = PICKLE_FILE_NAME, path: str | None = None):
+        self.path = path or CACHE_PATH
+
+        self.file_path = os.path.join(self.path, file_name)
+        if not os.path.exists(self.path):
+            os.makedirs(self.path)
             with open(self.file_path, "wb") as f:
                 f.write(b"")
 

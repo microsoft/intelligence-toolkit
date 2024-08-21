@@ -3,24 +3,27 @@
 #
 import os
 import re
-import pandas as pd
 
+import pandas as pd
 import streamlit as st
+from seaborn import color_palette
+from streamlit_agraph import Config, Edge, Node, agraph
+
+import python.question_answering.input_processor as input_processor
+import python.question_answering.prompts as prompts
+import python.question_answering.question_answerer as question_answerer
 from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
-from app.util.session_variables import SessionVariables
 from app.util.openai_wrapper import UIOpenAIConfiguration
-from python.AI.embedder import Embedder
-from streamlit_agraph import Config, Edge, Node, agraph
-from python.AI.defaults import CHUNK_SIZE
-import python.question_answering.prompts as prompts
-import python.question_answering.input_processor as input_processor
-import python.question_answering.question_answerer as question_answerer
-from seaborn import color_palette
+from app.util.session_variables import SessionVariables
 from app.workflows.question_answering import config
+from python.AI.defaults import CHUNK_SIZE
+from python.AI.embedder import Embedder
+from python.AI.embedder import Embedder
 
 sv_home = SessionVariables("home")
 ai_configuration = UIOpenAIConfiguration().get_configuration()
+
 
 def embedder():
     try:
@@ -31,7 +34,10 @@ def embedder():
         st.error(f"Error creating connection: {e}")
         st.stop()
 
-def get_concept_graph(placeholder, G, concept_to_community, community_to_concepts, width, height, key):
+
+def get_concept_graph(
+    placeholder, G, concept_to_community, community_to_concepts, width, height, key
+):
     """
     Implements the concept graph visualization
     """
@@ -42,15 +48,17 @@ def get_concept_graph(placeholder, G, concept_to_community, community_to_concept
     num_communities = len(community_to_concepts.keys())
     community_colors = color_palette("husl", num_communities)
     sorted_communities = sorted(
-        community_to_concepts.keys(), key=lambda x: len(community_to_concepts[x]), reverse=True
+        community_to_concepts.keys(),
+        key=lambda x: len(community_to_concepts[x]),
+        reverse=True,
     )
     community_to_color = dict(zip(sorted_communities, community_colors))
     for node in G.nodes():
         degree = G.degree(node)
         size = 5 + 20 * degree / max_degree
-        vadjust = -size*2 - 3
+        vadjust = -size * 2 - 3
         color = community_to_color[concept_to_community[node]]
-        color = '#%02x%02x%02x' % tuple([int(255 * x) for x in color])
+        color = "#%02x%02x%02x" % tuple([int(255 * x) for x in color])
         nodes.append(
             Node(
                 title=node,
@@ -58,14 +66,14 @@ def get_concept_graph(placeholder, G, concept_to_community, community_to_concept
                 label=node,
                 size=size,
                 color=color,
-                shape='dot',
+                shape="dot",
                 timestep=0.001,
                 font={"vadjust": vadjust, "size": size},
             )
         )
 
     for u, v, d in G.edges(data=True):
-        edges.append(Edge(source=u, target=v, color='lightgray'))
+        edges.append(Edge(source=u, target=v, color="lightgray"))
 
     config = Config(
         width=width,
@@ -74,11 +82,12 @@ def get_concept_graph(placeholder, G, concept_to_community, community_to_concept
         physics=True,
         hierarchical=False,
         key=key,
-        linkLength=100
+        linkLength=100,
     )
     with placeholder:
         return_value = agraph(nodes=nodes, edges=edges, config=config)
     return return_value
+
 
 class ProgressBatchCallback:
     """Class for progress callbacks."""
@@ -92,6 +101,7 @@ class ProgressBatchCallback:
         self.current_batch = current
         self.total_batches = total
 
+
 def get_intro():
     file_path = os.path.join(os.path.dirname(__file__), "README.md")
     with open(file_path) as file:
@@ -100,13 +110,15 @@ def get_intro():
 
 def create(sv: SessionVariables, workflow=None):
     sv_home = SessionVariables("home")
-    intro_tab, uploader_tab, graph_tab, search_tab, report_tab = st.tabs([
-        "Question answering workflow:",
-        "Upload data",
-        "Explore concept graph",
-        "Search for answers",
-        "Generate AI answer reports",
-    ])
+    intro_tab, uploader_tab, graph_tab, search_tab, report_tab = st.tabs(
+        [
+            "Question answering workflow:",
+            "Upload data",
+            "Explore concept graph",
+            "Search for answers",
+            "Generate AI answer reports",
+        ]
+    )
 
     with intro_tab:
         st.markdown(get_intro())
@@ -121,19 +133,26 @@ def create(sv: SessionVariables, workflow=None):
         if files is not None and st.button("Process files"):
             # functions.chunk_files(sv, files)
             file_pb = st.progress(0, "Processing files...")
+
             def on_file_batch_change(current, total):
-                file_pb.progress(int(current * 100 / total), text=f"Processed {current} files...")
+                file_pb.progress(
+                    int(current * 100 / total), text=f"Processed {current} files..."
+                )
 
             file_callback = ProgressBatchCallback()
             file_callback.on_batch_change = on_file_batch_change
             sv.text_to_chunks.value = input_processor.process_file_bytes(
                 input_file_bytes={file.name: file.getvalue() for file in files},
-                callbacks=[file_callback]
+                callbacks=[file_callback],
             )
-            
+
             chunk_pb = st.progress(0, "Processing text chunks...")
+
             def on_chunk_batch_change(current, total):
-                chunk_pb.progress(int(current * 100 / total), text=f"Processed {current} text chunks...")
+                chunk_pb.progress(
+                    int(current * 100 / total),
+                    text=f"Processed {current} text chunks...",
+                )
 
             chunk_callback = ProgressBatchCallback()
             chunk_callback.on_batch_change = on_chunk_batch_change
@@ -146,13 +165,13 @@ def create(sv: SessionVariables, workflow=None):
                 sv.concept_to_chunks.value,
                 sv.chunk_to_concepts.value,
                 sv.previous_chunk.value,
-                sv.next_chunk.value
+                sv.next_chunk.value,
             ) = input_processor.process_chunks(
                 text_to_chunks=sv.text_to_chunks.value,
                 embedder=embedder(),
                 embedding_cache=sv_home.save_cache.value,
                 max_cluster_size=50,
-                callbacks=[chunk_callback]
+                callbacks=[chunk_callback],
             )
             chunk_pb.empty()
             file_pb.empty()
@@ -169,13 +188,22 @@ def create(sv: SessionVariables, workflow=None):
         with c1:
             gp = st.empty()
             if sv.concept_graph.value is not None:
-                selection = get_concept_graph(gp, G, sv.concept_to_community.value, sv.community_to_concepts.value, 800, 700, "graph")
+                selection = get_concept_graph(
+                    gp,
+                    G,
+                    sv.concept_to_community.value,
+                    sv.community_to_concepts.value,
+                    800,
+                    700,
+                    "graph",
+                )
         with c2:
             if sv.concept_graph.value is not None and selection is not None:
                 selected_chunks = sv.concept_to_chunks.value[selection]
                 selected_chunks_df = pd.DataFrame(
                     [
-                        {"Matching text chunks (double click to expand)": chunk} for chunk in selected_chunks
+                        {"Matching text chunks (double click to expand)": chunk}
+                        for chunk in selected_chunks
                     ]
                 )
                 st.markdown(f"**Selected concept: {selection}**")
@@ -235,9 +263,9 @@ def create(sv: SessionVariables, workflow=None):
                 key="search_answers",
                 use_container_width=True,
             )
-        
+
         c1, c2 = st.columns([1, 1])
-        
+
         with c1:
             chunk_placeholder = st.empty()
             chunk_progress_placeholder = st.empty()
@@ -250,21 +278,35 @@ def create(sv: SessionVariables, workflow=None):
 
         def on_answer_progress(message):
             answer_progress_placeholder.markdown(message)
-    
+
         def on_chunk_relevant(message):
-            chunk_placeholder.dataframe(pd.DataFrame(columns=["Relevant text chunks (double click to expand)"],
-                                                        data=message),
-                                                        hide_index=True, height=400, use_container_width=True)
-            
+            chunk_placeholder.dataframe(
+                pd.DataFrame(
+                    columns=["Relevant text chunks (double click to expand)"],
+                    data=message,
+                ),
+                hide_index=True,
+                height=400,
+                use_container_width=True,
+            )
+
         def on_answer(message):
             answer_placeholder.markdown(message[0])
 
         chunk_progress_placeholder.markdown(sv.chunk_progress.value)
         answer_progress_placeholder.markdown(sv.answer_progress.value)
-        chunk_placeholder.dataframe(pd.DataFrame(columns=["Relevant text chunks (double click to expand)"],
-                                                    data=sv.relevant_chunks.value),
-                                                    hide_index=True, height=400, use_container_width=True)
-        answer_text = sv.partial_answers.value[0] if len(sv.partial_answers.value) > 0 else ""
+        chunk_placeholder.dataframe(
+            pd.DataFrame(
+                columns=["Relevant text chunks (double click to expand)"],
+                data=sv.relevant_chunks.value,
+            ),
+            hide_index=True,
+            height=400,
+            use_container_width=True,
+        )
+        answer_text = (
+            sv.partial_answers.value[0] if len(sv.partial_answers.value) > 0 else ""
+        )
         answer_placeholder.markdown(answer_text)
 
         if sv.last_question.value != "" and regenerate:
@@ -274,12 +316,25 @@ def create(sv: SessionVariables, workflow=None):
             sv.answer_progress.value = ""
             chunk_progress_placeholder.markdown(sv.chunk_progress.value)
             answer_progress_placeholder.markdown(sv.answer_progress.value)
-            chunk_placeholder.dataframe(pd.DataFrame(columns=["Relevant text chunks (double click to expand)"],
-                                                        data=sv.relevant_chunks.value),
-                                                        hide_index=True, height=400, use_container_width=True)
-            answer_text = sv.partial_answers.value[0] if len(sv.partial_answers.value) > 0 else ""
+            chunk_placeholder.dataframe(
+                pd.DataFrame(
+                    columns=["Relevant text chunks (double click to expand)"],
+                    data=sv.relevant_chunks.value,
+                ),
+                hide_index=True,
+                height=400,
+                use_container_width=True,
+            )
+            answer_text = (
+                sv.partial_answers.value[0] if len(sv.partial_answers.value) > 0 else ""
+            )
             answer_placeholder.markdown(answer_text)
-            sv.relevant_chunks.value, sv.partial_answers.value, sv.chunk_progress.value, sv.answer_progress.value = question_answerer.answer_question(
+            (
+                sv.relevant_chunks.value,
+                sv.partial_answers.value,
+                sv.chunk_progress.value,
+                sv.answer_progress.value,
+            ) = question_answerer.answer_question(
                 ai_configuration,
                 sv.last_question.value,
                 sv.text_to_chunks.value,
@@ -304,12 +359,9 @@ def create(sv: SessionVariables, workflow=None):
                 chunk_progress_callback=on_chunk_progress,
                 answer_progress_callback=on_answer_progress,
                 chunk_callback=on_chunk_relevant,
-                answer_callback=on_answer
+                answer_callback=on_answer,
             )
-        
 
-
-   
     with report_tab:
         if sv.partial_answers.value == []:
             st.warning("Search for answers to continue.")
@@ -319,15 +371,13 @@ def create(sv: SessionVariables, workflow=None):
             with c1:
                 variables = {
                     "question": sv.last_question.value,
-                    "answers": sv.partial_answers.value
+                    "answers": sv.partial_answers.value,
                 }
                 generate, messages, reset = ui_components.generative_ai_component(
                     sv.system_prompt, variables
                 )
                 if reset:
-                    sv.answering_system_prompt.value["user_prompt"] = (
-                        prompts.user_prompt
-                    )
+                    sv.system_prompt.value["user_prompt"] = prompts.user_prompt
                     st.rerun()
             with c2:
                 report_placeholder = st.empty()

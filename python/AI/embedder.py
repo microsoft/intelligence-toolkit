@@ -18,7 +18,10 @@ from sentence_transformers import SentenceTransformer
 
 class Embedder:
     def __init__(
-        self, configuration: OpenAIConfiguration | None, pickle_path=None, local=False
+        self,
+        configuration: OpenAIConfiguration | None,
+        pickle_path: str | None = None,
+        local=False,
     ) -> None:
         self.configuration = configuration or OpenAIConfiguration()
         self.openai_client = OpenAIClient(configuration)
