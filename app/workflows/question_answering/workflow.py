@@ -14,8 +14,8 @@ from python.AI.embedder import Embedder
 from streamlit_agraph import Config, Edge, Node, agraph
 from python.AI.defaults import CHUNK_SIZE
 import python.question_answering.prompts as prompts
-import python.question_answering.process_inputs as process_inputs
-import python.question_answering.generate_answer as generate_answer
+import python.question_answering.input_processor as input_processor
+import python.question_answering.question_answerer as question_answerer
 from seaborn import color_palette
 from app.workflows.question_answering import config
 
@@ -114,7 +114,7 @@ def create(sv: SessionVariables, workflow=None):
         st.markdown("##### Upload data for processing")
         files = st.file_uploader(
             "Upload PDF text files",
-            type=["pdf", "txt"],
+            type=["pdf", "txt", "json"],
             accept_multiple_files=True,
             key=sv.upload_key.value,
         )
@@ -122,18 +122,18 @@ def create(sv: SessionVariables, workflow=None):
             # functions.chunk_files(sv, files)
             file_pb = st.progress(0, "Processing files...")
             def on_file_batch_change(current, total):
-                file_pb.progress(int(current * 100 / total), text="Processing files...")
+                file_pb.progress(int(current * 100 / total), text=f"Processed {current} files...")
 
             file_callback = ProgressBatchCallback()
             file_callback.on_batch_change = on_file_batch_change
-            sv.text_to_chunks.value = process_inputs.process_file_bytes(
+            sv.text_to_chunks.value = input_processor.process_file_bytes(
                 input_file_bytes={file.name: file.getvalue() for file in files},
                 callbacks=[file_callback]
             )
             
             chunk_pb = st.progress(0, "Processing text chunks...")
             def on_chunk_batch_change(current, total):
-                chunk_pb.progress(int(current * 100 / total), text="Processing text chunks...")
+                chunk_pb.progress(int(current * 100 / total), text=f"Processed {current} text chunks...")
 
             chunk_callback = ProgressBatchCallback()
             chunk_callback.on_batch_change = on_chunk_batch_change
@@ -147,7 +147,7 @@ def create(sv: SessionVariables, workflow=None):
                 sv.chunk_to_concepts.value,
                 sv.previous_chunk.value,
                 sv.next_chunk.value
-            ) = process_inputs.process_chunks(
+            ) = input_processor.process_chunks(
                 text_to_chunks=sv.text_to_chunks.value,
                 embedder=embedder(),
                 embedding_cache=sv_home.save_cache.value,
@@ -184,23 +184,23 @@ def create(sv: SessionVariables, workflow=None):
         c1, c2, c3, c4, c5, c6 = st.columns([1, 1, 1, 1, 1, 1])
         with c1:
             st.number_input(
-                "Semantic search depth",
+                "Depth (semantic search tests)",
                 value=sv.semantic_search_depth.value,
                 key=sv.semantic_search_depth.key,
                 min_value=0,
             )
         with c2:
             st.number_input(
-                "Structural search steps",
-                value=sv.structural_search_steps.value,
-                key=sv.structural_search_steps.key,
+                "Breadth (community sample tests)",
+                value=sv.relational_search_depth.value,
+                key=sv.relational_search_depth.key,
                 min_value=0,
             )
         with c3:
             st.number_input(
-                "Relational search depth",
-                value=sv.relational_search_depth.value,
-                key=sv.relational_search_depth.key,
+                "Detail (test relevant adjacent)",
+                value=sv.structural_search_steps.value,
+                key=sv.structural_search_steps.key,
                 min_value=0,
             )
         with c4:
@@ -279,13 +279,14 @@ def create(sv: SessionVariables, workflow=None):
                                                         hide_index=True, height=400, use_container_width=True)
             answer_text = sv.partial_answers.value[0] if len(sv.partial_answers.value) > 0 else ""
             answer_placeholder.markdown(answer_text)
-            sv.relevant_chunks.value, sv.partial_answers.value, sv.chunk_progress.value, sv.answer_progress.value = generate_answer.answer_question(
+            sv.relevant_chunks.value, sv.partial_answers.value, sv.chunk_progress.value, sv.answer_progress.value = question_answerer.answer_question(
                 ai_configuration,
                 sv.last_question.value,
                 sv.text_to_chunks.value,
                 sv.chunk_to_concepts.value,
                 sv.concept_to_chunks.value,
                 sv.text_to_vectors.value,
+                sv.concept_graph.value,
                 sv.community_to_concepts.value,
                 sv.concept_to_community.value,
                 sv.previous_chunk.value,
@@ -295,7 +296,7 @@ def create(sv: SessionVariables, workflow=None):
                 select_logit_bias=5,
                 semantic_search_depth=sv.semantic_search_depth.value,
                 structural_search_steps=sv.structural_search_steps.value,
-                relational_search_depth=sv.relational_search_depth.value,
+                community_search_breadth=sv.relational_search_depth.value,
                 relevance_test_limit=sv.relevance_test_limit.value,
                 relevance_test_batch_size=sv.relevance_test_batch_size.value,
                 answer_batch_size=5,

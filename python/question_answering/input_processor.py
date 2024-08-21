@@ -4,12 +4,8 @@ from collections import defaultdict
 import pdfplumber
 import io
 import networkx as nx
-from app.util.wkhtmltopdf import config_pdfkit, pdfkit_options
-import nltk
-nltk.download('brown')
-nltk.download('punkt')
-nltk.download('punkt_tab')
-import python.question_answering.graph_functions as graph_functions
+from json import dumps
+import python.question_answering.graph_builder as graph_builder
 from python.AI.text_splitter import TextSplitter
 
 def process_file_bytes(input_file_bytes, callbacks=[]):
@@ -29,20 +25,42 @@ def process_file_bytes(input_file_bytes, callbacks=[]):
             doc_text = ' '.join(page_texts)
         else:
             doc_text = bytes.decode("utf-8")
-        doc_chunks = splitter.split(doc_text)
-        text_to_chunks[file_name] = doc_chunks
+        text_chunks = splitter.split(doc_text)
+        for cx, chunk in enumerate(text_chunks):
+            text_to_chunks[file_name].append(
+                dumps({
+                    'title': file_name,
+                    'chunk_id': cx+1,
+                    'text_chunk': chunk
+                    },
+                    indent=2
+                )
+            )
     return text_to_chunks
 
-def process_texts(text_dict):
+def process_json_texts(text_jsons):
+    '''
+    Texts are represented as JSON objects with title, text, and (optional) timestamp and metadata fields
+    '''
     text_to_chunks = defaultdict(list)
     splitter = TextSplitter()
-    for title, text in text_dict.items():
-        text_chunks = splitter.split(text)
-        text_to_chunks[title] = text_chunks
+    for text_json in text_jsons:
+        text_chunks = splitter.split(text_json['text'])
+        for cx, chunk in enumerate(text_chunks):
+            chunk_json = {
+                'title': text_json['title']
+            }
+            if 'timestamp' in text_json:
+                chunk_json['timestamp'] = text_json['timestamp']
+            if 'metadata' in text_json:
+                chunk_json['metadata'] = text_json['metadata']
+            chunk_json['chunk_id'] = cx+1
+            chunk_json['text_chunk'] = chunk
+            text_to_chunks[text_json['title']].append(dumps(chunk_json, indent=2))
     return text_to_chunks
 
 def process_chunks(text_to_chunks, embedder, embedding_cache, max_cluster_size, callbacks=[]):
-    G = nx.Graph()
+    concept_graph = nx.Graph()
     previous_chunk = {}
     next_chunk = {}
     concept_to_chunks = defaultdict(list)
@@ -64,7 +82,7 @@ def process_chunks(text_to_chunks, embedder, embedding_cache, max_cluster_size, 
             formatted_chunk, embedding_cache
         )
         text_to_vectors[file].append(np.array(chunk_vec))
-        graph_functions.update_concept_graph(G, chunk, concept_to_chunks, chunk_to_concepts)
-    graph_functions.clean_concept_graph(G, 2, 1)
-    community_to_concepts, concept_to_community = graph_functions.detect_concept_communities(G, max_cluster_size)
-    return text_to_vectors, G, community_to_concepts, concept_to_community, concept_to_chunks, chunk_to_concepts, previous_chunk, next_chunk
+        graph_builder.update_concept_graph(concept_graph, chunk, concept_to_chunks, chunk_to_concepts)
+    graph_builder.clean_concept_graph(concept_graph, 2, 1)
+    community_to_concepts, concept_to_community = graph_builder.detect_concept_communities(concept_graph, max_cluster_size)
+    return text_to_vectors, concept_graph, community_to_concepts, concept_to_community, concept_to_chunks, chunk_to_concepts, previous_chunk, next_chunk

@@ -4,7 +4,6 @@ from collections import defaultdict
 import re
 from textblob import TextBlob
 from graspologic import partition
-from app.util.wkhtmltopdf import config_pdfkit, pdfkit_options # should move this into the lib
 import nltk
 nltk.download('brown')
 nltk.download('punkt')
@@ -27,6 +26,9 @@ def update_concept_graph(G, chunk, concept_to_chunks, chunk_to_concepts):
                 G[np1][np2]["weight"] += 1
             else:
                 G.add_edge(np1, np2, weight=1)
+    for np in filtered_nps:
+        old_count = G.nodes[np]['count'] if 'count' in G.nodes[np] else 0
+        G.nodes[np]['count'] = old_count + 1
 
 def clean_concept_graph(G, min_edge_weight, min_node_degree):
     degrees = [x[1] for x in G.degree()]
