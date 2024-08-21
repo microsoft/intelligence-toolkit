@@ -8,8 +8,8 @@ from collections import defaultdict
 import networkx as nx
 import polars as pl
 
-import toolkit.risk_networks.config as config
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
+from toolkit.risk_networks.config import ENTITY_LABEL
 
 
 def build_exposure_data(
@@ -21,9 +21,7 @@ def build_exposure_data(
     if integrated_flags.is_empty():
         return ""
 
-    qualified_selected = (
-        f"{config.entity_label}{ATTRIBUTE_VALUE_SEPARATOR}{selected_entity}"
-    )
+    qualified_selected = f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}{selected_entity}"
     rdf = integrated_flags
     rdf = rdf.filter(pl.col("qualified_entity").is_in(c_nodes))
     rdf = rdf.group_by(["qualified_entity", "flag"]).agg(pl.col("count").sum())
@@ -58,7 +56,7 @@ def build_exposure_data(
                 continue
 
             for _, step in enumerate(path):
-                if config.entity_label in step:
+                if ENTITY_LABEL in step:
                     step_risks = rdf.filter(pl.col("qualified_entity") == step)[
                         "count"
                     ].sum()
@@ -133,7 +131,7 @@ def build_exposure_report(
             indent = "".join(["  "] * ix)
             for step in node:
                 node_value = [val for val in nodes if val["node"] == step]
-                if config.entity_label in step:
+                if ENTITY_LABEL in step:
                     step = f"{step} [linked to {node_value[0]['flags']} flags]"
                 else:
                     step = f"{step} [linked to {node_value[0]['entities']} entities]"

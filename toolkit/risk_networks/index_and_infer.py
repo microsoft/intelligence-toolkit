@@ -11,6 +11,7 @@ from toolkit.AI.openai_configuration import OpenAIConfiguration
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 from toolkit.risk_networks.config import (
+    ENTITY_LABEL,
     SIMILARITY_THRESHOLD_MAX,
     SIMILARITY_THRESHOLD_MIN,
 )
@@ -114,12 +115,8 @@ def build_inferred_df(inferred_links_list: defaultdict[set]) -> pl.DataFrame:
     inferred_df = pl.DataFrame(link_list, schema=["text", "similar"])
     inferred_df = inferred_df.with_columns(
         [
-            pl.col("text").str.replace(
-                config.entity_label + ATTRIBUTE_VALUE_SEPARATOR, ""
-            ),
-            pl.col("similar").str.replace(
-                config.entity_label + ATTRIBUTE_VALUE_SEPARATOR, ""
-            ),
+            pl.col("text").str.replace(ENTITY_LABEL + ATTRIBUTE_VALUE_SEPARATOR, ""),
+            pl.col("similar").str.replace(ENTITY_LABEL + ATTRIBUTE_VALUE_SEPARATOR, ""),
         ]
     )
 

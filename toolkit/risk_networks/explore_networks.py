@@ -10,7 +10,7 @@ import networkx as nx
 import polars as pl
 
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
-from toolkit.risk_networks import config
+from toolkit.risk_networks.config import ENTITY_LABEL, LIST_SEPARATOR
 
 
 def _integrate_flags(graph: nx.Graph, df_integrated_flags: pl.DataFrame) -> nx.Graph:
@@ -52,7 +52,7 @@ def _build_fuzzy_neighbors(
         fuzzy_att_neighbor
         for fuzzy_att_neighbor in fuzzy_att_neighbors
         if fuzzy_att_neighbor not in trimmed_nodeset
-        and not fuzzy_att_neighbor.startswith(config.entity_label)
+        and not fuzzy_att_neighbor.startswith(ENTITY_LABEL)
     ]
     for fuzzy_att_neighbor in fuzzy_att_neighbors_not_trimmed:
         network_graph.add_node(
@@ -81,7 +81,7 @@ def build_network_from_entities(
     # trimmed_nodeset.extend(additional_trimmed_nodeset)
     for node in nodes:
         n_c = str(entity_to_community[node]) if node in entity_to_community else ""
-        network_graph.add_node(node, type=config.entity_label, network=n_c, flags=0)
+        network_graph.add_node(node, type=ENTITY_LABEL, network=n_c, flags=0)
         ent_neighbors = set(graph.neighbors(node))
         if node in inferred_links:
             ent_neighbors = ent_neighbors.union(inferred_links[node])
@@ -93,11 +93,11 @@ def build_network_from_entities(
         ]
 
         for ent_neighbor in ent_neighbors_not_trimmed:
-            if ent_neighbor.startswith(config.entity_label):
+            if ent_neighbor.startswith(ENTITY_LABEL):
                 if node != ent_neighbor:
                     en_c = entity_to_community.get(ent_neighbor, "")
                     network_graph.add_node(
-                        ent_neighbor, type=config.entity_label, network=en_c
+                        ent_neighbor, type=ENTITY_LABEL, network=en_c
                     )
                     network_graph.add_edge(node, ent_neighbor)
             else:
@@ -114,7 +114,7 @@ def build_network_from_entities(
                     att_neighbor
                     for att_neighbor in att_neighbors
                     if att_neighbor not in trimmed_nodeset
-                    and not att_neighbor.startswith(config.entity_label)
+                    and not att_neighbor.startswith(ENTITY_LABEL)
                 ]
                 for att_neighbor in att_neighbors_not_trimmed:
                     network_graph.add_node(
@@ -139,8 +139,8 @@ def _merge_condition(x: str, y: str) -> bool:
     """
     Merge condition function for merging nodes in the graph.
     """
-    x_parts = set(x.split(config.list_sep))
-    y_parts = set(y.split(config.list_sep))
+    x_parts = set(x.split(LIST_SEPARATOR))
+    y_parts = set(y.split(LIST_SEPARATOR))
     return any(
         x_part.split(ATTRIBUTE_VALUE_SEPARATOR)[i]
         == y_part.split(ATTRIBUTE_VALUE_SEPARATOR)[i]
@@ -152,8 +152,8 @@ def _merge_condition(x: str, y: str) -> bool:
 
 def _merge_node_list(graph: nx.Graph, merge_list: list[str]) -> nx.Graph:
     graph = graph.copy()
-    merged_node = config.list_sep.join(sorted(merge_list))
-    merged_type = config.list_sep.join(
+    merged_node = LIST_SEPARATOR.join(sorted(merge_list))
+    merged_type = LIST_SEPARATOR.join(
         sorted([graph.nodes[n]["type"] for n in merge_list])
     )
     merged_risk = max(graph.nodes[n]["flags"] for n in merge_list)
@@ -188,14 +188,14 @@ def simplify_entities_graph(entities_graph: nx.Graph) -> nx.Graph:
     # remove single degree attributes
     entities_graph = entities_graph.copy()
     for node in list(entities_graph.nodes()):
-        if entities_graph.degree(node) < 2 and not node.startswith(config.entity_label):
+        if entities_graph.degree(node) < 2 and not node.startswith(ENTITY_LABEL):
             entities_graph.remove_node(node)
 
     entities_graph = _merge_nodes(entities_graph)
 
     # remove single degree attributes
     for node in list(entities_graph.nodes()):
-        if entities_graph.degree(node) < 2 and not node.startswith(config.entity_label):
+        if entities_graph.degree(node) < 2 and not node.startswith(ENTITY_LABEL):
             entities_graph.remove_node(node)
 
     return entities_graph
@@ -255,18 +255,10 @@ def get_entity_graph(
     all_nodes = set(links_df["source"]).union(set(links_df["target"]))
     for node in all_nodes:
         node_names.add(node)
-        size = (
-            20
-            if node == selected
-            else 12
-            if node.startswith(config.entity_label)
-            else 8
-        )
+        size = 20 if node == selected else 12 if node.startswith(ENTITY_LABEL) else 8
         vadjust = -size - 10
 
-        parts = [
-            p.split(ATTRIBUTE_VALUE_SEPARATOR) for p in node.split(config.list_sep)
-        ]
+        parts = [p.split(ATTRIBUTE_VALUE_SEPARATOR) for p in node.split(LIST_SEPARATOR)]
         atts = [p[0] for p in parts]
         atts = list(dict.fromkeys(atts))
 
@@ -279,7 +271,7 @@ def get_entity_graph(
 
         vals = [p[1] for p in parts if len(p) > 1]
         vals = list(dict.fromkeys(vals))
-        label = "\n".join(vals) + "\n(" + config.list_sep.join(atts) + ")"
+        label = "\n".join(vals) + "\n(" + LIST_SEPARATOR.join(atts) + ")"
 
         nodes.append(
             {

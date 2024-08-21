@@ -9,21 +9,21 @@ import polars as pl
 from graspologic.partition import hierarchical_leiden
 
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
-from toolkit.risk_networks import config
+from toolkit.risk_networks.config import DEFAULT_MAX_ATTRIBUTE_DEGREE, ENTITY_LABEL
 
 
 # ruff: noqa
 def trim_nodeset(
     graph: nx.Graph,
     additional_trimmed_attributes: list[str] | None = None,
-    max_attribute_degree: int = 10,
+    max_attribute_degree: int = DEFAULT_MAX_ATTRIBUTE_DEGREE,
 ) -> tuple[set, set[Any | str]]:
     if additional_trimmed_attributes is None:
         additional_trimmed_attributes = []
 
     trimmed_degrees = set()
     for node, degree in graph.degree():
-        if not node.startswith(config.entity_label) and degree > max_attribute_degree:
+        if not node.startswith(ENTITY_LABEL) and degree > max_attribute_degree:
             trimmed_degrees.add((node, degree))
 
     trimmed_nodes = {t[0] for t in trimmed_degrees}.union(additional_trimmed_attributes)
@@ -65,7 +65,7 @@ def project_entity_graph(
 ) -> nx.Graph:
     P = nx.Graph()
     entity_nodes = [
-        node for node in overall_graph.nodes() if node.startswith(config.entity_label)
+        node for node in overall_graph.nodes() if node.startswith(ENTITY_LABEL)
     ]
 
     for node in entity_nodes:
@@ -74,7 +74,7 @@ def project_entity_graph(
         )
 
         for ent_neighbor in neighbors:
-            if ent_neighbor.startswith(config.entity_label):
+            if ent_neighbor.startswith(ENTITY_LABEL):
                 P.add_edge(node, ent_neighbor)
             elif neighbor_is_valid(
                 ent_neighbor, supporting_attribute_types, trimmed_nodeset
@@ -86,7 +86,7 @@ def project_entity_graph(
                     if neighbor_is_valid(
                         att_neighbor, supporting_attribute_types, trimmed_nodeset
                     ):
-                        if att_neighbor.startswith(config.entity_label):
+                        if att_neighbor.startswith(ENTITY_LABEL):
                             if node != att_neighbor:
                                 P.add_edge(node, att_neighbor)
                         else:  # fuzzy att link
@@ -103,9 +103,7 @@ def project_entity_graph(
                                     supporting_attribute_types,
                                     trimmed_nodeset,
                                 ):
-                                    if fuzzy_att_neighbor.startswith(
-                                        config.entity_label
-                                    ):
+                                    if fuzzy_att_neighbor.startswith(ENTITY_LABEL):
                                         if node != fuzzy_att_neighbor:
                                             P.add_edge(
                                                 node,

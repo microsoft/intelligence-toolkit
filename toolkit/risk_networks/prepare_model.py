@@ -9,9 +9,8 @@ from typing import Any
 import networkx as nx
 import polars as pl
 
-import toolkit.risk_networks.config as config
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
-from toolkit.risk_networks.config import FlagAggregatorType
+from toolkit.risk_networks.config import ENTITY_LABEL, FlagAggregatorType
 
 
 def clean_text(text: str | int) -> str:
@@ -85,11 +84,11 @@ def build_main_graph(
     value_to_atts = defaultdict(set)
     for link_list in attribute_links:
         for link in link_list:
-            n1 = f"{config.entity_label}{ATTRIBUTE_VALUE_SEPARATOR}{link[0]}"
+            n1 = f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}{link[0]}"
             n2 = f"{link[1]}{ATTRIBUTE_VALUE_SEPARATOR}{link[2]}"
             edge = (n1, n2) if n1 < n2 else (n2, n1)
             graph.add_edge(edge[0], edge[1], type=link[1])
-            graph.add_node(n1, type=config.entity_label)
+            graph.add_node(n1, type=ENTITY_LABEL)
             graph.add_node(n2, type=link[1])
             value_to_atts[link[2]].add(n2)
 
@@ -141,7 +140,7 @@ def build_flag_links(
 
 
 def transform_entity(entity):
-    return f"{config.entity_label}{ATTRIBUTE_VALUE_SEPARATOR}{entity}"
+    return f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}{entity}"
 
 
 def build_flags(

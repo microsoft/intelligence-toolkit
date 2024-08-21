@@ -9,10 +9,10 @@ from toolkit.helpers.constants import CACHE_PATH
 
 SIMILARITY_THRESHOLD_MIN = 0.0
 SIMILARITY_THRESHOLD_MAX = 1.0
+DEFAULT_MAX_ATTRIBUTE_DEGREE = 10
+ENTITY_LABEL = "ENTITY"
+LIST_SEPARATOR = ";"
 
-list_sep = ";"
-max_rows_to_show = 1000
-entity_label = "ENTITY"
 cache_dir = os.path.join(CACHE_PATH, "risk_networks")
 outputs_dir = os.path.join(cache_dir, "outputs")
 os.makedirs(outputs_dir, exist_ok=True)
