@@ -76,14 +76,14 @@ def generate_attribute_links(
 
 
 def build_main_graph(
-    network_attribute_links: list[Any] | None = None,
+    attribute_links: list[Any] | None = None,
 ) -> nx.Graph:
     graph = nx.Graph()
-    if network_attribute_links is None:
+    if attribute_links is None:
         return graph
 
     value_to_atts = defaultdict(set)
-    for link_list in network_attribute_links:
+    for link_list in attribute_links:
         for link in link_list:
             n1 = f"{config.entity_label}{ATTRIBUTE_VALUE_SEPARATOR}{link[0]}"
             n2 = f"{link[1]}{ATTRIBUTE_VALUE_SEPARATOR}{link[2]}"
@@ -200,3 +200,26 @@ def build_groups(
         group_links.append(link_list)
 
     return group_links
+
+
+def build_model_with_attributes(
+    input_dataframe: pl.DataFrame, entity_id_column: str, columns_to_link: list[str]
+) -> nx.Graph:
+    data_df = format_data_columns(input_dataframe, columns_to_link, entity_id_column)
+    attribute_links = generate_attribute_links(
+        data_df, entity_id_column, columns_to_link
+    )
+
+    return build_main_graph(attribute_links)
+
+
+def get_flags(
+    flags_dataframe, entity_col, flag_agg, value_cols
+) -> tuple[pl.DataFrame, int, int]:
+    flag_links = build_flag_links(
+        flags_dataframe,
+        entity_col,
+        flag_agg,
+        value_cols,
+    )
+    return build_flags(flag_links)

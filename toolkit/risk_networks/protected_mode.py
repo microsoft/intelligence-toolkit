@@ -27,15 +27,25 @@ def protect_data(
             new_name = f"Protected_Entity_{i}"
             name_exists = [x for x in entities_renamed if x[0] == name]
             if len(name_exists) == 0:
-                entities_renamed.append((
-                    original_name,
-                    new_name,
-                ))
+                entities_renamed.append(
+                    (
+                        original_name,
+                        new_name,
+                    )
+                )
             else:
                 new_name = name_exists[0][1]
 
-            data_df[entity_col] = data_df[entity_col].apply(
-                lambda x, new_name=new_name, name=name: new_name if name == x else x
+            data_df = data_df.with_columns(
+                [
+                    data_df[entity_col]
+                    .apply(
+                        lambda x, new_name=new_name, name=name: new_name
+                        if x == name
+                        else x
+                    )
+                    .alias(entity_col)
+                ]
             )
 
         unique_names_value = data_df[value_col].unique()
@@ -47,18 +57,28 @@ def protect_data(
                 name_exists_entity = [x for x in entities_renamed if x[0] == name]
 
                 if len(name_exists) == 0 and len(name_exists_entity) == 0:
-                    attributes_renamed.append((
-                        name,
-                        new_name,
-                    ))
+                    attributes_renamed.append(
+                        (
+                            name,
+                            new_name,
+                        )
+                    )
                 else:
                     if len(name_exists_entity) > 0:
                         new_name = name_exists_entity[0][1]
                     else:
                         new_name = name_exists[0][1]
 
-                data_df[value_col] = data_df[value_col].apply(
-                    lambda x, new_name=new_name, name=name: new_name if name == x else x
+                data_df = data_df.with_columns(
+                    [
+                        data_df[value_col]
+                        .apply(
+                            lambda x, new_name=new_name, name=name: new_name
+                            if x == name
+                            else x
+                        )
+                        .alias(value_col)
+                    ]
                 )
         else:
             attributes_renamed = [(name, name) for name in unique_names_value]

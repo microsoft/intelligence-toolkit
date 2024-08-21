@@ -113,7 +113,7 @@ def get_subgraph(
     entity_graph: nx.Graph,
     nodes: list[str | int],
     random_seed: int = 42,
-    max_cluster_size: int = 10,
+    max_network_entities: int = 10,
 ) -> tuple[list, dict]:
     entity_to_community = {}
     community_nodes = []
@@ -124,7 +124,10 @@ def get_subgraph(
     S = nx.subgraph(entity_graph, nodes)
 
     node_to_network = hierarchical_leiden(
-        S, resolution=1.0, random_seed=random_seed, max_cluster_size=max_cluster_size
+        S,
+        resolution=1.0,
+        random_seed=random_seed,
+        max_cluster_size=max_network_entities,
     ).final_level_hierarchical_clustering()
 
     network_to_nodes = defaultdict(set)
@@ -142,7 +145,7 @@ def get_subgraph(
 
 def get_community_nodes(
     entity_graph: nx.Graph,
-    max_network_size: int = 50,
+    max_network_entities: int = 50,
 ) -> tuple[list, dict]:
     # get set of connected nodes list
     sorted_components = sorted(
@@ -158,9 +161,9 @@ def get_community_nodes(
     community_nodes = []
     for sequence in components_sequence:
         nodes = component_to_nodes[sequence]
-        if len(nodes) > max_network_size:
+        if len(nodes) > max_network_entities:
             community_nodes_sequence, entity_to_community = get_subgraph(
-                entity_graph, nodes, max_network_size
+                entity_graph, nodes, max_network_entities
             )
             community_nodes.extend(community_nodes_sequence)
             entity_to_community_ix.update(entity_to_community)
@@ -176,7 +179,7 @@ def build_networks(
     trimmed_nodes: set,
     inferred_links: set,
     supporting_attribute_types: list[str],
-    max_network_size: int,
+    max_network_entities: int,
 ) -> tuple[list, dict]:
     P = project_entity_graph(
         main_graph, trimmed_nodes, inferred_links, supporting_attribute_types
@@ -187,7 +190,7 @@ def build_networks(
         entity_to_community,
     ) = get_community_nodes(
         P,
-        max_network_size,
+        max_network_entities,
     )
 
     return community_nodes, entity_to_community

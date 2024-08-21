@@ -68,14 +68,16 @@ def build_network_from_entities(
     graph,
     entity_to_community,
     integrated_flags,
-    trimmed_attributes,
+    trimmed_attributes: list[tuple[str, int]],
     inferred_links,
     selected_nodes,
 ) -> nx.Graph:
     network_graph = nx.Graph()
     nodes = selected_nodes
     # additional_trimmed_nodeset = set(sv.network_additional_trimmed_attributes.value)
-    trimmed_nodeset = trimmed_attributes["Attribute"].unique().tolist()
+    # trimmed_nodeset = trimmed_attributes["Attribute"].unique().tolist()
+    trimmed_nodeset = {t[0] for t in trimmed_attributes}
+
     # trimmed_nodeset.extend(additional_trimmed_nodeset)
     for node in nodes:
         n_c = str(entity_to_community[node]) if node in entity_to_community else ""
@@ -226,14 +228,27 @@ def get_type_color(node_type: str, is_flagged: bool, attribute_types: list[Any])
 
 
 def get_entity_graph(
-    network_entities_graph: nx.Graph, selected, links_df, attribute_types
-):
+    network_entities_graph: nx.Graph, selected: str, attribute_types: list[str]
+) -> tuple[list, list]:
     """
     Implements the entity graph visualization after network selection
     """
     node_names = set()
     nodes = []
     edges = []
+
+    links_df = pl.DataFrame(
+        list(network_entities_graph.edges()), schema=["source", "target"]
+    )
+
+    links_df.with_columns(
+        [
+            pl.col("target")
+            .apply(lambda x: x.split(ATTRIBUTE_VALUE_SEPARATOR)[0])
+            .alias("attribute")
+        ]
+    )
+
     all_nodes = set(links_df["source"]).union(set(links_df["target"]))
     for node in all_nodes:
         node_names.add(node)
@@ -252,8 +267,6 @@ def get_entity_graph(
         atts = [p[0] for p in parts]
         # remove duplicate values while maintaining order
         atts = list(dict.fromkeys(atts))
-        print("network_entities_graph", network_entities_graph.nodes)
-        print("node", node)
         color = get_type_color(
             atts[0],
             network_entities_graph.nodes[node]["flags"] > 0,
@@ -276,9 +289,9 @@ def get_entity_graph(
                 "font": {"vadjust": vadjust, "size": 5},
             }
         )
-    for _i, row in links_df.iterrows():
-        source = row["source"]
-        target = row["target"]
+    for row in list(network_entities_graph.edges()):
+        source = row[0]
+        target = row[1]
         edges.append(
             {
                 "source": source,

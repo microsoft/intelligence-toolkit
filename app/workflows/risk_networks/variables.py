@@ -38,7 +38,7 @@ class SessionVariables:
         self.network_community_nodes = SessionVariable([], prefix)
         self.network_overall_graph = SessionVariable(None, prefix)
         self.network_entity_graph = SessionVariable(None, prefix)
-        self.network_max_network_size = SessionVariable(50, prefix)
+        self.network_max_network_entities = SessionVariable(20, prefix)
         self.network_max_attribute_degree = SessionVariable(10, prefix)
         self.network_trimmed_attributes = SessionVariable([], prefix)
         self.network_similarity_threshold = SessionVariable(0.05, prefix)

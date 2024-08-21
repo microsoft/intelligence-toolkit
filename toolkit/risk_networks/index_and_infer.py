@@ -162,5 +162,4 @@ def index_and_infer(
         callbacks,
     )
 
-    # Remove None values from link_list
     return inferred_links, len(embedded_texts)

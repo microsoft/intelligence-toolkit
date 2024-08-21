@@ -10,8 +10,13 @@ import polars as pl
 import streamlit as st
 import workflows.risk_networks.functions as functions
 import workflows.risk_networks.variables as rn_variables
-from st_aggrid import (AgGrid, ColumnsAutoSizeMode, DataReturnMode,
-                       GridOptionsBuilder, GridUpdateMode)
+from st_aggrid import (
+    AgGrid,
+    ColumnsAutoSizeMode,
+    DataReturnMode,
+    GridOptionsBuilder,
+    GridUpdateMode,
+)
 from streamlit_agraph import Edge, Node, agraph
 from util import ui_components
 from util.session_variables import SessionVariables
@@ -22,18 +27,25 @@ from toolkit.risk_networks import config
 from toolkit.risk_networks import get_readme as get_intro
 from toolkit.risk_networks import prompts
 from toolkit.risk_networks.explore_networks import (
-    build_network_from_entities, get_entity_graph, simplify_entities_graph)
+    build_network_from_entities,
+    get_entity_graph,
+    simplify_entities_graph,
+)
 from toolkit.risk_networks.exposure_report import build_exposure_report
-from toolkit.risk_networks.identify_networks import (build_entity_records,
-                                                     build_networks,
-                                                     trim_nodeset)
-from toolkit.risk_networks.index_and_infer import (build_inferred_df,
-                                                   index_and_infer)
-from toolkit.risk_networks.prepare_model import (build_flag_links, build_flags,
-                                                 build_groups,
-                                                 build_main_graph,
-                                                 format_data_columns,
-                                                 generate_attribute_links)
+from toolkit.risk_networks.identify_networks import (
+    build_entity_records,
+    build_networks,
+    trim_nodeset,
+)
+from toolkit.risk_networks.index_and_infer import build_inferred_df, index_and_infer
+from toolkit.risk_networks.prepare_model import (
+    build_flag_links,
+    build_flags,
+    build_groups,
+    build_main_graph,
+    format_data_columns,
+    generate_attribute_links,
+)
 from toolkit.risk_networks.protected_mode import protect_data
 
 
@@ -132,6 +144,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                                     value_cols,
                                     entity_col,
                                     sv.network_entities_renamed.value,
+                                    sv.network_attributes_renamed.value,
                                 )
                                 sv.network_entities_renamed.value = entities_renamed
                                 sv.network_attributes_renamed.value = attributes_renamed
@@ -355,11 +368,11 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                     help="The maximum number of entities that can share an attribute before it is removed from the network.",
                 )
             with c2:
-                network_max_network_size = st.number_input(
+                network_max_network_entities = st.number_input(
                     "Max network entities",
                     min_value=1,
-                    value=sv.network_max_network_size.value,
-                    help="Any network with entities >= network_max_network_entities will be isolated into a subnetwork",
+                    value=sv.network_max_network_entities.value,
+                    help="Any network with entities >= max_network_entities will be isolated into a subnetwork",
                 )
             with c3:
                 network_supporting_attribute_types = st.multiselect(
@@ -375,7 +388,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 identify = st.button("Identify networks")
             if identify:
                 sv.network_max_attribute_degree.value = network_max_attribute_degree
-                sv.network_max_network_size.value = network_max_network_size
+                sv.network_max_network_entities.value = network_max_network_entities
                 sv.network_supporting_attribute_types.value = (
                     network_supporting_attribute_types
                 )
@@ -405,7 +418,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                         trimmed_nodes,
                         sv.network_inferred_links.value,
                         sv.network_supporting_attribute_types.value,
-                        sv.network_max_network_size.value,
+                        sv.network_max_network_entities.value,
                     )
 
                 entity_records = build_entity_records(
@@ -568,11 +581,12 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 sv.network_selected_entity.value = selected_entity
                 sv.network_selected_community.value = selected_network
                 c_nodes = sv.network_community_nodes.value[selected_network]
+                trimmed_attr = {t[0] for t in sv.network_trimmed_attributes.value}
                 network_entities_graph = build_network_from_entities(
                     sv.network_overall_graph.value,
                     sv.network_entity_to_community_ix.value,
                     sv.network_integrated_flags.value,
-                    sv.network_trimmed_attributes.value,
+                    trimmed_attr,
                     sv.network_inferred_links.value,
                     c_nodes,
                 )
@@ -633,7 +647,6 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                         nodes, edges = get_entity_graph(
                             network_entities_graph,
                             entity_selected,
-                            full_links_df,
                             attribute_types,
                         )
 
@@ -643,7 +656,6 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                         nodes, edges = get_entity_graph(
                             network_entities_simplified_graph,
                             entity_selected,
-                            merged_links_df,
                             attribute_types,
                         )
 
