@@ -415,7 +415,7 @@ class TestSubgraph:
         assert set(community_nodes[1]) == {1, 2} or set(community_nodes[1]) == {3, 4}
         assert len(entity_to_community) == 4
 
-    def test_max_cluster_size(self):
+    def test_max_network_entities(self):
         graph = nx.Graph()
         graph.add_edges_from(
             [
@@ -430,15 +430,15 @@ class TestSubgraph:
             ]
         )
         nodes = [1, 2, 3, 4, 66, 54, 89]
-        max_cluster_size = 2
+        max_network_entities = 2
         community_nodes, _ = get_subgraph(
-            graph, nodes, max_cluster_size=max_cluster_size
+            graph, nodes, max_network_entities=max_network_entities
         )
 
         for community in community_nodes:
-            assert len(community) <= max_cluster_size
+            assert len(community) <= max_network_entities
 
-    def test_max_cluster_size_high(self):
+    def test_max_network_entities_size_high(self):
         graph = nx.Graph()
         graph.add_edges_from(
             [
@@ -453,13 +453,13 @@ class TestSubgraph:
             ]
         )
         nodes = [1, 2, 3, 4, 66, 54, 89]
-        max_cluster_size = 10
+        max_network_entities = 10
         community_nodes, _ = get_subgraph(
-            graph, nodes, max_cluster_size=max_cluster_size
+            graph, nodes, max_network_entities=max_network_entities
         )
 
         for community in community_nodes:
-            assert len(community) <= max_cluster_size
+            assert len(community) <= max_network_entities
 
     def test_graph_with_weights(self):
         graph = nx.Graph()

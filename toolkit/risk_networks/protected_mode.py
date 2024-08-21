@@ -39,7 +39,7 @@ def protect_data(
             data_df = data_df.with_columns(
                 [
                     data_df[entity_col]
-                    .apply(
+                    .map_elements(
                         lambda x, new_name=new_name, name=name: new_name
                         if x == name
                         else x
@@ -72,7 +72,7 @@ def protect_data(
                 data_df = data_df.with_columns(
                     [
                         data_df[value_col]
-                        .apply(
+                        .map_elements(
                             lambda x, new_name=new_name, name=name: new_name
                             if x == name
                             else x
