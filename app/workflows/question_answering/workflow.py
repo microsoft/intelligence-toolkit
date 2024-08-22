@@ -17,18 +17,26 @@ from app.util.download_pdf import add_download_pdf
 from app.util.openai_wrapper import UIOpenAIConfiguration
 from app.util.session_variables import SessionVariables
 from app.workflows.question_answering import config
+from python.AI.base_embedder import BaseEmbedder
 from python.AI.defaults import CHUNK_SIZE
-from python.AI.embedder import Embedder
-from python.AI.embedder import Embedder
+from python.AI.local_embedder import LocalEmbedder
+from python.AI.openai_embedder import OpenAIEmbedder
 
 sv_home = SessionVariables("home")
 ai_configuration = UIOpenAIConfiguration().get_configuration()
 
 
-def embedder():
+def embedder() -> BaseEmbedder:
     try:
-        return Embedder(
-            ai_configuration, config.cache_dir, sv_home.local_embeddings.value
+        ai_configuration = UIOpenAIConfiguration().get_configuration()
+        if sv_home.local_embeddings.value:
+            return LocalEmbedder(
+                db_name=config.cache_name,
+                max_tokens=ai_configuration.max_tokens,
+            )
+        return OpenAIEmbedder(
+            configuration=ai_configuration,
+            db_name=config.cache_name,
         )
     except Exception as e:
         st.error(f"Error creating connection: {e}")
