@@ -4,7 +4,7 @@
 import random
 import time
 from collections.abc import Callable
-from functools import _Wrapped, wraps
+from functools import wraps
 from typing import Any, TypeVar
 
 from python.helpers.constants import (
@@ -19,7 +19,7 @@ def retry_with_backoff(
     retries=VECTOR_STORE_MAX_RETRIES,
     backoff_in_seconds=VECTOR_STORE_MAX_RETRIES_WAIT_TIME,
 ) -> Callable[[Callable[..., T]], Callable[..., T]]:
-    def decorator(func) -> _Wrapped[Callable[..., Any], Any, Callable[..., Any], T]:
+    def decorator(func) -> Any:
         @wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> T:
             x = 0
