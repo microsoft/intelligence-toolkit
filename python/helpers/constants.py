@@ -14,3 +14,6 @@ CACHE_PATH = os.path.join(
 # create a new directory if it does not exist
 if not os.path.exists(CACHE_PATH):
     os.makedirs(CACHE_PATH)
+
+VECTOR_STORE_MAX_RETRIES = 5
+VECTOR_STORE_MAX_RETRIES_WAIT_TIME = 3

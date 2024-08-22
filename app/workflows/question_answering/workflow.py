@@ -2,7 +2,6 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 import os
-import re
 
 import pandas as pd
 import streamlit as st
@@ -34,6 +33,7 @@ def embedder() -> BaseEmbedder:
                 db_name=config.cache_name,
                 max_tokens=ai_configuration.max_tokens,
             )
+
         return OpenAIEmbedder(
             configuration=ai_configuration,
             db_name=config.cache_name,
