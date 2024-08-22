@@ -123,7 +123,7 @@ def create(sv: SessionVariables, workflow=None):
             "Question answering workflow:",
             "Upload data",
             "Explore concept graph",
-            "Search for answers",
+            "Generate incremental answers",
             "Generate AI answer reports",
         ]
     )
@@ -217,49 +217,50 @@ def create(sv: SessionVariables, workflow=None):
                 st.markdown(f"**Selected concept: {selection}**")
                 st.dataframe(selected_chunks_df, hide_index=True, height=650)
     with search_tab:
-        c1, c2, c3, c4, c5, c6 = st.columns([1, 1, 1, 1, 1, 1])
-        with c1:
-            st.number_input(
-                "Depth (semantic search tests)",
-                value=sv.semantic_search_depth.value,
-                key=sv.semantic_search_depth.key,
-                min_value=0,
-            )
-        with c2:
-            st.number_input(
-                "Breadth (community sample tests)",
-                value=sv.relational_search_depth.value,
-                key=sv.relational_search_depth.key,
-                min_value=0,
-            )
-        with c3:
-            st.number_input(
-                "Detail (test relevant adjacent)",
-                value=sv.structural_search_steps.value,
-                key=sv.structural_search_steps.key,
-                min_value=0,
-            )
-        with c4:
-            st.number_input(
-                "Relevance test batch size",
-                value=sv.relevance_test_batch_size.value,
-                key=sv.relevance_test_batch_size.key,
-                min_value=0,
-            )
-        with c5:
-            st.number_input(
-                "Maximum relevance tests",
-                value=sv.relevance_test_limit.value,
-                key=sv.relevance_test_limit.key,
-                min_value=0,
-            )
-        with c6:
-            st.number_input(
-                "Answer update batch size",
-                value=sv.answer_update_batch_size.value,
-                key=sv.answer_update_batch_size.key,
-                min_value=0,
-            )
+        with st.expander('Search options', expanded=False):
+            c1, c2, c3, c4, c5, c6 = st.columns([1, 1, 1, 1, 1, 1])
+            with c1:
+                st.number_input(
+                    "Relevance test budget",
+                    value=sv.relevance_test_budget.value,
+                    key=sv.relevance_test_budget.key,
+                    min_value=0,
+                )
+            with c2:
+                st.number_input(
+                    "Relevance tests/community/round",
+                    value=sv.community_relevance_tests.value,
+                    key=sv.community_relevance_tests.key,
+                    min_value=0,
+                )
+            with c3:
+                st.number_input(
+                    "Relevance tests/batch",
+                    value=sv.relevance_test_batch_size.value,
+                    key=sv.relevance_test_batch_size.key,
+                    min_value=0,
+                )
+            with c4:
+                st.number_input(
+                    "Restart on irrelevant communities",
+                    value=sv.irrelevant_community_restart.value,
+                    key=sv.irrelevant_community_restart.key,
+                    min_value=0,
+                )
+            with c5:
+                st.number_input(
+                    "Test relevant neighbours",
+                    value=sv.adjacent_chunk_steps.value,
+                    key=sv.adjacent_chunk_steps.key,
+                    min_value=0,
+                )
+            with c6:
+                st.number_input(
+                    "Relevant chunks/answer update",
+                    value=sv.answer_update_batch_size.value,
+                    key=sv.answer_update_batch_size.key,
+                    min_value=0,
+                )
         c1, c2 = st.columns([6, 1])
         with c1:
             st.text_input(
@@ -357,13 +358,12 @@ def create(sv: SessionVariables, workflow=None):
                 embedder=embedder(),
                 embedding_cache=sv_home.save_cache.value,
                 select_logit_bias=5,
-                semantic_search_depth=sv.semantic_search_depth.value,
-                structural_search_steps=sv.structural_search_steps.value,
-                community_search_breadth=sv.relational_search_depth.value,
-                relevance_test_limit=sv.relevance_test_limit.value,
+                adjacent_search_steps=sv.adjacent_chunk_steps.value,
+                relevance_test_budget=sv.relevance_test_budget.value,
+                community_relevance_tests=sv.community_relevance_tests.value,
                 relevance_test_batch_size=sv.relevance_test_batch_size.value,
-                answer_batch_size=5,
-                augment_top_concepts=10,
+                irrelevant_community_restart=sv.irrelevant_community_restart.value,
+                answer_batch_size=sv.answer_update_batch_size.value,
                 chunk_progress_callback=on_chunk_progress,
                 answer_progress_callback=on_answer_progress,
                 chunk_callback=on_chunk_relevant,

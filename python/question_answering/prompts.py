@@ -42,7 +42,7 @@ The JSON object should be structured as follows:
 {{
     "question": "<user question, which must not be modified>",
     "title": "<title of report that answers question, which may be updated based on new and updated content items>",
-    "introduction": "<introduction to the report, introducing all content items (not just new or updated ones)>",
+    "claims": "<introduction to the report, including a bulleted list of all major claims arising from the content items (not just the new or updated ones)>",
     "content_id_sequence": ["<sequence of context item ids>"],
     "content_items":
     {{
@@ -53,7 +53,7 @@ The JSON object should be structured as follows:
         }},
         ...
     }}
-    "conclusion": "<conclusion to the report, summarizing all content items (not just new or updated ones)>"
+    "conclusion": "<conclusion to the report, summarizing all major claims and their implications>"
 }}
 
 The content_sequence field should be a list of content item ids that represents the order in which the content items should be presented in the final report.
