@@ -6,10 +6,10 @@ import os
 import time
 
 import streamlit as st
-from app.components.app_loader import load_multipage_app
-from app.util.constants import MAX_SIZE_EMBEDDINGS_KEY
-from app.util.enums import Mode
-from app.util.openai_wrapper import (
+from components.app_loader import load_multipage_app
+from util.constants import MAX_SIZE_EMBEDDINGS_KEY
+from util.enums import Mode
+from util.openai_wrapper import (
     UIOpenAIConfiguration,
     key,
     openai_azure_auth_type,
@@ -18,9 +18,9 @@ from app.util.openai_wrapper import (
     openai_type_key,
     openai_version_key,
 )
-from app.util.secrets_handler import SecretsHandler
+from util.secrets_handler import SecretsHandler
 
-from python.AI.defaults import PICKLE_FILE_NAME
+from python.AI.vector_store import VectorStore
 from python.helpers.constants import CACHE_PATH
 
 
@@ -29,15 +29,6 @@ def on_change(handler, key=None, value=None):
         handler.write_secret(key, value)
 
     return change
-
-
-def delete_embeddings_pickle(root_dir=CACHE_PATH):
-    for root, _dirs, files in os.walk(root_dir):
-        for file in files:
-            if file == PICKLE_FILE_NAME:
-                file_path = os.path.join(root, file)
-                os.remove(file_path)
-                print(f"Deleted: {file_path}")
 
 
 def main():
@@ -179,7 +170,8 @@ def main():
         st.text("")
         clear = st.button("Clear all embeddings")
         if clear:
-            delete_embeddings_pickle()
+            vector_store = VectorStore(path=CACHE_PATH)
+            vector_store.drop_db()
             st.success("Embeddings cleared.")
 
 
