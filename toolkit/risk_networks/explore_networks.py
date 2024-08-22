@@ -67,16 +67,22 @@ def _build_fuzzy_neighbors(
 def build_network_from_entities(
     graph,
     entity_to_community,
-    integrated_flags,
-    trimmed_attributes: list[tuple[str, int]],
-    inferred_links,
-    selected_nodes,
+    integrated_flags: pl.DataFrame | None = None,
+    trimmed_attributes: list[tuple[str, int]] | None = None,
+    inferred_links: Any | None = None,
+    selected_nodes: list[str] | None = None,
 ) -> nx.Graph:
     network_graph = nx.Graph()
     nodes = selected_nodes
     # additional_trimmed_nodeset = set(sv.network_additional_trimmed_attributes.value)
     # trimmed_nodeset = trimmed_attributes["Attribute"].unique().tolist()
     trimmed_nodeset = {t[0] for t in trimmed_attributes}
+
+    if inferred_links is None:
+        inferred_links = {}
+
+    if integrated_flags is None:
+        integrated_flags = pl.DataFrame()
 
     # trimmed_nodeset.extend(additional_trimmed_nodeset)
     for node in nodes:
@@ -107,9 +113,9 @@ def build_network_from_entities(
                     flags=0,
                 )
                 network_graph.add_edge(node, ent_neighbor)
-                att_neighbors = set(graph.neighbors(ent_neighbor)).union(
-                    inferred_links[ent_neighbor]
-                )
+                att_neighbors = set(graph.neighbors(ent_neighbor))
+                if ent_neighbor in inferred_links:
+                    att_neighbors = att_neighbors.union(inferred_links[ent_neighbor])
                 att_neighbors_not_trimmed = [
                     att_neighbor
                     for att_neighbor in att_neighbors

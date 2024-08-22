@@ -8,9 +8,9 @@ from typing import Any
 import numpy as np
 import pyarrow as pa
 
-from python.AI.defaults import DEFAULT_LLM_MAX_TOKENS
-from python.AI.vector_store import VectorStore
-from python.helpers.constants import CACHE_PATH
+from toolkit.AI.defaults import DEFAULT_LLM_MAX_TOKENS
+from toolkit.AI.vector_store import VectorStore
+from toolkit.helpers.constants import CACHE_PATH
 
 from .utils import get_token_count, hash_text
 

@@ -6,8 +6,9 @@ import polars as pl
 from sklearn.neighbors import NearestNeighbors
 
 import toolkit.risk_networks.config as config
-from toolkit.AI.embedder import Embedder
+from toolkit.AI.base_embedder import BaseEmbedder
 from toolkit.AI.openai_configuration import OpenAIConfiguration
+from toolkit.AI.openai_embedder import OpenAIEmbedder
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 from toolkit.risk_networks.config import (
@@ -21,9 +22,8 @@ def index_nodes(
     indexed_node_types: list[str],
     main_graph: nx.Graph,
     callbacks: list[ProgressBatchCallback] | None = None,
-    functions_embedder: Embedder | None = None,
+    functions_embedder: BaseEmbedder | None = None,
     openai_configuration: OpenAIConfiguration | None = None,
-    use_local=False,
     save_cache=True,
 ):
     if len(indexed_node_types) == 0:
@@ -37,7 +37,7 @@ def index_nodes(
     texts = [t[0] for t in text_types]
 
     if functions_embedder is None:
-        functions_embedder = Embedder(openai_configuration, config.cache_dir, use_local)
+        functions_embedder = OpenAIEmbedder(openai_configuration, config.cache_name)
     embeddings = functions_embedder.embed_store_many(
         texts,
         callbacks,
@@ -128,7 +128,7 @@ def index_and_infer(
     main_graph: nx.Graph,
     network_similarity_threshold: float,
     callbacks: list[ProgressBatchCallback] | None = None,
-    functions_embedder: Embedder | None = None,
+    functions_embedder: BaseEmbedder | None = None,
     openai_configuration: OpenAIConfiguration | None = None,
     use_local=False,
     save_cache=True,

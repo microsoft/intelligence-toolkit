@@ -54,7 +54,7 @@ class TestIndexNodes:
         ):
             index_nodes([], overall_graph)
 
-    @patch("toolkit.risk_networks.index_and_infer.Embedder")
+    @patch("toolkit.risk_networks.index_and_infer.OpenAIEmbedder")
     def test_index_nodes_small_samples(self, mock_embedder, overall_graph_small):
         mock_embedder_instance = MagicMock()
         mock_embedder.return_value = mock_embedder_instance
@@ -68,7 +68,7 @@ class TestIndexNodes:
         ):
             index_nodes(indexed_node_types, overall_graph_small)
 
-    @patch("toolkit.risk_networks.index_and_infer.Embedder")
+    @patch("toolkit.risk_networks.index_and_infer.OpenAIEmbedder")
     def test_index_nodes(self, mock_embedder, overall_graph):
         mock_embedder_instance = MagicMock()
         mock_embedder.return_value = mock_embedder_instance

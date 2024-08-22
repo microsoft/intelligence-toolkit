@@ -60,13 +60,19 @@ def neighbor_is_valid(
 def project_entity_graph(
     overall_graph: nx.Graph,
     trimmed_nodeset: set,
-    inferred_links: dict[set],
-    supporting_attribute_types: list[str],
+    inferred_links: dict[set] | None = None,
+    supporting_attribute_types: list[str] | None = None,
 ) -> nx.Graph:
     P = nx.Graph()
     entity_nodes = [
         node for node in overall_graph.nodes() if node.startswith(ENTITY_LABEL)
     ]
+
+    if supporting_attribute_types is None:
+        supporting_attribute_types = []
+
+    if inferred_links is None:
+        inferred_links = []
 
     for node in entity_nodes:
         neighbors = get_entity_neighbors(

@@ -7,7 +7,7 @@ import duckdb
 import lancedb
 import pyarrow as pa
 
-from python.helpers.constants import CACHE_PATH
+from toolkit.helpers.constants import CACHE_PATH
 
 table_missing_msg = "Table not initialized"
 

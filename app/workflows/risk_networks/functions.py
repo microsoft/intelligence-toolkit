@@ -2,13 +2,13 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 import streamlit as st
-from python.AI.base_embedder import BaseEmbedder
-from python.AI.local_embedder import LocalEmbedder
-from python.AI.openai_embedder import OpenAIEmbedder
 from util.openai_wrapper import UIOpenAIConfiguration
 from util.session_variables import SessionVariables
 
 import toolkit.risk_networks.config as config
+from toolkit.AI.base_embedder import BaseEmbedder
+from toolkit.AI.local_embedder import LocalEmbedder
+from toolkit.AI.openai_embedder import OpenAIEmbedder
 
 sv_home = SessionVariables("home")
 

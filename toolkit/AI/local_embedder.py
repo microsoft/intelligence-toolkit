@@ -6,9 +6,9 @@ from typing import Any
 
 from sentence_transformers import SentenceTransformer
 
-from python.AI.base_embedder import BaseEmbedder
-from python.AI.defaults import DEFAULT_LLM_MAX_TOKENS, DEFAULT_LOCAL_EMBEDDING_MODEL
-from python.helpers.constants import CACHE_PATH
+from toolkit.AI.base_embedder import BaseEmbedder
+from toolkit.AI.defaults import DEFAULT_LLM_MAX_TOKENS, DEFAULT_LOCAL_EMBEDDING_MODEL
+from toolkit.helpers.constants import CACHE_PATH
 
 
 class LocalEmbedder(BaseEmbedder):

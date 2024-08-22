@@ -2,8 +2,8 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 
-from python.AI.base_embedder import BaseEmbedder
-from python.helpers.constants import CACHE_PATH
+from toolkit.AI.base_embedder import BaseEmbedder
+from toolkit.helpers.constants import CACHE_PATH
 
 from .client import OpenAIClient
 from .openai_configuration import OpenAIConfiguration

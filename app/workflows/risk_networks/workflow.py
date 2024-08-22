@@ -2,8 +2,6 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 
-import os
-
 # ruff: noqa
 import pandas as pd
 import polars as pl
@@ -23,9 +21,9 @@ from util.session_variables import SessionVariables
 
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
-from toolkit.risk_networks import config
 from toolkit.risk_networks import get_readme as get_intro
 from toolkit.risk_networks import prompts
+from toolkit.risk_networks.config import ENTITY_LABEL
 from toolkit.risk_networks.explore_networks import (
     build_network_from_entities,
     get_entity_graph,
@@ -51,9 +49,6 @@ from toolkit.risk_networks.protected_mode import protect_data
 
 def create(sv: rn_variables.SessionVariables, workflow=None):
     sv_home = SessionVariables("home")
-
-    if not os.path.exists(config.outputs_dir):
-        os.makedirs(config.outputs_dir)
 
     intro_tab, uploader_tab, process_tab, view_tab, report_tab = st.tabs(
         [
@@ -213,12 +208,10 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
             if sv.network_overall_graph.value is not None:
                 all_nodes = sv.network_overall_graph.value.nodes()
                 entity_nodes = [
-                    node for node in all_nodes if node.startswith(config.entity_label)
+                    node for node in all_nodes if node.startswith(ENTITY_LABEL)
                 ]
                 sv.network_attributes_list.value = [
-                    node
-                    for node in all_nodes
-                    if not node.startswith(config.entity_label)
+                    node for node in all_nodes if not node.startswith(ENTITY_LABEL)
                 ]
                 num_entities = len(entity_nodes)
                 num_attributes = len(all_nodes) - num_entities
@@ -257,7 +250,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
             st.markdown("##### Index and infer nodes (optional)")
             fuzzy_options = sorted(
                 [
-                    config.entity_label,
+                    ENTITY_LABEL,
                     *list(sv.network_node_types.value),
                 ]
             )
@@ -637,9 +630,11 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                     )
                     st.markdown(sv.network_risk_exposure.value)
                 with container:
-                    entity_selected = f"{config.entity_label}{ATTRIBUTE_VALUE_SEPARATOR}{selected_entity}"
+                    entity_selected = (
+                        f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}{selected_entity}"
+                    )
                     attribute_types = [
-                        config.entity_label,
+                        ENTITY_LABEL,
                         *list(sv.network_node_types.value),
                     ]
 
