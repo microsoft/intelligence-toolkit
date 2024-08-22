@@ -2,7 +2,6 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 import os
-import re
 
 import pandas as pd
 import streamlit as st
@@ -34,6 +33,7 @@ def embedder() -> BaseEmbedder:
                 db_name=config.cache_name,
                 max_tokens=ai_configuration.max_tokens,
             )
+
         return OpenAIEmbedder(
             configuration=ai_configuration,
             db_name=config.cache_name,
@@ -186,7 +186,7 @@ def create(sv: SessionVariables, workflow=None):
         num_files = len(sv.text_to_chunks.value.keys())
         num_chunks = sum([len(cs) for f, cs in sv.text_to_chunks.value.items()])
         G = sv.concept_graph.value
-        if num_files > 0:
+        if num_files > 0 and G is not None:
             st.success(
                 f"Chunked **{num_files}** file{'s' if num_files > 1 else ''} into **{num_chunks}** chunks of up to **{CHUNK_SIZE}** tokens. Extracted concept graph with **{len(G.nodes())}** concepts and **{len(G.edges())}** cooccurrences."
             )

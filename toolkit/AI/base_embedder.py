@@ -11,6 +11,7 @@ import pyarrow as pa
 from toolkit.AI.defaults import DEFAULT_LLM_MAX_TOKENS
 from toolkit.AI.vector_store import VectorStore
 from toolkit.helpers.constants import CACHE_PATH
+from toolkit.helpers.decorators import retry_with_backoff
 
 from .utils import get_token_count, hash_text
 
@@ -38,6 +39,7 @@ class BaseEmbedder(ABC):
         self.vector_store = VectorStore(db_name, db_path, schema)
         self.max_tokens = max_tokens
 
+    @retry_with_backoff()
     def embed_store_one(self, text: str, cache_data=True) -> Any | list[float]:
         text_hashed = hash_text(text)
         existing_embedding = (
@@ -62,6 +64,7 @@ class BaseEmbedder(ABC):
             raise Exception(msg)
         return embedding
 
+    @retry_with_backoff()
     def embed_store_many(
         self, texts: list[str], callback=None, cache_data=True
     ) -> np.ndarray[Any, np.dtype[Any]]:
