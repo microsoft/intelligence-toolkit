@@ -2,9 +2,7 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 import logging
-import time
 from abc import ABC, abstractmethod
-from functools import wraps
 from typing import Any
 
 import numpy as np
@@ -12,11 +10,8 @@ import pyarrow as pa
 
 from python.AI.defaults import DEFAULT_LLM_MAX_TOKENS
 from python.AI.vector_store import VectorStore
-from python.helpers.constants import (
-    CACHE_PATH,
-    VECTOR_STORE_MAX_RETRIES,
-    VECTOR_STORE_MAX_RETRIES_WAIT_TIME,
-)
+from python.helpers.constants import CACHE_PATH
+from python.helpers.decorators import retry_with_backoff
 
 from .utils import get_token_count, hash_text
 
@@ -29,37 +24,6 @@ schema = pa.schema(
         pa.field("vector", pa.list_(pa.float64())),
     ]
 )
-
-
-def retry_on_exception(
-    _func=None,
-    *,
-    retries=VECTOR_STORE_MAX_RETRIES,
-    delay=VECTOR_STORE_MAX_RETRIES_WAIT_TIME,
-):
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            # print func name
-            for attempt in range(retries):
-                try:
-                    return func(*args, **kwargs)
-                except Exception as e:
-                    logger.info(
-                        f"Exception caught: {e}. Retrying {attempt + 1}/{retries}..."
-                    )
-                    time.sleep(delay)
-            msg = f"Embedding operation failed after {retries} retries"
-            logger.info(
-                f"Embedding operation {func.__name__} failed after {retries} retries"
-            )
-            raise Exception(msg)
-
-        return wrapper
-
-    if _func is None:
-        return decorator
-    return decorator(_func)
 
 
 class BaseEmbedder(ABC):
@@ -75,7 +39,7 @@ class BaseEmbedder(ABC):
         self.vector_store = VectorStore(db_name, db_path, schema)
         self.max_tokens = max_tokens
 
-    @retry_on_exception
+    @retry_with_backoff
     def embed_store_one(self, text: str, cache_data=True) -> Any | list[float]:
         text_hashed = hash_text(text)
         existing_embedding = (
@@ -100,7 +64,7 @@ class BaseEmbedder(ABC):
             raise Exception(msg)
         return embedding
 
-    @retry_on_exception
+    @retry_with_backoff
     def embed_store_many(
         self, texts: list[str], callback=None, cache_data=True
     ) -> np.ndarray[Any, np.dtype[Any]]:
