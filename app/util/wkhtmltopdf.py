@@ -2,7 +2,7 @@
 import os
 
 import pdfkit
-import util.constants as constants
+import app.util.constants as constants
 
 
 # Specify the name of the executable

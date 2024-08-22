@@ -9,10 +9,15 @@ import streamlit as st
 from components.app_loader import load_multipage_app
 from util.constants import MAX_SIZE_EMBEDDINGS_KEY
 from util.enums import Mode
-from util.openai_wrapper import (UIOpenAIConfiguration, key,
-                                 openai_azure_auth_type, openai_endpoint_key,
-                                 openai_model_key, openai_type_key,
-                                 openai_version_key)
+from util.openai_wrapper import (
+    UIOpenAIConfiguration,
+    key,
+    openai_azure_auth_type,
+    openai_endpoint_key,
+    openai_model_key,
+    openai_type_key,
+    openai_version_key,
+)
 from util.secrets_handler import SecretsHandler
 
 from python.AI.vector_store import VectorStore

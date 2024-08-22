@@ -8,12 +8,12 @@ from collections import defaultdict
 import pandas as pd
 import plotly.io as pio
 import streamlit as st
-import util.df_functions
-import util.ui_components
-import workflows.data_synthesis.classes as classes
-import workflows.data_synthesis.config as config
-import workflows.data_synthesis.functions as functions
-import workflows.data_synthesis.variables as ds_variables
+import app.util.df_functions
+import app.util.ui_components
+import app.workflows.data_synthesis.classes as classes
+import app.workflows.data_synthesis.config as config
+import app.workflows.data_synthesis.functions as functions
+import app.workflows.data_synthesis.variables as ds_variables
 from pacsynth import (
     AccuracyMode,
     Dataset,

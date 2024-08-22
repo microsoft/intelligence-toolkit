@@ -1,5 +1,5 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-from workflows.security.metaprompts import do_not_disrespect_context, do_not_harm
+from app.workflows.security.metaprompts import do_not_disrespect_context, do_not_harm
 
 report_prompt = """\
 Goal: evaluate the overall RELATEDNESS of the records in each record group provided on a scale of 0-10, where 0 is definitively different entities and 10 is definitivly the same entity or entity group (e.g., branches of a company).

@@ -3,8 +3,8 @@ import random
 
 import polars as pl
 import streamlit as st
-import workflows.record_matching.prompts as prompts
-from util.session_variable import SessionVariable
+import app.workflows.record_matching.prompts as prompts
+from app.util.session_variable import SessionVariable
 
 
 class SessionVariables:

@@ -1,11 +1,12 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 #
-import components.app_mode as am
-import components.app_terminator as at
-import components.app_user as au
+import app.components.app_mode as am
+import app.components.app_terminator as at
+import app.components.app_user as au
+from app.javascript.styles import add_styles
 import streamlit as st
-from javascript.styles import add_styles
+
 
 
 def load_multipage_app(sv=None):

@@ -55,7 +55,7 @@ class OpenAIConfiguration:
         self._api_type = config.get("api_type", oai_type)
 
     def _get_openai_type(self):
-        return os.environ.get("OPENAI_TYPE", "Azure OpenAI")
+        return os.environ.get("OPENAI_TYPE", "OpenAI")
 
     def _get_azure_openai_version(self):
         return os.environ.get("AZURE_OPENAI_VERSION", DEFAULT_OPENAI_VERSION)
