@@ -186,7 +186,7 @@ def create(sv: SessionVariables, workflow=None):
         num_files = len(sv.text_to_chunks.value.keys())
         num_chunks = sum([len(cs) for f, cs in sv.text_to_chunks.value.items()])
         G = sv.concept_graph.value
-        if num_files > 0:
+        if num_files > 0 and G is not None:
             st.success(
                 f"Chunked **{num_files}** file{'s' if num_files > 1 else ''} into **{num_chunks}** chunks of up to **{CHUNK_SIZE}** tokens. Extracted concept graph with **{len(G.nodes())}** concepts and **{len(G.edges())}** cooccurrences."
             )
