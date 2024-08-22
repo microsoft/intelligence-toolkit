@@ -68,4 +68,18 @@ def get_answer_progress(answer_history):
 def test_history_elements(test_history):
     relevant_list = [x[1] for x in test_history if x[2] == 'Yes']
     seen_list = [x[1] for x in test_history]
-    return relevant_list, seen_list
+    found_relevant = False
+    all_searches = []
+    # Terminate if last full cycle yielded no relevant chunks
+    for search, chunk, result in list(reversed(test_history)):
+        found_relevant |= (result == 'Yes')
+        if len(all_searches) == 0:
+            all_searches.append(search)
+        else:
+            if search != all_searches[-1]:
+                all_searches.append(search)
+                if all_searches[-1] == all_searches[0]: # full cycle
+                    break
+            
+    terminate = not found_relevant              
+    return relevant_list, seen_list, terminate

@@ -99,7 +99,7 @@ def answer_question(
                 augmented_question, embedding_cache
             )
         )
-        relevant, seen = helper_functions.test_history_elements(test_history)
+        relevant, seen, terminate = helper_functions.test_history_elements(test_history)
         cosine_distances = sorted(
             [
                 (t, c, scipy.spatial.distance.cosine(aq_embedding, v))
@@ -123,11 +123,14 @@ def answer_question(
             progress_callback=chunk_progress_callback,
             chunk_callback=chunk_callback,
         )
-        
+        relevant, seen, terminate = helper_functions.test_history_elements(test_history)
+        if terminate:
+            break
+
         # Next, we do breadth/community search, which is a search of the unseen chunks most representative of the communities
         # whose concepts are contained in current chunks
         current_concepts = set()
-        relevant, seen = helper_functions.test_history_elements(test_history)
+        
         for chunk in relevant:
             concepts = chunk_to_concepts[chunk]
             current_concepts.update(concepts)
@@ -173,9 +176,11 @@ def answer_question(
             progress_callback=chunk_progress_callback,
             chunk_callback=chunk_callback,
         )
+        relevant, seen, terminate = helper_functions.test_history_elements(test_history)
+        if terminate:
+            break
 
         # Finally, we do detail/structural search, which is a search of the chunks adjacent to the relevant chunks.
-        relevant, seen = helper_functions.test_history_elements(test_history)
         structural_sources = [c for c in relevant if c not in structural_processed]
         structural_targets = set()
         for c in structural_sources:
@@ -195,8 +200,11 @@ def answer_question(
             progress_callback=chunk_progress_callback,
             chunk_callback=chunk_callback,
         )
+        relevant, seen, terminate = helper_functions.test_history_elements(test_history)
+        if terminate:
+            break
 
-    relevant, seen = helper_functions.test_history_elements(test_history)
+    relevant, seen, terminate = helper_functions.test_history_elements(test_history)
     relevant.sort(key=lambda x: sorted_chunks.index(x))
 
     answer_builder.generate_answers(
