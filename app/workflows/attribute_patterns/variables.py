@@ -5,7 +5,7 @@ import random
 
 import pandas as pd
 import streamlit as st
-from util.session_variable import SessionVariable
+from app.util.session_variable import SessionVariable
 
 import toolkit.attribute_patterns.prompts as prompts
 

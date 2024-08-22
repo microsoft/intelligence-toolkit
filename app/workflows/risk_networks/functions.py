@@ -2,20 +2,28 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 import streamlit as st
+from python.AI.base_embedder import BaseEmbedder
+from python.AI.local_embedder import LocalEmbedder
+from python.AI.openai_embedder import OpenAIEmbedder
 from util.openai_wrapper import UIOpenAIConfiguration
 from util.session_variables import SessionVariables
 
 import toolkit.risk_networks.config as config
-from toolkit.AI.embedder import Embedder
 
 sv_home = SessionVariables("home")
 
 
-def embedder():
+def embedder() -> BaseEmbedder:
     try:
         ai_configuration = UIOpenAIConfiguration().get_configuration()
-        return Embedder(
-            ai_configuration, config.cache_dir, sv_home.local_embeddings.value
+        if sv_home.local_embeddings.value:
+            return LocalEmbedder(
+                db_name=config.cache_name,
+                max_tokens=ai_configuration.max_tokens,
+            )
+        return OpenAIEmbedder(
+            configuration=ai_configuration,
+            db_name=config.cache_name,
         )
     except Exception as e:  # noqa: BLE001
         st.error(f"Error creating connection: {e}")

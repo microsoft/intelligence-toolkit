@@ -2,9 +2,9 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 import streamlit as st
-from javascript.scripts import get_auth_user
-from util.enums import Mode
-from util.session_variables import SessionVariables
+from app.javascript.scripts import get_auth_user
+from app.util.enums import Mode
+from app.util.session_variables import SessionVariables
 
 
 class AppUser:

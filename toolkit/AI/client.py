@@ -1,6 +1,7 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 #
+import asyncio
 import logging
 
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
@@ -21,6 +22,7 @@ class OpenAIClient:
     def __init__(self, configuration: OpenAIConfiguration | None = None) -> None:
         self.configuration = configuration or OpenAIConfiguration()
         self.create_openai_client()
+        self.semaphore = asyncio.Semaphore(5)
 
     def create_openai_client(self) -> None:
         """Create a new OpenAI client instance."""
@@ -64,14 +66,21 @@ class OpenAIClient:
         messages: list[str],
         stream: bool = True,
         callbacks: list[LLMCallback] | None = None,
+        **kwargs,
     ):
         try:
+            if "max_tokens" in kwargs.keys():
+                max_tokens = kwargs["max_tokens"]
+                kwargs.pop("max_tokens")
+            else:
+                max_tokens = self.configuration.max_tokens
             response = self._client.chat.completions.create(
                 model=self.configuration.model,
                 temperature=self.configuration.temperature,
-                max_tokens=self.configuration.max_tokens,
+                max_tokens=max_tokens,
                 messages=messages,
                 stream=stream,
+                **kwargs,
             )
 
             if stream and callbacks is not None:
@@ -92,6 +101,34 @@ class OpenAIClient:
         except Exception as e:
             print(f"Error validating report: {e}")
             msg = f"Problem in OpenAI response. {e}"
+            raise Exception(msg)
+
+    async def agenerate_chat(
+        self,
+        messages: list[str],
+        callbacks: list[LLMCallback] | None = None,
+        **kwargs,
+    ):
+        try:
+            if "max_tokens" in kwargs.keys():
+                max_tokens = kwargs["max_tokens"]
+                kwargs.pop("max_tokens")
+            else:
+                max_tokens = self.configuration.max_tokens
+            if "stream" in kwargs.keys():
+                kwargs.pop("stream")
+            response = self._client.chat.completions.create(
+                model=self.configuration.model,
+                temperature=self.configuration.temperature,
+                max_tokens=max_tokens,
+                messages=messages,
+                stream=False,
+                **kwargs,
+            )
+            return response.choices[0].message.content or ""  # type: ignore
+        except Exception as e:
+            print(f"Error validating report: {e}")
+            msg = f"Problem in OpenAI response. {e}"
             raise Exception(msg) from e
 
     def generate_embedding(
@@ -104,3 +141,13 @@ class OpenAIClient:
         self, text: list[str], model: str = DEFAULT_EMBEDDING_MODEL
     ) -> list[float]:
         return self._client.embeddings.create(input=text, model=model)
+
+    async def map_generate_text(
+        self,
+        messages_list: list[list[dict[str, str]]],
+        **llm_kwargs,
+    ):
+        map_responses = await asyncio.gather(
+            *[self.agenerate_chat(messages, **llm_kwargs) for messages in messages_list]
+        )
+        return map_responses

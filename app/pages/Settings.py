@@ -20,7 +20,7 @@ from util.openai_wrapper import (
 )
 from util.secrets_handler import SecretsHandler
 
-from toolkit.AI.defaults import PICKLE_FILE_NAME
+from toolkit.AI.vector_store import VectorStore
 from toolkit.helpers.constants import CACHE_PATH
 
 
@@ -29,15 +29,6 @@ def on_change(handler, key=None, value=None):
         handler.write_secret(key, value)
 
     return change
-
-
-def delete_embeddings_pickle(root_dir=CACHE_PATH):
-    for root, _dirs, files in os.walk(root_dir):
-        for file in files:
-            if file == PICKLE_FILE_NAME:
-                file_path = os.path.join(root, file)
-                os.remove(file_path)
-                print(f"Deleted: {file_path}")
 
 
 def main():
@@ -179,7 +170,8 @@ def main():
         st.text("")
         clear = st.button("Clear all embeddings")
         if clear:
-            delete_embeddings_pickle()
+            vector_store = VectorStore(path=CACHE_PATH)
+            vector_store.drop_db()
             st.success("Embeddings cleared.")
 
 

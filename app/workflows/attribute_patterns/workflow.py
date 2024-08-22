@@ -3,7 +3,7 @@
 #
 import altair as alt
 import streamlit as st
-import workflows.attribute_patterns.variables as ap_variables
+import app.workflows.attribute_patterns.variables as ap_variables
 from st_aggrid import (
     AgGrid,
     ColumnsAutoSizeMode,
@@ -11,7 +11,7 @@ from st_aggrid import (
     GridOptionsBuilder,
     GridUpdateMode,
 )
-from util import ui_components
+from app.util import ui_components
 
 from toolkit.attribute_patterns import get_readme as get_intro
 from toolkit.attribute_patterns import prompts

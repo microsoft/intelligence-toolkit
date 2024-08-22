@@ -17,7 +17,5 @@ DEFAULT_LOCAL_EMBEDDING_MODEL = "all-distilroberta-v1"
 
 API_BASE_REQUIRED_FOR_AZURE = "api_base is required for Azure OpenAI client"
 
-PICKLE_FILE_NAME = "embeddings.pickle"
-
 CHUNK_SIZE = 500
 CHUNK_OVERLAP = 0

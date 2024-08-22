@@ -3,8 +3,8 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 import streamlit as st
-import workflows.data_synthesis.variables as ds_variables
-import workflows.data_synthesis.workflow
+import app.workflows.data_synthesis.variables as ds_variables
+import app.workflows.data_synthesis.workflow
 from components.app_loader import load_multipage_app
 from util.helper_fn import app_in_dev_mode
 
@@ -22,7 +22,7 @@ def main():
     load_multipage_app(sv)
 
     try:
-        workflows.data_synthesis.workflow.create(sv, workflow)
+        app.workflows.data_synthesis.workflow.create(sv, workflow)
     except Exception as e:
         if app_in_dev_mode():
             st.exception(e)

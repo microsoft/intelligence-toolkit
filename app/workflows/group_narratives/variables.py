@@ -3,8 +3,8 @@ import random
 
 import pandas as pd
 import streamlit as st
-import workflows.group_narratives.prompts as prompts
-from util.session_variable import SessionVariable
+import app.workflows.group_narratives.prompts as prompts
+from app.util.session_variable import SessionVariable
 
 
 class SessionVariables:

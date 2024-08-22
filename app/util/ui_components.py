@@ -10,10 +10,10 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import streamlit as st
-from util.df_functions import get_current_time, quantize_datetime, quantize_numeric
-from util.download_pdf import add_download_pdf
-from util.enums import Mode
-from util.openai_wrapper import UIOpenAIConfiguration
+from app.util.df_functions import get_current_time, quantize_datetime, quantize_numeric
+from app.util.download_pdf import add_download_pdf
+from app.util.enums import Mode
+from app.util.openai_wrapper import UIOpenAIConfiguration
 
 import toolkit.AI.utils as utils
 from toolkit.AI.classes import LLMCallback
@@ -741,12 +741,11 @@ def validate_ai_report(messages, result, show_status=True):
     return json.loads(re.sub(r"```json\n|\n```", "", validation)), messages_to_llm
 
 
-def generate_text(messages, callbacks=None):
+def generate_text(messages, callbacks=None, **kwargs):
     if callbacks is None:
         callbacks = []
     ai_configuration = UIOpenAIConfiguration().get_configuration()
-    return OpenAIClient(ai_configuration).generate_chat(messages, callbacks=callbacks)
-
+    return OpenAIClient(ai_configuration).generate_chat(messages, callbacks=callbacks, **kwargs)
 
 def create_markdown_callback(placeholder, prefix=""):
     def on(text):
