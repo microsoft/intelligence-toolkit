@@ -15,8 +15,6 @@ T = TypeVar("T")
 
 
 def retry_with_backoff(
-    _func=None,
-    *,
     retries=VECTOR_STORE_MAX_RETRIES,
     backoff_in_seconds=VECTOR_STORE_MAX_RETRIES_WAIT_TIME,
 ) -> Callable[[Callable[..., T]], Callable[..., T]]:
@@ -36,6 +34,4 @@ def retry_with_backoff(
 
         return wrapper
 
-    if _func is None:
-        return decorator
-    return decorator(_func)
+    return decorator
