@@ -20,8 +20,8 @@ from util.openai_wrapper import (
 )
 from util.secrets_handler import SecretsHandler
 
-from python.AI.vector_store import VectorStore
-from python.helpers.constants import CACHE_PATH
+from toolkit.AI.vector_store import VectorStore
+from toolkit.helpers.constants import CACHE_PATH
 
 
 def on_change(handler, key=None, value=None):

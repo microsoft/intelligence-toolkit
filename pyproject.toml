@@ -123,18 +123,20 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"python/tests/*" = ["S", "D", "ANN", "T201", "ASYNC", "ARG", "PTH", "TRY"]
+"toolkit/tests/*" = ["S", "D", "ANN", "T201", "ASYNC", "ARG", "PTH", "TRY"]
 "examples/*" = ["S", "D", "ANN", "T201", "PTH", "TRY", "PERF"]
-"graphrag/index/config/*" = ["TCH"]
-"*.ipynb" = ["T201"]
+"*.ipynb" = ["S", "T201", "I001"]
 
 [tool.ruff.lint.flake8-builtins]
 builtins-ignorelist = ["input", "id", "bytes"]
+
+[tool.ruff.lint.flake8-pytest-style]
+fixture-parentheses = true
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
 
 # https://github.com/microsoft/pyright/blob/9f81564a4685ff5c55edd3959f9b39030f590b2f/docs/configuration.md#sample-pyprojecttoml-file
 [tool.pyright]
-include = ["app", "python", "examples"]
+include = ["app", "toolkit", "examples"]
 exclude = ["**/__pycache__"]

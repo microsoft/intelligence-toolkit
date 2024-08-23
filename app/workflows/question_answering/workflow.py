@@ -8,18 +8,18 @@ import streamlit as st
 from seaborn import color_palette
 from streamlit_agraph import Config, Edge, Node, agraph
 
-import python.question_answering.input_processor as input_processor
-import python.question_answering.prompts as prompts
-import python.question_answering.question_answerer as question_answerer
+import toolkit.question_answering.input_processor as input_processor
+import toolkit.question_answering.prompts as prompts
+import toolkit.question_answering.question_answerer as question_answerer
 from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
 from app.util.openai_wrapper import UIOpenAIConfiguration
 from app.util.session_variables import SessionVariables
 from app.workflows.question_answering import config
-from python.AI.base_embedder import BaseEmbedder
-from python.AI.defaults import CHUNK_SIZE
-from python.AI.local_embedder import LocalEmbedder
-from python.AI.openai_embedder import OpenAIEmbedder
+from toolkit.AI.base_embedder import BaseEmbedder
+from toolkit.AI.defaults import CHUNK_SIZE
+from toolkit.AI.local_embedder import LocalEmbedder
+from toolkit.AI.openai_embedder import OpenAIEmbedder
 
 sv_home = SessionVariables("home")
 ai_configuration = UIOpenAIConfiguration().get_configuration()

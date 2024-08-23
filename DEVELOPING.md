@@ -58,7 +58,7 @@ Open venv/Scripts/Activate.ps1, add the following lines after line 167:
     $env:AZURE_OPENAI_ENDPOINT="https://<ENDPOINT>.openai.azure.com/"
 ``` 
 ## Running code-only 
-- [Attribute Patterns](./python/attribute_patterns/README.md)
+- [Attribute Patterns](./toolkit/attribute_patterns/README.md)
 
     - [Example](./examples/attribute_patterns.ipynb): See an example of how to run the code with your data to obtain results without the need to run the UI.
 

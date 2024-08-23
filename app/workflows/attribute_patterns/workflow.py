@@ -1,8 +1,6 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 #
-import os
-
 import altair as alt
 import streamlit as st
 import app.workflows.attribute_patterns.variables as ap_variables
@@ -15,31 +13,28 @@ from st_aggrid import (
 )
 from app.util import ui_components
 
-from python.attribute_patterns import prompts
-from python.attribute_patterns.embedding import generate_embedding
-from python.attribute_patterns.model import (
+from toolkit.attribute_patterns import get_readme as get_intro
+from toolkit.attribute_patterns import prompts
+from toolkit.attribute_patterns.embedding import generate_embedding
+from toolkit.attribute_patterns.model import (
     compute_attribute_counts,
     create_time_series_df,
     detect_patterns,
     generate_graph_model,
     prepare_graph,
 )
-from python.attribute_patterns.record_counter import RecordCounter
-
-
-def get_intro():
-    file_path = os.path.join(os.path.dirname(__file__), "README.md")
-    with open(file_path) as file:
-        return file.read()
+from toolkit.attribute_patterns.record_counter import RecordCounter
 
 
 def create(sv: ap_variables.SessionVariables, workflow):
-    intro_tab, uploader_tab, detect_tab, explain_tab = st.tabs([
-        "Attribute patterns workflow:",
-        "Create graph model",
-        "Detect patterns",
-        "Generate AI pattern reports",
-    ])
+    intro_tab, uploader_tab, detect_tab, explain_tab = st.tabs(
+        [
+            "Attribute patterns workflow:",
+            "Create graph model",
+            "Detect patterns",
+            "Generate AI pattern reports",
+        ]
+    )
     selected_pattern = ""
     graph_df = None
     with intro_tab:
