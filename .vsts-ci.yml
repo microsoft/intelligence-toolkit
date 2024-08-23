@@ -64,6 +64,12 @@ stages:
                 curl -sSL https://install.python-poetry.org | python -
                 export PATH=$PATH:$HOME/.poetry/bin
           - task: Bash@3
+            displayName: Install packages
+            inputs:
+              workingDirectory: ./
+              targetType: "inline"
+              script: poetry install
+          - task: Bash@3
             displayName: Run Tests
             inputs:
               workingDirectory: ./
