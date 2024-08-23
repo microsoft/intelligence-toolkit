@@ -55,10 +55,14 @@ stages:
             inputs:
               versionSpec: "3.11"
             displayName: "Use Python 3.11"
-          - task: abatilo/actions-poetry@v3.0.0
-            displayName: "Install Poetry"
+          - task: Bash@3
+            displayName: Install poetry
             inputs:
-              poetry-version: $POETRY_VERSION
+              workingDirectory: ./
+              targetType: "inline"
+              script: |
+                curl -sSL https://install.python-poetry.org | python -
+                export PATH=$PATH:$HOME/.poetry/bin
           - task: Bash@3
             displayName: Run Tests
             inputs:
