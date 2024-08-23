@@ -57,3 +57,5 @@ app/wkhtmltox/*.exe
 
 **/studio_tests/
 .venv
+
+examples/**/*.csv

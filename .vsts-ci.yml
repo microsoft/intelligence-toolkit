@@ -81,7 +81,7 @@ stages:
 
   - stage: Build_NSIS
     dependsOn: []
-    condition: eq(variables['BUILD_EXE'], 'true')
+    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['BUILD_EXE'], 'true'))
     jobs:
       - job: NSIS_Build
         pool:
