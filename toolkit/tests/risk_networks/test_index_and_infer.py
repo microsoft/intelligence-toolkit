@@ -408,7 +408,7 @@ class TestIndexAndInfer:
         assert link_list == inferred_links
 
         mock_index_nodes.assert_called_once_with(
-            indexed_node_types, overall_graph, None, None, None, False, True
+            indexed_node_types, overall_graph, None, None, None, True
         )
         mock_infer_nodes.assert_called_once_with(
             0.5, embedded_texts, nearest_text_indices, nearest_text_distances, None

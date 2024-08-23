@@ -311,7 +311,6 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                     [callback],
                     functions_embedder,
                     None,
-                    sv_home.local_embeddings.value,
                     sv_home.save_cache.value,
                 )
                 pb.empty()

@@ -49,7 +49,6 @@ textblob = "0.18.0.post0"
 future = "1.0.0"
 
 
-
 [tool.poetry.group.dev.dependencies]
 poetry = "^1.8.3"
 coverage = "^7.6.0"
@@ -63,7 +62,6 @@ pytest = "^8.2.2"
 pytest-asyncio = "^0.23.7"
 pytest-mock = "^3.14.0"
 
-
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
@@ -76,7 +74,7 @@ _pyright = "pyright"
 check_format = 'ruff format . --check --preview'
 fix = "ruff  --preview check --fix ."
 fix_unsafe = "ruff check --preview --fix --unsafe-fixes ."
-test_unit = "pytest ./toolkit/tests"
+test = "pytest ${ARGS}"
 
 run_streamlit = "python -m streamlit run app/Home.py"  
 
@@ -91,10 +89,6 @@ ignore_fail = 'return_non_zero'
 [tool.ruff]
 target-version = "py310"
 extend-include = ["*.ipynb"]
-
-[[tool.poe.tasks.test]]
-sequence = ['test_unit']
-ignore_fail = 'return_non_zero'
 
 [tool.ruff.format]
 docstring-code-format = true
