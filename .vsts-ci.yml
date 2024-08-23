@@ -14,6 +14,9 @@ schedules:
     include:
       - main
 
+variables:
+  POETRY_VERSION: 1.8.3
+
 stages:
   - stage: Compliance
     dependsOn: []
@@ -52,18 +55,16 @@ stages:
             inputs:
               versionSpec: "3.11"
             displayName: "Use Python 3.11"
-          - task: Bash@3
-            displayName: Install Dependencies
-            inputs:
-              workingDirectory: ./
-              targetType: "inline"
-              script: pip install -r requirements.txt
+          - name: Install Poetry
+            uses: abatilo/actions-poetry@v3.0.0
+            with:
+              poetry-version: $POETRY_VERSION
           - task: Bash@3
             displayName: Run Tests
             inputs:
               workingDirectory: ./
               targetType: "inline"
-              script: pytest -vv
+              script: poetry run poe tests
       - job: buildAndPush
         displayName: BuildAndPushContainer
         dependsOn: validate
