@@ -1,3 +1,3 @@
 # Attribute Patterns
 
-[Go to main code folder](../../../python/attribute_patterns/README.md)
+[Go to main code folder](../../../toolkit/attribute_patterns/README.md)

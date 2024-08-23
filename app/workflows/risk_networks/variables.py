@@ -76,4 +76,3 @@ class SessionVariables:
             if key.startswith(self.prefix):
                 del st.session_state[key]
         self.create_session(self.prefix)
-        self.create_session(self.prefix)
