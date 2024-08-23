@@ -47,7 +47,6 @@ duckdb = "1.0.0"
 seaborn = "0.13.2"
 textblob = "0.18.0.post0"
 future = "1.0.0"
-# pdfminer.six = "20231228"
 
 
 
@@ -77,8 +76,9 @@ _pyright = "pyright"
 check_format = 'ruff format . --check --preview'
 fix = "ruff  --preview check --fix ."
 fix_unsafe = "ruff check --preview --fix --unsafe-fixes ."
-
 test_unit = "pytest ./toolkit/tests"
+
+run_streamlit = "python -m streamlit run app/Home.py"  
 
 [[tool.poe.tasks.format]]
 sequence = ['_sort_imports', '_format_code']
@@ -191,7 +191,3 @@ convention = "numpy"
 # https://github.com/microsoft/pyright/blob/9f81564a4685ff5c55edd3959f9b39030f590b2f/docs/configuration.md#sample-pyprojecttoml-file
 [tool.pyright]
 include = ["app", "toolkit", "examples"]
-exclude = ["**/__pycache__"]
-
-[tool.poetry.scripts]  
-run-streamlit = "streamlit run app/Home.py"  
