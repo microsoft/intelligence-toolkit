@@ -56,7 +56,7 @@ stages:
               versionSpec: "3.11"
             displayName: "Use Python 3.11"
           - task: abatilo/actions-poetry@v3.0.0
-          - displayName: "Install Poetry"
+            displayName: "Install Poetry"
             inputs:
               poetry-version: $POETRY_VERSION
           - task: Bash@3
