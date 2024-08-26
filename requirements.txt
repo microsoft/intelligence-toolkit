@@ -38,7 +38,7 @@ py==1.5.4
 ## Dev
 coverage==7.6.0
 ruff==0.4.7
-pynsist== 2.8
+pynsist==2.8
 pytest-cov==5.0.0
 pytest==8.2.2
 pytest-asyncio==0.23.7
