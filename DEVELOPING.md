@@ -4,8 +4,8 @@
 
 - Python 3.11 ([Download](https://www.python.org/downloads/))
     - We haver available two dependency management:
-        - pip
         - poetry ([Download](https://python-poetry.org/docs/#installation))
+        - pip
 - wkhtmltopdf (used to generate PDF reports)
 
     - Windows: ([Download](https://wkhtmltopdf.org/downloads.html))
@@ -16,6 +16,10 @@
 
 
 ## Install Dependencies
+
+- Using poetry
+
+    1. `poetry install`
 
 - Using pip
     1. Set up a virtual environment:
@@ -34,10 +38,6 @@
         `.\venv\Scripts\Activate` (Windows with Powershell)
 
     3. `pip install -r requirements.txt`
-
-- Using poetry
-
-    1. `poetry install`
 
 ### LLM API access
 
@@ -86,12 +86,12 @@ OPENAI_API_KEY=<OPENAI_API_KEY>
 
 ### Running via shell
 
+- Poetry
+
+    `poetry run poe run_streamlit`
 - Pip
 
     `python -m streamlit run app/Home.py`
-- Poetry
-
-    `poetry run poe python -m streamlit run app/Home.py`
 
 ### Running with docker
 
@@ -117,7 +117,6 @@ To build the .exe locally, you need to install pynsis with `pip install pynsist`
 
 Next, run `.\installer_script.ps1` in the root of the app to perform the following steps:
 - download wkhtmltox from the source (needed to generate PDF reports). 
-- download python-louvain wheel (which is not available on PyPI).
 - build an .exe into build\nsis.
 
 Once finished building, you can install the application by running the .exe and open the shortcut to launch intelligence-toolkit at http://localhost:8503 in your web browser.

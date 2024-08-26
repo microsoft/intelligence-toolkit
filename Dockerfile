@@ -5,17 +5,22 @@ FROM  mcr.microsoft.com/oryx/python:3.11
 RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
 RUN apt-get update -y
 RUN apt-get install wkhtmltopdf -y
+RUN curl -sSL https://install.python-poetry.org | python -
+ENV PATH="/root/.local/bin:$PATH"
 
 # Install dependencies
 WORKDIR ./
-COPY ./app ./app
-COPY ./python ./python
-COPY ./README.md ./
-COPY ./.streamlit ./.streamlit
 COPY Dockerfile .
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+COPY pyproject.toml .
+COPY poetry.lock .
+COPY ./.streamlit ./.streamlit
+COPY ./README.md ./
+
+COPY ./app ./app
+COPY ./toolkit ./toolkit
+
+RUN poetry install
 
 # Run application
 EXPOSE 8501
-ENTRYPOINT ["python", "-m", "streamlit", "run", "app/Home.py"]
+ENTRYPOINT ["poetry", "run", "poe", "run_streamlit"]
