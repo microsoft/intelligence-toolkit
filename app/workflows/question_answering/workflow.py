@@ -20,6 +20,7 @@ from toolkit.AI.base_embedder import BaseEmbedder
 from toolkit.AI.defaults import CHUNK_SIZE
 from toolkit.AI.local_embedder import LocalEmbedder
 from toolkit.AI.openai_embedder import OpenAIEmbedder
+from toolkit.question_answering import get_readme as get_intro
 
 sv_home = SessionVariables("home")
 ai_configuration = UIOpenAIConfiguration().get_configuration()
@@ -49,7 +50,6 @@ def get_concept_graph(
     """
     Implements the concept graph visualization
     """
-    node_names = set()
     nodes = []
     edges = []
     max_degree = max([G.degree(node) for node in G.nodes()])
@@ -108,12 +108,6 @@ class ProgressBatchCallback:
         """Handle when a new token is generated."""
         self.current_batch = current
         self.total_batches = total
-
-
-def get_intro():
-    file_path = os.path.join(os.path.dirname(__file__), "README.md")
-    with open(file_path) as file:
-        return file.read()
 
 
 def create(sv: SessionVariables, workflow=None):

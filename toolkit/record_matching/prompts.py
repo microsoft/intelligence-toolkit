@@ -1,4 +1,6 @@
-# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+# Copyright (c) Microsoft. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project.
+#
 from app.workflows.security.metaprompts import do_not_disrespect_context, do_not_harm
 
 report_prompt = """\
@@ -33,5 +35,5 @@ Do not output ``` or the column headers - start directly with the row values and
 list_prompts = {
     "report_prompt": report_prompt,
     "user_prompt": user_prompt,
-    "safety_prompt": " ".join([do_not_harm, do_not_disrespect_context]),
+    "safety_prompt": f"{do_not_harm} {do_not_disrespect_context}",
 }

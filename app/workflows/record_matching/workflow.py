@@ -2,32 +2,26 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 import io
-import os
 import re
 from collections import defaultdict
 
 import pandas as pd
 import polars as pl
 import streamlit as st
+from sklearn.neighbors import NearestNeighbors
+
 import app.util.session_variables as home_vars
 import app.workflows.record_matching.functions as functions
-import app.workflows.record_matching.prompts as prompts
 import app.workflows.record_matching.variables as rm_variables
-from sklearn.neighbors import NearestNeighbors
+import toolkit.record_matching.prompts as prompts
 from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
-
-from toolkit.AI import classes
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
+from toolkit.record_matching import get_readme as get_intro
+from toolkit.record_matching.prepare_model import format_dataset
 
 
-def get_intro():
-    file_path = os.path.join(os.path.dirname(__file__), "README.md")
-    with open(file_path) as file:
-        return file.read()
-
-
-def create(sv: rm_variables.SessionVariable, workflow=None):
+def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
     sv_home = home_vars.SessionVariables("home")
 
     intro_tab, uploader_tab, process_tab, evaluate_tab = st.tabs(
@@ -94,28 +88,13 @@ def create(sv: rm_variables.SessionVariable, workflow=None):
                         disabled=not ready,
                         use_container_width=True,
                     ):
-                        if entity_col == "":
-                            selected_df = selected_df.with_row_count(name="Entity ID")
-                            selected_df = selected_df.rename({name_col: "Entity name"})
-                        else:
-                            selected_df = selected_df.rename(
-                                {
-                                    entity_col: "Entity ID",
-                                    name_col: "Entity name",
-                                }
-                            )
-                            selected_df = selected_df.with_columns(
-                                pl.col("Entity ID").cast(pl.Utf8)
-                            )
-                        selected_df = selected_df.select(
-                            [pl.col("Entity ID"), pl.col("Entity name")]
-                            + [pl.col(c) for c in sorted(att_cols)]
-                        ).collect()
-                        if sv.matching_max_rows_to_process.value > 0:
-                            selected_df = selected_df.head(
-                                sv.matching_max_rows_to_process.value
-                            )
-                        sv.matching_dfs.value[dataset] = selected_df
+                        sv.matching_dfs.value[dataset] = format_dataset(
+                            selected_df,
+                            att_cols,
+                            name_col,
+                            entity_col,
+                            sv.matching_max_rows_to_process.value,
+                        )
                 with b2:
                     if st.button(
                         "Reset data model",
