@@ -3,90 +3,71 @@
 ## Requirements
 
 - Python 3.11 ([Download](https://www.python.org/downloads/))
-    - We use pip as dependency management
+- poetry ([Download](https://python-poetry.org/docs/#installation))
+- For package security reasons, if desired use pip with caution if poetry doesn't work out for you:
+    - [pip](./PIP.md)
 - wkhtmltopdf (used to generate PDF reports)
 
-    - Windows: [Download wkhtmltopdf installer](https://wkhtmltopdf.org/downloads.html)
+    - Windows: ([Download](https://wkhtmltopdf.org/downloads.html))
 
     - Linux:  `sudo apt-get install wkhtmltopdf`
 
     - MacOS: `brew install homebrew/cask/wkhtmltopdf`
 
 
-## Setup:
+## Install Dependencies
 
-1. Set up a virtual environment:
+`poetry install`
 
-    `python -m venv ./venv`
+### LLM API access
 
-    or
-    
-    `python3 -m venv ./venv`
-
-## OpenAI API
-
-You can use OpenAI with key-based access or Azure OpenAI with [Entra ID authentication](
-https://learn.microsoft.com/en-us/azure/ai-services/authentication#authenticate-with-microsoft-entra-id) access. For Azure OpenAI, ensure your account has access to the endpoint then run `az login` to connect.
-
-### Key-based API access
-
-Use the following instructions to set up key-based API access using environment variables.
-
-This step is optional: you may also set up key-based API access via the Settings page of the app.
-
-#### Linux:
-Open /venv/bin/activate, add the following lines at the end of the file:
+#### Default values: 
 ```
-    # set environment variables
-    export OPENAI_API_KEY=<OPENAI_API_KEY>
-
-    # if Azure OpenAI, include the following information too:
-    export OPENAI_TYPE="Azure OpenAI"
-    export AZURE_OPENAI_VERSION=2023-12-01-preview
-    export AZURE_OPENAI_ENDPOINT="https://<ENDPOINT>.azure.com/"
+OPENAI_API_MODEL="gpt-4o-2024-08-06"
+OPENAI_TYPE="OpenAI"
+AZURE_AUTH_TYPE="Azure Key" # if OPENAI_TYPE==Azure OpenAI
+DEFAULT_EMBEDDING_MODEL = "text-embedding-ada-002"
 ```
 
-#### Windows:
-Open venv/Scripts/Activate.ps1, add the following lines after line 167:
+### Azure OpenAI
 ```
-    $env:OPENAI_API_KEY="<OPENAI_API_KEY>"
+OPENAI_TYPE="Azure OpenAI"
+AZURE_OPENAI_VERSION=2023-12-01-preview
+AZURE_OPENAI_ENDPOINT="https://<ENDPOINT>.azure.com/"
+OPENAI_API_KEY=<OPENAI_API_KEY>
+AZURE_AUTH_TYPE="Managed Identity" # if not default Azure Key
+```
 
-    # if Azure OpenAI, include the following information too:
+### OpenAI
+```
+OPENAI_API_KEY=<OPENAI_API_KEY>
+```
 
-    $env:OPENAI_TYPE="Azure OpenAI"
-    $env:AZURE_OPENAI_VERSION="2023-12-01-preview"
-    $env:AZURE_OPENAI_ENDPOINT="https://<ENDPOINT>.openai.azure.com/"
-``` 
 ## Running code-only 
 - [Attribute Patterns](./toolkit/attribute_patterns/README.md)
 
     - [Example](./examples/attribute_patterns.ipynb): See an example of how to run the code with your data to obtain results without the need to run the UI.
 
+- [Question Answering](./toolkit/question_answering/README.md)
+
+    - [Example](./examples/question_answering.ipynb): See an example of how to run the code with your data to obtain results without the need to run the UI.
+
+- [Risk Networks](./toolkit/risk_networks/README.md)
+
+    - [Example](./examples/risk_networks/main.ipynb): See an example of how to run the code with your data to obtain results without the need to run the UI.
+
 :construction: Code-only workflows in progress: 
 
 - Data Synthesis
 - Group Narratives
-- Question Answering
 - Record Matching
-- Risk Networks.
 
 ## Running the UI (Streamlit) 
 
 ### Running via shell
 
-1. Run the activate script: 
+`poetry run poe run_streamlit`
 
-    `source venv/bin/activate`  (Linux)
-
-    `.\venv\Scripts\Activate` (Windows with Powershell)
-
-2 Install all the dependencies with pip:
-
-    `pip install -r requirements.txt`
-
-3. Run the project using streamlit:
-
-    `python -m streamlit run app/Home.py`
 
 ### Running with docker
 
@@ -94,11 +75,11 @@ Download and install docker: https://www.docker.com/products/docker-desktop/
 
 Then, in the root folder, run:
 
-`docker build . -t intel-toolkit`
+`docker build . -t intelligence-toolkit`
 
 After building, run the docker container with:
 
-`docker run -d -p 8501:8501 intel-toolkit`
+`docker run -d -p 8501:8501 intelligence-toolkit`
 
 Open [localhost:8501](http://localhost:8501)
 
@@ -108,11 +89,10 @@ Open [localhost:8501](http://localhost:8501)
 
 We use [Pynsist](https://pynsist.readthedocs.io/en/latest/) together with [NSIS (Nullsoft Scriptable Install System)](https://nsis.sourceforge.io/) to build an executable for Windows. This packages the whole project and its dependencies (including Python) into an .exe, which when installed will run the Intelligence Toolkit on the user's localhost.
 
-To build the .exe locally, you need to install pynsis with `pip install pynsist` and NSIS by [downloading it here](https://nsis.sourceforge.io/Main_Page).
+To build the .exe locally, you need to install NSIS by [downloading it here](https://nsis.sourceforge.io/Main_Page).
 
 Next, run `.\installer_script.ps1` in the root of the app to perform the following steps:
 - download wkhtmltox from the source (needed to generate PDF reports). 
-- download python-louvain wheel (which is not available on PyPI).
 - build an .exe into build\nsis.
 
 Once finished building, you can install the application by running the .exe and open the shortcut to launch intelligence-toolkit at http://localhost:8503 in your web browser.

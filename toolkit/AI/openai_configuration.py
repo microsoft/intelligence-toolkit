@@ -51,11 +51,14 @@ class OpenAIConfiguration:
         self._api_version = config.get("api_version", self._get_azure_openai_version())
         self._temperature = config.get("temperature", DEFAULT_TEMPERATURE)
         self._max_tokens = config.get("max_tokens", DEFAULT_LLM_MAX_TOKENS)
-        self._az_auth_type = config.get("az_auth_type", DEFAULT_AZ_AUTH_TYPE)
+        self._az_auth_type = config.get("az_auth_type", self._get_az_auth_type())
         self._api_type = config.get("api_type", oai_type)
 
     def _get_openai_type(self):
         return os.environ.get("OPENAI_TYPE", "OpenAI")
+
+    def _get_az_auth_type(self):
+        return os.environ.get("AZURE_AUTH_TYPE", DEFAULT_AZ_AUTH_TYPE)
 
     def _get_azure_openai_version(self):
         return os.environ.get("AZURE_OPENAI_VERSION", DEFAULT_OPENAI_VERSION)

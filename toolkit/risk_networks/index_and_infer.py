@@ -130,7 +130,6 @@ def index_and_infer(
     callbacks: list[ProgressBatchCallback] | None = None,
     functions_embedder: BaseEmbedder | None = None,
     openai_configuration: OpenAIConfiguration | None = None,
-    use_local=False,
     save_cache=True,
 ) -> tuple[defaultdict[set], int]:
     if not len(main_graph.nodes()):
@@ -147,7 +146,6 @@ def index_and_infer(
         callbacks,
         functions_embedder,
         openai_configuration,
-        use_local,
         save_cache,
     )
 

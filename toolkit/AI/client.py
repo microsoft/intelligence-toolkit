@@ -147,7 +147,6 @@ class OpenAIClient:
         messages_list: list[list[dict[str, str]]],
         **llm_kwargs,
     ):
-        map_responses = await asyncio.gather(
+        return await asyncio.gather(
             *[self.agenerate_chat(messages, **llm_kwargs) for messages in messages_list]
         )
-        return map_responses
