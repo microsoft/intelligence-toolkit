@@ -3,9 +3,9 @@
 ## Requirements
 
 - Python 3.11 ([Download](https://www.python.org/downloads/))
-    - We haver available two dependency management:
-        - poetry ([Download](https://python-poetry.org/docs/#installation))
-        - pip
+- poetry ([Download](https://python-poetry.org/docs/#installation))
+- For package security reasons, if desired use pip with caution if poetry doesn't work out for you:
+    - [pip](./PIP.md)
 - wkhtmltopdf (used to generate PDF reports)
 
     - Windows: ([Download](https://wkhtmltopdf.org/downloads.html))
@@ -17,27 +17,7 @@
 
 ## Install Dependencies
 
-- Using poetry
-
-    1. `poetry install`
-
-- Using pip
-    1. Set up a virtual environment:
-
-        `python -m venv ./venv`
-
-        or
-        
-        `python3 -m venv ./venv`
-    2. Run the activate script: 
-
-        `source venv/bin/activate`  (Linux)
-
-        or 
-
-        `.\venv\Scripts\Activate` (Windows with Powershell)
-
-    3. `pip install -r requirements.txt`
+`poetry install`
 
 ### LLM API access
 
@@ -86,12 +66,8 @@ OPENAI_API_KEY=<OPENAI_API_KEY>
 
 ### Running via shell
 
-- Poetry
+`poetry run poe run_streamlit`
 
-    `poetry run poe run_streamlit`
-- Pip
-
-    `python -m streamlit run app/Home.py`
 
 ### Running with docker
 
@@ -113,7 +89,7 @@ Open [localhost:8501](http://localhost:8501)
 
 We use [Pynsist](https://pynsist.readthedocs.io/en/latest/) together with [NSIS (Nullsoft Scriptable Install System)](https://nsis.sourceforge.io/) to build an executable for Windows. This packages the whole project and its dependencies (including Python) into an .exe, which when installed will run the Intelligence Toolkit on the user's localhost.
 
-To build the .exe locally, you need to install pynsis with `pip install pynsist` and NSIS by [downloading it here](https://nsis.sourceforge.io/Main_Page).
+To build the .exe locally, you need to install NSIS by [downloading it here](https://nsis.sourceforge.io/Main_Page).
 
 Next, run `.\installer_script.ps1` in the root of the app to perform the following steps:
 - download wkhtmltox from the source (needed to generate PDF reports). 

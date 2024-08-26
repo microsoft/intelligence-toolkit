@@ -28,12 +28,10 @@ azure-identity==1.17.1
 azure-core==1.30.2
 sentence-transformers==3.0.1
 semchunk==2.2.0
-lancedb==0.11.0
 duckdb==1.0.0
 seaborn==0.13.2
 textblob==0.18.0.post0
 future==1.0.0
-py==1.5.4
 
 ## Dev
 coverage==7.6.0

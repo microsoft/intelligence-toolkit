@@ -10,13 +10,6 @@ if (-not (Test-Path $folderPath)) {
 $outputFilePathExe = Join-Path -Path $folderPath -ChildPath "wkhtmltox-0.12.6-1.msvc2015-win64_.exe"
 
 
-# $wheelFolder = "wheels"
-# if (-not (Test-Path $wheelFolder)) {
-#     New-Item -Path $wheelFolder -ItemType Directory
-# }
-# $wheelFilePath = Join-Path -Path $wheelFolder -ChildPath "python_louvain-0.16-py3-none-any.whl"
-# # Check if the file already exists in the folder
-
 if (Test-Path $outputFilePathExe) {
     Write-Host "File already exists. Skipping download."
 } else {
