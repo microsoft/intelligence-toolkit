@@ -5,7 +5,7 @@
 import networkx as nx
 import pandas as pd
 
-from toolkit.attribute_patterns.config import type_val_sep
+from app.workflows.attribute_patterns.config import type_val_sep, min_edge_weight, missing_edge_prop
 from toolkit.attribute_patterns.model import (
     compute_attribute_counts,
     generate_graph_model,
@@ -24,7 +24,7 @@ def test_generate_graph_model_basic(mocker):
     test_df = pd.DataFrame(data)
 
     mocker.patch("toolkit.helpers.df_functions.fix_null_ints").return_value = test_df
-    result = generate_graph_model(test_df, "Period")
+    result = generate_graph_model(test_df, "Period", type_val_sep)
 
     expected_data = {
         "Subject ID": ["1", "2", "1", "2"],
@@ -56,7 +56,7 @@ def test_generate_graph_model_with_nans(mocker):
     mocker.patch(
         "toolkit.helpers.df_functions.fix_null_ints"
     ).return_value = test_df.fillna("")
-    result = generate_graph_model(test_df, "Period")
+    result = generate_graph_model(test_df, "Period", type_val_sep)
 
     expected_data = {
         "Subject ID": ["1", "2"],
@@ -218,7 +218,7 @@ def test_prepare_graph(mocker):
             "Full Attribute": ["ab=1", "bc=2", "ab=2", "bc=1"],
         }
     )
-    pdf, time_to_graph = prepare_graph(test_df)
+    pdf, time_to_graph = prepare_graph(test_df, False, min_edge_weight, missing_edge_prop)
     assert "Grouping ID" in pdf.columns
     assert pdf["Grouping ID"].str.contains("@").all()
     assert all(

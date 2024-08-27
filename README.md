@@ -32,7 +32,7 @@ It supports a variety of interactive workflows, each designed to address a speci
 - **Entity Intelligence Workflows**
   - [**Record Matching**](/app/workflows/record_matching/README.md) generates reports on record matches detected across entity datasets.
   - [**Risk Networks**](/app/workflows/risk_networks/README.md) generates reports on risk exposure for networks of related entities.
-  - [**Question Answering**](/app/workflows/question_answering/README.md) generates reports from an entity-rich document collection.
+  - [**Question Answering**](/app/workflows/question_answering/README.md) generates reports from a collection of text documents.
 
 #### How was Intelligence Toolkit evaluated?
 
