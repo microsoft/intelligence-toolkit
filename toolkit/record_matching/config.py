@@ -6,3 +6,5 @@ list_sep = "; "
 max_rows_to_show = 1000
 entity_label = "Entity"
 cache_name = "record_matching"
+
+DEFAULT_COLUMNS_DONT_CONVERT = ["Entity ID", "Entity name", "Dataset"]

@@ -8,7 +8,6 @@ from collections import defaultdict
 import pandas as pd
 import polars as pl
 import streamlit as st
-from sklearn.neighbors import NearestNeighbors
 
 import app.util.session_variables as home_vars
 import app.workflows.record_matching.functions as functions
@@ -18,6 +17,12 @@ from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 from toolkit.record_matching import get_readme as get_intro
+from toolkit.record_matching.detect import (
+    build_near_map,
+    build_nearest_neighbors,
+    build_sentence_pair_scores,
+    convert_to_sentences,
+)
 from toolkit.record_matching.prepare_model import format_dataset
 
 
@@ -89,7 +94,7 @@ def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                         use_container_width=True,
                     ):
                         sv.matching_dfs.value[dataset] = format_dataset(
-                            selected_df,
+                            selected_df.collect(),
                             att_cols,
                             name_col,
                             entity_col,
@@ -117,13 +122,12 @@ def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
             c1, c2 = st.columns([1, 1])
             with c1:
                 st.markdown("##### Configure text embedding model")
-                # max_atts = max([len(df.columns) for df in sv.matching_dfs.value.values()])
                 all_atts = []
-                for dataset, df in sv.matching_dfs.value.items():
+                for dataset, merged_df in sv.matching_dfs.value.items():
                     all_atts.extend(
                         [
                             f"{c}::{dataset}"
-                            for c in df.columns
+                            for c in merged_df.columns
                             if c not in ["Entity ID", "Entity name"]
                         ]
                     )
@@ -132,6 +136,11 @@ def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                 renaming = defaultdict(dict)
                 atts_to_datasets = defaultdict(list)
                 sv.matching_mapped_atts.value = []
+                # por ex, inicialmente tenho 3 datasets, cada um com 3 atributos
+                # att0_vals = [dataset1::att1, dataset2::att1, dataset3::att1]
+                # att1_vals = [dataset1::att2, dataset2::att2, dataset3::att2]
+                # att2_vals = [dataset1::att3, dataset2::att3, dataset3::att3]
+
                 num_atts = 0
                 while True:
                     if f"att{num_atts}_vals" not in st.session_state:
@@ -242,11 +251,11 @@ def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                                 sv.matching_sentence_pair_embedding_threshold.value
                             )
                             aligned_dfs = []
-                            for dataset, df in sv.matching_dfs.value.items():
-                                rdf = df.clone()
+                            for dataset, merged_df in sv.matching_dfs.value.items():
+                                rdf = merged_df.clone()
                                 rdf = rdf.rename(renaming[dataset])
                                 # drop columns that were not renamed
-                                for col in df.columns:
+                                for col in merged_df.columns:
                                     if (
                                         col not in ["Entity ID", "Entity name"]
                                         and col not in renaming[dataset].values()
@@ -259,13 +268,14 @@ def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                                 rdf = rdf.select(sorted(rdf.columns))
                                 aligned_dfs.append(rdf)
                             string_dfs = []
-                            for df in aligned_dfs:
+                            for merged_df in aligned_dfs:
                                 # convert all columns to strings
-                                for col in df.columns:
-                                    df = df.with_columns(pl.col(col).cast(pl.Utf8))
-                                string_dfs.append(df)
+                                for col in merged_df.columns:
+                                    merged_df = merged_df.with_columns(
+                                        pl.col(col).cast(pl.Utf8)
+                                    )
+                                string_dfs.append(merged_df)
                             sv.matching_merged_df.value = pl.concat(string_dfs)
-                            # filter out any rows with no entity name
                             sv.matching_merged_df.value = (
                                 sv.matching_merged_df.value.filter(
                                     pl.col("Entity name") != ""
@@ -278,11 +288,9 @@ def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                                     + pl.col("Dataset").alias("Unique ID")
                                 )
                             )
-                            all_sentences = functions.convert_to_sentences(
-                                sv.matching_merged_df.value,
-                                skip=["Unique ID", "Entity ID", "Dataset"],
+                            all_sentences = convert_to_sentences(
+                                sv.matching_merged_df.value
                             )
-                            # model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
 
                             pb = st.progress(0, "Embedding text batches...")
 
@@ -302,64 +310,22 @@ def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                             )
                             pb.empty()
 
-                            nbrs = NearestNeighbors(
-                                n_neighbors=50,
-                                n_jobs=1,
-                                algorithm="auto",
-                                leaf_size=20,
-                                metric="cosine",
-                            ).fit(embeddings)
-                            distances, indices = nbrs.kneighbors(embeddings)
-                            threshold = (
-                                sv.matching_sentence_pair_embedding_threshold.value
+                            distances, indices = build_nearest_neighbors(embeddings)
+
+                            near_map = build_near_map(
+                                distances,
+                                indices,
+                                sv.matching_sentence_pair_embedding_threshold.value,
+                                all_sentences,
                             )
-                            near_map = defaultdict(list)
-                            for ix in range(len(all_sentences)):
-                                near_is = indices[ix][1:]
-                                near_ds = distances[ix][1:]
-                                nearest = zip(near_is, near_ds, strict=False)
-                                for near_i, near_d in nearest:
-                                    if near_d <= threshold:
-                                        near_map[ix].append(near_i)
 
-                            df = sv.matching_merged_df.value
+                            sv.matching_sentence_pair_scores.value = (
+                                build_sentence_pair_scores(
+                                    near_map, all_sentences, sv.matching_merged_df.value
+                                )
+                            )
 
-                            sv.matching_sentence_pair_scores.value = []
-                            for ix, nx_list in near_map.items():
-                                all_sentences[ix]
-                                ixrec = df.row(ix, named=True)
-                                for nx in nx_list:
-                                    all_sentences[nx]
-                                    nxrec = df.row(nx, named=True)
-                                    ixn = ixrec["Entity name"].upper()
-                                    nxn = nxrec["Entity name"].upper()
-
-                                    ixn_c = re.sub(r"[^\w\s]", "", ixn)
-                                    nxn_c = re.sub(r"[^\w\s]", "", nxn)
-                                    N = 3
-                                    igrams = {
-                                        ixn_c[i : i + N]
-                                        for i in range(len(ixn_c) - N + 1)
-                                    }
-                                    ngrams = {
-                                        nxn_c[i : i + N]
-                                        for i in range(len(nxn_c) - N + 1)
-                                    }
-                                    inter = len(igrams.intersection(ngrams))
-                                    union = len(igrams.union(ngrams))
-                                    score = inter / union if union > 0 else 0
-
-                                    sv.matching_sentence_pair_scores.value.append(
-                                        (
-                                            ix,
-                                            nx,
-                                            score,
-                                        )
-                                    )
-
-                        # st.markdown(f'Identified **{len(sv.matching_sentence_pair_scores.value)}** pairwise record matches.')
-
-                        df = sv.matching_merged_df.value
+                        merged_df = sv.matching_merged_df.value
                         entity_to_group = {}
                         group_id = 0
                         matches = set()
@@ -373,8 +339,8 @@ def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                                 score
                                 >= sv.matching_sentence_pair_jaccard_threshold.value
                             ):
-                                ixrec = df.row(ix, named=True)
-                                nxrec = df.row(nx, named=True)
+                                ixrec = merged_df.row(ix, named=True)
+                                nxrec = merged_df.row(nx, named=True)
                                 ixn = ixrec["Entity name"]
                                 nxn = nxrec["Entity name"]
                                 ixp = ixrec["Dataset"]
@@ -390,19 +356,27 @@ def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                                     ig = entity_to_group[ix_id]
                                     ng = entity_to_group[nx_id]
                                     if ig != ng:
-                                        # print(f'Merging group of {ix_id} into group of {nx_id}')
+                                        print(
+                                            f"Merging group of {ix_id} into group of {nx_id}"
+                                        )
                                         for k, v in list(entity_to_group.items()):
                                             if v == ig:
-                                                # print(f'Updating {k} to group {ng}')
+                                                print(f"Updating {k} to group {ng}")
                                                 entity_to_group[k] = ng
                                 elif ix_id in entity_to_group:
-                                    # print(f'Adding {nx_id} to group {entity_to_group[ix_id]}')
+                                    print(
+                                        f"Adding {nx_id} to group {entity_to_group[ix_id]}"
+                                    )
                                     entity_to_group[nx_id] = entity_to_group[ix_id]
                                 elif nx_id in entity_to_group:
-                                    # print(f'Adding {ix_id} to group {entity_to_group[nx_id]}')
+                                    print(
+                                        f"Adding {ix_id} to group {entity_to_group[nx_id]}"
+                                    )
                                     entity_to_group[ix_id] = entity_to_group[nx_id]
                                 else:
-                                    # print(f'Creating new group {group_id} for {ix_id} and {nx_id}')
+                                    print(
+                                        f"Creating new group {group_id} for {ix_id} and {nx_id}"
+                                    )
                                     entity_to_group[ix_id] = group_id
                                     entity_to_group[nx_id] = group_id
                                     group_id += 1
@@ -416,8 +390,8 @@ def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                                 score
                                 >= sv.matching_sentence_pair_jaccard_threshold.value
                             ):
-                                ixrec = df.row(ix, named=True)
-                                nxrec = df.row(nx, named=True)
+                                ixrec = merged_df.row(ix, named=True)
+                                nxrec = merged_df.row(nx, named=True)
                                 ixn = ixrec["Entity name"]
                                 nxn = nxrec["Entity name"]
                                 ixp = ixrec["Dataset"]
@@ -425,8 +399,12 @@ def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
 
                                 ix_id = f"{ixn}::{ixp}"
                                 nx_id = f"{nxn}::{nxp}"
-                                matches.add((entity_to_group[ix_id], *list(df.row(ix))))
-                                matches.add((entity_to_group[nx_id], *list(df.row(nx))))
+                                matches.add(
+                                    (entity_to_group[ix_id], *list(merged_df.row(ix)))
+                                )
+                                matches.add(
+                                    (entity_to_group[nx_id], *list(merged_df.row(nx)))
+                                )
 
                                 pair_to_match[tuple(sorted([ix_id, nx_id]))] = score
 
@@ -523,8 +501,6 @@ def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                                 descending=[False, False],
                             )
                         )
-                        # # keep all records linked to a group ID if any record linked to that ID has dataset GD or ILM
-                        # sv.matching_matches_df.value = sv.matching_matches_df.value.filter(pl.col('Group ID').is_in(sv.matching_matches_df.value.filter(pl.col('Dataset').is_in(['GD', 'ILM']))['Group ID'].unique()))
 
                         st.rerun()
                 if len(sv.matching_matches_df.value) > 0:
