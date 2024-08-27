@@ -5,7 +5,7 @@ import os
 
 import plotly.express as px
 
-from python.helpers.constants import CACHE_PATH
+from toolkit.helpers.constants import CACHE_PATH
 
 cache_dir = os.path.join(CACHE_PATH, "data_synthesis")
 outputs_dir = os.path.join(cache_dir, "outputs")

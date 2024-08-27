@@ -1,8 +1,11 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import random
+
 import streamlit as st
+
+import toolkit.question_answering.prompts as prompts
 from app.util.session_variable import SessionVariable
-import python.question_answering.prompts as prompts
+
 
 class SessionVariables:
     prefix = None

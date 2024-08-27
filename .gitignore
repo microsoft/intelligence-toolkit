@@ -9,6 +9,7 @@ __pycache__/
 # Virtual environment
 venv/
 env/
+*.lcov
 
 # Streamlit
 .cache/
@@ -52,6 +53,9 @@ app/wkhtmltox/*.exe
 *.coverage
 **/messages
 **/xpia*
+*.lcov
 
 **/studio_tests/
 .venv
+
+examples/**/*.csv

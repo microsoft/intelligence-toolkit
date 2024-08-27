@@ -14,6 +14,9 @@ schedules:
     include:
       - main
 
+variables:
+  POETRY_VERSION: 1.8.3
+
 stages:
   - stage: Compliance
     dependsOn: []
@@ -53,17 +56,25 @@ stages:
               versionSpec: "3.11"
             displayName: "Use Python 3.11"
           - task: Bash@3
-            displayName: Install Dependencies
+            displayName: Install poetry
             inputs:
               workingDirectory: ./
               targetType: "inline"
-              script: pip install -r requirements.txt
+              script: |
+                curl -sSL https://install.python-poetry.org | python -
+                export PATH=$PATH:$HOME/.poetry/bin
+          - task: Bash@3
+            displayName: Install packages
+            inputs:
+              workingDirectory: ./
+              targetType: "inline"
+              script: poetry install
           - task: Bash@3
             displayName: Run Tests
             inputs:
               workingDirectory: ./
               targetType: "inline"
-              script: pytest
+              script: poetry run poe test
       - job: buildAndPush
         displayName: BuildAndPushContainer
         dependsOn: validate
@@ -81,7 +92,7 @@ stages:
 
   - stage: Build_NSIS
     dependsOn: []
-    condition: eq(variables['BUILD_EXE'], 'true')
+    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['BUILD_EXE'], 'true'))
     jobs:
       - job: NSIS_Build
         pool:

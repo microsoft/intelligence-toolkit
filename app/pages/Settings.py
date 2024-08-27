@@ -20,8 +20,8 @@ from util.openai_wrapper import (
 )
 from util.secrets_handler import SecretsHandler
 
-from python.AI.vector_store import VectorStore
-from python.helpers.constants import CACHE_PATH
+from toolkit.AI.vector_store import VectorStore
+from toolkit.helpers.constants import CACHE_PATH
 
 
 def on_change(handler, key=None, value=None):
@@ -69,8 +69,6 @@ def main():
             "Azure OpenAI Auth Type", types_az, index=index_az, disabled=is_mode_cloud
         )
         if type_input_az != openai_config.az_auth_type:
-            print("type_input_az", type_input_az)
-            print("openai_config.az_auth_type", openai_config.az_auth_type)
             on_change(secrets_handler, openai_azure_auth_type, type_input_az)()
             st.rerun()
         col1, col2, col3 = st.columns(3)

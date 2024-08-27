@@ -1,19 +1,13 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 #
-import os
-import re
-from collections import defaultdict
 
-import community
-import networkx as nx
+# ruff: noqa
 import pandas as pd
+import polars as pl
 import streamlit as st
-import workflows.risk_networks.config as config
 import workflows.risk_networks.functions as functions
-import workflows.risk_networks.prompts as prompts
 import workflows.risk_networks.variables as rn_variables
-from sklearn.neighbors import NearestNeighbors
 from st_aggrid import (
     AgGrid,
     ColumnsAutoSizeMode,
@@ -21,36 +15,57 @@ from st_aggrid import (
     GridOptionsBuilder,
     GridUpdateMode,
 )
-from streamlit_agraph import agraph
+from streamlit_agraph import Edge, Node, agraph
 from util import ui_components
 from util.session_variables import SessionVariables
 
-from python.AI import classes
-
-
-def get_intro():
-    file_path = os.path.join(os.path.dirname(__file__), "README.md")
-    with open(file_path) as file:
-        return file.read()
+from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
+from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
+from toolkit.risk_networks import get_readme as get_intro
+from toolkit.risk_networks import prompts
+from toolkit.risk_networks.config import ENTITY_LABEL
+from toolkit.risk_networks.explore_networks import (
+    build_network_from_entities,
+    get_entity_graph,
+    simplify_entities_graph,
+)
+from toolkit.risk_networks.exposure_report import build_exposure_report
+from toolkit.risk_networks.identify_networks import (
+    build_entity_records,
+    build_networks,
+    trim_nodeset,
+)
+from toolkit.risk_networks.index_and_infer import build_inferred_df, index_and_infer
+from toolkit.risk_networks.prepare_model import (
+    build_flag_links,
+    build_flags,
+    build_groups,
+    build_main_graph,
+    format_data_columns,
+    generate_attribute_links,
+)
+from toolkit.risk_networks.protected_mode import protect_data
 
 
 def create(sv: rn_variables.SessionVariables, workflow=None):
     sv_home = SessionVariables("home")
 
-    intro_tab, uploader_tab, process_tab, view_tab, report_tab = st.tabs([
-        "Network analysis workflow:",
-        "Create data model",
-        "Process data model",
-        "Explore networks",
-        "Generate AI network reports",
-    ])
-    df = None
+    intro_tab, uploader_tab, process_tab, view_tab, report_tab = st.tabs(
+        [
+            "Network analysis workflow:",
+            "Create data model",
+            "Process data model",
+            "Explore networks",
+            "Generate AI network reports",
+        ]
+    )
+    selected_df = None
     with intro_tab:
         st.markdown(get_intro())
     with uploader_tab:
         uploader_col, model_col = st.columns([3, 2])
         with uploader_col:
-            _selected_file, df = ui_components.multi_csv_uploader(
+            _, selected_df = ui_components.multi_csv_uploader(
                 "Upload multiple CSVs",
                 sv.network_uploaded_files,
                 sv.network_upload_key.value,
@@ -59,356 +74,128 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
             )
         with model_col:
             st.markdown("##### Map columns to model")
-            if df is None:
+            if selected_df is None:
                 st.warning("Upload and select a file to continue")
             else:
-                options = ["", *df.columns.to_numpy()]
+                options = ["", *selected_df.columns.to_numpy()]
                 link_type = st.radio(
                     "Link type",
                     [
                         "Entity-Attribute",
-                        "Entity-Entity",
                         "Entity-Flag",
                         "Entity-Group",
                     ],
                     horizontal=True,
-                    help="Select the type of link to create. Entity-Attribute links connect entities with shared attributes, Entity-Entity links create direct connections between entities, Entity-Flag links connect entities to risk flags, and Entity-Group links enable filtering of detected networks by specified grouping attributes.",
+                    help="Select the type of link to create. Entity-Attribute links connect entities with shared attributes, Entity-Flag links connect entities to risk flags, and Entity-Group links enable filtering of detected networks by specified grouping attributes.",
                 )
                 entity_col = st.selectbox(
                     "Entity ID column",
                     options,
                     help="The column containing unique entity identifiers, shared across datasets.",
                 )
-                model_links = None
-                attribute_label = ""
-                if link_type == "Entity-Entity":
-                    value_cols = [st.selectbox("Related entity column", options)]
-                    attribute_col = st.selectbox(
-                        "Relationship type",
-                        ["Use column name", "Use custom name", "Use related column"],
-                    )
-                    if attribute_col == "Use custom name":
-                        attribute_label = st.text_input("Relationship type", "")
-                    model_links = sv.network_entity_links.value
-                elif link_type == "Entity-Attribute":
+                if link_type == "Entity-Attribute":
                     value_cols = st.multiselect(
                         "Attribute value column(s) to link on",
                         options,
                         help="The column(s) containing attribute values that would only be shared by closely related entities.",
                     )
-                    attribute_col = st.selectbox(
-                        "Attribute type",
-                        ["Use column name", "Use custom name", "Use related column"],
-                        help="Where the name of the attribute comes from: the selected column, the user, or the values of another column.",
-                    )
-                    if attribute_col == "Use custom name":
-                        attribute_label = st.text_input("Attribute name", "")
-                    model_links = sv.network_attribute_links.value
                 elif link_type == "Entity-Flag":
                     value_cols = st.multiselect(
                         "Flag value column(s)",
                         options,
                         help="The column(s) containing risk flags associated with entities.",
                     )
-                    attribute_col = st.selectbox(
-                        "Flag type",
-                        ["Use column name", "Use custom name", "Use related column"],
-                        help="Where the name of the flag comes from: the selected column, the user, or the values of another column.",
-                    )
-                    if attribute_col == "Use custom name":
-                        attribute_label = st.text_input("Flag name", "")
                     flag_agg = st.selectbox(
                         "Flag format",
-                        ["Instance", "Count", "List"],
-                        help="How flags are represented: as individual instances or as aggregate counts in a flag value column, or as a list of flagged entities in the entity ID column.",
+                        ["Instance", "Count"],
+                        help="How flags are represented: as individual instances or as aggregate counts in a flag value column.",
                     )
-                    model_links = sv.network_flag_links.value
                 elif link_type == "Entity-Group":
                     value_cols = st.multiselect(
                         "Group value column(s) to group on",
                         options,
                         help="The column(s) containing group values that are shared by groups of broadly related entities.",
                     )
-                    attribute_col = st.selectbox(
-                        "Group type",
-                        ["Use column name", "Use custom name", "Use related column"],
-                        help="Where the name of the group comes from: the selected column, the user, or the values of another column.",
-                    )
-                    if attribute_col == "Use custom name":
-                        attribute_label = st.text_input("Group name", "")
-                    model_links = sv.network_group_links.value
                 b1, b2 = st.columns([1, 1])
                 with b1:
+                    groups = set()
                     if st.button(
                         "Add links to model",
                         disabled=entity_col == ""
-                        or attribute_col == ""
                         or len(value_cols) == 0
                         or link_type == "",
                     ):
                         with st.spinner("Adding links to model..."):
-                            for value_col in value_cols:
-                                # remove punctuation but retain characters and digits in any language
-                                # compress whitespace to single space
-                                df[entity_col] = df[entity_col].apply(
-                                    lambda x: re.sub(r"[^\w\s&@\+]", "", str(x)).strip()
+                            selected_df = format_data_columns(
+                                pl.from_pandas(selected_df), value_cols, entity_col
+                            )
+                            if sv_home.protected_mode.value:
+                                (
+                                    selected_df,
+                                    entities_renamed,
+                                    attributes_renamed,
+                                ) = protect_data(
+                                    selected_df,
+                                    value_cols,
+                                    entity_col,
+                                    sv.network_entities_renamed.value,
+                                    sv.network_attributes_renamed.value,
                                 )
-                                df[entity_col] = df[entity_col].apply(
-                                    lambda x: re.sub(r"\s+", " ", str(x)).strip()
+                                sv.network_entities_renamed.value = entities_renamed
+                                sv.network_attributes_renamed.value = attributes_renamed
+
+                            if link_type == "Entity-Attribute":
+                                attribute_links = generate_attribute_links(
+                                    selected_df,
+                                    entity_col,
+                                    value_cols,
+                                    sv.network_attribute_links.value,
                                 )
-                                df[value_col] = df[value_col].apply(
-                                    lambda x: re.sub(r"[^\w\s&@\+]", "", str(x)).strip()
+                                sv.network_attribute_links.value = attribute_links
+                                node_types = set()
+                                for attribute_link in attribute_links:
+                                    node_types.add(attribute_link[0][1])
+
+                                sv.network_node_types.value = node_types
+                                sv.network_overall_graph.value = build_main_graph(
+                                    attribute_links
                                 )
-                                df[value_col] = df[value_col].apply(
-                                    lambda x: re.sub(r"\s+", " ", str(x)).strip()
+                            elif link_type == "Entity-Flag":
+                                flag_links = build_flag_links(
+                                    selected_df,
+                                    entity_col,
+                                    flag_agg,
+                                    value_cols,
+                                    sv.network_flag_links.value,
                                 )
-                                df[value_col] = df[value_col].apply(
-                                    lambda x: re.sub(r"\s+", " ", str(x)).strip()
+                                sv.network_flag_links.value = flag_links
+
+                                (
+                                    sv.network_integrated_flags.value,
+                                    sv.network_max_entity_flags.value,
+                                    sv.network_mean_flagged_flags.value,
+                                ) = build_flags(sv.network_flag_links.value)
+                            elif link_type == "Entity-Group":
+                                sv.network_group_links.value = build_groups(
+                                    value_cols,
+                                    selected_df,
+                                    entity_col,
+                                    sv.network_group_links.value,
                                 )
-
-                                if sv_home.protected_mode.value:
-                                    unique_names = df[entity_col].unique()
-                                    for i, name in enumerate(unique_names, start=1):
-                                        original_name = name
-                                        new_name = f"Protected_Entity_{i}"
-                                        name_exists = [
-                                            x
-                                            for x in sv.network_entities_renamed.value
-                                            if x[0] == name
-                                        ]
-                                        if len(name_exists) == 0:
-                                            sv.network_entities_renamed.value.append((
-                                                original_name,
-                                                new_name,
-                                            ))
-                                        else:
-                                            new_name = name_exists[0][1]
-
-                                        df[entity_col] = df[entity_col].apply(
-                                            lambda x: new_name if name == x else x
-                                        )
-
-                                    unique_names_value = df[value_col].unique()
-
-                                    numeric_pattern = r"^\d+(\.\d+)?$"
-
-                                    def is_numeric_column(column):
-                                        return all(
-                                            re.match(numeric_pattern, str(value))
-                                            for value in column
-                                        )
-
-                                    is_numeric = is_numeric_column(df[value_col])
-                                    if not is_numeric:
-                                        for i, name in enumerate(
-                                            unique_names_value, start=1
-                                        ):
-                                            new_name = f"{value_col}_{i!s}"
-                                            name_exists = [
-                                                x
-                                                for x in sv.network_attributes_renamed.value
-                                                if x[0] == name
-                                            ]
-                                            name_exists_entity = [
-                                                x
-                                                for x in sv.network_entities_renamed.value
-                                                if x[0] == name
-                                            ]
-
-                                            if (
-                                                len(name_exists) == 0
-                                                and len(name_exists_entity) == 0
-                                            ):
-                                                sv.network_attributes_renamed.value.append((
-                                                    name,
-                                                    new_name,
-                                                ))
-                                            else:
-                                                if len(name_exists_entity) > 0:
-                                                    new_name = name_exists_entity[0][1]
-                                                else:
-                                                    new_name = name_exists[0][1]
-
-                                            df[value_col] = df[value_col].apply(
-                                                lambda x: new_name if name == x else x
-                                            )
-                                    else:
-                                        for i, name in enumerate(unique_names, start=1):
-                                            sv.network_attributes_renamed.value.append((
-                                                name,
-                                                name,
-                                            ))
-
-                                if attribute_col == "Use column name":
-                                    attribute_label = value_col
-
-                                if link_type == "Entity-Attribute":
-                                    if attribute_col in [
-                                        "Use column name",
-                                        "Use custom name",
-                                    ]:
-                                        df["attribute_col"] = attribute_label
-                                        sv.network_node_types.value.add(attribute_label)
-                                        model_links.append(
-                                            df[
-                                                [entity_col, "attribute_col", value_col]
-                                            ].values.tolist()
-                                        )
-                                    else:
-                                        sv.network_node_types.value.update(
-                                            df[attribute_label].unique().tolist()
-                                        )
-                                        model_links.append(
-                                            df[
-                                                [entity_col, attribute_col, value_col]
-                                            ].values.tolist()
-                                        )
-                                    functions.build_undirected_graph(sv)
-                                elif link_type == "Entity-Flag":
-                                    # groupby entity and sum flag counts
-                                    gdf = df.groupby([entity_col]).sum().reset_index()
-                                    gdf["attribute_col"] = attribute_label
-                                    gdf["attribute_col2"] = attribute_label
-                                    if attribute_col in [
-                                        "Use column name",
-                                        "Use custom name",
-                                    ]:
-                                        sv.network_flag_types.value.add(attribute_label)
-                                        if flag_agg == "Instance":
-                                            gdf["count_col"] = 1
-                                            model_links.append(
-                                                gdf[
-                                                    [
-                                                        entity_col,
-                                                        "attribute_col",
-                                                        value_col,
-                                                        "count_col",
-                                                    ]
-                                                ].values.tolist()
-                                            )
-                                        elif flag_agg == "Count":
-                                            gdf[value_col] = gdf[value_col].astype(int)
-                                            model_links.append(
-                                                gdf[
-                                                    [
-                                                        entity_col,
-                                                        "attribute_col",
-                                                        "attribute_col2",
-                                                        value_col,
-                                                    ]
-                                                ].values.tolist()
-                                            )
-                                        elif flag_agg == "List":
-                                            gdf["count_col"] = 1
-                                            model_links.append(
-                                                gdf[
-                                                    [
-                                                        entity_col,
-                                                        "attribute_col",
-                                                        "attribute_col2",
-                                                        "count_col",
-                                                    ]
-                                                ].values.tolist()
-                                            )
-                                    else:
-                                        sv.network_flag_types.value.update(
-                                            df[attribute_label].unique().tolist()
-                                        )
-                                        if flag_agg == "Instance":
-                                            model_links.append(
-                                                gdf[
-                                                    [
-                                                        entity_col,
-                                                        attribute_col,
-                                                        value_col,
-                                                    ]
-                                                ].values.tolist()
-                                            )
-                                        elif flag_agg == "Count":
-                                            gdf[value_col] = gdf[value_col].astype(int)
-                                            model_links.append(
-                                                gdf[
-                                                    [
-                                                        entity_col,
-                                                        attribute_col,
-                                                        "attribute_col2",
-                                                        value_col,
-                                                    ]
-                                                ].values.tolist()
-                                            )
-                                        elif flag_agg == "List":
-                                            gdf["count_col"] = 1
-                                            model_links.append(
-                                                gdf[
-                                                    [
-                                                        entity_col,
-                                                        "attribute_col",
-                                                        "attribute_col2",
-                                                        "count_col",
-                                                    ]
-                                                ].values.tolist()
-                                            )
-                                    functions.build_integrated_flags(sv)
-                                elif link_type == "Entity-Entity":
-                                    if attribute_col in [
-                                        "Use column name",
-                                        "Use custom name",
-                                    ]:
-                                        df["attribute_col"] = attribute_label
-                                        model_links.append(
-                                            df[
-                                                [entity_col, "attribute_col", value_col]
-                                            ].values.tolist()
-                                        )
-                                    else:
-                                        model_links.append(
-                                            df[
-                                                [entity_col, attribute_col, value_col]
-                                            ].values.tolist()
-                                        )
-                                    functions.build_undirected_graph(sv)
-                                    # build_directed_graph(sv) TODO
-                                elif link_type == "Entity-Group":
-                                    if attribute_col in [
-                                        "Use column name",
-                                        "Use custom name",
-                                    ]:
-                                        df["attribute_col"] = attribute_label
-                                        sv.network_group_types.value.add(
-                                            attribute_label
-                                        )
-                                        model_links.append(
-                                            df[
-                                                [entity_col, "attribute_col", value_col]
-                                            ].values.tolist()
-                                        )
-                                    else:
-                                        sv.network_group_types.value.update(
-                                            df[attribute_label].unique().tolist()
-                                        )
-                                        model_links.append(
-                                            df[
-                                                [entity_col, attribute_col, value_col]
-                                            ].values.tolist()
-                                        )
                 with b2:
                     if st.button(
                         "Clear data model",
                         disabled=entity_col == ""
-                        or attribute_col == ""
                         or len(value_cols) == 0
                         or link_type == "",
                     ):
-                        sv.network_entity_links.value = []
-                        sv.network_directed_entity_links.value = []
                         sv.network_attribute_links.value = []
                         sv.network_flag_links.value = []
                         sv.network_group_links.value = []
                         sv.network_overall_graph.value = None
                         sv.network_entity_graph.value = None
-                        sv.network_merged_graph.value = None
                         sv.network_community_df.value = pd.DataFrame()
-                        sv.network_integrated_flags.value = pd.DataFrame()
+                        sv.network_integrated_flags.value = pl.DataFrame()
 
             num_entities = 0
             num_attributes = 0
@@ -417,16 +204,14 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
             groups = set()
             for link_list in sv.network_group_links.value:
                 for link in link_list:
-                    groups.add(f"{link[1]}{config.att_val_sep}{link[2]}")
+                    groups.add(f"{link[1]}{ATTRIBUTE_VALUE_SEPARATOR}{link[2]}")
             if sv.network_overall_graph.value is not None:
                 all_nodes = sv.network_overall_graph.value.nodes()
                 entity_nodes = [
-                    node for node in all_nodes if node.startswith(config.entity_label)
+                    node for node in all_nodes if node.startswith(ENTITY_LABEL)
                 ]
                 sv.network_attributes_list.value = [
-                    node
-                    for node in all_nodes
-                    if not node.startswith(config.entity_label)
+                    node for node in all_nodes if not node.startswith(ENTITY_LABEL)
                 ]
                 num_entities = len(entity_nodes)
                 num_attributes = len(all_nodes) - num_entities
@@ -439,10 +224,12 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 unique_names = original_df["Attribute"].unique()
                 for i, name in enumerate(unique_names, start=1):
                     name_format = name.split("==")[0].strip()
-                    atributes_entities.append((
-                        name,
-                        f"{name_format}=={name_format}_{i!s}",
-                    ))
+                    atributes_entities.append(
+                        (
+                            name,
+                            f"{name_format}=={name_format}_{i!s}",
+                        )
+                    )
 
                 sv.network_attributes_renamed.value = atributes_entities
 
@@ -459,68 +246,20 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
 
     with process_tab:
         index_col, part_col = st.columns([1, 1])
-        components = None
         with index_col:
-            st.markdown("##### Index nodes (optional)")
-            fuzzy_options = sorted([
-                config.entity_label,
-                *list(sv.network_node_types.value),
-            ])
+            st.markdown("##### Index and infer nodes (optional)")
+            fuzzy_options = sorted(
+                [
+                    ENTITY_LABEL,
+                    *list(sv.network_node_types.value),
+                ]
+            )
             network_indexed_node_types = st.multiselect(
                 "Select node types to fuzzy match",
                 default=sv.network_indexed_node_types.value,
                 options=fuzzy_options,
                 help="Select the node types to embed into a multi-dimensional semantic space for fuzzy matching.",
             )
-            if st.button("Index nodes", disabled=len(network_indexed_node_types) == 0):
-                sv.network_indexed_node_types.value = network_indexed_node_types
-                text_types = [
-                    (n, d["type"])
-                    for n, d in sv.network_overall_graph.value.nodes(data=True)
-                    if d["type"] in sv.network_indexed_node_types.value
-                ]
-                texts = [t[0] for t in text_types]
-
-                df = pd.DataFrame(text_types, columns=["text", "type"])
-                pb = st.progress(0, "Embedding text batches...")
-
-                def on_embedding_batch_change(current, total):
-                    pb.progress(
-                        (current) / total,
-                        f"Embedding text batch {current} of {total}...",
-                    )
-
-                callback = classes.BatchEmbeddingCallback()
-                callback.on_embedding_batch_change = on_embedding_batch_change
-                functions_embedder = functions.embedder()
-                embeddings = functions_embedder.embed_store_many(
-                    texts, [callback], sv_home.save_cache.value
-                )
-                pb.empty()
-
-                vals = [
-                    (n, t, e) for (n, t), e in zip(text_types, embeddings, strict=False)
-                ]
-                edf = pd.DataFrame(vals, columns=["text", "type", "vector"])
-
-                edf = edf[edf["text"].isin(texts)]
-                sv.network_embedded_texts.value = edf["text"].tolist()
-                nbrs = NearestNeighbors(
-                    n_neighbors=20,
-                    n_jobs=1,
-                    algorithm="auto",
-                    leaf_size=20,
-                    metric="cosine",
-                ).fit(embeddings)
-                (
-                    sv.network_nearest_text_distances.value,
-                    sv.network_nearest_text_indices.value,
-                ) = nbrs.kneighbors(embeddings)
-                st.rerun()
-            nodes_indexed = len(sv.network_embedded_texts.value)
-            if nodes_indexed > 0:
-                st.markdown(f"*Number of nodes indexed*: {nodes_indexed}")
-            st.markdown("##### Infer links (optional)")
             network_similarity_threshold = st.number_input(
                 "Similarity threshold for fuzzy matching (max)",
                 min_value=0.0,
@@ -529,63 +268,80 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 value=sv.network_similarity_threshold.value,
                 help="The maximum cosine similarity threshold for inferring links between nodes based on their embeddings. Higher values will infer more links, but may also infer more false positives.",
             )
-            if st.button(
-                "Infer links",
-                disabled=len(sv.network_nearest_text_distances.value) == 0,
-            ):
-                sv.network_similarity_threshold.value = network_similarity_threshold
-                sv.network_inferred_links.value = defaultdict(set)
-                texts = sv.network_embedded_texts.value
-                pb = st.progress(0, text="Inferring links...")
-                for ix in range(len(texts)):
-                    pb.progress(int(ix * 100 / len(texts)), text="Inferring links...")
-                    near_is = sv.network_nearest_text_indices.value[ix]
-                    near_ds = sv.network_nearest_text_distances.value[ix]
-                    nearest = zip(near_is, near_ds, strict=False)
-                    for near_i, near_d in nearest:
-                        if (
-                            near_i != ix
-                            and near_d <= sv.network_similarity_threshold.value
-                        ) and texts[ix] != texts[near_i]:
-                            sv.network_inferred_links.value[texts[ix]].add(
-                                texts[near_i]
-                            )
-                            sv.network_inferred_links.value[texts[near_i]].add(
-                                texts[ix]
-                            )
 
-                pb.empty()
+            c_1, _, c_3 = st.columns([2, 3, 2])
+            with c_1:
+                index_infer = st.button(
+                    "Index and infer nodes",
+                    disabled=len(network_indexed_node_types) == 0,
+                )
+            with c_3:
+                clear_inferring = st.button(
+                    "Clear inferred links",
+                    disabled=len(sv.network_inferred_links.value) == 0,
+                )
+            if clear_inferring:
+                sv.network_inferred_links.value = []
                 st.rerun()
 
-            link_list = []
-            for text, near in sv.network_inferred_links.value.items():
-                for n in near:
-                    if text < n:
-                        link_list.append((text, n))
-            ilc = len(link_list)
+            if index_infer:
+                pb = st.progress(0, "Embedding text batches...")
 
-            if ilc > 0:
-                st.markdown(f"*Number of links inferred*: {ilc}")
-                idf = pd.DataFrame(link_list, columns=["text", "similar"])
-                idf["text"] = idf["text"].str.replace(
-                    config.entity_label + config.att_val_sep, ""
+                def on_embedding_batch_change(
+                    current, total, message="In progress...."
+                ):
+                    pb.progress(
+                        (current) / total,
+                        f"{message} {current} of {total}",
+                    )
+
+                callback = ProgressBatchCallback()
+                callback.on_batch_change = on_embedding_batch_change
+                functions_embedder = functions.embedder()
+                sv.network_indexed_node_types.value = network_indexed_node_types
+                sv.network_similarity_threshold.value = network_similarity_threshold
+
+                (
+                    sv.network_inferred_links.value,
+                    sv.network_embedded_texts_count.value,
+                ) = index_and_infer(
+                    network_indexed_node_types,
+                    sv.network_overall_graph.value,
+                    network_similarity_threshold,
+                    [callback],
+                    functions_embedder,
+                    None,
+                    sv_home.save_cache.value,
                 )
-                idf["similar"] = idf["similar"].str.replace(
-                    config.entity_label + config.att_val_sep, ""
+                pb.empty()
+
+            inferred_links_count = len(sv.network_inferred_links.value)
+            if inferred_links_count > 0:
+                st.markdown(
+                    f"*Number of nodes indexed*: {sv.network_embedded_texts_count.value}"
                 )
-                idf = idf.sort_values(by=["text", "similar"]).reset_index(drop=True)
-                st.dataframe(idf, hide_index=True, use_container_width=True)
+                st.markdown(f"*Number of links inferred*: {inferred_links_count}")
+                inferred_df = build_inferred_df(sv.network_inferred_links.value)
+                st.dataframe(
+                    inferred_df.to_pandas(), hide_index=True, use_container_width=True
+                )
+            else:
+                st.markdown(f"*No inferred links*")
 
         with part_col:
             st.markdown("##### Identify networks")
-            adf = pd.DataFrame(sv.network_attributes_list.value, columns=["Attribute"])
+            attributes_df = pd.DataFrame(
+                sv.network_attributes_list.value, columns=["Attribute"]
+            )
 
             search = st.text_input("Search for attributes to remove", "")
             if search != "":
-                adf = adf[adf["Attribute"].str.contains(search, case=False)]
+                attributes_df = attributes_df[
+                    attributes_df["Attribute"].str.contains(search, case=False)
+                ]
 
             selected_rows = ui_components.dataframe_with_selections(
-                adf,
+                attributes_df,
                 sv.network_additional_trimmed_attributes.value,
                 "Attribute",
                 "Remove",
@@ -594,7 +350,8 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
             sv.network_additional_trimmed_attributes.value = selected_rows[
                 "Attribute"
             ].tolist()
-            c1, c2, c3 = st.columns([1, 1, 1])
+
+            c1, c2, c3, c4 = st.columns([1, 1, 1, 1])
             with c1:
                 network_max_attribute_degree = st.number_input(
                     "Maximum attribute degree",
@@ -603,6 +360,13 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                     help="The maximum number of entities that can share an attribute before it is removed from the network.",
                 )
             with c2:
+                network_max_network_entities = st.number_input(
+                    "Max network entities",
+                    min_value=1,
+                    value=sv.network_max_network_entities.value,
+                    help="Any network with entities >= max_network_entities will be isolated into a subnetwork",
+                )
+            with c3:
                 network_supporting_attribute_types = st.multiselect(
                     "Supporting attribute types",
                     default=sv.network_supporting_attribute_types.value,
@@ -610,104 +374,50 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                     help="Attribute types that should not be used to detect networks (e.g., because of potential noise/unreliability) but which should be added back into detected networks for context.",
                 )
             comm_count = 0
-            with c3:
+            with c4:
+                st.text("")
+                st.text("")
                 identify = st.button("Identify networks")
             if identify:
                 sv.network_max_attribute_degree.value = network_max_attribute_degree
+                sv.network_max_network_entities.value = network_max_network_entities
                 sv.network_supporting_attribute_types.value = (
                     network_supporting_attribute_types
                 )
+
                 with st.spinner("Identifying networks..."):
                     sv.network_table_index.value += 1
-                    # Create a new graph P in which entities are connected if they share an attribute
-                    P = functions.project_entity_graph(sv)
-
-                    components = sorted(
-                        nx.components.connected_components(P),
-                        key=lambda x: len(x),
-                        reverse=True,
-                    )
-                    comp_count = len(components)
-                    sv.network_components.value = range(comp_count)
-                    sv.network_component_to_nodes.value = dict(
-                        zip(sv.network_components.value, components, strict=False)
-                    )
-                    sv.network_community_nodes.value = []
-                    sv.network_entity_to_community_ix.value = {}
-                    for component in sv.network_components.value:
-                        nodes = sv.network_component_to_nodes.value[component]
-                        if len(nodes) > sv.network_max_network_size.value:
-                            S = nx.subgraph(P, nodes)
-                            node_to_network = community.best_partition(
-                                S, resolution=1.0, randomize=False, weight="weight"
-                            )
-                            network_to_nodes = defaultdict(set)
-                            for node, network in node_to_network.items():
-                                network_to_nodes[network].add(node)
-                            networks = [
-                                list(nodes) for nodes in network_to_nodes.values()
-                            ]
-                            for network in networks:
-                                sv.network_community_nodes.value.append(network)
-                                for node in network:
-                                    sv.network_entity_to_community_ix.value[node] = (
-                                        len(sv.network_community_nodes.value) - 1
-                                    )
-                        else:
-                            sv.network_community_nodes.value.append(nodes)
-                            for node in nodes:
-                                sv.network_entity_to_community_ix.value[node] = (
-                                    len(sv.network_community_nodes.value) - 1
-                                )
-
-                    N = functions.build_network_from_entities(
-                        sv,
+                    (trimmed_degrees, trimmed_nodes) = trim_nodeset(
                         sv.network_overall_graph.value,
-                        sv.network_overall_graph.value.nodes(),
+                        sv.network_additional_trimmed_attributes.value,
+                        sv.network_max_attribute_degree.value,
                     )
 
-                entity_records = []
-                for ix, entities in enumerate(sv.network_community_nodes.value):
-                    community_flags = 0
-                    flagged = 0
-                    unflagged = 0
-                    flaggedPerUnflagged = 0
-                    if len(sv.network_integrated_flags.value) > 0:
-                        flags_df = sv.network_integrated_flags.value[
-                            sv.network_integrated_flags.value["qualified_entity"].isin(
-                                entities
-                            )
-                        ]
-                        community_flags = flags_df["count"].sum()
-                        flagged = len(flags_df[flags_df["count"] > 0])
-                        unflagged = len(entities) - flagged
-                        flaggedPerUnflagged = (
-                            flagged / unflagged if unflagged > 0 else 0
+                    sv.network_trimmed_attributes.value = (
+                        pd.DataFrame(
+                            trimmed_degrees,
+                            columns=["Attribute", "Linked Entities"],
                         )
-                        flaggedPerUnflagged = round(flaggedPerUnflagged, 2)
-                    flags_per_entity = round(
-                        community_flags / len(entities) if len(entities) > 0 else 0, 2
+                        .sort_values("Linked Entities", ascending=False)
+                        .reset_index(drop=True)
                     )
-                    for n in entities:
-                        flags = (
-                            sv.network_integrated_flags.value[
-                                sv.network_integrated_flags.value["qualified_entity"]
-                                == n
-                            ]["count"].sum()
-                            if len(sv.network_integrated_flags.value) > 0
-                            else 0
-                        )
 
-                        entity_records.append((
-                            n.split(config.att_val_sep)[1],
-                            flags,
-                            ix,
-                            len(entities),
-                            community_flags,
-                            flagged,
-                            flags_per_entity,
-                            flaggedPerUnflagged,
-                        ))
+                    (
+                        sv.network_community_nodes.value,
+                        sv.network_entity_to_community_ix.value,
+                    ) = build_networks(
+                        sv.network_overall_graph.value,
+                        trimmed_nodes,
+                        sv.network_inferred_links.value,
+                        sv.network_supporting_attribute_types.value,
+                        sv.network_max_network_entities.value,
+                    )
+
+                entity_records = build_entity_records(
+                    sv.network_community_nodes.value,
+                    sv.network_integrated_flags.value,
+                )
+
                 sv.network_entity_df.value = pd.DataFrame(
                     entity_records,
                     columns=[
@@ -743,7 +453,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                     f"*Attributes removed because of high degree*: {trimmed_atts}"
                 )
 
-                adf = pd.DataFrame(
+                attributes_df = pd.DataFrame(
                     sv.network_attributes_list.value, columns=["Attribute"]
                 )
                 if trimmed_atts > 0:
@@ -787,18 +497,18 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                     st.rerun()
                 if show_groups:
                     for group_links in sv.network_group_links.value:
-                        df = pd.DataFrame(
+                        selected_df = pd.DataFrame(
                             group_links, columns=["Entity ID", "Group", "Value"]
                         ).replace("nan", "")
-                        df = df[df["Value"] != ""]
+                        selected_df = selected_df[selected_df["Value"] != ""]
                         # Use group values as columns with values in them
-                        df = df.pivot_table(
+                        selected_df = selected_df.pivot_table(
                             index="Entity ID",
                             columns="Group",
                             values="Value",
                             aggfunc="first",
                         ).reset_index()
-                        show_df = show_df.merge(df, on="Entity ID", how="left")
+                        show_df = show_df.merge(selected_df, on="Entity ID", how="left")
                 last_df = show_df.copy()
                 if not show_entities:
                     last_df = (
@@ -863,146 +573,103 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 sv.network_selected_entity.value = selected_entity
                 sv.network_selected_community.value = selected_network
                 c_nodes = sv.network_community_nodes.value[selected_network]
-                N = functions.build_network_from_entities(
-                    sv, sv.network_overall_graph.value, c_nodes
+                trimmed_attr = {t[0] for t in sv.network_trimmed_attributes.value}
+                network_entities_graph = build_network_from_entities(
+                    sv.network_overall_graph.value,
+                    sv.network_entity_to_community_ix.value,
+                    sv.network_integrated_flags.value,
+                    trimmed_attr,
+                    sv.network_inferred_links.value,
+                    c_nodes,
                 )
 
                 if selected_entity != "":
-                    qualified_selected = (
-                        f"{config.entity_label}{config.att_val_sep}{selected_entity}"
-                    )
                     context = "Upload risk flags to see risk exposure report."
                     if len(sv.network_integrated_flags.value) > 0:
-                        rdf = sv.network_integrated_flags.value.copy()
-                        rdf = rdf[rdf["qualified_entity"].isin(c_nodes)]
-                        rdf = (
-                            rdf[["qualified_entity", "flag", "count"]]
-                            .groupby(["qualified_entity", "flag"])
-                            .sum()
-                            .reset_index()
+                        context = build_exposure_report(
+                            sv.network_integrated_flags.value,
+                            selected_entity,
+                            c_nodes,
+                            network_entities_graph,
                         )
-                        all_flagged = rdf[rdf["count"] > 0]["qualified_entity"].unique()
-                        path_to_source = defaultdict(list)
-                        target_flags = rdf[
-                            rdf["qualified_entity"] == qualified_selected
-                        ]["count"].sum()
-                        net_flags = rdf["count"].sum() - target_flags
-                        net_flagged = len(all_flagged)
-                        if qualified_selected in all_flagged:
-                            net_flagged -= 1
-                        context = "##### Risk Exposure Report\n\n"
-                        for flagged in all_flagged:
-                            all_paths = functions.merge_paths([
-                                list(x)
-                                for x in nx.all_shortest_paths(
-                                    N, flagged, qualified_selected
-                                )
-                            ])
-                            for path in all_paths:
-                                if len(path) > 1:
-                                    chain = ""
-                                    for j, step in enumerate(path):
-                                        indent = "".join(["  "] * j)
-                                        if "]\n" in step:
-                                            step = "".join(step.split("]\n")[1:])
-                                            step = "\n".join(step.split("; "))
-                                        if config.entity_label in step:
-                                            step_risks = rdf[
-                                                rdf["qualified_entity"] == step
-                                            ]["count"].sum()
-                                            step = (
-                                                step.split(config.att_val_sep)[1]
-                                                + f" [linked to {step_risks} flags]"
-                                            )
-                                        else:
-                                            step_entities = nx.degree(N, step)
-                                            step = (
-                                                f"\n{indent}".join(step.split("\n"))
-                                                + f" [linked to {step_entities} entities]"
-                                            )
-                                        chain += indent + f"{step}\n"
-                                        if j < len(path) - 1:
-                                            chain += indent + "--->\n"
-                                    source = chain.split("\n--->")[0]
-                                    path = chain.split("\n--->")[1]
-                                    path_to_source[path].append(source)
-                        paths = len(path_to_source.keys())
-                        context += f"The selected entity **{selected_entity}** has **{target_flags}** direct flags and is linked to **{net_flags}** indirect flags via **{paths}** paths from **{net_flagged}** related entities:\n\n"
-                        if net_flagged == 0:
-                            context = context[:-3] + "."
-                        for ix, (path, sources) in enumerate(path_to_source.items()):
-                            context += f"**Path {ix + 1}**\n\n```\n"
-                            for source in sources:
-                                context += f"{source}\n"
-                            context += f"---> {path}\n```\n\n"
-                        context = context.replace("**1** steps", "**1** step")
-                        context = context.replace("**1** flags", "**1** flag")
-                    sv.network_risk_exposure.value = context
+                        sv.network_risk_exposure.value = context
                 else:
                     sv.network_risk_exposure.value = ""
 
                 full_links_df = pd.DataFrame(
-                    list(N.edges()), columns=["source", "target"]
+                    list(network_entities_graph.edges()), columns=["source", "target"]
                 )
                 full_links_df["attribute"] = full_links_df["target"].apply(
-                    lambda x: x.split(config.att_val_sep)[0]
+                    lambda x: x.split(ATTRIBUTE_VALUE_SEPARATOR)[0]
                 )
-                N1 = functions.simplify_graph(N)
+                network_entities_simplified_graph = simplify_entities_graph(
+                    network_entities_graph
+                )
                 merged_nodes_df = pd.DataFrame(
-                    [(n, d["type"], d["flags"]) for n, d in N1.nodes(data=True)],
+                    [
+                        (n, d["type"], d["flags"])
+                        for n, d in network_entities_simplified_graph.nodes(data=True)
+                    ],
                     columns=["node", "type", "flags"],
                 )
                 merged_links_df = pd.DataFrame(
-                    list(N1.edges()), columns=["source", "target"]
+                    list(network_entities_simplified_graph.edges()),
+                    columns=["source", "target"],
                 )
                 merged_links_df["attribute"] = merged_links_df["target"].apply(
-                    lambda x: x.split(config.att_val_sep)[0]
+                    lambda x: x.split(ATTRIBUTE_VALUE_SEPARATOR)[0]
                 )
                 c1, c2 = st.columns([2, 1])
 
                 with c1:
-                    gp = st.container()
+                    container = st.container()
                 with c2:
                     graph_type = st.radio(
                         "Graph type", ["Full", "Simplified"], horizontal=True
                     )
                     st.markdown(sv.network_risk_exposure.value)
-                with gp:
-                    if graph_type == "Full":
-                        if selected_entity != "":
-                            gp.markdown(
-                                f"##### Entity {selected_entity} in Network {selected_network} (full)"
-                            )
-                        else:
-                            gp.markdown(f"##### Network {selected_network} (full)")
+                with container:
+                    entity_selected = (
+                        f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}{selected_entity}"
+                    )
+                    attribute_types = [
+                        ENTITY_LABEL,
+                        *list(sv.network_node_types.value),
+                    ]
 
-                        nodes, edges, g_config = functions.get_entity_graph(
-                            N,
-                            f"{config.entity_label}{config.att_val_sep}{selected_entity}",
-                            full_links_df,
-                            1000,
-                            700,
-                            [config.entity_label, *list(sv.network_node_types.value)],
+                    if graph_type == "Full":
+                        nodes, edges = get_entity_graph(
+                            network_entities_graph,
+                            entity_selected,
+                            attribute_types,
                         )
-                        agraph(nodes=nodes, edges=edges, config=g_config)  # type: ignore
-                    elif graph_type == "Simplified":
-                        if selected_entity != "":
-                            gp.markdown(
-                                f"##### Entity {selected_entity} in Network {selected_network} (simplified)"
-                            )
-                        else:
-                            gp.markdown(
-                                f"##### Network {selected_network} (simplified)"
-                            )
-                        nodes, edges, g_config = functions.get_entity_graph(
-                            N1,
-                            f"{config.entity_label}{config.att_val_sep}{selected_entity}",
-                            merged_links_df,
-                            1000,
-                            700,
-                            [config.entity_label, *list(sv.network_node_types.value)],
+
+                        nodes_agraph = [Node(**node) for node in nodes]
+                        edges_agraph = [Edge(**edge) for edge in edges]
+                    else:
+                        nodes, edges = get_entity_graph(
+                            network_entities_simplified_graph,
+                            entity_selected,
+                            attribute_types,
                         )
-                        agraph(nodes=nodes, edges=edges, config=g_config)  # type: ignore
+
+                    if selected_entity != "":
+                        container.markdown(
+                            f"##### Entity {selected_entity} in Network {selected_network} ({graph_type.lower()})"
+                        )
+                    else:
+                        container.markdown(
+                            f"##### Network {selected_network} ({graph_type.lower()})"
+                        )
+
+                    nodes_agraph = [Node(**node) for node in nodes]
+                    edges_agraph = [Edge(**edge) for edge in edges]
+
+                    agraph(
+                        nodes=nodes_agraph,
+                        edges=edges_agraph,
+                        config=rn_variables.agraph_config,
+                    )
                 sv.network_merged_links_df.value = merged_links_df
                 sv.network_merged_nodes_df.value = merged_nodes_df
             else:
@@ -1056,15 +723,31 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
 
                 callback = ui_components.create_markdown_callback(report_placeholder)
                 if generate:
-                    result = ui_components.generate_text(messages, [callback])
-                    sv.network_report.value = result
+                    connection_bar = st.progress(10, text="Connecting to AI...")
 
-                    validation, messages_to_llm = ui_components.validate_ai_report(
-                        messages, result
+                    def empty_connection_bar(_):
+                        connection_bar.empty()
+
+                    callback_bar = ui_components.remove_connection_bar(
+                        empty_connection_bar
                     )
-                    sv.network_report_validation.value = validation
-                    sv.network_report_validation_messages.value = messages_to_llm
-                    st.rerun()
+
+                    try:
+                        result = ui_components.generate_text(
+                            messages, [callback, callback_bar]
+                        )
+
+                        sv.network_report.value = result
+
+                        validation, messages_to_llm = ui_components.validate_ai_report(
+                            messages, result
+                        )
+                        sv.network_report_validation.value = validation
+                        sv.network_report_validation_messages.value = messages_to_llm
+                        st.rerun()
+                    except Exception as _e:
+                        empty_connection_bar(_e)
+                        raise
                 else:
                     if len(sv.network_report.value) == 0:
                         gen_placeholder.warning(

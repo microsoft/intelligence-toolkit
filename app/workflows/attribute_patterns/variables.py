@@ -7,7 +7,7 @@ import pandas as pd
 import streamlit as st
 from app.util.session_variable import SessionVariable
 
-import python.attribute_patterns.prompts as prompts
+import toolkit.attribute_patterns.prompts as prompts
 
 
 class SessionVariables:
