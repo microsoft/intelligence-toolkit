@@ -12,7 +12,7 @@ answer_format = {
                 "title": {
                     "type": "string"
                 },
-                "introduction": {
+                "claims": {
                     "type": "string"
                 },
                 "content_id_sequence": {
@@ -44,7 +44,7 @@ answer_format = {
                     "type": "string"
                 },
             },
-            "required": ["question", "title", "introduction", "content_id_sequence", "content_items", "conclusion"],
+            "required": ["question", "title", "claims", "content_id_sequence", "content_items", "conclusion"],
             "additionalProperties": False,
         }
     }
