@@ -5,7 +5,11 @@
 import networkx as nx
 import pandas as pd
 
-from app.workflows.attribute_patterns.config import type_val_sep, min_edge_weight, missing_edge_prop
+from app.workflows.attribute_patterns.config import (
+    min_edge_weight,
+    missing_edge_prop,
+    type_val_sep,
+)
 from toolkit.attribute_patterns.model import (
     compute_attribute_counts,
     generate_graph_model,
@@ -84,7 +88,7 @@ def test_generate_graph_model_column_rename(mocker):
     test_df = pd.DataFrame(data)
 
     mocker.patch("toolkit.helpers.df_functions.fix_null_ints").return_value = test_df
-    result = generate_graph_model(test_df, "Custom_Period")
+    result = generate_graph_model(test_df, "Custom_Period", type_val_sep)
 
     expected_data = {
         "Subject ID": ["1", "2", "1", "2"],
@@ -115,7 +119,7 @@ def test_compute_attribute_counts_basic(mocker):
 
     mocker.patch("toolkit.helpers.df_functions.fix_null_ints").return_value = test_df
     result = compute_attribute_counts(
-        test_df, f"Attribute1{type_val_sep}A", "Period", "P1"
+        test_df, f"Attribute1{type_val_sep}A", "Period", "P1", type_val_sep
     )
 
     expected_data = {
@@ -143,7 +147,7 @@ def test_compute_attribute_counts_with_multiple_patterns(mocker):
 
     mocker.patch("toolkit.helpers.df_functions.fix_null_ints").return_value = test_df
     result = compute_attribute_counts(
-        test_df, "Attribute1::A & Attribute2::X", "Period", "P1"
+        test_df, "Attribute1::A & Attribute2::X", "Period", "P1", type_val_sep
     )
 
     expected_data = {
@@ -166,7 +170,9 @@ def test_compute_attribute_counts_with_nans(mocker):
     test_df = pd.DataFrame(data).fillna("")
 
     mocker.patch("toolkit.helpers.df_functions.fix_null_ints").return_value = test_df
-    result = compute_attribute_counts(test_df, "Attribute1::A", "Period", "P1")
+    result = compute_attribute_counts(
+        test_df, "Attribute1::A", "Period", "P1", type_val_sep
+    )
 
     expected_data = {
         "AttributeValue": ["Attribute1=A", "Attribute2=X"],
@@ -188,7 +194,9 @@ def test_compute_attribute_counts_invalid_pattern(mocker):
     test_df = pd.DataFrame(data)
 
     mocker.patch("toolkit.helpers.df_functions.fix_null_ints").return_value = test_df
-    result = compute_attribute_counts(test_df, "InvalidPattern", "Period", "P1")
+    result = compute_attribute_counts(
+        test_df, "InvalidPattern", "Period", "P1", type_val_sep
+    )
 
     expected_data = {
         "AttributeValue": ["Attribute1=A", "Attribute2=X", "Attribute2=Y"],
@@ -218,7 +226,9 @@ def test_prepare_graph(mocker):
             "Full Attribute": ["ab=1", "bc=2", "ab=2", "bc=1"],
         }
     )
-    pdf, time_to_graph = prepare_graph(test_df, False, min_edge_weight, missing_edge_prop)
+    pdf, time_to_graph = prepare_graph(
+        test_df, False, min_edge_weight, missing_edge_prop
+    )
     assert "Grouping ID" in pdf.columns
     assert pdf["Grouping ID"].str.contains("@").all()
     assert all(
