@@ -6,6 +6,7 @@ import toolkit.AI.utils as utils
 import toolkit.question_answering.helper_functions as helper_functions
 import toolkit.question_answering.prompts as prompts
 
+
 def assess_relevance(
         ai_configuration,
         search_label,

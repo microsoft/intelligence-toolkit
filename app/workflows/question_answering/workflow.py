@@ -218,7 +218,7 @@ def create(sv: SessionVariables, workflow=None):
                 st.dataframe(selected_chunks_df, hide_index=True, height=650)
     with search_tab:
         with st.expander('Search options', expanded=False):
-            c1, c2, c3, c4, c5, c6 = st.columns([1, 1, 1, 1, 1, 1])
+            c1, c2, c3, c4, c5 = st.columns([1, 1, 1, 1, 1])
             with c1:
                 st.number_input(
                     "Relevance test budget",
@@ -228,33 +228,26 @@ def create(sv: SessionVariables, workflow=None):
                 )
             with c2:
                 st.number_input(
-                    "Relevance tests/community/round",
-                    value=sv.community_relevance_tests.value,
-                    key=sv.community_relevance_tests.key,
-                    min_value=0,
-                )
-            with c3:
-                st.number_input(
-                    "Relevance tests/batch",
+                    "Tests/community/round",
                     value=sv.relevance_test_batch_size.value,
                     key=sv.relevance_test_batch_size.key,
                     min_value=0,
                 )
-            with c4:
+            with c3:
                 st.number_input(
                     "Restart on irrelevant communities",
                     value=sv.irrelevant_community_restart.value,
                     key=sv.irrelevant_community_restart.key,
                     min_value=0,
                 )
-            with c5:
+            with c4:
                 st.number_input(
                     "Test relevant neighbours",
                     value=sv.adjacent_chunk_steps.value,
                     key=sv.adjacent_chunk_steps.key,
                     min_value=0,
                 )
-            with c6:
+            with c5:
                 st.number_input(
                     "Relevant chunks/answer update",
                     value=sv.answer_update_batch_size.value,
@@ -360,7 +353,7 @@ def create(sv: SessionVariables, workflow=None):
                 select_logit_bias=5,
                 adjacent_search_steps=sv.adjacent_chunk_steps.value,
                 relevance_test_budget=sv.relevance_test_budget.value,
-                community_relevance_tests=sv.community_relevance_tests.value,
+                community_relevance_tests=sv.relevance_test_batch_size.value,
                 relevance_test_batch_size=sv.relevance_test_batch_size.value,
                 irrelevant_community_restart=sv.irrelevant_community_restart.value,
                 answer_batch_size=sv.answer_update_batch_size.value,

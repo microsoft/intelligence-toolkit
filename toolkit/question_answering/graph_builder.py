@@ -32,15 +32,19 @@ def update_concept_graph(G, chunk, concept_to_chunks, chunk_to_concepts):
     for np in filtered_nps:
         concept_to_chunks[np].append(chunk)
     chunk_to_concepts[chunk] = filtered_nps
+    for np in filtered_nps:
+        if np not in G.nodes():
+            G.add_node(np, count=1)
+        else:
+            old_count = G.nodes[np]["count"] if "count" in G.nodes[np] else 0
+            G.nodes[np]["count"] = old_count + 1
     for ix, np1 in enumerate(filtered_nps):
         for np2 in filtered_nps[ix + 1 :]:
             if G.has_edge(np1, np2):
                 G[np1][np2]["weight"] += 1
             else:
                 G.add_edge(np1, np2, weight=1)
-    for np in filtered_nps:
-        old_count = G.nodes[np]["count"] if "count" in G.nodes[np] else 0
-        G.nodes[np]["count"] = old_count + 1
+
 
 
 def clean_concept_graph(G, min_edge_weight, min_node_degree):
