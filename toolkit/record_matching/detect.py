@@ -10,7 +10,10 @@ import numpy as np
 import polars as pl
 from sklearn.neighbors import NearestNeighbors
 
-from toolkit.record_matching.config import DEFAULT_COLUMNS_DONT_CONVERT
+from toolkit.record_matching.config import (
+    DEFAULT_COLUMNS_DONT_CONVERT,
+    DEFAULT_SENTENCE_PAIR_JACCARD_THRESHOLD,
+)
 
 
 def convert_to_sentences(
@@ -76,7 +79,7 @@ def build_near_map(
 def build_sentence_pair_scores(
     near_map: defaultdict[Any, list], merged_df: pl.DataFrame
 ) -> list:
-    matching_sentence_pair_scores = []
+    sentence_pair_scores = []
     for ix, nx_list in near_map.items():
         ixrec = merged_df.row(ix, named=True)
         for nx in nx_list:
@@ -93,11 +96,133 @@ def build_sentence_pair_scores(
             union = len(igrams.union(ngrams))
             score = inter / union if union > 0 else 0
 
-            matching_sentence_pair_scores.append(
+            sentence_pair_scores.append(
                 (
                     ix,
                     nx,
                     score,
                 )
             )
-    return matching_sentence_pair_scores
+    return sentence_pair_scores
+
+
+def build_matches(
+    sentence_pair_scores,
+    merged_df: pl.DataFrame,
+    sentence_pair_jaccard_threshold: float = DEFAULT_SENTENCE_PAIR_JACCARD_THRESHOLD,
+) -> tuple[dict, set, dict]:
+    entity_to_group = {}
+    group_id = 0
+    matches = set()
+    pair_to_match = {}
+
+    for ix, nx, score in sorted(
+        sentence_pair_scores,
+        key=lambda x: x[2],
+        reverse=True,
+    ):
+        if score < sentence_pair_jaccard_threshold:
+            continue
+
+        ixrec = merged_df.row(ix, named=True)
+        nxrec = merged_df.row(nx, named=True)
+        ixn = ixrec["Entity name"]
+        nxn = nxrec["Entity name"]
+        ixp = ixrec["Dataset"]
+        nxp = nxrec["Dataset"]
+
+        ix_id = f"{ixn}::{ixp}"
+        nx_id = f"{nxn}::{nxp}"
+
+        if ix_id in entity_to_group and nx_id in entity_to_group:
+            ig = entity_to_group[ix_id]
+            ng = entity_to_group[nx_id]
+            if ig != ng:
+                for k, v in list(entity_to_group.items()):
+                    if v == ig:
+                        entity_to_group[k] = ng
+        elif ix_id in entity_to_group:
+            entity_to_group[nx_id] = entity_to_group[ix_id]
+        elif nx_id in entity_to_group:
+            entity_to_group[ix_id] = entity_to_group[nx_id]
+        else:
+            entity_to_group[ix_id] = group_id
+            entity_to_group[nx_id] = group_id
+            group_id += 1
+
+        matches.add((entity_to_group[ix_id], *list(merged_df.row(ix))))
+        matches.add((entity_to_group[nx_id], *list(merged_df.row(nx))))
+
+        pair_to_match[tuple(sorted([ix_id, nx_id]))] = score
+
+    return entity_to_group, matches, pair_to_match
+
+
+def _calculate_mean_score(pair_to_match: dict, entity_to_group: dict) -> dict:
+    group_to_scores = defaultdict(list)
+
+    for (ix_id, nx_id), score in pair_to_match.items():
+        if (
+            ix_id in entity_to_group
+            and nx_id in entity_to_group
+            and entity_to_group[ix_id] == entity_to_group[nx_id]
+        ):
+            group_to_scores[entity_to_group[ix_id]].append(score)
+
+    group_to_mean_similarity = {}
+    for group, scores in group_to_scores.items():
+        group_to_mean_similarity[group] = (
+            sum(scores) / len(scores) if len(scores) > 0 else 0
+        )
+    return group_to_mean_similarity
+
+
+def build_matches_dataset(
+    matches_df: pl.DataFrame, pair_to_match: dict, entity_to_group: dict
+) -> pl.DataFrame:
+    if matches_df.is_empty():
+        return matches_df
+
+    group_to_size = (
+        matches_df.group_by("Group ID")
+        .agg(pl.count("Entity ID").alias("Size"))
+        .to_dict()
+    )
+    group_to_size = dict(
+        zip(
+            group_to_size["Group ID"],
+            group_to_size["Size"],
+            strict=False,
+        )
+    )
+    matches_df = matches_df.with_columns(
+        matches_df["Group ID"].replace(group_to_size).alias("Group size")
+    )
+
+    order_first_columns = [
+        "Group ID",
+        "Group size",
+        "Entity name",
+        "Dataset",
+        "Entity ID",
+    ]
+    remaining_columns = [c for c in matches_df.columns if c not in order_first_columns]
+    new_column_order = order_first_columns + remaining_columns
+    matches_df = matches_df.with_columns([matches_df[c] for c in new_column_order])
+
+    # keep only groups larger than 1
+    matches_df = matches_df.with_columns(
+        matches_df["Entity ID"]
+        .map_elements(lambda x: x.split("::")[0])
+        .alias("Entity ID")
+    ).filter(pl.col("Group size") > 1)
+
+    # iterate over groups, calculating mean score
+    group_to_mean_similarity = _calculate_mean_score(pair_to_match, entity_to_group)
+    matches_df = matches_df.with_columns(
+        matches_df["Group ID"]
+        .map_elements(lambda x: group_to_mean_similarity.get(x, 0))
+        .alias("Name similarity")
+    )
+
+    return matches_df.sort(by=["Name similarity", "Group ID"])

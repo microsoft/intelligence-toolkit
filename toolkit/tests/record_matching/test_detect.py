@@ -9,6 +9,9 @@ import polars as pl
 import pytest
 
 from toolkit.record_matching.detect import (
+    _calculate_mean_score,
+    build_matches,
+    build_matches_dataset,
     build_near_map,
     build_nearest_neighbors,
     build_sentence_pair_scores,
@@ -193,3 +196,229 @@ class TestBuildSentencePairScores:
         result = build_sentence_pair_scores(near_map, merged_df)
         expected = []
         assert result == expected
+
+
+class TestBuildMatches:
+    @pytest.fixture()
+    def merged_df(self) -> pl.DataFrame:
+        data = {
+            "Entity name": ["A", "B", "C", "D", "E"],
+            "Dataset": ["X", "X", "Y", "Y", "Z"],
+        }
+        return pl.DataFrame(data)
+
+    @pytest.fixture()
+    def sentence_pair_scores(self) -> list[tuple[int, int, float]]:
+        return [(0, 1, 0.8), (0, 2, 0.6), (3, 4, 0.7)]
+
+    def test_basic_grouping(self, merged_df, sentence_pair_scores) -> None:
+        entity_to_group, _, _ = build_matches(sentence_pair_scores, merged_df)
+        expected = {"A::X": 0, "B::X": 0}
+        assert entity_to_group == expected
+
+    def test_empty_scores(self, merged_df) -> None:
+        entity_to_group, _, _ = build_matches([], merged_df)
+        assert entity_to_group == {}
+
+    def test_all_below_threshold(self, merged_df) -> None:
+        sentence_pair_scores = [(0, 1, 0.2), (0, 2, 0.3), (3, 4, 0.1)]
+        entity_to_group, _, _ = build_matches(sentence_pair_scores, merged_df)
+        assert entity_to_group == {}
+
+    def test_single_pair_above_threshold(self, merged_df) -> None:
+        sentence_pair_scores = [(0, 1, 0.8)]
+        entity_to_group, _, _ = build_matches(sentence_pair_scores, merged_df)
+        expected = {
+            "A::X": 0,
+            "B::X": 0,
+        }
+        assert entity_to_group == expected
+
+    def test_overlapping_groups(self, merged_df) -> None:
+        sentence_pair_scores = [(0, 1, 0.8), (1, 2, 0.75), (2, 3, 0.85)]
+        entity_to_group, _, _ = build_matches(sentence_pair_scores, merged_df)
+        expected = {
+            "A::X": 0,
+            "B::X": 0,
+            "C::Y": 0,
+            "D::Y": 0,
+        }
+        assert entity_to_group == expected
+
+    def test_non_jaccard_change(self, merged_df) -> None:
+        sentence_pair_scores = [(0, 1, 0.8), (3, 4, 0.7)]
+        entity_to_group, _, _ = build_matches(sentence_pair_scores, merged_df, 0.5)
+        expected = {
+            "A::X": 0,
+            "B::X": 0,
+            "D::Y": 1,
+            "E::Z": 1,
+        }
+        assert entity_to_group == expected
+
+    def test_non_overlapping_groups(self, merged_df) -> None:
+        sentence_pair_scores = [(0, 1, 0.8), (3, 4, 0.75)]
+        entity_to_group, _, _ = build_matches(sentence_pair_scores, merged_df)
+        expected = {
+            "A::X": 0,
+            "B::X": 0,
+            "D::Y": 1,
+            "E::Z": 1,
+        }
+        assert entity_to_group == expected
+
+    def test_both_entities_in_same_group(self, merged_df) -> None:
+        sentence_pair_scores = [(0, 1, 0.8), (1, 2, 0.7), (2, 0, 0.9)]
+        entity_to_group, _, _ = build_matches(sentence_pair_scores, merged_df)
+        expected = {
+            "A::X": 0,
+            "B::X": 0,
+            "C::Y": 0,
+        }
+        assert entity_to_group == expected
+
+    def test_both_entities_in_different_groups(self, merged_df) -> None:
+        sentence_pair_scores = [(0, 1, 0.8), (2, 3, 0.9), (1, 2, 0.76)]
+        entity_to_group, _, _ = build_matches(sentence_pair_scores, merged_df)
+        expected = {
+            "A::X": 0,
+            "B::X": 0,
+            "C::Y": 0,
+            "D::Y": 0,
+        }
+        assert entity_to_group == expected
+
+    def test_one_entity_in_group_other_not(self, merged_df) -> None:
+        sentence_pair_scores = [(0, 1, 0.8), (4, 4, 0.9)]
+        entity_to_group, _, _ = build_matches(sentence_pair_scores, merged_df)
+        expected = {
+            "A::X": 1,
+            "B::X": 1,
+            "E::Z": 0,
+        }
+        assert entity_to_group == expected
+
+    def test_similar_names_different_datasets(self, merged_df) -> None:
+        sentence_pair_scores = [(0, 4, 0.8)]
+        entity_to_group, _, _ = build_matches(sentence_pair_scores, merged_df)
+        expected = {
+            "A::X": 0,
+            "E::Z": 0,
+        }
+        assert entity_to_group == expected
+
+    def test_matches(self, merged_df, sentence_pair_scores) -> None:
+        _, matches, _ = build_matches(sentence_pair_scores, merged_df)
+        assert len(matches) == 2
+
+    def test_pair_to_match(self, merged_df, sentence_pair_scores) -> None:
+        _, _, pair_to_match = build_matches(sentence_pair_scores, merged_df)
+        expected = {("A::X", "B::X"): 0.8}
+        assert pair_to_match == expected
+
+
+class TestCalculateMeanScore:
+    @pytest.fixture()
+    def pair_to_match(self) -> dict:
+        return {("A::X", "B::X"): 0.8, ("C::Y", "D::Y"): 0.7}
+
+    @pytest.fixture()
+    def entity_to_group(self) -> dict:
+        return {"A::X": 0, "B::X": 0, "C::Y": 1, "D::Y": 1}
+
+    def test_empty(self) -> None:
+        result = _calculate_mean_score({}, {})
+        assert result == {}
+
+    def test_no_matches(self, entity_to_group) -> None:
+        result = _calculate_mean_score({}, entity_to_group)
+        assert result == {}
+
+    def test_single_group(self, pair_to_match, entity_to_group) -> None:
+        result = _calculate_mean_score(pair_to_match, entity_to_group)
+        expected = {0: 0.8, 1: 0.7}
+        assert result == expected
+
+    def test_multiple_groups(self, pair_to_match, entity_to_group) -> None:
+        pair_to_match[("B::X", "C::Y")] = 0.8
+        result = _calculate_mean_score(pair_to_match, entity_to_group)
+        expected = {0: 0.8, 1: 0.7}
+        assert result == expected
+
+    def test_no_group(self, pair_to_match, entity_to_group) -> None:
+        pair_to_match[("B::X", "C::Y")] = 0.8
+        del entity_to_group["C::Y"]
+        result = _calculate_mean_score(pair_to_match, entity_to_group)
+        expected = {0: 0.8}
+        assert result == expected
+
+    def test_no_pair(self, pair_to_match, entity_to_group) -> None:
+        del pair_to_match[("A::X", "B::X")]
+        result = _calculate_mean_score(pair_to_match, entity_to_group)
+        expected = {1: 0.7}
+        assert result == expected
+
+
+class TestBuildMatchesDataset:
+    @pytest.fixture()
+    def merged_df(self) -> pl.DataFrame:
+        data = {
+            "Entity ID": ["10", "20", "30", "40", "50"],
+            "Entity name": ["A", "B", "C", "D", "E"],
+            "Group ID": [0, 0, 1, 1, 2],
+            "Dataset": ["X", "X", "Y", "Y", "Z"],
+        }
+        return pl.DataFrame(data)
+
+    @pytest.fixture()
+    def pair_to_match(self) -> dict[tuple[str, str], float]:
+        return {("A::X", "B::X"): 0.8, ("C::Y", "D::Y"): 0.7}
+
+    @pytest.fixture()
+    def entity_to_group(self) -> dict:
+        return {"A::X": 0, "B::X": 0, "C::Y": 1, "D::Y": 1}
+
+    def test_empty_df(self, entity_to_group) -> None:
+        result = build_matches_dataset(pl.DataFrame(), [], entity_to_group)
+        assert result.is_empty()
+
+    def test_empty_pair(self, merged_df, entity_to_group) -> None:
+        result = build_matches_dataset(merged_df, {}, entity_to_group)
+        assert len(result) == 4
+        assert result["Name similarity"].sum() == 0
+
+    def test_empty_group(self, merged_df, pair_to_match) -> None:
+        result = build_matches_dataset(merged_df, pair_to_match, {})
+        assert len(result) == 4
+        assert result["Name similarity"].sum() == 0
+
+    def test_basic_grouping(self, merged_df, pair_to_match, entity_to_group) -> None:
+        result = build_matches_dataset(merged_df, pair_to_match, entity_to_group)
+        assert len(result) == 4
+        assert result["Group ID"].n_unique() == 2
+        assert result["Group size"].sum() == 8
+        assert result["Name similarity"].sum() == 3.0
+
+    def test_basic_grouping_ordering(
+        self, merged_df, pair_to_match, entity_to_group
+    ) -> None:
+        result = build_matches_dataset(merged_df, pair_to_match, entity_to_group)
+        columns_ordered = [
+            "Group ID",
+            "Group size",
+            "Entity name",
+            "Dataset",
+            "Name similarity",
+        ]
+        assert result.columns[0] == "Group ID"
+        assert result.columns[1] == "Group name"
+
+    # def test_single_group(
+    #     self, merged_df, sentence_pair_scores, entity_to_group
+    # ) -> None:
+    #     entity_to_group["E::Z"] = 2
+    #     result = build_matches_dataset(merged_df, sentence_pair_scores, entity_to_group)
+    #     assert len(result) == 5
+    #     assert result["Group ID"].n_unique() == 3
+    #     assert result["Group size"].sum() == 3
+    #     assert result["Name similarity"].sum() == 2.1

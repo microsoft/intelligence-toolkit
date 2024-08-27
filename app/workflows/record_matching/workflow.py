@@ -2,7 +2,6 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 import io
-import re
 from collections import defaultdict
 
 import pandas as pd
@@ -18,6 +17,8 @@ from app.util.download_pdf import add_download_pdf
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 from toolkit.record_matching import get_readme as get_intro
 from toolkit.record_matching.detect import (
+    build_matches,
+    build_matches_dataset,
     build_near_map,
     build_nearest_neighbors,
     build_sentence_pair_scores,
@@ -315,8 +316,8 @@ def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                             near_map = build_near_map(
                                 distances,
                                 indices,
-                                sv.matching_sentence_pair_embedding_threshold.value,
                                 all_sentences,
+                                sv.matching_sentence_pair_embedding_threshold.value,
                             )
 
                             sv.matching_sentence_pair_scores.value = (
@@ -326,87 +327,11 @@ def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                             )
 
                         merged_df = sv.matching_merged_df.value
-                        entity_to_group = {}
-                        group_id = 0
-                        matches = set()
-                        pair_to_match = {}
-                        for ix, nx, score in sorted(
+                        entity_to_group, matches, pair_to_match = build_matches(
                             sv.matching_sentence_pair_scores.value,
-                            key=lambda x: x[2],
-                            reverse=True,
-                        ):
-                            if (
-                                score
-                                >= sv.matching_sentence_pair_jaccard_threshold.value
-                            ):
-                                ixrec = merged_df.row(ix, named=True)
-                                nxrec = merged_df.row(nx, named=True)
-                                ixn = ixrec["Entity name"]
-                                nxn = nxrec["Entity name"]
-                                ixp = ixrec["Dataset"]
-                                nxp = nxrec["Dataset"]
-
-                                ix_id = f"{ixn}::{ixp}"
-                                nx_id = f"{nxn}::{nxp}"
-
-                                if (
-                                    ix_id in entity_to_group
-                                    and nx_id in entity_to_group
-                                ):
-                                    ig = entity_to_group[ix_id]
-                                    ng = entity_to_group[nx_id]
-                                    if ig != ng:
-                                        print(
-                                            f"Merging group of {ix_id} into group of {nx_id}"
-                                        )
-                                        for k, v in list(entity_to_group.items()):
-                                            if v == ig:
-                                                print(f"Updating {k} to group {ng}")
-                                                entity_to_group[k] = ng
-                                elif ix_id in entity_to_group:
-                                    print(
-                                        f"Adding {nx_id} to group {entity_to_group[ix_id]}"
-                                    )
-                                    entity_to_group[nx_id] = entity_to_group[ix_id]
-                                elif nx_id in entity_to_group:
-                                    print(
-                                        f"Adding {ix_id} to group {entity_to_group[nx_id]}"
-                                    )
-                                    entity_to_group[ix_id] = entity_to_group[nx_id]
-                                else:
-                                    print(
-                                        f"Creating new group {group_id} for {ix_id} and {nx_id}"
-                                    )
-                                    entity_to_group[ix_id] = group_id
-                                    entity_to_group[nx_id] = group_id
-                                    group_id += 1
-
-                        for ix, nx, score in sorted(
-                            sv.matching_sentence_pair_scores.value,
-                            key=lambda x: x[2],
-                            reverse=True,
-                        ):
-                            if (
-                                score
-                                >= sv.matching_sentence_pair_jaccard_threshold.value
-                            ):
-                                ixrec = merged_df.row(ix, named=True)
-                                nxrec = merged_df.row(nx, named=True)
-                                ixn = ixrec["Entity name"]
-                                nxn = nxrec["Entity name"]
-                                ixp = ixrec["Dataset"]
-                                nxp = nxrec["Dataset"]
-
-                                ix_id = f"{ixn}::{ixp}"
-                                nx_id = f"{nxn}::{nxp}"
-                                matches.add(
-                                    (entity_to_group[ix_id], *list(merged_df.row(ix)))
-                                )
-                                matches.add(
-                                    (entity_to_group[nx_id], *list(merged_df.row(nx)))
-                                )
-
-                                pair_to_match[tuple(sorted([ix_id, nx_id]))] = score
+                            merged_df,
+                            sv.matching_sentence_pair_jaccard_threshold.value,
+                        )
 
                         sv.matching_matches_df.value = pl.DataFrame(
                             list(matches),
@@ -414,92 +339,9 @@ def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                         ).sort(
                             by=["Group ID", "Entity name", "Dataset"], descending=False
                         )
-                        group_to_size = (
-                            sv.matching_matches_df.value.group_by("Group ID")
-                            .agg(pl.count("Entity ID").alias("Size"))
-                            .to_dict()
-                        )
-                        group_to_size = dict(
-                            zip(
-                                group_to_size["Group ID"],
-                                group_to_size["Size"],
-                                strict=False,
-                            )
-                        )
-                        sv.matching_matches_df.value = (
-                            sv.matching_matches_df.value.with_columns(
-                                sv.matching_matches_df.value["Group ID"]
-                                .replace(group_to_size)
-                                .alias("Group size")
-                            )
-                        )
 
-                        sv.matching_matches_df.value = (
-                            sv.matching_matches_df.value.select(
-                                [
-                                    "Group ID",
-                                    "Group size",
-                                    "Entity name",
-                                    "Dataset",
-                                    "Entity ID",
-                                ]
-                                + [
-                                    c
-                                    for c in sv.matching_matches_df.value.columns
-                                    if c
-                                    not in [
-                                        "Group ID",
-                                        "Group size",
-                                        "Entity name",
-                                        "Dataset",
-                                        "Entity ID",
-                                    ]
-                                ]
-                            )
-                        )
-                        sv.matching_matches_df.value = (
-                            sv.matching_matches_df.value.with_columns(
-                                sv.matching_matches_df.value["Entity ID"]
-                                .map_elements(lambda x: x.split("::")[0])
-                                .alias("Entity ID")
-                            )
-                        )
-                        # keep only groups larger than 1
-                        sv.matching_matches_df.value = (
-                            sv.matching_matches_df.value.filter(
-                                pl.col("Group size") > 1
-                            )
-                        )
-                        # iterate over groups, calculating mean score
-                        group_to_scores = defaultdict(list)
-
-                        for (ix_id, nx_id), score in pair_to_match.items():
-                            if (
-                                ix_id in entity_to_group
-                                and nx_id in entity_to_group
-                                and entity_to_group[ix_id] == entity_to_group[nx_id]
-                            ):
-                                group_to_scores[entity_to_group[ix_id]].append(score)
-
-                        group_to_mean_similarity = {}
-                        for group, scores in group_to_scores.items():
-                            group_to_mean_similarity[group] = (
-                                sum(scores) / len(scores) if len(scores) > 0 else 0
-                            )
-                        sv.matching_matches_df.value = (
-                            sv.matching_matches_df.value.with_columns(
-                                sv.matching_matches_df.value["Group ID"]
-                                .map_elements(
-                                    lambda x: group_to_mean_similarity.get(x, 0)
-                                )
-                                .alias("Name similarity")
-                            )
-                        )
-                        sv.matching_matches_df.value = (
-                            sv.matching_matches_df.value.sort(
-                                by=["Name similarity", "Group ID"],
-                                descending=[False, False],
-                            )
+                        sv.matching_matches_df.value = build_matches_dataset(
+                            sv.matching_matches_df.value, pair_to_match, entity_to_group
                         )
 
                         st.rerun()

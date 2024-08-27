@@ -12,6 +12,7 @@ from toolkit.AI.defaults import DEFAULT_LLM_MAX_TOKENS
 from toolkit.AI.vector_store import VectorStore
 from toolkit.helpers.constants import CACHE_PATH
 from toolkit.helpers.decorators import retry_with_backoff
+from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 from .utils import get_token_count, hash_text
 
@@ -66,7 +67,10 @@ class BaseEmbedder(ABC):
 
     @retry_with_backoff()
     def embed_store_many(
-        self, texts: list[str], callback=None, cache_data=True
+        self,
+        texts: list[str],
+        callback: ProgressBatchCallback | None = None,
+        cache_data=True,
     ) -> np.ndarray[Any, np.dtype[Any]]:
         final_embeddings = [None] * len(texts)
         new_texts = []
@@ -97,7 +101,7 @@ class BaseEmbedder(ABC):
         for i in range(0, len(new_texts), 2000):
             if callback:
                 for cb in callback:
-                    cb.on_embedding_batch_change(batch_count, num_batches)
+                    cb.on_batch_change(batch_count, num_batches)
             batch_count += 1
             batch = new_texts[i : i + 2000]
             batch_texts = [x[1] for x in batch]

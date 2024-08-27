@@ -8,3 +8,4 @@ entity_label = "Entity"
 cache_name = "record_matching"
 
 DEFAULT_COLUMNS_DONT_CONVERT = ["Entity ID", "Entity name", "Dataset"]
+DEFAULT_SENTENCE_PAIR_JACCARD_THRESHOLD = 0.75
