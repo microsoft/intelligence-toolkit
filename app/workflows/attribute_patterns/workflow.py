@@ -15,7 +15,7 @@ from app.util import ui_components
 
 from toolkit.attribute_patterns import get_readme as get_intro
 from toolkit.attribute_patterns import prompts
-from toolkit.attribute_patterns.embedding import generate_embedding
+from toolkit.graph.embedding import generate_embedding
 from toolkit.attribute_patterns.model import (
     compute_attribute_counts,
     create_time_series_df,
@@ -24,7 +24,7 @@ from toolkit.attribute_patterns.model import (
     prepare_graph,
 )
 from toolkit.attribute_patterns.record_counter import RecordCounter
-
+from .config import type_val_sep, correlation, diaga, laplacian
 
 def create(sv: ap_variables.SessionVariables, workflow):
     intro_tab, uploader_tab, detect_tab, explain_tab = st.tabs(
@@ -87,7 +87,7 @@ def create(sv: ap_variables.SessionVariables, workflow):
                 with st.spinner("Adding links to model..."):
                     time_col = sv.attribute_time_col.value
                     graph_df = sv.attribute_final_df.value.copy(deep=True)
-                    pdf = generate_graph_model(graph_df, time_col)
+                    pdf = generate_graph_model(graph_df, time_col, type_val_sep)
                 sv.attribute_dynamic_df.value = pdf
             if ready and len(sv.attribute_dynamic_df.value) > 0:
                 st.success(
@@ -136,7 +136,8 @@ def create(sv: ap_variables.SessionVariables, workflow):
                             sv.attribute_embedding_df.value,
                             sv.attribute_node_to_centroid.value,
                             sv.attribute_period_embeddings.value,
-                        ) = generate_embedding(sv.attribute_df.value, time_to_graph)
+                        ) = generate_embedding(sv.attribute_df.value, time_to_graph, 
+                                               type_val_sep, correlation, diaga, laplacian)
                         sv.attribute_record_counter.value = RecordCounter(
                             sv.attribute_dynamic_df.value
                         )
@@ -247,6 +248,7 @@ def create(sv: ap_variables.SessionVariables, workflow):
                                 selected_pattern,
                                 time_col,
                                 selected_pattern_period,
+                                type_val_sep
                             )
                         )
                         print("Computed attribute counts")

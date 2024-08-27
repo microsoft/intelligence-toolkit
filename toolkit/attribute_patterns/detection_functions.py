@@ -7,7 +7,7 @@ from itertools import combinations
 import numpy as np
 import pandas as pd
 
-from .config import type_val_sep
+from ...app.workflows.attribute_patterns.config import type_val_sep
 
 
 def _calculate_cosine_distance(vec1: np.array, vec2: np.array):

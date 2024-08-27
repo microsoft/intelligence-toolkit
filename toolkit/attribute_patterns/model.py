@@ -10,7 +10,6 @@ from toolkit.AI.metaprompts import do_not_harm
 from toolkit.AI.utils import generate_messages
 from toolkit.helpers import df_functions
 
-from .config import type_val_sep
 from .detection_functions import (
     create_close_node_rows,
     create_pattern_rows,
@@ -81,7 +80,7 @@ def prepare_data(data_df, identifier_col=None):
     return output_df_var
 
 
-def generate_graph_model(df, period_col):
+def generate_graph_model(df, period_col, type_val_sep):
     att_cols = [
         col for col in df.columns.to_numpy() if col not in ["Subject ID", period_col]
     ]
@@ -114,7 +113,7 @@ def generate_graph_model(df, period_col):
     return pdf[pdf["Period"] != ""]
 
 
-def compute_attribute_counts(df, pattern, period_col, period):
+def compute_attribute_counts(df, pattern, period_col, period, type_val_sep):
     atts = pattern.split(" & ")
     # Combine astype and replace operations
     fdf = df_functions.fix_null_ints(df).replace({"nan": "", "<NA>": ""}).astype(str)
