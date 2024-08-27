@@ -24,7 +24,7 @@ from toolkit.attribute_patterns.model import (
     prepare_graph,
 )
 from toolkit.attribute_patterns.record_counter import RecordCounter
-from .config import type_val_sep, correlation, diaga, laplacian
+from .config import type_val_sep, correlation, diaga, laplacian, min_edge_weight, missing_edge_prop
 
 def create(sv: ap_variables.SessionVariables, workflow):
     intro_tab, uploader_tab, detect_tab, explain_tab = st.tabs(
@@ -129,7 +129,10 @@ def create(sv: ap_variables.SessionVariables, workflow):
                         progress_bar.progress(20, text="Preparing graph...")
 
                         sv.attribute_df.value, time_to_graph = prepare_graph(
-                            sv.attribute_dynamic_df.value
+                            sv.attribute_dynamic_df.value,
+                            False,
+                            min_edge_weight,
+                            missing_edge_prop
                         )
                         progress_bar.progress(40, text="Generating embedding...")
                         (
@@ -150,6 +153,7 @@ def create(sv: ap_variables.SessionVariables, workflow):
                             sv.attribute_node_to_centroid.value,
                             sv.attribute_period_embeddings.value,
                             sv.attribute_dynamic_df.value,
+                            type_val_sep,
                             sv.attribute_min_pattern_count.value,
                             sv.attribute_max_pattern_length.value,
                         )

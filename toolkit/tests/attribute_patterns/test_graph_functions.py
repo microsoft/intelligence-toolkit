@@ -11,6 +11,11 @@ from toolkit.attribute_patterns.graph_functions import (
     create_edge_df_from_atts,
 )
 
+from app.workflows.attribute_patterns.config import (
+    min_edge_weight,
+    missing_edge_prop
+)
+
 
 def test_convert_edge_df_to_graph_default():
     # Create a sample edge DataFrame
@@ -68,7 +73,7 @@ def sample_input_data():
 def test_create_edge_df_from_atts(sample_input_data):
     # Call the function with the sample input data
     all_atts, pdf, mi = sample_input_data
-    edge_df = create_edge_df_from_atts(all_atts, pdf, mi)
+    edge_df = create_edge_df_from_atts(all_atts, pdf, mi, min_edge_weight, missing_edge_prop)
 
     # Assert that the output DataFrame has the correct columns
     assert set(edge_df.columns) == {"edge", "count", "source", "target", "weight"}

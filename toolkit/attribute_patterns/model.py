@@ -159,7 +159,7 @@ def create_time_series_df(model, pattern_df):
     return pd.DataFrame(rows, columns=columns)
 
 
-def prepare_graph(dynamic_df, mi=False):
+def prepare_graph(dynamic_df, mi, min_edge_weight, missing_edge_prop):
     time_to_graph = {}
     dynamic_lcc = set()
     pdf = dynamic_df.copy()
@@ -174,7 +174,7 @@ def prepare_graph(dynamic_df, mi=False):
             tdf["Subject ID"].astype(str) + "@" + tdf["Period"].astype(str)
         )
         tdf = tdf.groupby("Grouping ID")["Full Attribute"].agg(list).reset_index()
-        dedge_df = create_edge_df_from_atts(atts, tdf, mi)
+        dedge_df = create_edge_df_from_atts(atts, tdf, mi, min_edge_weight, missing_edge_prop)
         G, lcc = convert_edge_df_to_graph(dedge_df)
         if ix == 0:
             dynamic_lcc.update(lcc)
@@ -188,6 +188,7 @@ def detect_patterns(
     node_to_centroid,
     period_embeddings,
     dynamic_df,
+    type_val_sep,
     min_pattern_count=5,
     max_pattern_length=100,
 ) -> tuple[pd.DataFrame, int, int]:
@@ -201,7 +202,7 @@ def detect_patterns(
 
     # # for each period, find all pairs of nodes close
     close_node_df, all_pairs, close_pairs = create_close_node_rows(
-        used_periods, period_shifts, sorted_nodes, min_pattern_count, record_counter
+        used_periods, period_shifts, sorted_nodes, min_pattern_count, record_counter, type_val_sep
     )
 
     period_to_patterns = create_period_to_patterns(

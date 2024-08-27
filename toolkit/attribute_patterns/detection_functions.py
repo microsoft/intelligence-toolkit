@@ -7,9 +7,6 @@ from itertools import combinations
 import numpy as np
 import pandas as pd
 
-from ...app.workflows.attribute_patterns.config import type_val_sep
-
-
 def _calculate_cosine_distance(vec1: np.array, vec2: np.array):
     return 1 - np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
 
@@ -69,7 +66,7 @@ def create_period_shifts(node_to_centroid, period_embeddings, dynamic_df) -> dic
 
 
 def _create_period_to_close_nodes(
-    used_periods, period_shifts, sorted_nodes, min_pattern_count, rc
+    used_periods, period_shifts, sorted_nodes, min_pattern_count, rc, type_val_sep
 ):
     period_to_close_nodes = {}
     all_pairs = 0
@@ -94,10 +91,10 @@ def _create_period_to_close_nodes(
 
 
 def create_close_node_rows(
-    used_periods, period_shifts, sorted_nodes, min_pattern_count, rc
+    used_periods, period_shifts, sorted_nodes, min_pattern_count, rc, type_val_sep
 ):
     all_pairs, close_pairs, period_to_close_nodes = _create_period_to_close_nodes(
-        used_periods, period_shifts, sorted_nodes, min_pattern_count, rc
+        used_periods, period_shifts, sorted_nodes, min_pattern_count, rc, type_val_sep
     )
 
     close_node_rows = []

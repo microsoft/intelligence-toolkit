@@ -5,7 +5,7 @@
 import networkx as nx
 import pandas as pd
 
-from app.workflows.attribute_patterns.config import type_val_sep
+from app.workflows.attribute_patterns.config import type_val_sep, min_edge_weight, missing_edge_prop
 from toolkit.attribute_patterns.model import (
     compute_attribute_counts,
     generate_graph_model,
@@ -218,7 +218,7 @@ def test_prepare_graph(mocker):
             "Full Attribute": ["ab=1", "bc=2", "ab=2", "bc=1"],
         }
     )
-    pdf, time_to_graph = prepare_graph(test_df)
+    pdf, time_to_graph = prepare_graph(test_df, False, min_edge_weight, missing_edge_prop)
     assert "Grouping ID" in pdf.columns
     assert pdf["Grouping ID"].str.contains("@").all()
     assert all(
