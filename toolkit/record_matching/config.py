@@ -2,10 +2,16 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 
-list_sep = "; "
+from typing import TypedDict
+
 max_rows_to_show = 1000
 entity_label = "Entity"
 cache_name = "record_matching"
 
 DEFAULT_COLUMNS_DONT_CONVERT = ["Entity ID", "Entity name", "Dataset"]
 DEFAULT_SENTENCE_PAIR_JACCARD_THRESHOLD = 0.75
+
+
+class AttributeToMatch(TypedDict):
+    label: str
+    columns: list[str]

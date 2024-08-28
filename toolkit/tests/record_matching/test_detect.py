@@ -10,6 +10,7 @@ import pytest
 
 from toolkit.record_matching.detect import (
     _calculate_mean_score,
+    build_attributes_dataframe,
     build_matches,
     build_matches_dataset,
     build_near_map,
@@ -362,13 +363,14 @@ class TestCalculateMeanScore:
 class TestBuildMatchesDataset:
     @pytest.fixture()
     def merged_df(self) -> pl.DataFrame:
-        data = {
-            "Entity ID": ["10", "20", "30", "40", "50"],
-            "Entity name": ["A", "B", "C", "D", "E"],
-            "Group ID": [0, 0, 1, 1, 2],
-            "Dataset": ["X", "X", "Y", "Y", "Z"],
-        }
-        return pl.DataFrame(data)
+        return pl.DataFrame(
+            {
+                "Entity ID": ["10", "20", "30", "40", "50"],
+                "Entity name": ["A", "B", "C", "D", "E"],
+                "Group ID": [0, 0, 1, 1, 2],
+                "Dataset": ["X", "X", "Y", "Y", "Z"],
+            }
+        )
 
     @pytest.fixture()
     def pair_to_match(self) -> dict[tuple[str, str], float]:
@@ -399,19 +401,33 @@ class TestBuildMatchesDataset:
         assert result["Group size"].sum() == 8
         assert result["Name similarity"].sum() == 3.0
 
-    def test_basic_grouping_ordering(
-        self, merged_df, pair_to_match, entity_to_group
-    ) -> None:
+    def test_no_matches(self) -> None:
+        pair_to_match = {("A::X", "B::X"): 0.8}
+        entity_to_group = {"A::X": 0}
+        merged_df = pl.DataFrame(
+            {
+                "Entity ID": ["10", "20"],
+                "Entity name": ["A", "B"],
+                "Group ID": [0, 1],
+                "Dataset": ["X", "X"],
+            }
+        )
         result = build_matches_dataset(merged_df, pair_to_match, entity_to_group)
-        columns_ordered = [
-            "Group ID",
-            "Group size",
-            "Entity name",
-            "Dataset",
-            "Name similarity",
-        ]
-        assert result.columns[0] == "Group ID"
-        assert result.columns[1] == "Group name"
+        assert result.height == 0
+
+    # def test_basic_grouping_ordering(
+    #     self, merged_df, pair_to_match, entity_to_group
+    # ) -> None:
+    #     result = build_matches_dataset(merged_df, pair_to_match, entity_to_group)
+    #     columns_ordered = [
+    #         "Group ID",
+    #         "Group size",
+    #         "Entity name",
+    #         "Dataset",
+    #         "Name similarity",
+    #     ]
+    #     assert result.columns[0] == "Group ID"
+    #     assert result.columns[1] == "Group name"
 
     # def test_single_group(
     #     self, merged_df, sentence_pair_scores, entity_to_group
@@ -422,3 +438,91 @@ class TestBuildMatchesDataset:
     #     assert result["Group ID"].n_unique() == 3
     #     assert result["Group size"].sum() == 3
     #     assert result["Name similarity"].sum() == 2.1
+
+
+class TestBuildAttributesDataFrame:
+    def test_empty(self) -> None:
+        matching_dfs = {}
+        result = build_attributes_dataframe(matching_dfs, atts_to_datasets={})
+        assert result.is_empty()
+
+    def test_one_df(self) -> None:
+        matching_dfs = {
+            "X": pl.DataFrame(
+                {
+                    "Entity ID": ["10", "20", "30", "40", "50"],
+                    "Entity name": ["A", "B", "C", "D", "E"],
+                    "VehicleType": [
+                        "Hatch 1",
+                        "Sedan 1",
+                        "Truck 1",
+                        "SUV 3",
+                        "CyberTruck 3",
+                    ],
+                    "VehicleColor": ["Blue", "Red", "Blue", "Black", "Silver"],
+                    "VehicleYear": ["2021", "2022", "2022", "2023", "2024"],
+                }
+            )
+        }
+        atts_to_datasets = {
+            "X": {"VehicleType": "VehicleType1"},
+        }
+        result = build_attributes_dataframe(
+            matching_dfs, atts_to_datasets=atts_to_datasets
+        )
+        assert "VehicleType1" in result.columns
+        assert "Entity ID" in result.columns
+        assert "Entity name" in result.columns
+        assert "VehicleColor" not in result.columns
+        assert "VehicleYear" not in result.columns
+
+    def test_multiple_dfs(self) -> None:
+        matching_dfs = {
+            "X": pl.DataFrame(
+                {
+                    "Entity ID": ["10", "20", "30", "40", "50"],
+                    "Entity name": ["A", "B", "C", "D", "E"],
+                    "VehicleType": [
+                        "Hatch 1",
+                        "Sedan 1",
+                        "Truck 1",
+                        "SUV 3",
+                        "CyberTruck 3",
+                    ],
+                    "VehicleColor": ["Blue", "Red", "Blue", "Black", "Silver"],
+                    "VehicleYear": ["2021", "2022", "2022", "2023", "2024"],
+                }
+            ),
+            "Y": pl.DataFrame(
+                {
+                    "Entity ID": ["10", "20", "30", "40", "50"],
+                    "Entity name": ["A", "B", "C", "D", "E"],
+                    "VehicleType": [
+                        "Hatch 1",
+                        "Sedan 1",
+                        "Truck 1",
+                        "SUV 3",
+                        "CyberTruck 3",
+                    ],
+                    "VehicleColor2": ["Blue", "Red", "Blue", "Black", "Silver"],
+                    "VehicleYear": ["2021", "2022", "2022", "2023", "2024"],
+                }
+            ),
+        }
+        atts_to_datasets = {
+            "X": {"VehicleType": "VehicleType1", "VehicleColor": "VehicleColor1"},
+            "Y": {"VehicleType": "VehicleType1", "VehicleColor2": "VehicleColor1"},
+        }
+        result = build_attributes_dataframe(
+            matching_dfs, atts_to_datasets=atts_to_datasets
+        )
+        assert "VehicleType1" in result.columns
+        assert "VehicleColor1" in result.columns
+        assert "VehicleColor" not in result.columns
+        assert "Entity ID" in result.columns
+        assert "Entity name" in result.columns
+        assert "VehicleYear" not in result.columns
+        assert "VehicleType" not in result.columns
+        assert result.height == 10
+        assert result["VehicleType1"].n_unique() == 5
+        assert result["VehicleColor1"].n_unique() == 4

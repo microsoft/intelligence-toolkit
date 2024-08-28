@@ -219,6 +219,10 @@ def build_matches_dataset(
 
     # iterate over groups, calculating mean score
     group_to_mean_similarity = _calculate_mean_score(pair_to_match, entity_to_group)
+
+    if matches_df.is_empty():
+        return matches_df
+
     matches_df = matches_df.with_columns(
         matches_df["Group ID"]
         .map_elements(lambda x: group_to_mean_similarity.get(x, 0))
@@ -226,3 +230,46 @@ def build_matches_dataset(
     )
 
     return matches_df.sort(by=["Name similarity", "Group ID"])
+
+
+def build_attributes_dataframe(
+    matching_dfs: dict[pl.DataFrame], atts_to_datasets: defaultdict[dict]
+) -> pl.DataFrame:
+    if not matching_dfs:
+        return pl.DataFrame()
+
+    aligned_dfs = []
+    for dataset, merged_df in matching_dfs.items():
+        if dataset not in atts_to_datasets:
+            continue
+        rdf = merged_df.clone()
+        rdf = rdf.rename(atts_to_datasets[dataset])
+        # drop columns that are not in atts_to_datasets
+        for col in matching_dfs[dataset].columns:
+            if col not in rdf.columns:
+                continue
+            if col not in atts_to_datasets[dataset] and col not in [
+                "Entity ID",
+                "Entity name",
+            ]:
+                rdf = rdf.drop(col)
+                continue
+
+            for dataset1 in atts_to_datasets:
+                if dataset1 not in atts_to_datasets and col not in [
+                    "Entity ID",
+                    "Entity name",
+                ]:
+                    rdf = rdf.drop(col)
+
+        rdf = rdf.with_columns(pl.lit(dataset).alias("Dataset"))
+        rdf = rdf.select(sorted(rdf.columns))
+        aligned_dfs.append(rdf)
+
+    string_dfs = []
+    for merged_df in aligned_dfs:
+        for col in merged_df.columns:
+            merged_df = merged_df.with_columns(pl.col(col).cast(pl.Utf8))
+        string_dfs.append(merged_df)
+
+    return pl.concat(string_dfs).filter(pl.col("Entity name") != "")

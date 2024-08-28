@@ -16,7 +16,9 @@ from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 from toolkit.record_matching import get_readme as get_intro
+from toolkit.record_matching.config import AttributeToMatch
 from toolkit.record_matching.detect import (
+    build_attributes_dataframe,
     build_matches,
     build_matches_dataset,
     build_near_map,
@@ -24,7 +26,11 @@ from toolkit.record_matching.detect import (
     build_sentence_pair_scores,
     convert_to_sentences,
 )
-from toolkit.record_matching.prepare_model import format_dataset
+from toolkit.record_matching.prepare_model import (
+    build_attribute_list,
+    build_attribute_options,
+    format_dataset,
+)
 
 
 def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
@@ -63,6 +69,7 @@ def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                 dataset = st.text_input(
                     "Dataset name",
                     key=f"{selected_file}_dataset_name",
+                    value=selected_file.split(".")[0] if selected_file else "",
                     help="Used to track which dataset each record came from; not used in the matching process itself.",
                 )
                 name_col = st.selectbox(
@@ -123,24 +130,8 @@ def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
             c1, c2 = st.columns([1, 1])
             with c1:
                 st.markdown("##### Configure text embedding model")
-                all_atts = []
-                for dataset, merged_df in sv.matching_dfs.value.items():
-                    all_atts.extend(
-                        [
-                            f"{c}::{dataset}"
-                            for c in merged_df.columns
-                            if c not in ["Entity ID", "Entity name"]
-                        ]
-                    )
-                    all_atts = sorted(all_atts)
-                options = sorted(all_atts)
-                renaming = defaultdict(dict)
-                atts_to_datasets = defaultdict(list)
+                attr_options = build_attribute_options(sv.matching_dfs.value)
                 sv.matching_mapped_atts.value = []
-                # por ex, inicialmente tenho 3 datasets, cada um com 3 atributos
-                # att0_vals = [dataset1::att1, dataset2::att1, dataset3::att1]
-                # att1_vals = [dataset1::att2, dataset2::att2, dataset3::att2]
-                # att2_vals = [dataset1::att3, dataset2::att3, dataset3::att3]
 
                 num_atts = 0
                 while True:
@@ -148,7 +139,7 @@ def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                         break
                     num_atts += 1
 
-                def att_ui(i):
+                def att_ui(i, any_empty, changed, attsaa):
                     st.markdown(f"**Attribute {i + 1}**")
                     is_assigned = False
                     b1, b2 = st.columns([3, 1])
@@ -162,9 +153,9 @@ def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                             "Values",
                             key=f"{i}_value",
                             default=st.session_state[f"att{i}_vals"]
-                            if st.session_state[f"att{i}_vals"] in options
+                            if st.session_state[f"att{i}_vals"] in attr_options
                             else [],
-                            options=options,
+                            options=attr_options,
                             help="Select all columns that represent the same attribute across datasets.",
                         )
                         if len(att_vals) > 0:
@@ -180,28 +171,31 @@ def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                         if att_name == "" and len(att_vals) > 0:
                             att_name = att_vals[0].split("::")[0]
 
-                    for val in att_vals:
-                        col, dataset = val.split("::")
-                        renaming[dataset][col] = att_name
-                        atts_to_datasets[att_name].append(dataset)
-                    return is_assigned, att_vals, att_name_original
+                        attsaa.append(
+                            AttributeToMatch({"label": att_name, "columns": att_vals})
+                        )
+
+                        if st.session_state[f"att{i}_vals"] != att_vals:
+                            st.session_state[f"att{i}_vals"] = att_vals
+                            changed = True
+                        if st.session_state[f"att{i}_name"] != att_name_original:
+                            st.session_state[f"att{i}_name"] = att_name_original
+                            changed = True
+                        if not is_assigned:
+                            any_empty = True
+                    return any_empty, changed, attsaa
 
                 any_empty = False
                 changed = False
+                attsa = []
                 for i in range(num_atts):
-                    is_assigned, att_vals, att_name_original = att_ui(i)
-                    if st.session_state[f"att{i}_vals"] != att_vals:
-                        st.session_state[f"att{i}_vals"] = att_vals
-                        changed = True
-                    if st.session_state[f"att{i}_name"] != att_name_original:
-                        st.session_state[f"att{i}_name"] = att_name_original
-                        changed = True
-                    if not is_assigned:
-                        any_empty = True
+                    any_empty, changed, attsa = att_ui(i, any_empty, changed, attsa)
+
                 if not any_empty:
-                    att_ui(num_atts)
+                    _, changed, attsa = att_ui(num_atts, any_empty, changed, attsa)
                 if changed:
                     st.rerun()
+                attributes_list = build_attribute_list(attsa)
 
                 st.markdown("##### Configure similarity thresholds")
                 b1, b2 = st.columns([1, 1])
@@ -251,44 +245,17 @@ def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                             sv.matching_last_sentence_pair_embedding_threshold.value = (
                                 sv.matching_sentence_pair_embedding_threshold.value
                             )
-                            aligned_dfs = []
-                            for dataset, merged_df in sv.matching_dfs.value.items():
-                                rdf = merged_df.clone()
-                                rdf = rdf.rename(renaming[dataset])
-                                # drop columns that were not renamed
-                                for col in merged_df.columns:
-                                    if (
-                                        col not in ["Entity ID", "Entity name"]
-                                        and col not in renaming[dataset].values()
-                                    ):
-                                        rdf = rdf.drop(col)
-                                for att, datasets in atts_to_datasets.items():
-                                    if dataset not in datasets:
-                                        rdf = rdf.with_columns(pl.lit("").alias(att))
-                                rdf = rdf.with_columns(pl.lit(dataset).alias("Dataset"))
-                                rdf = rdf.select(sorted(rdf.columns))
-                                aligned_dfs.append(rdf)
-                            string_dfs = []
-                            for merged_df in aligned_dfs:
-                                # convert all columns to strings
-                                for col in merged_df.columns:
-                                    merged_df = merged_df.with_columns(
-                                        pl.col(col).cast(pl.Utf8)
-                                    )
-                                string_dfs.append(merged_df)
-                            sv.matching_merged_df.value = pl.concat(string_dfs)
-                            sv.matching_merged_df.value = (
-                                sv.matching_merged_df.value.filter(
-                                    pl.col("Entity name") != ""
-                                )
+                            sv.matching_merged_df.value = build_attributes_dataframe(
+                                sv.matching_dfs.value, attributes_list
                             )
+
                             sv.matching_merged_df.value = (
                                 sv.matching_merged_df.value.with_columns(
                                     (pl.col("Entity ID").cast(pl.Utf8))
                                     + "::"
                                     + pl.col("Dataset").alias("Unique ID")
                                 )
-                            )
+                            )###??
                             all_sentences = convert_to_sentences(
                                 sv.matching_merged_df.value
                             )
@@ -322,7 +289,7 @@ def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
 
                             sv.matching_sentence_pair_scores.value = (
                                 build_sentence_pair_scores(
-                                    near_map, all_sentences, sv.matching_merged_df.value
+                                    near_map, sv.matching_merged_df.value
                                 )
                             )
 

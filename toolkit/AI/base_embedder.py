@@ -119,8 +119,9 @@ class BaseEmbedder(ABC):
                 )
                 final_embeddings[ix] = np.array(embeddings[j])
 
-        self.vector_store.save(loaded_embeddings) if cache_data else None
-        self.vector_store.update_duckdb_data()
+        if len(loaded_embeddings) > 0:
+            self.vector_store.save(loaded_embeddings) if cache_data else None
+            self.vector_store.update_duckdb_data()
         return np.array(final_embeddings)
 
     @abstractmethod

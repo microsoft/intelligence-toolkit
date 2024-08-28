@@ -5,7 +5,10 @@
 import polars as pl
 import pytest
 
-from toolkit.record_matching.prepare_model import format_dataset
+from toolkit.record_matching.prepare_model import (
+    build_attribute_options,
+    format_dataset,
+)
 
 
 class TestFormatDataset:
@@ -91,3 +94,82 @@ class TestFormatDataset:
         )
 
         assert result.height == 2
+
+
+class TestBuildAttributeOptions:
+    def test_empty(self) -> None:
+        matching_dfs = {}
+        result = build_attribute_options(matching_dfs)
+        assert result == []
+
+    def test_single(self) -> None:
+        matching_dfs = {
+            "dataset1": pl.DataFrame(
+                {
+                    "Entity ID": [1],
+                    "Entity name": ["A"],
+                    "Attribute1": ["A1"],
+                    "Attribute2": ["A2"],
+                }
+            )
+        }
+        result = build_attribute_options(matching_dfs)
+        assert result == [
+            "Attribute1::dataset1",
+            "Attribute2::dataset1",
+        ]
+
+    def test_multiple(self) -> None:
+        matching_dfs = {
+            "dataset1": pl.DataFrame(
+                {
+                    "Entity ID": [1],
+                    "Entity name": ["A"],
+                    "Attribute1": ["A1"],
+                    "Attribute2": ["A2"],
+                }
+            ),
+            "dataset2": pl.DataFrame(
+                {
+                    "Entity ID": [1],
+                    "Entity name": ["A"],
+                    "Attribute3": ["A3"],
+                    "Attribute4": ["A4"],
+                }
+            ),
+        }
+        result = build_attribute_options(matching_dfs)
+        assert result == [
+            "Attribute1::dataset1",
+            "Attribute2::dataset1",
+            "Attribute3::dataset2",
+            "Attribute4::dataset2",
+        ]
+
+    def test_order(self) -> None:
+        matching_dfs = {
+            "dataset2": pl.DataFrame(
+                {
+                    "Entity ID": [5],
+                    "Entity name": ["A"],
+                    "Attribute3": ["A3"],
+                    "Attribute0": ["A4"],
+                }
+            ),
+            "dataset1": pl.DataFrame(
+                {
+                    "Entity ID": [2, 3],
+                    "Entity name": ["A", "B"],
+                    "Attribute1": ["A1", "B1"],
+                    "Attribute2": ["A2", "B2"],
+                }
+            ),
+        }
+        result = build_attribute_options(matching_dfs)
+        assert result == [
+            "Attribute0::dataset2",
+            "Attribute1::dataset1",
+            "Attribute2::dataset1",
+            "Attribute3::dataset2",
+        ]
+        assert result == sorted(result)
