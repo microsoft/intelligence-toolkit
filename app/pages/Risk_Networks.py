@@ -3,8 +3,6 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 
-import asyncio
-
 import streamlit as st
 
 import app.workflows.risk_networks.variables as rn_variables
