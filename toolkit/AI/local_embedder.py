@@ -21,8 +21,8 @@ class LocalEmbedder(BaseEmbedder):
         super().__init__(db_name, db_path, max_tokens)
         self.local_client = SentenceTransformer(DEFAULT_LOCAL_EMBEDDING_MODEL)
 
-    def _generate_embedding(self, text: str) -> list | Any:
+    async def _generate_embedding(self, text: str | list[str]) -> list | Any:
         return self.local_client.encode(text).tolist()
 
-    def _generate_embeddings(self, texts: list[str]) -> list | Any:
+    async def _generate_embeddings(self, texts: list[str]) -> list | Any:
         return self._generate_embedding(texts)
