@@ -1,6 +1,7 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 #
+import asyncio
 import logging
 from abc import ABC, abstractmethod
 from typing import Any
@@ -39,6 +40,39 @@ class BaseEmbedder(ABC):
     ) -> None:
         self.vector_store = VectorStore(db_name, db_path, schema)
         self.max_tokens = max_tokens
+
+    @retry_with_backoff()
+    async def embed_store_many_async(
+        self, texts: list[str], cache_data=True
+    ) -> Any | list[float]:
+        tasks = [self.embed_store_one_async(text, cache_data) for text in texts]
+        return await asyncio.gather(*tasks)
+
+    async def embed_store_one_async(
+        self, text: str, cache_data=True
+    ) -> Any | list[float]:
+        text_hashed = hash_text(text)
+        existing_embedding = (
+            self.vector_store.search_one_by_column(text_hashed, "hash")
+            if cache_data
+            else []
+        )
+        if len(existing_embedding) > 0:
+            return existing_embedding.get("vector")[0]
+
+        tokens = get_token_count(text)
+        if tokens > self.max_tokens:
+            text = text[: self.max_tokens]
+            logger.info("Truncated text to max tokens")
+
+        try:
+            embedding = await self._generate_embedding_async(text)
+            data = {"hash": text_hashed, "text": text, "vector": embedding}
+            self.vector_store.save([data]) if cache_data else None
+        except Exception as e:
+            msg = f"Problem in embedding generation. {e}"
+            raise Exception(msg)
+        return embedding
 
     @retry_with_backoff()
     def embed_store_one(self, text: str, cache_data=True) -> Any | list[float]:
@@ -119,8 +153,9 @@ class BaseEmbedder(ABC):
                 )
                 final_embeddings[ix] = np.array(embeddings[j])
 
-        self.vector_store.save(loaded_embeddings) if cache_data else None
-        self.vector_store.update_duckdb_data()
+        if loaded_embeddings and cache_data:
+            self.vector_store.save(loaded_embeddings) if cache_data else None
+            self.vector_store.update_duckdb_data()
         return np.array(final_embeddings)
 
     @abstractmethod
@@ -130,3 +165,7 @@ class BaseEmbedder(ABC):
     @abstractmethod
     def _generate_embeddings(self, texts: list[str]) -> list:
         """Generate embeddings for multiple texts"""
+
+    @abstractmethod
+    async def _generate_embedding_async(self, text: str) -> list:
+        """Generate async embeddings for text"""

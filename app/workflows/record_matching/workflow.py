@@ -27,7 +27,7 @@ def get_intro():
         return file.read()
 
 
-def create(sv: rm_variables.SessionVariable, workflow=None):
+async def create(sv: rm_variables.SessionVariable, workflow=None):
     sv_home = home_vars.SessionVariables("home")
 
     intro_tab, uploader_tab, process_tab, evaluate_tab = st.tabs(
@@ -318,7 +318,7 @@ def create(sv: rm_variables.SessionVariable, workflow=None):
 
                             functions_embedder = functions.embedder()
 
-                            embeddings = functions_embedder.embed_store_many(
+                            embeddings = await functions_embedder.embed_store_many(
                                 all_sentences, [callback], sv_home.save_cache.value
                             )
                             pb.empty()
