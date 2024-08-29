@@ -1,6 +1,7 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 #
+import asyncio
 import logging
 from abc import ABC, abstractmethod
 from typing import Any
@@ -11,7 +12,7 @@ import pyarrow as pa
 from toolkit.AI.defaults import DEFAULT_LLM_MAX_TOKENS
 from toolkit.AI.vector_store import VectorStore
 from toolkit.helpers.constants import CACHE_PATH
-from toolkit.helpers.decorators import retry_with_backoff
+from toolkit.helpers.decorators import retry_async_with_backoff, retry_with_backoff
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 from .utils import get_token_count, hash_text
@@ -41,6 +42,12 @@ class BaseEmbedder(ABC):
         self.max_tokens = max_tokens
 
     @retry_with_backoff()
+    async def embed_store_many_async(
+        self, texts: list[str], cache_data=True
+    ) -> Any | list[float]:
+        tasks = [self.embed_store_one_async(text, cache_data) for text in texts]
+        return await asyncio.gather(*tasks)
+
     async def embed_store_one_async(
         self, text: str, cache_data=True
     ) -> Any | list[float]:
@@ -159,5 +166,5 @@ class BaseEmbedder(ABC):
         """Generate embeddings for multiple texts"""
 
     @abstractmethod
-    async def _generate_embedding_async(self, texts: list[str]) -> list:
+    async def _generate_embedding_async(self, text: str) -> list:
         """Generate async embeddings for text"""
