@@ -17,7 +17,7 @@ def extract_chunk_references(text):
 def convert_answer_object_to_text(answer_object):
     response = f'# {answer_object["title"]}\n\n'
     response += f'*In response to: {answer_object["question"]}*\n\n'
-    response += f'## Claims\n\n{answer_object["claims"]}\n\n## Analysis\n\n'
+    response += f'## Introduction\n\n{answer_object["introduction"]}\n\n## Analysis\n\n'
     for item in answer_object['content_items']:
         response += f'### {item["title"]}\n\n{item["content"]}\n\n'
     response += f'## Conclusion\n\n{answer_object["conclusion"]}\n\n'
@@ -26,7 +26,7 @@ def convert_answer_object_to_text(answer_object):
 def update_answer_object(answer_object, answer_update):
     new_and_updated_ids = set([x['id'] for x in answer_update['content_items']])
     answer_object['title'] = answer_update['title']
-    answer_object['claims'] = answer_update['claims']
+    answer_object['introduction'] = answer_update['introduction']
     answer_object['content_id_sequence'] = answer_update['content_id_sequence']
     updated_content_items = []
     for item_id in answer_object['content_id_sequence']:

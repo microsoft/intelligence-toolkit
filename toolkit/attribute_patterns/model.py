@@ -5,6 +5,7 @@ from collections import defaultdict
 
 import numpy as np
 import pandas as pd
+import networkx as nx
 
 from toolkit.AI.metaprompts import do_not_harm
 from toolkit.AI.utils import generate_messages
@@ -13,13 +14,11 @@ from toolkit.helpers import df_functions
 from .detection_functions import (
     create_close_node_rows,
     create_pattern_rows,
-    create_period_shifts,
     create_period_to_patterns,
 )
 from .graph_functions import convert_edge_df_to_graph, create_edge_df_from_atts
 from .prompts import report_prompt, user_prompt
 from .record_counter import RecordCounter
-
 
 def prepare_data(data_df, identifier_col=None):
     if not identifier_col:
@@ -159,9 +158,8 @@ def create_time_series_df(model, pattern_df):
     return pd.DataFrame(rows, columns=columns)
 
 
-def prepare_graph(dynamic_df, mi, min_edge_weight, missing_edge_prop):
+def prepare_graph(dynamic_df, min_edge_weight, missing_edge_prop):
     time_to_graph = {}
-    dynamic_lcc = set()
     pdf = dynamic_df.copy()
     atts = sorted(pdf["Full Attribute"].unique())
     pdf["Grouping ID"] = pdf["Subject ID"].astype(str) + "@" + pdf["Period"].astype(str)
@@ -174,35 +172,28 @@ def prepare_graph(dynamic_df, mi, min_edge_weight, missing_edge_prop):
             tdf["Subject ID"].astype(str) + "@" + tdf["Period"].astype(str)
         )
         tdf = tdf.groupby("Grouping ID")["Full Attribute"].agg(list).reset_index()
-        dedge_df = create_edge_df_from_atts(atts, tdf, mi, min_edge_weight, missing_edge_prop)
+        dedge_df = create_edge_df_from_atts(atts, tdf, min_edge_weight, missing_edge_prop)
         G, lcc = convert_edge_df_to_graph(dedge_df)
-        if ix == 0:
-            dynamic_lcc.update(lcc)
-        else:
-            dynamic_lcc.intersection_update(lcc)
         time_to_graph[period] = G
     return pdf, time_to_graph
 
 
 def detect_patterns(
-    node_to_centroid,
-    period_embeddings,
+    node_to_period_to_pos,
     dynamic_df,
     type_val_sep,
     min_pattern_count=5,
     max_pattern_length=100,
 ) -> tuple[pd.DataFrame, int, int]:
-    sorted_nodes = sorted(node_to_centroid.keys())
+    sorted_nodes = sorted(node_to_period_to_pos.keys())
     record_counter = RecordCounter(dynamic_df)
 
-    period_shifts = create_period_shifts(
-        node_to_centroid, period_embeddings, dynamic_df
-    )
+
     used_periods = sorted(dynamic_df["Period"].unique())
 
     # # for each period, find all pairs of nodes close
     close_node_df, all_pairs, close_pairs = create_close_node_rows(
-        used_periods, period_shifts, sorted_nodes, min_pattern_count, record_counter, type_val_sep
+        used_periods, node_to_period_to_pos, sorted_nodes, min_pattern_count, record_counter, type_val_sep
     )
 
     period_to_patterns = create_period_to_patterns(

@@ -20,6 +20,8 @@ from toolkit.AI.base_embedder import BaseEmbedder
 from toolkit.AI.defaults import CHUNK_SIZE
 from toolkit.AI.local_embedder import LocalEmbedder
 from toolkit.AI.openai_embedder import OpenAIEmbedder
+from toolkit.graph.graph_fusion_encoder_embedding import generate_graph_fusion_encoder_embedding
+from toolkit.question_answering.pattern_detector import detect_converging_pairs, explain_chunk_significance
 
 sv_home = SessionVariables("home")
 ai_configuration = UIOpenAIConfiguration().get_configuration()
@@ -49,7 +51,6 @@ def get_concept_graph(
     """
     Implements the concept graph visualization
     """
-    node_names = set()
     nodes = []
     edges = []
     max_degree = max([G.degree(node) for node in G.nodes()])
@@ -62,10 +63,13 @@ def get_concept_graph(
     )
     community_to_color = dict(zip(sorted_communities, community_colors))
     for node in G.nodes():
+        if node == 'dummynode':
+            continue
         degree = G.degree(node)
         size = 5 + 20 * degree / max_degree
         vadjust = -size * 2 - 3
-        color = community_to_color[concept_to_community[node]]
+        community = concept_to_community[node] if node in concept_to_community else -1
+        color = community_to_color[community] if community in community_to_color else (0.75, 0.75, 0.75)
         color = "#%02x%02x%02x" % tuple([int(255 * x) for x in color])
         nodes.append(
             Node(
@@ -81,6 +85,8 @@ def get_concept_graph(
         )
 
     for u, v, d in G.edges(data=True):
+        if u == 'dummynode' or v == 'dummynode':
+            continue
         edges.append(Edge(source=u, target=v, color="lightgray"))
 
     config = Config(
@@ -138,8 +144,11 @@ def create(sv: SessionVariables, workflow=None):
             accept_multiple_files=True,
             key=sv.upload_key.value,
         )
+        window_size = st.selectbox(
+            "Analysis time window", key=sv.analysis_window_size.key, options=[str(x) for x in input_processor.PeriodOption._member_names_]
+        )
+        window_period = input_processor.PeriodOption[window_size]
         if files is not None and st.button("Process files"):
-            # functions.chunk_files(sv, files)
             file_pb = st.progress(0, "Processing files...")
 
             def on_file_batch_change(current, total):
@@ -149,8 +158,9 @@ def create(sv: SessionVariables, workflow=None):
 
             file_callback = ProgressBatchCallback()
             file_callback.on_batch_change = on_file_batch_change
-            sv.text_to_chunks.value = input_processor.process_file_bytes(
+            sv.file_to_chunks.value = input_processor.process_file_bytes(
                 input_file_bytes={file.name: file.getvalue() for file in files},
+                analysis_window_size=window_period,
                 callbacks=[file_callback],
             )
 
@@ -166,36 +176,74 @@ def create(sv: SessionVariables, workflow=None):
             chunk_callback.on_batch_change = on_chunk_batch_change
 
             (
-                sv.text_to_vectors.value,
-                sv.concept_graph.value,
+                sv.cid_to_text.value,
+                sv.text_to_cid.value,
+                sv.period_concept_graphs.value,
                 sv.community_to_concepts.value,
                 sv.concept_to_community.value,
-                sv.concept_to_chunks.value,
-                sv.chunk_to_concepts.value,
-                sv.previous_chunk.value,
-                sv.next_chunk.value,
+                sv.concept_to_cids.value,
+                sv.cid_to_concepts.value,
+                sv.previous_cid.value,
+                sv.next_cid.value,
+                sv.period_to_cids.value,
+                sv.node_period_counts.value,
+                sv.edge_period_counts.value,
             ) = input_processor.process_chunks(
-                text_to_chunks=sv.text_to_chunks.value,
-                embedder=embedder(),
-                embedding_cache=sv_home.save_cache.value,
+                file_to_chunks=sv.file_to_chunks.value,
                 max_cluster_size=50,
                 callbacks=[chunk_callback],
             )
+            if window_period != input_processor.PeriodOption.NONE:
+                with st.spinner("Analyzing concept graphs..."):
+                    sv.node_to_period_to_pos.value, sv.node_to_period_to_shift.value = generate_graph_fusion_encoder_embedding(
+                        period_to_graph=sv.period_concept_graphs.value,
+                        node_to_label=sv.concept_to_community.value,
+                        correlation=True,
+                        diaga=True,
+                        laplacian=True
+                    )
+                with st.spinner("Detecting patterns..."):
+                    sv.cid_to_converging_pairs.value = detect_converging_pairs(
+                        sv.period_to_cids.value, 
+                        sv.cid_to_concepts.value, 
+                        sv.node_to_period_to_pos.value
+                    )
+                with st.spinner("Explaining significance..."):
+                    sv.cid_to_summary.value = explain_chunk_significance(
+                        sv.period_to_cids.value,
+                        sv.cid_to_converging_pairs.value,
+                        sv.node_period_counts.value,
+                        sv.edge_period_counts.value,
+                    )
+                    st.write(sv.cid_to_summary.value)
+                    sv.cid_to_explained_text.value = {}
+                    for cid, text in sv.cid_to_text.value.items():
+                        summary = sv.cid_to_summary.value[cid] if cid in sv.cid_to_summary.value else ''
+                        if summary != '':
+                            sv.cid_to_explained_text.value[cid] = f"{text}\n\n{summary}"
+                        else:
+                            sv.cid_to_explained_text.value[cid] = text
+            else:
+                sv.cid_to_explained_text.value = sv.cid_to_text.value
+            with st.spinner('Embedding chunks...'):
+                pass
+    
             chunk_pb.empty()
             file_pb.empty()
-        num_files = len(sv.text_to_chunks.value.keys())
-        num_chunks = sum([len(cs) for f, cs in sv.text_to_chunks.value.items()])
-        G = sv.concept_graph.value
+        num_files = len(sv.file_to_chunks.value.keys())
+        num_chunks = sum([len(cs) for f, cs in sv.file_to_chunks.value.items()])
+        G = sv.period_concept_graphs.value['ALL'] if sv.period_concept_graphs.value is not None else None
         if num_files > 0 and G is not None:
             st.success(
                 f"Chunked **{num_files}** file{'s' if num_files > 1 else ''} into **{num_chunks}** chunks of up to **{CHUNK_SIZE}** tokens. Extracted concept graph with **{len(G.nodes())}** concepts and **{len(G.edges())}** cooccurrences."
             )
     with graph_tab:
-        c1, c2 = st.columns([5, 2])
-        selection = None
-        with c1:
-            gp = st.empty()
-            if sv.concept_graph.value is not None:
+        if sv.period_concept_graphs.value is not None:
+            G = sv.period_concept_graphs.value["ALL"]
+            c1, c2 = st.columns([5, 2])
+            selection = None
+            with c1:
+                gp = st.empty()
                 selection = get_concept_graph(
                     gp,
                     G,
@@ -205,17 +253,17 @@ def create(sv: SessionVariables, workflow=None):
                     700,
                     "graph",
                 )
-        with c2:
-            if sv.concept_graph.value is not None and selection is not None:
-                selected_chunks = sv.concept_to_chunks.value[selection]
-                selected_chunks_df = pd.DataFrame(
-                    [
-                        {"Matching text chunks (double click to expand)": chunk}
-                        for chunk in selected_chunks
-                    ]
-                )
-                st.markdown(f"**Selected concept: {selection}**")
-                st.dataframe(selected_chunks_df, hide_index=True, height=650)
+            with c2:
+                if selection is not None:
+                    selected_cids = sv.concept_to_cids.value[selection]
+                    selected_cids_df = pd.DataFrame(
+                        [
+                            {"Matching text chunks (double click to expand)": sv.cid_to_text.value[cid]}
+                            for cid in selected_cids
+                        ]
+                    )
+                    st.markdown(f"**Selected concept: {selection}**")
+                    st.dataframe(selected_cids_df, hide_index=True, height=650)
     with search_tab:
         with st.expander('Search options', expanded=False):
             c1, c2, c3, c4, c5 = st.columns([1, 1, 1, 1, 1])
@@ -300,7 +348,7 @@ def create(sv: SessionVariables, workflow=None):
         chunk_placeholder.dataframe(
             pd.DataFrame(
                 columns=["Relevant text chunks (double click to expand)"],
-                data=sv.relevant_chunks.value,
+                data=[sv.cid_to_text[x] for x in sv.relevant_cids.value],
             ),
             hide_index=True,
             height=400,
@@ -312,7 +360,7 @@ def create(sv: SessionVariables, workflow=None):
         answer_placeholder.markdown(answer_text)
 
         if sv.last_question.value != "" and regenerate:
-            sv.relevant_chunks.value = []
+            sv.relevant_cids.value = []
             sv.partial_answers.value = []
             sv.chunk_progress.value = ""
             sv.answer_progress.value = ""
@@ -321,7 +369,7 @@ def create(sv: SessionVariables, workflow=None):
             chunk_placeholder.dataframe(
                 pd.DataFrame(
                     columns=["Relevant text chunks (double click to expand)"],
-                    data=sv.relevant_chunks.value,
+                    data=[sv.cid_to_text[x] for x in sv.relevant_cids.value],
                 ),
                 hide_index=True,
                 height=400,
@@ -332,22 +380,22 @@ def create(sv: SessionVariables, workflow=None):
             )
             answer_placeholder.markdown(answer_text)
             (
-                sv.relevant_chunks.value,
+                sv.relevant_cids.value,
                 sv.partial_answers.value,
                 sv.chunk_progress.value,
                 sv.answer_progress.value,
             ) = question_answerer.answer_question(
                 ai_configuration,
                 sv.last_question.value,
-                sv.text_to_chunks.value,
-                sv.chunk_to_concepts.value,
-                sv.concept_to_chunks.value,
+                sv.text_to_cids.value,
+                sv.cid_to_concepts.value,
+                sv.concept_to_cids.value,
                 sv.text_to_vectors.value,
-                sv.concept_graph.value,
+                sv.period_concept_graphs.value,
                 sv.community_to_concepts.value,
                 sv.concept_to_community.value,
-                sv.previous_chunk.value,
-                sv.next_chunk.value,
+                sv.previous_cid.value,
+                sv.next_cid.value,
                 embedder=embedder(),
                 embedding_cache=sv_home.save_cache.value,
                 select_logit_bias=5,

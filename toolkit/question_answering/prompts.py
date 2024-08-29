@@ -42,7 +42,7 @@ The JSON object should be structured as follows:
 {{
     "question": "<user question, which must not be modified>",
     "title": "<title of report that answers question, which may be updated based on new and updated content items>",
-    "claims": "<introduction to the report, including a bulleted list of all major claims arising from the content items (not just the new or updated ones)>",
+    "introduction": "<introduction to the report, including a bulleted list of the themes, each spanning multiple related content items (not just the new or updated ones)>",
     "content_id_sequence": ["<sequence of context item ids>"],
     "content_items":
     {{

@@ -5,6 +5,7 @@ import streamlit as st
 
 import toolkit.question_answering.prompts as prompts
 from app.util.session_variable import SessionVariable
+from toolkit.question_answering.input_processor import PeriodOption
 
 
 class SessionVariables:
@@ -15,20 +16,31 @@ class SessionVariables:
         self.create_session(prefix)
 
     def create_session(self, prefix):
-        self.text_to_chunks = SessionVariable({}, prefix)
+        self.file_to_chunks = SessionVariable({}, prefix)
+        self.cid_to_text = SessionVariable({}, prefix)
+        self.cid_to_explained_text = SessionVariable({}, prefix)
+        self.text_to_cid = SessionVariable({}, prefix)
         self.text_to_vectors = SessionVariable({}, prefix)
         self.upload_key = SessionVariable(random.randint(1, 100), prefix)
-        self.concept_graph = SessionVariable(None, prefix)
+        self.period_concept_graphs = SessionVariable(None, prefix)
         self.community_to_concepts = SessionVariable({}, prefix)
         self.concept_to_community = SessionVariable({}, prefix)
-        self.chunk_to_concepts = SessionVariable({}, prefix)
-        self.concept_to_chunks = SessionVariable({}, prefix)
-        self.previous_chunk = SessionVariable({}, prefix)
-        self.next_chunk = SessionVariable({}, prefix)
-        self.relevant_chunks = SessionVariable([], prefix)
+        self.cid_to_concepts = SessionVariable({}, prefix)
+        self.concept_to_cids = SessionVariable({}, prefix)
+        self.previous_cid = SessionVariable({}, prefix)
+        self.next_cid = SessionVariable({}, prefix)
+        self.relevant_cids = SessionVariable([], prefix)
         self.partial_answers = SessionVariable([], prefix)
         self.last_question = SessionVariable("", prefix)
         self.final_report = SessionVariable("", prefix)
+        self.period_to_cids = SessionVariable({}, prefix)
+        self.node_to_period_to_pos = SessionVariable({}, prefix)
+        self.node_to_period_to_shift = SessionVariable({}, prefix)
+        self.cid_to_converging_pairs = SessionVariable({}, prefix)
+        self.node_period_counts = SessionVariable({}, prefix)
+        self.edge_period_counts = SessionVariable({}, prefix)
+        self.cid_to_summary = SessionVariable({}, prefix)
+        self.analysis_window_size = SessionVariable('NONE', prefix)
 
         self.adjacent_chunk_steps = SessionVariable(1, prefix)
         self.community_relevance_tests = SessionVariable(10, prefix)
