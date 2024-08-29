@@ -41,7 +41,9 @@ class BaseEmbedder(ABC):
         self.max_tokens = max_tokens
 
     @retry_with_backoff()
-    async def embed_store_one(self, text: str, cache_data=True) -> Any | list[float]:
+    async def embed_store_one_async(
+        self, text: str, cache_data=True
+    ) -> Any | list[float]:
         text_hashed = hash_text(text)
         existing_embedding = (
             self.vector_store.search_one_by_column(text_hashed, "hash")
@@ -57,7 +59,7 @@ class BaseEmbedder(ABC):
             logger.info("Truncated text to max tokens")
 
         try:
-            embedding = await self._generate_embedding(text)
+            embedding = await self._generate_embedding_async(text)
             data = {"hash": text_hashed, "text": text, "vector": embedding}
             self.vector_store.save([data]) if cache_data else None
         except Exception as e:
@@ -66,7 +68,32 @@ class BaseEmbedder(ABC):
         return embedding
 
     @retry_with_backoff()
-    async def embed_store_many(
+    def embed_store_one(self, text: str, cache_data=True) -> Any | list[float]:
+        text_hashed = hash_text(text)
+        existing_embedding = (
+            self.vector_store.search_one_by_column(text_hashed, "hash")
+            if cache_data
+            else []
+        )
+        if len(existing_embedding) > 0:
+            return existing_embedding.get("vector")[0]
+
+        tokens = get_token_count(text)
+        if tokens > self.max_tokens:
+            text = text[: self.max_tokens]
+            logger.info("Truncated text to max tokens")
+
+        try:
+            embedding = self._generate_embedding(text)
+            data = {"hash": text_hashed, "text": text, "vector": embedding}
+            self.vector_store.save([data]) if cache_data else None
+        except Exception as e:
+            msg = f"Problem in embedding generation. {e}"
+            raise Exception(msg)
+        return embedding
+
+    @retry_with_backoff()
+    def embed_store_many(
         self,
         texts: list[str],
         callback: ProgressBatchCallback | None = None,
@@ -107,7 +134,7 @@ class BaseEmbedder(ABC):
             batch_texts = [x[1] for x in batch]
 
             try:
-                embeddings = await self._generate_embeddings(batch_texts)
+                embeddings = self._generate_embeddings(batch_texts)
             except Exception as e:
                 msg = f"Problem in embedding generation. {e}"
                 raise Exception(msg)
@@ -124,9 +151,13 @@ class BaseEmbedder(ABC):
         return np.array(final_embeddings)
 
     @abstractmethod
-    async def _generate_embedding(self, text: str) -> list[float]:
+    def _generate_embedding(self, text: str) -> list[float]:
         """Generate an embedding for a single text"""
 
     @abstractmethod
-    async def _generate_embeddings(self, texts: list[str]) -> list:
+    def _generate_embeddings(self, texts: list[str]) -> list:
         """Generate embeddings for multiple texts"""
+
+    @abstractmethod
+    async def _generate_embedding_async(self, texts: list[str]) -> list:
+        """Generate async embeddings for text"""

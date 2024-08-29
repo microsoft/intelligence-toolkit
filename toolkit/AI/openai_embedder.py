@@ -7,7 +7,6 @@ from toolkit.helpers.constants import CACHE_PATH
 
 from .client import OpenAIClient
 from .openai_configuration import OpenAIConfiguration
-import asyncio
 
 
 class OpenAIEmbedder(BaseEmbedder):
@@ -21,9 +20,11 @@ class OpenAIEmbedder(BaseEmbedder):
         self.configuration = configuration
         self.openai_client = OpenAIClient(configuration)
 
-    async def _generate_embedding(self, text: str) -> list[float]:
-        return await self.openai_client.generate_embedding(text)
-    
-    async def _generate_embeddings(self, texts: list[str]) -> list:
-        tasks = [self.openai_client.generate_embedding(text) for text in texts]
-        return await asyncio.gather(*tasks)
+    def _generate_embedding(self, text: str) -> list[float]:
+        return self.openai_client.generate_embedding(text)
+
+    def _generate_embeddings(self, texts: list[str]) -> list:
+        return [x.embedding for x in self.openai_client.generate_embeddings(texts).data]
+
+    async def _generate_embedding_async(self, text: str) -> list[float]:
+        return await self.openai_client.generate_embedding_async(text)

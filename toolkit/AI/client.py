@@ -5,7 +5,7 @@ import asyncio
 import logging
 
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
-from openai import OpenAI, AzureOpenAI, AsyncOpenAI, AsyncAzureOpenAI
+from openai import AsyncAzureOpenAI, AsyncOpenAI, AzureOpenAI, OpenAI
 
 from .classes import LLMCallback
 from .defaults import API_BASE_REQUIRED_FOR_AZURE, DEFAULT_EMBEDDING_MODEL
@@ -20,7 +20,9 @@ class OpenAIClient:
     _client = None
     _async_client = None
 
-    def __init__(self, configuration: OpenAIConfiguration | None = None, concurrent_coroutines = 5) -> None:
+    def __init__(
+        self, configuration: OpenAIConfiguration | None = None, concurrent_coroutines=10
+    ) -> None:
         self.configuration = configuration or OpenAIConfiguration()
         self._create_openai_client()
         self.semaphore = asyncio.Semaphore(concurrent_coroutines)
@@ -146,20 +148,30 @@ class OpenAIClient:
             msg = f"Problem in OpenAI response. {e}"
             raise Exception(msg) from e
 
-    async def generate_embedding(
+    def generate_embedding(
         self, text: str, model: str = DEFAULT_EMBEDDING_MODEL
     ) -> list[float]:
-        async with self.semaphore:
-            if self.configuration.api_type == "Azure OpenAI":
-                embedding = self._async_client.embeddings.create(input=text, model=model)
-            else:
-                embedding = await self._async_client.embeddings.create(input=text, model=model)
-            return embedding.data[0].embedding
+        embedding = self._client.embeddings.create(input=text, model=model)
+        return embedding.data[0].embedding
 
     def generate_embeddings(
         self, text: list[str], model: str = DEFAULT_EMBEDDING_MODEL
     ) -> list[float]:
         return self._client.embeddings.create(input=text, model=model)
+
+    async def generate_embedding_async(
+        self, text: list[str], model: str = DEFAULT_EMBEDDING_MODEL
+    ) -> list[float]:
+        async with self.semaphore:
+            if self.configuration.api_type == "Azure OpenAI":
+                embedding = self._async_client.embeddings.create(
+                    input=text, model=model
+                )
+            else:
+                embedding = await self._async_client.embeddings.create(
+                    input=text, model=model
+                )
+            return embedding.data[0].embedding
 
     async def map_generate_text(
         self,
