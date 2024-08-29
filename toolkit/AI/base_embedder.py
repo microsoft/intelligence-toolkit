@@ -12,7 +12,7 @@ import pyarrow as pa
 from toolkit.AI.defaults import DEFAULT_LLM_MAX_TOKENS
 from toolkit.AI.vector_store import VectorStore
 from toolkit.helpers.constants import CACHE_PATH
-from toolkit.helpers.decorators import retry_async_with_backoff, retry_with_backoff
+from toolkit.helpers.decorators import retry_with_backoff
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 from .utils import get_token_count, hash_text
@@ -153,8 +153,9 @@ class BaseEmbedder(ABC):
                 )
                 final_embeddings[ix] = np.array(embeddings[j])
 
-        self.vector_store.save(loaded_embeddings) if cache_data else None
-        self.vector_store.update_duckdb_data()
+        if loaded_embeddings and cache_data:
+            self.vector_store.save(loaded_embeddings) if cache_data else None
+            self.vector_store.update_duckdb_data()
         return np.array(final_embeddings)
 
     @abstractmethod

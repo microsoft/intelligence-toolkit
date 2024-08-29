@@ -111,7 +111,6 @@ def build_inferred_df(inferred_links_list: defaultdict[set]) -> pl.DataFrame:
         for n in near
         if text < n
     ]
-    print("link_listlink_list", link_list)
     inferred_df = pl.DataFrame(link_list, schema=["text", "similar"])
     inferred_df = inferred_df.with_columns(
         [
