@@ -2,6 +2,7 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 
+import asyncio
 from typing import Any
 
 from sentence_transformers import SentenceTransformer
@@ -28,4 +29,6 @@ class LocalEmbedder(BaseEmbedder):
         return self._generate_embedding(texts)
 
     async def _generate_embedding_async(self, text: str) -> list | Any:
-        return await self._generate_embedding(text)
+        await asyncio.sleep(0)
+
+        return self._generate_embedding(text)
