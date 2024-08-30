@@ -20,7 +20,7 @@ class SessionVariables:
         self.cid_to_text = SessionVariable({}, prefix)
         self.cid_to_explained_text = SessionVariable({}, prefix)
         self.text_to_cid = SessionVariable({}, prefix)
-        self.text_to_vectors = SessionVariable({}, prefix)
+        self.cid_to_vector = SessionVariable({}, prefix)
         self.upload_key = SessionVariable(random.randint(1, 100), prefix)
         self.period_concept_graphs = SessionVariable(None, prefix)
         self.community_to_concepts = SessionVariable({}, prefix)

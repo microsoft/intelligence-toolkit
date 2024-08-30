@@ -5,12 +5,14 @@ import os
 
 import pandas as pd
 import streamlit as st
+from json import loads, dumps
 from seaborn import color_palette
 from streamlit_agraph import Config, Edge, Node, agraph
 
 import toolkit.question_answering.input_processor as input_processor
 import toolkit.question_answering.prompts as prompts
 import toolkit.question_answering.question_answerer as question_answerer
+import toolkit.question_answering.helper_functions as helper_functions
 from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
 from app.util.openai_wrapper import UIOpenAIConfiguration
@@ -21,11 +23,25 @@ from toolkit.AI.defaults import CHUNK_SIZE
 from toolkit.AI.local_embedder import LocalEmbedder
 from toolkit.AI.openai_embedder import OpenAIEmbedder
 from toolkit.graph.graph_fusion_encoder_embedding import generate_graph_fusion_encoder_embedding
-from toolkit.question_answering.pattern_detector import detect_converging_pairs, explain_chunk_significance
+from toolkit.question_answering.pattern_detector import (
+    detect_converging_pairs,
+    explain_chunk_significance,
+    combine_chunk_text_and_explantion
+)
 
 sv_home = SessionVariables("home")
 ai_configuration = UIOpenAIConfiguration().get_configuration()
 
+
+def create_progress_callback(template: str):
+    pb = st.progress(0, 'Preparing...')
+    def on_change(current, total):
+        pb.progress(
+            int(current * 100 / total), text=template.format(current, total)
+        )
+    callback = ProgressBatchCallback()
+    callback.on_batch_change = on_change
+    return pb, callback
 
 def embedder() -> BaseEmbedder:
     try:
@@ -44,6 +60,7 @@ def embedder() -> BaseEmbedder:
         st.error(f"Error creating connection: {e}")
         st.stop()
 
+text_embedder = embedder()
 
 def get_concept_graph(
     placeholder, G, concept_to_community, community_to_concepts, width, height, key
@@ -149,32 +166,14 @@ def create(sv: SessionVariables, workflow=None):
         )
         window_period = input_processor.PeriodOption[window_size]
         if files is not None and st.button("Process files"):
-            file_pb = st.progress(0, "Processing files...")
-
-            def on_file_batch_change(current, total):
-                file_pb.progress(
-                    int(current * 100 / total), text=f"Processed {current} files..."
-                )
-
-            file_callback = ProgressBatchCallback()
-            file_callback.on_batch_change = on_file_batch_change
+            file_pb, file_callback = create_progress_callback("Loaded {} of {} files...")
             sv.file_to_chunks.value = input_processor.process_file_bytes(
                 input_file_bytes={file.name: file.getvalue() for file in files},
                 analysis_window_size=window_period,
                 callbacks=[file_callback],
             )
 
-            chunk_pb = st.progress(0, "Processing text chunks...")
-
-            def on_chunk_batch_change(current, total):
-                chunk_pb.progress(
-                    int(current * 100 / total),
-                    text=f"Processed {current} text chunks...",
-                )
-
-            chunk_callback = ProgressBatchCallback()
-            chunk_callback.on_batch_change = on_chunk_batch_change
-
+            chunk_pb, chunk_callback = create_progress_callback("Processed {} of {} chunks...")
             (
                 sv.cid_to_text.value,
                 sv.text_to_cid.value,
@@ -194,49 +193,52 @@ def create(sv: SessionVariables, workflow=None):
                 callbacks=[chunk_callback],
             )
             if window_period != input_processor.PeriodOption.NONE:
-                with st.spinner("Analyzing concept graphs..."):
-                    sv.node_to_period_to_pos.value, sv.node_to_period_to_shift.value = generate_graph_fusion_encoder_embedding(
-                        period_to_graph=sv.period_concept_graphs.value,
-                        node_to_label=sv.concept_to_community.value,
-                        correlation=True,
-                        diaga=True,
-                        laplacian=True
-                    )
-                with st.spinner("Detecting patterns..."):
-                    sv.cid_to_converging_pairs.value = detect_converging_pairs(
-                        sv.period_to_cids.value, 
-                        sv.cid_to_concepts.value, 
-                        sv.node_to_period_to_pos.value
-                    )
-                with st.spinner("Explaining significance..."):
-                    sv.cid_to_summary.value = explain_chunk_significance(
-                        sv.period_to_cids.value,
-                        sv.cid_to_converging_pairs.value,
-                        sv.node_period_counts.value,
-                        sv.edge_period_counts.value,
-                    )
-                    st.write(sv.cid_to_summary.value)
-                    sv.cid_to_explained_text.value = {}
-                    for cid, text in sv.cid_to_text.value.items():
-                        summary = sv.cid_to_summary.value[cid] if cid in sv.cid_to_summary.value else ''
-                        if summary != '':
-                            sv.cid_to_explained_text.value[cid] = f"{text}\n\n{summary}"
-                        else:
-                            sv.cid_to_explained_text.value[cid] = text
+                gfee_pb, gfee_callback = create_progress_callback("Embedded {} of {} concept nodes...")
+                sv.node_to_period_to_pos.value, sv.node_to_period_to_shift.value = generate_graph_fusion_encoder_embedding(
+                    period_to_graph=sv.period_concept_graphs.value,
+                    node_to_label=sv.concept_to_community.value,
+                    correlation=True,
+                    diaga=True,
+                    laplacian=True,
+                    callbacks=[gfee_callback],
+                )
+                period_pb, period_callback = create_progress_callback("Analyzed {} of {} periods...")
+                sv.cid_to_converging_pairs.value = detect_converging_pairs(
+                    sv.period_to_cids.value, 
+                    sv.cid_to_concepts.value, 
+                    sv.node_to_period_to_pos.value,
+                    callbacks=[period_callback],
+                )
+                explain_pb, explain_callback = create_progress_callback("Explained patterns in {} of {} periods...")
+                sv.cid_to_summary.value = explain_chunk_significance(
+                    sv.period_to_cids.value,
+                    sv.cid_to_converging_pairs.value,
+                    sv.node_period_counts.value,
+                    sv.edge_period_counts.value,
+                    callbacks=[explain_callback],
+                )
+                sv.cid_to_explained_text.value = combine_chunk_text_and_explantion(sv.cid_to_text.value, sv.cid_to_summary.value)
+                gfee_pb.empty()
+                period_pb.empty()
+                explain_pb.empty()
             else:
                 sv.cid_to_explained_text.value = sv.cid_to_text.value
-            with st.spinner('Embedding chunks...'):
-                pass
-    
+            embed_pb, embed_callback = create_progress_callback("Embedded {} of {} text chunks...")
+            sv.cid_to_vector.value = helper_functions.embed_texts(
+                sv.cid_to_explained_text.value, text_embedder, config.cache_name, callbacks=[embed_callback]
+            )
             chunk_pb.empty()
             file_pb.empty()
+            embed_pb.empty()
         num_files = len(sv.file_to_chunks.value.keys())
         num_chunks = sum([len(cs) for f, cs in sv.file_to_chunks.value.items()])
+        num_periods = len(sv.period_to_cids.value) - 1
+        
         G = sv.period_concept_graphs.value['ALL'] if sv.period_concept_graphs.value is not None else None
         if num_files > 0 and G is not None:
-            st.success(
-                f"Chunked **{num_files}** file{'s' if num_files > 1 else ''} into **{num_chunks}** chunks of up to **{CHUNK_SIZE}** tokens. Extracted concept graph with **{len(G.nodes())}** concepts and **{len(G.edges())}** cooccurrences."
-            )
+            message = f"Chunked **{num_files}** file{'s' if num_files > 1 else ''} into **{num_chunks}** chunks of up to **{CHUNK_SIZE}** tokens. Extracted concept graph with **{len(G.nodes())}** concepts and **{len(G.edges())}** cooccurrences, spanning **{num_periods}** periods."
+            message = message.replace('**1** periods', '**1** period')
+            st.success(message)
     with graph_tab:
         if sv.period_concept_graphs.value is not None:
             G = sv.period_concept_graphs.value["ALL"]
@@ -348,10 +350,10 @@ def create(sv: SessionVariables, workflow=None):
         chunk_placeholder.dataframe(
             pd.DataFrame(
                 columns=["Relevant text chunks (double click to expand)"],
-                data=[sv.cid_to_text[x] for x in sv.relevant_cids.value],
+                data=[sv.cid_to_text.value[x] for x in sv.relevant_cids.value],
             ),
             hide_index=True,
-            height=400,
+            height=300,
             use_container_width=True,
         )
         answer_text = (
@@ -385,17 +387,17 @@ def create(sv: SessionVariables, workflow=None):
                 sv.chunk_progress.value,
                 sv.answer_progress.value,
             ) = question_answerer.answer_question(
-                ai_configuration,
-                sv.last_question.value,
-                sv.text_to_cids.value,
-                sv.cid_to_concepts.value,
-                sv.concept_to_cids.value,
-                sv.text_to_vectors.value,
-                sv.period_concept_graphs.value,
-                sv.community_to_concepts.value,
-                sv.concept_to_community.value,
-                sv.previous_cid.value,
-                sv.next_cid.value,
+                ai_configuration=ai_configuration,
+                question=sv.last_question.value,
+                cid_to_text=sv.cid_to_explained_text.value,
+                cid_to_concepts=sv.cid_to_concepts.value,
+                concept_to_cids=sv.concept_to_cids.value,
+                cid_to_vector=sv.cid_to_vector.value,
+                concept_graph=sv.period_concept_graphs.value['ALL'],
+                community_to_concepts=sv.community_to_concepts.value,
+                concept_to_community=sv.concept_to_community.value,
+                previous_cid=sv.previous_cid.value,
+                next_cid=sv.next_cid.value,
                 embedder=embedder(),
                 embedding_cache=sv_home.save_cache.value,
                 select_logit_bias=5,

@@ -69,19 +69,15 @@ def get_answer_progress(answer_history):
 
 def test_history_elements(test_history):
     relevant_list = [x[1] for x in test_history if x[2] == 'Yes']
-    seen_list = [x[1] for x in test_history]
-    # found_relevant = False
-    # all_searches = []
-    # Terminate if last full cycle yielded no relevant chunks
-    # for search, chunk, result in list(reversed(test_history)):
-    #     found_relevant |= (result == 'Yes')
-    #     if len(all_searches) == 0:
-    #         all_searches.append(search)
-    #     else:
-    #         if search != all_searches[-1]:
-    #             all_searches.append(search)
-    #             if all_searches[-1] == all_searches[0]: # full cycle
-    #                 break
-            
-    # terminate = not found_relevant              
+    seen_list = [x[1] for x in test_history]           
     return relevant_list, seen_list
+
+def embed_texts(cid_to_text, text_embedder, cache_name, callbacks=[]):
+    cid_to_vector = {}
+    for ix, (cid, text) in enumerate(cid_to_text.items()):
+        cid_to_vector[cid] = text_embedder.embed_store_one(
+            text, cache_name
+        )
+        for callback in callbacks:
+            callback.on_batch_change(ix + 1, len(cid_to_text))
+    return cid_to_vector

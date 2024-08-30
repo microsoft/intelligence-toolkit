@@ -1,11 +1,14 @@
 from collections import defaultdict
+from json import dumps, loads
 from toolkit.graph.graph_fusion_encoder_embedding import is_converging_pair
 
-def detect_converging_pairs(period_to_cids, cid_to_concepts, node_to_period_to_pos):
+def detect_converging_pairs(period_to_cids, cid_to_concepts, node_to_period_to_pos, callbacks=[]):
     # print(f'Period to cids: {period_to_cids}')
     # print(f'CID to concepts: {cid_to_concepts}')
     chunk_to_converging_pairs = defaultdict(list)
-    for period, chunks in period_to_cids.items():
+    for ix, (period, chunks) in enumerate(period_to_cids.items()):
+        for callback in callbacks:
+            callback.on_batch_change(ix + 1, len(period_to_cids.keys()))
         for chunk in chunks:
             concepts = cid_to_concepts[chunk]
             for cx, c1 in enumerate(concepts):
@@ -55,11 +58,13 @@ def _get_props_from_counts(node_period_counts, node_edge_counts):
     return node_period_props, edge_period_props
 
 
-def explain_chunk_significance(period_to_cids, cid_to_converging_pairs, node_period_counts, edge_period_counts, pair_limit=5):
+def explain_chunk_significance(period_to_cids, cid_to_converging_pairs, node_period_counts, edge_period_counts, pair_limit=5, callbacks=[]):
     node_period_ranks, edge_period_ranks = _get_ranks_from_counts(node_period_counts, edge_period_counts)
     node_period_props, edge_period_props = _get_props_from_counts(node_period_counts, edge_period_counts)
     cid_to_summary = {}
-    for period, cids in period_to_cids.items():
+    for px, (period, cids) in enumerate(period_to_cids.items()):
+        for callback in callbacks:
+            callback.on_batch_change(px, len(period_to_cids.keys())-1)
         if period == "ALL":
             continue
         for cid in cids:
@@ -78,3 +83,16 @@ def explain_chunk_significance(period_to_cids, cid_to_converging_pairs, node_per
             summary = summary.replace('1 times', '1 time')
             cid_to_summary[cid] = summary
     return cid_to_summary
+
+def combine_chunk_text_and_explantion(cid_to_text, cid_to_summary):
+    cid_to_explained_text = {}
+    for cid, text in cid_to_text.items():
+        summary = cid_to_summary.value[cid] if cid in cid_to_summary else ''
+        if summary != '':
+            jsn = loads(text)
+            jsn['analysis'] = summary
+            explained_text = dumps(jsn, indent=2)
+            cid_to_explained_text[cid] = explained_text
+        else:
+            cid_to_explained_text[cid] = text
+    return cid_to_explained_text

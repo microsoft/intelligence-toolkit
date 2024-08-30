@@ -73,6 +73,11 @@ def process_json_text(text_json, period: PeriodOption):
         chunks.append(dumps(chunk_json, indent=2))
     return chunks
 
+def process_json_texts(file_to_text_jsons, period: PeriodOption):
+    file_to_chunks = {}
+    for file, text_json in file_to_text_jsons.items():
+        file_to_chunks[file] = process_json_text(text_json, period)
+    return file_to_chunks
 
 def process_chunks(
     file_to_chunks, max_cluster_size, callbacks=[]

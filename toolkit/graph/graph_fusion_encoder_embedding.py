@@ -44,7 +44,7 @@ def _cosine_distance(x, y):
     dist = 1 - (np.dot(x, y) / den) if den > 0 else np.inf
     return dist
 
-def generate_graph_fusion_encoder_embedding(period_to_graph, node_to_label, correlation, diaga, laplacian):
+def generate_graph_fusion_encoder_embedding(period_to_graph, node_to_label, correlation, diaga, laplacian, callbacks=[]):
     """Generate embeddings for all periods and calculate centroids.
     All-time centroids are encoded as 'ALL' and prior centroids are encoded as '<'+period.
     """
@@ -58,7 +58,9 @@ def generate_graph_fusion_encoder_embedding(period_to_graph, node_to_label, corr
         for node_id in range(len(period_embedding)):
             node_to_period_to_pos[node_list[node_id]][period] = period_embedding[node_id]
 
-    for node, period_to_pos in node_to_period_to_pos.items():
+    for ix, (node, period_to_pos) in enumerate(node_to_period_to_pos.items()):
+        for callback in callbacks:
+            callback.on_batch_change(ix + 1, len(node_to_period_to_pos.keys()))
         all_positions = [pos for period, pos in period_to_pos.items()]
         centroid = np.mean(all_positions, axis=0)
         node_to_period_to_pos[node]['ALL'] = centroid

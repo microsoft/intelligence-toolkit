@@ -10,7 +10,8 @@ import toolkit.question_answering.prompts as prompts
 def assess_relevance(
         ai_configuration,
         search_label,
-        search_chunks,
+        search_cids,
+        cid_to_text,
         question,
         logit_bias,
         relevance_test_budget,
@@ -19,21 +20,23 @@ def assess_relevance(
         progress_callback,
         chunk_callback
     ):
-    print(f'Assessing relevance for {search_label} with {len(search_chunks)} chunks')
-    batched_chunks = [search_chunks[i:i+relevance_test_batch_size]
-                      for i in range(0, len(search_chunks), relevance_test_batch_size)]
+    print(f'Assessing relevance for {search_label} with {len(search_cids)} chunks')
+    batched_cids = [search_cids[i:i+relevance_test_batch_size]
+                      for i in range(0, len(search_cids), relevance_test_batch_size)]
+    batched_texts = [[cid_to_text[cid] for cid in batch] for batch in batched_cids]
     batched_messages = [[utils.prepare_messages(prompts.chunk_relevance_prompt, {'chunk': chunk, 'question': question}) 
-                        for chunk in batch] for batch in batched_chunks]
+                        for chunk in batch] for batch in batched_texts]
     is_relevant = False
     for mx, mapped_messages in enumerate(batched_messages):
-        batch = batched_chunks[mx]
+        cid_batch = batched_cids[mx]
         if len(test_history) + len(mapped_messages) > relevance_test_budget:
             mapped_messages = mapped_messages[:relevance_test_budget - len(test_history)]
         mapped_responses = asyncio.run(helper_functions.map_generate_text(
             ai_configuration, mapped_messages, logit_bias=logit_bias, max_tokens=1))
         num_relevant = process_relevance_responses(
             search_label,
-            batch,
+            cid_batch,
+            cid_to_text,
             mapped_responses,
             test_history,
             progress_callback,
@@ -47,14 +50,15 @@ def assess_relevance(
 
 def process_relevance_responses(
         search_label,
-        search_chunks,
+        search_cids,
+        cid_to_text,
         mapped_responses,
         test_history,
         progress_callback,
         chunk_callback
     ):
     num_relevant = 0
-    for r, c in zip(mapped_responses, search_chunks):
+    for r, c in zip(mapped_responses, search_cids):
         if c not in [x[1] for x in test_history]:
             test_history.append((search_label, c, r))
             if r == 'Yes':
@@ -63,6 +67,6 @@ def process_relevance_responses(
         progress_callback(helper_functions.get_test_progress(test_history))
     relevant_list = [x[1] for x in test_history if x[2] == 'Yes']
     if chunk_callback is not None:
-        chunk_callback(relevant_list)
+        chunk_callback([cid_to_text[cid] for cid in relevant_list])
     return num_relevant
 

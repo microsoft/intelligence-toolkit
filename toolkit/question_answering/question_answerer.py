@@ -13,15 +13,15 @@ import toolkit.question_answering.relevance_assessor as relevance_assessor
 def answer_question(
         ai_configuration,
         question,
-        text_to_chunks,
-        chunk_to_concepts,
-        concept_to_chunks,
-        text_to_vectors,
+        cid_to_text,
+        cid_to_concepts,
+        concept_to_cids,
+        cid_to_vector,
         concept_graph,
         community_to_concepts,
         concept_to_community,
-        previous_chunk,
-        next_chunk,
+        previous_cid,
+        next_cid,
         embedder,
         embedding_cache,
         answer_batch_size,
@@ -46,24 +46,13 @@ def answer_question(
         "conclusion": ""
     }
     answer_stream = []
-    sorted_chunks = []
     test_history = []
     answer_history = []
     
-    for text, chunks in text_to_chunks.items():
-        for cx, chunk in enumerate(chunks):
-            sorted_chunks.append(chunk)
     all_units = []
-    
-    for text, chunks in text_to_chunks.items():
-        for cx, chunk in enumerate(chunks):
-            all_units.append(
-                (
-                    text,
-                    chunk,
-                    text_to_vectors[text][cx]
-                )
-            )
+
+    all_units = sorted([(cid, vector) for cid, vector in (cid_to_vector.items())], key=lambda x: x[0])
+
 
     yes_id = tiktoken.get_encoding('o200k_base').encode('Yes')[0]
     no_id = tiktoken.get_encoding('o200k_base').encode('No')[0]
@@ -80,35 +69,35 @@ def answer_question(
     relevant, seen = helper_functions.test_history_elements(test_history)
     cosine_distances = sorted(
         [
-            (t, c, scipy.spatial.distance.cosine(aq_embedding, v))
-            for (t, c, v) in all_units if c not in seen
+            (cid, scipy.spatial.distance.cosine(aq_embedding, vector))
+            for (cid, vector) in all_units if cid not in seen
         ],
-        key=lambda x: x[2],
+        key=lambda x: x[1],
         reverse=False,
     )
 
-    chunk_to_communities = defaultdict(set)
-    community_to_chunks = defaultdict(set)
-    for chunk, concepts in chunk_to_concepts.items():
+    cid_to_communities = defaultdict(set)
+    community_to_cids = defaultdict(set)
+    for cid, concepts in cid_to_concepts.items():
         for concept in concepts:
             if concept in concept_to_community.keys():
                 community = concept_to_community[concept]
-                chunk_to_communities[chunk].add(community)
-                community_to_chunks[community].add(chunk)
-    semantic_search_chunks = [x[1] for x in cosine_distances]
+                cid_to_communities[cid].add(community)
+                community_to_cids[community].add(cid)
+    semantic_search_cids = [x[0] for x in cosine_distances]
     community_sequence = []
-    community_to_semantic_search_chunks = defaultdict(list)
+    community_to_semantic_search_cids = defaultdict(list)
     community_mean_rank = []
-    for community, chunks in community_to_chunks.items():
-        mean_rank = np.mean(sorted([semantic_search_chunks.index(c) for c in chunks])[:community_relevance_tests])
+    for community, cids in community_to_cids.items():
+        mean_rank = np.mean(sorted([semantic_search_cids.index(c) for c in cids])[:community_relevance_tests])
         community_mean_rank.append((community, mean_rank))
     community_sequence = [x[0] for x in sorted(community_mean_rank, key=lambda x: x[1])]
 
-    for chunk in semantic_search_chunks:
-        chunk_communities = sorted(chunk_to_communities[chunk], key=lambda x : len(community_to_concepts[x]), reverse=True)
+    for cid in semantic_search_cids:
+        chunk_communities = sorted(cid_to_communities[cid], key=lambda x : len(community_to_concepts[x]), reverse=True)
         if len(chunk_communities) > 0:
             assigned_community = sorted(chunk_communities, key=lambda x: community_sequence.index(x))[0]
-            community_to_semantic_search_chunks[assigned_community].append(chunk)
+            community_to_semantic_search_cids[assigned_community].append(cid)
 
     successive_irrelevant = 0
     eliminated_communities = set()
@@ -119,12 +108,13 @@ def answer_question(
         narrowed_community_sequence = community_sequence #[c for c in community_sequence if c not in eliminated_communities]
         for community in narrowed_community_sequence:
             relevant, seen = helper_functions.test_history_elements(test_history)
-            unseen_chunks = [c for c in community_to_semantic_search_chunks[community] if c not in seen][:community_relevance_tests]
-            if len(unseen_chunks) > 0:
+            unseen_cids = [c for c in community_to_semantic_search_cids[community] if c not in seen][:community_relevance_tests]
+            if len(unseen_cids) > 0:
                 is_relevant = relevance_assessor.assess_relevance(
                     ai_configuration=ai_configuration,
                     search_label=f'community {community}',
-                    search_chunks=unseen_chunks,
+                    search_cids=unseen_cids,
+                    cid_to_text=cid_to_text,
                     question=question,
                     logit_bias=logit_bias,
                     relevance_test_budget=relevance_test_budget,
@@ -154,13 +144,14 @@ def answer_question(
     adjacent_sources = list(relevant)
     adjacent_targets = set()
     for c in adjacent_sources:
-        adjacent_targets.update(helper_functions.get_adjacent_chunks(c, previous_chunk, next_chunk, adjacent_search_steps))
-    adjacent_search_chunks = [x for x in adjacent_targets if x not in seen]
-    print(f'Adjacent: {adjacent_search_chunks}')
+        adjacent_targets.update(helper_functions.get_adjacent_chunks(c, previous_cid, next_cid, adjacent_search_steps))
+    adjacent_search_cids = [x for x in adjacent_targets if x not in seen]
+    print(f'Adjacent: {adjacent_search_cids}')
     relevance_assessor.assess_relevance(
         ai_configuration=ai_configuration,
         search_label='detail',
-        search_chunks=adjacent_search_chunks,
+        search_cids=adjacent_search_cids,
+        cid_to_text=cid_to_text,
         question=question,
         logit_bias=logit_bias,
         relevance_test_budget=relevance_test_budget,
@@ -169,14 +160,15 @@ def answer_question(
         progress_callback=chunk_progress_callback,
         chunk_callback=chunk_callback,
     )
-    relevant, seen = helper_functions.test_history_elements(test_history)
-    relevant.sort(key=lambda x: sorted_chunks.index(x))
-
+    relevant_cids, seen_cids = helper_functions.test_history_elements(test_history)
+    relevant_cids.sort()
+    seen_cids.sort()
+    relevant_texts = [cid_to_text[cid] for cid in relevant_cids]
     answer_builder.generate_answers(
         ai_configuration=ai_configuration,
         answer_object=answer_object,
         answer_format=answer_format,
-        process_chunks=relevant,
+        process_chunks=relevant_texts,
         answer_batch_size=answer_batch_size,
         answer_stream=answer_stream,
         answer_callback=answer_callback,
@@ -184,7 +176,7 @@ def answer_question(
         progress_callback=answer_progress_callback,
     )
     return (
-        relevant, 
+        relevant_cids, 
         answer_stream,
         helper_functions.get_test_progress(test_history),
         helper_functions.get_answer_progress(answer_history)
