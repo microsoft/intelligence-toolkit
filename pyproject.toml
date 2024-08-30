@@ -47,6 +47,7 @@ duckdb = "1.0.0"
 seaborn = "0.13.2"
 textblob = "0.18.0.post0"
 future = "1.0.0"
+jsonschema = "^4.23.0"
 
 
 [tool.poetry.group.dev.dependencies]
