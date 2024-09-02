@@ -128,8 +128,10 @@ class BaseEmbedder(ABC):
             hash_all_texts = [hash_text(te) for te in batch_texts]
             existing = self.vector_store.search_by_column(hash_all_texts, "hash")
             if len(existing.get("vector")) > 0:
-                loaded_texts.extend(existing["text"].unique())
-                final_embeddings.extend(existing["vector"].tolist())
+                existing_texts = existing.sort_values("text")
+                for text in existing_texts.to_numpy():
+                    loaded_texts.append(text[1])
+                    final_embeddings.append(text[2])
 
             new_texts = list(set(batch_texts) - set(loaded_texts))
 
@@ -146,7 +148,6 @@ class BaseEmbedder(ABC):
                 if callbacks:
                     await progress_task
 
-                # gert position 0 of all
                 embeddings = [embedding[0] for embedding in result]
                 data = [embedding[1] for embedding in result]
 
