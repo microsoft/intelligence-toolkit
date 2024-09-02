@@ -25,7 +25,6 @@ class OpenAIClient:
     ) -> None:
         self.configuration = configuration or OpenAIConfiguration()
         self._create_openai_client()
-        self.semaphore = asyncio.Semaphore(concurrent_coroutines)
 
     def _create_openai_client(self) -> None:
         """Create a new OpenAI client instance."""
@@ -162,16 +161,13 @@ class OpenAIClient:
     async def generate_embedding_async(
         self, text: list[str], model: str = DEFAULT_EMBEDDING_MODEL
     ) -> list[float]:
-        async with self.semaphore:
-            if self.configuration.api_type == "Azure OpenAI":
-                embedding = self._async_client.embeddings.create(
-                    input=text, model=model
-                )
-            else:
-                embedding = await self._async_client.embeddings.create(
-                    input=text, model=model
-                )
-            return embedding.data[0].embedding
+        if self.configuration.api_type == "Azure OpenAI":
+            embedding = self._async_client.embeddings.create(input=text, model=model)
+        else:
+            embedding = await self._async_client.embeddings.create(
+                input=text, model=model
+            )
+        return embedding.data[0].embedding
 
     async def map_generate_text(
         self,

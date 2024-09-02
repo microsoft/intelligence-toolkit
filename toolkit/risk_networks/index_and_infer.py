@@ -18,7 +18,7 @@ from toolkit.risk_networks.config import (
 )
 
 
-def index_nodes(
+async def index_nodes(
     indexed_node_types: list[str],
     main_graph: nx.Graph,
     callbacks: list[ProgressBatchCallback] | None = None,
@@ -38,7 +38,7 @@ def index_nodes(
 
     if functions_embedder is None:
         functions_embedder = OpenAIEmbedder(openai_configuration, config.cache_name)
-    embeddings = functions_embedder.embed_store_many(
+    embeddings = await functions_embedder.embed_store_many_async(
         texts,
         callbacks,
         save_cache,
@@ -122,7 +122,7 @@ def build_inferred_df(inferred_links_list: defaultdict[set]) -> pl.DataFrame:
     return inferred_df.sort(["text", "similar"])
 
 
-def index_and_infer(
+async def index_and_infer(
     indexed_node_types: list[str],
     main_graph: nx.Graph,
     network_similarity_threshold: float,
@@ -139,7 +139,7 @@ def index_and_infer(
         embedded_texts,
         nearest_text_distances,
         nearest_text_indices,
-    ) = index_nodes(
+    ) = await index_nodes(
         indexed_node_types,
         main_graph,
         callbacks,

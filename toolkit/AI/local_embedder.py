@@ -25,9 +25,6 @@ class LocalEmbedder(BaseEmbedder):
     def _generate_embedding(self, text: str | list[str]) -> list | Any:
         return self.local_client.encode(text).tolist()
 
-    def _generate_embeddings(self, texts: list[str]) -> list | Any:
-        return self._generate_embedding(texts)
-
     async def _generate_embedding_async(self, text: str) -> list | Any:
         await asyncio.sleep(0)
 

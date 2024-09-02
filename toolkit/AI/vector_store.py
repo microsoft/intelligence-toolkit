@@ -6,6 +6,7 @@ from typing import Any
 import duckdb
 import lancedb
 import pyarrow as pa
+from pandas import DataFrame
 
 from toolkit.helpers.constants import CACHE_PATH
 
@@ -32,14 +33,14 @@ class VectorStore:
     def save(self, items: list[Any]) -> None:
         if self.table is None:
             raise ValueError(table_missing_msg)
-        self.table.add(items, mode="append")
+        self.table.add(items)
 
-    def search_one_by_column(self, text: str, column: str) -> list[dict]:
+    def search_by_column(self, texts: list[str], column: str) -> DataFrame:
         if self.table is None:
             raise ValueError(table_missing_msg)
         arrow_data = self.duckdb_data
-        query = "SELECT * FROM arrow_data WHERE {} = ?".format(column)
-        return duckdb.execute(query, [text]).df()
+        query = f"SELECT DISTINCT * FROM arrow_data WHERE {column} IN {tuple(texts)}"
+        return duckdb.execute(query).df()
 
     def search_by_vector(self, vector: list[float], k: int = 10) -> list[dict]:
         if self.table is None:
