@@ -3,7 +3,7 @@
 #
 
 from collections import defaultdict
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import networkx as nx
 import polars as pl
@@ -56,11 +56,11 @@ class TestIndexNodes:
 
     @patch("toolkit.risk_networks.index_and_infer.OpenAIEmbedder")
     async def test_index_nodes_small_samples(self, mock_embedder, overall_graph_small):
-        async def embed_store_many_async(*args) -> list[list[float]]:
+        async def embed_store_many(*args) -> list[list[float]]:
             return [[0.1, 0.3], [0.3, 0.4]]
 
         mock_instance = mock_embedder.return_value
-        mock_instance.embed_store_many_async.side_effect = embed_store_many_async
+        mock_instance.embed_store_many.side_effect = embed_store_many
 
         indexed_node_types = ["TypeA", "TypeB"]
         # Expect ValueError
@@ -72,13 +72,13 @@ class TestIndexNodes:
 
     @patch("toolkit.risk_networks.index_and_infer.OpenAIEmbedder")
     async def test_index_nodes(self, mock_embedder, overall_graph):
-        async def embed_store_many_async(*args) -> list[list[float]]:
+        async def embed_store_many(*args) -> list[list[float]]:
             return [
                 [0.1, 0.3],
             ] * 23
 
         mock_instance = mock_embedder.return_value
-        mock_instance.embed_store_many_async.side_effect = embed_store_many_async
+        mock_instance.embed_store_many.side_effect = embed_store_many
 
         indexed_node_types = ["TypeA", "TypeB", "TypeC"]
         (
@@ -93,6 +93,7 @@ class TestIndexNodes:
             for i in range(1, 31)
             if f"Type{chr(65 + (i % 4))}" in indexed_node_types
         ]
+        expected_texts.sort()
 
         # Check the shape of the distances and indices
         expected_shape = (len(expected_texts), 20)
