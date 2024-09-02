@@ -15,7 +15,7 @@ from app.util import ui_components
 
 from toolkit.attribute_patterns import get_readme as get_intro
 from toolkit.attribute_patterns import prompts
-from toolkit.graph.embedding import generate_embedding
+from toolkit.graph.graph_fusion_encoder_embedding import generate_graph_fusion_encoder_embedding
 from toolkit.attribute_patterns.model import (
     compute_attribute_counts,
     create_time_series_df,
@@ -128,19 +128,23 @@ def create(sv: ap_variables.SessionVariables, workflow):
                         sv.attribute_table_index.value += 1
                         progress_bar.progress(20, text="Preparing graph...")
 
-                        sv.attribute_df.value, time_to_graph = prepare_graph(
+                        sv.attribute_df.value, period_to_graph = prepare_graph(
                             sv.attribute_dynamic_df.value,
-                            False,
                             min_edge_weight,
                             missing_edge_prop
                         )
+                        node_to_label_str = dict(sv.attribute_dynamic_df.value[['Full Attribute', 'Attribute Type']].values)
+                        # convert string labels to int labels
+                        sorted_labels = sorted(set(node_to_label_str.values()))
+                        label_to_code = {v: i for i, v in enumerate(sorted_labels)}
+                        node_to_label = {k: label_to_code[v] for k, v in node_to_label_str.items()}
                         progress_bar.progress(40, text="Generating embedding...")
                         (
-                            sv.attribute_embedding_df.value,
-                            sv.attribute_node_to_centroid.value,
-                            sv.attribute_period_embeddings.value,
-                        ) = generate_embedding(sv.attribute_df.value, time_to_graph, 
-                                               type_val_sep, correlation, diaga, laplacian)
+                            sv.attribute_node_to_period_to_pos.value,
+                            _
+                        ) = generate_graph_fusion_encoder_embedding(period_to_graph, node_to_label, 
+                                               correlation, diaga, laplacian)
+
                         sv.attribute_record_counter.value = RecordCounter(
                             sv.attribute_dynamic_df.value
                         )
@@ -150,8 +154,7 @@ def create(sv: ap_variables.SessionVariables, workflow):
                             sv.attribute_close_pairs.value,
                             sv.attribute_all_pairs.value,
                         ) = detect_patterns(
-                            sv.attribute_node_to_centroid.value,
-                            sv.attribute_period_embeddings.value,
+                            sv.attribute_node_to_period_to_pos.value,
                             sv.attribute_dynamic_df.value,
                             type_val_sep,
                             sv.attribute_min_pattern_count.value,

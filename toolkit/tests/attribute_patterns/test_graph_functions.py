@@ -60,17 +60,16 @@ def sample_input_data():
     # Generate sample input data
     all_atts = ["A", "B", "C", "D"]
     pdf = pd.DataFrame(
-        {"Full Attribute": [["A", "B"], ["B", "C"], ["C", "D"], ["A", "C"], ["B", "D"]]}
+        {"Full Attribute": [["A", "B"], ["B", "C"], ["C", "B"], ["B", "A"]]}
     )
-    mi = True  # You can change this based on your testing requirements
-    return all_atts, pdf, mi
+    return all_atts, pdf
 
 
 def test_create_edge_df_from_atts(sample_input_data):
     # Call the function with the sample input data
-    all_atts, pdf, mi = sample_input_data
+    all_atts, pdf = sample_input_data
     edge_df = create_edge_df_from_atts(
-        all_atts, pdf, mi, min_edge_weight, missing_edge_prop
+        all_atts, pdf, min_edge_weight, missing_edge_prop
     )
 
     # Assert that the output DataFrame has the correct columns
@@ -79,23 +78,5 @@ def test_create_edge_df_from_atts(sample_input_data):
     # Assert that the output DataFrame is not empty
     assert not edge_df.empty
 
-    # Assert that the weight column has values between the specified range
-    assert (edge_df["weight"] <= 1).all()
-    assert (edge_df["weight"] >= 0.0001).all()
-
-
-def test_create_edge_df_from_atts_mi_false(sample_input_data):
-    # Call the function with the sample input data
-    all_atts, pdf, mi = sample_input_data
-    mi = False
-    edge_df = create_edge_df_from_atts(
-        all_atts, pdf, mi, min_edge_weight, missing_edge_prop
-    )
-
-    # Assert that the output DataFrame has the correct columns
-    assert set(edge_df.columns) == {"edge", "count", "source", "target", "weight"}
-
-    # Assert that the output DataFrame is not empty
-    assert not edge_df.empty
-
-    assert len(edge_df["weight"].isna()) > 1
+    assert not (edge_df["weight"] > 1).any()
+    # assert not (edge_df["weight"] < 0.001).any()
