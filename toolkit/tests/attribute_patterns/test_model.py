@@ -226,9 +226,7 @@ def test_prepare_graph(mocker):
             "Full Attribute": ["ab=1", "bc=2", "ab=2", "bc=1"],
         }
     )
-    pdf, time_to_graph = prepare_graph(
-        test_df, False, min_edge_weight, missing_edge_prop
-    )
+    pdf, time_to_graph = prepare_graph(test_df, min_edge_weight, missing_edge_prop)
     assert "Grouping ID" in pdf.columns
     assert pdf["Grouping ID"].str.contains("@").all()
     assert all(

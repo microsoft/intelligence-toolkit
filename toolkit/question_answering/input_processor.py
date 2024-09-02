@@ -1,17 +1,19 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import io
 from collections import defaultdict
-from json import dumps
+from json import dumps, loads
+from enum import Enum
+from datetime import datetime
 
 import networkx as nx
-import numpy as np
 import pdfplumber
 
 import toolkit.question_answering.graph_builder as graph_builder
 from toolkit.AI.text_splitter import TextSplitter
 
+PeriodOption = Enum("Period", "NONE DAY WEEK MONTH QUARTER YEAR")
 
-def process_file_bytes(input_file_bytes, callbacks=[]):
+def process_file_bytes(input_file_bytes, analysis_window_size: PeriodOption, callbacks=[]):
     text_to_chunks = defaultdict(list)
     splitter = TextSplitter()
     for fx, file_name in enumerate(input_file_bytes.keys()):
@@ -26,76 +28,136 @@ def process_file_bytes(input_file_bytes, callbacks=[]):
                 page_text = pdf_reader.pages[px].extract_text()
                 page_texts.append(page_text)
             doc_text = " ".join(page_texts)
+            text_chunks = splitter.split(doc_text)
+        elif file_name.endswith(".json"):
+            text_chunks = process_json_text(loads(bytes.decode("utf-8")), analysis_window_size)
         else:
             doc_text = bytes.decode("utf-8")
-        text_chunks = splitter.split(doc_text)
-        for cx, chunk in enumerate(text_chunks):
-            text_to_chunks[file_name].append(
-                dumps(
-                    {"title": file_name, "chunk_id": cx + 1, "text_chunk": chunk},
-                    indent=2,
-                )
-            )
+            text_chunks = splitter.split(doc_text)
+
+        text_to_chunks[file_name] = text_chunks
     return text_to_chunks
 
+def process_json_text(text_json, period: PeriodOption):
+    def convert_to_year_quarter(datetm):
+        month = datetm.month
+        quarter = (month - 1) // 3 + 1
+        return f"{datetm.year}-Q{quarter}"
 
-def process_json_texts(text_jsons):
-    """
-    Texts are represented as JSON objects with title, text, and (optional) timestamp and metadata fields
-    """
-    text_to_chunks = defaultdict(list)
+    chunks = []
     splitter = TextSplitter()
-    for text_json in text_jsons:
-        text_chunks = splitter.split(text_json["text"])
-        for cx, chunk in enumerate(text_chunks):
-            chunk_json = {"title": text_json["title"]}
-            if "timestamp" in text_json:
-                chunk_json["timestamp"] = text_json["timestamp"]
-            if "metadata" in text_json:
-                chunk_json["metadata"] = text_json["metadata"]
-            chunk_json["chunk_id"] = cx + 1
-            chunk_json["text_chunk"] = chunk
-            text_to_chunks[text_json["title"]].append(dumps(chunk_json, indent=2))
-    return text_to_chunks
+    text_chunks = splitter.split(text_json["text"])
+    for cx, chunk in enumerate(text_chunks):
+        chunk_json = {"title": text_json["title"]}
+        if "timestamp" in text_json and period != PeriodOption.NONE:
+            timestamp = text_json["timestamp"]
+            chunk_json["timestamp"] = timestamp
+            period_str = ''
+            # Round timestamp to the enclosing period
+            datetm = datetime.fromisoformat(timestamp)
+            if period == PeriodOption.DAY:
+                period_str = datetm.strftime("%Y-%m-%d")
+            elif period == PeriodOption.WEEK:
+                period_str = datetm.strftime("%Y-%W")
+            elif period == PeriodOption.MONTH:
+                period_str = datetm.strftime("%Y-%m")
+            elif period == PeriodOption.QUARTER:
+                period_str = convert_to_year_quarter(datetm)
+            elif period == PeriodOption.YEAR:
+                period_str = str(datetm.year)
+            chunk_json["period"] = period_str
+        if "metadata" in text_json:
+            chunk_json["metadata"] = text_json["metadata"]
+        chunk_json["chunk_id"] = cx + 1
+        chunk_json["text_chunk"] = chunk
+        chunks.append(dumps(chunk_json, indent=2))
+    return chunks
 
+def process_json_texts(file_to_text_jsons, period: PeriodOption):
+    file_to_chunks = {}
+    for file, text_json in file_to_text_jsons.items():
+        file_to_chunks[file] = process_json_text(text_json, period)
+    return file_to_chunks
 
 def process_chunks(
-    text_to_chunks, embedder, embedding_cache, max_cluster_size, callbacks=[]
+    file_to_chunks, max_cluster_size, callbacks=[]
 ):
-    concept_graph = nx.Graph()
+    period_concept_graphs = defaultdict(nx.Graph)
+    period_concept_graphs["ALL"] = nx.Graph()
+    node_period_counts = defaultdict(lambda: defaultdict(int))
+    edge_period_counts = defaultdict(lambda: defaultdict(int))
     previous_chunk = {}
     next_chunk = {}
-    concept_to_chunks = defaultdict(list)
-    chunk_to_concepts = defaultdict(list)
-    text_to_vectors = defaultdict(list)
-    file_chunks = []
-    for file, chunks in text_to_chunks.items():
-        for cx, chunk in enumerate(chunks):
-            file_chunks.append((file, chunk))
+    concept_to_cids = defaultdict(list)
+    cid_to_concepts = defaultdict(list)
+    period_to_cids = defaultdict(list)
+    file_cids = []
+    cid_to_text = {}
+    text_to_cid = {}
+    chunk_id = 0
+    file_to_cids = defaultdict(list)
+    for file, chunks in file_to_chunks.items():
+        for chunk in chunks:
+            cid_to_text[chunk_id] = chunk
+            text_to_cid[chunk] = chunk_id
+            file_to_cids[file].append(chunk_id)
+            chunk_id += 1
+    for file, cids in file_to_cids.items():
+        for cx, cid in enumerate(cids):
+            file_cids.append((file, cid))
             if cx > 0:
-                previous_chunk[chunk] = chunks[cx - 1]
+                previous_chunk[cid] = cid-1
             if cx < len(chunks) - 1:
-                next_chunk[chunk] = chunks[cx + 1]
-    for cx, (file, chunk) in enumerate(file_chunks):
+                next_chunk[cid] = cid+1
+    for cx, (file, cid) in enumerate(file_cids):
         for cb in callbacks:
-            cb.on_batch_change(cx + 1, len(file_chunks))
-        formatted_chunk = chunk  # .replace("\n", " ")
-        chunk_vec = embedder.embed_store_one(formatted_chunk, embedding_cache)
-        text_to_vectors[file].append(np.array(chunk_vec))
-        graph_builder.update_concept_graph(
-            concept_graph, chunk, concept_to_chunks, chunk_to_concepts
+            cb.on_batch_change(cx + 1, len(file_cids))
+        period = None
+        chunk = cid_to_text[cid]
+        try:
+            chunk_json = loads(chunk)
+            if 'period' in chunk_json:
+                period = chunk_json['period']
+        except Exception as e:
+            print(e)
+            pass
+        periods = ['ALL']
+        period_to_cids["ALL"].append(cid)
+        if period is not None:
+            periods.append(period)
+            period_to_cids[period].append(cid)
+        graph_builder.update_concept_graph_edges(
+            node_period_counts, edge_period_counts, periods, chunk, cid, concept_to_cids, cid_to_concepts
         )
-    graph_builder.clean_concept_graph(concept_graph, 2, 1)
-    community_to_concepts, concept_to_community = (
-        graph_builder.detect_concept_communities(concept_graph, max_cluster_size)
+        
+    for node, period_counts in node_period_counts.items():
+        for period, count in period_counts.items():
+            period_concept_graphs[period].add_node(node, count=count)
+    for edge, period_counts in edge_period_counts.items():
+        for period, count in period_counts.items():
+            period_concept_graphs[period].add_edge(edge[0], edge[1], weight=count)
+
+    (
+        community_to_concepts,
+        concept_to_community
+    ) = graph_builder.prepare_concept_graphs(
+        period_concept_graphs,
+        max_cluster_size=max_cluster_size,
+        min_edge_weight=2,
+        min_node_degree=1
     )
+
     return (
-        text_to_vectors,
-        concept_graph,
+        cid_to_text,
+        text_to_cid,
+        period_concept_graphs,
         community_to_concepts,
         concept_to_community,
-        concept_to_chunks,
-        chunk_to_concepts,
+        concept_to_cids,
+        cid_to_concepts,
         previous_chunk,
         next_chunk,
+        period_to_cids,
+        node_period_counts,
+        edge_period_counts
     )
