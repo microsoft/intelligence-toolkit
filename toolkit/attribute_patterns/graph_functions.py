@@ -8,13 +8,16 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
+
 def convert_edge_df_to_graph(edge_df):
     G = nx.from_pandas_edgelist(edge_df, "source", "target", "weight")
     # get largest connected component
     lcc = max(nx.connected_components(G), key=len)
     return G, lcc
 
-def create_edge_df_from_atts(all_atts, pdf, min_edge_weight, missing_edge_prop):
+def create_edge_df_from_atts(
+    all_atts, pdf, min_edge_weight, missing_edge_prop
+) -> pd.DataFrame:
     edge_counter = Counter()
     att_counter = Counter()
     for _, row in pdf.iterrows():
