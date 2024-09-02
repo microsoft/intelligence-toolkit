@@ -78,9 +78,11 @@ class TestIndexNodes:
         ] * 23
 
         indexed_node_types = ["TypeA", "TypeB", "TypeC"]
-        embedded_texts, nearest_text_distances, nearest_text_indices = index_nodes(
-            indexed_node_types, overall_graph
-        )
+        (
+            embedded_texts,
+            nearest_text_distances,
+            nearest_text_indices,
+        ) = index_nodes(indexed_node_types, overall_graph)
 
         # Check if the embedded texts are correct
         expected_texts = [

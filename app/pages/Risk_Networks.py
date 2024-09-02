@@ -4,6 +4,7 @@
 #
 
 import streamlit as st
+
 import app.workflows.risk_networks.variables as rn_variables
 import app.workflows.risk_networks.workflow
 from app.components.app_loader import load_multipage_app
@@ -12,7 +13,7 @@ from app.util.helper_fn import app_in_dev_mode
 workflow = "risk_networks"
 
 
-def main():
+def main() -> None:
     st.set_page_config(
         layout="wide",
         initial_sidebar_state="collapsed",

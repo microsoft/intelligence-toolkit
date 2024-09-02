@@ -9,15 +9,14 @@ from collections import defaultdict
 import pandas as pd
 import polars as pl
 import streamlit as st
+from sklearn.neighbors import NearestNeighbors
+
 import app.util.session_variables as home_vars
 import app.workflows.record_matching.functions as functions
 import app.workflows.record_matching.prompts as prompts
 import app.workflows.record_matching.variables as rm_variables
-from sklearn.neighbors import NearestNeighbors
 from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
-
-from toolkit.AI import classes
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 
