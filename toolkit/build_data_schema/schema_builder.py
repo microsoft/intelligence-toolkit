@@ -1,8 +1,32 @@
 import jsonschema
 import json
 from enum import Enum
+import pandas as pd
 
 ValidationResult = Enum('ValidationResult', 'VALID SCHEMA_INVALID OBJECT_INVALID')
+
+class StringFormat(Enum):
+    DATE = 'date'
+    TIME = 'time'
+    DATE_TIME = 'date-time'
+    DURATION = 'duration'
+    URI = 'uri'
+    EMAIL = 'email'
+    IDN_EMAIL = 'idn-email'
+    HOSTNAME = 'hostname'
+    IDN_HOSTNAME = 'idn-hostname'
+    IPV4 = 'ipv4'
+    IPV6 = 'ipv6'
+    REGEX = 'regex'
+    UUID = 'uuid'
+    JSON_POINTER = 'json-pointer'
+    RELATIVE_JSON_POINTER = 'relative-json-pointer'
+    IRI = 'iri'
+    IRI_REFERENCE = 'iri-reference'
+    URI_REFERENCE = 'uri-reference'
+    URI_TEMPLATE = 'uri-template'
+    URI_TEMPLATE_EXPRESSION = 'uri-template-expression'
+    URI_TEMPLATE_FRAGMENT = 'uri-template-fragment'
 
 class FieldType(Enum):
     OBJECT = 'object'
@@ -56,7 +80,20 @@ def get_subobject(json_obj, field_labels):
         current_obj = current_obj['properties']
     return current_obj
 
-def create_schema(
+def get_required_list(json_obj, field_labels):
+    current_obj = json_obj
+    for label in field_labels:
+        if label in current_obj:
+            current_obj = current_obj[label]
+        elif 'properties' in current_obj and label in current_obj['properties']:
+            current_obj = current_obj['properties'][label]
+        elif 'items' in current_obj and 'properties' in current_obj['items'] and label in current_obj['items']['properties']:
+            current_obj = current_obj['items']['properties'][label]
+    if 'items' in current_obj:
+        current_obj = current_obj['items']['properties']
+    return current_obj['required']
+
+def create_boilerplate_schema(
         schema_field="http://json-schema.org/draft/2020-12/schema",
         id_field="https://yourdomain.com/example.schema.json",
         title_field="Example Schema",
@@ -67,6 +104,10 @@ def create_schema(
         "$id": id_field,
         "title": title_field,
         "description": description_field,
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": False
     }
     return schema
 
@@ -74,10 +115,11 @@ def add_object_field(
         schema,
         nesting=[],
         field_label="object",
-        field_description="An object field"
+        field_description="An object field",
+        required=True
     ):
     use_schema = get_subobject(schema, nesting)
-    use_field_label = _get_unique_field_label(use_schema, field_label)
+    use_field_label = _get_unique_field_label(schema, field_label)
     use_schema[use_field_label] = {
         "type": "object",
         "description": field_description,
@@ -85,6 +127,7 @@ def add_object_field(
         "required": [],
         "additionalProperties": False,
     }
+    set_required_field_status(schema, nesting, use_field_label, required)
     return use_field_label
 
 def add_array_field(
@@ -93,7 +136,8 @@ def add_array_field(
         field_label="",
         field_description="",
         item_description="",
-        item_type: ArrayFieldType=ArrayFieldType.STRING
+        item_type: ArrayFieldType=ArrayFieldType.STRING,
+        required=True
     ):
     use_schema = get_subobject(schema, nesting)
     if field_label == "":
@@ -102,7 +146,7 @@ def add_array_field(
         field_description = f"An array of {item_type.value}s"
     if item_description == "":
         item_description = f"A {item_type.value} list item" if item_type != ArrayFieldType.OBJECT else "An object list item"
-    use_field_label = _get_unique_field_label(use_schema, field_label)
+    use_field_label = _get_unique_field_label(schema, field_label)
     if item_type == ArrayFieldType.OBJECT:
         use_schema[use_field_label] = {
             "type": "array",
@@ -123,25 +167,145 @@ def add_array_field(
                 "type": item_type.value
             }
         }
+    set_required_field_status(schema, nesting, use_field_label, required)
     return use_field_label
+
+def set_string_min_length(string_field, min_length):
+    if min_length is None:
+        string_field.pop('minLength', None)
+    else:
+        string_field['minLength'] = min_length
+
+def set_string_max_length(string_field, max_length):
+    if max_length is None:
+        string_field.pop('maxLength', None)
+    else:
+        string_field['maxLength'] = max_length
+
+def set_string_pattern(string_field, pattern):
+    if pattern is None:
+        string_field.pop('pattern', None)
+    else:
+        string_field['pattern'] = pattern
+
+def set_string_format(string_field, string_format: StringFormat | None):
+    if string_format is None:
+        string_field.pop('format', None)
+    else:
+        string_field['format'] = string_format.value
+
+def clear_string_constraints(string_field):
+    string_field.pop('minLength', None)
+    string_field.pop('maxLength', None)
+    string_field.pop('pattern', None)
+    string_field.pop('format', None)
+
+def set_number_minimum(number_field, minimum, exclusive):
+    if minimum is None:
+        if exclusive:
+            number_field.pop('exclusiveMinimum', None)
+        else:
+            number_field.pop('minimum', None)
+    else:
+        if exclusive:
+            number_field['exclusiveMinimum'] = minimum
+            number_field.pop('minimum', None)
+        else:
+            number_field['minimum'] = minimum
+            number_field.pop('exclusiveMinimum', None)
+
+def set_number_maximum(number_field, maximum, exclusive):
+    if maximum is None:
+        if exclusive:
+            number_field.pop('exclusiveMaximum', None)
+        else:
+            number_field.pop('maximum', None)
+    else:
+        if exclusive:
+            number_field['exclusiveMaximum'] = maximum
+            number_field.pop('maximum', None)
+        else:
+            number_field['maximum'] = maximum
+            number_field.pop('exclusiveMaximum', None)
+
+def set_number_multiple_of(number_field, multiple_of):
+    if multiple_of is None:
+        number_field.pop('multipleOf', None)
+    else:
+        number_field['multipleOf'] = multiple_of
+
+def clear_number_constraints(number_field):
+    number_field.pop('minimum', None)
+    number_field.pop('maximum', None)
+    number_field.pop('exclusiveMinimum', None)
+    number_field.pop('exclusiveMaximum', None)
+    number_field.pop('multipleOf', None)
+
+def set_required_field_status(schema, nesting, field_label, required):
+    print(f'Set required field status: {field_label} {required}')
+    reqs = get_required_list(schema, nesting)
+    if required and field_label not in reqs:
+        print(f'Adding {field_label} to required list')
+        reqs.append(field_label)
+    elif not required and field_label in reqs:
+        print(f'Removing {field_label} from required list')
+        reqs.remove(field_label)
+    else:
+        print('No change to required list')
+
+
+def set_enum_field_status(schema, nesting, field_label, constrained):
+    obj = get_subobject(schema, nesting)
+    typ = obj[field_label]['type']
+    changed = False
+    if typ != 'array':
+        if constrained and 'enum' not in obj[field_label]:
+            changed = True
+            if typ == 'string':
+                obj[field_label]['enum'] = ["A", "B", "C"]
+            elif typ == 'number':
+                obj[field_label]['enum'] = [1, 2, 3]
+            elif typ == 'boolean':
+                obj[field_label]['enum'] = [True, False]
+            else:
+                changed = False
+        elif not constrained and 'enum' in obj[field_label]:
+            obj[field_label].pop('enum')
+            changed = True
+    else:
+        if constrained and 'enum' not in obj[field_label]['items']:
+            changed = True
+            item_typ = obj[field_label]['items']['type']
+            if item_typ == 'string':
+                obj[field_label]['items']['enum'] = ["A", "B", "C"]
+            elif item_typ == 'number':
+                obj[field_label]['items']['enum'] = [1, 2, 3]
+            else:
+                changed = False
+        elif not constrained and 'enum' in obj[field_label]['items']:
+            obj[field_label]['items'].pop('enum')
+            changed = True
+    return changed
 
 def add_primitive_field(
         schema,
         nesting=[],
         field_label="",
         field_description="",
-        field_type: PrimitiveFieldType=PrimitiveFieldType.STRING
+        field_type: PrimitiveFieldType=PrimitiveFieldType.STRING,
+        required=True
     ):
     use_schema = get_subobject(schema, nesting)
     if field_label == "":
         field_label = field_type.value
     if field_description == "":
         field_description = f"A {field_type.value} field"
-    use_field_label = _get_unique_field_label(use_schema, field_label)
+    use_field_label = _get_unique_field_label(schema, field_label)
     use_schema[use_field_label] = {
         "type": field_type.value,
         "description": field_description
     }
+    set_required_field_status(schema, nesting, use_field_label, required)
     return use_field_label
 
 def generate_object_from_schema(json_schema):
@@ -163,23 +327,62 @@ def generate_object_from_schema(json_schema):
             return {k: generate_template(v) for k, v in schema['properties'].items()}
         elif schema['type'] == 'array':
             if schema['items']['type'] == 'string':
-                return []
+                if 'enum' in schema['items'] and len(schema['items'] ['enum']) > 0:
+                    return [schema['items'] ['enum'][0]]
+                else:
+                    return []
             elif schema['items']['type'] == 'number':
-                return []
+                if 'enum' in schema['items']  and len(schema['items'] ['enum']) > 0:
+                    return [schema['items'] ['enum'][0]]
+                else:
+                    return []
             elif schema['items']['type'] == 'boolean':
                 return []
             else:
                 return [generate_template(schema['items'])]
         elif schema['type'] == 'string':
-            return ''
+            if 'enum' in schema and len(schema['enum']) > 0:
+                return schema['enum'][0]
+            else:
+                return ''
         elif schema['type'] == 'number':
-            return 0
+            if 'enum' in schema and len(schema['enum']) > 0:
+                return schema['enum'][0]
+            else:
+                return _get_constrained_value(schema)
         elif schema['type'] == 'boolean':
-            return False
+            if 'enum' in schema and len(schema['enum']) > 0:
+                return schema['enum'][0]
+            else:
+                return False
         else:
             return None
 
     return generate_template(json_schema)
+
+def convert_to_dataframe(json_obj):
+    df = pd.json_normalize(json_obj)
+    return df
+
+def _get_constrained_value(schema):
+    if 'minimum' in schema:
+        if 'multipleOf' in schema:
+            min = schema['minimum']
+            mult = schema['multipleOf']
+            # find the smallest multiple of mult that is greater than or equal to min
+            return min + mult - (min % mult)
+        else:
+            return schema['minimum']
+    elif 'maximum' in schema:
+        if 'multipleOf' in schema:
+            max = schema['maximum']
+            mult = schema['multipleOf']
+            # find the largest multiple of mult that is less than or equal to max
+            return max - (max % mult)
+        else:
+            return schema['maximum']
+    else:
+        return 0
 
 def evaluate_object_and_schema(obj, schema):
     try:
@@ -196,7 +399,7 @@ def evaluate_schema(schema):
 
 def test():
     print('Creating schema')
-    schema = create_schema()
+    schema = create_boilerplate_schema()
     print(evaluate_schema(schema))
 
     print('Adding first string field')

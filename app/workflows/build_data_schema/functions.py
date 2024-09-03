@@ -1,0 +1,227 @@
+import streamlit as st
+
+import toolkit.build_data_schema.schema_builder as schema_builder
+
+type_options = ['object', 'string', 'number', 'boolean', 'object array', 'string array', 'number array', 'boolean array']
+
+def generate_form_from_json_schema(global_schema, local_schema, nesting=[]):
+    if type(local_schema) != dict:
+        return
+    for key, value in list(local_schema.items()):
+        prefix = '.'.join(nesting)
+        key_with_prefix = f'{prefix}.{key}' if prefix else key
+        if type(value) == dict:
+            if 'type' in value and 'description' in value:
+                st.divider()
+                c1, c2, c3, c4 = st.columns([5, 3, 3, 3])
+                with c1:
+                    new_label = st.text_input(f'Level {len(nesting)} {local_schema[key]["type"]} field', key=f'{key_with_prefix}_label', value=key)
+                    if new_label != key:
+                        local_schema[new_label] = local_schema.pop(key)
+                        st.rerun()
+                with c2:
+                    old_req = key in schema_builder.get_required_list(global_schema, nesting)
+                    req = st.checkbox('Required?', key=f'{key_with_prefix}_required', value=old_req)
+
+                    if req != old_req:
+                        print(f'Changing required status of {key} to {req}')
+                        schema_builder.set_required_field_status(global_schema, nesting, new_label, req)
+                        st.rerun()
+                with c3:
+                    con = st.checkbox('Enum?', key=f'{key_with_prefix}_constrained', 
+                                      disabled=value['type'] in ['boolean', 'object'] or value['type'] == 'array' and value['items']['type'] in ['boolean', 'object'])
+                    changed = schema_builder.set_enum_field_status(global_schema, nesting, new_label, con)
+                    if changed:
+                        st.rerun()
+                with c4:
+                    if st.button('Delete', use_container_width=True, key=f'{key_with_prefix}_delete'):
+                        local_schema.pop(key)
+                        st.rerun()
+                
+
+                new_description = st.text_input('Field description', key=f'{key_with_prefix}_description', value=value['description'])
+                if new_description != value['description']:
+                    local_schema[new_label]['description'] = new_description
+                    st.rerun()
+
+                if 'enum' in value:
+                    create_enum_ui(local_schema, key, key_with_prefix, value)
+                elif value['type'] == 'array' and 'enum' in value['items']:
+                    create_enum_ui(local_schema, key, key_with_prefix, value['items'])
+                else:
+                    if value['type'] == 'number':
+                        create_number_ui(local_schema[key], key_with_prefix, value)
+                    elif value['type'] == "string":
+                        create_string_ui(local_schema[key], key_with_prefix, value)
+                    elif value['type'] == 'array':
+                        if value['items']['type'] == 'number':
+                            create_number_ui(local_schema[key]['items'], key_with_prefix, value['items'])
+                        elif value['items']['type'] == 'string':
+                            create_string_ui(local_schema[key]['items'], key_with_prefix, value['items'])
+                if value['type'] == 'object':
+                    generate_form_from_json_schema(global_schema, value['properties'], nesting+[key])
+            elif key == 'properties' and len(nesting)==0:
+                generate_form_from_json_schema(global_schema, value, nesting)
+                return
+        else:
+            if key != 'type':
+                new_value = st.text_input(f'Schema {key} field', key=f'{key_with_prefix}_label', value=value)
+                if new_value != value:
+                    local_schema[key] = new_value
+                    st.rerun()
+    st.divider()
+    edit_schema_ui(global_schema, nesting)
+
+def create_number_ui(number_field, key_with_prefix, value):
+    c1, c2, c3, c4, c5, c6 = st.columns(6)
+    with c1:
+        min_value = st.number_input('Min', key=f'{key_with_prefix}_min', value=value.get('minimum', None))
+        if min_value != value.get('minimum', None):
+            schema_builder.set_number_minimum(number_field, min_value, exclusive=False)
+            st.rerun()
+    with c2:
+        max_value = st.number_input('Max', key=f'{key_with_prefix}_max', value=value.get('maximum', None))
+        if max_value != value.get('maximum', None):
+            schema_builder.set_number_maximum(number_field, max_value, exclusive=False)
+            st.rerun()
+    with c3:
+        exclusive_min = st.number_input('Exclusive min', key=f'{key_with_prefix}_exclusive_min', value=value.get('exclusiveMinimum', None))
+        if exclusive_min != value.get('exclusiveMinimum', None):
+            schema_builder.set_number_minimum(number_field, exclusive_min, exclusive=True)
+            st.rerun()
+    with c4:
+        exclusive_max = st.number_input('Exclusive max', key=f'{key_with_prefix}_exclusive_max', value=value.get('exclusiveMaximum', None))
+        if exclusive_max != value.get('exclusiveMaximum', None):
+            schema_builder.set_number_maximum(number_field, exclusive_max, exclusive=True)
+            st.rerun()
+    with c5:
+        multiple_of = st.number_input('Multiple of', key=f'{key_with_prefix}_multiple_of', value=value.get('multipleOf', None))
+        if multiple_of != value.get('multipleOf', None):
+            schema_builder.set_number_multiple_of(number_field, multiple_of)
+            st.rerun()
+    with c6:
+        if st.button('Clear', key=f'{key_with_prefix}_clear', use_container_width=True):
+            schema_builder.clear_number_constraints(number_field)
+            st.rerun()
+
+def create_string_ui(string_field, key_with_prefix, value):
+    c1, c2, c3, c4, c5 = st.columns(5)
+    with c1:
+        min_value = st.number_input('Min length', key=f'{key_with_prefix}_min', value=value.get('minLength', None))
+        if min_value != value.get('minLength', None):
+            schema_builder.set_string_min_length(string_field, min_value, exclusive=False)
+            st.rerun()
+    with c2:
+        max_value = st.number_input('Max length', key=f'{key_with_prefix}_max', value=value.get('maxLength', None))
+        if max_value != value.get('maxLength', None):
+            schema_builder.set_string_max_length(string_field, max_value, exclusive=False)
+            st.rerun()
+    with c3:
+        pattern = st.text_input('Pattern', key=f'{key_with_prefix}_pattern', value=value.get('pattern', ''))
+        if pattern != value.get('pattern', ''):
+            schema_builder.set_string_pattern(string_field, pattern)
+            st.rerun()
+    with c4:
+        selected_index = 0 if 'format' not in value else [v.value for v in schema_builder.StringFormat].index(value['format'])+1
+        format = st.selectbox('Format', key=f'{key_with_prefix}_format', options=['']+[v.value for v in schema_builder.StringFormat], index=selected_index)
+        if format != value.get('format', ''):
+            schema_builder.set_string_format(string_field, schema_builder.StringFormat._value2member_map_[format])
+            st.rerun()
+    with c5:
+        if st.button('Clear', key=f'{key_with_prefix}_clear', use_container_width=True):
+            schema_builder.clear_string_constraints(string_field)
+            st.rerun()
+
+def create_enum_ui(local_schema, key, key_with_prefix, value):
+    # Create a text input and delete button in a single row for each enum value
+    for i, enum_value in enumerate(value['enum']):
+        c1, c2 = st.columns([4, 1])
+        with c1:
+            new_enum_value = st.text_input(f'Enum value {i}', key=f'{key_with_prefix}_enum_{i}', value=enum_value)
+            if new_enum_value != str(enum_value):
+                if value['type'] == 'string':
+                    local_schema[key]['enum'][i] = new_enum_value
+                    st.rerun()
+                elif value['type'] == 'number':
+                    if new_enum_value.isnumeric():
+                        if '.' in new_enum_value:
+                            local_schema[key]['enum'][i] = float(new_enum_value)
+                        else:
+                            local_schema[key]['enum'][i] = int(new_enum_value)
+                        st.rerun()
+                    else:
+                        st.warning('Enum value must be a number')
+                
+        with c2:
+            if st.button('Delete', key=f'{key_with_prefix}_enum_{i}_delete',
+                         disabled=('enum' in local_schema[key] and len(local_schema[key]['enum'])==1)) or \
+                            ('items' in local_schema[key] and 'enum' in local_schema[key]['items'] and len(local_schema[key]['items']['enum'])==1):
+                print(local_schema[key])
+                if 'items' in local_schema[key]:
+                    print('pop')
+                    local_schema[key]['items']['enum'].pop(i)
+                else:
+                    local_schema[key]['enum'].pop(i)
+                print(local_schema[key])
+                st.rerun()
+    # Add a button to add a new enum value
+    if st.button('Add enum value', key=f'{key_with_prefix}_add_enum'):
+        local_schema[key]['enum'].append('')
+        st.rerun()
+
+def edit_schema_ui(global_schema, nesting):
+    key_with_prefix = '.'.join(nesting)
+    title = f'Add field to {nesting[-1]}' if nesting else 'Add top-level field'
+    st.markdown(title)
+    c1, c2, c3, c4, c5, c6, c7, c8 = st.columns(8)
+    with c1:
+        if st.button('str', key=f'{key_with_prefix}_add_string', use_container_width=True):
+            add_type_field(global_schema, nesting, 'string')
+            st.rerun()
+    with c2:
+        if st.button('num', key=f'{key_with_prefix}_add_number', use_container_width=True):
+            add_type_field(global_schema, nesting, 'number')
+            st.rerun()
+    with c3:
+        if st.button('bool', key=f'{key_with_prefix}_add_boolean', use_container_width=True):
+            add_type_field(global_schema, nesting, 'boolean')
+            st.rerun()
+    with c4:
+        if st.button('obj', key=f'{key_with_prefix}_add_object', use_container_width=True):
+            add_type_field(global_schema, nesting, 'object')
+            st.rerun()
+    with c5:
+        if st.button('str[]', key=f'{key_with_prefix}_add_string_array', use_container_width=True):
+            add_type_field(global_schema, nesting, 'string array')
+            st.rerun()
+    with c6:
+        if st.button('num[]', key=f'{key_with_prefix}_add_number_array', use_container_width=True):
+            add_type_field(global_schema, nesting, 'number array')
+            st.rerun()
+    with c7:
+        if st.button('bool[]', key=f'{key_with_prefix}_add_boolean_array', use_container_width=True):
+            add_type_field(global_schema, nesting, 'boolean array')
+            st.rerun()
+    with c8:
+        if st.button('obj[]', key=f'{key_with_prefix}_add_object_array', use_container_width=True):
+            add_type_field(global_schema, nesting, 'object array')
+            st.rerun()
+
+
+def add_type_field(global_schema, nesting, to_add):
+    if to_add == 'object':
+        schema_builder.add_object_field(global_schema, nesting)
+    elif to_add == 'string':
+        schema_builder.add_primitive_field(global_schema, nesting, field_type=schema_builder.PrimitiveFieldType.STRING)
+    elif to_add == 'number':
+        schema_builder.add_primitive_field(global_schema, nesting, field_type=schema_builder.PrimitiveFieldType.NUMBER)
+    elif to_add == 'boolean':
+        schema_builder.add_primitive_field(global_schema, nesting, field_type=schema_builder.PrimitiveFieldType.BOOLEAN)
+    elif to_add == 'object array':
+        schema_builder.add_array_field(global_schema, nesting, item_type=schema_builder.ArrayFieldType.OBJECT)
+    elif to_add == 'string array':
+        schema_builder.add_array_field(global_schema, nesting, item_type=schema_builder.ArrayFieldType.STRING)
+    elif to_add == 'number array':
+        schema_builder.add_array_field(global_schema, nesting, item_type=schema_builder.ArrayFieldType.NUMBER)
+    elif to_add == 'boolean array':
+        schema_builder.add_array_field(global_schema, nesting, item_type=schema_builder.ArrayFieldType.BOOLEAN)
