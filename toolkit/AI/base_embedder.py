@@ -89,7 +89,7 @@ class BaseEmbedder(ABC):
     def embed_store_one(self, text: str, cache_data=True) -> Any | list[float]:
         text_hashed = hash_text(text)
         existing_embedding = (
-            self.vector_store.search_one_by_column(text_hashed, "hash")
+            self.vector_store.search_by_column(text_hashed, "hash")
             if cache_data
             else []
         )

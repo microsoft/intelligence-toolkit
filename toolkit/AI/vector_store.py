@@ -35,9 +35,11 @@ class VectorStore:
             raise ValueError(table_missing_msg)
         self.table.add(items)
 
-    def search_by_column(self, texts: list[str], column: str) -> DataFrame:
+    def search_by_column(self, texts: list[str] | str, column: str) -> DataFrame:
         if self.table is None:
             raise ValueError(table_missing_msg)
+        if isinstance(texts, str):
+            texts = [texts]
         arrow_data = self.duckdb_data
         query = f"SELECT DISTINCT * FROM arrow_data WHERE {column} IN {tuple(texts)}"
         return duckdb.execute(query).df()
