@@ -3,6 +3,9 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 
+import asyncio
+
+
 import streamlit as st
 
 import app.workflows.risk_networks.variables as rn_variables
@@ -13,7 +16,7 @@ from app.util.helper_fn import app_in_dev_mode
 workflow = "risk_networks"
 
 
-def main() -> None:
+async def main() -> None:
     st.set_page_config(
         layout="wide",
         initial_sidebar_state="collapsed",
@@ -25,7 +28,7 @@ def main() -> None:
     load_multipage_app(sv)
 
     try:
-        app.workflows.risk_networks.workflow.create(sv, workflow)
+        await app.workflows.risk_networks.workflow.create(sv, workflow)
     except Exception as e:
         if app_in_dev_mode():
             st.exception(e)
@@ -34,4 +37,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

@@ -47,7 +47,7 @@ from toolkit.risk_networks.prepare_model import (
 from toolkit.risk_networks.protected_mode import protect_data
 
 
-def create(sv: rn_variables.SessionVariables, workflow=None):
+async def create(sv: rn_variables.SessionVariables, workflow=None):
     sv_home = SessionVariables("home")
 
     intro_tab, uploader_tab, process_tab, view_tab, report_tab = st.tabs(
@@ -288,7 +288,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 pb = st.progress(0, "Embedding text batches...")
 
                 def on_embedding_batch_change(
-                    current, total, message="In progress...."
+                    current=0, total=0, message="In progress...."
                 ):
                     pb.progress(
                         (current) / total,
@@ -304,7 +304,7 @@ def create(sv: rn_variables.SessionVariables, workflow=None):
                 (
                     sv.network_inferred_links.value,
                     sv.network_embedded_texts_count.value,
-                ) = index_and_infer(
+                ) = await index_and_infer(
                     network_indexed_node_types,
                     sv.network_overall_graph.value,
                     network_similarity_threshold,
