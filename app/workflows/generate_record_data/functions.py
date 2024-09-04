@@ -29,8 +29,16 @@ def generate_form_from_json_schema(global_schema, field_location=None, nesting=[
                         print(f'Changing required status of {key} to {req}')
                         schema_builder.set_required_field_status(global_schema, nesting, new_label, req)
                         st.rerun()
-                    con = st.checkbox('Enum?', key=f'{key_with_prefix}_constrained', 
-                                      disabled=value['type'] in ['boolean', 'object'] or value['type'] == 'array' and value['items']['type'] in ['boolean', 'object'])
+                    con = st.checkbox(
+                        "Enum?",
+                        key=f"{key_with_prefix}_constrained",
+                        value="enum" in value
+                        or value["type"] == "array"
+                        and "enum" in value["items"],
+                        disabled=value["type"] in ["boolean", "object"]
+                        or value["type"] == "array"
+                        and value["items"]["type"] in ["boolean", "object"],
+                    )
                     changed = schema_builder.set_enum_field_status(global_schema, nesting, new_label, con)
                     if changed:
                         st.rerun()
