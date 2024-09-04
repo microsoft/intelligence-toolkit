@@ -6,6 +6,7 @@ import toolkit.AI.utils as utils
 import toolkit.question_answering.helper_functions as helper_functions
 import toolkit.question_answering.prompts as prompts
 
+
 def extract_chunk_references(text):
     source_spans = re.finditer(r'\[source: (.+)\]', text, re.MULTILINE)
     references = set()
@@ -93,8 +94,12 @@ def generate_answers(
         )
         selected_metadata = set()
         for c in selected_chunks:
-            c_json = loads(c)
-            selected_metadata.add(f'{c_json["title"]} ({c_json["chunk_id"]})')
+            try:
+                c_json = loads(c)
+                selected_metadata.add(f'{c_json["title"]} ({c_json["chunk_id"]})')
+            except:
+                selected_metadata.add("Unknown (Unknown)")
+
         used_references = [r for r in references if r in selected_metadata]
         answer_history.append((len(used_references), len(selected_chunks)))
         if progress_callback is not None:
