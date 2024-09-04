@@ -1,23 +1,23 @@
 import os
 import streamlit as st
-from json import dumps
+from json import dumps, loads
 import app.workflows.generate_record_data.variables as bds_variables
 import app.workflows.generate_record_data.functions as bds_functions
 import toolkit.generate_record_data.schema_builder as schema_builder
-
-
-def get_intro():
-    file_path = os.path.join(os.path.dirname(__file__), "README.md")
-    with open(file_path) as file:
-        return file.read()
-
+from toolkit.generate_record_data import get_readme as get_intro
 
 def create(sv: bds_variables.SessionVariables, workflow: None):
-    schema_tab, generator_tab = st.tabs(['Build data schema', 'Generate sample data'])
+    intro_tab, schema_tab, generator_tab = st.tabs(['Generate Record Data workflow:', 'Prepare data schema', 'Generate sample data'])
+    with intro_tab:
+        st.markdown(get_intro())
     with schema_tab:
         form, preview = st.columns([1, 1])
         with form:
-            st.markdown('### Build Data Schema')
+            file = st.file_uploader('Upload schema', type=['json'], key='schema_uploader')
+            if file is not None:
+                jsn = loads(file.read())
+                sv.schema.value = jsn
+            st.markdown('### Edit Data Schema')
             bds_functions.generate_form_from_json_schema(
                 global_schema=sv.schema.value
             )
