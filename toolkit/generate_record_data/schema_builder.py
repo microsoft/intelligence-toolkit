@@ -90,7 +90,7 @@ def get_required_list(json_obj, field_labels):
         elif 'items' in current_obj and 'properties' in current_obj['items'] and label in current_obj['items']['properties']:
             current_obj = current_obj['items']['properties'][label]
     if 'items' in current_obj:
-        current_obj = current_obj['items']['properties']
+        current_obj = current_obj['items']
     return current_obj['required']
 
 def create_boilerplate_schema(
@@ -112,43 +112,38 @@ def create_boilerplate_schema(
     return schema
 
 def add_object_field(
-        schema,
-        nesting=[],
+        global_schema,
+        field_location,
         field_label="object",
-        field_description="An object field",
-        required=True
+        field_description="An object field"
     ):
-    use_schema = get_subobject(schema, nesting)
-    use_field_label = _get_unique_field_label(schema, field_label)
-    use_schema[use_field_label] = {
+    use_field_label = _get_unique_field_label(global_schema, field_label)
+    field_location[use_field_label] = {
         "type": "object",
         "description": field_description,
         "properties": {},
         "required": [],
         "additionalProperties": False,
     }
-    set_required_field_status(schema, nesting, use_field_label, required)
     return use_field_label
 
 def add_array_field(
-        schema,
-        nesting=[],
+        global_schema,
+        field_location,
         field_label="",
         field_description="",
         item_description="",
-        item_type: ArrayFieldType=ArrayFieldType.STRING,
-        required=True
+        item_type: ArrayFieldType=ArrayFieldType.STRING
     ):
-    use_schema = get_subobject(schema, nesting)
     if field_label == "":
         field_label = f"{item_type.value}_array"
     if field_description == "":
         field_description = f"An array of {item_type.value}s"
     if item_description == "":
         item_description = f"A {item_type.value} list item" if item_type != ArrayFieldType.OBJECT else "An object list item"
-    use_field_label = _get_unique_field_label(schema, field_label)
+    use_field_label = _get_unique_field_label(global_schema, field_label)
     if item_type == ArrayFieldType.OBJECT:
-        use_schema[use_field_label] = {
+        field_location[use_field_label] = {
             "type": "array",
             "description": field_description,
             "items": {
@@ -160,14 +155,31 @@ def add_array_field(
             }
         }
     else:
-        use_schema[use_field_label] = {
+        field_location[use_field_label] = {
             "type": "array",
             "description": field_description,
             "items": {
                 "type": item_type.value
             }
         }
-    set_required_field_status(schema, nesting, use_field_label, required)
+    return use_field_label
+
+def add_primitive_field(
+        global_schema,
+        field_location,
+        field_label="",
+        field_description="",
+        field_type: PrimitiveFieldType=PrimitiveFieldType.STRING
+    ):
+    if field_label == "":
+        field_label = field_type.value
+    if field_description == "":
+        field_description = f"A {field_type.value} field"
+    use_field_label = _get_unique_field_label(global_schema, field_label)
+    field_location[use_field_label] = {
+        "type": field_type.value,
+        "description": field_description
+    }
     return use_field_label
 
 def set_string_min_length(string_field, min_length):
@@ -241,17 +253,51 @@ def clear_number_constraints(number_field):
     number_field.pop('exclusiveMaximum', None)
     number_field.pop('multipleOf', None)
 
+def rename_field(global_schema, field_location, nesting, old_label, new_label):
+    key_order = list(field_location.keys())
+    key_index = key_order.index(old_label)
+    # Ensures key order is stable
+    for ix, key in enumerate(key_order[key_index:]):
+        if ix == key_index:
+            set_required_field_status(global_schema, nesting, old_label, False)
+            field_location[new_label] = field_location.pop(old_label)
+        else:
+            field_location[key] = field_location.pop(key)
+    # Ensures required order matches field order
+    set_required_field_status(global_schema, nesting, new_label, True)
+
+def move_field_up(global_schema, nesting, field_location, label):
+    key_order = list(field_location.keys())
+    key_index = key_order.index(label)
+    if key_index > 0:
+        key_order[key_index - 1], key_order[key_index] = key_order[key_index], key_order[key_index - 1]
+        # Ensures key order is stable
+        for ix, key in enumerate(key_order[key_index - 1:]):
+            field_location[key] = field_location.pop(key)
+    reqs = get_required_list(global_schema, nesting)
+    reqs.sort(key=lambda x : key_order.index(x))
+
+def move_field_down(global_schema, nesting, field_location, label):
+    key_order = list(field_location.keys())
+    key_index = key_order.index(label)
+    # Move the field down by one position
+    if key_index < len(key_order) - 1:
+        key_order[key_index + 1], key_order[key_index] = key_order[key_index], key_order[key_index + 1]
+        # Ensures key order is stable
+        for ix, key in enumerate(key_order[key_index:]):
+            field_location[key] = field_location.pop(key)
+    reqs = get_required_list(global_schema, nesting)
+    reqs.sort(key=lambda x : key_order.index(x))
+
 def set_required_field_status(schema, nesting, field_label, required):
-    print(f'Set required field status: {field_label} {required}')
     reqs = get_required_list(schema, nesting)
     if required and field_label not in reqs:
-        print(f'Adding {field_label} to required list')
         reqs.append(field_label)
     elif not required and field_label in reqs:
-        print(f'Removing {field_label} from required list')
         reqs.remove(field_label)
-    else:
-        print('No change to required list')
+    obj = get_subobject(schema, nesting)
+    key_order = list(obj.keys())
+    reqs.sort(key=lambda x : key_order.index(x))
 
 
 def set_enum_field_status(schema, nesting, field_label, constrained):
@@ -286,27 +332,6 @@ def set_enum_field_status(schema, nesting, field_label, constrained):
             obj[field_label]['items'].pop('enum')
             changed = True
     return changed
-
-def add_primitive_field(
-        schema,
-        nesting=[],
-        field_label="",
-        field_description="",
-        field_type: PrimitiveFieldType=PrimitiveFieldType.STRING,
-        required=True
-    ):
-    use_schema = get_subobject(schema, nesting)
-    if field_label == "":
-        field_label = field_type.value
-    if field_description == "":
-        field_description = f"A {field_type.value} field"
-    use_field_label = _get_unique_field_label(schema, field_label)
-    use_schema[use_field_label] = {
-        "type": field_type.value,
-        "description": field_description
-    }
-    set_required_field_status(schema, nesting, use_field_label, required)
-    return use_field_label
 
 def generate_object_from_schema(json_schema):
     '''

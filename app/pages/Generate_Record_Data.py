@@ -3,12 +3,12 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 import streamlit as st
-import app.workflows.build_data_schema.variables as bds_variables
-import app.workflows.build_data_schema.workflow
+import app.workflows.generate_record_data.variables as bds_variables
+import app.workflows.generate_record_data.workflow
 from components.app_loader import load_multipage_app
 from util.helper_fn import app_in_dev_mode
 
-workflow = "build_data_schema"
+workflow = "generate_record_data"
 
 
 def main():
@@ -16,13 +16,13 @@ def main():
         layout="wide",
         initial_sidebar_state="collapsed",
         page_icon="app/myapp.ico",
-        page_title="Intelligence Toolkit | Build Data Schema",
+        page_title="Intelligence Toolkit | Generate Record Data",
     )
     sv = bds_variables.SessionVariables(workflow)
     load_multipage_app(sv)
 
     try:
-        app.workflows.build_data_schema.workflow.create(sv, workflow)
+        app.workflows.generate_record_data.workflow.create(sv, workflow)
     except Exception as e:
         if app_in_dev_mode():
             st.exception(e)
