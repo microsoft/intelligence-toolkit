@@ -48,6 +48,9 @@ seaborn = "0.13.2"
 textblob = "0.18.0.post0"
 future = "1.0.0"
 jsonschema = "^4.23.0"
+newspaper3k = "^0.2.8"
+lxml-html-clean = "^0.2.1"
+nest-asyncio = "^1.6.0"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -187,3 +190,6 @@ convention = "numpy"
 # https://github.com/microsoft/pyright/blob/9f81564a4685ff5c55edd3959f9b39030f590b2f/docs/configuration.md#sample-pyprojecttoml-file
 [tool.pyright]
 include = ["app", "toolkit", "examples"]
+
+[virtualenvs]
+in-project = true

@@ -4,69 +4,13 @@
 from collections import defaultdict
 from itertools import combinations
 
+from toolkit.graph.graph_fusion_encoder_embedding import is_converging_pair
+
 import numpy as np
 import pandas as pd
 
-def _calculate_cosine_distance(vec1: np.array, vec2: np.array):
-    return 1 - np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
-
-
-def _calculate_euclidean_distance(vec1: np.array, vec2: np.array):
-    return np.linalg.norm(vec1 - vec2)
-
-
-def _create_centroid_dists(node_to_centroid):
-    centroid_dists = {}
-    sorted_nodes = sorted(node_to_centroid.keys())
-    for ix, node1 in enumerate(sorted_nodes):
-        vector1 = np.array(node_to_centroid[node1])
-        for node2 in sorted_nodes[ix + 1 :]:
-            vector2 = np.array(node_to_centroid[node2])
-            cosine = _calculate_cosine_distance(vector1, vector2)
-            euclidean = _calculate_euclidean_distance(vector1, vector2)
-            centroid_dists[(node1, node2)] = (cosine, euclidean)
-
-    return centroid_dists
-
-
-def _compute_node_pair_distances(period, period_embeddings, sorted_nodes, node_to_ix):
-    distances = {}
-    num_nodes = len(sorted_nodes)
-    for ix in range(num_nodes):
-        node1 = sorted_nodes[ix]
-        for jx in range(ix + 1, num_nodes):
-            node2 = sorted_nodes[jx]
-            n1v = np.array(period_embeddings[period][node_to_ix[node1]])
-            n2v = np.array(period_embeddings[period][node_to_ix[node2]])
-            cosine = _calculate_cosine_distance(n1v, n2v)
-            euclidean = _calculate_euclidean_distance(n1v, n2v)
-            distances[(node1, node2)] = (cosine, euclidean)
-    return distances
-
-
-def create_period_shifts(node_to_centroid, period_embeddings, dynamic_df) -> dict:
-    centroid_dists = _create_centroid_dists(node_to_centroid)
-    period_shifts = {}
-    sorted_nodes = sorted(node_to_centroid.keys())
-    node_to_ix = {n: i for i, n in enumerate(sorted_nodes)}
-    used_periods = sorted(dynamic_df["Period"].unique())
-
-    for period in used_periods:
-        period_shifts[period] = {}
-        node_pair_distances = _compute_node_pair_distances(
-            period, period_embeddings, sorted_nodes, node_to_ix
-        )
-        for node_pair, (cosine, euclidean) in node_pair_distances.items():
-            centroid_cosine, centroid_euclidean = centroid_dists[node_pair]
-            period_shifts[period][node_pair] = (
-                centroid_cosine - cosine,
-                centroid_euclidean - euclidean,
-            )
-    return period_shifts
-
-
 def _create_period_to_close_nodes(
-    used_periods, period_shifts, sorted_nodes, min_pattern_count, rc, type_val_sep
+    used_periods, node_to_period_to_pos, sorted_nodes, min_pattern_count, rc, type_val_sep
 ):
     period_to_close_nodes = {}
     all_pairs = 0
@@ -79,10 +23,7 @@ def _create_period_to_close_nodes(
                 n1a = node1.split(type_val_sep)[0]
                 n2a = node2.split(type_val_sep)[0]
                 if n1a != n2a:
-                    cosine_shift, euclidean_shift = period_shifts[period][
-                        (node1, node2)
-                    ]
-                    if cosine_shift > 0 or euclidean_shift > 0:
+                    if is_converging_pair(period, node1, node2, node_to_period_to_pos, all_time=True):
                         period_count = rc.count_records([period, node1, node2])
                         if period_count >= min_pattern_count:
                             close_pairs += 1
@@ -91,10 +32,10 @@ def _create_period_to_close_nodes(
 
 
 def create_close_node_rows(
-    used_periods, period_shifts, sorted_nodes, min_pattern_count, rc, type_val_sep
+    used_periods, node_to_period_to_pos, sorted_nodes, min_pattern_count, rc, type_val_sep
 ):
     all_pairs, close_pairs, period_to_close_nodes = _create_period_to_close_nodes(
-        used_periods, period_shifts, sorted_nodes, min_pattern_count, rc, type_val_sep
+        used_periods, node_to_period_to_pos, sorted_nodes, min_pattern_count, rc, type_val_sep
     )
 
     close_node_rows = []
@@ -105,7 +46,6 @@ def create_close_node_rows(
             if period_count >= min_pattern_count:
                 count_factor = period_count / mean_count
                 count_delta = period_count - mean_count
-                cosine_shift, euclidean_shift = period_shifts[period][(node1, node2)]
                 row = [
                     period,
                     node1,
@@ -113,9 +53,7 @@ def create_close_node_rows(
                     period_count,
                     mean_count,
                     count_delta,
-                    count_factor,
-                    cosine_shift,
-                    euclidean_shift,
+                    count_factor
                 ]
                 close_node_rows.append(row)
     columns = [
@@ -125,9 +63,7 @@ def create_close_node_rows(
         "period_count",
         "mean_count",
         "count_delta",
-        "count_factor",
-        "cosine_shift",
-        "euclidean_shift",
+        "count_factor"
     ]
     close_node_df = pd.DataFrame(close_node_rows, columns=columns)
     return close_node_df, all_pairs, close_pairs

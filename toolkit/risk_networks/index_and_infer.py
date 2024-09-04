@@ -11,14 +11,12 @@ from toolkit.AI.openai_configuration import OpenAIConfiguration
 from toolkit.AI.openai_embedder import OpenAIEmbedder
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
-from toolkit.risk_networks.config import (
-    ENTITY_LABEL,
-    SIMILARITY_THRESHOLD_MAX,
-    SIMILARITY_THRESHOLD_MIN,
-)
+from toolkit.risk_networks.config import (ENTITY_LABEL,
+                                          SIMILARITY_THRESHOLD_MAX,
+                                          SIMILARITY_THRESHOLD_MIN)
 
 
-def index_nodes(
+async def index_nodes(
     indexed_node_types: list[str],
     main_graph: nx.Graph,
     callbacks: list[ProgressBatchCallback] | None = None,
@@ -34,11 +32,12 @@ def index_nodes(
         for n, d in main_graph.nodes(data=True)
         if d["type"] in indexed_node_types
     ]
+    text_types.sort()
     texts = [t[0] for t in text_types]
 
     if functions_embedder is None:
         functions_embedder = OpenAIEmbedder(openai_configuration, config.cache_name)
-    embeddings = functions_embedder.embed_store_many(
+    embeddings = await functions_embedder.embed_store_many(
         texts,
         callbacks,
         save_cache,
@@ -122,7 +121,7 @@ def build_inferred_df(inferred_links_list: defaultdict[set]) -> pl.DataFrame:
     return inferred_df.sort(["text", "similar"])
 
 
-def index_and_infer(
+async def index_and_infer(
     indexed_node_types: list[str],
     main_graph: nx.Graph,
     network_similarity_threshold: float,
@@ -139,7 +138,7 @@ def index_and_infer(
         embedded_texts,
         nearest_text_distances,
         nearest_text_indices,
-    ) = index_nodes(
+    ) = await index_nodes(
         indexed_node_types,
         main_graph,
         callbacks,
