@@ -57,7 +57,10 @@ class TestIndexNodes:
     @patch("toolkit.risk_networks.index_and_infer.OpenAIEmbedder")
     async def test_index_nodes_small_samples(self, mock_embedder, overall_graph_small):
         async def embed_store_many(*args) -> list[list[float]]:
-            return [[0.1, 0.3], [0.3, 0.4]]
+            return [
+                {"vector": [0.1, 0.3], "text": "A"},
+                {"vector": [0.3, 0.4], "text": "B"},
+            ]
 
         mock_instance = mock_embedder.return_value
         mock_instance.embed_store_many.side_effect = embed_store_many
@@ -74,7 +77,7 @@ class TestIndexNodes:
     async def test_index_nodes(self, mock_embedder, overall_graph):
         async def embed_store_many(*args) -> list[list[float]]:
             return [
-                [0.1, 0.3],
+                {"vector": [0.1, 0.3], "text": "A"},
             ] * 23
 
         mock_instance = mock_embedder.return_value

@@ -10,32 +10,33 @@ import toolkit.question_answering.answer_schema as answer_schema
 import toolkit.question_answering.helper_functions as helper_functions
 import toolkit.question_answering.relevance_assessor as relevance_assessor
 
-def answer_question(
-        ai_configuration,
-        question,
-        cid_to_text,
-        cid_to_concepts,
-        concept_to_cids,
-        cid_to_vector,
-        concept_graph,
-        community_to_concepts,
-        concept_to_community,
-        previous_cid,
-        next_cid,
-        embedder,
-        embedding_cache,
-        answer_batch_size,
-        select_logit_bias,
-        adjacent_search_steps,
-        relevance_test_budget,
-        community_relevance_tests,
-        relevance_test_batch_size,
-        irrelevant_community_restart,
-        chunk_progress_callback=None,
-        answer_progress_callback=None,
-        chunk_callback=None,
-        answer_callback=None
-    ):
+
+async def answer_question(
+    ai_configuration,
+    question,
+    cid_to_text,
+    cid_to_concepts,
+    concept_to_cids,
+    cid_to_vector,
+    concept_graph,
+    community_to_concepts,
+    concept_to_community,
+    previous_cid,
+    next_cid,
+    embedder,
+    embedding_cache,
+    answer_batch_size,
+    select_logit_bias,
+    adjacent_search_steps,
+    relevance_test_budget,
+    community_relevance_tests,
+    relevance_test_batch_size,
+    irrelevant_community_restart,
+    chunk_progress_callback=None,
+    answer_progress_callback=None,
+    chunk_callback=None,
+    answer_callback=None,
+):
     answer_format = answer_schema.answer_format
     answer_object = {
         "question": question,
@@ -48,9 +49,8 @@ def answer_question(
     answer_stream = []
     test_history = []
     answer_history = []
-    
-    all_units = []
 
+    all_units = []
     all_units = sorted([(cid, vector) for cid, vector in (cid_to_vector.items())], key=lambda x: x[0])
 
 
@@ -88,6 +88,7 @@ def answer_question(
     community_sequence = []
     community_to_semantic_search_cids = defaultdict(list)
     community_mean_rank = []
+
     for community, cids in community_to_cids.items():
         mean_rank = np.mean(sorted([semantic_search_cids.index(c) for c in cids])[:community_relevance_tests])
         community_mean_rank.append((community, mean_rank))
@@ -110,9 +111,9 @@ def answer_question(
             relevant, seen = helper_functions.test_history_elements(test_history)
             unseen_cids = [c for c in community_to_semantic_search_cids[community] if c not in seen][:community_relevance_tests]
             if len(unseen_cids) > 0:
-                is_relevant = relevance_assessor.assess_relevance(
+                is_relevant = await relevance_assessor.assess_relevance(
                     ai_configuration=ai_configuration,
-                    search_label=f'community {community}',
+                    search_label=f"community {community}",
                     search_cids=unseen_cids,
                     cid_to_text=cid_to_text,
                     question=question,
@@ -147,9 +148,9 @@ def answer_question(
         adjacent_targets.update(helper_functions.get_adjacent_chunks(c, previous_cid, next_cid, adjacent_search_steps))
     adjacent_search_cids = [x for x in adjacent_targets if x not in seen]
     print(f'Adjacent: {adjacent_search_cids}')
-    relevance_assessor.assess_relevance(
+    await relevance_assessor.assess_relevance(
         ai_configuration=ai_configuration,
-        search_label='detail',
+        search_label="detail",
         search_cids=adjacent_search_cids,
         cid_to_text=cid_to_text,
         question=question,

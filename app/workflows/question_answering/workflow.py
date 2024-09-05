@@ -5,14 +5,13 @@ import os
 
 import pandas as pd
 import streamlit as st
-from json import loads, dumps
 from seaborn import color_palette
 from streamlit_agraph import Config, Edge, Node, agraph
 
+import toolkit.question_answering.helper_functions as helper_functions
 import toolkit.question_answering.input_processor as input_processor
 import toolkit.question_answering.prompts as prompts
 import toolkit.question_answering.question_answerer as question_answerer
-import toolkit.question_answering.helper_functions as helper_functions
 from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
 from app.util.openai_wrapper import UIOpenAIConfiguration
@@ -22,11 +21,13 @@ from toolkit.AI.base_embedder import BaseEmbedder
 from toolkit.AI.defaults import CHUNK_SIZE
 from toolkit.AI.local_embedder import LocalEmbedder
 from toolkit.AI.openai_embedder import OpenAIEmbedder
-from toolkit.graph.graph_fusion_encoder_embedding import generate_graph_fusion_encoder_embedding
+from toolkit.graph.graph_fusion_encoder_embedding import (
+    generate_graph_fusion_encoder_embedding,
+)
 from toolkit.question_answering.pattern_detector import (
+    combine_chunk_text_and_explantion,
     detect_converging_pairs,
     explain_chunk_significance,
-    combine_chunk_text_and_explantion
 )
 
 sv_home = SessionVariables("home")
@@ -34,11 +35,14 @@ ai_configuration = UIOpenAIConfiguration().get_configuration()
 
 
 def create_progress_callback(template: str):
-    pb = st.progress(0, 'Preparing...')
+    pb = st.progress(0, "Preparing...")
+
     def on_change(current, total):
         pb.progress(
-            int(current * 100 / total), text=template.format(current, total)
+            (current) / total if (current) / total < 100 else 100,
+            text=template.format(current, total),
         )
+
     callback = ProgressBatchCallback()
     callback.on_batch_change = on_change
     return pb, callback
@@ -139,7 +143,7 @@ def get_intro():
         return file.read()
 
 
-def create(sv: SessionVariables, workflow=None):
+async def create(sv: SessionVariables, workflow=None):
     sv_home = SessionVariables("home")
     intro_tab, uploader_tab, graph_tab, search_tab, report_tab = st.tabs(
         [
@@ -224,8 +228,11 @@ def create(sv: SessionVariables, workflow=None):
             else:
                 sv.cid_to_explained_text.value = sv.cid_to_text.value
             embed_pb, embed_callback = create_progress_callback("Embedded {} of {} text chunks...")
-            sv.cid_to_vector.value = helper_functions.embed_texts(
-                sv.cid_to_explained_text.value, text_embedder, config.cache_name, callbacks=[embed_callback]
+            sv.cid_to_vector.value = await helper_functions.embed_texts(
+                sv.cid_to_explained_text.value,
+                text_embedder,
+                config.cache_name,
+                callbacks=[embed_callback],
             )
             chunk_pb.empty()
             file_pb.empty()
@@ -386,14 +393,14 @@ def create(sv: SessionVariables, workflow=None):
                 sv.partial_answers.value,
                 sv.chunk_progress.value,
                 sv.answer_progress.value,
-            ) = question_answerer.answer_question(
+            ) = await question_answerer.answer_question(
                 ai_configuration=ai_configuration,
                 question=sv.last_question.value,
                 cid_to_text=sv.cid_to_explained_text.value,
                 cid_to_concepts=sv.cid_to_concepts.value,
                 concept_to_cids=sv.concept_to_cids.value,
                 cid_to_vector=sv.cid_to_vector.value,
-                concept_graph=sv.period_concept_graphs.value['ALL'],
+                concept_graph=sv.period_concept_graphs.value["ALL"],
                 community_to_concepts=sv.community_to_concepts.value,
                 concept_to_community=sv.concept_to_community.value,
                 previous_cid=sv.previous_cid.value,

@@ -1,11 +1,20 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+import json
+
+from toolkit.AI.base_embedder import BaseEmbedder
+from toolkit.AI.classes import VectorData
 from toolkit.AI.client import OpenAIClient
+from toolkit.AI.utils import hash_text
+
 
 def generate_text(ai_configuration, messages, **kwargs):
     return OpenAIClient(ai_configuration).generate_chat(messages, stream=False, **kwargs)
 
-def map_generate_text(ai_configuration, messages_list, **kwargs):
-    return OpenAIClient(ai_configuration).map_generate_text(messages_list, **kwargs)
+async def map_generate_text(ai_configuration, messages_list, **kwargs):
+    return await OpenAIClient(ai_configuration).map_generate_text(
+        messages_list, **kwargs
+    )
+
 
 def get_adjacent_chunks(source, previous_chunk_dict, next_chunk_dict, steps):
     prev_chunks = []
@@ -72,12 +81,22 @@ def test_history_elements(test_history):
     seen_list = [x[1] for x in test_history]           
     return relevant_list, seen_list
 
-def embed_texts(cid_to_text, text_embedder, cache_name, callbacks=[]):
+async def embed_texts(
+    cid_to_text, text_embedder: BaseEmbedder, cache_data=True, callbacks=[]
+) -> dict:
     cid_to_vector = {}
-    for ix, (cid, text) in enumerate(cid_to_text.items()):
-        cid_to_vector[cid] = text_embedder.embed_store_one(
-            text, cache_name
+    data: list[VectorData] = []
+
+    for cid, text in cid_to_text.items():
+        data.append(
+            {"hash": hash_text(text), "text": text, "additional_details": {"cid": cid}}
         )
-        for callback in callbacks:
-            callback.on_batch_change(ix + 1, len(cid_to_text))
+
+    embedded_data = await text_embedder.embed_store_many(data, callbacks, cache_data)
+    for item in embedded_data:
+        details = json.loads(item["additional_details"])
+        if len(details.keys()) == 0:
+            continue
+        cid_to_vector[details["cid"]] = item["vector"]
     return cid_to_vector
+

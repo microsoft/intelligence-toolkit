@@ -2,6 +2,7 @@ from collections import defaultdict
 from typing import Any
 
 import networkx as nx
+import numpy as np
 import polars as pl
 from sklearn.neighbors import NearestNeighbors
 
@@ -9,6 +10,7 @@ import toolkit.risk_networks.config as config
 from toolkit.AI.base_embedder import BaseEmbedder
 from toolkit.AI.openai_configuration import OpenAIConfiguration
 from toolkit.AI.openai_embedder import OpenAIEmbedder
+from toolkit.AI.utils import hash_text
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 from toolkit.risk_networks.config import (ENTITY_LABEL,
@@ -35,13 +37,23 @@ async def index_nodes(
     text_types.sort()
     texts = [t[0] for t in text_types]
 
+    data = [
+        {"hash": hash_text(t), "text": t, "additional_details": {"type": ty}}
+        for t, ty in text_types
+    ]
+
     if functions_embedder is None:
         functions_embedder = OpenAIEmbedder(openai_configuration, config.cache_name)
-    embeddings = await functions_embedder.embed_store_many(
-        texts,
+    data_embeddings = await functions_embedder.embed_store_many(
+        data,
         callbacks,
         save_cache,
     )
+
+    # sort data_embeddings by text
+    data_embeddings.sort(key=lambda x: x["text"])
+    embeddings = [np.array(d["vector"]) for d in data_embeddings]
+    print("emb", embeddings)
 
     vals = [(n, t, e) for (n, t), e in zip(text_types, embeddings, strict=False)]
     edf = pl.DataFrame(vals, schema=["text", "type", "vector"])
