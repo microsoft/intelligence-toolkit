@@ -39,7 +39,12 @@ from toolkit.risk_networks.identify_networks import (
     build_networks,
     trim_nodeset,
 )
-from toolkit.risk_networks.index_and_infer import build_inferred_df, index_and_infer
+from toolkit.risk_networks.index_and_infer import (
+    build_inferred_df,
+    index_and_infer,
+    index_nodes,
+    infer_nodes,
+)
 from toolkit.risk_networks.prepare_model import (
     build_flag_links,
     build_flags,
@@ -264,6 +269,10 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                 options=fuzzy_options,
                 help="Select the node types to embed into a multi-dimensional semantic space for fuzzy matching.",
             )
+            index = st.button(
+                "Index nodes",
+                disabled=len(network_indexed_node_types) == 0,
+            )
             network_similarity_threshold = st.number_input(
                 "Similarity threshold for fuzzy matching (max)",
                 min_value=SIMILARITY_THRESHOLD_MIN,
@@ -274,22 +283,23 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                 help="The maximum cosine similarity threshold for inferring links between nodes based on their embeddings. Higher values will infer more links, but may also infer more false positives.",
             )
 
-            c_1, _, c_3 = st.columns([2, 3, 2])
+            c_1, c_2 = st.columns([2, 2])
             with c_1:
-                index_infer = st.button(
-                    "Index and infer nodes",
+                infer = st.button(
+                    "Infer nodes",
                     disabled=len(network_indexed_node_types) == 0,
                 )
-            with c_3:
+            with c_2:
                 clear_inferring = st.button(
                     "Clear inferred links",
                     disabled=len(sv.network_inferred_links.value) == 0,
+                    use_container_width=True,
                 )
             if clear_inferring:
                 sv.network_inferred_links.value = []
                 st.rerun()
 
-            if index_infer:
+            if index:
                 pb = st.progress(0, "Embedding text batches...")
 
                 def on_embedding_batch_change(
@@ -304,15 +314,14 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                 callback.on_batch_change = on_embedding_batch_change
                 functions_embedder = functions.embedder()
                 sv.network_indexed_node_types.value = network_indexed_node_types
-                sv.network_similarity_threshold.value = network_similarity_threshold
 
                 (
-                    sv.network_inferred_links.value,
-                    sv.network_embedded_texts_count.value,
-                ) = await index_and_infer(
+                    sv.network_embedded_texts.value,
+                    sv.network_nearest_text_distances.value,
+                    sv.network_nearest_text_indices.value,
+                ) = await index_nodes(
                     network_indexed_node_types,
                     sv.network_overall_graph.value,
-                    network_similarity_threshold,
                     [callback],
                     functions_embedder,
                     None,
@@ -320,11 +329,36 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                 )
                 pb.empty()
 
-            inferred_links_count = len(sv.network_inferred_links.value)
-            if inferred_links_count > 0:
-                st.markdown(
-                    f"*Number of nodes indexed*: {sv.network_embedded_texts_count.value}"
+            if infer:
+                pb = st.progress(0, "Inferring texts...")
+
+                def on_inferring_batch_change(
+                    current=0, total=0, message="In progress...."
+                ):
+                    pb.progress(
+                        (current) / total,
+                        f"{message} {current} of {total}",
+                    )
+
+                callback_infer = ProgressBatchCallback()
+                callback_infer.on_batch_change = on_inferring_batch_change
+                sv.network_similarity_threshold.value = network_similarity_threshold
+
+                sv.network_inferred_links.value = infer_nodes(
+                    network_similarity_threshold,
+                    sv.network_embedded_texts.value,
+                    sv.network_nearest_text_indices.value,
+                    sv.network_nearest_text_distances.value,
+                    [callback_infer],
                 )
+                pb.empty()
+
+            inferred_links_count = len(sv.network_inferred_links.value)
+            if len(sv.network_embedded_texts.value) > 0:
+                st.markdown(
+                    f"*Number of nodes indexed*: {len(sv.network_embedded_texts.value)}"
+                )
+            if inferred_links_count > 0:
                 st.markdown(f"*Number of links inferred*: {inferred_links_count}")
                 inferred_df = build_inferred_df(sv.network_inferred_links.value)
                 st.dataframe(
