@@ -3,6 +3,7 @@
 #
 import io
 
+import numpy as np
 import pandas as pd
 import polars as pl
 import streamlit as st
@@ -28,7 +29,7 @@ from toolkit.record_matching.prepare_model import (build_attribute_list,
                                                    format_dataset)
 
 
-def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
+async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
     sv_home = home_vars.SessionVariables("home")
 
     intro_tab, uploader_tab, process_tab, evaluate_tab = st.tabs(
@@ -250,8 +251,8 @@ def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                                     + "::"
                                     + pl.col("Dataset").alias("Unique ID")
                                 )
-                            )###??
-                            all_sentences = convert_to_sentences(
+                            )  ###??
+                            all_sentences_data = convert_to_sentences(
                                 sv.matching_merged_df.value
                             )
 
@@ -267,14 +268,25 @@ def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                             callback.on_batch_change = on_embedding_batch_change
 
                             functions_embedder = functions.embedder()
-
-                            embeddings = functions_embedder.embed_store_many(
-                                all_sentences, [callback], sv_home.save_cache.value
+                            data_embeddings = await functions_embedder.embed_store_many(
+                                all_sentences_data, [callback], sv_home.save_cache.value
                             )
+
+                            all_sentences = [x["text"] for x in all_sentences_data]
+                            all_embeddings = [
+                                np.array(
+                                    next(
+                                        d["vector"]
+                                        for d in data_embeddings
+                                        if d["text"] == f
+                                    )
+                                )
+                                for f in all_sentences
+                            ]
+
                             pb.empty()
 
-                            distances, indices = build_nearest_neighbors(embeddings)
-
+                            distances, indices = build_nearest_neighbors(all_embeddings)
                             near_map = build_near_map(
                                 distances,
                                 indices,

@@ -10,17 +10,17 @@ import numpy as np
 import polars as pl
 from sklearn.neighbors import NearestNeighbors
 
+from toolkit.AI.classes import VectorData
+from toolkit.AI.utils import hash_text
 from toolkit.record_matching.config import (
-    DEFAULT_COLUMNS_DONT_CONVERT,
-    DEFAULT_SENTENCE_PAIR_JACCARD_THRESHOLD,
-)
+    DEFAULT_COLUMNS_DONT_CONVERT, DEFAULT_SENTENCE_PAIR_JACCARD_THRESHOLD)
 
 
 def convert_to_sentences(
     merged_dataframe: pl.DataFrame,
     skip_columns: list[str] | None = DEFAULT_COLUMNS_DONT_CONVERT,
-) -> list[str]:
-    sentences = []
+) -> list[VectorData]:
+    sentences: list[VectorData] = []
     skip_columns = skip_columns or []
     cols = merged_dataframe.columns
     for row in merged_dataframe.iter_rows(named=True):
@@ -31,7 +31,10 @@ def convert_to_sentences(
                 if val == "NAN":
                     val = ""
                 sentence += field.upper() + ": " + val + "; "
-        sentences.append(sentence.strip())
+        sentence = sentence.strip()
+        text_hashed = hash_text(sentence)
+        sentences.append({"text": sentence, "hash": text_hashed})
+
     return sentences
 
 
@@ -70,7 +73,6 @@ def build_near_map(
         nearest = zip(near_is, near_ds, strict=False)
         for near_i, near_d in nearest:
             if near_d <= max_record_distance:
-                near_map[ix].append(near_i)
                 near_map[ix].append(near_i)
 
     return near_map

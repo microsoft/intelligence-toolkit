@@ -162,7 +162,9 @@ class OpenAIClient:
         self, text: list[str], model: str = DEFAULT_EMBEDDING_MODEL
     ) -> list[float]:
         if self.configuration.api_type == "Azure OpenAI":
-            embedding = self._async_client.embeddings.create(input=text, model=model)
+            embedding = await self._async_client.embeddings.create(
+                input=text, model=model
+            )
         else:
             embedding = await self._async_client.embeddings.create(
                 input=text, model=model

@@ -12,8 +12,7 @@ import pyarrow as pa
 from tqdm.asyncio import tqdm_asyncio
 
 from toolkit.AI.classes import VectorData
-from toolkit.AI.defaults import (DEFAULT_LLM_MAX_TOKENS,
-                                 EMBEDDING_BATCHES_NUMBER)
+from toolkit.AI.defaults import DEFAULT_LLM_MAX_TOKENS, EMBEDDING_BATCHES_NUMBER
 from toolkit.AI.vector_store import VectorStore
 from toolkit.helpers.constants import CACHE_PATH
 from toolkit.helpers.decorators import retry_with_backoff
@@ -81,7 +80,9 @@ class BaseEmbedder(ABC):
                 logger.info("Truncated text to max tokens")
             try:
                 embedding = await self._generate_embedding_async(data["text"])
-                data["additional_details"] = json.dumps(data["additional_details"])
+                data["additional_details"] = json.dumps(
+                    data["additional_details"] if "additional_details" in data else {}
+                )
                 data["vector"] = embedding
             except Exception as e:
                 msg = f"Problem in embedding generation. {e}"
@@ -149,7 +150,7 @@ class BaseEmbedder(ABC):
                             "hash": item[0],
                             "text": item[1],
                             "vector": item[2],
-                            "additional_details": item[3] if len(item) > 3 else {},
+                            "additional_details": item[3] if len(item) > 3 else "{}",
                         }
                     )
                     loaded_texts.append(item[1])
