@@ -4,7 +4,8 @@ import toolkit.generate_record_data.schema_builder as schema_builder
 
 type_options = ['object', 'string', 'number', 'boolean', 'object array', 'string array', 'number array', 'boolean array']
 
-def generate_form_from_json_schema(global_schema, field_location=None, nesting=[]):
+def generate_form_from_json_schema(global_schema, default_schema, field_location=None, nesting=[]):
+    # print(f'Generating form for {global_schema}')
     if field_location is None:
         field_location = global_schema
     if type(field_location) != dict:
@@ -26,7 +27,6 @@ def generate_form_from_json_schema(global_schema, field_location=None, nesting=[
                     req = st.checkbox('Required?', key=f'{key_with_prefix}_required', value=old_req)
 
                     if req != old_req:
-                        print(f'Changing required status of {key} to {req}')
                         schema_builder.set_required_field_status(global_schema, nesting, new_label, req)
                         st.rerun()
                     con = st.checkbox(
@@ -64,22 +64,31 @@ def generate_form_from_json_schema(global_schema, field_location=None, nesting=[
                 elif value['type'] == 'array' and 'enum' in value['items']:
                     create_enum_ui(field_location, key, key_with_prefix, value['items'])
                 else:
-                    if value['type'] == 'number':
-                        create_number_ui(field_location[key], key_with_prefix, value)
-                    elif value['type'] == "string":
-                        create_string_ui(field_location[key], key_with_prefix, value)
-                    elif value['type'] == 'array':
-                        if value['items']['type'] == 'number':
-                            create_number_ui(field_location[key]['items'], key_with_prefix, value['items'])
-                        elif value['items']['type'] == 'string':
-                            create_string_ui(field_location[key]['items'], key_with_prefix, value['items'])
+                    pass
+                    # Open AI structured outputs do not currently support these fields
+                    # https://platform.openai.com/docs/guides/structured-outputs/supported-schemas
+                    # if value['type'] == 'number':
+                    #     create_number_ui(field_location[key], key_with_prefix, value)
+                    # elif value['type'] == "string":
+                    #     create_string_ui(field_location[key], key_with_prefix, value)
+                    # elif value['type'] == 'array':
+                    #     if value['items']['type'] == 'number':
+                    #         create_number_ui(field_location[key]['items'], key_with_prefix, value['items'])
+                    #     elif value['items']['type'] == 'string':
+                    #         create_string_ui(field_location[key]['items'], key_with_prefix, value['items'])
                 if value['type'] == 'object':
-                    generate_form_from_json_schema(global_schema, value['properties'], nesting+[key])
+                    generate_form_from_json_schema(global_schema, default_schema, value['properties'], nesting+[key])
                 elif value['type'] == 'array':
                     if value['items']['type'] == 'object':
-                        generate_form_from_json_schema(global_schema, value['items']['properties'], nesting+[key])
+                        generate_form_from_json_schema(global_schema, default_schema, value['items']['properties'], nesting+[key])
             elif key == 'properties' and len(nesting)==0:
-                generate_form_from_json_schema(global_schema, value, nesting)
+                generate_form_from_json_schema(global_schema, default_schema, value, nesting)
+                st.divider()
+                if st.button('Clear schema', key='clear_schema', use_container_width=True):
+                    global_schema.clear()
+                    for k, v in default_schema.items():
+                        global_schema[k] = v
+                    st.rerun()
                 return
         else:
             if key != 'type':
@@ -176,11 +185,9 @@ def create_enum_ui(field_location, key, key_with_prefix, value):
                             ('items' in field_location[key] and 'enum' in field_location[key]['items'] and len(field_location[key]['items']['enum'])==1):
                 print(field_location[key])
                 if 'items' in field_location[key]:
-                    print('pop')
                     field_location[key]['items']['enum'].pop(i)
                 else:
                     field_location[key]['enum'].pop(i)
-                print(field_location[key])
                 st.rerun()
     # Add a button to add a new enum value
     if st.button('Add enum value', key=f'{key_with_prefix}_add_enum'):

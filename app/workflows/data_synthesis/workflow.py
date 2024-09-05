@@ -8,8 +8,8 @@ from collections import defaultdict
 import pandas as pd
 import plotly.io as pio
 import streamlit as st
-import app.util.df_functions
-import app.util.ui_components
+import app.util.df_functions as df_functions
+import app.util.ui_components as ui_components
 import app.workflows.data_synthesis.classes as classes
 import app.workflows.data_synthesis.config as config
 import app.workflows.data_synthesis.functions as functions
@@ -42,7 +42,7 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
     with prepare_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:
-            app.util.ui_components.single_csv_uploader(
+            ui_components.single_csv_uploader(
                 workflow,
                 "Upload sensitive data CSV",
                 sv.synthesis_last_sensitive_file_name,
@@ -54,7 +54,7 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                 height=400,
             )
         with model_col:
-            app.util.ui_components.prepare_input_df(
+            ui_components.prepare_input_df(
                 workflow,
                 sv.synthesis_raw_sensitive_df,
                 sv.synthesis_processing_df,
@@ -144,7 +144,7 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                                 columns=["Subject ID"]
                             )
                             df = (
-                                app.util.df_functions.fix_null_ints(df)
+                                df_functions.fix_null_ints(df)
                                 .astype(str)
                                 .replace("nan", "")
                             )
@@ -300,7 +300,7 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
             st.warning(
                 "Please synthesize data to continue, or upload an existing synthetic dataset below."
             )
-            app.util.ui_components.single_csv_uploader(
+            ui_components.single_csv_uploader(
                 workflow,
                 "Upload synthetic data CSV",
                 sv.synthesis_last_synthetic_file_name,
@@ -310,7 +310,7 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                 uploader_key=sv.synthesis_synthetic_upload_key.value,
                 key="synthetic_data_uploader",
             )
-            app.util.ui_components.single_csv_uploader(
+            ui_components.single_csv_uploader(
                 workflow,
                 "Upload aggregate data CSV",
                 sv.synthesis_last_aggregate_file_name,

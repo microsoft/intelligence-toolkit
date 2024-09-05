@@ -115,8 +115,10 @@ def add_object_field(
         global_schema,
         field_location,
         field_label="object",
-        field_description="An object field"
+        field_description=""
     ):
+    # if field_description == "":
+    #     field_description = f"An object field"
     use_field_label = _get_unique_field_label(global_schema, field_label)
     field_location[use_field_label] = {
         "type": "object",
@@ -137,8 +139,8 @@ def add_array_field(
     ):
     if field_label == "":
         field_label = f"{item_type.value}_array"
-    if field_description == "":
-        field_description = f"An array of {item_type.value}s"
+    # if field_description == "":
+    #     field_description = f"An array of {item_type.value}s"
     if item_description == "":
         item_description = f"A {item_type.value} list item" if item_type != ArrayFieldType.OBJECT else "An object list item"
     use_field_label = _get_unique_field_label(global_schema, field_label)
@@ -173,8 +175,8 @@ def add_primitive_field(
     ):
     if field_label == "":
         field_label = field_type.value
-    if field_description == "":
-        field_description = f"A {field_type.value} field"
+    # if field_description == "":
+    #     field_description = f"A {field_type.value} field"
     use_field_label = _get_unique_field_label(global_schema, field_label)
     field_location[use_field_label] = {
         "type": field_type.value,
@@ -254,13 +256,12 @@ def clear_number_constraints(number_field):
     number_field.pop('multipleOf', None)
 
 def rename_field(global_schema, field_location, nesting, old_label, new_label):
+    set_required_field_status(global_schema, nesting, old_label, False)
     key_order = list(field_location.keys())
-    key_index = key_order.index(old_label)
     # Ensures key order is stable
-    for ix, key in enumerate(key_order[key_index:]):
-        if ix == key_index:
-            set_required_field_status(global_schema, nesting, old_label, False)
-            field_location[new_label] = field_location.pop(old_label)
+    for key in key_order:
+        if key == old_label:
+            field_location[new_label] = field_location.pop(key)
         else:
             field_location[key] = field_location.pop(key)
     # Ensures required order matches field order
