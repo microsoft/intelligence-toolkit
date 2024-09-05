@@ -1,6 +1,10 @@
 from collections import defaultdict
 from json import dumps, loads
+
 from toolkit.graph.graph_fusion_encoder_embedding import is_converging_pair
+
+from toolkit.graph.graph_fusion_encoder_embedding import is_converging_pair
+
 
 def detect_converging_pairs(period_to_cids, cid_to_concepts, node_to_period_to_pos, callbacks=[]):
     # print(f'Period to cids: {period_to_cids}')
@@ -87,7 +91,7 @@ def explain_chunk_significance(period_to_cids, cid_to_converging_pairs, node_per
 def combine_chunk_text_and_explantion(cid_to_text, cid_to_summary):
     cid_to_explained_text = {}
     for cid, text in cid_to_text.items():
-        summary = cid_to_summary.value[cid] if cid in cid_to_summary else ''
+        summary = cid_to_summary[cid] if cid in cid_to_summary else ""
         if summary != '':
             jsn = loads(text)
             jsn['analysis'] = summary
