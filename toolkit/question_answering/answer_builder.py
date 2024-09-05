@@ -94,11 +94,8 @@ def generate_answers(
         )
         selected_metadata = set()
         for c in selected_chunks:
-            try:
-                c_json = loads(c)
-                selected_metadata.add(f'{c_json["title"]} ({c_json["chunk_id"]})')
-            except:
-                selected_metadata.add("Unknown (Unknown)")
+            c_json = loads(c)
+            selected_metadata.add(f'{c_json["title"]} ({c_json["chunk_id"]})')
 
         used_references = [r for r in references if r in selected_metadata]
         answer_history.append((len(used_references), len(selected_chunks)))

@@ -140,7 +140,7 @@ class BaseEmbedder(ABC):
             hash_all_texts = [hash_text(item["text"]) for item in batch_data]
             existing = self.vector_store.search_by_column(hash_all_texts, "hash")
 
-            if len(existing.get("vector")) > 0:
+            if len(existing.get("vector")) > 0 and cache_data:
                 existing_texts = existing.sort_values("text")
                 for item in existing_texts.to_numpy():
                     all_data.append(
