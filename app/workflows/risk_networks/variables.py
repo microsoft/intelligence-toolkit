@@ -41,7 +41,7 @@ class SessionVariables:
         self.network_max_network_entities = SessionVariable(20, prefix)
         self.network_max_attribute_degree = SessionVariable(10, prefix)
         self.network_trimmed_attributes = SessionVariable([], prefix)
-        self.network_similarity_threshold = SessionVariable(0.05, prefix)
+        self.network_similarity_threshold = SessionVariable(0.001, prefix)
         self.network_inferred_links = SessionVariable(defaultdict(set), prefix)
         self.network_embedded_texts_count = SessionVariable(0, prefix)
         self.network_node_types = SessionVariable(set(), prefix)

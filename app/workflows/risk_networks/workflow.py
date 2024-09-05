@@ -23,7 +23,11 @@ from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 from toolkit.risk_networks import get_readme as get_intro
 from toolkit.risk_networks import prompts
-from toolkit.risk_networks.config import ENTITY_LABEL
+from toolkit.risk_networks.config import (
+    ENTITY_LABEL,
+    SIMILARITY_THRESHOLD_MAX,
+    SIMILARITY_THRESHOLD_MIN,
+)
 from toolkit.risk_networks.explore_networks import (
     build_network_from_entities,
     get_entity_graph,
@@ -262,9 +266,10 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
             )
             network_similarity_threshold = st.number_input(
                 "Similarity threshold for fuzzy matching (max)",
-                min_value=0.0,
-                max_value=1.0,
-                step=0.01,
+                min_value=SIMILARITY_THRESHOLD_MIN,
+                max_value=SIMILARITY_THRESHOLD_MAX,
+                step=0.001,
+                format="%f",
                 value=sv.network_similarity_threshold.value,
                 help="The maximum cosine similarity threshold for inferring links between nodes based on their embeddings. Higher values will infer more links, but may also infer more false positives.",
             )
