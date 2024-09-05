@@ -3,7 +3,7 @@
 #
 
 from collections import defaultdict
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import networkx as nx
 import polars as pl
@@ -47,18 +47,23 @@ class TestIndexNodes:
             G.add_edge(f"Entity{i}", f"Entity{i + 1}")
         return G
 
-    def test_index_nodes_empty_types(self, overall_graph):
+    async def test_index_nodes_empty_types(self, overall_graph):
         with pytest.raises(
             ValueError,
             match="No node types to index",
         ):
-            index_nodes([], overall_graph)
+            await index_nodes([], overall_graph)
 
     @patch("toolkit.risk_networks.index_and_infer.OpenAIEmbedder")
-    def test_index_nodes_small_samples(self, mock_embedder, overall_graph_small):
-        mock_embedder_instance = MagicMock()
-        mock_embedder.return_value = mock_embedder_instance
-        mock_embedder_instance.embed_store_many.return_value = [[0.1, 0.3], [0.3, 0.4]]
+    async def test_index_nodes_small_samples(self, mock_embedder, overall_graph_small):
+        async def embed_store_many(*args) -> list[list[float]]:
+            return [
+                {"vector": [0.1, 0.3], "text": "A"},
+                {"vector": [0.3, 0.4], "text": "B"},
+            ]
+
+        mock_instance = mock_embedder.return_value
+        mock_instance.embed_store_many.side_effect = embed_store_many
 
         indexed_node_types = ["TypeA", "TypeB"]
         # Expect ValueError
@@ -66,21 +71,24 @@ class TestIndexNodes:
             ValueError,
             match="Expected n_neighbors <= n_samples_fit, but n_neighbors = 20, n_samples_fit = 2, n_samples = 2",
         ):
-            index_nodes(indexed_node_types, overall_graph_small)
+            await index_nodes(indexed_node_types, overall_graph_small)
 
     @patch("toolkit.risk_networks.index_and_infer.OpenAIEmbedder")
-    def test_index_nodes(self, mock_embedder, overall_graph):
-        mock_embedder_instance = MagicMock()
-        mock_embedder.return_value = mock_embedder_instance
-        # Simulate embedding for the expected number of nodes
-        mock_embedder_instance.embed_store_many.return_value = [
-            [0.1, 0.3],
-        ] * 23
+    async def test_index_nodes(self, mock_embedder, overall_graph):
+        async def embed_store_many(*args) -> list[list[float]]:
+            return [
+                {"vector": [0.1, 0.3], "text": "A"},
+            ] * 23
+
+        mock_instance = mock_embedder.return_value
+        mock_instance.embed_store_many.side_effect = embed_store_many
 
         indexed_node_types = ["TypeA", "TypeB", "TypeC"]
-        embedded_texts, nearest_text_distances, nearest_text_indices = index_nodes(
-            indexed_node_types, overall_graph
-        )
+        (
+            embedded_texts,
+            nearest_text_distances,
+            nearest_text_indices,
+        ) = await index_nodes(indexed_node_types, overall_graph)
 
         # Check if the embedded texts are correct
         expected_texts = [
@@ -88,14 +96,13 @@ class TestIndexNodes:
             for i in range(1, 31)
             if f"Type{chr(65 + (i % 4))}" in indexed_node_types
         ]
-        assert embedded_texts == expected_texts
+        expected_texts.sort()
 
         # Check the shape of the distances and indices
         expected_shape = (len(expected_texts), 20)
+        assert embedded_texts == expected_texts
         assert nearest_text_distances.shape == expected_shape
         assert nearest_text_indices.shape == expected_shape
-        print("nearest_text_indices", nearest_text_indices)
-        print("nearest_text_distances", nearest_text_distances)
 
 
 class TestInferNodes:
@@ -378,14 +385,14 @@ class TestIndexAndInfer:
             G.add_edge(f"Entity{i}", f"Entity{i + 1}")
         return G
 
-    def test_empty_graph(self):
+    async def test_empty_graph(self):
         indexed_node_types = ["TypeA", "TypeB", "TypeC"]
         with pytest.raises(ValueError, match="Graph is empty"):
-            index_and_infer(indexed_node_types, nx.Graph(), 0)
+            await index_and_infer(indexed_node_types, nx.Graph(), 0)
 
     @patch("toolkit.risk_networks.index_and_infer.index_nodes")
     @patch("toolkit.risk_networks.index_and_infer.infer_nodes")
-    def test_index_and_infer(
+    async def test_index_and_infer(
         self, mock_infer_nodes, mock_index_nodes, overall_graph
     ) -> None:
         indexed_node_types = ["TypeA", "TypeB", "TypeC"]
@@ -403,7 +410,7 @@ class TestIndexAndInfer:
         inferred_links["Entity1"].add("Entity2")
         mock_infer_nodes.return_value = inferred_links
 
-        link_list, _ = index_and_infer(indexed_node_types, overall_graph, 0.5)
+        link_list, _ = await index_and_infer(indexed_node_types, overall_graph, 0.5)
 
         assert link_list == inferred_links
 

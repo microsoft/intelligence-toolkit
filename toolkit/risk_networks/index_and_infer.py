@@ -2,6 +2,7 @@ from collections import defaultdict
 from typing import Any
 
 import networkx as nx
+import numpy as np
 import polars as pl
 from sklearn.neighbors import NearestNeighbors
 
@@ -9,6 +10,7 @@ import toolkit.risk_networks.config as config
 from toolkit.AI.base_embedder import BaseEmbedder
 from toolkit.AI.openai_configuration import OpenAIConfiguration
 from toolkit.AI.openai_embedder import OpenAIEmbedder
+from toolkit.AI.utils import hash_text
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 from toolkit.risk_networks.config import (
@@ -18,7 +20,7 @@ from toolkit.risk_networks.config import (
 )
 
 
-def index_nodes(
+async def index_nodes(
     indexed_node_types: list[str],
     main_graph: nx.Graph,
     callbacks: list[ProgressBatchCallback] | None = None,
@@ -34,15 +36,25 @@ def index_nodes(
         for n, d in main_graph.nodes(data=True)
         if d["type"] in indexed_node_types
     ]
+    text_types.sort()
     texts = [t[0] for t in text_types]
+
+    data = [
+        {"hash": hash_text(t), "text": t, "additional_details": {"type": ty}}
+        for t, ty in text_types
+    ]
 
     if functions_embedder is None:
         functions_embedder = OpenAIEmbedder(openai_configuration, config.cache_name)
-    embeddings = functions_embedder.embed_store_many(
-        texts,
+    data_embeddings = await functions_embedder.embed_store_many(
+        data,
         callbacks,
         save_cache,
     )
+
+    # sort data_embeddings by text
+    data_embeddings.sort(key=lambda x: x["text"])
+    embeddings = [np.array(d["vector"]) for d in data_embeddings]
 
     vals = [(n, t, e) for (n, t), e in zip(text_types, embeddings, strict=False)]
     edf = pl.DataFrame(vals, schema=["text", "type", "vector"])
@@ -111,7 +123,6 @@ def build_inferred_df(inferred_links_list: defaultdict[set]) -> pl.DataFrame:
         for n in near
         if text < n
     ]
-    print("link_listlink_list", link_list)
     inferred_df = pl.DataFrame(link_list, schema=["text", "similar"])
     inferred_df = inferred_df.with_columns(
         [
@@ -123,7 +134,7 @@ def build_inferred_df(inferred_links_list: defaultdict[set]) -> pl.DataFrame:
     return inferred_df.sort(["text", "similar"])
 
 
-def index_and_infer(
+async def index_and_infer(
     indexed_node_types: list[str],
     main_graph: nx.Graph,
     network_similarity_threshold: float,
@@ -140,7 +151,7 @@ def index_and_infer(
         embedded_texts,
         nearest_text_distances,
         nearest_text_indices,
-    ) = index_nodes(
+    ) = await index_nodes(
         indexed_node_types,
         main_graph,
         callbacks,

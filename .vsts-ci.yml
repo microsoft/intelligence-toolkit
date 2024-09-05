@@ -84,7 +84,7 @@ stages:
         steps:
           - task: Docker@2
             inputs:
-              containerRegistry: 'intelligenceappscontainerservice'
+              containerRegistry: '$(CONTAINER_REGISTRY)'
               repository: 'intelligence-toolkit'
               command: 'buildAndPush'
               Dockerfile: '**/Dockerfile'
@@ -127,4 +127,3 @@ stages:
           - task: PublishPipelineArtifact@1
             inputs:
               targetPath: '$(System.DefaultWorkingDirectory)/build/nsis/Intelligence_toolkit_installer.exe' 
-              artifact: 'executable'

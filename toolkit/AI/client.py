@@ -5,7 +5,7 @@ import asyncio
 import logging
 
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
-from openai import AzureOpenAI, OpenAI
+from openai import AsyncAzureOpenAI, AsyncOpenAI, AzureOpenAI, OpenAI
 
 from .classes import LLMCallback
 from .defaults import API_BASE_REQUIRED_FOR_AZURE, DEFAULT_EMBEDDING_MODEL
@@ -18,13 +18,15 @@ class OpenAIClient:
     """OpenAI Client class definition."""
 
     _client = None
+    _async_client = None
 
-    def __init__(self, configuration: OpenAIConfiguration | None = None) -> None:
+    def __init__(
+        self, configuration: OpenAIConfiguration | None = None, concurrent_coroutines=10
+    ) -> None:
         self.configuration = configuration or OpenAIConfiguration()
-        self.create_openai_client()
-        self.semaphore = asyncio.Semaphore(5)
+        self._create_openai_client()
 
-    def create_openai_client(self) -> None:
+    def _create_openai_client(self) -> None:
         """Create a new OpenAI client instance."""
         if self.configuration.api_type == "Azure OpenAI":
             api_base = self.configuration.api_base
@@ -47,8 +49,20 @@ class OpenAIClient:
                     azure_ad_token_provider=token_provider,
                     azure_endpoint=api_base,
                 )
+                self._async_client = AsyncAzureOpenAI(
+                    api_version=self.configuration.api_version,
+                    # Azure-Specifics
+                    azure_ad_token_provider=token_provider,
+                    azure_endpoint=api_base,
+                )
             else:
-                self._client = AzureOpenAI(
+                self._client = AsyncAzureOpenAI(
+                    api_version=self.configuration.api_version,
+                    # Azure-Specifics
+                    azure_endpoint=api_base,
+                    api_key=self.configuration.api_key,
+                )
+                self._async_client = AzureOpenAI(
                     api_version=self.configuration.api_version,
                     # Azure-Specifics
                     azure_endpoint=api_base,
@@ -59,7 +73,9 @@ class OpenAIClient:
             self._client = OpenAI(
                 api_key=self.configuration.api_key,
             )
-        return self._client
+            self._async_client = AsyncOpenAI(
+                api_key=self.configuration.api_key,
+            )
 
     def generate_chat(
         self,
@@ -141,6 +157,17 @@ class OpenAIClient:
         self, text: list[str], model: str = DEFAULT_EMBEDDING_MODEL
     ) -> list[float]:
         return self._client.embeddings.create(input=text, model=model)
+
+    async def generate_embedding_async(
+        self, text: list[str], model: str = DEFAULT_EMBEDDING_MODEL
+    ) -> list[float]:
+        if self.configuration.api_type == "Azure OpenAI":
+            embedding = self._async_client.embeddings.create(input=text, model=model)
+        else:
+            embedding = await self._async_client.embeddings.create(
+                input=text, model=model
+            )
+        return embedding.data[0].embedding
 
     async def map_generate_text(
         self,

@@ -5,7 +5,7 @@ import os
 
 import pandas as pd
 import streamlit as st
-import app.util.df_functions
+import app.util.df_functions as df_functions
 import app.workflows.group_narratives.prompts as prompts
 import app.workflows.group_narratives.variables as gn_variables
 from app.util import ui_components
@@ -49,7 +49,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                 sv.narrative_final_df,
                 sv.narrative_subject_identifier,
             )
-            sv.narrative_final_df.value = util.df_functions.fix_null_ints(
+            sv.narrative_final_df.value = df_functions.fix_null_ints(
                 sv.narrative_final_df.value
             )
             sv.narrative_final_df.value = (

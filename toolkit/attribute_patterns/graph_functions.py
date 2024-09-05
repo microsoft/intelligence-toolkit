@@ -8,14 +8,16 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
+
 def convert_edge_df_to_graph(edge_df):
     G = nx.from_pandas_edgelist(edge_df, "source", "target", "weight")
     # get largest connected component
     lcc = max(nx.connected_components(G), key=len)
     return G, lcc
 
-
-def create_edge_df_from_atts(all_atts, pdf, mi, min_edge_weight, missing_edge_prop):
+def create_edge_df_from_atts(
+    all_atts, pdf, min_edge_weight, missing_edge_prop
+) -> pd.DataFrame:
     edge_counter = Counter()
     att_counter = Counter()
     for _, row in pdf.iterrows():
@@ -29,22 +31,7 @@ def create_edge_df_from_atts(all_atts, pdf, mi, min_edge_weight, missing_edge_pr
     edge_df["target"] = edge_df["edge"].apply(lambda x: x[1])
     att_count = sum(att_counter.values())
     edge_count = sum(edge_counter.values())
-
-    if mi:
-        edge_df["weight"] = edge_df.apply(
-            lambda x: (edge_counter[x["edge"]] / edge_count)
-            * np.log2(
-                edge_counter[x["edge"]]
-                / edge_count
-                / (
-                    (att_counter[x["source"]] / att_count)
-                    * (att_counter[x["target"]] / att_count)
-                )
-            ),
-            axis=1,
-        )
-    else:
-        edge_df["weight"] = edge_df.apply(lambda x: edge_counter[x["edge"]], axis=1)
+    edge_df["weight"] = edge_df.apply(lambda x: edge_counter[x["edge"]], axis=1)
 
     max_w = edge_df["weight"].max()
     min_w = edge_df["weight"].min()
