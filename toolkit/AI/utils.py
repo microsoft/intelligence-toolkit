@@ -33,7 +33,7 @@ def prepare_messages(
 
     if user_message is not None:
         messages.append({"role": "user", "content": user_message.format(**variables)})
-
+    print(messages)
     return messages
 
 

@@ -622,10 +622,10 @@ def prepare_input_df(
         if f"{workflow}_suppress_zeros" not in st.session_state:
             st.session_state[f"{workflow}_suppress_zeros"] = True
         suppress_zeros = st.checkbox(
-            "Suppress binary 0s",
+            "Suppress boolean False / binary 0",
             key=f"{workflow}_suppress_zeros_input",
             value=st.session_state[f"{workflow}_suppress_zeros"],
-            help="For binary columns, maps the number 0 to None. This is useful when only the presence of an attribute is important, not the absence.",
+            help="For boolean columns, maps the value False to None. For binary columns, maps the number 0 to None. This is useful when only the presence of an attribute is important, not the absence.",
         )
         reload = False
         if suppress_zeros:
@@ -640,6 +640,10 @@ def prepare_input_df(
                 ):
                     if 0 in unique_values or str(0) in unique_values or float(0):
                         bdf[col] = input_df_var.value[col].replace(0, np.nan)
+                        processed_df_var.value[col] = bdf[col]
+                        reload = True
+                    elif False in unique_values or str(False) in unique_values:
+                        bdf[col] = input_df_var.value[col].replace(False, np.nan).replace('False', np.nan)
                         processed_df_var.value[col] = bdf[col]
                         reload = True
         if suppress_zeros != st.session_state[f"{workflow}_suppress_zeros"]:
