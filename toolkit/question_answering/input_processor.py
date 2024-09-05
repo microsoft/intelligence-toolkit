@@ -1,9 +1,9 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import io
 from collections import defaultdict
-from json import dumps, loads
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+from json import dumps, loads
 
 import networkx as nx
 import pdfplumber
@@ -28,12 +28,16 @@ def process_file_bytes(input_file_bytes, analysis_window_size: PeriodOption, cal
                 page_text = pdf_reader.pages[px].extract_text()
                 page_texts.append(page_text)
             doc_text = " ".join(page_texts)
-            text_chunks = splitter.split(doc_text)
         elif file_name.endswith(".json"):
             text_chunks = process_json_text(loads(bytes.decode("utf-8")), analysis_window_size)
         else:
             doc_text = bytes.decode("utf-8")
+
+        if not file_name.endswith(".json"):
             text_chunks = splitter.split(doc_text)
+            for index, text in enumerate(text_chunks):
+                chunk = {"title": file_name, "text_chunk": text, "chunk_id": index + 1}
+                text_chunks[index] = dumps(chunk, indent=2)
 
         text_to_chunks[file_name] = text_chunks
     return text_to_chunks
