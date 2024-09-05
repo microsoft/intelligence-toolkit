@@ -107,8 +107,9 @@ def create(sv: bds_variables.SessionVariables, workflow: None):
 
             for ix, record_array in enumerate(sv.record_arrays.value):
                     with df_placeholders[ix]:
-                        df = sv.generated_dfs.value[record_array]
-                        st.dataframe(df, height=250)
+                        if record_array in sv.generated_dfs.value:
+                            df = sv.generated_dfs.value[record_array]
+                            st.dataframe(df, height=250)
 
             for ix, record_array in enumerate(sv.record_arrays.value):
                 with dl_placeholders[ix]:
