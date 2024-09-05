@@ -13,9 +13,11 @@ from toolkit.AI.openai_embedder import OpenAIEmbedder
 from toolkit.AI.utils import hash_text
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
-from toolkit.risk_networks.config import (ENTITY_LABEL,
-                                          SIMILARITY_THRESHOLD_MAX,
-                                          SIMILARITY_THRESHOLD_MIN)
+from toolkit.risk_networks.config import (
+    ENTITY_LABEL,
+    SIMILARITY_THRESHOLD_MAX,
+    SIMILARITY_THRESHOLD_MIN,
+)
 
 
 async def index_nodes(
@@ -53,7 +55,6 @@ async def index_nodes(
     # sort data_embeddings by text
     data_embeddings.sort(key=lambda x: x["text"])
     embeddings = [np.array(d["vector"]) for d in data_embeddings]
-    print("emb", embeddings)
 
     vals = [(n, t, e) for (n, t), e in zip(text_types, embeddings, strict=False)]
     edf = pl.DataFrame(vals, schema=["text", "type", "vector"])
