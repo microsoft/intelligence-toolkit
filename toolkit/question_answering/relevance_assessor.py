@@ -7,19 +7,19 @@ import toolkit.question_answering.helper_functions as helper_functions
 import toolkit.question_answering.prompts as prompts
 
 
-def assess_relevance(
-        ai_configuration,
-        search_label,
-        search_cids,
-        cid_to_text,
-        question,
-        logit_bias,
-        relevance_test_budget,
-        relevance_test_batch_size,
-        test_history,
-        progress_callback,
-        chunk_callback
-    ):
+async def assess_relevance(
+    ai_configuration,
+    search_label,
+    search_cids,
+    cid_to_text,
+    question,
+    logit_bias,
+    relevance_test_budget,
+    relevance_test_batch_size,
+    test_history,
+    progress_callback,
+    chunk_callback,
+):
     print(f'Assessing relevance for {search_label} with {len(search_cids)} chunks')
     batched_cids = [search_cids[i:i+relevance_test_batch_size]
                       for i in range(0, len(search_cids), relevance_test_batch_size)]
@@ -31,8 +31,9 @@ def assess_relevance(
         cid_batch = batched_cids[mx]
         if len(test_history) + len(mapped_messages) > relevance_test_budget:
             mapped_messages = mapped_messages[:relevance_test_budget - len(test_history)]
-        mapped_responses = asyncio.run(helper_functions.map_generate_text(
-            ai_configuration, mapped_messages, logit_bias=logit_bias, max_tokens=1))
+        mapped_responses = await helper_functions.map_generate_text(
+            ai_configuration, mapped_messages, logit_bias=logit_bias, max_tokens=1
+        )
         num_relevant = process_relevance_responses(
             search_label,
             cid_batch,
