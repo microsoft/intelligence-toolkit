@@ -61,7 +61,7 @@ def generate_form_from_json_schema(global_schema, default_schema, field_location
                     show_enum = value["type"] in ["string", "number"] \
                         or value["type"] == "array" \
                         and value["items"]["type"] in ["string", "number"]
-                    if not show_enum:
+                    if show_enum:
                         con = st.checkbox(
                             "Enum?",
                             key=f"{key_with_prefix}_constrained",
@@ -111,7 +111,7 @@ def generate_form_from_json_schema(global_schema, default_schema, field_location
                 return
         else:
             if key != 'type':
-                new_value = st.text_input(f'{key} metadata', key=f'{key_with_prefix}_label', value=value)
+                new_value = st.text_input(f'`{key}` metadata', key=f'{key_with_prefix}_label', value=value)
                 if new_value != value:
                     field_location[key] = new_value
                     st.rerun()
@@ -215,7 +215,7 @@ def create_enum_ui(field_location, key, key_with_prefix, value):
 
 def edit_schema_ui(global_schema, nesting, field_location):
     key_with_prefix = '.'.join(nesting)
-    title = f'Add field to {nesting[-1]}' if nesting else 'Add top-level field'
+    title = f'Add field to `{nesting[-1]}`' if nesting else 'Add top-level field'
     st.markdown(title)
     c1, c2, c3, c4, c5, c6, c7, c8 = st.columns(8)
     with c1:

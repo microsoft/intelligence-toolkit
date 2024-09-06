@@ -56,9 +56,23 @@ Now select the `Sample Object` tab, and notice how none of these fields are cont
 
 Let's now add some fields to the object using the buttons under `Add top-level field` in the form to the left.
 
-To create a dataset of records rather than a single object, the schema needs to contain an object array field. Press the `obj[]` button to add an object array field at the top level (i.e., level 0). The new field will be given a generic name by default: `object_array_1`. Rename this to `customer_complaint_records` and see on the right how this creates an array of objects whose properties you can define next.
+To create a dataset of records rather than a single object, the schema needs to contain an object array field. Press the `obj[]` button to add an object array field at the top level (i.e., level 0). The new field will be given a generic name by default: `object_array_1`. Rename this to `complaint_records` and see on the right how this creates an array of objects whose properties you can define next.
 
 Note that all new fields have the `Required?` checkbox checked by default, placing all field names in the `required` field of the object. This is a requirement for the [OpenAI Structured Outputs API](https://platform.openai.com/docs/guides/structured-outputs/supported-schemas), which we'll later use to generate mock data that follows the schema. Similarly, all objects must also have `additionalProperties` set to `false`, so the `Additional?` checkbox is left unchecked by default.
 
 ### Defining record attributes
 
+Next, we need to add fields to the objects of `complaint_records` for each attribute of the records we want to create.
+
+Using the controls under `Add field to complaint_records`, press the `str` button to add a string (i.e., text) field. This field appears as the level 1 string `string_1` (level 1 because the field is nested one level down from the `complaint_records` array at the top level, i.e., level 0). Edit the text label from `string_1` to `name`.
+
+As further string fields within `complaint_records`, now add:
+
+- `street` and `city` as string fields
+- `age` as a numeric field using the `num` button
+- `email` as string field
+- `price_issue`, `quality_issue`, `service_issue`, `delivery_issue`, `description_issue` as boolean (`true`/`false`) fields using the `bool` button
+
+Next, we want to add a `product_code` string field, but limit the posible values of the field to a predefined list called an "enumeration". Do this by checking the `Enum?` checkbox and observing the default values `A`, `B`, and `C` added to the enumeration. These values can be edited, deleted, and expanded as desired. For this tutorial, simply add further enum values alphabetically from `D` to `H`.
+
+Note that boolean attributes of the record could also have been created using the `str[]` button to create a string array, checking `Enum?`, and specifying `price_issue`, `quality_issue`, `service_issue`, `delivery_issue`, `description_issue` as possible values. However, by using independent boolean fields we simplify the overall record structure and avoid the challenges of nested arrays in the final data object.

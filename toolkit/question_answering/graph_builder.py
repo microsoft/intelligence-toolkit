@@ -46,10 +46,11 @@ def prepare_concept_graphs(period_concept_graphs, max_cluster_size, min_edge_wei
     community_to_concepts, concept_to_community = (
         detect_concept_communities(period_concept_graphs["ALL"], max_cluster_size)
     )
+    final_nodeset = set(period_concept_graphs["ALL"].nodes()).intersection(concept_to_community.keys())
     for period, G in period_concept_graphs.items():
-        for node in list(G.nodes()):
-            if node not in concept_to_community:
-                G.remove_node(node)
+        for node in final_nodeset:
+            if node not in G.nodes():
+                G.add_node(node)
         for component in list(nx.connected_components(G)):
             highest_degree_node = max(component, key=lambda x: G.degree(x))
             G.add_edge(highest_degree_node, 'dummynode', weight=1)

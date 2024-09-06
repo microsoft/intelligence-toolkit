@@ -143,7 +143,7 @@ def create(sv: bds_variables.SessionVariables, workflow: None):
                                     key=f'{record_array}_csv_download'
                                 )
     with mock_tab:
-        workflow_home = '/example_outputs/generate_record_data'
+        workflow_home = 'example_outputs/generate_record_data'
 
         mock_data_files = os.listdir(f'{workflow_home}/datasets')
         mock_dfs = {}
@@ -153,9 +153,10 @@ def create(sv: bds_variables.SessionVariables, workflow: None):
         if selected_data != None:
             c1, c2 = st.columns([1, 1])
             with c1:
+                st.markdown('### Schema')
                 schema_file = '_'.join(selected_data.split('_')[:-1]) + '_schema.json'
-                schema_text = loads(open(f'/{workflow_home}/schemas/{schema_file}', 'r').read())
-                st.markdown(schema_text)
+                schema_text = loads(open(f'{workflow_home}/schemas/{schema_file}', 'r').read())
+                st.write(schema_text)
                 st.download_button(
                     label=f'Download {schema_file}',
                     data=dumps(schema_text, indent=2),
@@ -163,6 +164,7 @@ def create(sv: bds_variables.SessionVariables, workflow: None):
                     mime='application/json',
                 )
             with c2:
+                st.markdown('### Mock Data')
                 st.dataframe(mock_dfs[selected_data], height=500)
                 st.download_button(
                     label=f'Download {selected_data}',
