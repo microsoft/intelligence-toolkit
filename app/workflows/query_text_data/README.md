@@ -1,6 +1,6 @@
-# Question Answering
+# Query Text Data
 
-The **Question Answering** workflow generates intelligence reports from a collection of text documents.
+The **Query Text Data** workflow generates intelligence reports from a collection of text documents.
 
 ## How it works
 

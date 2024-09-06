@@ -8,7 +8,7 @@ from json import dumps, loads
 import networkx as nx
 import pdfplumber
 
-import toolkit.question_answering.graph_builder as graph_builder
+import toolkit.query_text_data.graph_builder as graph_builder
 from toolkit.AI.text_splitter import TextSplitter
 
 PeriodOption = Enum("Period", "NONE DAY WEEK MONTH QUARTER YEAR")

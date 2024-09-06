@@ -2,4 +2,4 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 
-cache_name = "question_answering"
+cache_name = "query_text_data"

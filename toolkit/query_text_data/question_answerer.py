@@ -5,10 +5,10 @@ import numpy as np
 import scipy.spatial.distance
 import tiktoken
 
-import toolkit.question_answering.answer_builder as answer_builder
-import toolkit.question_answering.answer_schema as answer_schema
-import toolkit.question_answering.helper_functions as helper_functions
-import toolkit.question_answering.relevance_assessor as relevance_assessor
+import toolkit.query_text_data.answer_builder as answer_builder
+import toolkit.query_text_data.answer_schema as answer_schema
+import toolkit.query_text_data.helper_functions as helper_functions
+import toolkit.query_text_data.relevance_assessor as relevance_assessor
 
 
 async def answer_question(

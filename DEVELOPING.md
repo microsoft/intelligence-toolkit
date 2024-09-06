@@ -48,9 +48,9 @@ OPENAI_API_KEY=<OPENAI_API_KEY>
 
     - [Example](./examples/detect_case_patterns.ipynb): See an example of how to run the code with your data to obtain results without the need to run the UI.
 
-- [Question Answering](./toolkit/question_answering/README.md)
+- [Query Text Data](./toolkit/query_text_data/README.md)
 
-    - [Example](./examples/question_answering.ipynb): See an example of how to run the code with your data to obtain results without the need to run the UI.
+    - [Example](./examples/query_text_data.ipynb): See an example of how to run the code with your data to obtain results without the need to run the UI.
 
 - [Detect Entity Networks](./toolkit/detect_entity_networks/README.md)
 

@@ -3,9 +3,9 @@ import random
 
 import streamlit as st
 
-import toolkit.question_answering.prompts as prompts
+import toolkit.query_text_data.prompts as prompts
 from app.util.session_variable import SessionVariable
-from toolkit.question_answering.input_processor import PeriodOption
+from toolkit.query_text_data.input_processor import PeriodOption
 
 
 class SessionVariables:
@@ -40,7 +40,7 @@ class SessionVariables:
         self.node_period_counts = SessionVariable({}, prefix)
         self.edge_period_counts = SessionVariable({}, prefix)
         self.cid_to_summary = SessionVariable({}, prefix)
-        self.analysis_window_size = SessionVariable('NONE', prefix)
+        self.analysis_window_size = SessionVariable("NONE", prefix)
 
         self.adjacent_chunk_steps = SessionVariable(1, prefix)
         self.community_relevance_tests = SessionVariable(10, prefix)
@@ -54,8 +54,6 @@ class SessionVariables:
         self.system_prompt = SessionVariable(prompts.list_prompts, prefix)
         self.chunk_progress = SessionVariable("", prefix)
         self.answer_progress = SessionVariable("", prefix)
-
-
 
     def reset_workflow(self):
         for key in st.session_state:

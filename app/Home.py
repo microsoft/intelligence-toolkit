@@ -62,7 +62,7 @@ flowchart TD
     HasGroups{Grouping Attributes?} --> |Match Entity Records Workflow| MatchedEntities[/AI Group Reports\\]
     EntityData[\\Entity Records/] ---> HasInconsistencies{Inconsistent Attributes?} --> |Match Entity Records Workflow| RecordLinking[/AI Match Reports\\]
     EntityData[\\Entity Records/] ---> HasIdentifiers{Identifying Attributes?} --> |Network Analysis Workflow| NetworkAnalysis[/AI Network Reports\\]
-    EntityDocs[\\Entity Documents/] ----> |Question Answering Workflow| AnswerReports[/AI Answer Reports\\]
+    EntityDocs[\\Entity Documents/] ----> |Query Text Data Workflow| AnswerReports[/AI Answer Reports\\]
 
     """,
         height=600,

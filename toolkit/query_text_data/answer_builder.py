@@ -3,8 +3,8 @@ import re
 from json import loads
 
 import toolkit.AI.utils as utils
-import toolkit.question_answering.helper_functions as helper_functions
-import toolkit.question_answering.prompts as prompts
+import toolkit.query_text_data.helper_functions as helper_functions
+import toolkit.query_text_data.prompts as prompts
 
 
 def extract_chunk_references(text):
