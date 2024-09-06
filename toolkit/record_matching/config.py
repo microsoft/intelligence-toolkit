@@ -10,7 +10,7 @@ cache_name = "record_matching"
 
 DEFAULT_COLUMNS_DONT_CONVERT = ["Entity ID", "Entity name", "Dataset"]
 DEFAULT_SENTENCE_PAIR_JACCARD_THRESHOLD = 0.75
-DEFAULT_MAX_RECORD_DISTANCE = 0.5
+DEFAULT_MAX_RECORD_DISTANCE = 0.05
 
 
 class AttributeToMatch(TypedDict):
