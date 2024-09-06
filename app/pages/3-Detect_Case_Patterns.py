@@ -3,12 +3,13 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 import streamlit as st
-import app.workflows.attribute_patterns.variables as ap_variables
-import app.workflows.attribute_patterns.workflow
 from components.app_loader import load_multipage_app
+
+import app.workflows.detect_case_patterns.variables as ap_variables
+import app.workflows.detect_case_patterns.workflow
 from app.util.helper_fn import app_in_dev_mode
 
-workflow = "attribute_patterns"
+workflow = "detect_case_patterns"
 
 
 def main() -> None:
@@ -16,13 +17,13 @@ def main() -> None:
         layout="wide",
         initial_sidebar_state="collapsed",
         page_icon="app/myapp.ico",
-        page_title="Intelligence Toolkit | Attribute Patterns",
+        page_title="Intelligence Toolkit | Detect Case Patterns",
     )
     sv = ap_variables.SessionVariables(workflow)
     load_multipage_app(sv)
 
     try:
-        app.workflows.attribute_patterns.workflow.create(sv, workflow)
+        app.workflows.detect_case_patterns.workflow.create(sv, workflow)
     except Exception as e:
         if app_in_dev_mode():
             st.exception(e)

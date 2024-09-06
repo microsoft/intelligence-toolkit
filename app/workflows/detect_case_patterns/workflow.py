@@ -3,7 +3,6 @@
 #
 import altair as alt
 import streamlit as st
-import app.workflows.attribute_patterns.variables as ap_variables
 from st_aggrid import (
     AgGrid,
     ColumnsAutoSizeMode,
@@ -11,25 +10,37 @@ from st_aggrid import (
     GridOptionsBuilder,
     GridUpdateMode,
 )
-from app.util import ui_components
 
-from toolkit.attribute_patterns import get_readme as get_intro
-from toolkit.attribute_patterns import prompts
-from toolkit.graph.graph_fusion_encoder_embedding import generate_graph_fusion_encoder_embedding
-from toolkit.attribute_patterns.model import (
+import app.workflows.detect_case_patterns.variables as ap_variables
+from app.util import ui_components
+from toolkit.detect_case_patterns import get_readme as get_intro
+from toolkit.detect_case_patterns import prompts
+from toolkit.detect_case_patterns.model import (
     compute_attribute_counts,
     create_time_series_df,
     detect_patterns,
     generate_graph_model,
     prepare_graph,
 )
-from toolkit.attribute_patterns.record_counter import RecordCounter
-from .config import type_val_sep, correlation, diaga, laplacian, min_edge_weight, missing_edge_prop
+from toolkit.detect_case_patterns.record_counter import RecordCounter
+from toolkit.graph.graph_fusion_encoder_embedding import (
+    generate_graph_fusion_encoder_embedding,
+)
+
+from .config import (
+    correlation,
+    diaga,
+    laplacian,
+    min_edge_weight,
+    missing_edge_prop,
+    type_val_sep,
+)
+
 
 def create(sv: ap_variables.SessionVariables, workflow):
     intro_tab, uploader_tab, detect_tab, explain_tab = st.tabs(
         [
-            "Attribute patterns workflow:",
+            "Detect case patterns workflow:",
             "Create graph model",
             "Detect patterns",
             "Generate AI pattern reports",
@@ -43,59 +54,59 @@ def create(sv: ap_variables.SessionVariables, workflow):
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:
             ui_components.single_csv_uploader(
-                "attribute_patterns",
+                "detect_case_patterns",
                 "Upload CSV",
-                sv.attribute_last_file_name,
-                sv.attribute_input_df,
-                sv.attribute_binned_df,
-                sv.attribute_final_df,
-                sv.attribute_upload_key.value,
-                key="attributes_uploader",
+                sv.detect_case_patterns_last_file_name,
+                sv.detect_case_patterns_input_df,
+                sv.detect_case_patterns_binned_df,
+                sv.detect_case_patterns_final_df,
+                sv.detect_case_patterns_upload_key.value,
+                key="case_patterns_uploader",
                 height=500,
             )
         with model_col:
             ui_components.prepare_input_df(
-                "attribute_patterns",
-                sv.attribute_input_df,
-                sv.attribute_binned_df,
-                sv.attribute_final_df,
-                sv.attribute_subject_identifier,
+                "detect_case_patterns",
+                sv.detect_case_patterns_input_df,
+                sv.detect_case_patterns_binned_df,
+                sv.detect_case_patterns_final_df,
+                sv.detect_case_patterns_subject_identifier,
             )
             options = [""] + [
                 c
-                for c in sv.attribute_final_df.value.columns.to_numpy()
+                for c in sv.detect_case_patterns_final_df.value.columns.to_numpy()
                 if c != "Subject ID"
             ]
-            sv.attribute_time_col.value = st.selectbox(
+            sv.detect_case_patterns_time_col.value = st.selectbox(
                 "Period column",
                 options,
-                index=options.index(sv.attribute_time_col.value)
-                if sv.attribute_time_col.value in options
+                index=options.index(sv.detect_case_patterns_time_col.value)
+                if sv.detect_case_patterns_time_col.value in options
                 else 0,
             )
-            time_col = sv.attribute_time_col.value
+            time_col = sv.detect_case_patterns_time_col.value
             att_cols = [
                 col
-                for col in sv.attribute_final_df.value.columns.to_numpy()
+                for col in sv.detect_case_patterns_final_df.value.columns.to_numpy()
                 if col not in ["Subject ID", time_col]
-                and st.session_state[f"attribute_patterns_{col}"] is True
+                and st.session_state[f"detect_case_patterns_{col}"] is True
             ]
 
-            ready = len(att_cols) > 0 and sv.attribute_time_col.value != ""
+            ready = len(att_cols) > 0 and sv.detect_case_patterns_time_col.value != ""
 
             if st.button("Generate graph model", disabled=not ready):
                 with st.spinner("Adding links to model..."):
-                    time_col = sv.attribute_time_col.value
-                    graph_df = sv.attribute_final_df.value.copy(deep=True)
+                    time_col = sv.detect_case_patterns_time_col.value
+                    graph_df = sv.detect_case_patterns_final_df.value.copy(deep=True)
                     pdf = generate_graph_model(graph_df, time_col, type_val_sep)
-                sv.attribute_dynamic_df.value = pdf
-            if ready and len(sv.attribute_dynamic_df.value) > 0:
+                sv.detect_case_patterns_dynamic_df.value = pdf
+            if ready and len(sv.detect_case_patterns_dynamic_df.value) > 0:
                 st.success(
-                    f'Graph model has **{len(sv.attribute_dynamic_df.value)}** links spanning **{len(sv.attribute_dynamic_df.value["Subject ID"].unique())}** cases, **{len(sv.attribute_dynamic_df.value["Full Attribute"].unique())}** attributes, and **{len(sv.attribute_dynamic_df.value["Period"].unique())}** periods.'
+                    f'Graph model has **{len(sv.detect_case_patterns_dynamic_df.value)}** links spanning **{len(sv.detect_case_patterns_dynamic_df.value["Subject ID"].unique())}** cases, **{len(sv.detect_case_patterns_dynamic_df.value["Full Attribute"].unique())}** attributes, and **{len(sv.detect_case_patterns_dynamic_df.value["Period"].unique())}** periods.'
                 )
 
     with detect_tab:
-        if not ready or len(sv.attribute_final_df.value) == 0:
+        if not ready or len(sv.detect_case_patterns_final_df.value) == 0:
             st.warning("Generate a graph model to continue.")
         else:
             b1, b2, b3, b4, _ = st.columns([1, 1, 1, 1, 2])
@@ -104,7 +115,7 @@ def create(sv: ap_variables.SessionVariables, workflow):
                     "Minimum pattern count",
                     min_value=1,
                     step=1,
-                    value=sv.attribute_min_pattern_count.value,
+                    value=sv.detect_case_patterns_min_pattern_count.value,
                     help="The minimum number of times a pattern must occur in a given period to be detectable.",
                 )
             with b2:
@@ -112,79 +123,100 @@ def create(sv: ap_variables.SessionVariables, workflow):
                     "Maximum pattern length",
                     min_value=1,
                     step=1,
-                    value=sv.attribute_max_pattern_length.value,
+                    value=sv.detect_case_patterns_max_pattern_length.value,
                     help="The maximum number of attributes in a pattern. Longer lengths will take longer to detect.",
                 )
             with b3:
                 if st.button("Detect patterns"):
                     progress_text = "Starting..."
                     progress_bar = st.progress(0, text=progress_text)
-                    sv.attribute_min_pattern_count.value = minimum_pattern_count
-                    sv.attribute_max_pattern_length.value = maximum_pattern_count
-                    sv.attribute_selected_pattern.value = ""
-                    sv.attribute_selected_pattern_period.value = ""
+                    sv.detect_case_patterns_min_pattern_count.value = (
+                        minimum_pattern_count
+                    )
+                    sv.detect_case_patterns_max_pattern_length.value = (
+                        maximum_pattern_count
+                    )
+                    sv.detect_case_patterns_selected_pattern.value = ""
+                    sv.detect_case_patterns_selected_pattern_period.value = ""
 
                     with st.spinner("Processing..."):
-                        sv.attribute_table_index.value += 1
+                        sv.detect_case_patterns_table_index.value += 1
                         progress_bar.progress(20, text="Preparing graph...")
 
-                        sv.attribute_df.value, period_to_graph = prepare_graph(
-                            sv.attribute_dynamic_df.value,
-                            min_edge_weight,
-                            missing_edge_prop
+                        sv.detect_case_patterns_df.value, period_to_graph = (
+                            prepare_graph(
+                                sv.detect_case_patterns_dynamic_df.value,
+                                min_edge_weight,
+                                missing_edge_prop,
+                            )
                         )
-                        node_to_label_str = dict(sv.attribute_dynamic_df.value[['Full Attribute', 'Attribute Type']].values)
+                        node_to_label_str = dict(
+                            sv.detect_case_patterns_dynamic_df.value[
+                                ["Full Attribute", "Attribute Type"]
+                            ].values
+                        )
                         # convert string labels to int labels
                         sorted_labels = sorted(set(node_to_label_str.values()))
                         label_to_code = {v: i for i, v in enumerate(sorted_labels)}
-                        node_to_label = {k: label_to_code[v] for k, v in node_to_label_str.items()}
+                        node_to_label = {
+                            k: label_to_code[v] for k, v in node_to_label_str.items()
+                        }
                         progress_bar.progress(40, text="Generating embedding...")
-                        (
-                            sv.attribute_node_to_period_to_pos.value,
-                            _
-                        ) = generate_graph_fusion_encoder_embedding(period_to_graph, node_to_label, 
-                                               correlation, diaga, laplacian)
+                        (sv.detect_case_patterns_node_to_period_to_pos.value, _) = (
+                            generate_graph_fusion_encoder_embedding(
+                                period_to_graph,
+                                node_to_label,
+                                correlation,
+                                diaga,
+                                laplacian,
+                            )
+                        )
 
-                        sv.attribute_record_counter.value = RecordCounter(
-                            sv.attribute_dynamic_df.value
+                        sv.detect_case_patterns_record_counter.value = RecordCounter(
+                            sv.detect_case_patterns_dynamic_df.value
                         )
                         progress_bar.progress(60, text="Detecting data patterns...")
                         (
-                            sv.attribute_pattern_df.value,
-                            sv.attribute_close_pairs.value,
-                            sv.attribute_all_pairs.value,
+                            sv.detect_case_patterns_pattern_df.value,
+                            sv.detect_case_patterns_close_pairs.value,
+                            sv.detect_case_patterns_all_pairs.value,
                         ) = detect_patterns(
-                            sv.attribute_node_to_period_to_pos.value,
-                            sv.attribute_dynamic_df.value,
+                            sv.detect_case_patterns_node_to_period_to_pos.value,
+                            sv.detect_case_patterns_dynamic_df.value,
                             type_val_sep,
-                            sv.attribute_min_pattern_count.value,
-                            sv.attribute_max_pattern_length.value,
+                            sv.detect_case_patterns_min_pattern_count.value,
+                            sv.detect_case_patterns_max_pattern_length.value,
                         )
                         progress_bar.progress(80, text="Creating time series...")
 
                         tdf = create_time_series_df(
-                            sv.attribute_dynamic_df.value, sv.attribute_pattern_df.value
+                            sv.detect_case_patterns_dynamic_df.value,
+                            sv.detect_case_patterns_pattern_df.value,
                         )
                         progress_bar.progress(99, text="Finalizing...")
-                        sv.attribute_time_series_df.value = tdf
+                        sv.detect_case_patterns_time_series_df.value = tdf
                         progress_bar.empty()
                         st.rerun()
             with b4:
                 st.download_button(
                     "Download patterns",
-                    data=sv.attribute_pattern_df.value.to_csv(index=False),
-                    file_name="attribute_patterns.csv",
+                    data=sv.detect_case_patterns_pattern_df.value.to_csv(index=False),
+                    file_name="detect_case_patterns.csv",
                     mime="text/csv",
-                    disabled=len(sv.attribute_pattern_df.value) == 0,
+                    disabled=len(sv.detect_case_patterns_pattern_df.value) == 0,
                 )
-            if len(sv.attribute_pattern_df.value) > 0:
-                period_count = len(sv.attribute_pattern_df.value["period"].unique())
-                pattern_count = len(sv.attribute_pattern_df.value)
-                unique_count = len(sv.attribute_pattern_df.value["pattern"].unique())
+            if len(sv.detect_case_patterns_pattern_df.value) > 0:
+                period_count = len(
+                    sv.detect_case_patterns_pattern_df.value["period"].unique()
+                )
+                pattern_count = len(sv.detect_case_patterns_pattern_df.value)
+                unique_count = len(
+                    sv.detect_case_patterns_pattern_df.value["pattern"].unique()
+                )
                 st.success(
-                    f"Over **{period_count}** periods, detected **{pattern_count}** attribute patterns (**{unique_count}** unique) from **{sv.attribute_close_pairs.value}**/**{sv.attribute_all_pairs.value}** converging attribute pairs (**{round(sv.attribute_close_pairs.value / sv.attribute_all_pairs.value * 100, 2) if sv.attribute_all_pairs.value > 0 else 0}%**). Patterns ranked by ```overall_score = normalize(length * ln(count) * z_score * detections)```."
+                    f"Over **{period_count}** periods, detected **{pattern_count}** attribute patterns (**{unique_count}** unique) from **{sv.detect_case_patterns_close_pairs.value}**/**{sv.detect_case_patterns_all_pairs.value}** converging attribute pairs (**{round(sv.detect_case_patterns_close_pairs.value / sv.detect_case_patterns_all_pairs.value * 100, 2) if sv.detect_case_patterns_all_pairs.value > 0 else 0}%**). Patterns ranked by ```overall_score = normalize(length * ln(count) * z_score * detections)```."
                 )
-                show_df = sv.attribute_pattern_df.value
+                show_df = sv.detect_case_patterns_pattern_df.value
 
                 gb = GridOptionsBuilder.from_dataframe(show_df)
                 gb.configure_default_column(
@@ -202,7 +234,7 @@ def create(sv: ap_variables.SessionVariables, workflow):
                 gridoptions["columnDefs"][1]["minWidth"] = 400
                 response = AgGrid(
                     show_df,
-                    key=f"report_grid_{sv.attribute_table_index.value}",
+                    key=f"report_grid_{sv.detect_case_patterns_table_index.value}",
                     height=380,
                     gridOptions=gridoptions,
                     enable_enterprise_modules=False,
@@ -219,13 +251,13 @@ def create(sv: ap_variables.SessionVariables, workflow):
                 selected_pattern = (
                     response["selected_rows"][0]["pattern"]
                     if len(response["selected_rows"]) > 0
-                    else sv.attribute_selected_pattern.value
+                    else sv.detect_case_patterns_selected_pattern.value
                 )
                 print(f"selected_pattern: {selected_pattern}")
                 selected_pattern_period = (
                     response["selected_rows"][0]["period"]
                     if len(response["selected_rows"]) > 0
-                    else sv.attribute_selected_pattern_period.value
+                    else sv.detect_case_patterns_selected_pattern_period.value
                 )
 
                 if selected_pattern != "":
@@ -236,32 +268,37 @@ def create(sv: ap_variables.SessionVariables, workflow):
                         + selected_pattern_period
                         + ")**"
                     )
-                    if selected_pattern != sv.attribute_selected_pattern.value:
-                        sv.attribute_selected_pattern.value = selected_pattern
-                        sv.attribute_selected_pattern_period.value = (
+                    if (
+                        selected_pattern
+                        != sv.detect_case_patterns_selected_pattern.value
+                    ):
+                        sv.detect_case_patterns_selected_pattern.value = (
+                            selected_pattern
+                        )
+                        sv.detect_case_patterns_selected_pattern_period.value = (
                             selected_pattern_period
                         )
-                        sv.attribute_report.value = ""
-                        sv.attribute_report_validation.value = {}
+                        sv.detect_case_patterns_report.value = ""
+                        sv.detect_case_patterns_report_validation.value = {}
 
-                        tdf = sv.attribute_time_series_df.value
+                        tdf = sv.detect_case_patterns_time_series_df.value
                         tdf = tdf[tdf["pattern"] == selected_pattern]
-                        sv.attribute_selected_pattern_df.value = tdf
+                        sv.detect_case_patterns_selected_pattern_df.value = tdf
 
                         print("Compute attribute counts")
-                        sv.attribute_selected_pattern_att_counts.value = (
+                        sv.detect_case_patterns_selected_pattern_att_counts.value = (
                             compute_attribute_counts(
-                                sv.attribute_final_df.value,
+                                sv.detect_case_patterns_final_df.value,
                                 selected_pattern,
                                 time_col,
                                 selected_pattern_period,
-                                type_val_sep
+                                type_val_sep,
                             )
                         )
                         print("Computed attribute counts")
 
                     count_ct = (
-                        alt.Chart(sv.attribute_selected_pattern_df.value)
+                        alt.Chart(sv.detect_case_patterns_selected_pattern_df.value)
                         .mark_line()
                         .encode(x="period:O", y="count:Q", color=alt.ColorValue("blue"))
                         .properties(height=200, width=600)
@@ -271,48 +308,48 @@ def create(sv: ap_variables.SessionVariables, workflow):
                     st.warning(
                         "Select column headers to rank patterns by that attribute. Use quickfilter or column filters to narrow down the list of patterns. Select a pattern to continue."
                     )
-            elif sv.attribute_table_index.value > 0:
+            elif sv.detect_case_patterns_table_index.value > 0:
                 st.info("No patterns detected.")
     with explain_tab:
         if (
             not ready
-            or len(sv.attribute_final_df.value) == 0
-            or sv.attribute_selected_pattern.value == ""
+            or len(sv.detect_case_patterns_final_df.value) == 0
+            or sv.detect_case_patterns_selected_pattern.value == ""
         ):
             st.warning("Select a pattern to continue.")
         else:
             c1, c2 = st.columns([2, 3])
             with c1:
                 variables = {
-                    "pattern": sv.attribute_selected_pattern.value,
-                    "period": sv.attribute_selected_pattern_period.value,
-                    "time_series": sv.attribute_selected_pattern_df.value.to_csv(
+                    "pattern": sv.detect_case_patterns_selected_pattern.value,
+                    "period": sv.detect_case_patterns_selected_pattern_period.value,
+                    "time_series": sv.detect_case_patterns_selected_pattern_df.value.to_csv(
                         index=False
                     ),
-                    "attribute_counts": sv.attribute_selected_pattern_att_counts.value.to_csv(
+                    "attribute_counts": sv.detect_case_patterns_selected_pattern_att_counts.value.to_csv(
                         index=False
                     ),
                 }
 
                 generate, messages, reset = ui_components.generative_ai_component(
-                    sv.attribute_system_prompt, variables
+                    sv.detect_case_patterns_system_prompt, variables
                 )
                 if reset:
-                    sv.attribute_system_prompt.value["user_prompt"] = (
+                    sv.detect_case_patterns_system_prompt.value["user_prompt"] = (
                         prompts.user_prompt
                     )
                     st.rerun()
             with c2:
                 st.markdown("##### Selected attribute pattern")
-                if sv.attribute_selected_pattern.value != "":
+                if sv.detect_case_patterns_selected_pattern.value != "":
                     st.markdown(
                         "**"
-                        + sv.attribute_selected_pattern.value
+                        + sv.detect_case_patterns_selected_pattern.value
                         + " ("
-                        + sv.attribute_selected_pattern_period.value
+                        + sv.detect_case_patterns_selected_pattern_period.value
                         + ")**"
                     )
-                    tdf = sv.attribute_selected_pattern_df.value
+                    tdf = sv.detect_case_patterns_selected_pattern_df.value
 
                     count_ct = (
                         alt.Chart(tdf)
@@ -338,31 +375,35 @@ def create(sv: ap_variables.SessionVariables, workflow):
                             messages, callbacks=[on_callback, empty_connection_bar]
                         )
 
-                        sv.attribute_report.value = result
+                        sv.detect_case_patterns_report.value = result
 
                         validation, messages_to_llm = ui_components.validate_ai_report(
                             messages, result
                         )
-                        sv.attribute_report_validation.value = validation
-                        sv.attribute_report_validation_messages.value = messages_to_llm
+                        sv.detect_case_patterns_report_validation.value = validation
+                        sv.detect_case_patterns_report_validation_messages.value = (
+                            messages_to_llm
+                        )
                         st.rerun()
                     except Exception as _e:
                         empty_connection_bar()
                         raise
                 else:
-                    if sv.attribute_report.value == "":
+                    if sv.detect_case_patterns_report.value == "":
                         gen_placeholder.warning(
                             "Press the Generate button to create an AI report for the selected attribute pattern."
                         )
 
-                report_data = sv.attribute_report.value
+                report_data = sv.detect_case_patterns_report.value
                 report_placeholder.markdown(report_data)
 
-                ui_components.report_download_ui(sv.attribute_report, "pattern_report")
+                ui_components.report_download_ui(
+                    sv.detect_case_patterns_report, "pattern_report"
+                )
 
                 ui_components.build_validation_ui(
-                    sv.attribute_report_validation.value,
-                    sv.attribute_report_validation_messages.value,
+                    sv.detect_case_patterns_report_validation.value,
+                    sv.detect_case_patterns_report_validation_messages.value,
                     report_data,
                     workflow,
                 )

@@ -1,6 +1,6 @@
-# Attribute Patterns
+# Detect Case Patterns
 
-The **Attribute Patterns** workflow generates intelligence reports on attribute patterns detected in streams of case records.
+The **Detect Case Patterns** workflow generates intelligence reports on attribute patterns detected in streams of case records.
 
 ## How it works
 

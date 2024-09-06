@@ -26,8 +26,8 @@ The Intelligence Toolkit is designed to be used by domain experts who are famili
 It supports a variety of interactive workflows, each designed to address a specific type of intelligence task:
 
 - **Case Intelligence Workflows**
-  - [**Data Synthesis**](/app/workflows/data_synthesis/README.md) generates differentially-private datasets and summaries from sensitive case records.
-  - [**Attribute Patterns**](/app/workflows/attribute_patterns/README.md) generates reports on attribute patterns detected in streams of case records.
+  - [**Anonymize Case Data**](/app/workflows/anonymize_case_data/README.md) generates differentially-private datasets and summaries from sensitive case records.
+  - [**Detect Case Patterns**](/app/workflows/detect_case_patterns/README.md) generates reports on attribute patterns detected in streams of case records.
   - [**Group Narratives**](/app/workflows/group_narratives/README.md) generates reports by defining and comparing groups of case records.
 - **Entity Intelligence Workflows**
   - [**Record Matching**](/app/workflows/record_matching/README.md) generates reports on record matches detected across entity datasets.

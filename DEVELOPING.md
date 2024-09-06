@@ -44,9 +44,9 @@ OPENAI_API_KEY=<OPENAI_API_KEY>
 ```
 
 ## Running code-only 
-- [Attribute Patterns](./toolkit/attribute_patterns/README.md)
+- [Detect Case Patterns](./toolkit/detect_case_patterns/README.md)
 
-    - [Example](./examples/attribute_patterns.ipynb): See an example of how to run the code with your data to obtain results without the need to run the UI.
+    - [Example](./examples/detect_case_patterns.ipynb): See an example of how to run the code with your data to obtain results without the need to run the UI.
 
 - [Question Answering](./toolkit/question_answering/README.md)
 

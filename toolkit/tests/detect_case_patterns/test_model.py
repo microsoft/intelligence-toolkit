@@ -5,12 +5,12 @@
 import networkx as nx
 import pandas as pd
 
-from app.workflows.attribute_patterns.config import (
+from app.workflows.detect_case_patterns.config import (
     min_edge_weight,
     missing_edge_prop,
     type_val_sep,
 )
-from toolkit.attribute_patterns.model import (
+from toolkit.detect_case_patterns.model import (
     compute_attribute_counts,
     generate_graph_model,
     prepare_graph,
@@ -209,7 +209,7 @@ def test_compute_attribute_counts_invalid_pattern(mocker):
 
 def test_prepare_graph(mocker):
     create_edge_df_from_atts_mock = mocker.patch(
-        "toolkit.attribute_patterns.graph_functions.create_edge_df_from_atts"
+        "toolkit.detect_case_patterns.graph_functions.create_edge_df_from_atts"
     )
     edge_df = pd.DataFrame(
         {
