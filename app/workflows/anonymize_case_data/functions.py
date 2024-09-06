@@ -10,7 +10,8 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objs as go
-import app.workflows.data_synthesis.config as config
+
+import app.workflows.anonymize_case_data.config as config
 
 
 def hsl_to_hex(h, s, l):
@@ -161,14 +162,16 @@ def compute_aggregate_graph(
     for edge, count in edge_counts.items():
         if count > 0:
             highlight = edge_highlights[edge] if edge in edge_highlights else 0
-            edges.append([
-                edge[0],
-                edge[1],
-                count,
-                highlight,
-                highlight / count,
-                "Aggregate",
-            ])
+            edges.append(
+                [
+                    edge[0],
+                    edge[1],
+                    count,
+                    highlight,
+                    highlight / count,
+                    "Aggregate",
+                ]
+            )
 
     edges_df = pd.DataFrame(
         edges,
@@ -177,7 +180,7 @@ def compute_aggregate_graph(
     return edges_df
 
 
-def compute_synthetic_graph(
+def compute_anonym_graph(
     sdf, filters, source_attribute, target_attribute, highlight_attribute
 ):
     edges = []
@@ -203,14 +206,16 @@ def compute_synthetic_graph(
                     hatt, hval = highlight_attribute.split(config.val_separator)
                     df = df[df[hatt] == hval]
                     highlight = len(df)
-                edges.append([
-                    source,
-                    target,
-                    count,
-                    highlight,
-                    highlight / count,
-                    "Synthetic",
-                ])
+                edges.append(
+                    [
+                        source,
+                        target,
+                        count,
+                        highlight,
+                        highlight / count,
+                        "Anonym",
+                    ]
+                )
 
     edges_df = pd.DataFrame(
         edges,
@@ -339,7 +344,7 @@ def compute_top_attributes_query(
     )
     syn_counts["Attribute"] = syn_counts.index.str.split(val_separator).str[0]
     syn_counts.reset_index(level=0, inplace=True)
-    syn_counts["Dataset"] = "Synthetic"
+    syn_counts["Dataset"] = "Anonym"
 
     result_df = syn_counts[["Attribute", "Attribute Value", "Count", "Dataset"]]
 
@@ -368,10 +373,10 @@ def compute_top_attributes_query(
             agg_rows, columns=["Attribute", "Attribute Value", "Count", "Dataset"]
         )
         result_df = pd.concat([syn_counts, agg_df], axis=0, ignore_index=True)
-        # remove rows of result_df where Dataset = Synthetic if there is another row with Dataset = Aggregate for the same Attribute Value
+        # remove rows of result_df where Dataset = Anonym if there is another row with Dataset = Aggregate for the same Attribute Value
         result_df = result_df[
             ~(
-                (result_df["Dataset"] == "Synthetic")
+                (result_df["Dataset"] == "Anonym")
                 & (
                     result_df["Attribute Value"].isin(
                         result_df[result_df["Dataset"] == "Aggregate"][

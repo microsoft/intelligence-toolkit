@@ -8,12 +8,6 @@ from collections import defaultdict
 import pandas as pd
 import plotly.io as pio
 import streamlit as st
-import app.util.df_functions as df_functions
-import app.util.ui_components as ui_components
-import app.workflows.data_synthesis.classes as classes
-import app.workflows.data_synthesis.config as config
-import app.workflows.data_synthesis.functions as functions
-import app.workflows.data_synthesis.variables as ds_variables
 from pacsynth import (
     AccuracyMode,
     Dataset,
@@ -21,6 +15,13 @@ from pacsynth import (
     DpAggregateSeededSynthesizer,
     FabricationMode,
 )
+
+import app.util.df_functions as df_functions
+import app.util.ui_components as ui_components
+import app.workflows.anonymize_case_data.classes as classes
+import app.workflows.anonymize_case_data.config as config
+import app.workflows.anonymize_case_data.functions as functions
+import app.workflows.anonymize_case_data.variables as ds_variables
 
 
 def get_intro():
@@ -30,12 +31,14 @@ def get_intro():
 
 
 def create(sv: ds_variables.SessionVariables, workflow: None):
-    intro_tab, prepare_tab, generate_tab, queries_tab = st.tabs([
-        "Data synthesis workflow:",
-        "Upload sensitive data",
-        "Generate anonymous data",
-        "Query and visualize data",
-    ])
+    intro_tab, prepare_tab, generate_tab, queries_tab = st.tabs(
+        [
+            "Anonymize case data workflow:",
+            "Upload sensitive data",
+            "Generate anonymous data",
+            "Query and visualize data",
+        ]
+    )
     df = None
     with intro_tab:
         st.markdown(get_intro())
@@ -45,26 +48,26 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
             ui_components.single_csv_uploader(
                 workflow,
                 "Upload sensitive data CSV",
-                sv.synthesis_last_sensitive_file_name,
-                sv.synthesis_raw_sensitive_df,
-                sv.synthesis_processing_df,
-                sv.synthesis_sensitive_df,
-                uploader_key=sv.synthesis_upload_key.value,
+                sv.anonymize_last_sensitive_file_name,
+                sv.anonymize_raw_sensitive_df,
+                sv.anonymize_processing_df,
+                sv.anonymize_sensitive_df,
+                uploader_key=sv.anonymize_upload_key.value,
                 key="sensitive_data_uploader",
                 height=400,
             )
         with model_col:
             ui_components.prepare_input_df(
                 workflow,
-                sv.synthesis_raw_sensitive_df,
-                sv.synthesis_processing_df,
-                sv.synthesis_sensitive_df,
-                sv.synthesis_subject_identifier,
+                sv.anonymize_raw_sensitive_df,
+                sv.anonymize_processing_df,
+                sv.anonymize_sensitive_df,
+                sv.anonymize_subject_identifier,
             )
 
-            if len(sv.synthesis_sensitive_df.value) > 0:
+            if len(sv.anonymize_sensitive_df.value) > 0:
                 distinct_counts = []
-                wdf = sv.synthesis_sensitive_df.value
+                wdf = sv.anonymize_sensitive_df.value
                 att_cols = [col for col in wdf.columns if col != "Subject ID"]
                 num_cols = len(att_cols)
 
@@ -118,29 +121,29 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                 )
 
     with generate_tab:
-        if len(sv.synthesis_sensitive_df.value) == 0:
+        if len(sv.anonymize_sensitive_df.value) == 0:
             st.warning("Please upload and prepare data to continue.")
         else:
             c1, c2, c3 = st.columns([1, 1, 1])
             with c1:
-                st.markdown("#### Synthesize data")
+                st.markdown("#### Anonymize data")
                 b1, b2 = st.columns([1, 1])
                 reporting_length = 4  # fixed
                 with b1:
                     epsilon = st.number_input(
                         "Epsilon",
-                        value=sv.synthesis_epsilon.value,
+                        value=sv.anonymize_epsilon.value,
                         help="The privacy budget, under differential privacy, to use when synthesizing the aggregate dataset.\n\nLower values of epsilon correspond to greater privacy protection but lower data quality.\n\nThe delta parameter is set automatically as 1/(protected_records*ln(protected_records)), where protected_records is the count of sensitive records protected using 0.5% of the privacy budget.\n\n**Rule of thumb**: Aim to keep epsilon at **12** or below.",
                     )
                 with b2:
-                    if st.button("Synthesize data"):
-                        sv.synthesis_epsilon.value = epsilon
-                        with st.spinner("Synthesizing data..."):
-                            # for col in sv.synthesis_wide_sensitive_df.value.columns:
-                            #     distinct_values = tuple(sorted(sv.synthesis_wide_sensitive_df.value[col].astype(str).unique()))
+                    if st.button("Anonymize data"):
+                        sv.anonymize_epsilon.value = epsilon
+                        with st.spinner("Anonymizing data..."):
+                            # for col in sv.anonymize_wide_sensitive_df.value.columns:
+                            #     distinct_values = tuple(sorted(sv.anonymize_wide_sensitive_df.value[col].astype(str).unique()))
                             #     if distinct_values == tuple(['0', '1']):
-                            #         sv.synthesis_sensitive_df.value.replace({col : {'0': ''}}, inplace=True)
-                            df = sv.synthesis_sensitive_df.value.drop(
+                            #         sv.anonymize_sensitive_df.value.replace({col : {'0': ''}}, inplace=True)
+                            df = sv.anonymize_sensitive_df.value.drop(
                                 columns=["Subject ID"]
                             )
                             df = (
@@ -178,13 +181,13 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                                 math.log(protected_number_of_records)
                                 * protected_number_of_records
                             )
-                            sv.synthesis_delta.value = f"{delta:.2e}"
+                            sv.anonymize_delta.value = f"{delta:.2e}"
                             synthetic_raw_data = synth.sample()
                             synthetic_dataset = Dataset(synthetic_raw_data)
                             synthetic_df = Dataset.raw_data_to_data_frame(
                                 synthetic_raw_data
                             )
-                            sv.synthesis_synthetic_df.value = synthetic_df
+                            sv.anonymize_synthetic_df.value = synthetic_df
 
                             sensitive_aggregates = sensitive_dataset.get_aggregates(
                                 reporting_length, ";"
@@ -226,12 +229,12 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                                 synth.get_dp_number_of_records()
                             )
 
-                            sv.synthesis_aggregate_df.value = agg_df
+                            sv.anonymize_aggregate_df.value = agg_df
 
-                            sv.synthesis_sen_agg_rep.value = classes.ErrorReport(
+                            sv.anonymize_sen_agg_rep.value = classes.ErrorReport(
                                 sensitive_aggregates_parsed, dp_aggregates_parsed
                             ).gen()
-                            sv.synthesis_sen_syn_rep.value = classes.ErrorReport(
+                            sv.anonymize_sen_syn_rep.value = classes.ErrorReport(
                                 sensitive_aggregates_parsed, synthetic_aggregates_parsed
                             ).gen()
 
@@ -240,19 +243,19 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                     help="Tables show three evaluation metrics for each **Length** of attribute combination up to 4, plus an **Overall** average.\n\n- **Count +/- Error** is the average number of records for the combination length +/- the average absolute error in the number of records.\n- **Suppressed %** is the percentage of the total attribute counts that were suppressed, i.e., present in the Sensitive data but not the Aggregate/Synthetic data.\n- **Fabricated %** is the percentage of the total attribute counts that were fabricated, i.e., present in the Aggregate/Synthetic data but not the Sensitive data.\n\nPercentages are calculated with respect to attribute counts in the Sensitive data.\n\n**Rule of thumb**: For the Synthetic data, aim to keep the Overall Error below the Overall Count, Suppressed % below 10%, and Fabricated % below 1%.",
                 )
 
-                if len(sv.synthesis_sen_agg_rep.value) > 0:
+                if len(sv.anonymize_sen_agg_rep.value) > 0:
                     st.markdown(
-                        f"Differential privacy parameters: **Epsilon = {sv.synthesis_epsilon.value}**, **Delta = {sv.synthesis_delta.value}**"
+                        f"Differential privacy parameters: **Epsilon = {sv.anonymize_epsilon.value}**, **Delta = {sv.anonymize_delta.value}**"
                     )
                     st.markdown("###### Aggregate data quality")
                     st.dataframe(
-                        sv.synthesis_sen_agg_rep.value,
+                        sv.anonymize_sen_agg_rep.value,
                         hide_index=True,
                         use_container_width=True,
                     )
                     st.markdown("###### Synthetic data quality")
                     st.dataframe(
-                        sv.synthesis_sen_syn_rep.value,
+                        sv.anonymize_sen_syn_rep.value,
                         hide_index=True,
                         use_container_width=True,
                     )
@@ -262,40 +265,40 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
 
             with c2:
                 st.markdown("##### Aggregate data")
-                if len(sv.synthesis_aggregate_df.value) > 0:
+                if len(sv.anonymize_aggregate_df.value) > 0:
                     st.dataframe(
-                        sv.synthesis_aggregate_df.value,
+                        sv.anonymize_aggregate_df.value,
                         hide_index=True,
                         use_container_width=True,
                         height=700,
                     )
                     st.download_button(
                         "Download Aggregate data",
-                        data=sv.synthesis_aggregate_df.value.to_csv(index=False),
+                        data=sv.anonymize_aggregate_df.value.to_csv(index=False),
                         file_name="aggregate_data.csv",
                         mime="text/csv",
                     )
 
             with c3:
                 st.markdown("##### Synthetic data")
-                if len(sv.synthesis_synthetic_df.value) > 0:
+                if len(sv.anonymize_synthetic_df.value) > 0:
                     st.dataframe(
-                        sv.synthesis_synthetic_df.value,
+                        sv.anonymize_synthetic_df.value,
                         hide_index=True,
                         use_container_width=True,
                         height=700,
                     )
                     st.download_button(
                         "Download Synthetic data",
-                        data=sv.synthesis_synthetic_df.value.to_csv(index=False),
+                        data=sv.anonymize_synthetic_df.value.to_csv(index=False),
                         file_name="synthetic_data.csv",
                         mime="text/csv",
                     )
 
     with queries_tab:
         if (
-            len(sv.synthesis_synthetic_df.value) == 0
-            or len(sv.synthesis_aggregate_df.value) == 0
+            len(sv.anonymize_synthetic_df.value) == 0
+            or len(sv.anonymize_aggregate_df.value) == 0
         ):
             st.warning(
                 "Please synthesize data to continue, or upload an existing synthetic dataset below."
@@ -303,26 +306,26 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
             ui_components.single_csv_uploader(
                 workflow,
                 "Upload synthetic data CSV",
-                sv.synthesis_last_synthetic_file_name,
-                sv.synthesis_synthetic_df,
+                sv.anonymize_last_synthetic_file_name,
+                sv.anonymize_synthetic_df,
                 None,
                 None,
-                uploader_key=sv.synthesis_synthetic_upload_key.value,
+                uploader_key=sv.anonymize_synthetic_upload_key.value,
                 key="synthetic_data_uploader",
             )
             ui_components.single_csv_uploader(
                 workflow,
                 "Upload aggregate data CSV",
-                sv.synthesis_last_aggregate_file_name,
-                sv.synthesis_aggregate_df,
+                sv.anonymize_last_aggregate_file_name,
+                sv.anonymize_aggregate_df,
                 None,
                 None,
-                uploader_key=sv.synthesis_aggregate_upload_key.value,
+                uploader_key=sv.anonymize_aggregate_upload_key.value,
                 key="aggregate_data_uploader",
             )
             if (
-                len(sv.synthesis_synthetic_df.value) > 0
-                and len(sv.synthesis_aggregate_df.value) > 0
+                len(sv.anonymize_synthetic_df.value) > 0
+                and len(sv.anonymize_aggregate_df.value) > 0
             ):
                 st.rerun()
         else:
@@ -349,9 +352,9 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
             if f"{workflow}_series_attributes" not in st.session_state:
                 st.session_state[f"{workflow}_series_attributes"] = []
 
-            adf = sv.synthesis_aggregate_df.value
+            adf = sv.anonymize_aggregate_df.value
             adf["protected_count"] = adf["protected_count"].astype(int)
-            sdf = sv.synthesis_synthetic_df.value.copy(deep=True)
+            sdf = sv.anonymize_synthetic_df.value.copy(deep=True)
             options = []
             for att in sdf.columns.to_numpy():
                 vals = [f"{att}:{x}" for x in sdf[att].unique() if len(str(x)) > 0]
@@ -392,9 +395,9 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                     selection.sort(
                         key=lambda x: x["attribute"] + val_separator + x["value"]
                     )
-                    selection_key = att_separator.join([
-                        x["attribute"] + val_separator + x["value"] for x in selection
-                    ])
+                    selection_key = att_separator.join(
+                        [x["attribute"] + val_separator + x["value"] for x in selection]
+                    )
                     filtered_aggs = adf[adf["selections"] == selection_key]
 
                     agg_records = adf[adf["selections"] == "record_count"][
@@ -537,7 +540,7 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                         if time_attribute != "" and len(series_attributes) > 0:
                             export_df = functions.compute_time_series_query(
                                 selection,
-                                sv.synthesis_synthetic_df.value,
+                                sv.anonymize_synthetic_df.value,
                                 adf,
                                 att_separator,
                                 val_separator,
@@ -604,7 +607,7 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                         )
 
                         if source_attribute != "" and target_attribute != "":
-                            # export_df = compute_flow_query(selection, sv.synthesis_synthetic_df.value, adf, att_separator, val_separator, data_schema, source_attribute, target_attribute, highlight_attribute)
+                            # export_df = compute_flow_query(selection, sv.anonymize_synthetic_df.value, adf, att_separator, val_separator, data_schema, source_attribute, target_attribute, highlight_attribute)
                             att_count = 2 if highlight_attribute == "" else 3
                             att_count += len(filters)
                             if att_count <= 4:
@@ -616,7 +619,7 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                                     highlight_attribute,
                                 )
                             else:
-                                export_df = functions.compute_synthetic_graph(
+                                export_df = functions.compute_anonym_graph(
                                     sdf,
                                     filters,
                                     source_attribute,

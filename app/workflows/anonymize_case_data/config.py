@@ -7,7 +7,7 @@ import plotly.express as px
 
 from toolkit.helpers.constants import CACHE_PATH
 
-cache_dir = os.path.join(CACHE_PATH, "data_synthesis")
+cache_dir = os.path.join(CACHE_PATH, "anonymize_case_data")
 outputs_dir = os.path.join(cache_dir, "outputs")
 os.makedirs(outputs_dir, exist_ok=True)
 

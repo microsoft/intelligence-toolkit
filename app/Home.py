@@ -53,7 +53,7 @@ Use the diagram to identify an appropriate workflow, then open the workflow from
         code="""\
 flowchart TD
 
-    PersonalData[\\Personal Case Records/] ----> |Data Synthesis Workflow| SyntheticData[/Synthetic Case Records\\]
+    PersonalData[\\Personal Case Records/] ----> |Anonymize Case Data Workflow| AnonymData[/Anonym Case Records\\]
     EntityData[\\Entity Records/] ---> HasTime{Time Attributes?}
     CaseRecords[\\ Case Records/] ---> HasTime{Time Attributes?}
     HasTime{Time Attributes?} --> |Attribute Patterns Workflow| AttributePatterns[/AI Pattern Reports\\]

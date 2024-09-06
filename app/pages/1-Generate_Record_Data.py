@@ -3,10 +3,12 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 import streamlit as st
-import app.workflows.generate_record_data.variables as grd_variables
-import app.workflows.generate_record_data.workflow as grd_workflow
 from components.app_loader import load_multipage_app
 from util.helper_fn import app_in_dev_mode
+
+import app.workflows.generate_record_data.variables as grd_variables
+import app.workflows.generate_record_data.workflow as grd_workflow
+import app.workflows.generate_record_data.workflow as grd_workflow
 
 workflow = "generate_record_data"
 
