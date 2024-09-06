@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yourdomain.com/example.schema.json",
+  "title": "Customer complaints",
+  "description": "An example schema storing an array of customer complaints",
+  "type": "object",
+  "properties": {
+    "customer_complaints": {
+      "type": "array",
+      "description": "The list of customers and their complaints",
+      "items": {
+        "type": "object",
+        "description": "An object list item",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the customer"
+          },
+          "street": {
+            "type": "string",
+            "description": "The street of the customer, including property name/number"
+          },
+          "city": {
+            "type": "string",
+            "description": "The city of the customer"
+          },
+          "age": {
+            "type": "number",
+            "description": "The age of the customer"
+          },
+          "email": {
+            "type": "string",
+            "description": "The email address of the customer"
+          },
+          "price_issue": {
+            "type": "boolean",
+            "description": "The complaint is a price issue"
+          },
+          "quality_issue": {
+            "type": "boolean",
+            "description": "The complaint is a quality issue"
+          },
+          "service_issue": {
+            "type": "boolean",
+            "description": "The complaint is a service issue"
+          },
+          "delivery_issue": {
+            "type": "boolean",
+            "description": "The complaint is a delivery issue"
+          },
+          "description_issue": {
+            "type": "boolean",
+            "description": "The complaint is a description issue"
+          },
+          "product_code": {
+            "type": "string",
+            "description": "The product code targeted by the complaint",
+            "enum": [
+              "A",
+              "B",
+              "C",
+              "D",
+              "E",
+              "F",
+              "G",
+              "H"
+            ]
+          },
+          "quarter": {
+            "type": "string",
+            "description": "The quarter in which the complaint was made (since 2020-Q1)"
+          }
+        },
+        "required": [
+          "name",
+          "street",
+          "city",
+          "age",
+          "email",
+          "price_issue",
+          "quality_issue",
+          "service_issue",
+          "delivery_issue",
+          "description_issue",
+          "product_code",
+          "quarter"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "customer_complaints"
+  ],
+  "additionalProperties": false
+}
