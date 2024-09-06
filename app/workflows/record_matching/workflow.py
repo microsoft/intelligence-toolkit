@@ -17,16 +17,20 @@ from app.util.download_pdf import add_download_pdf
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 from toolkit.record_matching import get_readme as get_intro
 from toolkit.record_matching.config import AttributeToMatch
-from toolkit.record_matching.detect import (build_attributes_dataframe,
-                                            build_matches,
-                                            build_matches_dataset,
-                                            build_near_map,
-                                            build_nearest_neighbors,
-                                            build_sentence_pair_scores,
-                                            convert_to_sentences)
-from toolkit.record_matching.prepare_model import (build_attribute_list,
-                                                   build_attribute_options,
-                                                   format_dataset)
+from toolkit.record_matching.detect import (
+    build_attributes_dataframe,
+    build_matches,
+    build_matches_dataset,
+    build_near_map,
+    build_nearest_neighbors,
+    build_sentence_pair_scores,
+    convert_to_sentences,
+)
+from toolkit.record_matching.prepare_model import (
+    build_attribute_list,
+    build_attribute_options,
+    format_dataset,
+)
 
 
 async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
@@ -261,7 +265,7 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                             def on_embedding_batch_change(current, total):
                                 pb.progress(
                                     (current) / total,
-                                    f"Embedding text batch {current} of {total}...",
+                                    f"Embedding text {current} of {total}...",
                                 )
 
                             callback = ProgressBatchCallback()
