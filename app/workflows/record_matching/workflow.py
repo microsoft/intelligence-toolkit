@@ -17,20 +17,16 @@ from app.util.download_pdf import add_download_pdf
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 from toolkit.record_matching import get_readme as get_intro
 from toolkit.record_matching.config import AttributeToMatch
-from toolkit.record_matching.detect import (
-    build_attributes_dataframe,
-    build_matches,
-    build_matches_dataset,
-    build_near_map,
-    build_nearest_neighbors,
-    build_sentence_pair_scores,
-    convert_to_sentences,
-)
-from toolkit.record_matching.prepare_model import (
-    build_attribute_list,
-    build_attribute_options,
-    format_dataset,
-)
+from toolkit.record_matching.detect import (build_attributes_dataframe,
+                                            build_matches,
+                                            build_matches_dataset,
+                                            build_near_map,
+                                            build_nearest_neighbors,
+                                            build_sentence_pair_scores,
+                                            convert_to_sentences)
+from toolkit.record_matching.prepare_model import (build_attribute_list,
+                                                   build_attribute_options,
+                                                   format_dataset)
 
 
 async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
@@ -202,9 +198,10 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                 with b1:
                     record_distance = st.number_input(
                         "Matching record distance (max)",
-                        min_value=0.0,
+                        min_value=0.001,
                         max_value=1.0,
-                        step=0.01,
+                        step=0.001,
+                        format="%f",
                         value=sv.matching_sentence_pair_embedding_threshold.value,
                         help="The maximum cosine distance between two records in the embedding space for them to be considered a match. Lower values will result in fewer closer matches overall.",
                     )

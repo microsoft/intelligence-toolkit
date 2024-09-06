@@ -13,7 +13,10 @@ from sklearn.neighbors import NearestNeighbors
 from toolkit.AI.classes import VectorData
 from toolkit.AI.utils import hash_text
 from toolkit.record_matching.config import (
-    DEFAULT_COLUMNS_DONT_CONVERT, DEFAULT_SENTENCE_PAIR_JACCARD_THRESHOLD)
+    DEFAULT_COLUMNS_DONT_CONVERT,
+    DEFAULT_MAX_RECORD_DISTANCE,
+    DEFAULT_SENTENCE_PAIR_JACCARD_THRESHOLD,
+)
 
 
 def convert_to_sentences(
@@ -64,7 +67,7 @@ def build_near_map(
     distances: np.array,
     indices: np.array,
     all_sentences: list[str],
-    max_record_distance: int | None = 0.05,
+    max_record_distance: int | None = DEFAULT_MAX_RECORD_DISTANCE,
 ) -> defaultdict[Any, list]:
     near_map = defaultdict(list)
     for ix in range(len(all_sentences)):

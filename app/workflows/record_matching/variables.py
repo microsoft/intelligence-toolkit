@@ -8,6 +8,7 @@ import streamlit as st
 
 import toolkit.record_matching.prompts as prompts
 from app.util.session_variable import SessionVariable
+from toolkit.record_matching.config import DEFAULT_MAX_RECORD_DISTANCE
 
 
 class SessionVariables:
@@ -26,7 +27,9 @@ class SessionVariables:
         self.matching_mapped_atts = SessionVariable([], prefix)
         self.matching_sentence_pair_scores = SessionVariable([], prefix)
         self.matching_sentence_pair_jaccard_threshold = SessionVariable(0.75, prefix)
-        self.matching_sentence_pair_embedding_threshold = SessionVariable(0.05, prefix)
+        self.matching_sentence_pair_embedding_threshold = SessionVariable(
+            DEFAULT_MAX_RECORD_DISTANCE, prefix
+        )
         self.matching_last_sentence_pair_embedding_threshold = SessionVariable(
             0.05, prefix
         )

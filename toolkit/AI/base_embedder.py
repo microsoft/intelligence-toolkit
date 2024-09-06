@@ -12,8 +12,7 @@ import pyarrow as pa
 from tqdm.asyncio import tqdm_asyncio
 
 from toolkit.AI.classes import VectorData
-from toolkit.AI.defaults import (DEFAULT_LLM_MAX_TOKENS,
-                                 EMBEDDING_BATCHES_NUMBER)
+from toolkit.AI.defaults import DEFAULT_LLM_MAX_TOKENS, EMBEDDING_BATCHES_NUMBER
 from toolkit.AI.vector_store import VectorStore
 from toolkit.helpers.constants import CACHE_PATH
 from toolkit.helpers.decorators import retry_with_backoff
@@ -166,7 +165,7 @@ class BaseEmbedder(ABC):
 
             if len(new_items) > 0:
                 tasks = [
-                    asyncio.create_task(self.embed_one_async(item, len(callbacks) > 0))
+                    asyncio.create_task(self.embed_one_async(item, callbacks))
                     for item in new_items
                 ]
                 if callbacks:

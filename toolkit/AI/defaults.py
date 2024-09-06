@@ -20,3 +20,5 @@ API_BASE_REQUIRED_FOR_AZURE = "api_base is required for Azure OpenAI client"
 
 CHUNK_SIZE = 500
 CHUNK_OVERLAP = 0
+
+DEFAULT_REPORT_BATCH_SIZE = 100

@@ -11,8 +11,8 @@ from typing import Any
 
 import tiktoken
 
-from .defaults import DEFAULT_ENCODING
-from .validation_prompt import GROUNDEDNESS_PROMPT
+from toolkit.AI.defaults import DEFAULT_ENCODING, DEFAULT_REPORT_BATCH_SIZE
+from toolkit.AI.validation_prompt import GROUNDEDNESS_PROMPT
 
 log = logging.getLogger(__name__)
 
@@ -72,3 +72,37 @@ def generate_messages(
     full_prompt = f"{system_prompt} {user_prompt} {safety_prompt}"
 
     return prepare_messages(full_prompt, variables)
+
+def generate_batch_messages(
+    prompt,
+    batch_name,
+    batch_value,
+    variables: dict | None = None,
+    batch_size: int | None = DEFAULT_REPORT_BATCH_SIZE,
+) -> list[dict[str, str]]:
+    if variables is None:
+        variables = {}
+
+    batch_offset = 0
+    batch_count_raw = len(batch_value) // batch_size
+    batch_count_remaining = len(batch_value) % batch_size
+    batch_count = batch_count_raw + 1 if batch_count_remaining != 0 else batch_count_raw
+    batch_messages = []
+
+    full_prompt = " ".join(
+        [
+            prompt["report_prompt"],
+            prompt["user_prompt"],
+            prompt["safety_prompt"],
+        ]
+    )
+    for _i in range(batch_count):
+        batch = batch_value[
+            batch_offset : min(batch_offset + batch_size, len(batch_value))
+        ]
+        batch_offset += batch_size
+        batch_variables = dict(variables)
+        batch_variables[batch_name] = batch.to_csv()
+        batch_messages.append(prepare_messages(full_prompt, batch_variables))
+
+    return batch_messages
