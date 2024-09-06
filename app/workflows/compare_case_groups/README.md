@@ -1,6 +1,6 @@
-# Group Narratives
+# Compare Case Groups
 
-The **Group Narratives** workflow generates intelligence reports by defining and comparing groups of case records.
+The **Compare Case Groups** workflow generates intelligence reports by defining and comparing groups of case records.
 
 ## How it works
 

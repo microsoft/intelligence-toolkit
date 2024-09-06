@@ -5,9 +5,10 @@ import os
 
 import pandas as pd
 import streamlit as st
+
 import app.util.df_functions as df_functions
-import app.workflows.group_narratives.prompts as prompts
-import app.workflows.group_narratives.variables as gn_variables
+import app.workflows.compare_case_groups.prompts as prompts
+import app.workflows.compare_case_groups.variables as gn_variables
 from app.util import ui_components
 
 
@@ -18,12 +19,14 @@ def get_intro():
 
 
 def create(sv: gn_variables.SessionVariables, workflow=None):
-    intro_tab, prepare_tab, summarize_tab, generate_tab = st.tabs([
-        "Group narratives workflow:",
-        "Upload data to narrate",
-        "Prepare data summary",
-        "Generate AI group reports",
-    ])
+    intro_tab, prepare_tab, summarize_tab, generate_tab = st.tabs(
+        [
+            "Compare case groups workflow:",
+            "Upload data to narrate",
+            "Prepare data summary",
+            "Generate AI group reports",
+        ]
+    )
 
     with intro_tab:
         st.markdown(get_intro())
@@ -32,48 +35,48 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
         with uploader_col:
             ui_components.single_csv_uploader(
                 workflow,
-                "Upload CSV to narrate",
-                sv.narrative_last_file_name,
-                sv.narrative_input_df,
-                sv.narrative_binned_df,
-                sv.narrative_final_df,
-                uploader_key=sv.narrative_upload_key.value,
+                "Upload CSV to compare",
+                sv.case_groups_last_file_name,
+                sv.case_groups_input_df,
+                sv.case_groups_binned_df,
+                sv.case_groups_final_df,
+                uploader_key=sv.case_groups_upload_key.value,
                 key="narrative_uploader",
                 height=400,
             )
         with model_col:
             ui_components.prepare_input_df(
                 workflow,
-                sv.narrative_input_df,
-                sv.narrative_binned_df,
-                sv.narrative_final_df,
-                sv.narrative_subject_identifier,
+                sv.case_groups_input_df,
+                sv.case_groups_binned_df,
+                sv.case_groups_final_df,
+                sv.case_groups_subject_identifier,
             )
-            sv.narrative_final_df.value = df_functions.fix_null_ints(
-                sv.narrative_final_df.value
+            sv.case_groups_final_df.value = df_functions.fix_null_ints(
+                sv.case_groups_final_df.value
             )
-            sv.narrative_final_df.value = (
-                sv.narrative_final_df.value.astype(str)
+            sv.case_groups_final_df.value = (
+                sv.case_groups_final_df.value.astype(str)
                 .replace("<NA>", "")
                 .replace("nan", "")
             )
 
     with summarize_tab:
-        if len(sv.narrative_final_df.value) == 0:
+        if len(sv.case_groups_final_df.value) == 0:
             st.warning("Upload data to continue.")
         else:
             c1, c2 = st.columns([1, 2])
             with c1:
                 st.markdown("##### Define summary model")
                 sorted_atts = []
-                sorted_cols = sorted(sv.narrative_final_df.value.columns)
+                sorted_cols = sorted(sv.case_groups_final_df.value.columns)
                 for col in sorted_cols:
                     if col == "Subject ID":
                         continue
                     vals = [
                         f"{col}:{x}"
                         for x in sorted(
-                            sv.narrative_final_df.value[col].astype(str).unique()
+                            sv.case_groups_final_df.value[col].astype(str).unique()
                         )
                         if x
                         not in [
@@ -92,23 +95,23 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                 filters = st.multiselect(
                     "After filtering to records matching these values:",
                     sorted_atts,
-                    default=sv.narrative_filters.value,
+                    default=sv.case_groups_filters.value,
                 )
                 groups = st.multiselect(
                     "Compare groups of records with different combinations of these attributes:",
                     sorted_cols,
-                    default=sv.narrative_groups.value,
+                    default=sv.case_groups_groups.value,
                 )
                 aggregates = st.multiselect(
                     "Using counts of these attributes:",
                     sorted_cols,
-                    default=sv.narrative_aggregates.value,
+                    default=sv.case_groups_aggregates.value,
                 )
                 temporal_options = ["", *sorted_cols]
                 temporal = st.selectbox(
                     "Across windows of this temporal/ordinal attribute (optional):",
                     temporal_options,
-                    index=temporal_options.index(sv.narrative_temporal.value),
+                    index=temporal_options.index(sv.case_groups_temporal.value),
                 )
 
                 model = st.button(
@@ -118,24 +121,24 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
             with c2:
                 st.markdown("##### Data summary")
                 if model:
-                    sv.narrative_filters.value = filters
-                    sv.narrative_groups.value = groups
-                    sv.narrative_aggregates.value = aggregates
-                    sv.narrative_temporal.value = temporal
+                    sv.case_groups_filters.value = filters
+                    sv.case_groups_groups.value = groups
+                    sv.case_groups_aggregates.value = aggregates
+                    sv.case_groups_temporal.value = temporal
 
-                    sv.narrative_model_df.value = sv.narrative_final_df.value.copy(
+                    sv.case_groups_model_df.value = sv.case_groups_final_df.value.copy(
                         deep=True
                     )
-                    sv.narrative_model_df.value["Subject ID"] = [
-                        str(x) for x in range(1, len(sv.narrative_model_df.value) + 1)
+                    sv.case_groups_model_df.value["Subject ID"] = [
+                        str(x) for x in range(1, len(sv.case_groups_model_df.value) + 1)
                     ]
 
-                    sv.narrative_model_df.value = sv.narrative_model_df.value.replace(
-                        "", None
+                    sv.case_groups_model_df.value = (
+                        sv.case_groups_model_df.value.replace("", None)
                     )
 
                     # wide df for model
-                    wdf = sv.narrative_model_df.value
+                    wdf = sv.case_groups_model_df.value
                     print(wdf)
                     initial_row_count = len(wdf)
 
@@ -209,7 +212,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                     # create Window df
                     if temporal != "":
                         temporal_atts = sorted(
-                            sv.narrative_model_df.value[temporal].astype(str).unique()
+                            sv.case_groups_model_df.value[temporal].astype(str).unique()
                         )
                         ldf = wdf.melt(
                             id_vars=[*groups, temporal],
@@ -296,7 +299,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                     odf["Attribute Rank"] = odf["Attribute Rank"].astype(int)
                     odf["Group Rank"] = odf["Group Rank"].astype(int)
 
-                    sv.narrative_model_df.value = (
+                    sv.case_groups_model_df.value = (
                         odf[
                             [
                                 *groups,
@@ -328,9 +331,9 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                     )
                     filters_text = (
                         "["
-                        + ", ".join([
-                            "**" + f.replace(":", "\\:") + "**" for f in filters
-                        ])
+                        + ", ".join(
+                            ["**" + f.replace(":", "\\:") + "**" for f in filters]
+                        )
                         + "]"
                     )
                     description = "This table shows:"
@@ -344,20 +347,20 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                     if temporal != "":
                         description += f"\n- The **{temporal} Window Count** of each **Attribute Value** for each **{temporal} Window** for all {groups_text} groups, and corresponding **{temporal} Window Rank**"
                         description += f"\n- The **{temporal} Window Delta**, or change in the **Attribute Value Count** for successive **{temporal} Window** values, within each {groups_text} group"
-                    sv.narrative_description.value = description
+                    sv.case_groups_description.value = description
                     st.rerun()
-                if len(sv.narrative_model_df.value) > 0:
+                if len(sv.case_groups_model_df.value) > 0:
                     st.dataframe(
-                        sv.narrative_model_df.value,
+                        sv.case_groups_model_df.value,
                         hide_index=True,
                         use_container_width=True,
                         height=500,
                     )
 
-                    st.markdown(sv.narrative_description.value)
+                    st.markdown(sv.case_groups_description.value)
                     st.download_button(
                         "Download data",
-                        data=sv.narrative_model_df.value.to_csv(
+                        data=sv.case_groups_model_df.value.to_csv(
                             index=False, encoding="utf-8-sig"
                         ),
                         file_name="narrative_data_summary.csv",
@@ -365,15 +368,15 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                     )
 
     with generate_tab:
-        if len(sv.narrative_model_df.value) == 0:
+        if len(sv.case_groups_model_df.value) == 0:
             st.warning("Prepare data summary to continue.")
         else:
             c1, c2 = st.columns([1, 1])
             with c1:
                 st.markdown("##### Data summary filters")
                 groups = sorted(
-                    sv.narrative_model_df.value.groupby(
-                        sv.narrative_groups.value
+                    sv.case_groups_model_df.value.groupby(
+                        sv.case_groups_groups.value
                     ).groups.keys()
                 )
                 b1, b2 = st.columns([1, 1])
@@ -381,20 +384,20 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                     selected_groups = st.multiselect(
                         "Select specific groups to narrate:",
                         list(groups),
-                        default=sv.narrative_selected_groups.value,
+                        default=sv.case_groups_selected_groups.value,
                     )
                 with b2:
                     top_group_ranks = st.number_input(
                         "OR Select top group ranks to narrate:",
                         min_value=0,
                         max_value=9999999999,
-                        value=sv.narrative_top_groups.value,
+                        value=sv.case_groups_top_groups.value,
                     )
-                fdf = sv.narrative_model_df.value.copy(deep=True)
+                fdf = sv.case_groups_model_df.value.copy(deep=True)
                 filter_description = ""
                 if len(selected_groups) > 0:
                     fdf = fdf[
-                        fdf.set_index(sv.narrative_groups.value).index.isin(
+                        fdf.set_index(sv.case_groups_groups.value).index.isin(
                             selected_groups
                         )
                     ]
@@ -408,15 +411,15 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                 st.markdown(f"##### Filtered data summary to narrate ({num_rows} rows)")
                 st.dataframe(fdf, hide_index=True, use_container_width=True, height=280)
                 variables = {
-                    "description": sv.narrative_description.value,
+                    "description": sv.case_groups_description.value,
                     "dataset": fdf.to_csv(index=False, encoding="utf-8-sig"),
                     "filters": filter_description,
                 }
                 generate, messages, reset = ui_components.generative_ai_component(
-                    sv.narrative_system_prompt, variables
+                    sv.case_groups_system_prompt, variables
                 )
                 if reset:
-                    sv.narrative_system_prompt.value["user_prompt"] = (
+                    sv.case_groups_system_prompt.value["user_prompt"] = (
                         prompts.user_prompt
                     )
                     st.rerun()
@@ -426,8 +429,8 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                 narrative_placeholder = st.empty()
                 gen_placeholder = st.empty()
                 if generate:
-                    sv.narrative_selected_groups.value = selected_groups
-                    sv.narrative_top_groups.value = top_group_ranks
+                    sv.case_groups_selected_groups.value = selected_groups
+                    sv.case_groups_top_groups.value = top_group_ranks
 
                     on_callback = ui_components.create_markdown_callback(
                         narrative_placeholder
@@ -435,26 +438,26 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                     result = ui_components.generate_text(
                         messages, callbacks=[on_callback]
                     )
-                    sv.narrative_report.value = result
+                    sv.case_groups_report.value = result
 
                     validation, messages_to_llm = ui_components.validate_ai_report(
                         messages, result
                     )
-                    sv.narrative_report_validation.value = validation
-                    sv.narrative_report_validation_messages.value = messages_to_llm
+                    sv.case_groups_report_validation.value = validation
+                    sv.case_groups_report_validation_messages.value = messages_to_llm
                     st.rerun()
                 else:
-                    if sv.narrative_report.value == "":
+                    if sv.case_groups_report.value == "":
                         gen_placeholder.warning(
                             "Press the Generate button to create an AI report for the selected groups."
                         )
-                narrative_placeholder.markdown(sv.narrative_report.value)
+                narrative_placeholder.markdown(sv.case_groups_report.value)
 
-                ui_components.report_download_ui(sv.narrative_report, "group_report")
+                ui_components.report_download_ui(sv.case_groups_report, "group_report")
 
                 ui_components.build_validation_ui(
-                    sv.narrative_report_validation.value,
-                    sv.narrative_report_validation_messages.value,
-                    sv.narrative_report.value,
+                    sv.case_groups_report_validation.value,
+                    sv.case_groups_report_validation_messages.value,
+                    sv.case_groups_report.value,
                     workflow,
                 )

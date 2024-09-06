@@ -59,7 +59,7 @@ OPENAI_API_KEY=<OPENAI_API_KEY>
 :construction: Code-only workflows in progress: 
 
 - Anonymize Case Data
-- Group Narratives
+- Compare Case Groups
 - Record Matching
 
 ## Running the UI (Streamlit) 
