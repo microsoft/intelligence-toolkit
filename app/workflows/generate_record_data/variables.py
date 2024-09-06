@@ -14,9 +14,11 @@ class SessionVariables:
 
     def create_session(self, prefix):
         self.schema = SessionVariable(create_boilerplate_schema(), prefix)
-        self.num_records = SessionVariable(100, prefix)
-        self.duplicate_records_per_iteration = SessionVariable(0, prefix)
-        self.related_records_per_iteration = SessionVariable(0, prefix)
+        self.num_records_overall = SessionVariable(100, prefix)
+        self.records_per_batch = SessionVariable(20, prefix)
+        self.parallel_batches = SessionVariable(5, prefix)
+        self.duplicate_records_per_batch = SessionVariable(0, prefix)
+        self.related_records_per_batch = SessionVariable(0, prefix)
         self.primary_record_array = SessionVariable('', prefix)
         self.generated_dfs = SessionVariable({}, prefix)
         self.generated_objects = SessionVariable([], prefix)

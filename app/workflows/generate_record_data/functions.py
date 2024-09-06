@@ -18,41 +18,60 @@ def generate_form_from_json_schema(global_schema, default_schema, field_location
                 st.divider()
                 c1, c2, c3, c4 = st.columns([3, 2, 2, 2])
                 with c1:
-                    new_label = st.text_input(f'Level {len(nesting)} {field_location[key]["type"]} field', key=f'{key_with_prefix}_label', value=key)
+                    field_type = field_location[key]["type"]
+                    if field_type == "array":
+                        item_type = field_location[key]["items"]["type"]
+                        field_type = f"{item_type} array"
+                    new_label = st.text_input(f'Level {len(nesting)} {field_type}', key=f'{key_with_prefix}_label', value=key)
                     if new_label != key:
                         schema_builder.rename_field(global_schema, field_location, nesting, key, new_label)
                         st.rerun()
                 with c2:
+                    if st.button('Move up', key=f'{key_with_prefix}_move_up', disabled=key == list(field_location.keys())[0]):
+                        schema_builder.move_field_up(global_schema, nesting, field_location, key)
+                        st.rerun()
+
                     old_req = key in schema_builder.get_required_list(global_schema, nesting)
                     req = st.checkbox('Required?', key=f'{key_with_prefix}_required', value=old_req)
 
                     if req != old_req:
                         schema_builder.set_required_field_status(global_schema, nesting, new_label, req)
                         st.rerun()
-                    con = st.checkbox(
-                        "Enum?",
-                        key=f"{key_with_prefix}_constrained",
-                        value="enum" in value
-                        or value["type"] == "array"
-                        and "enum" in value["items"],
-                        disabled=value["type"] in ["boolean", "object"]
-                        or value["type"] == "array"
-                        and value["items"]["type"] in ["boolean", "object"],
-                    )
-                    changed = schema_builder.set_enum_field_status(global_schema, nesting, new_label, con)
-                    if changed:
-                        st.rerun()
                 with c3:
-                    if st.button('Move up', key=f'{key_with_prefix}_move_up', disabled=key == list(field_location.keys())[0]):
-                        schema_builder.move_field_up(global_schema, nesting, field_location, key)
-                        st.rerun()
                     if st.button('Move down', key=f'{key_with_prefix}_move_down', disabled=key == list(field_location.keys())[-1]):
                         schema_builder.move_field_down(global_schema, nesting, field_location, key)
                         st.rerun()
+
+                    show_additional = value["type"] == "object" or (value["type"] == "array" and value["items"]["type"] == "object")
+                    if show_additional:
+                        add = st.checkbox(
+                            "Additional?",
+                            key=f"{key_with_prefix}_additional",
+                            value=value["additionalProperties"] if "additionalProperties" in value else value["items"]["additionalProperties"]
+                        )
+                        changed = schema_builder.set_additional_field_status(global_schema, nesting, new_label, add)
+                        if changed:
+                            st.rerun()
+
                 with c4:
                     if st.button('Delete', use_container_width=True, key=f'{key_with_prefix}_delete'):
-                        field_location.pop(key)
+                        schema_builder.delete_field(global_schema, nesting, field_location, key)
                         st.rerun()
+
+                    show_enum = value["type"] in ["string", "number"] \
+                        or value["type"] == "array" \
+                        and value["items"]["type"] in ["string", "number"]
+                    if show_enum:
+                        con = st.checkbox(
+                            "Enum?",
+                            key=f"{key_with_prefix}_constrained",
+                            value="enum" in value
+                            or value["type"] == "array"
+                            and "enum" in value["items"]
+                        )
+                        changed = schema_builder.set_enum_field_status(global_schema, nesting, new_label, con)
+                        if changed:
+                            st.rerun()
                 
                 new_description = st.text_input('Field description', key=f'{key_with_prefix}_description', value=value['description'])
                 if new_description != value['description']:
@@ -92,7 +111,7 @@ def generate_form_from_json_schema(global_schema, default_schema, field_location
                 return
         else:
             if key != 'type':
-                new_value = st.text_input(f'Schema {key} field', key=f'{key_with_prefix}_label', value=value)
+                new_value = st.text_input(f'`{key}` metadata', key=f'{key_with_prefix}_label', value=value)
                 if new_value != value:
                     field_location[key] = new_value
                     st.rerun()
@@ -196,7 +215,7 @@ def create_enum_ui(field_location, key, key_with_prefix, value):
 
 def edit_schema_ui(global_schema, nesting, field_location):
     key_with_prefix = '.'.join(nesting)
-    title = f'Add field to {nesting[-1]}' if nesting else 'Add top-level field'
+    title = f'Add field to `{nesting[-1]}`' if nesting else 'Add top-level field'
     st.markdown(title)
     c1, c2, c3, c4, c5, c6, c7, c8 = st.columns(8)
     with c1:

@@ -3,8 +3,8 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 import streamlit as st
-import app.workflows.generate_record_data.variables as bds_variables
-import app.workflows.generate_record_data.workflow
+import app.workflows.generate_record_data.variables as grd_variables
+import app.workflows.generate_record_data.workflow as grd_workflow
 from components.app_loader import load_multipage_app
 from util.helper_fn import app_in_dev_mode
 
@@ -18,11 +18,11 @@ def main():
         page_icon="app/myapp.ico",
         page_title="Intelligence Toolkit | Generate Record Data",
     )
-    sv = bds_variables.SessionVariables(workflow)
+    sv = grd_variables.SessionVariables(workflow)
     load_multipage_app(sv)
 
     try:
-        app.workflows.generate_record_data.workflow.create(sv, workflow)
+        grd_workflow.create(sv, workflow)
     except Exception as e:
         if app_in_dev_mode():
             st.exception(e)
