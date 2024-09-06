@@ -3,6 +3,7 @@
 #
 
 import re
+from collections import defaultdict
 
 import numpy as np
 import polars as pl
@@ -132,16 +133,24 @@ class TestBuildNearMap:
         indices = np.array([[0, 1, 2], [0, 1, 2], [0, 1, 2]])
         result = build_near_map(distances, indices, all_sentences)
 
+        expected = defaultdict(list)
+        expected[0].extend([1, 2])
+        expected[1].append(1)
+
         assert len(result) == 2
-        assert result == {0: [1, 1, 2, 2], 1: [1, 1]}
+        assert result == expected
 
     def test_result_max_record(self, all_sentences) -> None:
         distances = np.array([[0.01, 0.02, 0.03], [0.04, 0.05, 0.06], [0.03, 0.8, 0.9]])
         indices = np.array([[0, 1, 2], [0, 1, 2], [0, 1, 2]])
         result = build_near_map(distances, indices, all_sentences, 0.1)
 
+        expected = defaultdict(list)
+        expected[0].extend([1, 2])
+        expected[1].extend([1, 2])
+
         assert len(result) == 2
-        assert result == {0: [1, 1, 2, 2], 1: [1, 1, 2, 2]}
+        assert result == expected
 
 
 class TestBuildSentencePairScores:
