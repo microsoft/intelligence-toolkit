@@ -48,24 +48,25 @@ class TestConvertToSentences:
         result = convert_to_sentences(merged_df, [])
 
         assert len(result) == 5
-        assert "ID1" in result[0]
+        assert "ID1" in result[0]["text"]
 
     def test_skip(self, merged_df) -> None:
         result = convert_to_sentences(merged_df, ["ID1"])
 
         for re in result:
-            assert "ID1" not in re
+            assert "ID1" not in re["text"]
 
     def test_sentence(self, merged_df) -> None:
         result = convert_to_sentences(merged_df)
 
         assert len(result) == 5
         for re in result:
-            assert "ID1:" in re
-            assert "NAME:" in re
-            assert "VEHICLETYPE:" in re
-            assert "VEHICLECOLOR:" in re
-            assert "VEHICLEYEAR:" in re
+            text = re["text"]
+            assert "ID1:" in text
+            assert "NAME:" in text
+            assert "VEHICLETYPE:" in text
+            assert "VEHICLECOLOR:" in text
+            assert "VEHICLEYEAR:" in text
 
     def test_val_nan(self, merged_df) -> None:
         # add one row with nan value
@@ -86,7 +87,7 @@ class TestConvertToSentences:
         result = convert_to_sentences(merged_df)
 
         re = result[-1]
-        assert "VEHICLETYPE: ;" in re
+        assert "VEHICLETYPE: ;" in re["text"]
 
 
 class TestBuildNearestNeighbors:
