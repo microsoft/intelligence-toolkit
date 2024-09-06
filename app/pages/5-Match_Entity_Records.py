@@ -6,12 +6,12 @@ import asyncio
 
 import streamlit as st
 
-import app.workflows.record_matching.variables as rm_variables
-import app.workflows.record_matching.workflow
+import app.workflows.match_entity_records.variables as rm_variables
+import app.workflows.match_entity_records.workflow
 from app.components.app_loader import load_multipage_app
 from app.util.helper_fn import app_in_dev_mode
 
-workflow = "record_matching"
+workflow = "matching"
 
 
 async def main():
@@ -19,13 +19,13 @@ async def main():
         layout="wide",
         initial_sidebar_state="collapsed",
         page_icon="app/myapp.ico",
-        page_title="Intelligence Toolkit | Record Matching",
+        page_title="Intelligence Toolkit | Match Entity Records",
     )
     sv = rm_variables.SessionVariables(workflow)
     load_multipage_app(sv)
 
     try:
-        await app.workflows.record_matching.workflow.create(sv, workflow)
+        await app.workflows.match_entity_records.workflow.create(sv, workflow)
     except Exception as e:
         if app_in_dev_mode():
             st.exception(e)

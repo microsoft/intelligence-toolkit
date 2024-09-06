@@ -1,6 +1,6 @@
-# Record Matching
+# Match Entity Records
 
-The **Record Matching** workflow generates intelligence reports on record matches detected across entity datasets.
+The **Match Entity Records** workflow generates intelligence reports on record matches detected across entity datasets.
 
 ## How it works
 

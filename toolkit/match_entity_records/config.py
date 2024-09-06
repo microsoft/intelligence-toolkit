@@ -6,7 +6,7 @@ from typing import TypedDict
 
 max_rows_to_show = 1000
 entity_label = "Entity"
-cache_name = "record_matching"
+cache_name = "match_entity_records"
 
 DEFAULT_COLUMNS_DONT_CONVERT = ["Entity ID", "Entity name", "Dataset"]
 DEFAULT_SENTENCE_PAIR_JACCARD_THRESHOLD = 0.75

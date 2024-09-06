@@ -3,7 +3,7 @@
 #
 import polars as pl
 
-import toolkit.record_matching.prompts as prompts
+import toolkit.match_entity_records.prompts as prompts
 from toolkit.AI.defaults import DEFAULT_REPORT_BATCH_SIZE
 from toolkit.AI.utils import generate_batch_messages
 

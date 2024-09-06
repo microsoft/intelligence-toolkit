@@ -56,11 +56,11 @@ flowchart TD
     PersonalData[\\Personal Case Records/] ----> |Anonymize Case Data Workflow| AnonymData[/Anonym Case Records\\]
     EntityData[\\Entity Records/] ---> HasTime{Time Attributes?}
     CaseRecords[\\ Case Records/] ---> HasTime{Time Attributes?}
-    HasTime{Time Attributes?} --> |Attribute Patterns Workflow| AttributePatterns[/AI Pattern Reports\\]
+    HasTime{Time Attributes?} --> |Detect Case Patterns Workflow| CasePatterns[/AI Pattern Reports\\]
     EntityData[\\Entity Records/] ---> HasGroups{Grouping Attributes?}
     CaseRecords[\\Case Records/] ---> HasGroups{Grouping Attributes?}
-    HasGroups{Grouping Attributes?} --> |Group Narratives Workflow| GroupNarratives[/AI Group Reports\\]
-    EntityData[\\Entity Records/] ---> HasInconsistencies{Inconsistent Attributes?} --> |Record Matching Workflow| RecordLinking[/AI Match Reports\\]
+    HasGroups{Grouping Attributes?} --> |Match Entity Records Workflow| MatchedEntities[/AI Group Reports\\]
+    EntityData[\\Entity Records/] ---> HasInconsistencies{Inconsistent Attributes?} --> |Match Entity Records Workflow| RecordLinking[/AI Match Reports\\]
     EntityData[\\Entity Records/] ---> HasIdentifiers{Identifying Attributes?} --> |Network Analysis Workflow| NetworkAnalysis[/AI Network Reports\\]
     EntityDocs[\\Entity Documents/] ----> |Question Answering Workflow| AnswerReports[/AI Answer Reports\\]
 

@@ -9,24 +9,28 @@ import polars as pl
 import streamlit as st
 
 import app.util.session_variables as home_vars
-import app.workflows.record_matching.functions as functions
-import app.workflows.record_matching.variables as rm_variables
-import toolkit.record_matching.prompts as prompts
+import app.workflows.match_entity_records.functions as functions
+import app.workflows.match_entity_records.variables as rm_variables
+import toolkit.match_entity_records.prompts as prompts
 from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
-from toolkit.record_matching import get_readme as get_intro
-from toolkit.record_matching.config import AttributeToMatch
-from toolkit.record_matching.detect import (build_attributes_dataframe,
-                                            build_matches,
-                                            build_matches_dataset,
-                                            build_near_map,
-                                            build_nearest_neighbors,
-                                            build_sentence_pair_scores,
-                                            convert_to_sentences)
-from toolkit.record_matching.prepare_model import (build_attribute_list,
-                                                   build_attribute_options,
-                                                   format_dataset)
+from toolkit.match_entity_records import get_readme as get_intro
+from toolkit.match_entity_records.config import AttributeToMatch
+from toolkit.match_entity_records.detect import (
+    build_attributes_dataframe,
+    build_matches,
+    build_matches_dataset,
+    build_near_map,
+    build_nearest_neighbors,
+    build_sentence_pair_scores,
+    convert_to_sentences,
+)
+from toolkit.match_entity_records.prepare_model import (
+    build_attribute_list,
+    build_attribute_options,
+    format_dataset,
+)
 
 
 async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
@@ -34,7 +38,7 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
 
     intro_tab, uploader_tab, process_tab, evaluate_tab = st.tabs(
         [
-            "Record matching workflow:",
+            "Match entity records workflow:",
             "Upload data to match",
             "Detect record groups",
             "Evaluate record groups",

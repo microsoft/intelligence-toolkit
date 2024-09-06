@@ -12,7 +12,7 @@ from sklearn.neighbors import NearestNeighbors
 
 from toolkit.AI.classes import VectorData
 from toolkit.AI.utils import hash_text
-from toolkit.record_matching.config import (
+from toolkit.match_entity_records.config import (
     DEFAULT_COLUMNS_DONT_CONVERT,
     DEFAULT_MAX_RECORD_DISTANCE,
     DEFAULT_SENTENCE_PAIR_JACCARD_THRESHOLD,

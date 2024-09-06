@@ -8,7 +8,7 @@ from app.util.session_variables import SessionVariables
 from toolkit.AI.base_embedder import BaseEmbedder
 from toolkit.AI.local_embedder import LocalEmbedder
 from toolkit.AI.openai_embedder import OpenAIEmbedder
-from toolkit.record_matching import config
+from toolkit.match_entity_records import config
 
 sv_home = SessionVariables("home")
 

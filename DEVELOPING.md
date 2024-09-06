@@ -60,7 +60,7 @@ OPENAI_API_KEY=<OPENAI_API_KEY>
 
 - Anonymize Case Data
 - Compare Case Groups
-- Record Matching
+- Match Entity Records
 
 ## Running the UI (Streamlit) 
 
