@@ -6,18 +6,18 @@ import numpy as np
 import polars as pl
 from sklearn.neighbors import NearestNeighbors
 
-import toolkit.risk_networks.config as config
+import toolkit.detect_entity_networks.config as config
 from toolkit.AI.base_embedder import BaseEmbedder
 from toolkit.AI.openai_configuration import OpenAIConfiguration
 from toolkit.AI.openai_embedder import OpenAIEmbedder
 from toolkit.AI.utils import hash_text
-from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
-from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
-from toolkit.risk_networks.config import (
+from toolkit.detect_entity_networks.config import (
     ENTITY_LABEL,
     SIMILARITY_THRESHOLD_MAX,
     SIMILARITY_THRESHOLD_MIN,
 )
+from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
+from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 
 async def index_nodes(

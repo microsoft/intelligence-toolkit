@@ -7,7 +7,7 @@ import polars as pl
 import pytest
 from networkx import Graph
 
-from toolkit.risk_networks.explore_networks import (
+from toolkit.detect_entity_networks.explore_networks import (
     _build_fuzzy_neighbors,
     _integrate_flags,
     _merge_condition,
@@ -286,7 +286,7 @@ class TestMergeNodes:
 class TestSimplifyEntitiesGraph:
     def test_simplify_condition_false(self, mocker, graph):
         mocker.patch(
-            "toolkit.risk_networks.explore_networks._merge_nodes"
+            "toolkit.detect_entity_networks.explore_networks._merge_nodes"
         ).return_value = graph
 
         aba = simplify_entities_graph(graph)
@@ -295,7 +295,7 @@ class TestSimplifyEntitiesGraph:
     def test_simplify_condition_true(self, mocker, graph):
         G = nx.Graph()
         mocker.patch(
-            "toolkit.risk_networks.explore_networks._merge_nodes"
+            "toolkit.detect_entity_networks.explore_networks._merge_nodes"
         ).return_value = G
 
         aba = simplify_entities_graph(graph)

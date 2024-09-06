@@ -10,7 +10,7 @@ DEFAULT_MAX_ATTRIBUTE_DEGREE = 10
 ENTITY_LABEL = "ENTITY"
 LIST_SEPARATOR = ";"
 
-cache_name = "risk_networks"
+cache_name = "detect_entity_networks"
 
 
 class LinkType(Enum):

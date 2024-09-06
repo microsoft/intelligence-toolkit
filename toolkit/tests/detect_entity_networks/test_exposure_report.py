@@ -6,7 +6,7 @@ import networkx as nx
 import polars as pl
 import pytest
 
-from toolkit.risk_networks.exposure_report import build_exposure_data
+from toolkit.detect_entity_networks.exposure_report import build_exposure_data
 
 
 class TestExposureData:

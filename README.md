@@ -28,10 +28,10 @@ It supports a variety of interactive workflows, each designed to address a speci
 - **Case Intelligence Workflows**
   - [**Anonymize Case Data**](/app/workflows/anonymize_case_data/README.md) generates differentially-private datasets and summaries from sensitive case records.
   - [**Detect Case Patterns**](/app/workflows/detect_case_patterns/README.md) generates reports on attribute patterns detected in streams of case records.
-  - [**Group Narratives**](/app/workflows/group_narratives/README.md) generates reports by defining and comparing groups of case records.
+  - [**Compare Case Groups**](/app/workflows/compare_case_groups/README.md) generates reports by defining and comparing groups of case records.
 - **Entity Intelligence Workflows**
   - [**Match Entity Recordsg**](/app/workflows/match_entity_records/README.md) generates reports on record matches detected across entity datasets.
-  - [**Risk Networks**](/app/workflows/risk_networks/README.md) generates reports on risk exposure for networks of related entities.
+  - [**Detect Entity Networks**](/app/workflows/detect_entity_networks/README.md) generates reports on risk exposure for networks of related entities.
   - [**Question Answering**](/app/workflows/question_answering/README.md) generates reports from a collection of text documents.
 
 #### How was Intelligence Toolkit evaluated?

@@ -7,7 +7,7 @@ import streamlit as st
 from streamlit_agraph import Config
 from util.session_variable import SessionVariable
 
-from toolkit.risk_networks import prompts
+from toolkit.detect_entity_networks import prompts
 
 agraph_config = Config(
     width=1000,

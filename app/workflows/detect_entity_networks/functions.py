@@ -5,7 +5,7 @@ import streamlit as st
 from util.openai_wrapper import UIOpenAIConfiguration
 from util.session_variables import SessionVariables
 
-import toolkit.risk_networks.config as config
+import toolkit.detect_entity_networks.config as config
 from toolkit.AI.base_embedder import BaseEmbedder
 from toolkit.AI.local_embedder import LocalEmbedder
 from toolkit.AI.openai_embedder import OpenAIEmbedder

@@ -1,6 +1,6 @@
-# Risk Networks
+# Detect Entity Networks
 
-The **Risk Networks** workflow generates intelligence reports on risk exposure for networks of related entities.
+The **Detect Entity Networks** workflow generates intelligence reports on risk exposure for networks of related entities.
 
 ## How it works
 

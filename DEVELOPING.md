@@ -52,9 +52,9 @@ OPENAI_API_KEY=<OPENAI_API_KEY>
 
     - [Example](./examples/question_answering.ipynb): See an example of how to run the code with your data to obtain results without the need to run the UI.
 
-- [Risk Networks](./toolkit/risk_networks/README.md)
+- [Detect Entity Networks](./toolkit/detect_entity_networks/README.md)
 
-    - [Example](./examples/risk_networks/main.ipynb): See an example of how to run the code with your data to obtain results without the need to run the UI.
+    - [Example](./examples/detect_entity_networks/main.ipynb): See an example of how to run the code with your data to obtain results without the need to run the UI.
 
 :construction: Code-only workflows in progress: 
 

@@ -8,8 +8,11 @@ import networkx as nx
 import polars as pl
 from graspologic.partition import hierarchical_leiden
 
+from toolkit.detect_entity_networks.config import (
+    DEFAULT_MAX_ATTRIBUTE_DEGREE,
+    ENTITY_LABEL,
+)
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
-from toolkit.risk_networks.config import DEFAULT_MAX_ATTRIBUTE_DEGREE, ENTITY_LABEL
 
 
 # ruff: noqa

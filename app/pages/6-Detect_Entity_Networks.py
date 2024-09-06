@@ -5,15 +5,14 @@
 
 import asyncio
 
-
 import streamlit as st
 
-import app.workflows.risk_networks.variables as rn_variables
-import app.workflows.risk_networks.workflow
+import app.workflows.detect_entity_networks.variables as rn_variables
+import app.workflows.detect_entity_networks.workflow
 from app.components.app_loader import load_multipage_app
 from app.util.helper_fn import app_in_dev_mode
 
-workflow = "risk_networks"
+workflow = "detect_entity_networks"
 
 
 async def main() -> None:
@@ -21,14 +20,14 @@ async def main() -> None:
         layout="wide",
         initial_sidebar_state="collapsed",
         page_icon="app/myapp.ico",
-        page_title="Intelligence Toolkit | Risk Networks",
+        page_title="Intelligence Toolkit | Detect Entity Networks",
     )
     sv = rn_variables.SessionVariables(workflow)
 
     load_multipage_app(sv)
 
     try:
-        await app.workflows.risk_networks.workflow.create(sv, workflow)
+        await app.workflows.detect_entity_networks.workflow.create(sv, workflow)
     except Exception as e:
         if app_in_dev_mode():
             st.exception(e)

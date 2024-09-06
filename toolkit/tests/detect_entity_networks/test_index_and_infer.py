@@ -9,18 +9,18 @@ import networkx as nx
 import polars as pl
 import pytest
 
-from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
-from toolkit.risk_networks.config import (
+from toolkit.detect_entity_networks.config import (
     SIMILARITY_THRESHOLD_MAX,
     SIMILARITY_THRESHOLD_MIN,
 )
-from toolkit.risk_networks.index_and_infer import (
+from toolkit.detect_entity_networks.index_and_infer import (
     build_inferred_df,
     create_inferred_links,
     index_and_infer,
     index_nodes,
     infer_nodes,
 )
+from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 
 class TestIndexNodes:
@@ -54,7 +54,7 @@ class TestIndexNodes:
         ):
             await index_nodes([], overall_graph)
 
-    @patch("toolkit.risk_networks.index_and_infer.OpenAIEmbedder")
+    @patch("toolkit.detect_entity_networks.index_and_infer.OpenAIEmbedder")
     async def test_index_nodes_small_samples(self, mock_embedder, overall_graph_small):
         async def embed_store_many(*args) -> list[list[float]]:
             return [
@@ -73,7 +73,7 @@ class TestIndexNodes:
         ):
             await index_nodes(indexed_node_types, overall_graph_small)
 
-    @patch("toolkit.risk_networks.index_and_infer.OpenAIEmbedder")
+    @patch("toolkit.detect_entity_networks.index_and_infer.OpenAIEmbedder")
     async def test_index_nodes(self, mock_embedder, overall_graph):
         async def embed_store_many(*args) -> list[list[float]]:
             return [
@@ -390,8 +390,8 @@ class TestIndexAndInfer:
         with pytest.raises(ValueError, match="Graph is empty"):
             await index_and_infer(indexed_node_types, nx.Graph(), 0)
 
-    @patch("toolkit.risk_networks.index_and_infer.index_nodes")
-    @patch("toolkit.risk_networks.index_and_infer.infer_nodes")
+    @patch("toolkit.detect_entity_networks.index_and_infer.index_nodes")
+    @patch("toolkit.detect_entity_networks.index_and_infer.infer_nodes")
     async def test_index_and_infer(
         self, mock_infer_nodes, mock_index_nodes, overall_graph
     ) -> None:

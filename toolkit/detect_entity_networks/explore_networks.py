@@ -9,8 +9,8 @@ from typing import Any
 import networkx as nx
 import polars as pl
 
+from toolkit.detect_entity_networks.config import ENTITY_LABEL, LIST_SEPARATOR
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
-from toolkit.risk_networks.config import ENTITY_LABEL, LIST_SEPARATOR
 
 
 def _integrate_flags(graph: nx.Graph, df_integrated_flags: pl.DataFrame) -> nx.Graph:

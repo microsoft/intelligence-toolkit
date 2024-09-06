@@ -8,8 +8,8 @@ from unittest.mock import patch
 import polars as pl
 import pytest
 
-from toolkit.risk_networks.config import FlagAggregatorType
-from toolkit.risk_networks.prepare_model import (
+from toolkit.detect_entity_networks.config import FlagAggregatorType
+from toolkit.detect_entity_networks.prepare_model import (
     build_flag_links,
     build_flags,
     build_groups,

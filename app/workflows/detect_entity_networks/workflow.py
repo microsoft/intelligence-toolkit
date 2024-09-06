@@ -6,8 +6,8 @@
 import pandas as pd
 import polars as pl
 import streamlit as st
-import workflows.risk_networks.functions as functions
-import workflows.risk_networks.variables as rn_variables
+import workflows.detect_entity_networks.functions as functions
+import workflows.detect_entity_networks.variables as rn_variables
 from st_aggrid import (
     AgGrid,
     ColumnsAutoSizeMode,
@@ -19,33 +19,31 @@ from streamlit_agraph import Edge, Node, agraph
 from util import ui_components
 from util.session_variables import SessionVariables
 
-from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
-from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
-from toolkit.risk_networks import get_readme as get_intro
-from toolkit.risk_networks import prompts
-from toolkit.risk_networks.config import (
+from toolkit.detect_entity_networks import get_readme as get_intro
+from toolkit.detect_entity_networks import prompts
+from toolkit.detect_entity_networks.config import (
     ENTITY_LABEL,
     SIMILARITY_THRESHOLD_MAX,
     SIMILARITY_THRESHOLD_MIN,
 )
-from toolkit.risk_networks.explore_networks import (
+from toolkit.detect_entity_networks.explore_networks import (
     build_network_from_entities,
     get_entity_graph,
     simplify_entities_graph,
 )
-from toolkit.risk_networks.exposure_report import build_exposure_report
-from toolkit.risk_networks.identify_networks import (
+from toolkit.detect_entity_networks.exposure_report import build_exposure_report
+from toolkit.detect_entity_networks.identify_networks import (
     build_entity_records,
     build_networks,
     trim_nodeset,
 )
-from toolkit.risk_networks.index_and_infer import (
+from toolkit.detect_entity_networks.index_and_infer import (
     build_inferred_df,
     index_and_infer,
     index_nodes,
     infer_nodes,
 )
-from toolkit.risk_networks.prepare_model import (
+from toolkit.detect_entity_networks.prepare_model import (
     build_flag_links,
     build_flags,
     build_groups,
@@ -53,7 +51,9 @@ from toolkit.risk_networks.prepare_model import (
     format_data_columns,
     generate_attribute_links,
 )
-from toolkit.risk_networks.protected_mode import protect_data
+from toolkit.detect_entity_networks.protected_mode import protect_data
+from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
+from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 
 async def create(sv: rn_variables.SessionVariables, workflow=None):

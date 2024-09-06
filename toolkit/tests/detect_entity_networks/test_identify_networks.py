@@ -7,7 +7,7 @@ import networkx as nx
 import polars as pl
 import pytest
 
-from toolkit.risk_networks.identify_networks import (
+from toolkit.detect_entity_networks.identify_networks import (
     build_entity_records,
     get_community_nodes,
     get_entity_neighbors,

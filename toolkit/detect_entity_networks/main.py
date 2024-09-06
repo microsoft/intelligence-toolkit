@@ -3,17 +3,17 @@
 #
 import polars as pl
 
-from toolkit.risk_networks.config import ENTITY_LABEL
-from toolkit.risk_networks.explore_networks import (
+from toolkit.detect_entity_networks.config import ENTITY_LABEL
+from toolkit.detect_entity_networks.explore_networks import (
     build_network_from_entities,
     get_entity_graph,
 )
-from toolkit.risk_networks.identify_networks import (
+from toolkit.detect_entity_networks.identify_networks import (
     build_entity_records,
     build_networks,
     trim_nodeset,
 )
-from toolkit.risk_networks.prepare_model import build_model_with_attributes
+from toolkit.detect_entity_networks.prepare_model import build_model_with_attributes
 
 
 def build_simple_network_data(

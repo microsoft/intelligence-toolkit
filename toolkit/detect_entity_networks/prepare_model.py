@@ -9,8 +9,8 @@ from typing import Any
 import networkx as nx
 import polars as pl
 
+from toolkit.detect_entity_networks.config import ENTITY_LABEL, FlagAggregatorType
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
-from toolkit.risk_networks.config import ENTITY_LABEL, FlagAggregatorType
 
 
 def clean_text(text: str | int) -> str:
