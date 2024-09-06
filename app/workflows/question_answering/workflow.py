@@ -21,14 +21,11 @@ from toolkit.AI.base_embedder import BaseEmbedder
 from toolkit.AI.defaults import CHUNK_SIZE
 from toolkit.AI.local_embedder import LocalEmbedder
 from toolkit.AI.openai_embedder import OpenAIEmbedder
-from toolkit.graph.graph_fusion_encoder_embedding import (
-    generate_graph_fusion_encoder_embedding,
-)
+from toolkit.graph.graph_fusion_encoder_embedding import \
+    generate_graph_fusion_encoder_embedding
 from toolkit.question_answering.pattern_detector import (
-    combine_chunk_text_and_explantion,
-    detect_converging_pairs,
-    explain_chunk_significance,
-)
+    combine_chunk_text_and_explantion, detect_converging_pairs,
+    explain_chunk_significance)
 
 sv_home = SessionVariables("home")
 ai_configuration = UIOpenAIConfiguration().get_configuration()

@@ -81,7 +81,7 @@ fix = "ruff  --preview check --fix ."
 fix_unsafe = "ruff check --preview --fix --unsafe-fixes ."
 test = "pytest ${ARGS}"
 
-run_streamlit = "python -m streamlit run app/Home.py"  
+run_streamlit = "python -m streamlit run app/Home.py ${ARGS}"  
 
 [[tool.poe.tasks.format]]
 sequence = ['_sort_imports', '_format_code']

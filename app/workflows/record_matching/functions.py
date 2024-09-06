@@ -5,10 +5,10 @@ import streamlit as st
 
 from app.util.openai_wrapper import UIOpenAIConfiguration
 from app.util.session_variables import SessionVariables
-from app.workflows.record_matching import config
 from toolkit.AI.base_embedder import BaseEmbedder
 from toolkit.AI.local_embedder import LocalEmbedder
 from toolkit.AI.openai_embedder import OpenAIEmbedder
+from toolkit.record_matching import config
 
 sv_home = SessionVariables("home")
 
@@ -28,18 +28,3 @@ def embedder() -> BaseEmbedder:
     except Exception as e:
         st.error(f"Error creating connection: {e}")
         st.stop()
-
-
-def convert_to_sentences(df, skip):
-    sentences = []
-    cols = df.columns
-    for row in df.iter_rows(named=True):
-        sentence = ""
-        for field in cols:
-            if field not in skip:
-                val = str(row[field]).upper()
-                if val == "NAN":
-                    val = ""
-                sentence += field.upper() + ": " + val + "; "
-        sentences.append(sentence.strip())
-    return sentences

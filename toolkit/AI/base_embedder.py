@@ -60,14 +60,14 @@ class BaseEmbedder(ABC):
             for callback in callbacks:
                 callback.on_batch_change(self.completed_tasks, self.total_sentences)
 
-    def _progress_callback(self):
+    def _progress_callback(self) -> None:
         self.completed_tasks += 1
 
     @retry_with_backoff()
     async def embed_one_async(
         self,
         data: VectorData,
-        callbacks: list[ProgressBatchCallback] | None = None,
+        has_callback=False,
     ) -> Any | list[float]:
         async with self.semaphore:
             if not data["hash"]:
@@ -80,13 +80,15 @@ class BaseEmbedder(ABC):
                 logger.info("Truncated text to max tokens")
             try:
                 embedding = await self._generate_embedding_async(data["text"])
-                data["additional_details"] = json.dumps(data["additional_details"])
+                data["additional_details"] = json.dumps(
+                    data["additional_details"] if "additional_details" in data else {}
+                )
                 data["vector"] = embedding
             except Exception as e:
                 msg = f"Problem in embedding generation. {e}"
                 raise Exception(msg)
 
-            if callbacks:
+            if has_callback:
                 self._progress_callback()
             return embedding, data
 
@@ -137,22 +139,25 @@ class BaseEmbedder(ABC):
         for i in range(0, len(data), (EMBEDDING_BATCHES_NUMBER)):
             batch_data = data[i : i + (EMBEDDING_BATCHES_NUMBER)]
 
-            hash_all_texts = [hash_text(item["text"]) for item in batch_data]
-            existing = self.vector_store.search_by_column(hash_all_texts, "hash")
+            if cache_data:
+                hash_all_texts = [hash_text(item["text"]) for item in batch_data]
+                existing = self.vector_store.search_by_column(hash_all_texts, "hash")
 
-            if len(existing.get("vector")) > 0 and cache_data:
-                existing_texts = existing.sort_values("text")
-                for item in existing_texts.to_numpy():
-                    all_data.append(
-                        {
-                            "hash": item[0],
-                            "text": item[1],
-                            "vector": item[2],
-                            "additional_details": item[3] if len(item) > 3 else {},
-                        }
-                    )
-                    loaded_texts.append(item[1])
-                    final_embeddings.append(item[2])
+                if len(existing.get("vector")) > 0 and cache_data:
+                    existing_texts = existing.sort_values("text")
+                    for item in existing_texts.to_numpy():
+                        all_data.append(
+                            {
+                                "hash": item[0],
+                                "text": item[1],
+                                "vector": item[2],
+                                "additional_details": item[3]
+                                if len(item) > 3
+                                else "{}",
+                            }
+                        )
+                        loaded_texts.append(item[1])
+                        final_embeddings.append(item[2])
 
             new_items = [
                 item for item in batch_data if item["text"] not in loaded_texts
@@ -160,7 +165,7 @@ class BaseEmbedder(ABC):
 
             if len(new_items) > 0:
                 tasks = [
-                    asyncio.create_task(self.embed_one_async(item))
+                    asyncio.create_task(self.embed_one_async(item, callbacks))
                     for item in new_items
                 ]
                 if callbacks:
