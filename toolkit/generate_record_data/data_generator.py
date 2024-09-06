@@ -10,45 +10,45 @@ import toolkit.question_answering.helper_functions as helper_functions
 import toolkit.generate_record_data.prompts as prompts
 import toolkit.generate_record_data.schema_builder as schema_builder
 
-internal_batch_size = 10
-
 def generate_data(
         ai_configuration,
         generation_guidance,
         primary_record_array,
         record_arrays,
-        num_records,
         data_schema,
-        duplicate_records_per_iteration,
-        related_records_per_iteration,
+        num_records_overall,
+        records_per_batch,
+        parallel_batches,
+        duplicate_records_per_batch,
+        related_records_per_batch,
         df_update_callback
     ):
-    num_iterations = num_records // (internal_batch_size * internal_batch_size)
+    num_iterations = num_records_overall // (records_per_batch * parallel_batches)
+    print(num_records_overall, records_per_batch, parallel_batches, num_iterations)
     generated_objects = []
     first_object = generate_unseeded_data(
                         ai_configuration=ai_configuration,
                         generation_guidance=generation_guidance,
                         primary_record_array=primary_record_array,
-                        total_records=internal_batch_size,
+                        total_records=parallel_batches,
                         data_schema=data_schema
                     )
     first_object_json = loads(first_object)
     current_object_json = {}
     for i in range(num_iterations):
         if i == 0:
-            sample_records = sample_from_record_array(first_object_json, primary_record_array, 10)
+            sample_records = sample_from_record_array(first_object_json, primary_record_array, records_per_batch)
         else:
-            sample_records = sample_from_record_array(current_object_json, primary_record_array, 10)
-
+            sample_records = sample_from_record_array(current_object_json, primary_record_array, records_per_batch)
         # Use each as seed for parallel gen
         new_objects = generate_seeded_data(
             ai_configuration=ai_configuration,
             sample_records=sample_records,
             generation_guidance=generation_guidance,
             primary_record_array=primary_record_array,
-            total_records=internal_batch_size,
-            near_duplicate_records=duplicate_records_per_iteration,
-            close_relation_records=related_records_per_iteration,
+            total_records=records_per_batch,
+            near_duplicate_records=duplicate_records_per_batch,
+            close_relation_records=related_records_per_batch,
             data_schema=data_schema
         )
         for new_object in new_objects:

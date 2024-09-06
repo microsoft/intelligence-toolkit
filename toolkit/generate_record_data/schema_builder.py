@@ -267,6 +267,10 @@ def rename_field(global_schema, field_location, nesting, old_label, new_label):
     # Ensures required order matches field order
     set_required_field_status(global_schema, nesting, new_label, True)
 
+def delete_field(global_schema, nesting, field_location, key):
+    field_location.pop(key)
+    set_required_field_status(global_schema, nesting, key, False)
+
 def move_field_up(global_schema, nesting, field_location, label):
     key_order = list(field_location.keys())
     key_index = key_order.index(label)
@@ -332,6 +336,16 @@ def set_enum_field_status(schema, nesting, field_label, constrained):
         elif not constrained and 'enum' in obj[field_label]['items']:
             obj[field_label]['items'].pop('enum')
             changed = True
+    return changed
+
+def set_additional_field_status(schema, nesting, field_label, additional):
+    obj = get_subobject(schema, nesting)
+    typ = obj[field_label]['type']
+    changed = False
+    if typ == 'object':
+        obj[field_label]['additionalProperties'] = additional
+    elif typ == 'array' and obj[field_label]['items']['type'] == 'object':
+        obj[field_label]['items']['additionalProperties'] = additional
     return changed
 
 def generate_object_from_schema(json_schema):
