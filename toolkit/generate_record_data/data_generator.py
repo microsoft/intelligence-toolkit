@@ -1,14 +1,16 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-import re
-from json import loads, dumps
-import pandas as pd
-import random
 import asyncio
+import random
+import re
+from json import dumps, loads
+
+import pandas as pd
 
 import toolkit.AI.utils as utils
-import toolkit.question_answering.helper_functions as helper_functions
 import toolkit.generate_record_data.prompts as prompts
 import toolkit.generate_record_data.schema_builder as schema_builder
+import toolkit.query_text_data.helper_functions as helper_functions
+
 
 def generate_data(
         ai_configuration,

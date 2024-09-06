@@ -9,7 +9,7 @@ import numpy as np
 import polars as pl
 import pytest
 
-from toolkit.record_matching.detect import (
+from toolkit.match_entity_records.detect import (
     _calculate_mean_score,
     build_attributes_dataframe,
     build_matches,

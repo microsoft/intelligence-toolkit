@@ -44,23 +44,23 @@ OPENAI_API_KEY=<OPENAI_API_KEY>
 ```
 
 ## Running code-only 
-- [Attribute Patterns](./toolkit/attribute_patterns/README.md)
+- [Detect Case Patterns](./toolkit/detect_case_patterns/README.md)
 
-    - [Example](./examples/attribute_patterns.ipynb): See an example of how to run the code with your data to obtain results without the need to run the UI.
+    - [Example](./examples/detect_case_patterns.ipynb): See an example of how to run the code with your data to obtain results without the need to run the UI.
 
-- [Question Answering](./toolkit/question_answering/README.md)
+- [Query Text Data](./toolkit/query_text_data/README.md)
 
-    - [Example](./examples/question_answering.ipynb): See an example of how to run the code with your data to obtain results without the need to run the UI.
+    - [Example](./examples/query_text_data.ipynb): See an example of how to run the code with your data to obtain results without the need to run the UI.
 
-- [Risk Networks](./toolkit/risk_networks/README.md)
+- [Detect Entity Networks](./toolkit/detect_entity_networks/README.md)
 
-    - [Example](./examples/risk_networks/main.ipynb): See an example of how to run the code with your data to obtain results without the need to run the UI.
+    - [Example](./examples/detect_entity_networks/main.ipynb): See an example of how to run the code with your data to obtain results without the need to run the UI.
 
 :construction: Code-only workflows in progress: 
 
-- Data Synthesis
-- Group Narratives
-- Record Matching
+- Anonymize Case Data
+- Compare Case Groups
+- Match Entity Records
 
 ## Running the UI (Streamlit) 
 

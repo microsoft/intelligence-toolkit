@@ -2,13 +2,14 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 import pandas as pd
+
+
 import app.util.session_variable as sv
 from app.util.session_variable import SessionVariable
 
 
 class SessionVariables:
     def __init__(self, prefix=""):
-        self.narrative_input_df = SessionVariable(pd.DataFrame(), prefix)
         self.username = sv.SessionVariable("")
         self.generation_model = sv.SessionVariable("gpt-4-turbo")
         self.embedding_model = sv.SessionVariable("text-embedding-ada-002")

@@ -2,7 +2,8 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 import streamlit as st
-import app.workflows.risk_networks.variables as rn_variables
+
+import app.workflows.detect_entity_networks.variables as rn_variables
 from app.util.session_variables import SessionVariables
 
 
@@ -16,13 +17,13 @@ class AppMode:
         else:
             self.sv = SessionVariables("home")
 
-        self.sv_network = rn_variables.SessionVariables("risk_networks")
+        self.sv_network = rn_variables.SessionVariables("detect_entity_networks")
 
     def config(self):
         mode = st.sidebar.toggle(
             "Protected mode",
             value=self.sv.protected_mode.value,
-            help="Prevent entity identification on screen. Changing this value will reset the whole workflow on Risk Networks.",
+            help="Prevent entity identification on screen. Changing this value will reset the whole workflow on Detect Entity Networks.",
         )
         cache = st.sidebar.toggle(
             "Save embeddings",
