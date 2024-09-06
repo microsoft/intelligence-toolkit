@@ -5,7 +5,6 @@ from collections import defaultdict
 
 import numpy as np
 import pandas as pd
-import networkx as nx
 
 from toolkit.AI.metaprompts import do_not_harm
 from toolkit.AI.utils import generate_messages
@@ -20,8 +19,10 @@ from .graph_functions import convert_edge_df_to_graph, create_edge_df_from_atts
 from .prompts import report_prompt, user_prompt
 from .record_counter import RecordCounter
 
+
 def prepare_data(data_df, identifier_col=None):
     if not identifier_col:
+
         data_df["Subject ID"] = list(range(len(data_df)))
     else:
         data_df["Subject ID"] = list(data_df.value[identifier_col])
