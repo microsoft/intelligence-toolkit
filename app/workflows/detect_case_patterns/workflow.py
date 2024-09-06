@@ -13,6 +13,7 @@ from st_aggrid import (
 
 import app.workflows.detect_case_patterns.variables as ap_variables
 from app.util import ui_components
+from toolkit.AI.classes import LLMCallback
 from toolkit.detect_case_patterns import get_readme as get_intro
 from toolkit.detect_case_patterns import prompts
 from toolkit.detect_case_patterns.model import (
@@ -368,11 +369,16 @@ def create(sv: ap_variables.SessionVariables, workflow):
                     connection_bar = st.progress(10, text="Connecting to AI...")
 
                     def empty_connection_bar():
-                        connection_bar.empty()
+                        def on(_) -> None:
+                            connection_bar.empty()
+
+                        on_callback = LLMCallback()
+                        on_callback.on_llm_new_token = on
+                        return on_callback
 
                     try:
                         result = ui_components.generate_text(
-                            messages, callbacks=[on_callback, empty_connection_bar]
+                            messages, callbacks=[on_callback, empty_connection_bar()]
                         )
 
                         sv.detect_case_patterns_report.value = result

@@ -1,13 +1,15 @@
 import os
-import streamlit as st
-import pandas as pd
 from json import dumps, loads
-import app.workflows.generate_record_data.variables as bds_variables
+
+import pandas as pd
+import streamlit as st
+
 import app.workflows.generate_record_data.functions as bds_functions
-import toolkit.generate_record_data.schema_builder as schema_builder
+import app.workflows.generate_record_data.variables as bds_variables
 import toolkit.generate_record_data.data_generator as data_generator
-from toolkit.generate_record_data import get_readme as get_intro
+import toolkit.generate_record_data.schema_builder as schema_builder
 from app.util.openai_wrapper import UIOpenAIConfiguration
+from toolkit.generate_record_data import get_readme as get_intro
 
 ai_configuration = UIOpenAIConfiguration().get_configuration()
 
