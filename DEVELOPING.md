@@ -58,7 +58,7 @@ OPENAI_API_KEY=<OPENAI_API_KEY>
 
 :construction: Code-only workflows in progress: 
 
-- Data Synthesis
+- Anonymize Case Data
 - Group Narratives
 - Record Matching
 
