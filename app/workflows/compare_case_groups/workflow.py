@@ -1,21 +1,16 @@
 # Copyright (c) Microsoft. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 #
-import os
-
 import pandas as pd
+import polars as pl
 import streamlit as st
 
 import app.util.df_functions as df_functions
-import app.workflows.compare_case_groups.prompts as prompts
 import app.workflows.compare_case_groups.variables as gn_variables
+import toolkit.compare_case_groups.prompts as prompts
 from app.util import ui_components
-
-
-def get_intro():
-    file_path = os.path.join(os.path.dirname(__file__), "README.md")
-    with open(file_path) as file:
-        return file.read()
+from toolkit.compare_case_groups import get_readme
+from toolkit.compare_case_groups.temporal_process import create_window_df
 
 
 def create(sv: gn_variables.SessionVariables, workflow=None):
@@ -29,7 +24,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
     )
 
     with intro_tab:
-        st.markdown(get_intro())
+        st.markdown(get_readme())
     with prepare_tab:
         uploader_col, model_col = st.columns([1, 1])
         with uploader_col:
@@ -114,13 +109,13 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                     index=temporal_options.index(sv.case_groups_temporal.value),
                 )
 
-                model = st.button(
+                create = st.button(
                     "Create summary", disabled=len(groups) == 0 or len(aggregates) == 0
                 )
 
             with c2:
                 st.markdown("##### Data summary")
-                if model:
+                if create:
                     sv.case_groups_filters.value = filters
                     sv.case_groups_groups.value = groups
                     sv.case_groups_aggregates.value = aggregates
@@ -211,65 +206,60 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
 
                     # create Window df
                     if temporal != "":
+                        ldf = create_window_df(
+                            groups, temporal, aggregates, pl.from_pandas(wdf)
+                        ).to_pandas()
+
                         temporal_atts = sorted(
                             sv.case_groups_model_df.value[temporal].astype(str).unique()
                         )
-                        ldf = wdf.melt(
-                            id_vars=[*groups, temporal],
-                            value_vars=aggregates,
-                            var_name="Attribute",
-                            value_name="Value",
-                        )
-                        ldf["Attribute Value"] = ldf["Attribute"] + ":" + ldf["Value"]
-                        # group by groups and count attribute values
-                        ldf = (
-                            ldf.groupby([*groups, temporal, "Attribute Value"])
-                            .size()
-                            .reset_index(name=f"{temporal} Window Count")
-                        )
 
-                    tdfs = []
-                    if len(temporal_atts) > 0:
-                        # Add in 0 counts for any missing temporal attribute values across all groups and attribute values
-                        for name, group in ldf.groupby(groups):
-                            for att_val in ldf["Attribute Value"].unique():
-                                for time_val in ldf[temporal].unique():
-                                    if (
-                                        len(
-                                            group[
-                                                (group[temporal] == time_val)
-                                                & (
-                                                    group[f"{temporal} Window Count"]
-                                                    == att_val
-                                                )
+                        tdfs = []
+                        print("temporal_atts", temporal_atts)
+                        if len(temporal_atts) > 0:
+                            # Add in 0 counts for any missing temporal attribute values across all groups and attribute values
+                            for name, group in ldf.groupby(groups):
+                                for att_val in ldf["Attribute Value"].unique():
+                                    for time_val in ldf[temporal].unique():
+                                        if (
+                                            len(
+                                                group[
+                                                    (group[temporal] == time_val)
+                                                    & (
+                                                        group[
+                                                            f"{temporal} Window Count"
+                                                        ]
+                                                        == att_val
+                                                    )
+                                                ]
+                                            )
+                                            == 0
+                                        ):
+                                            ldf.loc[len(ldf)] = [
+                                                *name,
+                                                time_val,
+                                                att_val,
+                                                0,
                                             ]
-                                        )
-                                        == 0
-                                    ):
-                                        ldf.loc[len(ldf)] = [
-                                            *name,
-                                            time_val,
-                                            att_val,
-                                            0,
-                                        ]
 
-                        # Calculate deltas in counts within each group and attribute value
-                        for name, ddf in ldf.groupby([*groups, "Attribute Value"]):
-                            ldf.loc[ddf.index, f"{temporal} Window Delta"] = (
-                                ddf[f"{temporal} Window Count"].diff().fillna(0)
-                            )
-                        for tatt in temporal_atts:
-                            tdf = ldf[ldf[temporal] == tatt].copy(deep=True)
-                            # rank counts for each attribute value
-                            for att_val in tdf["Attribute Value"].unique():
-                                tdf.loc[
-                                    (tdf["Attribute Value"] == att_val),
-                                    f"{temporal} Window Rank",
-                                ] = tdf[tdf["Attribute Value"] == att_val][
-                                    f"{temporal} Window Count"
-                                ].rank(ascending=False, method="first")
-                            tdfs.append(tdf)
-                        ldf = pd.concat(tdfs).sort_values(by=temporal)
+                            # Calculate deltas in counts within each group and attribute value
+                            for name, ddf in ldf.groupby([*groups, "Attribute Value"]):
+                                ldf.loc[ddf.index, f"{temporal} Window Delta"] = (
+                                    ddf[f"{temporal} Window Count"].diff().fillna(0)
+                                )
+                            for tatt in temporal_atts:
+                                tdf = ldf[ldf[temporal] == tatt].copy(deep=True)
+                                print("tdf", tdf)
+                                # rank counts for each attribute value
+                                for att_val in tdf["Attribute Value"].unique():
+                                    tdf.loc[
+                                        (tdf["Attribute Value"] == att_val),
+                                        f"{temporal} Window Rank",
+                                    ] = tdf[tdf["Attribute Value"] == att_val][
+                                        f"{temporal} Window Count"
+                                    ].rank(ascending=False, method="first")
+                                tdfs.append(tdf)
+                            ldf = pd.concat(tdfs).sort_values(by=temporal)
 
                     # Create overall df
                     odf = (

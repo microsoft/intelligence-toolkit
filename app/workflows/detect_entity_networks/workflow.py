@@ -19,8 +19,7 @@ from streamlit_agraph import Edge, Node, agraph
 from util import ui_components
 from util.session_variables import SessionVariables
 
-from toolkit.detect_entity_networks import get_readme as get_intro
-from toolkit.detect_entity_networks import prompts
+from toolkit.detect_entity_networks import get_readme, prompts
 from toolkit.detect_entity_networks.config import (
     ENTITY_LABEL,
     SIMILARITY_THRESHOLD_MAX,
@@ -70,7 +69,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
     )
     selected_df = None
     with intro_tab:
-        st.markdown(get_intro())
+        st.markdown(get_readme())
     with uploader_tab:
         uploader_col, model_col = st.columns([3, 2])
         with uploader_col:

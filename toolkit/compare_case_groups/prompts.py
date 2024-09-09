@@ -1,5 +1,5 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-from app.workflows.security.metaprompts import do_not_harm
+from toolkit.AI.metaprompts import do_not_harm
 
 report_prompt = """\
 You are a data analyst preparing a detailed report on a given dataset.
@@ -35,5 +35,5 @@ Where possible, the text should add numeric counts, ranks, and deltas in parenth
 list_prompts = {
     "report_prompt": report_prompt,
     "user_prompt": user_prompt,
-    "safety_prompt": " ".join([do_not_harm]),
+    "safety_prompt": f"{do_not_harm}",
 }
