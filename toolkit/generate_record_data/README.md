@@ -2,7 +2,7 @@
 
 The `Generate Record Data` workflow generates mock data following a JSON schema defined by the user.
 
-Select `View example outputs` (in app) or [example_outputs/generate_record_data](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/generate_record_data) (in repo) for examples.
+Select the `View example outputs` tab (in app) or navigate to [example_outputs/generate_record_data](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/generate_record_data) (on GitHub) for examples.
 
 ## How it works
 
@@ -29,7 +29,7 @@ Mock data is particularly helpful when working in sensitive domains and/or with 
 
 ## Tutorial
 
-Let's start by creating a mock case dataset for customer complaints, where each case record describes an identified individual and the nature of their complaint regarding a specific product. This is a useful proxy for any individual-level case data or "microdata" where the privacy of data subjects must be respected.
+The task for this tutorial is creating a mock case dataset of customer complaints, where each case record describes an identified individual and the nature of their complaint regarding a specific product. This is a useful proxy for any individual-level case data or "microdata" where the privacy of data subjects must be respected.
 
 From the `Generate Record Data` homepage in a running instance of Intelligence Toolkit, select `Prepare data schema`.
 
@@ -73,13 +73,13 @@ As further string fields within `complaint_records`, now add:
 - `email` as string field
 - `price_issue`, `quality_issue`, `service_issue`, `delivery_issue`, `description_issue` as boolean (`true`/`false`) fields using the `bool` button
 
-Next, we want to add a `product_code` string field, but limit the posible values of the field to a predefined list called an "enumeration". Do this by checking the `Enum?` checkbox and observing the default values `A`, `B`, and `C` added to the enumeration. These values can be edited, deleted, and expanded as desired. For this tutorial, simply add further enum values alphabetically from `D` to `H`.
+Next, we want to add a `product_code` string field, but limit the possible values of the field to a predefined list called an "enumeration". Do this by checking the `Enum?` checkbox and observing the default values `A`, `B`, and `C` added to the enumeration. These values can be edited, deleted, and expanded as desired. For this tutorial, simply add further enum values alphabetically from `D` to `H`.
 
 Note that boolean attributes of the record could also have been created using the `str[]` button to create a string array, checking `Enum?`, and specifying `price_issue`, `quality_issue`, `service_issue`, `delivery_issue`, `description_issue` as possible values. However, by using independent boolean fields we simplify the overall record structure and avoid the challenges of nested arrays in the final data object.
 
 Finally, add a `quarter` string indicating in which calendar quarter the complaint was made. In the description, you can add a hint about the field structure and contents, e.g., "The quarter in which the complaint was made (since 2020-Q1)".
 
-The schema is now complete and can be downloaded using the `Downlaod complaint_records_[schema].json` button below the schema preview. Selecting the `Sample object` tab shows a minimal JSON object confirming to the schema.
+The schema is now complete and can be downloaded using the `Download complaint_records_[schema].json` button below the schema preview. Selecting the `Sample object` tab shows a minimal JSON object confirming to the schema.
 
 ### Generating mock data
 
@@ -97,3 +97,5 @@ All `Data configuration controls` are as follows:
 - `A data generation guidance`: Guidance to the generative AI model about how mock data should be generated (e.g., targeted a specific region, time period, industry, etc.)
 
 Press `Generate mock data` to generate mock data according to the schema and configuration. Each record array in the JSON schema will be converted into CSV format and shown in its own tab (in this example, there will be just a single tab for `complaint_records`). Both the JSON object for the entire dataset and CSV files for each record array may be downloaded using the buttons provided.
+
+The outputs of this tutorial are available for download in the `View example outputs` tab under the `customer_complaints` dataset, or from the GitHub repo [here](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/generate_record_data/customer_complaints).

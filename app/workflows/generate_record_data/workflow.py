@@ -153,17 +153,17 @@ def create(sv: bds_variables.SessionVariables, workflow: None):
     with mock_tab:
         workflow_home = 'example_outputs/generate_record_data'
 
-        mock_data_files = os.listdir(f'{workflow_home}/datasets')
+        mock_data_files = [x for x in os.listdir(f'{workflow_home}') if x.endswith('.csv')]
         mock_dfs = {}
         for file in mock_data_files:
-            mock_dfs[file] = pd.read_csv(f'{workflow_home}/datasets/{file}')
+            mock_dfs[file] = pd.read_csv(f'{workflow_home}/{file}')
         selected_data = st.selectbox('Select mock data', mock_data_files)
         if selected_data != None:
             c1, c2 = st.columns([1, 1])
             with c1:
                 st.markdown('### Schema')
                 schema_file = '_'.join(selected_data.split('_')[:-1]) + '_schema.json'
-                schema_text = loads(open(f'{workflow_home}/schemas/{schema_file}', 'r').read())
+                schema_text = loads(open(f'{workflow_home}/{schema_file}', 'r').read())
                 st.write(schema_text)
                 st.download_button(
                     label=f'Download {schema_file}',
