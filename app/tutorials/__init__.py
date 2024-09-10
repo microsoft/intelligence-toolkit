@@ -4,7 +4,7 @@
 import os
 
 
-def get_readme():
-    file_path = os.path.join(os.path.dirname(__file__), "README.md")
+def get_tutorial(workflow_name: str) -> str:
+    file_path = os.path.join(os.path.dirname(__file__), f"{workflow_name}.md")
     with open(file_path) as file:
         return file.read()

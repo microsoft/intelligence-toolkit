@@ -8,48 +8,31 @@ import polars as pl
 import streamlit as st
 import workflows.detect_entity_networks.functions as functions
 import workflows.detect_entity_networks.variables as rn_variables
-from st_aggrid import (
-    AgGrid,
-    ColumnsAutoSizeMode,
-    DataReturnMode,
-    GridOptionsBuilder,
-    GridUpdateMode,
-)
+from st_aggrid import (AgGrid, ColumnsAutoSizeMode, DataReturnMode,
+                       GridOptionsBuilder, GridUpdateMode)
 from streamlit_agraph import Edge, Node, agraph
 from util import ui_components
 from util.session_variables import SessionVariables
 
-from toolkit.detect_entity_networks import get_readme, prompts
-from toolkit.detect_entity_networks.config import (
-    ENTITY_LABEL,
-    SIMILARITY_THRESHOLD_MAX,
-    SIMILARITY_THRESHOLD_MIN,
-)
+from app.tutorials import get_tutorial
+from toolkit.detect_entity_networks import get_readme as get_intro
+from toolkit.detect_entity_networks import prompts
+from toolkit.detect_entity_networks.config import (ENTITY_LABEL,
+                                                   SIMILARITY_THRESHOLD_MAX,
+                                                   SIMILARITY_THRESHOLD_MIN)
 from toolkit.detect_entity_networks.explore_networks import (
-    build_network_from_entities,
-    get_entity_graph,
-    simplify_entities_graph,
-)
-from toolkit.detect_entity_networks.exposure_report import build_exposure_report
+    build_network_from_entities, get_entity_graph, simplify_entities_graph)
+from toolkit.detect_entity_networks.exposure_report import \
+    build_exposure_report
 from toolkit.detect_entity_networks.identify_networks import (
-    build_entity_records,
-    build_networks,
-    trim_nodeset,
-)
-from toolkit.detect_entity_networks.index_and_infer import (
-    build_inferred_df,
-    index_and_infer,
-    index_nodes,
-    infer_nodes,
-)
+    build_entity_records, build_networks, trim_nodeset)
+from toolkit.detect_entity_networks.index_and_infer import (build_inferred_df,
+                                                            index_and_infer,
+                                                            index_nodes,
+                                                            infer_nodes)
 from toolkit.detect_entity_networks.prepare_model import (
-    build_flag_links,
-    build_flags,
-    build_groups,
-    build_main_graph,
-    format_data_columns,
-    generate_attribute_links,
-)
+    build_flag_links, build_flags, build_groups, build_main_graph,
+    format_data_columns, generate_attribute_links)
 from toolkit.detect_entity_networks.protected_mode import protect_data
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
@@ -69,7 +52,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
     )
     selected_df = None
     with intro_tab:
-        st.markdown(get_readme())
+        st.markdown(get_intro() + get_tutorial("detect_entity_networks"))
     with uploader_tab:
         uploader_col, model_col = st.columns([3, 2])
         with uploader_col:

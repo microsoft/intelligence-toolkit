@@ -22,26 +22,23 @@ import app.workflows.anonymize_case_data.classes as classes
 import app.workflows.anonymize_case_data.config as config
 import app.workflows.anonymize_case_data.functions as functions
 import app.workflows.anonymize_case_data.variables as ds_variables
-
-
-def get_intro():
-    file_path = os.path.join(os.path.dirname(__file__), "README.md")
-    with open(file_path) as file:
-        return file.read()
+from app.tutorials import get_tutorial
+from toolkit.anonymize_code_data import get_readme as get_intro
 
 
 def create(sv: ds_variables.SessionVariables, workflow: None):
-    intro_tab, prepare_tab, generate_tab, queries_tab = st.tabs(
+    intro_tab, prepare_tab, generate_tab, queries_tab, examples_tab = st.tabs(
         [
             "Anonymize case data workflow:",
-            "Upload sensitive data",
+            "Prepare sensitive data",
             "Generate anonymous data",
             "Query and visualize data",
+            "View example outputs"
         ]
     )
     df = None
     with intro_tab:
-        st.markdown(get_intro())
+        st.markdown(get_intro() + get_tutorial(workflow))
     with prepare_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:
@@ -70,7 +67,7 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                 wdf = sv.anonymize_sensitive_df.value
                 att_cols = [col for col in wdf.columns if col != "Subject ID"]
                 num_cols = len(att_cols)
-
+                print(att_cols)
                 for col in wdf.columns.to_numpy():
                     if col == "Subject ID":
                         continue
@@ -79,29 +76,13 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                     #     distinct_counts.append(1)
                     # else:
                     distinct_counts.append(len(distinct_values))
+                print(distinct_counts)
                 distinct_counts.sort()
-                common_level = max(
-                    distinct_counts[int(len(distinct_counts) * 0.5)],
-                    len(distinct_counts),
-                )
                 overall_att_count = sum(distinct_counts)
-                # calculate number of pairs of column values using combinatorics
-                num_observed_pairs = 0
-                num_common_pairs = 0
-                for ix, ci in enumerate(att_cols):
-                    for _jx, cj in enumerate(att_cols[ix + 1 :]):
-                        groups = wdf[[ci, cj]].dropna().groupby([ci, cj]).size()
-
-                        num_observed_pairs += len(groups)
-                        # count groups with at least common_level records
-                        common_groups = groups[groups >= common_level]
-                        num_common_pairs += len(common_groups)
-
-                coverage = (
-                    num_common_pairs / num_observed_pairs
-                    if num_observed_pairs > 0
-                    else 1
-                )
+                possible_combinations = math.prod(distinct_counts)
+                possible_combinations_per_row = int(round(possible_combinations / wdf.shape[0]))
+                max_combinations_per_record = 2**len(att_cols)
+                excess_combinations_ratio = possible_combinations_per_row / max_combinations_per_record
                 st.markdown("### Synthesizability summary")
                 st.markdown(
                     f"Number of selected columns: **{num_cols}**",
@@ -112,12 +93,20 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                     help="This is the total number of distinct attribute values across all selected columns. The more distinct values, the harder it will be to synthesize data.",
                 )
                 st.markdown(
-                    f"Common pair threshold: **{common_level}**",
-                    help="This is the minimum number of records that must appear in a pair of column values for the pair to be considered common. The higher this number, the harder it will be to synthesize data. The value is set as max(median value count, num selected columns).",
+                    f"Number of possible combinations: **{possible_combinations}**",
+                    help="This is the total number of possible attribute combinations across all selected columns. The higher this number, the harder it will be to synthesize data.",
                 )
                 st.markdown(
-                    f"Estimated synthesizability score: **{round(coverage, 4)}**",
-                    help=f"We define synthesizability as the proportion of observed pairs of values across selected columns that are common, appearing at least as many times as the number of columns. In this case, {num_common_pairs}/{num_observed_pairs} pairs appear at least {num_cols} times. The intuition here is that all combinations of attribute values in a synthetic record must be composed from common attribute pairs. **Rule of thumb**: Aim for a synthesizability score of **0.5** or higher.",
+                    f"Mean combinations per record: **{possible_combinations_per_row}**",
+                    help="This is the mean number of possible attribute combinations per sensitive case record. The higher this number, the harder it will be to synthesize data.",
+                )
+                st.markdown(
+                    f"Maximum combinations per record: **{max_combinations_per_record}**",
+                    help="This is the maximum number of possible attribute combinations per record. The higher this number, the harder it will be to synthesize data.",
+                )
+                st.markdown(
+                    f"Excess combinations ratio: **{round(excess_combinations_ratio, 1)}**",
+                    help="This is the ratio of possible combinations per record to the maximum possible combinations per record. The higher this number, the harder it will be to synthesize data. **Rule of thumb**: Aim for a ratio of **5** or lower.",
                 )
 
     with generate_tab:
@@ -251,13 +240,13 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                     st.dataframe(
                         sv.anonymize_sen_agg_rep.value,
                         hide_index=True,
-                        use_container_width=True,
+                        use_container_width=False,
                     )
                     st.markdown("###### Synthetic data quality")
                     st.dataframe(
                         sv.anonymize_sen_syn_rep.value,
                         hide_index=True,
-                        use_container_width=True,
+                        use_container_width=False,
                     )
                     st.warning(
                         "**Caution**: These tables should only be used to evaluate the quality of data for release. Sharing them compromises privacy."
@@ -517,7 +506,7 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                             f"{workflow}_chart_individual_configuration"
                         ]
                         st.markdown("##### Configure time series chart")
-                        time_options = ["", list(sdf.columns.to_numpy())]
+                        time_options = [""] + list(sdf.columns.values)
                         time_attribute = st.selectbox(
                             "Time attribute",
                             options=time_options,
@@ -527,8 +516,7 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                         )
                         series_attributes = st.multiselect(
                             "Series attributes",
-                            options=list(sdf.columns.to_numpy()),
-                            default=chart_individual_configuration["series_attributes"],
+                            options=list(sdf.columns.to_numpy())
                         )
                         chart_individual_configuration["time_attribute"] = (
                             time_attribute
@@ -573,7 +561,7 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                             f"{workflow}_chart_individual_configuration"
                         ]
                         st.markdown("##### Configure flow (alluvial) chart")
-                        attribute_type_options = ["", list(sdf.columns.to_numpy())]
+                        attribute_type_options = [""] + list(sdf.columns.to_numpy())
                         highlight_options = ["", *options]
                         source_attribute = st.selectbox(
                             "Source/origin attribute type",

@@ -12,6 +12,7 @@ import toolkit.query_text_data.helper_functions as helper_functions
 import toolkit.query_text_data.input_processor as input_processor
 import toolkit.query_text_data.prompts as prompts
 import toolkit.query_text_data.question_answerer as question_answerer
+from app.tutorials import get_tutorial
 from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
 from app.util.openai_wrapper import UIOpenAIConfiguration
@@ -24,6 +25,7 @@ from toolkit.AI.openai_embedder import OpenAIEmbedder
 from toolkit.graph.graph_fusion_encoder_embedding import (
     generate_graph_fusion_encoder_embedding,
 )
+from toolkit.query_text_data import get_readme as get_intro
 from toolkit.query_text_data.pattern_detector import (
     combine_chunk_text_and_explantion,
     detect_converging_pairs,
@@ -144,12 +146,6 @@ class ProgressBatchCallback:
         self.total_batches = total
 
 
-def get_intro():
-    file_path = os.path.join(os.path.dirname(__file__), "README.md")
-    with open(file_path) as file:
-        return file.read()
-
-
 async def create(sv: SessionVariables, workflow=None):
     sv_home = SessionVariables("home")
     intro_tab, uploader_tab, graph_tab, search_tab, report_tab = st.tabs(
@@ -163,7 +159,7 @@ async def create(sv: SessionVariables, workflow=None):
     )
 
     with intro_tab:
-        st.markdown(get_intro())
+        st.markdown(get_intro() + get_tutorial("query_text_data"))
     with uploader_tab:
         st.markdown("##### Upload data for processing")
         files = st.file_uploader(

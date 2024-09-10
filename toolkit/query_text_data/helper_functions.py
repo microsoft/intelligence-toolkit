@@ -1,10 +1,12 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import json
 
+from toolkit.AI.base_chat import BaseChat
 from toolkit.AI.base_embedder import BaseEmbedder
 from toolkit.AI.classes import VectorData
 from toolkit.AI.client import OpenAIClient
 from toolkit.AI.utils import hash_text
+from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 
 def generate_text(ai_configuration, messages, **kwargs):
@@ -13,11 +15,15 @@ def generate_text(ai_configuration, messages, **kwargs):
     )
 
 
-async def map_generate_text(ai_configuration, messages_list, **kwargs):
-    return await OpenAIClient(ai_configuration).map_generate_text(
-        messages_list, **kwargs
+async def map_generate_text(
+    ai_configuration,
+    messages_list,
+    callbacks: list[ProgressBatchCallback] | None = None,
+    **kwargs,
+):
+    return await BaseChat(ai_configuration).generate_texts_async(
+        messages_list, callbacks, **kwargs
     )
-
 
 def get_adjacent_chunks(source, previous_chunk_dict, next_chunk_dict, steps):
     prev_chunks = []

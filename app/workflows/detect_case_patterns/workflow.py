@@ -12,6 +12,7 @@ from st_aggrid import (
 )
 
 import app.workflows.detect_case_patterns.variables as ap_variables
+from app.tutorials import get_tutorial
 from app.util import ui_components
 from toolkit.AI.classes import LLMCallback
 from toolkit.detect_case_patterns import get_readme as get_intro
@@ -49,7 +50,7 @@ def create(sv: ap_variables.SessionVariables, workflow):
     selected_pattern = ""
     graph_df = None
     with intro_tab:
-        st.markdown(get_intro())
+        st.markdown(get_intro() + get_tutorial("detect_case_patterns"))
     with uploader_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:

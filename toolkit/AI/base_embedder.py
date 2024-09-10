@@ -11,6 +11,7 @@ import numpy as np
 import pyarrow as pa
 from tqdm.asyncio import tqdm_asyncio
 
+from toolkit.AI.base_batch_async import BaseBatchAsync
 from toolkit.AI.classes import VectorData
 from toolkit.AI.defaults import DEFAULT_LLM_MAX_TOKENS, EMBEDDING_BATCHES_NUMBER
 from toolkit.AI.vector_store import VectorStore
@@ -31,7 +32,7 @@ schema = pa.schema(
     ]
 )
 
-class BaseEmbedder(ABC):
+class BaseEmbedder(ABC, BaseBatchAsync):
     def __init__(
         self,
         db_name: str = "embeddings",
@@ -42,26 +43,6 @@ class BaseEmbedder(ABC):
         self.vector_store = VectorStore(db_name, db_path, schema)
         self.max_tokens = max_tokens
         self.semaphore = asyncio.Semaphore(concurrent_coroutines)
-        self.total_sentences: int = 1
-        self.completed_tasks: int = 0
-        self.previous_completed_tasks: int = 0
-
-    async def _track_progress(
-        self, tasks: list[asyncio.Task], callbacks: list[ProgressBatchCallback]
-    ):
-        while not all(task.done() for task in tasks):
-            await asyncio.sleep(0.1)
-            if self.completed_tasks != self.previous_completed_tasks:
-                for callback in callbacks:
-                    callback.on_batch_change(self.completed_tasks, self.total_sentences)
-                self.previous_completed_tasks = self.completed_tasks
-        # Ensure final update
-        if self.completed_tasks != self.previous_completed_tasks:
-            for callback in callbacks:
-                callback.on_batch_change(self.completed_tasks, self.total_sentences)
-
-    def _progress_callback(self) -> None:
-        self.completed_tasks += 1
 
     @retry_with_backoff()
     async def embed_one_async(
@@ -89,7 +70,7 @@ class BaseEmbedder(ABC):
                 raise Exception(msg)
 
             if has_callback:
-                self._progress_callback()
+                self.progress_callback()
             return embedding, data
 
     @retry_with_backoff()
@@ -131,7 +112,7 @@ class BaseEmbedder(ABC):
         callbacks: list[ProgressBatchCallback] | None = None,
         cache_data=True,
     ) -> np.ndarray[Any, np.dtype[Any]]:
-        self.total_sentences = len(data)
+        self.total_tasks = len(data)
         final_embeddings = []
         loaded_texts = []
         all_data = []
@@ -170,7 +151,7 @@ class BaseEmbedder(ABC):
                 ]
                 if callbacks:
                     progress_task = asyncio.create_task(
-                        self._track_progress(tasks, callbacks)
+                        self.track_progress(tasks, callbacks)
                     )
                 result = await tqdm_asyncio.gather(*tasks)
                 if callbacks:

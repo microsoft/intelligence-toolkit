@@ -7,9 +7,10 @@ import streamlit as st
 
 import app.util.df_functions as df_functions
 import app.workflows.compare_case_groups.variables as gn_variables
-import toolkit.compare_case_groups.prompts as prompts
+from app.tutorials import get_tutorial
 from app.util import ui_components
-from toolkit.compare_case_groups import get_readme
+from toolkit.compare_case_groups import get_readme as get_intro
+from toolkit.compare_case_groups import prompts
 from toolkit.compare_case_groups.temporal_process import create_window_df
 
 
@@ -24,7 +25,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
     )
 
     with intro_tab:
-        st.markdown(get_readme())
+        st.markdown(get_intro() + get_tutorial("compare_case_groups"))
     with prepare_tab:
         uploader_col, model_col = st.columns([1, 1])
         with uploader_col:
