@@ -2,13 +2,11 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 
-import pandas as pd
 import polars as pl
-import pytest
-from click import group
 
 from toolkit.compare_case_groups.temporal_process import (
     build_temporal_count,
+    calculate_window_delta,
     create_window_df,
 )
 
@@ -56,6 +54,36 @@ class TestCreateWindowDf:
         # Assert the result
         assert result_df.equals(expected_df)
 
+class TestCalculateWindowDelta:
+    def test_basic(self) -> None:
+        data = {
+            "Group": ["A", "A", "B", "B"],
+            "Temporal": [1, 2, 1, 2],
+            "Attribute Value": ["X:10", "X:20", "Y:30", "Y:40"],
+            "Temporal Window Count": [5, 3, 8, 6],
+        }
+        sample_data = pl.DataFrame(data)
+        temporal = "Temporal"
+
+        result = calculate_window_delta(sample_data, temporal)
+
+        assert "Temporal Window Delta" in result.columns
+        assert all(result["Temporal Window Delta"].is_not_nan())
+
+    def test_missing_values(self):
+        data = {
+            "Group": ["A", "A", "B", "B"],
+            "Temporal": [1, 2, 1, 2],
+            "Attribute Value": ["X:10", "X:20", "Y:30", "Y:40"],
+            "Temporal Window Count": [5, None, 8, None],
+        }
+        sample_data = pl.DataFrame(data)
+        temporal = "Temporal"
+
+        result = calculate_window_delta(sample_data, temporal)
+
+        assert result["Temporal Window Count"].is_nan().sum() == 0
+        assert result.filter(pl.col("Temporal Window Delta") == 0).height == 4
 
 class TestBuildTemporalCount:
     def test_basic(self) -> None:
