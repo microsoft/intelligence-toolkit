@@ -10,10 +10,11 @@ import toolkit.generate_record_data.data_generator as data_generator
 import toolkit.generate_record_data.schema_builder as schema_builder
 from app.util.openai_wrapper import UIOpenAIConfiguration
 from toolkit.generate_record_data import get_readme as get_intro
+from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 ai_configuration = UIOpenAIConfiguration().get_configuration()
 
-def create(sv: bds_variables.SessionVariables, workflow: None):
+async def create(sv: bds_variables.SessionVariables, workflow: None):
     intro_tab, schema_tab, generator_tab, mock_tab = st.tabs(['Generate Record Data workflow:', 'Prepare data schema', 'Generate mock data', 'View example outputs'])
     with intro_tab:
         st.markdown(get_intro())
@@ -95,7 +96,7 @@ def create(sv: bds_variables.SessionVariables, workflow: None):
                         df_placeholder = st.empty()
                         df_placeholders.append(df_placeholder)
                         dl_placeholder = st.empty()
-                        dl_placeholders.append(dl_placeholder)                
+                        dl_placeholders.append(dl_placeholder)
 
                 def on_dfs_update(path_to_df):
                     for ix, record_array in enumerate(sv.record_arrays.value):
@@ -103,13 +104,28 @@ def create(sv: bds_variables.SessionVariables, workflow: None):
                             df = path_to_df[record_array]
                             st.dataframe(df, height=250)
                     sv.generated_dfs.value = path_to_df
-                                
+
                 if generate:
                     sv.generated_dfs.value = {k: pd.DataFrame() for k in sv.record_arrays.value}
                     for placeholder in df_placeholders:
                         placeholder.empty()
 
-                    sv.final_object.value, sv.generated_objects.value, sv.generated_dfs.value = data_generator.generate_data(
+                    pb = st.progress(0, "Preparing data schema...")
+
+                    def on_batch_change(current=0, total=0, message="In progress..."):
+                        pb.progress(
+                            (current) / total if (current) / total < 100 else 100,
+                            f"{message} batch {current} of {total}",
+                        )
+
+                    callback_batch = ProgressBatchCallback()
+                    callback_batch.on_batch_change = on_batch_change
+
+                    (
+                        sv.final_object.value,
+                        sv.generated_objects.value,
+                        sv.generated_dfs.value,
+                    ) = await data_generator.generate_data(
                         ai_configuration=ai_configuration,
                         generation_guidance=sv.generation_guidance.value,
                         primary_record_array=sv.primary_record_array.value,
@@ -120,8 +136,10 @@ def create(sv: bds_variables.SessionVariables, workflow: None):
                         duplicate_records_per_batch=sv.duplicate_records_per_batch.value,
                         related_records_per_batch=sv.related_records_per_batch.value,
                         data_schema=sv.schema.value,
-                        df_update_callback=on_dfs_update
+                        df_update_callback=on_dfs_update,
+                        callback_batch=callback_batch,
                     )
+                    pb.empty()
 
                 for ix, record_array in enumerate(sv.record_arrays.value):
                         with df_placeholders[ix]:

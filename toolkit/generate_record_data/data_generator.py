@@ -3,6 +3,7 @@ import asyncio
 import random
 import re
 from json import dumps, loads
+from operator import call
 
 import pandas as pd
 
@@ -10,21 +11,23 @@ import toolkit.AI.utils as utils
 import toolkit.generate_record_data.prompts as prompts
 import toolkit.generate_record_data.schema_builder as schema_builder
 import toolkit.query_text_data.helper_functions as helper_functions
+from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 
-def generate_data(
-        ai_configuration,
-        generation_guidance,
-        primary_record_array,
-        record_arrays,
-        data_schema,
-        num_records_overall,
-        records_per_batch,
-        parallel_batches,
-        duplicate_records_per_batch,
-        related_records_per_batch,
-        df_update_callback
-    ):
+async def generate_data(
+    ai_configuration,
+    generation_guidance,
+    primary_record_array,
+    record_arrays,
+    data_schema,
+    num_records_overall,
+    records_per_batch,
+    parallel_batches,
+    duplicate_records_per_batch,
+    related_records_per_batch,
+    df_update_callback,
+    callback_batch,
+):
     num_iterations = num_records_overall // (records_per_batch * parallel_batches)
     print(num_records_overall, records_per_batch, parallel_batches, num_iterations)
     generated_objects = []
@@ -43,7 +46,7 @@ def generate_data(
         else:
             sample_records = sample_from_record_array(current_object_json, primary_record_array, records_per_batch)
         # Use each as seed for parallel gen
-        new_objects = generate_seeded_data(
+        new_objects = await generate_seeded_data(
             ai_configuration=ai_configuration,
             sample_records=sample_records,
             generation_guidance=generation_guidance,
@@ -51,8 +54,10 @@ def generate_data(
             total_records=records_per_batch,
             near_duplicate_records=duplicate_records_per_batch,
             close_relation_records=related_records_per_batch,
-            data_schema=data_schema
+            data_schema=data_schema,
+            callbacks=[callback_batch],
         )
+
         for new_object in new_objects:
             new_object_json = loads(new_object)
             generated_objects.append(new_object_json)
@@ -83,25 +88,27 @@ def generate_unseeded_data(
     )
     answer_format = {
         "type": "json_schema",
-        "json_schema": {
-            "name": "answer_object",
-            "strict": True,
-            "schema": data_schema
-        }
+        "json_schema": {"name": "answer_object", "strict": True, "schema": data_schema},
     }
-    answer_response = helper_functions.generate_text(ai_configuration, answer_messages, response_format=answer_format)
-    return answer_response
 
-def generate_seeded_data(
+    return helper_functions.generate_text(
         ai_configuration,
-        sample_records,
-        generation_guidance,
-        primary_record_array,
-        total_records,
-        near_duplicate_records,
-        close_relation_records,
-        data_schema,
-    ):
+        answer_messages,
+        response_format=answer_format,
+    )
+
+
+async def generate_seeded_data(
+    ai_configuration,
+    sample_records,
+    generation_guidance,
+    primary_record_array,
+    total_records,
+    near_duplicate_records,
+    close_relation_records,
+    data_schema,
+    callbacks: list[ProgressBatchCallback] | None = None,
+):
     answer_format = {
         "type": "json_schema",
         "json_schema": {
@@ -123,8 +130,13 @@ def generate_seeded_data(
             ]),
         }) for sample_record in sample_records
     ]
-    mapped_responses = asyncio.run(helper_functions.map_generate_text(ai_configuration, mapped_messages, response_format=answer_format))
-    return mapped_responses
+
+    return await helper_functions.map_generate_text(
+        ai_configuration,
+        mapped_messages,
+        response_format=answer_format,
+        callbacks=callbacks,
+    )
 
 def select_random_records(num_records, category_to_count):
     select = sum(category_to_count.values())

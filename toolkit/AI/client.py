@@ -119,33 +119,27 @@ class OpenAIClient:
             msg = f"Problem in OpenAI response. {e}"
             raise Exception(msg)
 
-    async def agenerate_chat(
+    async def generate_chat_async(
         self,
         messages: list[str],
-        callbacks: list[LLMCallback] | None = None,
         **kwargs,
     ):
-        try:
-            if "max_tokens" in kwargs.keys():
-                max_tokens = kwargs["max_tokens"]
-                kwargs.pop("max_tokens")
-            else:
-                max_tokens = self.configuration.max_tokens
-            if "stream" in kwargs.keys():
-                kwargs.pop("stream")
-            response = self._client.chat.completions.create(
-                model=self.configuration.model,
-                temperature=self.configuration.temperature,
-                max_tokens=max_tokens,
-                messages=messages,
-                stream=False,
-                **kwargs,
-            )
-            return response.choices[0].message.content or ""  # type: ignore
-        except Exception as e:
-            print(f"Error validating report: {e}")
-            msg = f"Problem in OpenAI response. {e}"
-            raise Exception(msg) from e
+        if "max_tokens" in kwargs.keys():
+            max_tokens = kwargs["max_tokens"]
+            kwargs.pop("max_tokens")
+        else:
+            max_tokens = self.configuration.max_tokens
+        if "stream" in kwargs.keys():
+            kwargs.pop("stream")
+        response = await self._async_client.chat.completions.create(
+            model=self.configuration.model,
+            temperature=self.configuration.temperature,
+            max_tokens=max_tokens,
+            messages=messages,
+            stream=False,
+            **kwargs,
+        )
+        return response.choices[0].message.content or ""  # type: ignore
 
     def generate_embedding(
         self, text: str, model: str = DEFAULT_EMBEDDING_MODEL
@@ -161,21 +155,5 @@ class OpenAIClient:
     async def generate_embedding_async(
         self, text: list[str], model: str = DEFAULT_EMBEDDING_MODEL
     ) -> list[float]:
-        if self.configuration.api_type == "Azure OpenAI":
-            embedding = await self._async_client.embeddings.create(
-                input=text, model=model
-            )
-        else:
-            embedding = await self._async_client.embeddings.create(
-                input=text, model=model
-            )
+        embedding = await self._async_client.embeddings.create(input=text, model=model)
         return embedding.data[0].embedding
-
-    async def map_generate_text(
-        self,
-        messages_list: list[list[dict[str, str]]],
-        **llm_kwargs,
-    ):
-        return await asyncio.gather(
-            *[self.agenerate_chat(messages, **llm_kwargs) for messages in messages_list]
-        )
