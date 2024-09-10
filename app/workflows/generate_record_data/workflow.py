@@ -29,14 +29,14 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                 for k, v in jsn.items():
                     sv.schema.value[k] = v
                 print(f'Loaded schema: {sv.schema.value}')
-            st.markdown('### Edit Data Schema')
+            st.markdown('### Edit data schema')
             bds_functions.generate_form_from_json_schema(
                 global_schema=sv.schema.value,
                 default_schema=schema_builder.create_boilerplate_schema(),
             )
         with preview:
             st.markdown('### Preview')
-            schema_tab, object_tab = st.tabs(['JSON Schema', 'Sample Object'])
+            schema_tab, object_tab = st.tabs(['JSON schema', 'Sample object'])
             obj = schema_builder.generate_object_from_schema(sv.schema.value)
             with schema_tab:
                 st.write(sv.schema.value)
@@ -65,20 +65,26 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
             with c1:
                 array_field_arrays = data_generator.extract_array_fields(sv.schema.value)
                 sv.record_arrays.value = ['.'.join(a) for a in array_field_arrays]
-                st.selectbox("Primary record array", sv.record_arrays.value, key=sv.primary_record_array.key)
+                st.selectbox("Primary record array", sv.record_arrays.value, key=sv.primary_record_array.key,
+                             help="In the presence of multiple arrays, select the one that represents the primary record type whose records should be counted towards the `Total records to generate` target")
             with c2:
-                st.number_input("Records per batch", min_value=1, value=sv.records_per_batch.value, key=sv.records_per_batch.key)
+                st.number_input("Records per batch", min_value=1, value=sv.records_per_batch.value, key=sv.records_per_batch.key,
+                                help="How many records to generate in a single LLM call")
             with c3:
-                st.number_input("Parallel batches", min_value=0, step=100, value=sv.parallel_batches.value, key=sv.parallel_batches.key)
+                st.number_input("Parallel batches", min_value=0, step=100, value=sv.parallel_batches.value, key=sv.parallel_batches.key,
+                                help="In a single iteration, how many batches to generate via parallel LLM calls")
             with c4:
-                st.number_input("Total records to generate", min_value=0, step=sv.records_per_batch.value*sv.parallel_batches.value, value=sv.num_records_overall.value, key=sv.num_records_overall.key)    
+                st.number_input("Total records to generate", min_value=0, step=sv.records_per_batch.value*sv.parallel_batches.value, value=sv.num_records_overall.value, key=sv.num_records_overall.key, help="How many records to generate. Must be a multiple of `Records per batch` x `Parallel batches`")    
             with c5:
-                st.number_input("Duplicate records per batch", min_value=0, value=sv.duplicate_records_per_batch.value, key=sv.duplicate_records_per_batch.key)
+                st.number_input("Duplicate records per batch", min_value=0, value=sv.duplicate_records_per_batch.value, key=sv.duplicate_records_per_batch.key,
+                                help="Within each batch, how many records should be near-duplicates of a seed record randomly selected from existing records")
             with c6:
-                st.number_input("Related records per batch", min_value=0, value=sv.related_records_per_batch.value, key=sv.related_records_per_batch.key)
-            st.text_area("Generation guidance", key=sv.generation_guidance.key, value=sv.generation_guidance.value)
+                st.number_input("Related records per batch", min_value=0, value=sv.related_records_per_batch.value, key=sv.related_records_per_batch.key,
+                                help="Within each batch, how many records should appear closely related to (but not the same as) a seed record randomly selected from existing records")
+            st.text_area("AI data generation guidance", key=sv.generation_guidance.key, value=sv.generation_guidance.value,
+                         help="Guidance to the generative AI model about how mock data should be generated (e.g., targeted a specific region, time period, industry, etc.)")
             
-            generate = st.button('Generate data')
+            generate = st.button('Generate mock data')
             df_placeholders = []
             dl_placeholders = []
             if len(sv.record_arrays.value) == 0:
@@ -165,17 +171,17 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
     with mock_tab:
         workflow_home = 'example_outputs/generate_record_data'
 
-        mock_data_files = os.listdir(f'{workflow_home}/datasets')
+        mock_data_files = [x for x in os.listdir(f'{workflow_home}') if x.endswith('.csv')]
         mock_dfs = {}
         for file in mock_data_files:
-            mock_dfs[file] = pd.read_csv(f'{workflow_home}/datasets/{file}')
+            mock_dfs[file] = pd.read_csv(f'{workflow_home}/{file}')
         selected_data = st.selectbox('Select mock data', mock_data_files)
         if selected_data != None:
             c1, c2 = st.columns([1, 1])
             with c1:
                 st.markdown('### Schema')
                 schema_file = '_'.join(selected_data.split('_')[:-1]) + '_schema.json'
-                schema_text = loads(open(f'{workflow_home}/schemas/{schema_file}', 'r').read())
+                schema_text = loads(open(f'{workflow_home}/{schema_file}', 'r').read())
                 st.write(schema_text)
                 st.download_button(
                     label=f'Download {schema_file}',
@@ -184,7 +190,7 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                     mime='application/json',
                 )
             with c2:
-                st.markdown('### Mock Data')
+                st.markdown('### Mock data')
                 st.dataframe(mock_dfs[selected_data], height=500)
                 st.download_button(
                     label=f'Download {selected_data}',
