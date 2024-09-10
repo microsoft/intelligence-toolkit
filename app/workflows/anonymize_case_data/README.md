@@ -77,7 +77,7 @@ Since the above approach to DP data synthesis works by controlling the release o
 
 We can now work though the steps of senstive data preparation using the `customer_complaints_3k.csv` dataset above.
 
-First, navigate to the `Upload sensitive data` tab, select `Browse files`, and upload the `customer_complaints_3k.csv` dataset. A preview of the dataset should appear below.
+First, navigate to the `Prepare sensitive data` tab, select `Browse files`, and upload the `customer_complaints_3k.csv` dataset. A preview of the dataset should appear below.
 
 #### Set subject identifier
 
@@ -109,3 +109,109 @@ Looking at the actual distribution of `age` values in the dataset, we see that t
 - `(50.0-60.0]`
 
 In general, the fewer the values of a data attribute and the more even the distribution of values across a dataset, the better.
+
+#### Suppress insignificant attribute values
+
+If an attribute value occurs only a small number of times, then attribute combinations containing that value will generally be even less frequent. Since these combinations will likely be eliminated during the data synthesis process anyway, removing low-frequency values from the sensitive dataset by specifying a `Minimum value count` of say `10` will reduce the number of combinations that need to be controlled. This typically raises the accuracy of the resulting synthetic dataset.
+
+The checkbox `Suppress boolean False / binary 0` is also selected by default. This should be unchecked if `False` or `0` values are sensitive and/or counts of attribute combinations containing these values are important for analysis. In many cases, however, counts of cases that don't have certain attributes are less useful for analysis and lead to an explosion in the number of attribute combinations that need to be controlled. It is therefore recommended to leave this box checked and recode any meaningful alternatives using `Yes` and `No` values.
+
+#### Evaluating synthesizability
+
+Pressing `Generate final dataset` applies all the specified transformations to the input dataset, with the result available for viewing and download under the `Final` tab of the data table panel.
+
+The `Synthesizability summary` gives an initial indication of how easy it will be to generate high-accurary synthetic data given the number of attribute combinations in the final sensitive dataset. The smaller each of these numbers, the better:
+
+- `Number of selected columns`: The number of columns after all data transformations
+- `Number of distinct attribute values`: The number of distinct attribute values across selected columns
+- `Number of possible combinations`: The product of the number of distinct attribute values in each column
+- `Mean combinations per records`: The number of possible combinations divided by the number of records
+- `Maximum combinations per record`: The number of possible combinations in a record (2^num_selected_columns)
+- `Excess combinations ratio`: Mean combinations per record / Max combinations per record
+
+The last metric, `Excess combinations ratio`, is the main one to pay attention to in terms of synthesizability. As a rule of thumb, try to keep this ratio at or below `5`. The general idea here is that datasets should have sufficient records to support all possible combinations of attribute values, given the number of distinct attribute values in each column. Not all combinations will be present in most cases &ndash; data records tend to cluster around certain attribute patterns &ndash; so it is ok for this value to be greater than `1`. How far it can actually go and still yield high-accuracy synthetic data depends on how many of these possible attribute combinations are actually observed in the data.
+
+### Generating anonymous data
+
+Navigate to the `Generate anonymous data` tab to generate anonymous data from the sensitive dataset uploaded and prepared in previous steps.
+
+The only user input required for synthesis is the `Epsilon` value, set to `12.00` by default. Lower values of epsilon give greater theoretical privacy protection at the expense of lower accuracy, while higher values of epsilon give higher accuracy at the expense of lower theoretical privacy protection. See [here](https://github.com/microsoft/synthetic-data-showcase/blob/main/docs/dp/README.md) for more details on how this "privacy budget" is allocated to different aspects of the synthesis process.
+
+We recommend using the lowest `Epsilon` value that results in synthetic data with sufficient accurary to support downstream analysis. Start with the default value, and reduce it in small increments at a time. If the accuracy values with an `Epsilon` value of `12.00` are themselves too low, go back to the `Prepare sensitive data` tab and continue refining the sensitive dataset in ways that reduce the `Excess combinations ratio`.
+
+After pressing `Anonymize data`, you will see two differential privacy parameters: the `Epsilon` value you set, and a `Delta` value that is generated based on the data (and indicates the very small thereoretical chance that the `Epsilon` privacy guarantee does not hold). It is important to publish both values alongside any DP dataset for correct interpretation of the privacy protection provided.
+
+Once generated, you will see the `Aggregate data` and `Synthetic data` appear on the right hand side:
+
+- The `Aggregate data` shows the protected counts of all combinations of up to four attribute values, plus the protected count of sensitive records. These aggregate counts are "protected" by the addition of noise calibrated to give the desired DP guarantees.
+- The `Synthetic data` shows a dataset of records synthesized in a way that aims to replicate the protected counts of the aggregate dataset. In particular, new values are sampled and new records synthesized until the counts of individual attribute values match their protected counts, while ensuring that all combinations of up to four attributes in the synthesized record are present in the aggregate dataset.
+
+Each of these datasets can be downloaded using the buttons provided.
+
+### Evaluating anonymous data
+
+The `Aggregate data` and `Synthetic data` generated by the workflow will always respect the privacy budget (i.e., `Epsilon` value) set by the user. However, the data may deviate from the actual sensitive data in three significant ways:
+
+- `Error`: For a group of attribute combinations, the mean absolute difference between anonymous data counts and sensitive data counts
+- `Suppressed %`: For a group of attribute combinations, the percentage of sensitive data counts not present in anonymous data counts
+- `Fabrictaed %`: For a group of attribute combinations, the percentage of anonymous data counts not present in sensitive data counts
+
+These metrics are summarized for each length of attribute combination up to four in the `Aggregate data quality` and `Synthetic data quality` tables to the left. For example, a value of `62 +/- 5` in the `Length 1` row should be read as "The mean count of attribute combinations with length 1 is 62, with a mean absolute error of 5".
+
+As rules of thumb, under `Synthetic data quality`, the highest accuracy synthetic data will have:
+
+- The mean `Overall Error` less than the mean `Overall Count`
+- The `Suppressed %` less than `10%`
+- The `Fabricated %` less than `1%`
+
+### Querying anonymous data
+
+Move to the `Query and visualize data` tab to start exploring the anonymous data.
+
+Any record counts shown will use the corresponding protected counts from the aggregate data if these counts exist, since they will always be the most accurate, otherwise the synthetic data will be dynamically filtered to derive the desired count.
+
+Before any filters are applied, the interface will use the `record_count` value from thr aggregate data as the estimate of sensitive records overall.
+
+Try adding one or more attribute values to the query to observe the estimated count change. Notice that:
+
+- selecting values from different attributes creates an "and" query, estimating the count of records with all of the selected attribute values
+- selecting values from the same attribute creates an "or" query, estimating the count of records with any of the selected attribute values
+
+### Visualizing anonymous data
+
+The `Chart` panel to the right visualizes the current query using the selected `Chart type`, by default set to `Top attributes`. 
+
+#### Top attributes chart
+
+This chart groups values by attribute and shows these groups in descending count order.
+
+The chart can be configured in multiple ways:
+
+- Set `Subject label` to `Customer` to indicate what kind of individul is being counted
+- Set `Types of  top attributes to show` to filter to a particular attribute, e.g., `product_code`
+- Set `Number of top attribute values to show` to `5` to show only the top five attribute values
+
+#### Time series chart
+
+This chart plots the counts of multiple attribute values as time series. For example:
+
+- Set `Time attribute` to `period`
+- Set `Series attributes` to `price_issue` and `quality_issue` to compare these over time
+
+#### Flow (alluvial) chart
+
+This chart type is typically used to show flows from a source attribute to a target attribute, e.g., from origin to destination in a flight dataset. However, it can also be used to visualize the association between any pair of attributes. For example:
+
+- Set `Source/origin attribute type` to `age_range`
+- Set `Target/destination attribute type` to `product_code`
+- Set `Highlight attribute` to `price_issue:True`
+
+Mouse over the flow lines on the visualization to see how different combinations of `age_range` and `product_code` are associated with `price_issue:True` complaints.
+
+### Exporting data and visuals
+
+There are three different ways to export the current visual:
+
+- Select `Data CSV` on the left to download a CSV file of the data displayed in the visual
+- Select `Chart JSON` on the left to download a JSON file containing the specification of the [Plotly](https://plotly.com/python/) chart shown
+- Press the camera icon above the chart to save it as a PNG image file, adjusting `Chart width` and `Chart height` as needed
