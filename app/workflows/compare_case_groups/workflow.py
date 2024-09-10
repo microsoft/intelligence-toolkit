@@ -11,7 +11,10 @@ from app.tutorials import get_tutorial
 from app.util import ui_components
 from toolkit.compare_case_groups import get_readme as get_intro
 from toolkit.compare_case_groups import prompts
-from toolkit.compare_case_groups.temporal_process import create_window_df
+from toolkit.compare_case_groups.temporal_process import (
+    build_temporal_data,
+    create_window_df,
+)
 
 
 def create(sv: gn_variables.SessionVariables, workflow=None):
@@ -215,53 +218,10 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                             sv.case_groups_model_df.value[temporal].astype(str).unique()
                         )
 
-                        tdfs = []
-                        print("temporal_atts", temporal_atts)
-                        if len(temporal_atts) > 0:
-                            # Add in 0 counts for any missing temporal attribute values across all groups and attribute values
-                            for name, group in ldf.groupby(groups):
-                                for att_val in ldf["Attribute Value"].unique():
-                                    for time_val in ldf[temporal].unique():
-                                        if (
-                                            len(
-                                                group[
-                                                    (group[temporal] == time_val)
-                                                    & (
-                                                        group[
-                                                            f"{temporal} Window Count"
-                                                        ]
-                                                        == att_val
-                                                    )
-                                                ]
-                                            )
-                                            == 0
-                                        ):
-                                            ldf.loc[len(ldf)] = [
-                                                *name,
-                                                time_val,
-                                                att_val,
-                                                0,
-                                            ]
-
-                            # Calculate deltas in counts within each group and attribute value
-                            for name, ddf in ldf.groupby([*groups, "Attribute Value"]):
-                                ldf.loc[ddf.index, f"{temporal} Window Delta"] = (
-                                    ddf[f"{temporal} Window Count"].diff().fillna(0)
-                                )
-                            for tatt in temporal_atts:
-                                tdf = ldf[ldf[temporal] == tatt].copy(deep=True)
-                                print("tdf", tdf)
-                                # rank counts for each attribute value
-                                for att_val in tdf["Attribute Value"].unique():
-                                    tdf.loc[
-                                        (tdf["Attribute Value"] == att_val),
-                                        f"{temporal} Window Rank",
-                                    ] = tdf[tdf["Attribute Value"] == att_val][
-                                        f"{temporal} Window Count"
-                                    ].rank(ascending=False, method="first")
-                                tdfs.append(tdf)
-                            ldf = pd.concat(tdfs).sort_values(by=temporal)
-
+                        ldf = build_temporal_data(
+                            pl.from_pandas(ldf), groups, temporal_atts, temporal
+                        )
+                        ldf = ldf.to_pandas()
                     # Create overall df
                     odf = (
                         ldf.merge(gdf, on=[*groups], how="left", suffixes=["", "_r"])

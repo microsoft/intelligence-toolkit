@@ -34,93 +34,46 @@ def create_window_df(
         .sort([*groups, temporal, "Attribute Value"])
     )
 
+# Calculate deltas in counts within each group and attribute value
+def calculate_window_delta(temporal_df: pl.DataFrame, temporal) -> pl.DataFrame:
+    return temporal_df.with_columns(
+        (pl.col(f"{temporal} Window Count").diff().fill_null(0)).alias(
+            f"{temporal} Window Delta"
+        )
+    )
 
-def process_group(ldf, temporal, group) -> pl.DataFrame:
-    group_dict = group.to_dict(as_series=False)
-    new_rows = []
-    unique_att_vals = ldf["Attribute Value"].unique()
-    unique_time_vals = ldf["temporal"].unique()
-    product_combinations = list(product(unique_time_vals, unique_att_vals))
+def build_temporal_count(
+    ldf: pl.DataFrame, groups: list[str], temporal: str
+) -> pl.DataFrame:
+    grouped_df = ldf.group_by(groups)
+    for name, group in grouped_df:
+        for att_val in ldf["Attribute Value"].unique():
+            for time_val in ldf[temporal].unique():
+                filtered_df = group.filter(
+                    (pl.col(temporal) == time_val)
+                    & (
+                        pl.col(f"{temporal} Window Count").cast(pl.String)
+                        == str(att_val)
+                    )
+                )
+                if filtered_df.height == 0:
+                    # Create a new row as a DataFrame
+                    new_row = pl.DataFrame(
+                        [[*name, time_val, att_val, 0]], schema=ldf.schema
+                    )
 
-    for time_val, att_val in product_combinations:
-        if not (
-            (group_dict["temporal"] == time_val)
-            & (group_dict[f"{temporal} Window Count"] == att_val)
-        ).any():
-            new_rows.append(
-                {
-                    "groups": group_dict["groups"][
-                        0
-                    ],  # Assuming `groups` is a single value per group
-                    "temporal": time_val,
-                    "Attribute Value": att_val,
-                    f"{temporal} Window Count": 0,
-                }
-            )
-    return pl.DataFrame(new_rows)
+                    # Append the new row to ldf
+                    ldf = ldf.vstack(new_row)
+
+    return calculate_window_delta(ldf, temporal)
 
 
-def rank_temporal_attributes(
+def build_temporal_data(
     ldf: pl.DataFrame, groups: list[str], temporal_atts: list[str], temporal: str
 ) -> pl.DataFrame:
     tdfs = []
 
-    # Process each group and collect results
-    results = ldf.groupby("groups").apply(lambda x: process_group(ldf, temporal, x))
-
-    # Concatenate the original DataFrame with the new rows
-    ldf = pl.concat([ldf, results])
-
-    # Optionally, sort `ldf` if needed
-    ldf = ldf.sort(["groups", "temporal", "Attribute Value"])
-
-    # Calculate deltas in counts within each group and attribute value
-    for _, ddf in ldf.groupby([*groups, "Attribute Value"]):
-        ldf.loc[ddf.index, f"{temporal} Window Delta"] = (
-            ddf[f"{temporal} Window Count"].diff().fillna(0)
-        )
-    for tatt in temporal_atts:
-        tdf = ldf[ldf[temporal] == tatt].copy(deep=True)
-        # rank counts for each attribute value
-        for att_val in tdf["Attribute Value"].unique():
-            tdf.loc[
-                (tdf["Attribute Value"] == att_val),
-                f"{temporal} Window Rank",
-            ] = tdf[tdf["Attribute Value"] == att_val][f"{temporal} Window Count"].rank(
-                ascending=False, method="first"
-            )
-        tdfs.append(tdf)
-    return pl.concat(tdfs).sort(by=temporal)
-
-
-def temp_rank(
-    ldf: pd.DataFrame, groups: list[str], temporal_atts: list[str], temporal: str
-) -> pd.DataFrame:
-    tdfs = []
-    for name, group in ldf.groupby(groups):
-        for att_val in ldf["Attribute Value"].unique():
-            for time_val in ldf[temporal].unique():
-                if (
-                    len(
-                        group[
-                            (group[temporal] == time_val)
-                            & (group[f"{temporal} Window Count"] == att_val)
-                        ]
-                    )
-                    == 0
-                ):
-                    ldf.loc[len(ldf)] = [
-                        *name,
-                        time_val,
-                        att_val,
-                        0,
-                    ]
-
-    # Calculate deltas in counts within each group and attribute value
-    for _, ddf in ldf.groupby([*groups, "Attribute Value"]):
-        ldf.loc[ddf.index, f"{temporal} Window Delta"] = (
-            ddf[f"{temporal} Window Count"].diff().fillna(0)
-        )
+    ldf = build_temporal_count(ldf, groups, temporal)
     for tatt in temporal_atts:
         tdf = ldf[ldf[temporal] == tatt].copy(deep=True)
         # rank counts for each attribute value
