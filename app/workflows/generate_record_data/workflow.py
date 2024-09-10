@@ -8,6 +8,7 @@ import app.workflows.generate_record_data.functions as bds_functions
 import app.workflows.generate_record_data.variables as bds_variables
 import toolkit.generate_record_data.data_generator as data_generator
 import toolkit.generate_record_data.schema_builder as schema_builder
+from app.tutorials import get_tutorial
 from app.util.openai_wrapper import UIOpenAIConfiguration
 from toolkit.generate_record_data import get_readme as get_intro
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
@@ -17,7 +18,7 @@ ai_configuration = UIOpenAIConfiguration().get_configuration()
 async def create(sv: bds_variables.SessionVariables, workflow: None):
     intro_tab, schema_tab, generator_tab, mock_tab = st.tabs(['Generate Record Data workflow:', 'Prepare data schema', 'Generate mock data', 'View example outputs'])
     with intro_tab:
-        st.markdown(get_intro())
+        st.markdown(get_intro() + get_tutorial("generate_record_data"))
     with schema_tab:
         form, preview = st.columns([1, 1])
         with form:

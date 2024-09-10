@@ -12,6 +12,7 @@ import app.util.session_variables as home_vars
 import app.workflows.match_entity_records.functions as functions
 import app.workflows.match_entity_records.variables as rm_variables
 import toolkit.match_entity_records.prompts as prompts
+from app.tutorials import get_tutorial
 from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
@@ -46,7 +47,7 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
     )
     selected_df = None
     with intro_tab:
-        st.markdown(get_intro())
+        st.markdown(get_intro() + get_tutorial("match_entity_records"))
     with uploader_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:
