@@ -11,7 +11,7 @@ import app.workflows.compare_case_groups.prompts as prompts
 import app.workflows.compare_case_groups.variables as gn_variables
 from app.tutorials import get_tutorial
 from app.util import ui_components
-from toolkit.anonymize_code_data import get_readme as get_intro
+from toolkit.compare_case_groups import get_readme as get_intro
 
 
 def create(sv: gn_variables.SessionVariables, workflow=None):
