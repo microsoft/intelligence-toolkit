@@ -1,27 +1,5 @@
-# Anonymize Case Data
 
-The `Anonymize Case Data` workflow generates differentially-private datasets and data summaries from sensitive case records.
-
-Select the `View example outputs` tab (in app) or navigate to [example_outputs/anonymize_case_data](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/anonymize_case_data) (on GitHub) for examples.
-
-## Input requirements
-
-- The input data file should be in CSV format and represent individual data subjects.
-- Individual data subjects may be represented by a single row, in which case no identifier is required, or by multiple rows, in which case an identifier is required to link these rows into a single record.
-- For data synthesis, each individual must be represented as a collection of discrete (i.e., categorical or binary) attributes. Any continuous attributes must first be quantized via the user interface.
-- Given the goal of creating an anonymous dataset, no direct identifiers (e.g., names, aliases, ids, phone numbers, email addresses, street addresses) should be included in data outputs. Following the principle of [data minimization](https://en.wikipedia.org/wiki/Data_minimization), such direct identifiers should be removed from data inputs because they are not required for the processing purpose and create unnecessary risks for the data subject. Tools such as Microsoft Excel can be used to delete any direct identifier columns prior to use in Intelligence Toolkit.
-- The nature of differential privacy means that indirect identifiers (e.g., age range, year of birth, gender, country, city) may be freely included in the data inputs. None of the combinations of these identifiers (or of any attributes) in the output data allow the presence of individuals to be inferred with any degree of certainty.
-
-## Use with other workflows
-
-`Anonymize Case Data` can be used to anonymize case data for privacy-preserving analysis in any other workflow accepting structured records as input:
-
-- `Detect Case Patterns`
-- `Compare Case Groups`
-
-`Generate Record Data` can also be used to generate mock data for demonstration or evaluation of the `Anonymize Case Data` workflow.
-
-## Tutorial
+## Anonymize Case Data Tutorial
 
 The task for this tutorial is creating an anonymous version of the `customer_complaints_3k.csv` dataset available for download either from the `View example outputs` tab of the `Generate Record Data` workflow, or from the GitHub repo [here](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/generate_record_data/customer_complaints).
 
@@ -79,36 +57,32 @@ Under `Select attribute columns to include`, press `Select all` then deselect th
 
 #### Quantize datetime attributes
 
-Under `Quantize datetime attributes`, select the `quarter` attribute and `Half` bin size to combine quarters into half years. After pressing `Quantize selected columns`, switching from the `Input data` to the `Prepared data` view of the loaded data will show `quarter` now encoded into half years. The column name can be updated in a later step.
+Under `Quantize datetime attributes`, select the `quarter` attribute and `Half` bin size to combine quarters into half years. After pressing `Quantize selected columns`, switching from the `Input data` to the `Processed data` view of the loaded data will show `quarter` now encoded into half years. The column name can be updated in a later step.
 
 #### Quantize numeric attributes
 
-Under `Quantize numeric attributes`, select `age`, set `Target bins` to `5`, and leave `Trim percent` at `0.00`. After pressing `Quantize selected columns`, the `Prepared data` view of the loaded data will show `age` now encoded into five age ranges represented as (exclusive mininum value-inclusive maximum value]:
+Under `Quantize numeric attributes`, select `age`, set `Target bins` to `5`, and leave `Trim percent` at `0.00`. After pressing `Quantize selected columns`, the `Processed data` view of the loaded data will show `age` now encoded into five age ranges represented as (exclusive mininum value-inclusive maximum value):
 
-- `(0-20]`
-- `(20-40]`
-- `(40-60]`
-- `(60-80]`
-- `(80-100]`
+- `(0.0-20.0]`
+- `(20.0-40.0]`
+- `(40.0-60.0]`
+- `(60.0-80.0]`
+- `(80.0-100.0]`
 
-Looking at the actual distribution of `age` values in the dataset, we see that there are very few data points in the `(0-20]` and `(80-100]` age ranges. We might therefore decide to trim some of these extreme values before determining appropriate bin sizes for the quantized data. Setting `Trim percent` to `0.01` and pressing `Quantize selected columns` again results in new age ranges as follows:
+Looking at the actual distribution of `age` values in the dataset, we see that there are very few data points in the `(0.0-20.0]` and `(80.0-100.0]` age ranges. We might therefore decide to trim some of these extreme values before determining appropriate bin sizes for the quantized data. Setting `Trim percent` to `0.01` and pressing `Quantize selected columns` again results in new age ranges as follows:
 
-- `(20-30]`
-- `(30-40]`
-- `(40-50]`
-- `(50-60]`
+- `(20.0-30.0]`
+- `(30.0-40.0]`
+- `(40.0-50.0]`
+- `(50.0-60.0]`
 
 In general, the fewer the values of a data attribute and the more even the distribution of values across a dataset, the better.
 
 #### Suppress insignificant attribute values
 
-If an attribute value occurs only a small number of times, then attribute combinations containing that value will generally be even less frequent. Since these combinations will likely be eliminated during the data synthesis process anyway, removing low-frequency values from the sensitive dataset by specifying a `Minimum value count` of say `5` will reduce the number of combinations that need to be controlled. This typically raises the accuracy of the resulting synthetic dataset.
+If an attribute value occurs only a small number of times, then attribute combinations containing that value will generally be even less frequent. Since these combinations will likely be eliminated during the data synthesis process anyway, removing low-frequency values from the sensitive dataset by specifying a `Minimum value count` of say `10` will reduce the number of combinations that need to be controlled. This typically raises the accuracy of the resulting synthetic dataset.
 
 The checkbox `Suppress boolean False / binary 0` is also selected by default. This should be unchecked if `False` or `0` values are sensitive and/or counts of attribute combinations containing these values are important for analysis. In many cases, however, counts of cases that don't have certain attributes are less useful for analysis and lead to an explosion in the number of attribute combinations that need to be controlled. It is therefore recommended to leave this box checked and recode any meaningful alternatives using `Yes` and `No` values.
-
-#### Rename attributes
-
-Rename `age` to `age_range` and `quarter` to `period`.
 
 #### Evaluating synthesizability
 
@@ -118,11 +92,10 @@ The `Synthesizability summary` gives an initial indication of how easy it will b
 
 - `Number of selected columns`: The number of columns after all data transformations
 - `Number of distinct attribute values`: The number of distinct attribute values across selected columns
-- `Theoretical attribute combinations`: The product of the number of distinct attribute values in each column
-- `Theoretical combinations per record`: The number of theoretical combinations divided by the number of records
-- `Typical values per record`: The mean number of attribute values per record
-- `Typical combinations per record`: The number of possible combinations in the typical number of attribute values(2^typical_values)
-- `Excess combinations ratio`: Theoretical combinations per record / Typical combinations per record
+- `Number of possible combinations`: The product of the number of distinct attribute values in each column
+- `Mean combinations per records`: The number of possible combinations divided by the number of records
+- `Maximum combinations per record`: The number of possible combinations in a record (2^num_selected_columns)
+- `Excess combinations ratio`: Mean combinations per record / Max combinations per record
 
 The last metric, `Excess combinations ratio`, is the main one to pay attention to in terms of synthesizability. As a rule of thumb, try to keep this ratio at or below `5`. The general idea here is that datasets should have sufficient records to support all possible combinations of attribute values, given the number of distinct attribute values in each column. Not all combinations will be present in most cases &ndash; data records tend to cluster around certain attribute patterns &ndash; so it is ok for this value to be greater than `1`. How far it can actually go and still yield high-accuracy synthetic data depends on how many of these possible attribute combinations are actually observed in the data.
 
@@ -210,4 +183,3 @@ There are three different ways to export the current visual:
 - Select `Data CSV` on the left to download a CSV file of the data displayed in the visual
 - Select `Chart JSON` on the left to download a JSON file containing the specification of the [Plotly](https://plotly.com/python/) chart shown
 - Press the camera icon above the chart to save it as a PNG image file, adjusting `Chart width` and `Chart height` as needed
-
