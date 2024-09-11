@@ -3,8 +3,6 @@
 #
 
 
-from itertools import product
-
 import pandas as pd
 import polars as pl
 
@@ -59,7 +57,8 @@ def build_temporal_count(
                 if filtered_df.height == 0:
                     # Create a new row as a DataFrame
                     new_row = pl.DataFrame(
-                        [[*name, time_val, att_val, 0]], schema=ldf.schema
+                        [[*name, time_val, att_val, 0]],  # type: ignore
+                        schema=ldf.schema,
                     )
 
                     # Append the new row to ldf
@@ -72,17 +71,28 @@ def build_temporal_data(
     ldf: pl.DataFrame, groups: list[str], temporal_atts: list[str], temporal: str
 ) -> pl.DataFrame:
     tdfs = []
+    if ldf.shape[0] == 0:
+        return ldf
 
     ldf = build_temporal_count(ldf, groups, temporal)
+    if ldf.is_empty():
+        return ldf
+
     for tatt in temporal_atts:
-        tdf = ldf[ldf[temporal] == tatt].copy(deep=True)
+        tdf = ldf.filter(pl.col(temporal) == tatt)
+        tdf = tdf.with_columns(pl.lit(None).alias(f"{temporal} Window Rank"))
         # rank counts for each attribute value
-        for att_val in tdf["Attribute Value"].unique():
-            tdf.loc[
-                (tdf["Attribute Value"] == att_val),
-                f"{temporal} Window Rank",
-            ] = tdf[tdf["Attribute Value"] == att_val][f"{temporal} Window Count"].rank(
-                ascending=False, method="first"
+        for att_val in tdf.select("Attribute Value").unique().to_numpy():
+            filtered_df = tdf.filter(pl.col("Attribute Value") == att_val)
+            ranked_series = filtered_df[f"{temporal} Window Count"].rank(
+                descending=True, method="dense"
             )
+            tdf = tdf.with_columns(
+                pl.when(pl.col("Attribute Value") == att_val)
+                .then(ranked_series)
+                .otherwise(pl.col(f"{temporal} Window Rank"))
+                .alias(f"{temporal} Window Rank")
+            )
+
         tdfs.append(tdf)
-    return pd.concat(tdfs).sort_values(by=temporal)
+    return pl.concat(tdfs).sort(by=temporal)

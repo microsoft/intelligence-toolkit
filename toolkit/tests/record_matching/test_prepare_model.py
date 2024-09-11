@@ -26,7 +26,7 @@ class TestFormatDataset:
 
     def test_empty(self) -> None:
         df_empty = pl.DataFrame()
-        result = format_dataset(df_empty, "", "")
+        result = format_dataset(df_empty, [], "")
         assert result.is_empty()
 
     def test_add_with_id(self, selected_df) -> None:

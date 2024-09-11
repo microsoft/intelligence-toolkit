@@ -44,7 +44,7 @@ def format_dataset(
     return selected_df
 
 
-def build_attribute_options(matching_dfs: dict[pl.DataFrame]) -> list[str]:
+def build_attribute_options(matching_dfs: dict[str, pl.DataFrame]) -> list[str]:
     attr_options = []
     skip_columns = ["Entity ID", "Entity name"]
     for dataset, merged_df in matching_dfs.items():

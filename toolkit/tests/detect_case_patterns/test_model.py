@@ -27,7 +27,9 @@ def test_generate_graph_model_basic(mocker):
 
     test_df = pd.DataFrame(data)
 
-    mocker.patch("toolkit.helpers.df_functions.fix_null_ints").return_value = test_df
+    mocker.patch(
+        "toolkit.helpers.df_functions.fix_null_ints"
+    ).return_value = test_df.astype(str)
     result = generate_graph_model(test_df, "Period", type_val_sep)
 
     expected_data = {
@@ -59,7 +61,7 @@ def test_generate_graph_model_with_nans(mocker):
 
     mocker.patch(
         "toolkit.helpers.df_functions.fix_null_ints"
-    ).return_value = test_df.fillna("")
+    ).return_value = test_df.fillna("").astype(str)
     result = generate_graph_model(test_df, "Period", type_val_sep)
 
     expected_data = {
@@ -87,7 +89,9 @@ def test_generate_graph_model_column_rename(mocker):
 
     test_df = pd.DataFrame(data)
 
-    mocker.patch("toolkit.helpers.df_functions.fix_null_ints").return_value = test_df
+    mocker.patch(
+        "toolkit.helpers.df_functions.fix_null_ints"
+    ).return_value = test_df.astype(str)
     result = generate_graph_model(test_df, "Custom_Period", type_val_sep)
 
     expected_data = {

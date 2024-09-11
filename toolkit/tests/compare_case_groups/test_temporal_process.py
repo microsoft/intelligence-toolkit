@@ -2,10 +2,13 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 
+import pandas as pd
 import polars as pl
+import pytest
 
 from toolkit.compare_case_groups.temporal_process import (
     build_temporal_count,
+    build_temporal_data,
     calculate_window_delta,
     create_window_df,
 )
@@ -179,3 +182,177 @@ class TestBuildTemporalCount:
             .to_series()
             .all()
         )
+
+        data = {
+            "Group": ["A", "A", "B", "B"],
+            "Temporal": [1, 2, 1, 2],
+            "Attribute Value": ["X:10", "X:20", "Y:30", "Y:40"],
+            "Temporal Window Count": [5, 3, 8, 6],
+        }
+
+
+class TestBuildTemporalData:
+    @pytest.fixture()
+    def expected_df_mock(self):
+        return pl.DataFrame(
+            {
+                "Group": ["A", "A", "B", "B"],
+                "Temporal": ["2023-01-01", "2023-01-02", "2023-01-01", "2023-01-02"],
+                "Attribute Value": ["V1:10", "V2:20", "V1:30", "V2:40"],
+                "Temporal Window Count": [5, 3, 8, 6],
+            }
+        )
+
+    def test_empty_dataframe(self):
+        ldf = pl.DataFrame()
+        result = build_temporal_data(ldf, groups=[], temporal_atts=[], temporal="")
+        assert result.is_empty()
+
+    def test_single_temporal_attribute(self, expected_df_mock, mocker):
+        data = {
+            "Group": ["A", "A", "B", "B"],
+            "Attribute Value": ["V1:10", "V2:20", "V1:30", "V2:40"],
+            "Temporal": ["2023-01-01", "2023-01-02", "2023-01-01", "2023-01-02"],
+        }
+        ldf = pl.DataFrame(data)
+
+        mocker.patch(
+            "toolkit.compare_case_groups.temporal_process.build_temporal_count"
+        ).return_value = expected_df_mock
+        result = build_temporal_data(
+            ldf, groups=["Group"], temporal_atts=["2023-01-01"], temporal="Temporal"
+        )
+        expected_data = {
+            "Group": ["A", "B"],
+            "Temporal": ["2023-01-01", "2023-01-01"],
+            "Attribute Value": ["V1:10", "V1:30"],
+            "Temporal Window Count": [5, 8],
+            "Temporal Window Rank": [1.0, 1.0],
+        }
+        expected_df = pl.DataFrame(expected_data)
+        assert result.equals(expected_df)
+
+    def test_multiple_temporal_attributes(self, expected_df_mock, mocker):
+        data = {
+            "Group": ["A", "A", "B", "B"],
+            "Attribute Value": [1, 2, 3, 4],
+            "Temporal": ["2023-01-01", "2023-01-02", "2023-01-01", "2023-01-02"],
+        }
+        ldf = pl.DataFrame(data)
+
+        mocker.patch(
+            "toolkit.compare_case_groups.temporal_process.build_temporal_count"
+        ).return_value = expected_df_mock
+        result = build_temporal_data(
+            ldf,
+            groups=["Group"],
+            temporal_atts=["2023-01-01", "2023-01-02"],
+            temporal="Temporal",
+        )
+        expected_data = {
+            "Group": ["A", "B", "A", "B"],
+            "Temporal": ["2023-01-01", "2023-01-01", "2023-01-02", "2023-01-02"],
+            "Attribute Value": ["V1:10", "V1:30", "V2:20", "V2:40"],
+            "Temporal Window Count": [5, 8, 3, 6],
+            "Temporal Window Rank": [1.0, 1.0, 1.0, 1.0],
+        }
+        expected_df = pl.DataFrame(expected_data)
+        assert result.equals(expected_df)
+
+    def test_multiple_groups(self, mocker):
+        data = {
+            "Group": ["A", "A", "B", "B"],
+            "SubGroup": ["X", "Y", "X", "Y"],
+            "Attribute Value": [1, 2, 3, 4],
+            "Temporal": ["2023-01-01", "2023-01-02", "2023-01-01", "2023-01-02"],
+        }
+        ldf = pl.DataFrame(data)
+
+        df_mock = pl.DataFrame(
+            {
+                "Group": ["A", "A", "B", "B"],
+                "SubGroup": ["X", "Y", "X", "Y"],
+                "Temporal": ["2023-01-01", "2023-01-02", "2023-01-01", "2023-01-02"],
+                "Attribute Value": ["V1:10", "V2:20", "V1:30", "V2:40"],
+                "Temporal Window Count": [5, 3, 8, 6],
+            }
+        )
+        mocker.patch(
+            "toolkit.compare_case_groups.temporal_process.build_temporal_count"
+        ).return_value = df_mock
+        result = build_temporal_data(
+            ldf,
+            groups=["Group", "SubGroup"],
+            temporal_atts=["2023-01-01", "2023-01-02"],
+            temporal="Temporal",
+        )
+        expected_data = {
+            "Group": ["A", "B", "A", "B"],
+            "SubGroup": ["X", "X", "Y", "Y"],
+            "Temporal": ["2023-01-01", "2023-01-01", "2023-01-02", "2023-01-02"],
+            "Attribute Value": ["V1:10", "V1:30", "V2:20", "V2:40"],
+            "Temporal Window Count": [5, 8, 3, 6],
+            "Temporal Window Rank": [1.0, 1.0, 1.0, 1.0],
+        }
+        expected_df = pl.DataFrame(expected_data)
+        assert result.equals(expected_df)
+
+    def test_missing_values(self, expected_df_mock, mocker):
+        data = {
+            "Group": ["A", "A", "B", "B"],
+            "Attribute Value": [1, 2, 3, 4],
+            "Temporal": ["2023-01-01", "2023-01-02", "2023-01-01", "2023-01-02"],
+        }
+        ldf = pl.DataFrame(data)
+
+        mocker.patch(
+            "toolkit.compare_case_groups.temporal_process.build_temporal_count"
+        ).return_value = expected_df_mock
+        result = build_temporal_data(
+            ldf,
+            groups=["Group"],
+            temporal_atts=["2023-01-01", "2023-01-02"],
+            temporal="Temporal",
+        )
+
+        assert result["Temporal Window Count"].is_nan().sum() == 0
+
+    def test_non_existent_temporal_values(self, expected_df_mock, mocker):
+        data = {
+            "Group": ["A", "A", "B", "B"],
+            "Attribute Value": [1, 2, 3, 4],
+            "Temporal": ["2023-01-01", "2023-01-02", "2023-01-01", "2023-01-02"],
+        }
+        ldf = pl.DataFrame(data)
+
+        mocker.patch(
+            "toolkit.compare_case_groups.temporal_process.build_temporal_count"
+        ).return_value = expected_df_mock
+        result = build_temporal_data(
+            ldf,
+            groups=["Group"],
+            temporal_atts=["2023-01-03"],
+            temporal="Temporal",
+        )
+
+        assert result.is_empty()
+
+    def test_incorrect_groups(self, mocker):
+        data = {
+            "Group": ["A", "A", "B", "B"],
+            "Attribute Value": [1, 2, 3, 4],
+            "Temporal": ["2023-01-01", "2023-01-02", "2023-01-01", "2023-01-02"],
+        }
+        ldf = pl.DataFrame(data)
+
+        mocker.patch(
+            "toolkit.compare_case_groups.temporal_process.build_temporal_count"
+        ).return_value = pl.DataFrame()
+        result = build_temporal_data(
+            ldf,
+            groups=["Group", "NonExistent"],
+            temporal_atts=["2023-01-01", "2023-01-02"],
+            temporal="Temporal",
+        )
+
+        assert result.is_empty()

@@ -84,12 +84,8 @@ def generate_graph_model(df, period_col, type_val_sep):
     att_cols = [
         col for col in df.columns.to_numpy() if col not in ["Subject ID", period_col]
     ]
-    model_df = (
-        df_functions.fix_null_ints(df)
-        .astype(str)
-        .replace("nan", "")
-        .replace("<NA>", "")
-    )
+    model_df = df_functions.fix_null_ints(df)
+
     model_df["Subject ID"] = [str(x) for x in range(1, len(model_df) + 1)]
     model_df["Subject ID"] = model_df["Subject ID"].astype(str)
     pdf = model_df.copy(deep=True)[[period_col, "Subject ID", *att_cols]]
@@ -116,7 +112,7 @@ def generate_graph_model(df, period_col, type_val_sep):
 def compute_attribute_counts(df, pattern, period_col, period, type_val_sep):
     atts = pattern.split(" & ")
     # Combine astype and replace operations
-    fdf = df_functions.fix_null_ints(df).replace({"nan": "", "<NA>": ""}).astype(str)
+    fdf = df_functions.fix_null_ints(df)
     fdf = fdf[fdf[period_col] == period]
 
     # Pre-filter columns to avoid unnecessary processing

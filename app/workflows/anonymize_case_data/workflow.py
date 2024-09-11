@@ -135,11 +135,7 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                             df = sv.anonymize_sensitive_df.value.drop(
                                 columns=["Subject ID"]
                             )
-                            df = (
-                                df_functions.fix_null_ints(df)
-                                .astype(str)
-                                .replace("nan", "")
-                            )
+                            df = df_functions.fix_null_ints(df)
                             sensitive_dataset = Dataset.from_data_frame(df)
 
                             params = (
