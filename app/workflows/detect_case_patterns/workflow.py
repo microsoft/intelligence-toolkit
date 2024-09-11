@@ -43,7 +43,7 @@ def create(sv: ap_variables.SessionVariables, workflow):
     intro_tab, uploader_tab, detect_tab, explain_tab = st.tabs(
         [
             "Detect case patterns workflow:",
-            "Create graph model",
+            "Create attribute model",
             "Detect patterns",
             "Generate AI pattern reports",
         ]
@@ -60,7 +60,6 @@ def create(sv: ap_variables.SessionVariables, workflow):
                 "Upload CSV",
                 sv.detect_case_patterns_last_file_name,
                 sv.detect_case_patterns_input_df,
-                sv.detect_case_patterns_binned_df,
                 sv.detect_case_patterns_final_df,
                 sv.detect_case_patterns_upload_key.value,
                 key="case_patterns_uploader",
@@ -70,10 +69,9 @@ def create(sv: ap_variables.SessionVariables, workflow):
             ui_components.prepare_input_df(
                 "detect_case_patterns",
                 sv.detect_case_patterns_input_df,
-                sv.detect_case_patterns_binned_df,
-                sv.detect_case_patterns_final_df,
-                sv.detect_case_patterns_subject_identifier,
+                sv.detect_case_patterns_final_df
             )
+            sv.detect_case_patterns_final_df.value['Subject ID'] = range(len(sv.detect_case_patterns_final_df.value))
             options = [""] + [
                 c
                 for c in sv.detect_case_patterns_final_df.value.columns.to_numpy()
@@ -96,7 +94,7 @@ def create(sv: ap_variables.SessionVariables, workflow):
 
             ready = len(att_cols) > 0 and sv.detect_case_patterns_time_col.value != ""
 
-            if st.button("Generate graph model", disabled=not ready):
+            if st.button("Generate attribute model", disabled=not ready):
                 with st.spinner("Adding links to model..."):
                     time_col = sv.detect_case_patterns_time_col.value
                     graph_df = sv.detect_case_patterns_final_df.value.copy(deep=True)
