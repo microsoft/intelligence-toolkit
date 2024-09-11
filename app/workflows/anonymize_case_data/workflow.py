@@ -4,7 +4,8 @@
 import math
 import os
 from collections import defaultdict
-
+from json import dumps, loads
+import numpy as np
 import pandas as pd
 import plotly.io as pio
 import streamlit as st
@@ -51,7 +52,6 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                 "Upload sensitive data CSV",
                 sv.anonymize_last_sensitive_file_name,
                 sv.anonymize_raw_sensitive_df,
-                sv.anonymize_processing_df,
                 sv.anonymize_sensitive_df,
                 uploader_key=sv.anonymize_upload_key.value,
                 key="sensitive_data_uploader",
@@ -61,31 +61,23 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
             ui_components.prepare_input_df(
                 workflow,
                 sv.anonymize_raw_sensitive_df,
-                sv.anonymize_processing_df,
-                sv.anonymize_sensitive_df,
-                sv.anonymize_subject_identifier,
+                sv.anonymize_sensitive_df
             )
 
             if len(sv.anonymize_sensitive_df.value) > 0:
                 distinct_counts = []
                 wdf = sv.anonymize_sensitive_df.value
-                att_cols = [col for col in wdf.columns if col != "Subject ID"]
+                att_cols = list(wdf.columns)
                 num_cols = len(att_cols)
-                print(att_cols)
                 for col in wdf.columns.to_numpy():
-                    if col == "Subject ID":
-                        continue
-                    distinct_values = tuple(sorted(wdf[col].astype(str).unique()))
-                    # if distinct_values == tuple(['0', '1']):
-                    #     distinct_counts.append(1)
-                    # else:
+                    distinct_values = [x for x in wdf[col].astype(str).unique() if x not in ["", "nan"]]
                     distinct_counts.append(len(distinct_values))
-                print(distinct_counts)
                 distinct_counts.sort()
                 overall_att_count = sum(distinct_counts)
                 possible_combinations = math.prod(distinct_counts)
-                possible_combinations_per_row = int(round(possible_combinations / wdf.shape[0]))
-                max_combinations_per_record = 2**len(att_cols)
+                possible_combinations_per_row = round(possible_combinations / len(wdf), 1)
+                mean_vals_per_record = sum([len([y for y in x if str(y) not in ['nan', '']]) for x in wdf.to_numpy()]) / wdf.shape[0]
+                max_combinations_per_record = 2**mean_vals_per_record
                 excess_combinations_ratio = possible_combinations_per_row / max_combinations_per_record
                 st.markdown("### Synthesizability summary")
                 st.markdown(
@@ -97,20 +89,24 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                     help="This is the total number of distinct attribute values across all selected columns. The more distinct values, the harder it will be to synthesize data.",
                 )
                 st.markdown(
-                    f"Number of possible combinations: **{possible_combinations}**",
+                    f"Theoretical attribute combinations: **{possible_combinations}**",
                     help="This is the total number of possible attribute combinations across all selected columns. The higher this number, the harder it will be to synthesize data.",
                 )
                 st.markdown(
-                    f"Mean combinations per record: **{possible_combinations_per_row}**",
+                    f"Theoretical combinations per record: **{possible_combinations_per_row}**",
                     help="This is the mean number of possible attribute combinations per sensitive case record. The higher this number, the harder it will be to synthesize data.",
                 )
                 st.markdown(
-                    f"Maximum combinations per record: **{max_combinations_per_record}**",
-                    help="This is the maximum number of possible attribute combinations per record. The higher this number, the harder it will be to synthesize data.",
+                    f"Typical values per record: **{round(mean_vals_per_record, 1)}**",
+                    help="This is the mean number of actual attribute values per sensitive case record. The higher this number, the harder it will be to synthesize data.",
+                )
+                st.markdown(
+                    f"Typical combinations per record: **{round(max_combinations_per_record, 1)}**",
+                    help="This is the number of attribute combinations in a record with the typical number of values.",
                 )
                 st.markdown(
                     f"Excess combinations ratio: **{round(excess_combinations_ratio, 1)}**",
-                    help="This is the ratio of possible combinations per record to the maximum possible combinations per record. The higher this number, the harder it will be to synthesize data. **Rule of thumb**: Aim for a ratio of **5** or lower.",
+                    help="This is the ratio of theoretical combinations per record to the typical combinations per record. The higher this number, the harder it will be to synthesize data. **Rule of thumb**: Aim for a ratio of **5** or lower.",
                 )
 
     with generate_tab:
@@ -131,14 +127,8 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                 with b2:
                     if st.button("Anonymize data"):
                         sv.anonymize_epsilon.value = epsilon
+                        df = sv.anonymize_sensitive_df.value
                         with st.spinner("Anonymizing data..."):
-                            # for col in sv.anonymize_wide_sensitive_df.value.columns:
-                            #     distinct_values = tuple(sorted(sv.anonymize_wide_sensitive_df.value[col].astype(str).unique()))
-                            #     if distinct_values == tuple(['0', '1']):
-                            #         sv.anonymize_sensitive_df.value.replace({col : {'0': ''}}, inplace=True)
-                            df = sv.anonymize_sensitive_df.value.drop(
-                                columns=["Subject ID"]
-                            )
                             df = (
                                 df_functions.fix_null_ints(df)
                                 .astype(str)
@@ -302,7 +292,6 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                 sv.anonymize_last_synthetic_file_name,
                 sv.anonymize_synthetic_df,
                 None,
-                None,
                 uploader_key=sv.anonymize_synthetic_upload_key.value,
                 key="synthetic_data_uploader",
             )
@@ -311,7 +300,6 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                 "Upload aggregate data CSV",
                 sv.anonymize_last_aggregate_file_name,
                 sv.anonymize_aggregate_df,
-                None,
                 None,
                 uploader_key=sv.anonymize_aggregate_upload_key.value,
                 key="aggregate_data_uploader",
@@ -693,3 +681,54 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                 st.markdown("##### Chart")
                 if chart is not None:
                     st.plotly_chart(chart)
+
+    with examples_tab:
+
+        workflow_home = 'example_outputs/anonymize_case_data'
+
+        mock_data_folders = [x for x in os.listdir(f'{workflow_home}')]
+        print(mock_data_folders)
+        mock_dfs = {}
+        selected_data = st.selectbox('Select example', mock_data_folders)
+        if selected_data != None:
+            t1, t2, t3, t4 = st.tabs(['Sensitive data', 'Prepared data', 'Aggregate data', 'Synthetic data'])
+            with t1:
+                data_file = f'{workflow_home}/{selected_data}/{selected_data}_sensitive.csv'
+                df = pd.read_csv(data_file)
+                st.dataframe(df, height=500, use_container_width=True)
+                st.download_button(
+                    label=f'Download {selected_data}_sensitive.csv',
+                    data=df.to_csv(index=False, encoding='utf-8'),
+                    file_name=data_file,
+                    mime='text/csv',
+                )
+            with t2:
+                data_file = f'{workflow_home}/{selected_data}/{selected_data}_prepared.csv'
+                df = pd.read_csv(data_file)
+                st.dataframe(df, height=500, use_container_width=True)
+                st.download_button(
+                    label=f'Download {selected_data}_prepared.csv',
+                    data=df.to_csv(index=False, encoding='utf-8'),
+                    file_name=data_file,
+                    mime='text/csv',
+                )
+            with t3:
+                data_file = f'{workflow_home}/{selected_data}/{selected_data}_aggregate.csv'
+                df = pd.read_csv(data_file)
+                st.dataframe(df, height=500, use_container_width=True)
+                st.download_button(
+                    label=f'Download {selected_data}_aggregate.csv',
+                    data=df.to_csv(index=False, encoding='utf-8'),
+                    file_name=data_file,
+                    mime='text/csv',
+                )
+            with t4:
+                data_file = f'{workflow_home}/{selected_data}/{selected_data}_synthetic.csv'
+                df = pd.read_csv(data_file)
+                st.dataframe(df, height=500, use_container_width=True)
+                st.download_button(
+                    label=f'Download {selected_data}_synthetic.csv',
+                    data=df.to_csv(index=False, encoding='utf-8'),
+                    file_name=data_file,
+                    mime='text/csv',
+                )

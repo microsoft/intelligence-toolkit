@@ -13,7 +13,6 @@ import app.workflows.generate_record_data.workflow as grd_workflow
 
 workflow = "generate_record_data"
 
-
 async def main():
     st.set_page_config(
         layout="wide",
@@ -25,7 +24,7 @@ async def main():
     load_multipage_app(sv)
 
     try:
-        await grd_workflow.create(sv, workflow)
+        grd_workflow.create(sv, workflow)
     except Exception as e:
         if app_in_dev_mode():
             st.exception(e)

@@ -10,14 +10,17 @@ The project page can be found at [github.com/microsoft/intelligence-toolkit](htt
 
 #### What can Intelligence Toolkit do?  
 
-The Intelligence Toolkit aims to help domain experts make sense of real-world data at a speed and scale that wouldn't otherwise be possible. It was specifically designed for analysis of case data and entity data:
+The Intelligence Toolkit aims to help domain experts make sense of real-world data at a speed and scale that wouldn't otherwise be possible. It was specifically designed for analysis of case, entity, and text data:
 
 - **Case Data**
   - Units are structured records describing individual people.
   - Analysis aims to inform *policy* while preserving *privacy*.
 - **Entity Data**
-  - Units are records or documents describing real-world entities.
+  - Units are structured records describing real-world entities.
   - Analysis aims to understand *risks* represented by *relationships*.
+- **Text Data**
+  - Units are collections or instances of unstructured text documents.
+  - Analysis aims to retrieve *information* and summarize *themes*.
 
 #### What are Intelligence Toolkit's intended uses?
 
@@ -30,9 +33,12 @@ It supports a variety of interactive workflows, each designed to address a speci
   - [**Detect Case Patterns**](/app/workflows/detect_case_patterns/README.md) generates reports on attribute patterns detected in streams of case records.
   - [**Compare Case Groups**](/app/workflows/compare_case_groups/README.md) generates reports by defining and comparing groups of case records.
 - **Entity Intelligence Workflows**
-  - [**Match Entity Recordsg**](/app/workflows/match_entity_records/README.md) generates reports on record matches detected across entity datasets.
+  - [**Match Entity Records**](/app/workflows/match_entity_records/README.md) generates reports on record matches detected across entity datasets.
   - [**Detect Entity Networks**](/app/workflows/detect_entity_networks/README.md) generates reports on risk exposure for networks of related entities.
+- **Text Intelligence Workflows**
   - [**Query Text Data**](/app/workflows/query_text_data/README.md) generates reports from a collection of text documents.
+
+In addition, the [**Generate Record Data**](/app/workflows/generate_record_data/README.md) workflow can be used to generate mock case or entity data following a JSON schema defined or uploaded by the user.
 
 #### How was Intelligence Toolkit evaluated?
 
