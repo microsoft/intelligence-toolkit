@@ -27,16 +27,16 @@ The Intelligence Toolkit is designed to be used by domain experts who are famili
 It supports a variety of interactive workflows, each designed to address a specific type of intelligence task:
 
 - **Case Intelligence Workflows**
-  - [`Anonymize Case Data`](/app/workflows/anonymize_case_data/README.md) generates differentially-private datasets and summaries from sensitive case records.
-  - [`Detect Case Patterns`](/app/workflows/detect_case_patterns/README.md) generates reports on patterns of attribute values detected in streams of case records.
-  - [`Compare Case Groups`](/app/workflows/compare_case_groups/README.md) generates reports by defining and comparing groups of case records.
+  - [`Anonymize Case Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/anonymize_case_data/README.md) generates differentially-private datasets and summaries from sensitive case records.
+  - [`Detect Case Patterns`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/detect_case_patterns/README.md) generates reports on patterns of attribute values detected in streams of case records.
+  - [`Compare Case Groups`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/compare_case_groups/README.md) generates reports by defining and comparing groups of case records.
 - **Entity Intelligence Workflows**
-  - [`Match Entity Records`](/app/workflows/match_entity_records/README.md) generates reports on record matches detected across entity datasets.
-  - [`Detect Entity Networks`](/app/workflows/detect_entity_networks/README.md) generates reports on risk exposure for networks of related entities.
+  - [`Match Entity Records`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/match_entity_records/README.md) generates reports on record matches detected across entity datasets.
+  - [`Detect Entity Networks`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/detect_entity_networks/README.md) generates reports on risk exposure for networks of related entities.
 - **Text Intelligence Workflows**
-  - [`Query Text Data`](/app/workflows/query_text_data/README.md) generates reports from a collection of text documents.
+  - [`Query Text Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/query_text_data/README.md) generates reports from a collection of text documents.
 
-In addition, the [`Generate Record Data`](/app/workflows/generate_record_data/README.md) workflow can be used to generate mock case or entity data following a JSON schema defined or uploaded by the user.
+In addition, the [`Generate Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_record_data/README.md) workflow can be used to generate mock case or entity data following a JSON schema defined or uploaded by the user.
 
 #### How was Intelligence Toolkit evaluated?
 
@@ -87,6 +87,32 @@ All use of Intelligence Toolkit should be consistent with this documentation. In
 - Pursuing any illegal purpose.
 - Identifying or evaluating individuals.
 - Establishing criminal activity.
+
+## Getting Started
+
+#### Which Intelligence Toolkit workflow is right for my data and task?
+
+Use the diagram to identify an appropriate workflow, from the left sidebar while running the application.
+
+```mermaid
+%%{init: {"flowchart": {"htmlLabels": true}} }%%
+flowchart TD
+    NoData["<b>Input</b>: None"] --> |"<b>Generate Record Data</b><br/>workflow"| MockData["Mock Data"]
+    MockData["AI Mock Data"] --> PersonalData["<b>Input</b>: Personal Case Records"]
+    MockData["AI Mock Data"] --> CaseRecords["<b>Input</b>: Case Records"]
+    MockData["AI Mock Data"] --> EntityData["<b>Input</b>: Entity Records"]
+    PersonalData["<b>Input</b>: Personal Case Records"] ----> |"<b>Anonymize Case Data</b><br/>workflow"| AnonData["Anonymous Case Records"]
+    EntityData["<b>Input</b>: Entity Records"] ---> HasTime{"Time<br/>Attributes?"}
+    CaseRecords["<b>Input</b>: Case Records"] ---> HasTime{"Time<br/>Attributes?"}
+    HasTime{"Time<br/>Attributes?"} --> |"<b>Detect Case Patterns</b><br/>workflow"| CasePatterns["AI Pattern Reports"]
+    EntityData["<b>Input</b>: Entity Records"] ---> HasGroups{"Grouping<br/>Attributes?"}
+    CaseRecords["<b>Input</b>: Case Records"] ---> HasGroups{"Grouping<br/>Attributes?"}
+    HasGroups{"Grouping<br/>Attributes?"} --> |"<b>Compare Case Records</b><br/>workflow"| MatchedEntities["AI Group Reports"]
+    EntityData["<b>Input</b>: Entity Records"] ---> HasInconsistencies{"Inconsistent<br/>Attributes?"} --> |"<b>Match Entity Records</b><br/>workflow"| RecordLinking["AI Match Reports"]
+    EntityData["<b>Input</b>: Entity Records"] ---> HasIdentifiers{"Identifying<br/>Attributes?"} --> |"<b>Detect Entity Networks</b><br/>workflow"| NetworkAnalysis["AI Network Reports"]
+    TextDocs["<b>Input:</b> Text Data"] ------> |"<b>Query Text Data</b><br/>workflow"| AnswerReports["AI Answer Reports"]
+```
+
 
 ## Diving Deeper
 

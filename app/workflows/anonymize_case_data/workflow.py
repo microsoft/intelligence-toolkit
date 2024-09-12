@@ -5,6 +5,7 @@ import math
 import os
 from collections import defaultdict
 from json import dumps, loads
+
 import numpy as np
 import pandas as pd
 import plotly.io as pio
@@ -23,8 +24,12 @@ import app.workflows.anonymize_case_data.classes as classes
 import app.workflows.anonymize_case_data.config as config
 import app.workflows.anonymize_case_data.functions as functions
 import app.workflows.anonymize_case_data.variables as ds_variables
-from app.tutorials import get_tutorial
-from toolkit.anonymize_case_data import get_readme as get_intro
+
+
+def get_intro():
+    file_path = os.path.join(os.path.dirname(__file__), "README.md")
+    with open(file_path) as file:
+        return file.read()
 
 
 def create(sv: ds_variables.SessionVariables, workflow: None):
@@ -39,7 +44,7 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
     )
     df = None
     with intro_tab:
-        st.markdown(get_intro() + get_tutorial(workflow))
+        st.markdown(get_intro())
     with prepare_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:

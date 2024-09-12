@@ -2,6 +2,8 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 
+import os
+
 # ruff: noqa
 import pandas as pd
 import polars as pl
@@ -19,8 +21,6 @@ from streamlit_agraph import Edge, Node, agraph
 from util import ui_components
 from util.session_variables import SessionVariables
 
-from app.tutorials import get_tutorial
-from toolkit.detect_entity_networks import get_readme as get_intro
 from toolkit.detect_entity_networks import prompts
 from toolkit.detect_entity_networks.config import (
     ENTITY_LABEL,
@@ -57,6 +57,12 @@ from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 
+def get_intro():
+    file_path = os.path.join(os.path.dirname(__file__), "README.md")
+    with open(file_path) as file:
+        return file.read()
+
+
 async def create(sv: rn_variables.SessionVariables, workflow=None):
     sv_home = SessionVariables("home")
 
@@ -71,7 +77,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
     )
     selected_df = None
     with intro_tab:
-        st.markdown(get_intro() + get_tutorial("detect_entity_networks"))
+        st.markdown(get_intro())
     with uploader_tab:
         uploader_col, model_col = st.columns([3, 2])
         with uploader_col:

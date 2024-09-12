@@ -1,6 +1,6 @@
 # Anonymize Case Data
 
-The `Anonymize Case Data` workflow generates differentially-private datasets and data summaries from sensitive case records.
+The [`Anonymize Case Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/anonymize_case_data/README.md) workflow generates differentially-private datasets and data summaries from sensitive case records.
 
 Select the `View example outputs` tab (in app) or navigate to [example_outputs/anonymize_case_data](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/anonymize_case_data) (on GitHub) for examples.
 
@@ -13,18 +13,18 @@ Select the `View example outputs` tab (in app) or navigate to [example_outputs/a
 
 ## Use with other workflows
 
-`Anonymize Case Data` can be used to anonymize case data for privacy-preserving analysis in any other workflow accepting structured records as input:
+[`Anonymize Case Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/anonymize_case_data/README.md) can be used to anonymize case data for privacy-preserving analysis in any other workflow accepting structured records as input:
 
-- `Detect Case Patterns`
+- [`Detect Case Patterns`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/detect_case_patterns/README.md)
 - `Compare Case Groups`
 
-`Generate Record Data` can also be used to generate mock data for demonstration or evaluation of the `Anonymize Case Data` workflow.
+[`Generate Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_record_data/README.md) can also be used to generate mock data for demonstration or evaluation of the [`Anonymize Case Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/anonymize_case_data/README.md) workflow.
 
 ## Tutorial
 
 The task for this tutorial is creating an anonymous version of the `customer_complaints` dataset available for download either:
 
-- in app, via `Generate Record Data` workflow &rarr; `View example outputs` tab &rarr; `Mock data` tab
+- in app, via [`Generate Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_record_data/README.md) workflow &rarr; `View example outputs` tab &rarr; `Mock data` tab
 - on GitHub, at [example_outputs/generate_record_data/customer_complaints](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/generate_record_data/customer_complaints).
 
 The format of this dataset is as follows, with each row representing an individual customer and their complaint:
@@ -54,7 +54,7 @@ Continuing the above example, imagine the neighbour in question lives in a very 
 
 ### Anonymization via DP data synthesis
 
-The `Anonymize Case Data` workflow uses the differentially-private data synthesizer of [Synthetic Data Showcase](https://github.com/microsoft/synthetic-data-showcase) to create a synthetic dataset with the same structure and statistics as a sensitive input dataset while providing strong statistical protection against all possible privacy attacks. It achieves this through a two-step process:
+The [`Anonymize Case Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/anonymize_case_data/README.md) workflow uses the differentially-private data synthesizer of [Synthetic Data Showcase](https://github.com/microsoft/synthetic-data-showcase) to create a synthetic dataset with the same structure and statistics as a sensitive input dataset while providing strong statistical protection against all possible privacy attacks. It achieves this through a two-step process:
 
 1. All possible combinations of up to four attribute values are considered (even those not present in the data), and calibrated noise is added to the associated counts of records such that the presence or absense of any arbitrary record is not detectable (i.e., the counts are differentially private).
 2. These DP aggregate counts or "marginals" are iteratively sampled to create synthetic data records consistent with the counts of individual attribute values in the original sensitive dataset, reproducing the DP aggregate counts as accurately as possible while retaining differential privacy.

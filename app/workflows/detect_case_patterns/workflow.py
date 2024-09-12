@@ -1,12 +1,13 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 #
-import altair as alt
-import os
 import io
-import PIL
-import pandas as pd
+import os
+
+import altair as alt
 import numpy as np
+import pandas as pd
+import PIL
 import streamlit as st
 from st_aggrid import (
     AgGrid,
@@ -17,10 +18,8 @@ from st_aggrid import (
 )
 
 import app.workflows.detect_case_patterns.variables as ap_variables
-from app.tutorials import get_tutorial
 from app.util import ui_components
 from toolkit.AI.classes import LLMCallback
-from toolkit.detect_case_patterns import get_readme as get_intro
 from toolkit.detect_case_patterns import prompts
 from toolkit.detect_case_patterns.model import (
     compute_attribute_counts,
@@ -44,6 +43,12 @@ from .config import (
 )
 
 
+def get_intro():
+    file_path = os.path.join(os.path.dirname(__file__), "README.md")
+    with open(file_path) as file:
+        return file.read()
+
+
 def create(sv: ap_variables.SessionVariables, workflow):
     intro_tab, uploader_tab, detect_tab, explain_tab, examples_tab = st.tabs(
         [
@@ -57,7 +62,7 @@ def create(sv: ap_variables.SessionVariables, workflow):
     selected_pattern = ""
     graph_df = None
     with intro_tab:
-        st.markdown(get_intro() + get_tutorial("detect_case_patterns"))
+        st.markdown(get_intro())
     with uploader_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:
