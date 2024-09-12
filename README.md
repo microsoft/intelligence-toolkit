@@ -106,7 +106,7 @@ Use the diagram to identify an appropriate workflow, from the left sidebar while
 
 ```mermaid
 %%{init: {
-  'theme': 'dark',
+  'theme': 'neutral',
   "flowchart": {"htmlLabels": true}} }%%
 flowchart TD
     NoData["<b>Input</b>: None"] --> |"<b>Generate Record Data</b><br/>workflow"| MockData["Mock Data"]
