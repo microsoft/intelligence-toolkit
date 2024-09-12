@@ -6,9 +6,8 @@ Select the `View example outputs` tab (in app) or navigate to [example_outputs/a
 
 ## Input requirements
 
-- The input data file should be in CSV format and represent individual data subjects.
-- Individual data subjects may be represented by a single row, in which case no identifier is required, or by multiple rows, in which case an identifier is required to link these rows into a single record.
-- For data synthesis, each individual must be represented as a collection of discrete (i.e., categorical or binary) attributes. Any continuous attributes must first be quantized via the user interface.
+- The input data file should be in CSV format with each row representing a different case (i.e., individual person or data subject).
+- For data synthesis, each case must be represented as a collection of discrete (i.e., categorical or binary) attributes. Any continuous attributes must first be quantized via the user interface.
 - Given the goal of creating an anonymous dataset, no direct identifiers (e.g., names, aliases, ids, phone numbers, email addresses, street addresses) should be included in data outputs. Following the principle of [data minimization](https://en.wikipedia.org/wiki/Data_minimization), such direct identifiers should be removed from data inputs because they are not required for the processing purpose and create unnecessary risks for the data subject. Tools such as Microsoft Excel can be used to delete any direct identifier columns prior to use in Intelligence Toolkit.
 - The nature of differential privacy means that indirect identifiers (e.g., age range, year of birth, gender, country, city) may be freely included in the data inputs. None of the combinations of these identifiers (or of any attributes) in the output data allow the presence of individuals to be inferred with any degree of certainty.
 
@@ -23,7 +22,10 @@ Select the `View example outputs` tab (in app) or navigate to [example_outputs/a
 
 ## Tutorial
 
-The task for this tutorial is creating an anonymous version of the `customer_complaints_3k.csv` dataset available for download either from the `View example outputs` tab of the `Generate Record Data` workflow, or from the GitHub repo [here](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/generate_record_data/customer_complaints).
+The task for this tutorial is creating an anonymous version of the `customer_complaints` dataset available for download either:
+
+- in app, via `Generate Record Data` workflow &rarr; `View example outputs` tab &rarr; `Mock data` tab
+- on GitHub, at [example_outputs/generate_record_data/customer_complaints](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/generate_record_data/customer_complaints).
 
 The format of this dataset is as follows, with each row representing an individual customer and their complaint:
 
@@ -65,13 +67,9 @@ Since the above approach to DP data synthesis works by controlling the release o
 2. Suppressing insignificant values that hold little analytical value (e.g., binary 0 or boolean false indicating absence of an attribute)
 3. Selecting the minimum set of data columns (i.e., attributes) necessary to support downstream analysis and reporting tasks.
 
-We can now work though the steps of senstive data preparation using the `customer_complaints_3k.csv` dataset above.
+We can now work though the steps of senstive data preparation using the `customer_complaints_data.csv` dataset above.
 
-First, navigate to the `Prepare sensitive data` tab, select `Browse files`, and upload the `customer_complaints_3k.csv` dataset. A preview of the dataset should appear below.
-
-#### Set subject identifier
-
-Select `Set subject identifier` to expand the dropdown and indicate how individual data subjects (i.e., natural persons) are represented in the dataset. Since each record of the data file represents a different data subject, we can leave `Row number` as the selected option. Select the header again to collapse the dropdown and continue.
+First, navigate to the `Prepare sensitive data` tab, select `Browse files`, and upload the `customer_complaints_data.csv` dataset. A preview of the dataset should appear below.
 
 #### Select attribute columns to include
 

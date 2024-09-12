@@ -1,12 +1,10 @@
 # Intelligence Toolkit
 
-#### What is Intelligence Toolkit?
-
-The Intelligence Toolkit is a suite of interactive workflows for creating AI intelligence reports from real-world data sources. The toolkit is designed to help users identify patterns, answers, relationships, and risks within complex datasets, with generative AI ([OpenAI GPT models](https://platform.openai.com/docs/models/)) used to create reports on findings of interest.
-
-#### How do I run Intelligence Toolkit? 
+The Intelligence Toolkit is a suite of interactive workflows for creating AI intelligence reports from real-world data sources. It helps users to identify patterns, themes, relationships, and risks within complex datasets, with generative AI ([GPT models](https://platform.openai.com/docs/models/)) used to create reports on findings of interest.
 
 The project page can be found at [github.com/microsoft/intelligence-toolkit](https://github.com/microsoft/intelligence-toolkit/). Instructions on how to run and deploy Intelligence Toolkit can be found [here](https://github.com/microsoft/intelligence-toolkit/blob/main/DEVELOPING.md).
+
+## Transparency FAQ
 
 #### What can Intelligence Toolkit do?  
 
@@ -29,16 +27,16 @@ The Intelligence Toolkit is designed to be used by domain experts who are famili
 It supports a variety of interactive workflows, each designed to address a specific type of intelligence task:
 
 - **Case Intelligence Workflows**
-  - [**Anonymize Case Data**](/app/workflows/anonymize_case_data/README.md) generates differentially-private datasets and summaries from sensitive case records.
-  - [**Detect Case Patterns**](/app/workflows/detect_case_patterns/README.md) generates reports on attribute patterns detected in streams of case records.
-  - [**Compare Case Groups**](/app/workflows/compare_case_groups/README.md) generates reports by defining and comparing groups of case records.
+  - [`Anonymize Case Data`](/app/workflows/anonymize_case_data/README.md) generates differentially-private datasets and summaries from sensitive case records.
+  - [`Detect Case Patterns`](/app/workflows/detect_case_patterns/README.md) generates reports on patterns of attribute values detected in streams of case records.
+  - [`Compare Case Groups`](/app/workflows/compare_case_groups/README.md) generates reports by defining and comparing groups of case records.
 - **Entity Intelligence Workflows**
-  - [**Match Entity Records**](/app/workflows/match_entity_records/README.md) generates reports on record matches detected across entity datasets.
-  - [**Detect Entity Networks**](/app/workflows/detect_entity_networks/README.md) generates reports on risk exposure for networks of related entities.
+  - [`Match Entity Records`](/app/workflows/match_entity_records/README.md) generates reports on record matches detected across entity datasets.
+  - [`Detect Entity Networks`](/app/workflows/detect_entity_networks/README.md) generates reports on risk exposure for networks of related entities.
 - **Text Intelligence Workflows**
-  - [**Query Text Data**](/app/workflows/query_text_data/README.md) generates reports from a collection of text documents.
+  - [`Query Text Data`](/app/workflows/query_text_data/README.md) generates reports from a collection of text documents.
 
-In addition, the [**Generate Record Data**](/app/workflows/generate_record_data/README.md) workflow can be used to generate mock case or entity data following a JSON schema defined or uploaded by the user.
+In addition, the [`Generate Record Data`](/app/workflows/generate_record_data/README.md) workflow can be used to generate mock case or entity data following a JSON schema defined or uploaded by the user.
 
 #### How was Intelligence Toolkit evaluated?
 

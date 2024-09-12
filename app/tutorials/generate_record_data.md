@@ -70,4 +70,7 @@ All `Data configuration controls` are as follows:
 
 Press `Generate mock data` to generate mock data according to the schema and configuration. Each record array in the JSON schema will be converted into CSV format and shown in its own tab (in this example, there will be just a single tab for `complaint_records`). Both the JSON object for the entire dataset and CSV files for each record array may be downloaded using the buttons provided.
 
-The outputs of this tutorial are available for download in the `View example outputs` tab under the `customer_complaints` dataset, or from the GitHub repo [here](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/generate_record_data/customer_complaints).
+The outputs of this tutorial are available for download either:
+
+- in app, via `Generate Record Data` workflow &rarr; `View example outputs` tab &rarr; `Mock data` tab
+- on GitHub, at [example_outputs/generate_record_data/customer_complaints](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/generate_record_data/customer_complaints).

@@ -24,7 +24,7 @@ import app.workflows.anonymize_case_data.config as config
 import app.workflows.anonymize_case_data.functions as functions
 import app.workflows.anonymize_case_data.variables as ds_variables
 from app.tutorials import get_tutorial
-from toolkit.anonymize_code_data import get_readme as get_intro
+from toolkit.anonymize_case_data import get_readme as get_intro
 
 
 def create(sv: ds_variables.SessionVariables, workflow: None):

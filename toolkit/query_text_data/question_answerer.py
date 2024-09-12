@@ -66,7 +66,8 @@ async def answer_question(
             question, embedding_cache
         )
     )
-    relevant, seen = helper_functions.test_history_elements(test_history)
+    relevant, seen, adjacent = helper_functions.test_history_elements(test_history, previous_cid, next_cid, adjacent_search_steps)
+
     cosine_distances = sorted(
         [
             (cid, scipy.spatial.distance.cosine(aq_embedding, vector))
@@ -103,22 +104,23 @@ async def answer_question(
     successive_irrelevant = 0
     eliminated_communities = set()
 
-    while len(test_history) < relevance_test_budget:
+    while len(test_history) + len(adjacent) < relevance_test_budget:
         print(f'New loop after {len(test_history)} tests')
         relevant_this_loop = False
-        narrowed_community_sequence = community_sequence #[c for c in community_sequence if c not in eliminated_communities]
-        for community in narrowed_community_sequence:
-            relevant, seen = helper_functions.test_history_elements(test_history)
+
+        for community in community_sequence:
+            relevant, seen, adjacent = helper_functions.test_history_elements(test_history, previous_cid, next_cid, adjacent_search_steps)
             unseen_cids = [c for c in community_to_semantic_search_cids[community] if c not in seen][:community_relevance_tests]
             if len(unseen_cids) > 0:
                 is_relevant = await relevance_assessor.assess_relevance(
                     ai_configuration=ai_configuration,
-                    search_label=f"community {community}",
+                    search_label=f"topic {community}",
                     search_cids=unseen_cids,
                     cid_to_text=cid_to_text,
                     question=question,
                     logit_bias=logit_bias,
                     relevance_test_budget=relevance_test_budget,
+                    num_adjacent=len(adjacent),
                     relevance_test_batch_size=relevance_test_batch_size,
                     test_history=test_history,
                     progress_callback=chunk_progress_callback,
@@ -139,32 +141,26 @@ async def answer_question(
             print('Nothing relevant this loop')
             break
 
-    relevant, seen = helper_functions.test_history_elements(test_history)
+    relevant, seen, adjacent = helper_functions.test_history_elements(test_history, previous_cid, next_cid, adjacent_search_steps)
 
-    # Finally, we do detail/adjacent search, which is a search of the chunks adjacent to the relevant chunks.
-    adjacent_sources = list(relevant)
-    adjacent_targets = set()
-    for c in adjacent_sources:
-        adjacent_targets.update(helper_functions.get_adjacent_chunks(c, previous_cid, next_cid, adjacent_search_steps))
-    adjacent_search_cids = [x for x in adjacent_targets if x not in seen]
-    print(f'Adjacent: {adjacent_search_cids}')
     await relevance_assessor.assess_relevance(
         ai_configuration=ai_configuration,
-        search_label="detail",
-        search_cids=adjacent_search_cids,
+        search_label="neighbours",
+        search_cids=adjacent,
         cid_to_text=cid_to_text,
         question=question,
         logit_bias=logit_bias,
         relevance_test_budget=relevance_test_budget,
+        num_adjacent=len(adjacent),
         relevance_test_batch_size=relevance_test_batch_size,
         test_history=test_history,
         progress_callback=chunk_progress_callback,
         chunk_callback=chunk_callback,
     )
-    relevant_cids, seen_cids = helper_functions.test_history_elements(test_history)
-    relevant_cids.sort()
-    seen_cids.sort()
-    relevant_texts = [cid_to_text[cid] for cid in relevant_cids]
+    relevant, seen, adjacent = helper_functions.test_history_elements(test_history, previous_cid, next_cid, adjacent_search_steps)
+    relevant.sort()
+    seen.sort()
+    relevant_texts = [cid_to_text[cid] for cid in relevant]
     answer_builder.generate_answers(
         ai_configuration=ai_configuration,
         answer_object=answer_object,
@@ -177,7 +173,7 @@ async def answer_question(
         progress_callback=answer_progress_callback,
     )
     return (
-        relevant_cids, 
+        relevant, 
         answer_stream,
         helper_functions.get_test_progress(test_history),
         helper_functions.get_answer_progress(answer_history)

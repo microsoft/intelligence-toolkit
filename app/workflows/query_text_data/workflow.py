@@ -159,7 +159,7 @@ async def create(sv: SessionVariables, workflow=None):
     )
 
     with intro_tab:
-        st.markdown(get_intro() + get_tutorial("query_text_data"))
+        st.markdown(get_intro() + get_tutorial("query_text_data"), unsafe_allow_html=True)
     with uploader_tab:
         st.markdown("##### Upload data for processing")
         files = st.file_uploader(
@@ -314,14 +314,14 @@ async def create(sv: SessionVariables, workflow=None):
                 )
             with c2:
                 st.number_input(
-                    "Tests/community/round",
+                    "Tests/topic/round",
                     value=sv.relevance_test_batch_size.value,
                     key=sv.relevance_test_batch_size.key,
                     min_value=0,
                 )
             with c3:
                 st.number_input(
-                    "Restart on irrelevant communities",
+                    "Restart on irrelevant topics",
                     value=sv.irrelevant_community_restart.value,
                     key=sv.irrelevant_community_restart.key,
                     min_value=0,
@@ -362,10 +362,10 @@ async def create(sv: SessionVariables, workflow=None):
             answer_placeholder = st.empty()
 
         def on_chunk_progress(message):
-            chunk_progress_placeholder.markdown(message)
+            chunk_progress_placeholder.markdown(message, unsafe_allow_html=True)
 
         def on_answer_progress(message):
-            answer_progress_placeholder.markdown(message)
+            answer_progress_placeholder.markdown(message, unsafe_allow_html=True)
 
         def on_chunk_relevant(message):
             chunk_placeholder.dataframe(
@@ -379,10 +379,10 @@ async def create(sv: SessionVariables, workflow=None):
             )
 
         def on_answer(message):
-            answer_placeholder.markdown(message[0])
+            answer_placeholder.markdown(message[0], unsafe_allow_html=True)
 
-        chunk_progress_placeholder.markdown(sv.chunk_progress.value)
-        answer_progress_placeholder.markdown(sv.answer_progress.value)
+        chunk_progress_placeholder.markdown(sv.chunk_progress.value, unsafe_allow_html=True)
+        answer_progress_placeholder.markdown(sv.answer_progress.value, unsafe_allow_html=True)
         chunk_placeholder.dataframe(
             pd.DataFrame(
                 columns=["Relevant text chunks (double click to expand)"],
@@ -395,15 +395,15 @@ async def create(sv: SessionVariables, workflow=None):
         answer_text = (
             sv.partial_answers.value[0] if len(sv.partial_answers.value) > 0 else ""
         )
-        answer_placeholder.markdown(answer_text)
+        answer_placeholder.markdown(answer_text, unsafe_allow_html=True)
 
         if sv.last_question.value != "" and regenerate:
             sv.relevant_cids.value = []
             sv.partial_answers.value = []
             sv.chunk_progress.value = ""
             sv.answer_progress.value = ""
-            chunk_progress_placeholder.markdown(sv.chunk_progress.value)
-            answer_progress_placeholder.markdown(sv.answer_progress.value)
+            chunk_progress_placeholder.markdown(sv.chunk_progress.value, unsafe_allow_html=True)
+            answer_progress_placeholder.markdown(sv.answer_progress.value, unsafe_allow_html=True)
             chunk_placeholder.dataframe(
                 pd.DataFrame(
                     columns=["Relevant text chunks (double click to expand)"],
@@ -416,7 +416,7 @@ async def create(sv: SessionVariables, workflow=None):
             answer_text = (
                 sv.partial_answers.value[0] if len(sv.partial_answers.value) > 0 else ""
             )
-            answer_placeholder.markdown(answer_text)
+            answer_placeholder.markdown(answer_text, unsafe_allow_html=True)
             (
                 sv.relevant_cids.value,
                 sv.partial_answers.value,
@@ -489,7 +489,7 @@ async def create(sv: SessionVariables, workflow=None):
                         gen_placeholder.warning(
                             "Press the Generate button to create an AI report for the current question."
                         )
-                report_placeholder.markdown(sv.final_report.value)
+                report_placeholder.markdown(sv.final_report.value, unsafe_allow_html=True)
 
                 if len(sv.final_report.value) > 0:
                     is_download_disabled = sv.final_report.value == ""

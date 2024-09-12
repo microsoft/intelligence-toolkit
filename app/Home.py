@@ -43,6 +43,9 @@ def main():
         transparency_faq
         + "\n\n"
         + """\
+        
+## Getting Started
+
 #### Which Intelligence Toolkit workflow is right for my data and task?
 
 Use the diagram to identify an appropriate workflow, then open the workflow from the sidebar to the left.

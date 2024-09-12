@@ -55,7 +55,10 @@ def get_test_progress(test_history):
     for ix, (search, chunk, response) in enumerate(test_history):
         if search != current_search:
             if current_search != "":
-                rounds.append(f"{current_search}: {current_relevant}/{current_tested}")
+                if current_relevant > 0:
+                    rounds.append(f"{current_search}: {current_relevant}/{current_tested}")
+                else:
+                    rounds.append(f"<span style='color: red'>{current_search}: {current_relevant}/{current_tested}</span>")
             current_search = search
             current_relevant = 0
             current_tested = 0
@@ -65,7 +68,10 @@ def get_test_progress(test_history):
             current_relevant += 1
             total_relevant += 1
     if current_search != "":
-        rounds.append(f"{current_search}: {current_relevant}/{current_tested}")
+        if current_relevant > 0:
+            rounds.append(f"{current_search}: {current_relevant}/{current_tested}")
+        else:
+            rounds.append(f"<span style='color: red'>{current_search}: {current_relevant}/{current_tested}</span>")
     response = f"**Chunks relevant/tested: {total_relevant}/{total_tested}**"
     if len(rounds) > 0:
         response += " (" + "; ".join(rounds) + ")"
@@ -82,16 +88,20 @@ def get_answer_progress(answer_history):
     progress = f"**Chunks referenced/relevant: {sum_used}/{sum_provided}**"
     if len(answer_history) > 0:
         progress += " ("
-        for used_chunks, provided_chunks in answer_history:
-            progress += f"{used_chunks}/{provided_chunks}, "
+        for ix, (used_chunks, provided_chunks) in enumerate(answer_history):
+            progress += f"answer {ix+1}: {used_chunks}/{provided_chunks}, "
         progress = progress[:-2] + ")"
     return progress
 
 
-def test_history_elements(test_history):
+def test_history_elements(test_history, previous_cid, next_cid, adjacent_search_steps):
     relevant_list = [x[1] for x in test_history if x[2] == "Yes"]
     seen_list = [x[1] for x in test_history]
-    return relevant_list, seen_list
+    adjacent_targets = set()
+    for c in relevant_list:
+        adjacent_targets.update(get_adjacent_chunks(c, previous_cid, next_cid, adjacent_search_steps))
+    adjacent_list = [x for x in adjacent_targets if x not in seen_list]
+    return relevant_list, seen_list, adjacent_list
 
 
 async def embed_texts(
