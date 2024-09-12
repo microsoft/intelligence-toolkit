@@ -10,74 +10,61 @@ from toolkit.AI.metaprompts import do_not_harm
 from toolkit.AI.utils import generate_messages
 from toolkit.helpers import df_functions
 
-from .detection_functions import (
-    create_close_node_rows,
-    create_pattern_rows,
-    create_period_to_patterns,
-)
+from .detection_functions import (create_close_node_rows, create_pattern_rows,
+                                  create_period_to_patterns)
 from .graph_functions import convert_edge_df_to_graph, create_edge_df_from_atts
 from .prompts import report_prompt, user_prompt
 from .record_counter import RecordCounter
 
+# def prepare_data(data_df):
+#     melted = data_df.melt(
+#         id_vars=["Subject ID"], var_name="Attribute", value_name="Value"
+#     att_to_subject_to_vals = defaultdict(lambda: defaultdict(set))
+#     for _i, row in melted.iterrows():
+#         att_to_subject_to_vals[row["Attribute"]][row["Subject ID"]].add(row["Value"])
 
-def prepare_data(data_df, identifier_col=None):
-    if not identifier_col:
+#     # define expanded atts as all attributes with more than one value for a given subject
+#     expanded_atts = []
+#     for att, subject_to_vals in att_to_subject_to_vals.items():
+#         max_count = max(len(vals) for vals in subject_to_vals.values())
+#         if max_count > 1:
+#             expanded_atts.append(att)
+#     if len(expanded_atts) > 0:
+#         new_rows = []
+#         for _, row in melted.iterrows():
+#             if row["Attribute"] in expanded_atts:
+#                 if str(row["Value"]) not in ["", "<NA>"]:
+#                     new_rows.append(
+#                         [
+#                             row["Subject ID"],
+#                             row["Attribute"] + "_" + str(row["Value"]),
+#                             "1",
+#                         ]
+#                     )
+#             else:
+#                 new_rows.append(
+#                     [
+#                         row["Subject ID"],
+#                         row["Attribute"],
+#                         str(row["Value"]),
+#                     ]
+#                 )
+#         melted = pd.DataFrame(new_rows, columns=["Subject ID", "Attribute", "Value"])
+#         # convert back to wide format
+#         wdf = melted.pivot(
+#             index="Subject ID", columns="Attribute", values="Value"
+#         ).reset_index()
+#         # wdf = wdf.drop(columns=['Subject ID'])
 
-        data_df["Subject ID"] = list(range(len(data_df)))
-    else:
-        data_df["Subject ID"] = list(data_df.value[identifier_col])
+#         output_df_var = wdf
+#     else:
+#         wdf = data_df.copy()
 
-    # Drop empty Subject ID rows
-    filtered = data_df.dropna(subset=["Subject ID"])
-    melted = filtered.melt(
-        id_vars=["Subject ID"], var_name="Attribute", value_name="Value"
-    ).drop_duplicates()
-    att_to_subject_to_vals = defaultdict(lambda: defaultdict(set))
-    for _i, row in melted.iterrows():
-        att_to_subject_to_vals[row["Attribute"]][row["Subject ID"]].add(row["Value"])
-
-    # define expanded atts as all attributes with more than one value for a given subject
-    expanded_atts = []
-    for att, subject_to_vals in att_to_subject_to_vals.items():
-        max_count = max(len(vals) for vals in subject_to_vals.values())
-        if max_count > 1:
-            expanded_atts.append(att)
-    if len(expanded_atts) > 0:
-        new_rows = []
-        for _, row in melted.iterrows():
-            if row["Attribute"] in expanded_atts:
-                if str(row["Value"]) not in ["", "<NA>"]:
-                    new_rows.append(
-                        [
-                            row["Subject ID"],
-                            row["Attribute"] + "_" + str(row["Value"]),
-                            "1",
-                        ]
-                    )
-            else:
-                new_rows.append(
-                    [
-                        row["Subject ID"],
-                        row["Attribute"],
-                        str(row["Value"]),
-                    ]
-                )
-        melted = pd.DataFrame(new_rows, columns=["Subject ID", "Attribute", "Value"])
-        # convert back to wide format
-        wdf = melted.pivot(
-            index="Subject ID", columns="Attribute", values="Value"
-        ).reset_index()
-        # wdf = wdf.drop(columns=['Subject ID'])
-
-        output_df_var = wdf
-    else:
-        wdf = data_df.copy()
-
-    output_df_var = wdf
-    output_df_var.replace({"<NA>": np.nan}, inplace=True)
-    output_df_var.replace({"nan": ""}, inplace=True)
-    output_df_var.replace({"1.0": "1"}, inplace=True)
-    return output_df_var
+#     output_df_var = wdf
+#     output_df_var.replace({"<NA>": np.nan}, inplace=True)
+#     output_df_var.replace({"nan": ""}, inplace=True)
+#     output_df_var.replace({"1.0": "1"}, inplace=True)
+#     return output_df_var
 
 
 def generate_graph_model(df, period_col, type_val_sep):
@@ -117,7 +104,7 @@ def compute_attribute_counts(df, pattern, period_col, period, type_val_sep):
 
     # Pre-filter columns to avoid unnecessary processing
     relevant_columns = [c for c in fdf.columns if c not in ["Subject ID", period_col]]
-    fdf = fdf[["Subject ID", period_col, *relevant_columns]]
+    # fdf = fdf[["Subject ID", period_col, *relevant_columns]]
 
     for att in atts:
         if att == "Subject ID" or type_val_sep not in att:

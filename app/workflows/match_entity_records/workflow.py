@@ -2,6 +2,7 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 import io
+import os
 
 import numpy as np
 import pandas as pd
@@ -12,28 +13,26 @@ import app.util.session_variables as home_vars
 import app.workflows.match_entity_records.functions as functions
 import app.workflows.match_entity_records.variables as rm_variables
 import toolkit.match_entity_records.prompts as prompts
-from app.tutorials import get_tutorial
 from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
-from toolkit.match_entity_records import get_readme as get_intro
 from toolkit.match_entity_records.config import AttributeToMatch
-from toolkit.match_entity_records.detect import (
-    build_attributes_dataframe,
-    build_matches,
-    build_matches_dataset,
-    build_near_map,
-    build_nearest_neighbors,
-    build_sentence_pair_scores,
-    convert_to_sentences,
-)
+from toolkit.match_entity_records.detect import (build_attributes_dataframe,
+                                                 build_matches,
+                                                 build_matches_dataset,
+                                                 build_near_map,
+                                                 build_nearest_neighbors,
+                                                 build_sentence_pair_scores,
+                                                 convert_to_sentences)
 from toolkit.match_entity_records.prepare_model import (
-    build_attribute_list,
-    build_attribute_options,
-    format_dataset,
-)
+    build_attribute_list, build_attribute_options, format_dataset)
 
 
+def get_intro():
+    file_path = os.path.join(os.path.dirname(__file__), "README.md")
+    with open(file_path) as file:
+        return file.read()
+    
 async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
     sv_home = home_vars.SessionVariables("home")
 
@@ -47,7 +46,7 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
     )
     selected_df = None
     with intro_tab:
-        st.markdown(get_intro() + get_tutorial("match_entity_records"))
+        st.markdown(get_intro())
     with uploader_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:

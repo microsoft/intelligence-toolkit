@@ -1,7 +1,7 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import math
 import sys
-
+import re
 import numpy as np
 import pandas as pd
 from dateutil import parser as dateparser
@@ -33,6 +33,41 @@ def get_current_time():
 
 def quantize_datetime(input_df, col, bin_size):
     func = None
+    def extract_elements(x):
+        parts = str(x).split("-")
+        if len(parts) == 1:
+            parts = str(x).split("/")
+        if len(parts) == 1:
+            parts = str(x).split(" ")
+
+        elements = {}
+        for part in parts:
+            if re.match(r"\d{4}", part): # year
+                elements['year'] = part
+            elif re.match(r"\d{2}", part): # month
+                month_cand = int(part)
+                if month_cand < 13:
+                    elements['month'] = month_cand
+                    elements['half'] = "H1" if month_cand < 7 else "H2"
+                    elements['quarter'] = (
+                        "Q1"
+                        if month_cand < 4
+                        else "Q2"
+                        if month_cand < 7
+                        else "Q3"
+                        if month_cand < 10
+                        else "Q4"
+                    )
+            elif re.match(r"H1|H2", part):
+                elements['half'] = part
+                elements['quarter'] = "Q1" if part == "H1" else "Q3" # default to first quarter of half
+                elements['month'] = 1 if part == "H1" else 7
+            elif re.match(r"Q1|Q2|Q3|Q4", part):
+                elements['quarter'] = part
+                elements['half'] = "H1" if part == "Q1" or part == "Q2" else "H2"
+                elements['month'] = 1 if part == "Q1" else 4 if part == "Q2" else 7 if part == "Q3" else 10
+        return elements
+    
     if bin_size == "Year":
 
         def convert(x):
@@ -41,22 +76,26 @@ def quantize_datetime(input_df, col, bin_size):
                 dt = dateparser.parse(str(x))
                 return str(dt.year)
             except:
-                return ""
-
+                elements = extract_elements(x)
+                if 'year' in elements:
+                    return elements['year']
+                else:
+                    return ""
         func = convert
     elif bin_size == "Half":
-
         def convert(x):
             try:
                 dt = dateparser.parse(str(x))
                 half = "H1" if dt.month < 7 else "H2"
                 return str(dt.year) + "-" + half
             except:
-                return ""
-
+                elements = extract_elements(x)
+                if 'year' in elements and 'half' in elements:
+                    return elements['year'] + '-' + elements['half']
+                else:
+                    return ""
         func = convert
     elif bin_size == "Quarter":
-
         def convert(x):
             try:
                 dt = dateparser.parse(str(x))
@@ -71,8 +110,11 @@ def quantize_datetime(input_df, col, bin_size):
                 )
                 return str(dt.year) + "-" + quarter
             except:
-                return ""
-
+                elements = extract_elements(x)
+                if 'year' in elements and 'quarter' in elements:
+                    return elements['year'] + '-' + elements['quarter']
+                else:
+                    return ""
         func = convert
     elif bin_size == "Month":
 
@@ -81,8 +123,11 @@ def quantize_datetime(input_df, col, bin_size):
                 dt = dateparser.parse(str(x))
                 return str(dt.year) + "-" + str(dt.month).zfill(2)
             except:
-                return ""
-
+                elements = extract_elements(x)
+                if 'year' in elements and 'month' in elements:
+                    return elements['year'] + '-' + elements['month']
+                else:
+                    return ""
         func = convert
     elif bin_size == "Day":
 
@@ -108,10 +153,10 @@ def quantize_numeric(input_df, col, num_bins, trim_percent):
     distinct_values = tuple(
         sorted([x for x in input_df[col].unique() if str(x) != "nan"])
     )
-    print([type(x) for x in distinct_values])
-    print(
-        f"Quantizing {col} with distinct values: {distinct_values} into {num_bins} bins with {trim_percent} trim percent"
-    )
+
+    # print(
+    #     f"Quantizing {col} with distinct values: {distinct_values} into {num_bins} bins with {trim_percent} trim percent"
+    # )
     if len(distinct_values) < 2:
         return
     if distinct_values == (0, 1):
@@ -125,10 +170,7 @@ def quantize_numeric(input_df, col, num_bins, trim_percent):
     )
     top_trim = sorted_values[top]
     bx = math.floor(len(sorted_values) * trim_percent)
-    print(f"bx: {bx}")
     bottom_trim = sorted_values[bx]
-    print(f"bv: {sorted_values[bx]}")
-    print(f"Top trim: {top_trim}, Bottom trim: {bottom_trim}")
     processed_df.loc[input_df[col] > top_trim, col] = top_trim
     processed_df.loc[input_df[col] < bottom_trim, col] = bottom_trim
     target_bin_width = (top_trim - bottom_trim) / num_bins
@@ -160,9 +202,16 @@ def quantize_numeric(input_df, col, num_bins, trim_percent):
         include_lowest=False,
     )
 
-    results = [
-        "" if str(v) == "nan" else "(" + str(v.left) + "-" + str(v.right) + "]"
-        for v in values
-    ]
-    print(set(results))
+    results = []
+    for v in values:
+        if str(v) == "nan":
+            results.append("")
+        else:
+            left = str(v.left)
+            right = str(v.right)
+            if left.endswith(".0"):
+                left = left[:-2]
+            if right.endswith(".0"):
+                right = right[:-2]
+            results.append("(" + left + "-" + right + "]")
     return results

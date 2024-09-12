@@ -15,6 +15,7 @@ async def assess_relevance(
     question,
     logit_bias,
     relevance_test_budget,
+    num_adjacent,
     relevance_test_batch_size,
     test_history,
     progress_callback,
@@ -29,7 +30,7 @@ async def assess_relevance(
     is_relevant = False
     for mx, mapped_messages in enumerate(batched_messages):
         cid_batch = batched_cids[mx]
-        if len(test_history) + len(mapped_messages) > relevance_test_budget:
+        if len(test_history) + len(mapped_messages) + num_adjacent > relevance_test_budget:
             mapped_messages = mapped_messages[:relevance_test_budget - len(test_history)]
         mapped_responses = await helper_functions.map_generate_text(
             ai_configuration, mapped_messages, logit_bias=logit_bias, max_tokens=1
