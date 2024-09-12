@@ -12,7 +12,6 @@ import toolkit.query_text_data.helper_functions as helper_functions
 import toolkit.query_text_data.input_processor as input_processor
 import toolkit.query_text_data.prompts as prompts
 import toolkit.query_text_data.question_answerer as question_answerer
-from app.tutorials import get_tutorial
 from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
 from app.util.openai_wrapper import UIOpenAIConfiguration
@@ -25,12 +24,18 @@ from toolkit.AI.openai_embedder import OpenAIEmbedder
 from toolkit.graph.graph_fusion_encoder_embedding import (
     generate_graph_fusion_encoder_embedding,
 )
-from toolkit.query_text_data import get_readme as get_intro
 from toolkit.query_text_data.pattern_detector import (
     combine_chunk_text_and_explantion,
     detect_converging_pairs,
     explain_chunk_significance,
 )
+
+
+def get_intro():
+    file_path = os.path.join(os.path.dirname(__file__), "README.md")
+    with open(file_path) as file:
+        return file.read()
+
 
 sv_home = SessionVariables("home")
 ai_configuration = UIOpenAIConfiguration().get_configuration()
@@ -159,7 +164,7 @@ async def create(sv: SessionVariables, workflow=None):
     )
 
     with intro_tab:
-        st.markdown(get_intro() + get_tutorial("query_text_data"))
+        st.markdown(get_intro(), unsafe_allow_html=True)
     with uploader_tab:
         st.markdown("##### Upload data for processing")
         files = st.file_uploader(
@@ -314,14 +319,14 @@ async def create(sv: SessionVariables, workflow=None):
                 )
             with c2:
                 st.number_input(
-                    "Tests/community/round",
+                    "Tests/topic/round",
                     value=sv.relevance_test_batch_size.value,
                     key=sv.relevance_test_batch_size.key,
                     min_value=0,
                 )
             with c3:
                 st.number_input(
-                    "Restart on irrelevant communities",
+                    "Restart on irrelevant topics",
                     value=sv.irrelevant_community_restart.value,
                     key=sv.irrelevant_community_restart.key,
                     min_value=0,
@@ -362,10 +367,10 @@ async def create(sv: SessionVariables, workflow=None):
             answer_placeholder = st.empty()
 
         def on_chunk_progress(message):
-            chunk_progress_placeholder.markdown(message)
+            chunk_progress_placeholder.markdown(message, unsafe_allow_html=True)
 
         def on_answer_progress(message):
-            answer_progress_placeholder.markdown(message)
+            answer_progress_placeholder.markdown(message, unsafe_allow_html=True)
 
         def on_chunk_relevant(message):
             chunk_placeholder.dataframe(
@@ -379,10 +384,10 @@ async def create(sv: SessionVariables, workflow=None):
             )
 
         def on_answer(message):
-            answer_placeholder.markdown(message[0])
+            answer_placeholder.markdown(message[0], unsafe_allow_html=True)
 
-        chunk_progress_placeholder.markdown(sv.chunk_progress.value)
-        answer_progress_placeholder.markdown(sv.answer_progress.value)
+        chunk_progress_placeholder.markdown(sv.chunk_progress.value, unsafe_allow_html=True)
+        answer_progress_placeholder.markdown(sv.answer_progress.value, unsafe_allow_html=True)
         chunk_placeholder.dataframe(
             pd.DataFrame(
                 columns=["Relevant text chunks (double click to expand)"],
@@ -395,15 +400,15 @@ async def create(sv: SessionVariables, workflow=None):
         answer_text = (
             sv.partial_answers.value[0] if len(sv.partial_answers.value) > 0 else ""
         )
-        answer_placeholder.markdown(answer_text)
+        answer_placeholder.markdown(answer_text, unsafe_allow_html=True)
 
         if sv.last_question.value != "" and regenerate:
             sv.relevant_cids.value = []
             sv.partial_answers.value = []
             sv.chunk_progress.value = ""
             sv.answer_progress.value = ""
-            chunk_progress_placeholder.markdown(sv.chunk_progress.value)
-            answer_progress_placeholder.markdown(sv.answer_progress.value)
+            chunk_progress_placeholder.markdown(sv.chunk_progress.value, unsafe_allow_html=True)
+            answer_progress_placeholder.markdown(sv.answer_progress.value, unsafe_allow_html=True)
             chunk_placeholder.dataframe(
                 pd.DataFrame(
                     columns=["Relevant text chunks (double click to expand)"],
@@ -416,7 +421,7 @@ async def create(sv: SessionVariables, workflow=None):
             answer_text = (
                 sv.partial_answers.value[0] if len(sv.partial_answers.value) > 0 else ""
             )
-            answer_placeholder.markdown(answer_text)
+            answer_placeholder.markdown(answer_text, unsafe_allow_html=True)
             (
                 sv.relevant_cids.value,
                 sv.partial_answers.value,
@@ -489,7 +494,7 @@ async def create(sv: SessionVariables, workflow=None):
                         gen_placeholder.warning(
                             "Press the Generate button to create an AI report for the current question."
                         )
-                report_placeholder.markdown(sv.final_report.value)
+                report_placeholder.markdown(sv.final_report.value, unsafe_allow_html=True)
 
                 if len(sv.final_report.value) > 0:
                     is_download_disabled = sv.final_report.value == ""

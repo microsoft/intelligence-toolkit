@@ -1,29 +1,31 @@
 # Anonymize Case Data
 
-The `Anonymize Case Data` workflow generates differentially-private datasets and data summaries from sensitive case records.
+The [`Anonymize Case Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/anonymize_case_data/README.md) workflow generates differentially-private datasets and data summaries from sensitive case records.
 
 Select the `View example outputs` tab (in app) or navigate to [example_outputs/anonymize_case_data](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/anonymize_case_data) (on GitHub) for examples.
 
 ## Input requirements
 
-- The input data file should be in CSV format and represent individual data subjects.
-- Individual data subjects may be represented by a single row, in which case no identifier is required, or by multiple rows, in which case an identifier is required to link these rows into a single record.
-- For data synthesis, each individual must be represented as a collection of discrete (i.e., categorical or binary) attributes. Any continuous attributes must first be quantized via the user interface.
+- The input data file should be in CSV format with each row representing a different case (i.e., individual person or data subject).
+- For data synthesis, each case must be represented as a collection of discrete (i.e., categorical or binary) attributes. Any continuous attributes must first be quantized via the user interface.
 - Given the goal of creating an anonymous dataset, no direct identifiers (e.g., names, aliases, ids, phone numbers, email addresses, street addresses) should be included in data outputs. Following the principle of [data minimization](https://en.wikipedia.org/wiki/Data_minimization), such direct identifiers should be removed from data inputs because they are not required for the processing purpose and create unnecessary risks for the data subject. Tools such as Microsoft Excel can be used to delete any direct identifier columns prior to use in Intelligence Toolkit.
 - The nature of differential privacy means that indirect identifiers (e.g., age range, year of birth, gender, country, city) may be freely included in the data inputs. None of the combinations of these identifiers (or of any attributes) in the output data allow the presence of individuals to be inferred with any degree of certainty.
 
 ## Use with other workflows
 
-`Anonymize Case Data` can be used to anonymize case data for privacy-preserving analysis in any other workflow accepting structured records as input:
+[`Anonymize Case Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/anonymize_case_data/README.md) can be used to anonymize case data for privacy-preserving analysis in any other workflow accepting structured records as input:
 
-- `Detect Case Patterns`
+- [`Detect Case Patterns`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/detect_case_patterns/README.md)
 - `Compare Case Groups`
 
-`Generate Record Data` can also be used to generate mock data for demonstration or evaluation of the `Anonymize Case Data` workflow.
+[`Generate Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_record_data/README.md) can also be used to generate mock data for demonstration or evaluation of the [`Anonymize Case Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/anonymize_case_data/README.md) workflow.
 
 ## Tutorial
 
-The task for this tutorial is creating an anonymous version of the `customer_complaints_3k.csv` dataset available for download either from the `View example outputs` tab of the `Generate Record Data` workflow, or from the GitHub repo [here](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/generate_record_data/customer_complaints).
+The task for this tutorial is creating an anonymous version of the `customer_complaints` dataset available for download either:
+
+- in app, via [`Generate Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_record_data/README.md) workflow &rarr; `View example outputs` tab &rarr; `Mock data` tab
+- on GitHub, at [example_outputs/generate_record_data/customer_complaints](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/generate_record_data/customer_complaints).
 
 The format of this dataset is as follows, with each row representing an individual customer and their complaint:
 
@@ -52,7 +54,7 @@ Continuing the above example, imagine the neighbour in question lives in a very 
 
 ### Anonymization via DP data synthesis
 
-The `Anonymize Case Data` workflow uses the differentially-private data synthesizer of [Synthetic Data Showcase](https://github.com/microsoft/synthetic-data-showcase) to create a synthetic dataset with the same structure and statistics as a sensitive input dataset while providing strong statistical protection against all possible privacy attacks. It achieves this through a two-step process:
+The [`Anonymize Case Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/anonymize_case_data/README.md) workflow uses the differentially-private data synthesizer of [Synthetic Data Showcase](https://github.com/microsoft/synthetic-data-showcase) to create a synthetic dataset with the same structure and statistics as a sensitive input dataset while providing strong statistical protection against all possible privacy attacks. It achieves this through a two-step process:
 
 1. All possible combinations of up to four attribute values are considered (even those not present in the data), and calibrated noise is added to the associated counts of records such that the presence or absense of any arbitrary record is not detectable (i.e., the counts are differentially private).
 2. These DP aggregate counts or "marginals" are iteratively sampled to create synthetic data records consistent with the counts of individual attribute values in the original sensitive dataset, reproducing the DP aggregate counts as accurately as possible while retaining differential privacy.
@@ -65,13 +67,9 @@ Since the above approach to DP data synthesis works by controlling the release o
 2. Suppressing insignificant values that hold little analytical value (e.g., binary 0 or boolean false indicating absence of an attribute)
 3. Selecting the minimum set of data columns (i.e., attributes) necessary to support downstream analysis and reporting tasks.
 
-We can now work though the steps of senstive data preparation using the `customer_complaints_3k.csv` dataset above.
+We can now work though the steps of senstive data preparation using the `customer_complaints_data.csv` dataset above.
 
-First, navigate to the `Prepare sensitive data` tab, select `Browse files`, and upload the `customer_complaints_3k.csv` dataset. A preview of the dataset should appear below.
-
-#### Set subject identifier
-
-Select `Set subject identifier` to expand the dropdown and indicate how individual data subjects (i.e., natural persons) are represented in the dataset. Since each record of the data file represents a different data subject, we can leave `Row number` as the selected option. Select the header again to collapse the dropdown and continue.
+First, navigate to the `Prepare sensitive data` tab, select `Browse files`, and upload the `customer_complaints_data.csv` dataset. A preview of the dataset should appear below.
 
 #### Select attribute columns to include
 

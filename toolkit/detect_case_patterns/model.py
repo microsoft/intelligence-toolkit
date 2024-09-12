@@ -108,12 +108,12 @@ def generate_graph_model(df, period_col, type_val_sep):
 def compute_attribute_counts(df, pattern, period_col, period, type_val_sep):
     atts = pattern.split(" & ")
     # Combine astype and replace operations
-    fdf = df_functions.fix_null_ints(df).replace({"nan": "", "<NA>": ""}).astype(str)
+    fdf = df_functions.fix_null_ints(df).astype(str).replace({"nan": "", "<NA>": ""})
     fdf = fdf[fdf[period_col] == period]
 
     # Pre-filter columns to avoid unnecessary processing
     relevant_columns = [c for c in fdf.columns if c not in ["Subject ID", period_col]]
-    fdf = fdf[["Subject ID", period_col, *relevant_columns]]
+    # fdf = fdf[["Subject ID", period_col, *relevant_columns]]
 
     for att in atts:
         if att == "Subject ID" or type_val_sep not in att:

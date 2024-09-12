@@ -17,16 +17,18 @@ path = os.path.dirname(os.path.abspath(filename))
 def get_readme():
     file_path = os.path.join(path, "README.md")
     if not os.path.exists(file_path):
-        file_path = os.path.join(path, "..\\README.md")
+        file_path = os.path.join(path, "..", "README.md")
     with open(file_path) as file:
         content = file.read()
-    folders = [f.name for f in os.scandir(f"{path}\\workflows") if f.is_dir()]
+    folders = [
+        f.name for f in os.scandir(os.path.join(path, "workflows")) if f.is_dir()
+    ]
     for f in folders:
         content = content.replace(
-            f"{path}\\workflows\\{f}\\README.md",
+            os.path.join(path, "workflows", "README.md"),
             f'{"_".join(word.capitalize() for word in f.split("_"))}',
         )
-    return content.split("## Diving Deeper")[0]
+    return content.split("```mermaid")[0]
 
 
 def main():
@@ -41,12 +43,6 @@ def main():
 
     st.markdown(
         transparency_faq
-        + "\n\n"
-        + """\
-#### Which Intelligence Toolkit workflow is right for my data and task?
-
-Use the diagram to identify an appropriate workflow, then open the workflow from the sidebar to the left.
-"""
     )
 
     mermaid.mermaid(

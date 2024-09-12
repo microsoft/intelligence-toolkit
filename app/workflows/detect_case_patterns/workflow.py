@@ -1,7 +1,13 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 #
+import io
+import os
+
 import altair as alt
+import numpy as np
+import pandas as pd
+import PIL
 import streamlit as st
 from st_aggrid import (
     AgGrid,
@@ -12,10 +18,8 @@ from st_aggrid import (
 )
 
 import app.workflows.detect_case_patterns.variables as ap_variables
-from app.tutorials import get_tutorial
 from app.util import ui_components
 from toolkit.AI.classes import LLMCallback
-from toolkit.detect_case_patterns import get_readme as get_intro
 from toolkit.detect_case_patterns import prompts
 from toolkit.detect_case_patterns.model import (
     compute_attribute_counts,
@@ -39,19 +43,26 @@ from .config import (
 )
 
 
+def get_intro():
+    file_path = os.path.join(os.path.dirname(__file__), "README.md")
+    with open(file_path) as file:
+        return file.read()
+
+
 def create(sv: ap_variables.SessionVariables, workflow):
-    intro_tab, uploader_tab, detect_tab, explain_tab = st.tabs(
+    intro_tab, uploader_tab, detect_tab, explain_tab, examples_tab = st.tabs(
         [
             "Detect case patterns workflow:",
-            "Create attribute model",
-            "Detect patterns",
+            "Prepare case data",
+            "Detect attribute patterns",
             "Generate AI pattern reports",
+            "View example outputs"
         ]
     )
     selected_pattern = ""
     graph_df = None
     with intro_tab:
-        st.markdown(get_intro() + get_tutorial("detect_case_patterns"))
+        st.markdown(get_intro())
     with uploader_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:
@@ -102,7 +113,7 @@ def create(sv: ap_variables.SessionVariables, workflow):
                 sv.detect_case_patterns_dynamic_df.value = pdf
             if ready and len(sv.detect_case_patterns_dynamic_df.value) > 0:
                 st.success(
-                    f'Graph model has **{len(sv.detect_case_patterns_dynamic_df.value)}** links spanning **{len(sv.detect_case_patterns_dynamic_df.value["Subject ID"].unique())}** cases, **{len(sv.detect_case_patterns_dynamic_df.value["Full Attribute"].unique())}** attributes, and **{len(sv.detect_case_patterns_dynamic_df.value["Period"].unique())}** periods.'
+                    f'Attribute model has **{len(sv.detect_case_patterns_dynamic_df.value)}** links spanning **{len(sv.detect_case_patterns_dynamic_df.value["Subject ID"].unique())}** cases, **{len(sv.detect_case_patterns_dynamic_df.value["Full Attribute"].unique())}** attributes, and **{len(sv.detect_case_patterns_dynamic_df.value["Period"].unique())}** periods.'
                 )
 
     with detect_tab:
@@ -261,13 +272,6 @@ def create(sv: ap_variables.SessionVariables, workflow):
                 )
 
                 if selected_pattern != "":
-                    st.markdown(
-                        "**Selected pattern: "
-                        + selected_pattern
-                        + " ("
-                        + selected_pattern_period
-                        + ")**"
-                    )
                     if (
                         selected_pattern
                         != sv.detect_case_patterns_selected_pattern.value
@@ -284,8 +288,6 @@ def create(sv: ap_variables.SessionVariables, workflow):
                         tdf = sv.detect_case_patterns_time_series_df.value
                         tdf = tdf[tdf["pattern"] == selected_pattern]
                         sv.detect_case_patterns_selected_pattern_df.value = tdf
-
-                        print("Compute attribute counts")
                         sv.detect_case_patterns_selected_pattern_att_counts.value = (
                             compute_attribute_counts(
                                 sv.detect_case_patterns_final_df.value,
@@ -295,16 +297,15 @@ def create(sv: ap_variables.SessionVariables, workflow):
                                 type_val_sep,
                             )
                         )
-                        print("Computed attribute counts")
-
+                    title = 'Pattern: ' + selected_pattern + ' (' + selected_pattern_period + ')'
                     count_ct = (
                         alt.Chart(sv.detect_case_patterns_selected_pattern_df.value)
                         .mark_line()
                         .encode(x="period:O", y="count:Q", color=alt.ColorValue("blue"))
-                        .properties(height=200, width=600)
+                        .properties(title=title,
+                                    height=220, width=600)
                     )
-                    st.altair_chart(count_ct, use_container_width=True)
-                else:
+                    st.altair_chart(count_ct, use_container_width=True)                       
                     st.warning(
                         "Select column headers to rank patterns by that attribute. Use quickfilter or column filters to narrow down the list of patterns. Select a pattern to continue."
                     )
@@ -342,20 +343,13 @@ def create(sv: ap_variables.SessionVariables, workflow):
             with c2:
                 st.markdown("##### Selected attribute pattern")
                 if sv.detect_case_patterns_selected_pattern.value != "":
-                    st.markdown(
-                        "**"
-                        + sv.detect_case_patterns_selected_pattern.value
-                        + " ("
-                        + sv.detect_case_patterns_selected_pattern_period.value
-                        + ")**"
-                    )
                     tdf = sv.detect_case_patterns_selected_pattern_df.value
-
+                    title = 'Pattern: ' + selected_pattern + ' (' + selected_pattern_period + ')'
                     count_ct = (
                         alt.Chart(tdf)
                         .mark_line()
                         .encode(x="period:O", y="count:Q", color=alt.ColorValue("blue"))
-                        .properties(height=200, width=600)
+                        .properties(title=title, height=220, width=600)
                     )
                     st.altair_chart(count_ct, use_container_width=True)
                 report_placeholder = st.empty()
@@ -412,3 +406,65 @@ def create(sv: ap_variables.SessionVariables, workflow):
                     report_data,
                     workflow,
                 )
+    with examples_tab:
+
+        workflow_home = 'example_outputs/detect_case_patterns'
+
+        mock_data_folders = [x for x in os.listdir(f'{workflow_home}')]
+        print(mock_data_folders)
+        selected_data = st.selectbox('Select example', mock_data_folders)
+        if selected_data != None:
+            t1, t2, t3, t4 = st.tabs(['Input data', 'Prepared data', 'Case patterns', 'Pattern reports'])
+            with t1:
+                data_file = f'{workflow_home}/{selected_data}/{selected_data}_input.csv'
+                df = pd.read_csv(data_file)
+                st.dataframe(df, height=500, use_container_width=True)
+                st.download_button(
+                    label=f'Download {selected_data}_input.csv',
+                    data=df.to_csv(index=False, encoding='utf-8'),
+                    file_name=data_file,
+                    mime='text/csv',
+                )
+            with t2:
+                data_file = f'{workflow_home}/{selected_data}/{selected_data}_prepared.csv'
+                df = pd.read_csv(data_file)
+                st.dataframe(df, height=500, use_container_width=True)
+                st.download_button(
+                    label=f'Download {selected_data}_prepared.csv',
+                    data=df.to_csv(index=False, encoding='utf-8'),
+                    file_name=data_file,
+                    mime='text/csv',
+                )
+            with t3:
+                data_file = f'{workflow_home}/{selected_data}/{selected_data}_case_patterns.csv'
+                df = pd.read_csv(data_file)
+                st.dataframe(df, height=500, use_container_width=True)
+                st.download_button(
+                    label=f'Download {selected_data}_case_patterns.csv',
+                    data=df.to_csv(index=False, encoding='utf-8'),
+                    file_name=data_file,
+                    mime='text/csv',
+                )
+            with t4:
+                pattern_md = []
+                pattern_img = []
+                index = 1
+                while True:
+                    if os.path.exists(f'{workflow_home}/{selected_data}/{selected_data}_pattern_report_{index}.md') and \
+                        os.path.exists(f'{workflow_home}/{selected_data}/{selected_data}_pattern_chart_{index}.png'):
+                        with open(f'{workflow_home}/{selected_data}/{selected_data}_pattern_report_{index}.md', 'r') as f:
+                            pattern_md.append(f.read())
+                        with open(f'{workflow_home}/{selected_data}/{selected_data}_pattern_chart_{index}.png', 'rb') as f:
+                            im = PIL.Image.open(io.BytesIO(f.read()))
+                            pattern_img.append(im)
+                        index += 1
+                    else:
+                        break
+                for i in range(len(pattern_md)):
+                    st.divider()
+                    st.markdown(f'# Example {i+1}')
+                    st.divider()
+                    st.image(pattern_img[i], width=1000)
+                    st.markdown(pattern_md[i])
+                    st.divider()
+                    

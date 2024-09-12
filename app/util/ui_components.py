@@ -98,7 +98,7 @@ def generative_ai_component(system_prompt_var, variables):
         reset_prompt = st.button("Reset to default")
 
     st.warning(
-        "This app uses AI and may not be error-free. Please verify critical details independently."
+        "AI outputs may contain errors. Please verify details independently."
     )
 
     messages = utils.generate_messages(
@@ -137,7 +137,7 @@ def generative_batch_ai_component(
         reset_prompt = st.button("Reset to default")
 
     st.warning(
-        "This app uses AI and may not be error-free. Please verify critical details independently."
+        "AI outputs may contain errors. Please verify details independently."
     )
     batch_offset = 0
     batch_count_raw = len(batch_val) // batch_size
@@ -647,25 +647,27 @@ def prepare_input_df(
     processed_df.replace({"<NA>": np.nan}, inplace=True)
     processed_df.replace({"nan": ""}, inplace=True)
     processed_df.replace({"1.0": "1"}, inplace=True)
-
     with st.expander("Rename attributes", expanded=False):
-        renamed = False
-        for col in this_df.columns:
-            new_name = st.text_input(
-                f"Rename {col}",
-                key=f"{workflow}_rename_{col}",
-                value=col,
-                help="Rename the attribute to a more descriptive name.",
-            )
-            if new_name not in processed_df.columns:
-                processed_df.rename(columns={col: new_name}, inplace=True)
-                renamed = True
-        if renamed:
-            if "renaming_cycle" in st.session_state:
-                del st.session_state["renaming_cycle"]
-            else:
-                reload = True
-                st.session_state["renaming_cycle"] = True
+        if len(processed_df) == 0:
+            st.warning("Please select attributes to include in the prepared dataset.")
+        else:
+            renamed = False
+            for col in this_df.columns:
+                new_name = st.text_input(
+                    f"Rename {col}",
+                    key=f"{workflow}_rename_{col}",
+                    value=col,
+                    help="Rename the attribute to a more descriptive name.",
+                )
+                if new_name not in processed_df.columns:
+                    processed_df.rename(columns={col: new_name}, inplace=True)
+                    renamed = True
+            if renamed:
+                if "renaming_cycle" in st.session_state:
+                    del st.session_state["renaming_cycle"]
+                else:
+                    reload = True
+                    st.session_state["renaming_cycle"] = True
 
     processed_df_var.value = processed_df
     if reload and len(input_df) > 0 and len(processed_df) > 0:

@@ -9,9 +9,13 @@ import streamlit as st
 import app.util.df_functions as df_functions
 import app.workflows.compare_case_groups.prompts as prompts
 import app.workflows.compare_case_groups.variables as gn_variables
-from app.tutorials import get_tutorial
 from app.util import ui_components
-from toolkit.compare_case_groups import get_readme as get_intro
+
+
+def get_intro():
+    file_path = os.path.join(os.path.dirname(__file__), "README.md")
+    with open(file_path) as file:
+        return file.read()
 
 
 def create(sv: gn_variables.SessionVariables, workflow=None):
@@ -25,7 +29,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
     )
 
     with intro_tab:
-        st.markdown(get_intro() + get_tutorial("compare_case_groups"))
+        st.markdown(get_intro())
     with prepare_tab:
         uploader_col, model_col = st.columns([1, 1])
         with uploader_col:
@@ -34,7 +38,6 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                 "Upload CSV to compare",
                 sv.case_groups_last_file_name,
                 sv.case_groups_input_df,
-                sv.case_groups_binned_df,
                 sv.case_groups_final_df,
                 uploader_key=sv.case_groups_upload_key.value,
                 key="narrative_uploader",
@@ -44,9 +47,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
             ui_components.prepare_input_df(
                 workflow,
                 sv.case_groups_input_df,
-                sv.case_groups_binned_df,
                 sv.case_groups_final_df,
-                sv.case_groups_subject_identifier,
             )
             sv.case_groups_final_df.value = df_functions.fix_null_ints(
                 sv.case_groups_final_df.value
