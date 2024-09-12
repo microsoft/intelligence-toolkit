@@ -105,8 +105,15 @@ You can access the `Settings` page on the left sidebar when running the applicat
 Use the diagram to identify an appropriate workflow, from the left sidebar while running the application.
 
 ```mermaid
+graph TD;
+    A-->B;
+    A-->C;
+    B-->D;
+    C-->D;
+```
+
+```mermaid
 %%{init: {
-  'theme': 'neutral',
   "flowchart": {"htmlLabels": true}} }%%
 flowchart TD
     NoData["<b>Input</b>: None"] --> |"<b>Generate Record Data</b><br/>workflow"| MockData["Mock Data"]
