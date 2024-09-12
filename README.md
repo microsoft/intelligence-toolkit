@@ -90,7 +90,17 @@ All use of Intelligence Toolkit should be consistent with this documentation. In
 
 ## Getting Started
 
-#### Which Intelligence Toolkit workflow is right for my data and task?
+#### Setting up the AI model
+Either OpenAI or Azure OpenAI is supported.
+
+You can access the `Settings` page on the left sidebar when running the application.
+
+- For OpenAI, have an active OpenAI account ([create here](https://platform.openai.com/login)) and API key ([create here](https://platform.openai.com/account/api-keys)). 
+
+- For Azure OpenAI, have an active Azure account ([create here](https://portal.azure.com/)), endpoint, key and version for the AI Service ([create here](https://portal.azure.com/#view/Microsoft_Azure_ProjectOxford/CognitiveServicesHub/~/OpenAI)).
+
+
+#### Selecting the right workflow for the data and task
 
 Use the diagram to identify an appropriate workflow, from the left sidebar while running the application.
 

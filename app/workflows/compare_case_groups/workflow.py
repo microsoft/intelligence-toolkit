@@ -12,7 +12,6 @@ import app.workflows.compare_case_groups.variables as gn_variables
 from app.util import ui_components
 
 
-
 def get_intro():
     file_path = os.path.join(os.path.dirname(__file__), "README.md")
     with open(file_path) as file:
@@ -39,7 +38,6 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                 "Upload CSV to compare",
                 sv.case_groups_last_file_name,
                 sv.case_groups_input_df,
-                sv.case_groups_binned_df,
                 sv.case_groups_final_df,
                 uploader_key=sv.case_groups_upload_key.value,
                 key="narrative_uploader",
@@ -49,9 +47,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
             ui_components.prepare_input_df(
                 workflow,
                 sv.case_groups_input_df,
-                sv.case_groups_binned_df,
                 sv.case_groups_final_df,
-                sv.case_groups_subject_identifier,
             )
             sv.case_groups_final_df.value = df_functions.fix_null_ints(
                 sv.case_groups_final_df.value
