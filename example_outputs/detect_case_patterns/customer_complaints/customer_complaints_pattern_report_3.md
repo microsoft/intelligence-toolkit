@@ -1,6 +1,6 @@
 # Pattern Report
 
-**Pattern: age_range=(40.0-50.0] & city=Mountainview & delivery_issue=True & description_issue=True & product_code=C**
+**Pattern: age_range=(40-50] & city=Mountainview & delivery_issue=True & description_issue=True & product_code=C**
 
 This pattern identifies a group of individuals aged between 40 and 50 years old, residing in Mountainview, who have experienced both delivery and description issues with product code C.
 
