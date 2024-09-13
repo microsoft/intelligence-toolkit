@@ -1,6 +1,48 @@
 import streamlit as st
+from json import loads, dumps
 
-import toolkit.generate_record_data.schema_builder as schema_builder
+import toolkit.generate_mock_data.schema_builder as schema_builder
+
+def build_schema_ui(global_schema, last_filename):
+    form, preview = st.columns([1, 1])
+    processed_filename = last_filename
+    with form:
+        file = st.file_uploader('Upload schema', type=['json'], key='schema_uploader')
+        if file is not None and file.name != last_filename: #sv.loaded_filename.value != file.name:
+            processed_filename = file.name
+            global_schema.clear()
+            jsn = loads(file.read())
+            for k, v in jsn.items():
+                global_schema[k] = v
+            print(f'Loaded schema: {global_schema}')
+        st.markdown('### Edit data schema')
+        generate_form_from_json_schema(
+            global_schema=global_schema,
+            default_schema=schema_builder.create_boilerplate_schema(),
+        )
+    with preview:
+        st.markdown('### Preview')
+        schema_tab, object_tab = st.tabs(['JSON schema', 'Sample object'])
+        obj = schema_builder.generate_object_from_schema(global_schema)
+        with schema_tab:
+            st.write(global_schema)
+        with object_tab:
+            st.write(obj)
+        validation = schema_builder.evaluate_object_and_schema(obj, global_schema)
+        if validation == schema_builder.ValidationResult.VALID:
+            st.success('Schema is valid')
+        elif validation == schema_builder.ValidationResult.OBJECT_INVALID:
+            st.error('Object is invalid')
+        elif validation == schema_builder.ValidationResult.SCHEMA_INVALID:
+            st.error('Schema is invalid')
+        name = global_schema["title"].replace(" ", "_").lower() + "_[schema].json"
+        st.download_button(
+            label=f'Download {name}',
+            data=dumps(global_schema, indent=2),
+            file_name=name,
+            mime='application/json'
+        )
+    return processed_filename
 
 type_options = ['object', 'string', 'number', 'boolean', 'object array', 'string array', 'number array', 'boolean array']
 

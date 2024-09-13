@@ -9,23 +9,23 @@ import pandas as pd
 from components.app_loader import load_multipage_app
 from util.helper_fn import app_in_dev_mode
 
-import app.workflows.generate_record_data.variables as grd_variables
-import app.workflows.generate_record_data.workflow as grd_workflow
+import app.workflows.extract_record_data.variables as erd_variables
+import app.workflows.extract_record_data.workflow as erd_workflow
 
-workflow = "generate_record_data"
+workflow = "extract_record_data"
 
 async def main():
     st.set_page_config(
         layout="wide",
         initial_sidebar_state="collapsed",
         page_icon="app/myapp.ico",
-        page_title="Intelligence Toolkit | Generate Record Data",
+        page_title="Intelligence Toolkit | Extract Record Data",
     )
-    sv = grd_variables.SessionVariables(workflow)
+    sv = erd_variables.SessionVariables(workflow)
     load_multipage_app(sv)
 
     try:
-        await grd_workflow.create(sv, workflow)
+        await erd_workflow.create(sv, workflow)
     except Exception as e:
         if app_in_dev_mode():
             st.exception(e)

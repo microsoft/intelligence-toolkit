@@ -4,10 +4,9 @@ from json import dumps, loads
 import pandas as pd
 import streamlit as st
 
-import app.workflows.generate_record_data.functions as bds_functions
-import app.workflows.generate_record_data.variables as bds_variables
-import toolkit.generate_record_data.data_generator as data_generator
-import toolkit.generate_record_data.schema_builder as schema_builder
+import app.workflows.generate_mock_data.variables as bds_variables
+import toolkit.generate_mock_data.data_generator as data_generator
+import app.util.schema_ui as schema_ui
 from app.util.openai_wrapper import UIOpenAIConfiguration
 
 ai_configuration = UIOpenAIConfiguration().get_configuration()
@@ -19,47 +18,11 @@ def get_intro():
 
 
 async def create(sv: bds_variables.SessionVariables, workflow: None):
-    intro_tab, schema_tab, generator_tab, mock_tab = st.tabs(['Generate Record Data workflow:', 'Prepare data schema', 'Generate mock data', 'View example outputs'])
+    intro_tab, schema_tab, generator_tab, mock_tab = st.tabs(['Generate Mock Data workflow:', 'Prepare data schema', 'Generate mock data', 'View example outputs'])
     with intro_tab:
         st.markdown(get_intro())
     with schema_tab:
-        form, preview = st.columns([1, 1])
-        with form:
-            file = st.file_uploader('Upload schema', type=['json'], key='schema_uploader')
-            if file is not None and sv.loaded_filename.value != file.name:
-                sv.loaded_filename.value = file.name
-                sv.schema.value.clear()
-                jsn = loads(file.read())
-                for k, v in jsn.items():
-                    sv.schema.value[k] = v
-                print(f'Loaded schema: {sv.schema.value}')
-            st.markdown('### Edit data schema')
-            bds_functions.generate_form_from_json_schema(
-                global_schema=sv.schema.value,
-                default_schema=schema_builder.create_boilerplate_schema(),
-            )
-        with preview:
-            st.markdown('### Preview')
-            schema_tab, object_tab = st.tabs(['JSON schema', 'Sample object'])
-            obj = schema_builder.generate_object_from_schema(sv.schema.value)
-            with schema_tab:
-                st.write(sv.schema.value)
-            with object_tab:
-                st.write(obj)
-            validation = schema_builder.evaluate_object_and_schema(obj, sv.schema.value)
-            if validation == schema_builder.ValidationResult.VALID:
-                st.success('Schema is valid')
-            elif validation == schema_builder.ValidationResult.OBJECT_INVALID:
-                st.error('Object is invalid')
-            elif validation == schema_builder.ValidationResult.SCHEMA_INVALID:
-                st.error('Schema is invalid')
-            name = sv.schema.value["title"].replace(" ", "_").lower() + "_[schema].json"
-            st.download_button(
-                label=f'Download {name}',
-                data=dumps(sv.schema.value, indent=2),
-                file_name=name,
-                mime='application/json'
-            )
+        sv.loaded_filename.value = schema_ui.build_schema_ui(sv.schema.value, sv.loaded_filename.value)
     with generator_tab:
         if len(sv.schema.value['properties']) == 0:
             st.warning("Prepare data schema to continue.")
@@ -86,7 +49,7 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                 st.number_input("Related records per batch", min_value=0, value=sv.related_records_per_batch.value, key=sv.related_records_per_batch.key,
                                 help="Within each batch, how many records should appear closely related to (but not the same as) a seed record randomly selected from existing records")
             st.text_area("AI data generation guidance", key=sv.generation_guidance.key, value=sv.generation_guidance.value,
-                         help="Guidance to the generative AI model about how mock data should be generated (e.g., targeted a specific region, time period, industry, etc.)")
+                         help="Guidance to the generative AI model about how mock data should be generated (e.g., targeting a specific region, time period, industry, etc.)")
             
             generate = st.button('Generate mock data')
             df_placeholders = []
@@ -157,7 +120,7 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                                     key=f'{record_array}_csv_download'
                                 )
     with mock_tab:
-        workflow_home = 'example_outputs/generate_record_data'
+        workflow_home = 'example_outputs/generate_mock_data'
 
         mock_data_folders = [x for x in os.listdir(f'{workflow_home}')]
         print(mock_data_folders)

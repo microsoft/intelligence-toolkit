@@ -8,8 +8,8 @@ from operator import call
 import pandas as pd
 
 import toolkit.AI.utils as utils
-import toolkit.generate_record_data.prompts as prompts
-import toolkit.generate_record_data.schema_builder as schema_builder
+import toolkit.generate_mock_data.prompts as prompts
+import toolkit.generate_mock_data.schema_builder as schema_builder
 import toolkit.query_text_data.helper_functions as helper_functions
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 

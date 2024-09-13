@@ -11,7 +11,8 @@ from streamlit_agraph import Config, Edge, Node, agraph
 import toolkit.query_text_data.helper_functions as helper_functions
 import toolkit.query_text_data.input_processor as input_processor
 import toolkit.query_text_data.prompts as prompts
-import toolkit.query_text_data.question_answerer as question_answerer
+import toolkit.query_text_data.answer_builder as answer_builder
+import toolkit.query_text_data.relevance_assessor as relevance_assessor
 from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
 from app.util.openai_wrapper import UIOpenAIConfiguration
@@ -158,7 +159,7 @@ async def create(sv: SessionVariables, workflow=None):
             "Query text data workflow:",
             "Upload data",
             "Explore concept graph",
-            "Generate incremental answers",
+            "Generate AI extended answers",
             "Generate AI answer reports",
         ]
     )
@@ -365,6 +366,14 @@ async def create(sv: SessionVariables, workflow=None):
             answer_progress_placeholder = st.empty()
         with c2:
             answer_placeholder = st.empty()
+            if len(sv.partial_answers.value) > 0 and len(sv.partial_answers.value[0]) > 0:
+                st.download_button(
+                    "Download extended answer as MD",
+                    data=sv.partial_answers.value[0],
+                    file_name="extended_answer.md",
+                    mime="text/markdown",
+                    key="qa_download_button",
+                )
 
         def on_chunk_progress(message):
             chunk_progress_placeholder.markdown(message, unsafe_allow_html=True)
@@ -422,19 +431,16 @@ async def create(sv: SessionVariables, workflow=None):
                 sv.partial_answers.value[0] if len(sv.partial_answers.value) > 0 else ""
             )
             answer_placeholder.markdown(answer_text, unsafe_allow_html=True)
+
             (
                 sv.relevant_cids.value,
-                sv.partial_answers.value,
                 sv.chunk_progress.value,
-                sv.answer_progress.value,
-            ) = await question_answerer.answer_question(
+            ) = await relevance_assessor.detect_relevant_chunks(
                 ai_configuration=ai_configuration,
                 question=sv.last_question.value,
                 cid_to_text=sv.cid_to_explained_text.value,
                 cid_to_concepts=sv.cid_to_concepts.value,
-                concept_to_cids=sv.concept_to_cids.value,
                 cid_to_vector=sv.cid_to_vector.value,
-                concept_graph=sv.period_concept_graphs.value["ALL"],
                 community_to_concepts=sv.community_to_concepts.value,
                 concept_to_community=sv.concept_to_community.value,
                 previous_cid=sv.previous_cid.value,
@@ -447,12 +453,23 @@ async def create(sv: SessionVariables, workflow=None):
                 community_relevance_tests=sv.relevance_test_batch_size.value,
                 relevance_test_batch_size=sv.relevance_test_batch_size.value,
                 irrelevant_community_restart=sv.irrelevant_community_restart.value,
-                answer_batch_size=sv.answer_update_batch_size.value,
                 chunk_progress_callback=on_chunk_progress,
-                answer_progress_callback=on_answer_progress,
                 chunk_callback=on_chunk_relevant,
+            )
+
+            (
+                sv.partial_answers.value,
+                sv.answer_progress.value,
+            ) = answer_builder.answer_question(
+                ai_configuration=ai_configuration,
+                question=sv.last_question.value,
+                relevant_cids=sv.relevant_cids.value,
+                cid_to_text=sv.cid_to_explained_text.value,
+                answer_batch_size=sv.answer_update_batch_size.value,
+                answer_progress_callback=on_answer_progress,
                 answer_callback=on_answer,
             )
+            
 
     with report_tab:
         if sv.partial_answers.value == []:

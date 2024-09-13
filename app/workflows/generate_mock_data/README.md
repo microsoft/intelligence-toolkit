@@ -1,15 +1,15 @@
-# Generate Record Data
+# Generate Mock Data
 
-The [`Generate Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_record_data/README.md) workflow generates mock data following a JSON schema defined by the user.
+The [`Generate Mock Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_mock_data/README.md) workflow generates (a) structured records and (b) synthetic text notes aligned with each record, each according to a JSON schema uploaded or defined by the user.
 
-Navigate to [example_outputs/generate_record_data](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/generate_record_data) (on GitHub) for examples.
+Navigate to [example_outputs/generate_mock_data](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/generate_mock_data) (on GitHub) for examples.
 
 ## How it works
 
 1. [**Input**] A JSON file containing the JSON schema with which to generate output records (optional).
 2. [**Process**] The user edits the uploaded JSON schema or creates one interactively.
-3. [**AI Calls**] The system uses generative AI to create a dataset of mock records following the data schema.
-4. [**Output**] A JSON schema defining structured data records and a dataset of mock records following this data schema.
+3. [**AI Calls**] The system uses generative AI to create a dataset of mock records following the JSON schema.
+4. [**Output**] A JSON schema defining structured data records and a dataset of mock records following this schema.
 
 ## Input requirements
 
@@ -17,13 +17,7 @@ Navigate to [example_outputs/generate_record_data](https://github.com/microsoft/
 
 ## Use with other workflows
 
-[`Generate Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_record_data/README.md) can be used to create mock data for demonstration or evaluation of any other workflow accepting structured records as input:
-
-- [`Anonymize Case Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/anonymize_case_data/README.md)
-- [`Detect Case Patterns`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/detect_case_patterns/README.md)
-- `Compare Case Groups`
-- `Match Entity Records`
-- `Detect Entity Networks`
+[`Generate Mock Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_mock_data/README.md) can be used to create mock data for demonstration or evaluation of any other workflow.
 
 Mock data is particularly helpful when working in sensitive domains and/or with personally identifiable information (PII).
 
@@ -31,7 +25,7 @@ Mock data is particularly helpful when working in sensitive domains and/or with 
 
 The task for this tutorial is creating a mock case dataset of customer complaints, where each case record describes an identified individual and the nature of their complaint regarding a specific product. This is a useful proxy for any individual-level case data or "microdata" where the privacy of data subjects must be respected.
 
-From the [`Generate Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_record_data/README.md) homepage in a running instance of Intelligence Toolkit, select `Prepare data schema`.
+From the [`Generate Mock Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_mock_data/README.md) homepage in a running instance of Intelligence Toolkit, select `Prepare data schema`.
 
 ### Modifying the default schema
 
@@ -100,5 +94,5 @@ Press `Generate mock data` to generate mock data according to the schema and con
 
 The outputs of this tutorial are available for download either:
 
-- in app, via [`Generate Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_record_data/README.md) workflow &rarr; `View example outputs` tab &rarr; `Mock data` tab
-- on GitHub, at [example_outputs/generate_record_data/customer_complaints](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/generate_record_data/customer_complaints).
+- in app, via [`Generate Mock Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_mock_data/README.md) workflow &rarr; `View example outputs` tab &rarr; `Mock data` tab
+- on GitHub, at [example_outputs/generate_mock_data/customer_complaints](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/generate_mock_data/customer_complaints).
