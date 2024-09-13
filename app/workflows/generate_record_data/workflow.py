@@ -75,10 +75,30 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                 st.number_input("Records per batch", min_value=1, value=sv.records_per_batch.value, key=sv.records_per_batch.key,
                                 help="How many records to generate in a single LLM call")
             with c3:
-                st.number_input("Parallel batches", min_value=0, step=100, value=sv.parallel_batches.value, key=sv.parallel_batches.key,
-                                help="In a single iteration, how many batches to generate via parallel LLM calls")
+
+                def on_change_batches_num() -> None:
+                    sv.num_records_overall.value = (
+                        sv.records_per_batch.value * sv.parallel_batches.value
+                    )
+
+                st.number_input(
+                    "Parallel batches",
+                    min_value=0,
+                    step=1,
+                    value=sv.parallel_batches.value,
+                    on_change=on_change_batches_num,
+                    key=sv.parallel_batches.key,
+                    help="In a single iteration, how many batches to generate via parallel LLM calls",
+                )
             with c4:
-                st.number_input("Total records to generate", min_value=0, step=sv.records_per_batch.value*sv.parallel_batches.value, value=sv.num_records_overall.value, key=sv.num_records_overall.key, help="How many records to generate. Must be a multiple of `Records per batch` x `Parallel batches`")    
+                st.number_input(
+                    "Total records to generate",
+                    min_value=sv.records_per_batch.value * sv.parallel_batches.value,
+                    step=sv.records_per_batch.value * sv.parallel_batches.value,
+                    value=sv.num_records_overall.value,
+                    key=sv.num_records_overall.key,
+                    help="How many records to generate. Must be a multiple of `Records per batch` x `Parallel batches`",
+                )
             with c5:
                 st.number_input("Duplicate records per batch", min_value=0, value=sv.duplicate_records_per_batch.value, key=sv.duplicate_records_per_batch.key,
                                 help="Within each batch, how many records should be near-duplicates of a seed record randomly selected from existing records")
