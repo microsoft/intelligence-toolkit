@@ -18,7 +18,7 @@ def get_intro():
         return file.read()
 
 
-def create(sv: bds_variables.SessionVariables, workflow: None):
+async def create(sv: bds_variables.SessionVariables, workflow: None):
     intro_tab, schema_tab, generator_tab, mock_tab = st.tabs(['Generate Record Data workflow:', 'Prepare data schema', 'Generate mock data', 'View example outputs'])
     with intro_tab:
         st.markdown(get_intro())
@@ -75,10 +75,30 @@ def create(sv: bds_variables.SessionVariables, workflow: None):
                 st.number_input("Records per batch", min_value=1, value=sv.records_per_batch.value, key=sv.records_per_batch.key,
                                 help="How many records to generate in a single LLM call")
             with c3:
-                st.number_input("Parallel batches", min_value=0, step=100, value=sv.parallel_batches.value, key=sv.parallel_batches.key,
-                                help="In a single iteration, how many batches to generate via parallel LLM calls")
+
+                def on_change_batches_num() -> None:
+                    sv.num_records_overall.value = (
+                        sv.records_per_batch.value * sv.parallel_batches.value
+                    )
+
+                st.number_input(
+                    "Parallel batches",
+                    min_value=0,
+                    step=1,
+                    value=sv.parallel_batches.value,
+                    on_change=on_change_batches_num,
+                    key=sv.parallel_batches.key,
+                    help="In a single iteration, how many batches to generate via parallel LLM calls",
+                )
             with c4:
-                st.number_input("Total records to generate", min_value=0, step=sv.records_per_batch.value*sv.parallel_batches.value, value=sv.num_records_overall.value, key=sv.num_records_overall.key, help="How many records to generate. Must be a multiple of `Records per batch` x `Parallel batches`")    
+                st.number_input(
+                    "Total records to generate",
+                    min_value=sv.records_per_batch.value * sv.parallel_batches.value,
+                    step=sv.records_per_batch.value * sv.parallel_batches.value,
+                    value=sv.num_records_overall.value,
+                    key=sv.num_records_overall.key,
+                    help="How many records to generate. Must be a multiple of `Records per batch` x `Parallel batches`",
+                )
             with c5:
                 st.number_input("Duplicate records per batch", min_value=0, value=sv.duplicate_records_per_batch.value, key=sv.duplicate_records_per_batch.key,
                                 help="Within each batch, how many records should be near-duplicates of a seed record randomly selected from existing records")
@@ -114,7 +134,7 @@ def create(sv: bds_variables.SessionVariables, workflow: None):
                     for placeholder in df_placeholders:
                         placeholder.empty()
 
-                    sv.final_object.value, sv.generated_objects.value, sv.generated_dfs.value = data_generator.generate_data(
+                    sv.final_object.value, sv.generated_objects.value, sv.generated_dfs.value = await data_generator.generate_data(
                         ai_configuration=ai_configuration,
                         generation_guidance=sv.generation_guidance.value,
                         primary_record_array=sv.primary_record_array.value,
@@ -125,7 +145,8 @@ def create(sv: bds_variables.SessionVariables, workflow: None):
                         duplicate_records_per_batch=sv.duplicate_records_per_batch.value,
                         related_records_per_batch=sv.related_records_per_batch.value,
                         data_schema=sv.schema.value,
-                        df_update_callback=on_dfs_update
+                        df_update_callback=on_dfs_update,
+                        callback_batch=None
                     )
 
                 for ix, record_array in enumerate(sv.record_arrays.value):

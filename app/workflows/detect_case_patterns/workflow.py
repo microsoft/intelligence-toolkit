@@ -463,7 +463,7 @@ def create(sv: ap_variables.SessionVariables, workflow):
                     st.divider()
                     st.markdown(f'# Example {i+1}')
                     st.divider()
-                    st.image(pattern_img[i], width=1000)
+                    st.image(pattern_img[i])
                     st.markdown(pattern_md[i])
                     st.divider()
                     

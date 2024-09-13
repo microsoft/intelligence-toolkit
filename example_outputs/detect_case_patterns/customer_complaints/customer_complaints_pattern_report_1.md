@@ -1,6 +1,6 @@
 # Pattern Report
 
-**Pattern: age_range=(30.0-40.0] & price_issue=True & product_code=A**
+**Pattern: age_range=(30-40] & price_issue=True & product_code=A**
 
 This pattern identifies a group of cases where individuals aged between 30 and 40 years have reported price issues with a product labeled as "A."
 

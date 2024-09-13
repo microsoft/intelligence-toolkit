@@ -1,7 +1,5 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-import asyncio
 import random
-import re
 from json import dumps, loads
 from operator import call
 
@@ -29,7 +27,6 @@ async def generate_data(
     callback_batch,
 ):
     num_iterations = num_records_overall // (records_per_batch * parallel_batches)
-    print(num_records_overall, records_per_batch, parallel_batches, num_iterations)
     generated_objects = []
     first_object = generate_unseeded_data(
                         ai_configuration=ai_configuration,
@@ -44,7 +41,9 @@ async def generate_data(
         if i == 0:
             sample_records = sample_from_record_array(first_object_json, primary_record_array, records_per_batch)
         else:
-            sample_records = sample_from_record_array(current_object_json, primary_record_array, records_per_batch)
+            sample_records = sample_from_record_array(
+                current_object_json, primary_record_array, parallel_batches
+            )
         # Use each as seed for parallel gen
         new_objects = await generate_seeded_data(
             ai_configuration=ai_configuration,
@@ -55,13 +54,15 @@ async def generate_data(
             near_duplicate_records=duplicate_records_per_batch,
             close_relation_records=related_records_per_batch,
             data_schema=data_schema,
-            callbacks=[callback_batch],
+            callbacks=[callback_batch] if callback_batch is not None else None,
         )
 
         for new_object in new_objects:
             new_object_json = loads(new_object)
             generated_objects.append(new_object_json)
-            current_object_json, conflicts = merge_json_objects(current_object_json, new_object_json)
+            current_object_json, conflicts = merge_json_objects(
+                current_object_json, new_object_json
+            )
         dfs = {}
         for record_array in record_arrays:
             df = extract_df(current_object_json, record_array)
@@ -207,6 +208,6 @@ def extract_array_fields(schema):
     extract_array_fields_recursive(schema, [])
     return array_fields
 
-def sample_from_record_array(object, record_array, k):
-    records = schema_builder.get_subobject(object, record_array.split('.'))
+def sample_from_record_array(current_object, record_array, k):
+    records = schema_builder.get_subobject(current_object, record_array.split("."))
     return random.sample(records, k) if len(records) > k else records
