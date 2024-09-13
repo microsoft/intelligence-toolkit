@@ -8,30 +8,28 @@ from operator import call
 import pandas as pd
 
 import toolkit.AI.utils as utils
-import toolkit.extract_data_records.prompts as prompts
+import toolkit.extract_record_data.prompts as prompts
 import toolkit.generate_mock_data.schema_builder as schema_builder
 import toolkit.query_text_data.helper_functions as helper_functions
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 
-async def extract_data(
+async def extract_record_data(
     ai_configuration,
     generation_guidance,
-    primary_record_array,
     record_arrays,
     data_schema,
-    text_inputs,
-    parallel_batches,
+    input_texts,
     df_update_callback,
     callback_batch,
 ):
     generated_objects = []
+    current_object_json = {}
     
-    new_objects = await extract_data(
+    new_objects = await _extract_data_parallel(
         ai_configuration=ai_configuration,
-        text_inputs=text_inputs,
+        input_texts=input_texts,
         generation_guidance=generation_guidance,
-        primary_record_array=primary_record_array,
         data_schema=data_schema,
         callbacks=[callback_batch] if callback_batch is not None else None,
     )
@@ -49,11 +47,10 @@ async def extract_data(
     return current_object_json, generated_objects, dfs
 
 
-async def extract_data(
+async def _extract_data_parallel(
     ai_configuration,
-    text_inputs,
+    input_texts,
     generation_guidance,
-    primary_record_array,
     data_schema,
     callbacks: list[ProgressBatchCallback] | None = None,
 ):
@@ -70,7 +67,6 @@ async def extract_data(
         {
             'input_text': input_text,
             'generation_guidance': generation_guidance,
-            'primary_record_array': primary_record_array
         }) for input_text in input_texts
     ]
 

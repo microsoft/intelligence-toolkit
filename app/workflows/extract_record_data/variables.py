@@ -21,6 +21,8 @@ class SessionVariables:
         self.generated_dfs = SessionVariable({}, prefix)
         self.final_object = SessionVariable({}, prefix)
         self.primary_record_array = SessionVariable('', prefix)
+        self.generated_objects = SessionVariable([], prefix)
+        self.generated_dfs = SessionVariable({}, prefix)
         
     def reset_workflow(self):
         for key in st.session_state:

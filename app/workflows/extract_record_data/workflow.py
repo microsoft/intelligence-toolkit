@@ -4,8 +4,9 @@ from json import dumps, loads
 import pandas as pd
 import streamlit as st
 
-import app.workflows.generate_mock_data.variables as bds_variables
-import toolkit.generate_mock_data.data_generator as data_generator
+import app.workflows.extract_record_data.variables as variables
+import toolkit.extract_record_data.prompts as prompts
+import toolkit.extract_record_data.data_extractor as data_extractor
 import app.util.schema_ui as schema_ui
 from app.util.openai_wrapper import UIOpenAIConfiguration
 
@@ -17,20 +18,19 @@ def get_intro():
         return file.read()
 
 
-async def create(sv: bds_variables.SessionVariables, workflow: None):
+async def create(sv: variables.SessionVariables, workflow: None):
     intro_tab, schema_tab, generator_tab, mock_tab = st.tabs(['Extract Record Data workflow:', 'Prepare data schema', 'Extract structured records', 'View example outputs'])
     with intro_tab:
         st.markdown(get_intro())
     with schema_tab:
         sv.loaded_filename.value = schema_ui.build_schema_ui(sv.schema.value, sv.loaded_filename.value)
-        array_field_arrays = data_generator.extract_array_fields(sv.schema.value)
-        print(array_field_arrays)
+        array_field_arrays = data_extractor.extract_array_fields(sv.schema.value)
         sv.record_arrays.value = ['.'.join(a) for a in array_field_arrays]
     with generator_tab:
         if len(sv.schema.value['properties']) == 0:
             st.warning("Prepare data schema to continue.")
         else:
-            # ABC Ltd. is headquarted at 10 Downing Street, London, UK. The company has 3 employees: John Doe, Jane Doe, and Alice Smith. John Doe is the CEO, Jane Doe is the CFO, and Alice Smith is the CTO. The company has 2 departments: Sales and Marketing. The Sales department has 2 employees: John Doe and Jane Doe. The Marketing department has 1 employee: Alice Smith. I called them on 07876545432 and they have an email address of abc@example.com. Grievances include safety (10) and poor treatment (5) of employees.
+            # ABC Ltd. is headquartered at 10 Downing Street, London, UK. The company has 3 employees: John Doe, Jane Doe, and Alice Smith. John Doe is the CEO, Jane Doe is the CFO, and Alice Smith is the CTO. The company has 2 departments: Sales and Marketing. The Sales department has 2 employees: John Doe and Jane Doe. The Marketing department has 1 employee: Alice Smith. I called them on 07876545432 and they have an email address of abc@example.com. Grievances include safety (10) and poor treatment (5) of employees.
 
             st.markdown("##### Record extraction controls")
             st.selectbox("Primary record array", sv.record_arrays.value, key=sv.primary_record_array.key,
@@ -65,16 +65,15 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                     for placeholder in df_placeholders:
                         placeholder.empty()
 
-                    sv.final_object.value, sv.generated_objects.value, sv.generated_dfs.value = await data_generator.generate_data(
+                    (
+                        sv.final_object.value,
+                        sv.generated_objects.value,
+                        sv.generated_dfs.value
+                    ) = await data_extractor.extract_record_data(
                         ai_configuration=ai_configuration,
+                        input_texts=[sv.text_input.value],
                         generation_guidance=sv.generation_guidance.value,
-                        primary_record_array=sv.primary_record_array.value,
                         record_arrays=sv.record_arrays.value,
-                        num_records_overall=sv.num_records_overall.value,
-                        records_per_batch=sv.records_per_batch.value,
-                        parallel_batches=sv.parallel_batches.value,
-                        duplicate_records_per_batch=sv.duplicate_records_per_batch.value,
-                        related_records_per_batch=sv.related_records_per_batch.value,
                         data_schema=sv.schema.value,
                         df_update_callback=on_dfs_update,
                         callback_batch=None
