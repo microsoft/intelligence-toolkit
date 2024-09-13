@@ -5,6 +5,7 @@
 import asyncio
 
 import streamlit as st
+import pandas as pd
 from components.app_loader import load_multipage_app
 from util.helper_fn import app_in_dev_mode
 
@@ -24,7 +25,7 @@ async def main():
     load_multipage_app(sv)
 
     try:
-        grd_workflow.create(sv, workflow)
+        await grd_workflow.create(sv, workflow)
     except Exception as e:
         if app_in_dev_mode():
             st.exception(e)

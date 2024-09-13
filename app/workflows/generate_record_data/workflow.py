@@ -18,7 +18,7 @@ def get_intro():
         return file.read()
 
 
-def create(sv: bds_variables.SessionVariables, workflow: None):
+async def create(sv: bds_variables.SessionVariables, workflow: None):
     intro_tab, schema_tab, generator_tab, mock_tab = st.tabs(['Generate Record Data workflow:', 'Prepare data schema', 'Generate mock data', 'View example outputs'])
     with intro_tab:
         st.markdown(get_intro())
@@ -114,7 +114,7 @@ def create(sv: bds_variables.SessionVariables, workflow: None):
                     for placeholder in df_placeholders:
                         placeholder.empty()
 
-                    sv.final_object.value, sv.generated_objects.value, sv.generated_dfs.value = data_generator.generate_data(
+                    sv.final_object.value, sv.generated_objects.value, sv.generated_dfs.value = await data_generator.generate_data(
                         ai_configuration=ai_configuration,
                         generation_guidance=sv.generation_guidance.value,
                         primary_record_array=sv.primary_record_array.value,
@@ -125,7 +125,8 @@ def create(sv: bds_variables.SessionVariables, workflow: None):
                         duplicate_records_per_batch=sv.duplicate_records_per_batch.value,
                         related_records_per_batch=sv.related_records_per_batch.value,
                         data_schema=sv.schema.value,
-                        df_update_callback=on_dfs_update
+                        df_update_callback=on_dfs_update,
+                        callback_batch=None
                     )
 
                 for ix, record_array in enumerate(sv.record_arrays.value):

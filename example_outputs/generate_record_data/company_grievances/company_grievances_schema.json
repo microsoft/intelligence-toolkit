@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yourdomain.com/example.schema.json",
+  "title": "Company schema",
+  "description": "A schema for mock company data generation",
+  "type": "object",
+  "properties": {
+    "companies": {
+      "type": "array",
+      "description": "The dataset of companies",
+      "items": {
+        "type": "object",
+        "description": "An object list item",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the company"
+          },
+          "sector": {
+            "type": "string",
+            "description": "The industry sector in which the company operates"
+          },
+          "address": {
+            "type": "string",
+            "description": "The street address of the company"
+          },
+          "city": {
+            "type": "string",
+            "description": "The city of the company"
+          },
+          "country": {
+            "type": "string",
+            "description": "The country of the company"
+          },
+          "email": {
+            "type": "string",
+            "description": "The contact email for the company"
+          },
+          "phone": {
+            "type": "string",
+            "description": "The phone number of the company"
+          },
+          "owner": {
+            "type": "string",
+            "description": "The owner of the company"
+          },
+          "safety_grievances": {
+            "type": "number",
+            "description": "The number of reported safety grievances"
+          },
+          "pay_grievances": {
+            "type": "number",
+            "description": "The number of reported pay grievances"
+          },
+          "conditions_grievances": {
+            "type": "number",
+            "description": "The number of reported conditions grievances"
+          },
+          "treatment_grievances": {
+            "type": "number",
+            "description": "The number of reported treatment grievances"
+          },
+          "workload_grievances": {
+            "type": "string",
+            "description": "The number of reported workload grievances"
+          }
+        },
+        "required": [
+          "name",
+          "sector",
+          "address",
+          "city",
+          "country",
+          "email",
+          "phone",
+          "owner",
+          "safety_grievances",
+          "pay_grievances",
+          "conditions_grievances",
+          "treatment_grievances",
+          "workload_grievances"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "companies"
+  ],
+  "additionalProperties": false
+}

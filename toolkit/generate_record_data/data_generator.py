@@ -55,7 +55,7 @@ async def generate_data(
             near_duplicate_records=duplicate_records_per_batch,
             close_relation_records=related_records_per_batch,
             data_schema=data_schema,
-            callbacks=[callback_batch],
+            callbacks=[callback_batch] if callback_batch is not None else None,
         )
 
         for new_object in new_objects:
