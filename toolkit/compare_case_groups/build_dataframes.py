@@ -55,10 +55,9 @@ def build_grouped_df(main_dataset, groups) -> pd.DataFrame:
     return gdf
 
 
-def build_attribute_df(filtered_df, groups, temporal, aggregates):
-    id_vars = [*groups, temporal] if temporal != "" else groups
+def build_attribute_df_pd(filtered_df, groups, aggregates=""):
     ndf = filtered_df.melt(
-        id_vars=id_vars,
+        id_vars=groups,
         value_vars=aggregates,
         var_name="Attribute",
         value_name="Value",
@@ -73,8 +72,9 @@ def build_attribute_df(filtered_df, groups, temporal, aggregates):
         .size()
         .reset_index(name="Attribute Count")
     )
-    # Ensure all groups have entries for all attribute values
-    for name, group in attributes_df.groupby(groups):
+    # Ensure all groups have entries for all attribute value
+    grouped = attributes_df.groupby(groups)
+    for name, group in grouped:
         for att_val in attributes_df["Attribute Value"].unique():
             # count rows with this group and attribute value
             row_count = len(group[group["Attribute Value"] == att_val])
@@ -88,6 +88,50 @@ def build_attribute_df(filtered_df, groups, temporal, aggregates):
             "Attribute Count"
         ].rank(ascending=False, method="max", na_option="bottom")
     return attributes_df
+
+
+def build_attribute_df(
+    filtered_df: pl.DataFrame, groups: list[str], aggregates: str = ""
+) -> pl.DataFrame:
+    ndf = filtered_df.melt(
+        id_vars=groups,
+        value_vars=aggregates,
+        variable_name="Attribute",
+        value_name="Value",
+    )
+
+    # Drop rows with NaN values in the "Value" column
+    ndf = ndf.drop_nulls(subset=["Value"])
+
+    # Create "Attribute Value" column
+    ndf = ndf.with_columns(
+        (pl.col("Attribute") + ":" + pl.col("Value").cast(str)).alias("Attribute Value")
+    )
+
+    # Group by and count the occurrences
+    attributes_df = ndf.group_by([*groups, "Attribute Value"]).agg(
+        pl.len().alias("Attribute Count")
+    )
+
+    # Ensure all groups have entries for all attribute values
+    all_attribute_values = attributes_df["Attribute Value"].unique().to_list()
+    groups_df = filtered_df.select(groups).unique()
+    all_combinations = pl.DataFrame({col: groups_df[col] for col in groups}).join(
+        pl.DataFrame({"Attribute Value": all_attribute_values}), how="cross"
+    )
+    attributes_df = all_combinations.join(
+        attributes_df, on=[*groups, "Attribute Value"], how="left"
+    ).fill_null(0)
+
+    # Calculate the rank
+    return attributes_df.with_columns(
+        [
+            pl.col("Attribute Count")
+            .rank("max", descending=True)
+            .over("Attribute Value")
+            .alias("Attribute Rank")
+        ]
+    )
 
 
 def filter_df(main_df, filters: list[str]):

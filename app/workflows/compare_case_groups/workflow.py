@@ -6,17 +6,19 @@ import os
 import polars as pl
 import streamlit as st
 
-import streamlit as st
-
 import app.workflows.compare_case_groups.variables as gn_variables
 from app.util import ui_components
 from toolkit.compare_case_groups import prompts
-from toolkit.compare_case_groups.build_dataframes import (build_attribute_df,
-                                                          build_grouped_df,
-                                                          build_ranked_df,
-                                                          filter_df)
-from toolkit.compare_case_groups.temporal_process import (build_temporal_data,
-                                                          create_window_df)
+from toolkit.compare_case_groups.build_dataframes import (
+    build_attribute_df,
+    build_grouped_df,
+    build_ranked_df,
+    filter_df,
+)
+from toolkit.compare_case_groups.temporal_process import (
+    build_temporal_data,
+    create_window_df,
+)
 from toolkit.helpers.df_functions import fix_null_ints
 
 
@@ -166,7 +168,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                     grouped_df = build_grouped_df(filtered_df, groups)
 
                     attributes_df = build_attribute_df(
-                        filtered_df, groups, temporal, aggregates
+                        pl.from_pandas(filtered_df), groups, aggregates
                     )
 
                     temporal_df = pl.DataFrame()
@@ -188,7 +190,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                     odf = build_ranked_df(
                         temporal_df,
                         pl.from_pandas(grouped_df),
-                        pl.from_pandas(attributes_df),
+                        attributes_df,
                         temporal or "",
                         groups,
                     )
