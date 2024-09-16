@@ -10,12 +10,13 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import streamlit as st
+
+import toolkit.AI.utils as utils
 from app.util.df_functions import get_current_time, quantize_datetime, quantize_numeric
 from app.util.download_pdf import add_download_pdf
 from app.util.enums import Mode
 from app.util.openai_wrapper import UIOpenAIConfiguration
-
-import toolkit.AI.utils as utils
+from app.util.openai_wrapper import UIOpenAIConfiguration
 from toolkit.AI.classes import LLMCallback
 from toolkit.AI.client import OpenAIClient
 from toolkit.AI.defaults import DEFAULT_MAX_INPUT_TOKENS
@@ -208,8 +209,6 @@ def single_csv_uploader(
         df = pd.read_csv(
             file, encoding=encoding, encoding_errors="ignore", low_memory=False
         )
-        # df.columns = df.columns.str.strip()
-        # df = util.df_functions.fix_null_ints(df)
         input_df_var.value = df
         processed_df_var.value = pd.DataFrame()
         if f"{workflow}_intermediate_dfs" in st.session_state:

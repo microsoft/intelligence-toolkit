@@ -108,7 +108,7 @@ class TestBuildTemporalCount:
     def test_missing_values(self):
         data = {
             "Group": ["A", "A", "B", "B"],
-            "Temporal": [1, 2, 1, 2],
+            "Temporal": [1, 2, 1, 20],
             "Attribute Value": ["X:10", "X:20", "Y:30", "Y:40"],
             "Temporal Window Count": [5, None, 8, None],
         }

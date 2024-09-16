@@ -9,20 +9,16 @@ import streamlit as st
 import app.workflows.compare_case_groups.variables as gn_variables
 from app.util import ui_components
 from toolkit.compare_case_groups import prompts
-from toolkit.compare_case_groups.build_dataframes import (
-    build_attribute_df,
-    build_grouped_df,
-    build_ranked_df,
-    filter_df,
-)
-from toolkit.compare_case_groups.temporal_process import (
-    build_temporal_data,
-    create_window_df,
-)
+from toolkit.compare_case_groups.build_dataframes import (build_attribute_df,
+                                                          build_grouped_df,
+                                                          build_ranked_df,
+                                                          filter_df)
+from toolkit.compare_case_groups.temporal_process import (build_temporal_data,
+                                                          create_window_df)
 from toolkit.helpers.df_functions import fix_null_ints
 
 
-def get_intro():
+def get_intro() -> str:
     file_path = os.path.join(os.path.dirname(__file__), "README.md")
     with open(file_path) as file:
         return file.read()
@@ -69,28 +65,6 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                 st.markdown("##### Define summary model")
                 sorted_atts = []
                 sorted_cols = sorted(sv.case_groups_final_df.value.columns)
-
-                # exclude_values = {
-                #     "",
-                #     "<NA>",
-                #     "nan",
-                #     "NaN",
-                #     "None",
-                #     "none",
-                #     "NULL",
-                #     "null",
-                # }
-                # for col in sorted_cols:
-                #     if col == "Subject ID":
-                #         continue
-                #     unique_vals = (
-                #         sv.case_groups_final_df.value[col].astype(str).dropna().unique()
-                #     )
-                #     filtered_vals = [
-                #         val for val in unique_vals if val not in exclude_values
-                #     ]
-                #     vals = [f"{col}:{val}" for val in sorted(filtered_vals)]
-                #     sorted_atts.extend(vals)
 
                 for col in sorted_cols:
                     if col == "Subject ID":
@@ -158,6 +132,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                     sv.case_groups_model_df.value = (
                         sv.case_groups_model_df.value.replace("", None)
                     )
+                    initial_row_count = len(sv.case_groups_model_df.value)
 
                     filtered_df = (
                         filter_df(sv.case_groups_model_df.value, filters)
@@ -187,17 +162,17 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                             temporal_df, groups, temporal_atts, temporal
                         )
                     # Create overall df
-                    odf = build_ranked_df(
+                    ranked_df = build_ranked_df(
                         temporal_df,
                         pl.from_pandas(grouped_df),
                         attributes_df,
                         temporal or "",
                         groups,
                     )
-                    odf = odf.to_pandas()
+                    ranked_df = ranked_df.to_pandas()
 
                     sv.case_groups_model_df.value = (
-                        odf[
+                        ranked_df[
                             [
                                 *groups,
                                 "Group Count",
@@ -212,7 +187,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                             ]
                         ]
                         if temporal != ""
-                        else odf[
+                        else ranked_df[
                             [
                                 *groups,
                                 "Group Count",
@@ -234,7 +209,6 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                         + "]"
                     )
 
-                    initial_row_count = len(sv.case_groups_model_df.value)
                     filtered_row_count = len(filtered_df)
                     dataset_proportion = int(
                         round(
@@ -310,7 +284,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                         )
                     ]
                     filter_description = f'Filtered to the following groups only: {", ".join([str(s) for s in selected_groups])}'
-                elif top_group_ranks or 0 > 0:
+                elif top_group_ranks:
                     fdf = fdf[fdf["Group Rank"] <= top_group_ranks]
                     filter_description = (
                         f"Filtered to the top {top_group_ranks} groups by record count"

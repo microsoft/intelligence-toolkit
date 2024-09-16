@@ -80,18 +80,34 @@ def build_temporal_data(
 
     for tatt in temporal_atts:
         tdf = ldf.filter(pl.col(temporal) == tatt)
-        tdf = tdf.with_columns(pl.lit(None).alias(f"{temporal} Window Rank"))
-        # rank counts for each attribute value
+        tdf = tdf.with_columns(pl.lit(0).alias(f"{temporal} Window Rank"))
         for att_val in tdf.select("Attribute Value").unique().to_numpy():
             filtered_df = tdf.filter(pl.col("Attribute Value") == att_val)
             ranked_series = filtered_df[f"{temporal} Window Count"].rank(
                 descending=True, method="dense"
             )
+            filtered_ranked = filtered_df.with_columns(
+                ranked_series.alias(f"{temporal} Window Rank")
+            )
+            tdf = tdf.join(
+                filtered_ranked,
+                on=[*groups, temporal, "Attribute Value"],
+                how="left",
+                suffix=("_r"),
+            )
             tdf = tdf.with_columns(
                 pl.when(pl.col("Attribute Value") == att_val)
-                .then(ranked_series)
+                .then(pl.col(f"{temporal} Window Rank_r"))
                 .otherwise(pl.col(f"{temporal} Window Rank"))
                 .alias(f"{temporal} Window Rank")
+            )
+
+            tdf = tdf.drop(
+                [
+                    f"{temporal} Window Delta_r",
+                    f"{temporal} Window Rank_r",
+                    f"{temporal} Window Count_r",
+                ]
             )
 
         tdfs.append(tdf)
