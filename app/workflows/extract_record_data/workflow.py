@@ -58,6 +58,7 @@ async def create(sv: variables.SessionVariables, workflow: None):
                 generate = st.button('Extract record data')
 
             with d2:
+                st.markdown("##### Extracted records")
                 df_placeholders = []
                 dl_placeholders = []
                 if len(sv.record_arrays.value) == 0:
@@ -101,7 +102,7 @@ async def create(sv: variables.SessionVariables, workflow: None):
                             with df_placeholders[ix]:
                                 if record_array in sv.generated_dfs.value:
                                     df = sv.generated_dfs.value[record_array]
-                                    st.dataframe(df, height=600)
+                                    st.dataframe(df, height=600, use_container_width=True)
 
                     for ix, record_array in enumerate(sv.record_arrays.value):
                         with dl_placeholders[ix]:
@@ -118,11 +119,11 @@ async def create(sv: variables.SessionVariables, workflow: None):
                             with c2:
                                 if record_array in sv.generated_dfs.value:
                                     st.download_button(
-                                        label=f'Download {record_array}.csv',
+                                        label=f'Download {record_array}_extracted.csv',
                                         data=sv.generated_dfs.value[record_array].to_csv(index=False, encoding='utf-8'),
-                                        file_name=f'{record_array}.csv',
+                                        file_name=f'{record_array}_extracted.csv',
                                         mime='text/csv',
-                                        key=f'{record_array}_csv_download'
+                                        key=f'{record_array}_extracted_csv_download'
                                     )
     # with mock_tab:
     #     workflow_home = 'example_outputs/generate_mock_data'

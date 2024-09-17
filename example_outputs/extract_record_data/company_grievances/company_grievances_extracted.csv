@@ -1,0 +1,51 @@
+name,sector,address,city,country,email,phone,owner,safety_grievances,pay_grievances,conditions_grievances,treatment_grievances,workload_grievances
+SmartBuild,Real Estate,60 Living St,HomeCity,Houseland,info@smartbuild.com,1213141521,Home Architect,0,0,0,0,0
+AgriGrowth Ltd,Agriculture,500 Farm Rd,AgroVille,FarmLand,contact@agrigrowth.com,3344556677,Tom Farmer,0,0,0,0,0
+MediCare Services,Healthcare,101 Health Blvd,Medicity,Healthland,support@medicare.com,2233445566,Dr. Heal,0,0,0,0,0
+HealthGuard Services,Healthcare,654 Wellness Blvd,Health City,Careland,info@healthguard.med,333-444-5559,Dr. Safe,0,0,0,0,0
+Skyline Architects,Architecture,303 Design Blvd,Arch City,Designia,contact@skylinearch.com,3344556677,Anna Design,0,0,0,0,0
+CleanEnergi Co,Energy,900 Solar St.,Energy City,Powerland,info@cleanenergi.com,+1 777-888-9999,Power Corp,0,0,0,0,0
+Woodland Timber Supplies,Manufacturing,175 Timber Trail,Woodland,Leafland,support@woodlandtimber.com,4455667813,Oak Leaf,0,0,0,0,0
+AutoDrive Inc.,automotive,987 Motorway,Drive City,Autoland,info@autodriveinc.com,6677889900,Alex Auto,0,0,0,0,0
+TechFinance Innovations,Finance,505 Money St,Finance City,Bankland,support@techfinanceinnovations.com,9876543215,Alice Cash,0,0,0,0,0
+BrightFuture Consulting,Consulting,321 Knowledge Ave,EduCity,LearnLand,consult@brightfuture.edu,1234567891,Liam Johnson,0,0,0,0,0
+AgriGrowth Ltd.,agriculture,202 Farm Lane,Harvest Town,Agroland,info@agrigrowth.com,2233445566,Bob Farmer,0,0,0,0,0
+Smart Solutions,Technology,987 Smart Rd,Techville,Innovatia,info@smartsolutions.com,123-456-7897,Alex Smart,0,0,0,0,0
+AgriTech Farms,Agriculture,700 Harvest Road,Farm City,AgriLand,contact@agritechfarms.com,7890123456,Eve Farmer,0,0,0,0,0
+HealthFirst,healthcare,321 Wellness St,HealthCity,CareLand,support@healthfirst.com,7890123456,Morgan Care,0,0,0,0,0
+SkyLift Carriers,logistics,417 Sky St.,SkyCity,SkyLand,info@skylift.com,9900990022,Sky Navigator,0,0,0,0,0
+Harvest Solutions,agriculture,1313 Solution Ave,Solution City,USA,contact@harvestsolutions.com,+1 415-161-718,Solution Farmer,0,0,0,0,0
+Tech Pioneers,Information Technology,200 Tech Avenue,Innovate City,Futuristan,info@techpioneers.com,123-456-7897,Jamie Innovator,0,0,0,0,0
+Innovative Gears Co.,Technology,128 Innovation Dr.,Techville,Innovatia,contact@innovativegears.com,1234567895,Jordan Tech,0,0,0,0,0
+Harvesters Co-op,Agriculture,720 Farm Lane,Harvest,Agroland,coop@harvesters.co,1112131427,Farmer Yellow,0,0,0,0,0
+EduLearn Academy,Education,1010 Knowledge Ave,Learnville,EduLand,info@edulearn.acad,9988776655,Teach Wise,0,0,0,0,0
+Finance Gurus,finance,11000 Money St,Finance City,Finland,info@financegurus.finance,9112345678,Banker Rich,0,0,0,0,0
+Harvest Time Inc,Agriculture,81 Harvest Road,Farmville,Agroland,hello@harvesttime.inc,3344556680,Farmer Crops,0,0,0,0,0
+TechWave Solutions,Technology,101 Innovation Drive,Tech City,Techland,support@techwave.com,111-222-3334,Jordan Innovate,4,3,5,3,4
+AutoDrive,automotive,852 Motorway,Auto City,Carland,contact@autodrive.auto,1555000000,Carla Driver,0,0,0,0,0
+Fashion Forward Inc.,retail,987 Style St,Fashion City,Trendland,hello@fashionforward.com,1445566778,Chic Trend,0,0,0,0,0
+Green Energy Corp,Energy,300 Solar St,Sunville,Energia,contact@greenenergy.com,1555000666,Sam G.,0,0,0,0,0
+Quantum Networks,Information Technology,137 Innovation Drive,Techville,Futuristan,networks@quantum.com,123-456-7899,Jordan Quantum,0,0,0,0,0
+BuildIt Construction,construction,303 Build Ave,Construct City,Buildland,info@buildit.construct,1999000111,Bob Builder,0,0,0,0,0
+SafeHome Security,Security,987 Secure Lane,SafeTown,SecureLand,support@safehome.com,7890123456,Alex Guard,0,0,0,0,0
+Coastal Ventures,Marine,210 Ocean Drive,Seaside,Marineland,info@coastalventures.com,1333444559,Marina Shore,0,0,0,0,0
+TravelTime,travel,1010 Journey Rd,TravelCity,Wanderland,contact@traveltime.com,1889900112,Globetrotter,0,0,0,0,0
+DrivePro Services,automotive,811 Drive Lane,Autotown,Japan,services@drivepro.jp,6677889908,Drive Expert,0,0,0,0,0
+FastTrack Autos,automotive,507 Driveway,Autoville,Carland,info@fasttrack.auto,9900112244,Driver Fast,0,0,0,0,0
+Tech Solutions,Technology,404 Code Street,Techville,Innovatia,support@techsolutions.com,222-334-4556,Alex Code,0,0,0,0,0
+Fashion Forward,retail,789 Style Ave,FashionTown,TrendLand,contact@fashionforward.com,3456789012,Cathy Chic,0,0,0,0,0
+Health First,healthcare,4000 Wellness Way,Health City,Careland,contact@healthfirst.com,6600445566,Care Group,0,0,0,0,0
+TravelAdventures,travel,6060 Journey Rd,Travelville,Wanderland,info@traveladventures.com,1778899001,Wander Lust,0,0,0,0,0
+EduLearn,education,1010 Knowledge Rd,Learnville,EduNation,info@edulearn.edu,1223344556,Prof. Teach,0,0,0,0,0
+StyleHub Retail,Retail,123 Fashion Ave,Fashion City,StyleLand,contact@stylehub.com,456-789-0124,Ava Taylor,0,0,0,0,0
+Eco Fashion House,fashion,123 Style St,Fashion City,Trendland,info@ecofashion.com,1011121314,Style Eco,0,0,0,0,0
+Leafland Woodworks,manufacturing,176 Timber Trail,Woodland,Leafland,contact@leaflandwoodworks.com,4455667814,Pine Cone,0,0,0,0,0
+AutoDrive Mechanics,automotive,56 Motorway,Autocity,Carland,service@autodrive.com,6677889900,Mechanic Mike,0,0,0,0,0
+Fashion Forward,fashion,707 Style St,Fashionville,Stylia,info@fashionforward.fashion,1555000121,Trend Setter,0,0,0,0,0
+Green Builders,construction,761 Build Blvd,Construct City,Buildland,green@greenbuilders.com,1667788999,Alex Builder,0,0,0,0,0
+EcoTravel Agency,Travel,1000 Travel Rd.,TravelCity,TravelLand,info@ecotravelagency.com,9900111122,Pat Journey,0,0,0,0,0
+TechCorp Solutions,Technology,200 Tech Park,Innovate City,Techland,contact@techcorpsolutions.com,123-456-7890,Sam Innovate,0,0,0,0,0
+TechWave Innovations,Technology,186 Digital Dr.,Techville,Innovatia,contact@techwave.innov,1314151617,Wave Tech,0,0,0,0,0
+Drive Dynamics,automotive,1104 Drive St,Motor City,Autoland,hello@drivedynamics.com,8899001166,Morgan Drive,0,0,0,0,0
+Innovatech,Technology,12000 Innovate Rd,Innovate City,Techland,info@innovatech.tech,1555000666,Jordan Wise,0,0,0,0,0
+TravelCo,travel,90 Adventure Blvd,Travel Town,USA,info@travelco.com,1123456789,Tina Traveler,0,0,0,0,0

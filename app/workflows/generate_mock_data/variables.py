@@ -24,8 +24,13 @@ class SessionVariables:
         self.generated_objects = SessionVariable([], prefix)
         self.final_object = SessionVariable({}, prefix)
         self.generation_guidance = SessionVariable('', prefix)
+        self.text_generation_guidance = SessionVariable('', prefix)
         self.record_arrays = SessionVariable([], prefix)
         self.loaded_filename = SessionVariable('', prefix)
+        self.generated_texts = SessionVariable([], prefix)
+        self.generated_text_df = SessionVariable(None, prefix)
+        self.uploaded_synthesis_files = SessionVariable([], prefix)
+        self.synthesis_max_rows_to_process = SessionVariable(0, prefix)
         
     def reset_workflow(self):
         for key in st.session_state:

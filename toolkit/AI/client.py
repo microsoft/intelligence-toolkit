@@ -129,11 +129,16 @@ class OpenAIClient:
             kwargs.pop("max_tokens")
         else:
             max_tokens = self.configuration.max_tokens
+        if "temperature" in kwargs.keys():
+            temperature = kwargs["temperature"]
+            kwargs.pop("temperature")
+        else:
+            temperature = self.configuration.temperature
         if "stream" in kwargs.keys():
             kwargs.pop("stream")
         response = await self._async_client.chat.completions.create(
             model=self.configuration.model,
-            temperature=self.configuration.temperature,
+            temperature=temperature,
             max_tokens=max_tokens,
             messages=messages,
             stream=False,

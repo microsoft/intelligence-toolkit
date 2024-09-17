@@ -6,8 +6,10 @@ import streamlit as st
 
 import app.workflows.generate_mock_data.variables as bds_variables
 import toolkit.generate_mock_data.data_generator as data_generator
+import toolkit.generate_mock_data.text_generator as text_generator
 import app.util.schema_ui as schema_ui
 from app.util.openai_wrapper import UIOpenAIConfiguration
+import app.util.ui_components as ui_components
 
 ai_configuration = UIOpenAIConfiguration().get_configuration()
 
@@ -102,7 +104,7 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                     with dl_placeholders[ix]:
                         c1, c2 = st.columns([1, 1])
                         with c1:
-                            name = sv.schema.value["title"].replace(" ", "_").lower() + "_[data].json"
+                            name = sv.schema.value["title"].replace(" ", "_").lower() + "_[mock_data].json"
                             st.download_button(
                                 label=f'Download {name}',
                                 data=dumps(sv.final_object.value, indent=2),
@@ -121,19 +123,83 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                                 )
 
     with text_generator_tab:
-        pass
+        d1, d2 = st.columns([1, 1])
+        with d1:
+            st.markdown("##### Text generation controls")
+            selected_file, selected_df = ui_components.multi_csv_uploader(
+                "Upload CSV file(s)",
+                sv.uploaded_synthesis_files,
+                "synthesis_uploader",
+                "synthesis_uploader",
+                sv.synthesis_max_rows_to_process,
+            )
+            if selected_df is not None:
+                input_texts = []
+                for ix, row in selected_df.iterrows():
+                    input_texts.append(row.to_json())
+            st.text_area("AI text generation guidance", key=sv.text_generation_guidance.key, value=sv.text_generation_guidance.value,
+                        help="Guidance to the generative AI model about how text should be generated from records")
+            
+            generate = st.button('Generate text data')
+
+        with d2:
+            df_placeholders = []
+            dl_placeholders = []
+            
+            df_placeholder = st.empty()
+            df_placeholders.append(df_placeholder)
+            dl_placeholder = st.empty()
+            dl_placeholders.append(dl_placeholder)                
+
+            def on_dfs_update(df):
+                with df_placeholder:
+                    st.dataframe(df, height=250)
+                sv.generated_text_df.value = df
+                            
+            if generate:
+                sv.generated_texts.value = pd.DataFrame()
+                df_placeholder.empty()
+
+                (
+                    sv.generated_texts.value,
+                    sv.generated_text_df.value
+                ) = await text_generator.generate_text_data(
+                    ai_configuration=ai_configuration,
+                    input_texts=input_texts,
+                    generation_guidance=sv.text_generation_guidance.value,
+                    df_update_callback=on_dfs_update,
+                    callback_batch=None
+                )
+
+            if sv.generated_text_df.value is not None:
+                with df_placeholder:
+                    st.dataframe(sv.generated_text_df.value, height=600, use_container_width=True)
+
+                with dl_placeholder:
+                    name = '.'.join(selected_file.split(".")[:-1]) + "_[mock_text].csv"
+                    st.download_button(
+                        label=f'Download {name}',
+                        data=sv.generated_text_df.value.to_csv(index=False, encoding='utf-8'),
+                        file_name=f'{name}',
+                        mime='text/csv',
+                        key=f'{name}_csv_download'
+                    )
+               
     with mock_tab:
         workflow_home = 'example_outputs/generate_mock_data'
 
         mock_data_folders = [x for x in os.listdir(f'{workflow_home}')]
         print(mock_data_folders)
         mock_dfs = {}
+        mock_text_dfs = {}
         for folder in mock_data_folders:
-            mock_data_file = [x for x in os.listdir(f'{workflow_home}/{folder}') if x.endswith('.csv')][0]
+            mock_data_file = [x for x in os.listdir(f'{workflow_home}/{folder}') if x.endswith('data.csv')][0]
             mock_dfs[folder] = pd.read_csv(f'{workflow_home}/{folder}/{mock_data_file}')
+            mock_text_file = [x for x in os.listdir(f'{workflow_home}/{folder}') if x.endswith('text.csv')][0]
+            mock_text_dfs[folder] = pd.read_csv(f'{workflow_home}/{folder}/{mock_text_file}')
         selected_data = st.selectbox('Select example', mock_data_folders)
         if selected_data != None:
-            t1, t2 = st.tabs(['JSON schema', 'Mock data'])
+            t1, t2, t3 = st.tabs(['JSON schema', 'Mock records', 'Mock texts'])
             with t1:
                 schema_file = f'{workflow_home}/{selected_data}/{selected_data}_schema.json'
                 schema_text = loads(open(schema_file, 'r').read())
@@ -147,8 +213,16 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
             with t2:
                 st.dataframe(mock_dfs[selected_data], height=500)
                 st.download_button(
-                    label=f'Download {selected_data}',
+                    label=f'Download {selected_data}_data.csv',
                     data=mock_dfs[selected_data].to_csv(index=False, encoding='utf-8'),
-                    file_name=f'{selected_data}',
+                    file_name=f'{selected_data}_data.csv',
+                    mime='text/csv',
+                )
+            with t3:
+                st.dataframe(mock_text_dfs[selected_data], height=500, use_container_width=True)
+                st.download_button(
+                    label=f'Download {selected_data}_text.csv',
+                    data=mock_text_dfs[selected_data].to_csv(index=False, encoding='utf-8'),
+                    file_name=f'{selected_data}_text.csv',
                     mime='text/csv',
                 )
