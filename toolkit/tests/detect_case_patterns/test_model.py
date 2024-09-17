@@ -5,7 +5,7 @@
 import networkx as nx
 import pandas as pd
 
-from app.workflows.detect_case_patterns.config import (
+from toolkit.detect_case_patterns.config import (
     min_edge_weight,
     missing_edge_prop,
     type_val_sep,
@@ -27,7 +27,9 @@ def test_generate_graph_model_basic(mocker):
 
     test_df = pd.DataFrame(data)
 
-    mocker.patch("toolkit.helpers.df_functions.fix_null_ints").return_value = test_df
+    mocker.patch(
+        "toolkit.helpers.df_functions.fix_null_ints"
+    ).return_value = test_df.astype(str)
     result = generate_graph_model(test_df, "Period", type_val_sep)
 
     expected_data = {
@@ -59,7 +61,7 @@ def test_generate_graph_model_with_nans(mocker):
 
     mocker.patch(
         "toolkit.helpers.df_functions.fix_null_ints"
-    ).return_value = test_df.fillna("")
+    ).return_value = test_df.fillna("").astype(str)
     result = generate_graph_model(test_df, "Period", type_val_sep)
 
     expected_data = {
@@ -87,7 +89,9 @@ def test_generate_graph_model_column_rename(mocker):
 
     test_df = pd.DataFrame(data)
 
-    mocker.patch("toolkit.helpers.df_functions.fix_null_ints").return_value = test_df
+    mocker.patch(
+        "toolkit.helpers.df_functions.fix_null_ints"
+    ).return_value = test_df.astype(str)
     result = generate_graph_model(test_df, "Custom_Period", type_val_sep)
 
     expected_data = {
@@ -229,6 +233,10 @@ def test_prepare_graph(mocker):
     pdf, time_to_graph = prepare_graph(test_df, min_edge_weight, missing_edge_prop)
     assert "Grouping ID" in pdf.columns
     assert pdf["Grouping ID"].str.contains("@").all()
+    assert all(
+        isinstance(graph, nx.classes.graph.Graph) for graph in time_to_graph.values()
+    )
+    assert len(time_to_graph) == 2
     assert all(
         isinstance(graph, nx.classes.graph.Graph) for graph in time_to_graph.values()
     )

@@ -4,7 +4,7 @@ import random
 import pandas as pd
 import streamlit as st
 
-import app.workflows.compare_case_groups.prompts as prompts
+import toolkit.compare_case_groups.prompts as prompts
 from app.util.session_variable import SessionVariable
 
 
@@ -28,7 +28,6 @@ class SessionVariables:
         self.case_groups_temporal = SessionVariable("", prefix)
         self.case_groups_description = SessionVariable("", prefix)
         self.case_groups_top_groups = SessionVariable(0, prefix)
-        self.case_groups_top_attributes = SessionVariable(0, prefix)
         self.case_groups_report = SessionVariable("", prefix)
         self.case_groups_report_validation_messages = SessionVariable("", prefix)
         self.case_groups_report_validation = SessionVariable({}, prefix)
