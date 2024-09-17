@@ -43,14 +43,13 @@ def update_concept_graph_edges(node_to_period_counts, edge_to_period_counts, per
 
 def prepare_concept_graphs(period_concept_graphs, max_cluster_size, min_edge_weight, min_node_degree):
     prepare_concept_graph(period_concept_graphs["ALL"], min_edge_weight, min_node_degree)
-    community_to_concepts, concept_to_community = (
+    community_to_concepts, concept_to_community, hierarchy_communities = (
         detect_concept_communities(period_concept_graphs["ALL"], max_cluster_size)
     )
-    final_nodeset = set(period_concept_graphs["ALL"].nodes()).intersection(concept_to_community.keys())
     for period, G in period_concept_graphs.items():
-        for node in final_nodeset:
-            if node not in G.nodes():
-                G.add_node(node)
+        for node in list(G.nodes()):
+            if node not in concept_to_community:
+                G.remove_node(node)
         for component in list(nx.connected_components(G)):
             highest_degree_node = max(component, key=lambda x: G.degree(x))
             G.add_edge(highest_degree_node, 'dummynode', weight=1)
@@ -58,7 +57,7 @@ def prepare_concept_graphs(period_concept_graphs, max_cluster_size, min_edge_wei
             data['community'] = concept_to_community[node] if node in concept_to_community else -1
 
     
-    return community_to_concepts, concept_to_community
+    return community_to_concepts, concept_to_community, hierarchy_communities
     
 
 def prepare_concept_graph(G, min_edge_weight, min_node_degree, std_trim=4):
@@ -89,4 +88,4 @@ def detect_concept_communities(G, max_cluster_size):
     # sort nodes
     for community in community_to_nodes.keys():
         community_to_nodes[community] = sorted(community_to_nodes[community])
-    return community_to_nodes, node_to_community
+    return community_to_nodes, node_to_community, clustering

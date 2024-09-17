@@ -35,6 +35,7 @@ async def extract_record_data(
     )
 
     for new_object in new_objects:
+        print(new_object)
         new_object_json = loads(new_object)
         generated_objects.append(new_object_json)
         current_object_json, conflicts = merge_json_objects(current_object_json, new_object_json)

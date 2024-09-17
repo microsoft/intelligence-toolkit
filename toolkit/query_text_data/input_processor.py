@@ -83,6 +83,8 @@ def process_json_texts(file_to_text_jsons, period: PeriodOption):
         file_to_chunks[file] = process_json_text(text_json, period)
     return file_to_chunks
 
+def test_fun():
+    return 'none'
 def process_chunks(
     file_to_chunks, max_cluster_size, callbacks=[]
 ):
@@ -143,14 +145,14 @@ def process_chunks(
 
     (
         community_to_concepts,
-        concept_to_community
+        concept_to_community,
+        hierarchical_communities
     ) = graph_builder.prepare_concept_graphs(
         period_concept_graphs,
         max_cluster_size=max_cluster_size,
         min_edge_weight=2,
         min_node_degree=1
     )
-
     return (
         cid_to_text,
         text_to_cid,
@@ -163,5 +165,6 @@ def process_chunks(
         next_chunk,
         period_to_cids,
         node_period_counts,
-        edge_period_counts
+        edge_period_counts,
+        hierarchical_communities
     )

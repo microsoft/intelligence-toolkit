@@ -1,4 +1,4 @@
-# Extract Record Data [in progress]
+# Extract Record Data
 
 The [`Extract Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/extract_record_data/README.md) workflow translates unstructured text into structured records via schema-aligned JSON objects uploaded or defined by the user.
 

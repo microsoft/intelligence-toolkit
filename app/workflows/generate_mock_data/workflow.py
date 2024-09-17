@@ -18,12 +18,12 @@ def get_intro():
 
 
 async def create(sv: bds_variables.SessionVariables, workflow: None):
-    intro_tab, schema_tab, generator_tab, mock_tab = st.tabs(['Generate Mock Data workflow:', 'Prepare data schema', 'Generate mock data', 'View example outputs'])
+    intro_tab, schema_tab, record_generator_tab, text_generator_tab, mock_tab = st.tabs(['Generate Mock Data workflow:', 'Prepare data schema', 'Generate mock records', 'Generate mock text', 'View example outputs'])
     with intro_tab:
         st.markdown(get_intro())
     with schema_tab:
         sv.loaded_filename.value = schema_ui.build_schema_ui(sv.schema.value, sv.loaded_filename.value)
-    with generator_tab:
+    with record_generator_tab:
         if len(sv.schema.value['properties']) == 0:
             st.warning("Prepare data schema to continue.")
         else:
@@ -119,6 +119,9 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                                     mime='text/csv',
                                     key=f'{record_array}_csv_download'
                                 )
+
+    with text_generator_tab:
+        pass
     with mock_tab:
         workflow_home = 'example_outputs/generate_mock_data'
 
@@ -136,7 +139,7 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                 schema_text = loads(open(schema_file, 'r').read())
                 st.write(schema_text)
                 st.download_button(
-                    label=f'Download {schema_file}',
+                    label=f'Download {selected_data}_schema.json',
                     data=dumps(schema_text, indent=2),
                     file_name=schema_file,
                     mime='application/json',

@@ -61,7 +61,7 @@
             "description": "The number of reported treatment grievances"
           },
           "workload_grievances": {
-            "type": "string",
+            "type": "number",
             "description": "The number of reported workload grievances"
           }
         },

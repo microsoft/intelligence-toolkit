@@ -170,7 +170,7 @@ def create(sv: ap_variables.SessionVariables, workflow):
                         sorted_labels = sorted(set(node_to_label_str.values()))
                         label_to_code = {v: i for i, v in enumerate(sorted_labels)}
                         node_to_label = {
-                            k: label_to_code[v] for k, v in node_to_label_str.items()
+                            k: {0: label_to_code[v]} for k, v in node_to_label_str.items()
                         }
                         progress_bar.progress(40, text="Generating embedding...")
                         (sv.detect_case_patterns_node_to_period_to_pos.value, _) = (
@@ -180,6 +180,7 @@ def create(sv: ap_variables.SessionVariables, workflow):
                                 correlation,
                                 diaga,
                                 laplacian,
+                                max_level=0
                             )
                         )
 

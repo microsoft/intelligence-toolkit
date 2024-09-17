@@ -9,6 +9,7 @@ import toolkit.extract_record_data.prompts as prompts
 import toolkit.extract_record_data.data_extractor as data_extractor
 import app.util.schema_ui as schema_ui
 from app.util.openai_wrapper import UIOpenAIConfiguration
+import app.util.ui_components as ui_components
 
 ai_configuration = UIOpenAIConfiguration().get_configuration()
 
@@ -23,89 +24,106 @@ async def create(sv: variables.SessionVariables, workflow: None):
     with intro_tab:
         st.markdown(get_intro())
     with schema_tab:
-        sv.loaded_filename.value = schema_ui.build_schema_ui(sv.schema.value, sv.loaded_filename.value)
+        sv.loaded_schema_filename.value = schema_ui.build_schema_ui(
+            sv.schema.value, sv.loaded_schema_filename.value)
         array_field_arrays = data_extractor.extract_array_fields(sv.schema.value)
         sv.record_arrays.value = ['.'.join(a) for a in array_field_arrays]
     with generator_tab:
-        if len(sv.schema.value['properties']) == 0:
-            st.warning("Prepare data schema to continue.")
-        else:
-            # ABC Ltd. is headquartered at 10 Downing Street, London, UK. The company has 3 employees: John Doe, Jane Doe, and Alice Smith. John Doe is the CEO, Jane Doe is the CFO, and Alice Smith is the CTO. The company has 2 departments: Sales and Marketing. The Sales department has 2 employees: John Doe and Jane Doe. The Marketing department has 1 employee: Alice Smith. I called them on 07876545432 and they have an email address of abc@example.com. Grievances include safety (10) and poor treatment (5) of employees.
-
-            st.markdown("##### Record extraction controls")
-            st.selectbox("Primary record array", sv.record_arrays.value, key=sv.primary_record_array.key,
-                             help="In the presence of multiple arrays, select the one that represents the primary record type.")
-            st.text_area("Unstructured text input", key=sv.text_input.key, value=sv.text_input.value)
-            st.text_area("AI record extraction guidance", key=sv.generation_guidance.key, value=sv.generation_guidance.value,
-                         help="Guidance to the generative AI model about how data records should be extracted")
-            
-            generate = st.button('Extract record data')
-            df_placeholders = []
-            dl_placeholders = []
-            if len(sv.record_arrays.value) == 0:
-                st.warning("No record arrays found in schema.")
+        d1, d2 = st.columns([1, 1])
+        with d1:
+            if len(sv.schema.value['properties']) == 0:
+                st.warning("Prepare data schema to continue.")
             else:
-                tabs = st.tabs(sv.record_arrays.value)
-                for ix, record_array in enumerate(sv.record_arrays.value):
-                    with tabs[ix]:
-                        df_placeholder = st.empty()
-                        df_placeholders.append(df_placeholder)
-                        dl_placeholder = st.empty()
-                        dl_placeholders.append(dl_placeholder)                
-
-                def on_dfs_update(path_to_df):
-                    for ix, record_array in enumerate(sv.record_arrays.value):
-                        with df_placeholders[ix]:
-                            df = path_to_df[record_array]
-                            st.dataframe(df, height=250)
-                    sv.generated_dfs.value = path_to_df
-                                
-                if generate:
-                    sv.generated_dfs.value = {k: pd.DataFrame() for k in sv.record_arrays.value}
-                    for placeholder in df_placeholders:
-                        placeholder.empty()
-
-                    (
-                        sv.final_object.value,
-                        sv.generated_objects.value,
-                        sv.generated_dfs.value
-                    ) = await data_extractor.extract_record_data(
-                        ai_configuration=ai_configuration,
-                        input_texts=[sv.text_input.value],
-                        generation_guidance=sv.generation_guidance.value,
-                        record_arrays=sv.record_arrays.value,
-                        data_schema=sv.schema.value,
-                        df_update_callback=on_dfs_update,
-                        callback_batch=None
+                st.markdown("##### Record extraction controls")
+                mode = st.radio("Mode", ["Extract from single text", "Extract from rows of CSV file"], horizontal=True)
+                input_texts = []
+                if mode == "Extract from single text":
+                    st.text_area("Unstructured text input", key=sv.text_input.key, value=sv.text_input.value, height=400)
+                    input_texts.append(sv.text_input.value)
+                else:
+                    _, selected_df = ui_components.multi_csv_uploader(
+                        "Upload CSV file(s)",
+                        sv.uploaded_synthesis_files,
+                        "synthesis_uploader",
+                        "synthesis_uploader",
+                        sv.synthesis_max_rows_to_process,
                     )
+                    if selected_df is not None:
+                        input_texts = []
+                        for ix, row in selected_df.iterrows():
+                            input_texts.append(row.to_json())
+                st.text_area("AI record extraction guidance", key=sv.generation_guidance.key, value=sv.generation_guidance.value,
+                            help="Guidance to the generative AI model about how data records should be extracted")
+                
+                generate = st.button('Extract record data')
 
-                for ix, record_array in enumerate(sv.record_arrays.value):
-                        with df_placeholders[ix]:
-                            if record_array in sv.generated_dfs.value:
-                                df = sv.generated_dfs.value[record_array]
+            with d2:
+                df_placeholders = []
+                dl_placeholders = []
+                if len(sv.record_arrays.value) == 0:
+                    st.warning("No record arrays found in schema.")
+                else:
+                    tabs = st.tabs(sv.record_arrays.value)
+                    for ix, record_array in enumerate(sv.record_arrays.value):
+                        with tabs[ix]:
+                            df_placeholder = st.empty()
+                            df_placeholders.append(df_placeholder)
+                            dl_placeholder = st.empty()
+                            dl_placeholders.append(dl_placeholder)                
+
+                    def on_dfs_update(path_to_df):
+                        for ix, record_array in enumerate(sv.record_arrays.value):
+                            with df_placeholders[ix]:
+                                df = path_to_df[record_array]
                                 st.dataframe(df, height=250)
+                        sv.generated_dfs.value = path_to_df
+                                    
+                    if generate:
+                        sv.generated_dfs.value = {k: pd.DataFrame() for k in sv.record_arrays.value}
+                        for placeholder in df_placeholders:
+                            placeholder.empty()
 
-                for ix, record_array in enumerate(sv.record_arrays.value):
-                    with dl_placeholders[ix]:
-                        c1, c2 = st.columns([1, 1])
-                        with c1:
-                            name = sv.schema.value["title"].replace(" ", "_").lower() + "_[data].json"
-                            st.download_button(
-                                label=f'Download {name}',
-                                data=dumps(sv.final_object.value, indent=2),
-                                file_name=f'{name}',
-                                mime='application/json',
-                                key=f'{name}_{ix}_json_download'
-                            )
-                        with c2:
-                            if record_array in sv.generated_dfs.value:
+                        (
+                            sv.final_object.value,
+                            sv.generated_objects.value,
+                            sv.generated_dfs.value
+                        ) = await data_extractor.extract_record_data(
+                            ai_configuration=ai_configuration,
+                            input_texts=input_texts,
+                            generation_guidance=sv.generation_guidance.value,
+                            record_arrays=sv.record_arrays.value,
+                            data_schema=sv.schema.value,
+                            df_update_callback=on_dfs_update,
+                            callback_batch=None
+                        )
+
+                    for ix, record_array in enumerate(sv.record_arrays.value):
+                            with df_placeholders[ix]:
+                                if record_array in sv.generated_dfs.value:
+                                    df = sv.generated_dfs.value[record_array]
+                                    st.dataframe(df, height=600)
+
+                    for ix, record_array in enumerate(sv.record_arrays.value):
+                        with dl_placeholders[ix]:
+                            c1, c2 = st.columns([1, 1])
+                            with c1:
+                                name = sv.schema.value["title"].replace(" ", "_").lower() + "_[data].json"
                                 st.download_button(
-                                    label=f'Download {record_array}.csv',
-                                    data=sv.generated_dfs.value[record_array].to_csv(index=False, encoding='utf-8'),
-                                    file_name=f'{record_array}.csv',
-                                    mime='text/csv',
-                                    key=f'{record_array}_csv_download'
+                                    label=f'Download {name}',
+                                    data=dumps(sv.final_object.value, indent=2),
+                                    file_name=f'{name}',
+                                    mime='application/json',
+                                    key=f'{name}_{ix}_json_download'
                                 )
+                            with c2:
+                                if record_array in sv.generated_dfs.value:
+                                    st.download_button(
+                                        label=f'Download {record_array}.csv',
+                                        data=sv.generated_dfs.value[record_array].to_csv(index=False, encoding='utf-8'),
+                                        file_name=f'{record_array}.csv',
+                                        mime='text/csv',
+                                        key=f'{record_array}_csv_download'
+                                    )
     # with mock_tab:
     #     workflow_home = 'example_outputs/generate_mock_data'
 
