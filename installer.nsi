@@ -266,6 +266,13 @@ Function un.onInit
   !insertmacro MULTIUSER_UNINIT
 FunctionEnd
 
+Function EnableCancelButton  
+    GetDlgItem $0 $HWNDPARENT 2  
+    EnableWindow $0 1  
+FunctionEnd  
+
+Page custom EnableCancelButton  
+
 [% if ib.py_bitness == 64 %]
 Function correct_prog_files
   ; The multiuser machinery doesn't know about the different Program files
