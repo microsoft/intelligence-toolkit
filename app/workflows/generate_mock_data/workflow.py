@@ -10,6 +10,7 @@ import toolkit.generate_mock_data.text_generator as text_generator
 import app.util.schema_ui as schema_ui
 from app.util.openai_wrapper import UIOpenAIConfiguration
 import app.util.ui_components as ui_components
+import app.util.example_outputs_ui as example_outputs_ui
 
 ai_configuration = UIOpenAIConfiguration().get_configuration()
 
@@ -186,43 +187,4 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                     )
                
     with mock_tab:
-        workflow_home = 'example_outputs/generate_mock_data'
-
-        mock_data_folders = [x for x in os.listdir(f'{workflow_home}')]
-        print(mock_data_folders)
-        mock_dfs = {}
-        mock_text_dfs = {}
-        for folder in mock_data_folders:
-            mock_data_file = [x for x in os.listdir(f'{workflow_home}/{folder}') if x.endswith('data.csv')][0]
-            mock_dfs[folder] = pd.read_csv(f'{workflow_home}/{folder}/{mock_data_file}')
-            mock_text_file = [x for x in os.listdir(f'{workflow_home}/{folder}') if x.endswith('text.csv')][0]
-            mock_text_dfs[folder] = pd.read_csv(f'{workflow_home}/{folder}/{mock_text_file}')
-        selected_data = st.selectbox('Select example', mock_data_folders)
-        if selected_data != None:
-            t1, t2, t3 = st.tabs(['JSON schema', 'Mock records', 'Mock texts'])
-            with t1:
-                schema_file = f'{workflow_home}/{selected_data}/{selected_data}_schema.json'
-                schema_text = loads(open(schema_file, 'r').read())
-                st.write(schema_text)
-                st.download_button(
-                    label=f'Download {selected_data}_schema.json',
-                    data=dumps(schema_text, indent=2),
-                    file_name=schema_file,
-                    mime='application/json',
-                )
-            with t2:
-                st.dataframe(mock_dfs[selected_data], height=500)
-                st.download_button(
-                    label=f'Download {selected_data}_data.csv',
-                    data=mock_dfs[selected_data].to_csv(index=False, encoding='utf-8'),
-                    file_name=f'{selected_data}_data.csv',
-                    mime='text/csv',
-                )
-            with t3:
-                st.dataframe(mock_text_dfs[selected_data], height=500, use_container_width=True)
-                st.download_button(
-                    label=f'Download {selected_data}_text.csv',
-                    data=mock_text_dfs[selected_data].to_csv(index=False, encoding='utf-8'),
-                    file_name=f'{selected_data}_text.csv',
-                    mime='text/csv',
-                )
+        example_outputs_ui.create_example_outputs_ui(mock_tab, workflow)

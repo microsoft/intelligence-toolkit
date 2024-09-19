@@ -24,6 +24,7 @@ from toolkit.AI.local_embedder import LocalEmbedder
 from toolkit.AI.openai_embedder import OpenAIEmbedder
 from toolkit.graph.graph_fusion_encoder_embedding import (
     generate_graph_fusion_encoder_embedding,
+    create_concept_to_community_hierarchy
 )
 from toolkit.query_text_data.pattern_detector import (
     combine_chunk_text_and_explantion,
@@ -174,12 +175,13 @@ async def create(sv: SessionVariables, workflow=None):
             accept_multiple_files=True,
             key=sv.upload_key.value,
         )
-        window_size = st.selectbox(
-            "Analysis time window",
-            key=sv.analysis_window_size.key,
-            options=[str(x) for x in input_processor.PeriodOption._member_names_],
-        )
-        window_period = input_processor.PeriodOption[window_size]
+        # window_size = st.selectbox(
+        #     "Analysis time window",
+        #     key=sv.analysis_window_size.key,
+        #     options=[str(x) for x in input_processor.PeriodOption._member_names_],
+        # )
+        # window_period = input_processor.PeriodOption[window_size]
+        window_period = input_processor.PeriodOption.NONE
         if files is not None and st.button("Process files"):
             file_pb, file_callback = create_progress_callback(
                 "Loaded {} of {} files..."
@@ -206,6 +208,7 @@ async def create(sv: SessionVariables, workflow=None):
                 sv.period_to_cids.value,
                 sv.node_period_counts.value,
                 sv.edge_period_counts.value,
+                sv.hierarchical_clusters.value,
             ) = input_processor.process_chunks(
                 file_to_chunks=sv.file_to_chunks.value,
                 max_cluster_size=50,
@@ -215,10 +218,12 @@ async def create(sv: SessionVariables, workflow=None):
                 gfee_pb, gfee_callback = create_progress_callback(
                     "Embedded {} of {} concept nodes..."
                 )
+                concept_to_community_hierarchy, max_cluster_per_level, max_level = create_concept_to_community_hierarchy(
+                    sv.hierarchical_communities.value)
                 sv.node_to_period_to_pos.value, sv.node_to_period_to_shift.value = (
                     generate_graph_fusion_encoder_embedding(
                         period_to_graph=sv.period_concept_graphs.value,
-                        node_to_label=sv.concept_to_community.value,
+                        node_to_label=concept_to_community_hierarchy,
                         correlation=True,
                         diaga=True,
                         laplacian=True,
@@ -274,7 +279,11 @@ async def create(sv: SessionVariables, workflow=None):
             else None
         )
         if num_files > 0 and G is not None:
-            message = f"Chunked **{num_files}** file{'s' if num_files > 1 else ''} into **{num_chunks}** chunks of up to **{CHUNK_SIZE}** tokens. Extracted concept graph with **{len(G.nodes())}** concepts and **{len(G.edges())}** cooccurrences, spanning **{num_periods}** periods."
+            message = f"Chunked **{num_files}** file{'s' if num_files > 1 else ''} into **{num_chunks}** chunks of up to **{CHUNK_SIZE}** tokens. Extracted concept graph with **{len(G.nodes())}** concepts and **{len(G.edges())}** cooccurrences"
+            if num_periods > 1:
+                message += ", spanning **{num_periods}** periods."
+            else:
+                message += "."
             message = message.replace("**1** periods", "**1** period")
             st.success(message)
     with graph_tab:
@@ -372,7 +381,7 @@ async def create(sv: SessionVariables, workflow=None):
                     data=sv.partial_answers.value[0],
                     file_name="extended_answer.md",
                     mime="text/markdown",
-                    key="qa_download_button",
+                    key="qa_extended_download_button",
                 )
 
         def on_chunk_progress(message):
