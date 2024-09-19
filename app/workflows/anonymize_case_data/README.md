@@ -18,14 +18,14 @@ Select the `View example outputs` tab (in app) or navigate to [example_outputs/a
 - [`Detect Case Patterns`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/detect_case_patterns/README.md)
 - `Compare Case Groups`
 
-[`Generate Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_record_data/README.md) can also be used to generate mock data for demonstration or evaluation of the [`Anonymize Case Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/anonymize_case_data/README.md) workflow.
+[`Generate Mock Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_mock_data/README.md) can also be used to generate mock data for demonstration or evaluation of the [`Anonymize Case Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/anonymize_case_data/README.md) workflow.
 
 ## Tutorial
 
 The task for this tutorial is creating an anonymous version of the `customer_complaints` dataset available for download either:
 
-- in app, via [`Generate Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_record_data/README.md) workflow &rarr; `View example outputs` tab &rarr; `Mock data` tab
-- on GitHub, at [example_outputs/generate_record_data/customer_complaints](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/generate_record_data/customer_complaints).
+- in app, via [`Generate Mock Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_mock_data/README.md) workflow &rarr; `View example outputs` tab &rarr; `Mock data` tab
+- on GitHub, at [example_outputs/generate_mock_data/customer_complaints](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/generate_mock_data/customer_complaints).
 
 The format of this dataset is as follows, with each row representing an individual customer and their complaint:
 

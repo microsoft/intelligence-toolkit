@@ -1,0 +1,51 @@
+name,street,city,age,email,price_issue,quality_issue,service_issue,delivery_issue,description_issue,product_code,quarter
+Bob Johnson,123 Maple Street,Springfield,36,bob.johnson@example.com,False,True,False,False,False,A,2023-Q2
+Alice Johnson,456 Oak Avenue,Springfield,0,alice.j@example.com,False,True,False,True,False,A,2023-Q3
+Alice Smith,789 Pine Road,Springfield,0,alice.smith@example.com,False,True,False,False,True,A,2023-Q2
+Alice Johnson,123 Maple Street,Shelbyville,0,alice.johnson@anothermail.com,True,True,False,False,True,A,2023-Q2
+Alice Johnson,123 Maple Street,Springfield,0,alice.johnson@samplemail.com,False,True,True,False,False,B,2023-Q2
+Charlie Brown,321 Elm Street,Shelbyville,0,charlie.brown@example.com,True,False,False,False,False,B,2023-Q1
+Diana Prince,987 Cedar Lane,Metropolis,0,diana.prince@example.com,False,False,True,False,False,C,2023-Q2
+Evan Wright,654 Birch Boulevard,Gotham,30,evan.wright@example.com,False,False,False,True,False,D,2023-Q3
+Fiona Apple,111 Apple Street,Star City,29,fiona.apple@example.com,True,False,False,False,True,E,2023-Q4
+George Martin,222 Music Avenue,Central City,0,george.martin@example.com,False,True,False,False,False,F,2023-Q1
+Hannah Lee,333 Cherry Lane,Coast City,0,hannah.lee@example.com,False,False,True,False,False,G,2023-Q2
+Ian Malcolm,"444 Jurassic Park, Isla Nublar",,0,ian.malcolm@example.com,False,False,False,True,False,H,2023-Q3
+Jessica Jones,,Hell's Kitchen,32,jessica.jones@example.com,True,False,False,False,False,A,
+Kyle Rayner,666 Lantern Lane,Coast City,40,kyle.rayner@example.com,False,True,False,False,False,B,2023-Q1
+Laura Palmer,777 Twin Peaks,Twin Peaks,0,laura.palmer@example.com,False,False,True,False,False,C,2023-Q2
+Michael Knight,888 KITT Road,Knight City,0,michael.knight@example.com,False,False,False,True,False,D,2023-Q3
+Nancy Drew,999 Mystery Lane,River Heights,0,nancy.drew@example.com,True,False,False,False,True,E,2023-Q4
+Oliver Queen,1010 Arrow Street,Star City,0,oliver.queen@example.com,False,True,False,False,False,F,2023-Q1
+Peter Parker,1111 Spider Lane,New York,0,peter.parker@example.com,False,False,True,False,False,G,2023-Q2
+Quinn Fabray,1212 Cheerios Avenue,Lima,0,quinn.fabray@example.com,False,False,False,True,False,H,2023-Q3
+Robert Smith,456 Oak Avenue,Rivertown,0,robert.smith@example.com,True,False,False,False,False,B,2022-Q4
+Barbara Smith,456 Oak Avenue,Rivertown,44,barbara.smith@example.com,False,True,False,False,False,B,2022-Q4
+Bobby Smith,456 Oak Avenue,Rivertown,0,bobby.smith@example.com,False,False,True,False,False,B,2022-Q4
+Bob Smith Jr.,456 Oak Avenue,Rivertown,0,bob.smith.jr@example.com,False,False,False,True,False,B,2022-Q4
+Roberta Smith,,Rivertown,0,roberta.smith@example.com,False,False,False,False,True,B,2022-Q4
+Alice Johnson,789 Pine Street,Lakeside,0,alice.johnson@example.com,False,True,False,False,False,A,2023-Q1
+John Doe,123 Elm Street,Springfield,0,john.doe@example.com,True,False,False,False,False,C,2023-Q2
+Jane Roe,321 Maple Avenue,Greenfield,0,jane.roe@example.com,False,False,True,False,False,D,2023-Q3
+Michael Brown,654 Cedar Lane,Hilltown,0,michael.brown@example.com,False,False,False,True,False,E,2023-Q4
+Emily White,987 Birch Road,Riverbend,0,emily.white@example.com,False,False,False,False,True,F,2023-Q1
+David Green,159 Spruce Street,Meadowville,45,david.green@example.com,True,False,False,False,False,G,2023-Q2
+Sophia Black,753 Willow Avenue,Brookside,0,sophia.black@example.com,False,True,False,False,False,H,2023-Q3
+James Wilson,852 Aspen Drive,Forestville,0,,False,False,True,False,False,A,2023-Q4
+Olivia Martinez,951 Oakwood Lane,Seaside,0,olivia.martinez@example.com,False,False,False,True,False,B,2023-Q1
+Liam Davis,357 Cherry Street,Mountainview,0,liam.davis@example.com,False,False,False,False,True,C,2023-Q2
+Emma Thompson,246 Poplar Avenue,Valleytown,0,emma.thompson@example.com,True,False,False,False,False,D,2023-Q3
+Noah Anderson,135 Beech Road,Riverside,0,noah.anderson@example.com,False,True,False,False,False,E,2023-Q4
+Ava Clark,,Lakeside,0,,False,False,True,False,False,F,2023-Q1
+William Lewis,975 Hemlock Street,Hilltown,0,william.lewis@example.com,False,False,False,True,False,G,2023-Q2
+Isabella Walker,,Greenfield,34,isabella.walker@example.com,False,False,False,False,True,H,2023-Q3
+Catherine Lee,789 Pine Road,Lakeside,0,catherine.lee@example.com,False,False,True,False,False,C,2021-Q3
+Kathy Lee,789 Pine Rd,Lakeside,0,kathy.lee@example.com,False,False,True,False,False,C,2021-Q4
+Cathy L.,789 Pine Road,Lakeside,0,cathy.l@example.com,False,False,True,False,False,C,2021-Q3
+C. Lee,789 Pine Road,Lakeside,0,c.lee@example.com,False,False,True,False,False,C,2021-Q3
+Cathy Lee,789 Pine Road,Lakeside,0,cathy.lee@sample.com,False,False,True,False,False,C,2021-Q3
+John Smith,123 Elm Street,Springfield,45,john.smith@example.com,True,False,False,False,False,A,2022-Q1
+Jane Doe,456 Oak Avenue,Rivertown,0,jane.doe@example.com,False,True,False,False,False,B,2022-Q2
+Michael Brown,789 Maple Lane,Hilltop,0,michael.brown@example.com,False,False,False,True,False,D,2022-Q3
+Emily White,321 Birch Boulevard,Lakeside,0,emily.white@example.com,False,False,False,False,True,E,2022-Q4
+Robert Green,654 Cedar Court,Meadowville,0,robert.green@example.com,True,True,False,False,False,F,2023-Q1

@@ -51,6 +51,8 @@ jsonschema = "^4.23.0"
 newspaper3k = "^0.2.8"
 lxml-html-clean = "^0.2.1"
 nest-asyncio = "^1.6.0"
+altair-viewer = "^0.4.0"
+nbformat = "^5.10.4"
 
 
 [tool.poetry.group.dev.dependencies]

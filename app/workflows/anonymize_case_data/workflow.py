@@ -20,6 +20,7 @@ import app.workflows.anonymize_case_data.classes as classes
 import app.workflows.anonymize_case_data.config as config
 import app.workflows.anonymize_case_data.functions as functions
 import app.workflows.anonymize_case_data.variables as ds_variables
+import app.util.example_outputs_ui as example_outputs_ui
 
 
 def get_intro():
@@ -678,52 +679,5 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                     st.plotly_chart(chart)
 
     with examples_tab:
-
-        workflow_home = 'example_outputs/anonymize_case_data'
-
-        mock_data_folders = [x for x in os.listdir(f'{workflow_home}')]
-        print(mock_data_folders)
-        mock_dfs = {}
-        selected_data = st.selectbox('Select example', mock_data_folders)
-        if selected_data != None:
-            t1, t2, t3, t4 = st.tabs(['Sensitive data', 'Prepared data', 'Aggregate data', 'Synthetic data'])
-            with t1:
-                data_file = f'{workflow_home}/{selected_data}/{selected_data}_sensitive.csv'
-                df = pd.read_csv(data_file)
-                st.dataframe(df, height=500, use_container_width=True)
-                st.download_button(
-                    label=f'Download {selected_data}_sensitive.csv',
-                    data=df.to_csv(index=False, encoding='utf-8'),
-                    file_name=data_file,
-                    mime='text/csv',
-                )
-            with t2:
-                data_file = f'{workflow_home}/{selected_data}/{selected_data}_prepared.csv'
-                df = pd.read_csv(data_file)
-                st.dataframe(df, height=500, use_container_width=True)
-                st.download_button(
-                    label=f'Download {selected_data}_prepared.csv',
-                    data=df.to_csv(index=False, encoding='utf-8'),
-                    file_name=data_file,
-                    mime='text/csv',
-                )
-            with t3:
-                data_file = f'{workflow_home}/{selected_data}/{selected_data}_aggregate.csv'
-                df = pd.read_csv(data_file)
-                st.dataframe(df, height=500, use_container_width=True)
-                st.download_button(
-                    label=f'Download {selected_data}_aggregate.csv',
-                    data=df.to_csv(index=False, encoding='utf-8'),
-                    file_name=data_file,
-                    mime='text/csv',
-                )
-            with t4:
-                data_file = f'{workflow_home}/{selected_data}/{selected_data}_synthetic.csv'
-                df = pd.read_csv(data_file)
-                st.dataframe(df, height=500, use_container_width=True)
-                st.download_button(
-                    label=f'Download {selected_data}_synthetic.csv',
-                    data=df.to_csv(index=False, encoding='utf-8'),
-                    file_name=data_file,
-                    mime='text/csv',
-                )
+        example_outputs_ui.create_example_outputs_ui(examples_tab, workflow)
+       

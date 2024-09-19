@@ -18,6 +18,7 @@ from st_aggrid import (
 )
 
 import app.workflows.detect_case_patterns.variables as ap_variables
+import app.util.example_outputs_ui as example_outputs_ui
 from app.util import ui_components
 from toolkit.AI.classes import LLMCallback
 from toolkit.detect_case_patterns import prompts
@@ -169,7 +170,7 @@ def create(sv: ap_variables.SessionVariables, workflow):
                         sorted_labels = sorted(set(node_to_label_str.values()))
                         label_to_code = {v: i for i, v in enumerate(sorted_labels)}
                         node_to_label = {
-                            k: label_to_code[v] for k, v in node_to_label_str.items()
+                            k: {0: label_to_code[v]} for k, v in node_to_label_str.items()
                         }
                         progress_bar.progress(40, text="Generating embedding...")
                         (sv.detect_case_patterns_node_to_period_to_pos.value, _) = (
@@ -179,6 +180,7 @@ def create(sv: ap_variables.SessionVariables, workflow):
                                 correlation,
                                 diaga,
                                 laplacian,
+                                max_level=0
                             )
                         )
 
@@ -406,64 +408,4 @@ def create(sv: ap_variables.SessionVariables, workflow):
                     workflow,
                 )
     with examples_tab:
-
-        workflow_home = 'example_outputs/detect_case_patterns'
-
-        mock_data_folders = [x for x in os.listdir(f'{workflow_home}')]
-        print(mock_data_folders)
-        selected_data = st.selectbox('Select example', mock_data_folders)
-        if selected_data != None:
-            t1, t2, t3, t4 = st.tabs(['Input data', 'Prepared data', 'Case patterns', 'Pattern reports'])
-            with t1:
-                data_file = f'{workflow_home}/{selected_data}/{selected_data}_input.csv'
-                df = pd.read_csv(data_file)
-                st.dataframe(df, height=500, use_container_width=True)
-                st.download_button(
-                    label=f'Download {selected_data}_input.csv',
-                    data=df.to_csv(index=False, encoding='utf-8'),
-                    file_name=data_file,
-                    mime='text/csv',
-                )
-            with t2:
-                data_file = f'{workflow_home}/{selected_data}/{selected_data}_prepared.csv'
-                df = pd.read_csv(data_file)
-                st.dataframe(df, height=500, use_container_width=True)
-                st.download_button(
-                    label=f'Download {selected_data}_prepared.csv',
-                    data=df.to_csv(index=False, encoding='utf-8'),
-                    file_name=data_file,
-                    mime='text/csv',
-                )
-            with t3:
-                data_file = f'{workflow_home}/{selected_data}/{selected_data}_case_patterns.csv'
-                df = pd.read_csv(data_file)
-                st.dataframe(df, height=500, use_container_width=True)
-                st.download_button(
-                    label=f'Download {selected_data}_case_patterns.csv',
-                    data=df.to_csv(index=False, encoding='utf-8'),
-                    file_name=data_file,
-                    mime='text/csv',
-                )
-            with t4:
-                pattern_md = []
-                pattern_img = []
-                index = 1
-                while True:
-                    if os.path.exists(f'{workflow_home}/{selected_data}/{selected_data}_pattern_report_{index}.md') and \
-                        os.path.exists(f'{workflow_home}/{selected_data}/{selected_data}_pattern_chart_{index}.png'):
-                        with open(f'{workflow_home}/{selected_data}/{selected_data}_pattern_report_{index}.md', 'r') as f:
-                            pattern_md.append(f.read())
-                        with open(f'{workflow_home}/{selected_data}/{selected_data}_pattern_chart_{index}.png', 'rb') as f:
-                            im = PIL.Image.open(io.BytesIO(f.read()))
-                            pattern_img.append(im)
-                        index += 1
-                    else:
-                        break
-                for i in range(len(pattern_md)):
-                    st.divider()
-                    st.markdown(f'# Example {i+1}')
-                    st.divider()
-                    st.image(pattern_img[i])
-                    st.markdown(pattern_md[i])
-                    st.divider()
-                    
+        example_outputs_ui.create_example_outputs_ui(examples_tab, workflow)

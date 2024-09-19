@@ -35,8 +35,8 @@ It supports a variety of interactive workflows, each designed to address a speci
   - [`Detect Entity Networks`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/detect_entity_networks/README.md) generates reports on risk exposure for networks of related entities.
 - **Text Intelligence Workflows**
   - [`Query Text Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/query_text_data/README.md) generates reports from a collection of text documents.
-
-In addition, the [`Generate Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_record_data/README.md) workflow can be used to generate mock case or entity data following a JSON schema defined or uploaded by the user.
+  - [`Extract Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/extract_record_data/README.md) generate schema-aligned JSON objects and CSV records from unstructured text.
+  - [`Generate Mock Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_mock_data/README.md) generates mock records and text from a JSON schema defined or uploaded by the user.
 
 #### How was Intelligence Toolkit evaluated?
 
@@ -108,20 +108,21 @@ Use the diagram to identify an appropriate workflow, from the left sidebar while
 %%{init: {
   "flowchart": {"htmlLabels": true}} }%%
 flowchart TD
-    NoData["<b>Input</b>: None"] --> |"<b>Generate Record Data</b><br/>workflow"| MockData["Mock Data"]
-    MockData["AI Mock Data"] --> PersonalData["<b>Input</b>: Personal Case Records"]
-    MockData["AI Mock Data"] --> CaseRecords["<b>Input</b>: Case Records"]
-    MockData["AI Mock Data"] --> EntityData["<b>Input</b>: Entity Records"]
+    NoData["<b>Input</b>: None"] --> |"<b>Generate Mock Data</b><br/>workflow"| MockData["AI-Generated Records"]
+    NoData["<b>Input</b>: None"] --> |"<b>Generate Mock Data</b><br/>workflow"| MockText["AI-Generated Texts"]
+    MockText["AI-Generated Texts"] -->  TextDocs["<b>Input:</b> Text Data"]
+    MockData["AI-Generated Records"] --> PersonalData["<b>Input</b>: Personal Case Records"]
+    MockData["AI-Generated Records"] --> CaseRecords["<b>Input</b>: Case Records"]
+    MockData["AI-Generated Records"] --> EntityData["<b>Input</b>: Entity Records"]
     PersonalData["<b>Input</b>: Personal Case Records"] ----> |"<b>Anonymize Case Data</b><br/>workflow"| AnonData["Anonymous Case Records"]
-    EntityData["<b>Input</b>: Entity Records"] ---> HasTime{"Time<br/>Attributes?"}
     CaseRecords["<b>Input</b>: Case Records"] ---> HasTime{"Time<br/>Attributes?"}
     HasTime{"Time<br/>Attributes?"} --> |"<b>Detect Case Patterns</b><br/>workflow"| CasePatterns["AI Pattern Reports"]
-    EntityData["<b>Input</b>: Entity Records"] ---> HasGroups{"Grouping<br/>Attributes?"}
     CaseRecords["<b>Input</b>: Case Records"] ---> HasGroups{"Grouping<br/>Attributes?"}
-    HasGroups{"Grouping<br/>Attributes?"} --> |"<b>Compare Case Records</b><br/>workflow"| MatchedEntities["AI Group Reports"]
-    EntityData["<b>Input</b>: Entity Records"] ---> HasInconsistencies{"Inconsistent<br/>Attributes?"} --> |"<b>Match Entity Records</b><br/>workflow"| RecordLinking["AI Match Reports"]
+    HasGroups{"Grouping<br/>Attributes?"} --> |"<b>Compare Case Groups</b><br/>workflow"| MatchedEntities["AI Group Reports"]
+    EntityData["<b>Input</b>: Entity Records"] ---> HasInconsistencies{"Inconsistent<br/>Attributes?"} --> |"<b>Match Entity Records</b><br/>workflow"| RecordLinking["AI-Matched Records"]
     EntityData["<b>Input</b>: Entity Records"] ---> HasIdentifiers{"Identifying<br/>Attributes?"} --> |"<b>Detect Entity Networks</b><br/>workflow"| NetworkAnalysis["AI Network Reports"]
-    TextDocs["<b>Input:</b> Text Data"] ------> |"<b>Query Text Data</b><br/>workflow"| AnswerReports["AI Answer Reports"]
+    TextDocs["<b>Input:</b> Text Data"] ---> NeedRecords{"Need<br/>Records?"} --> |"<b>Extract Record Data</b><br/>workflow"| ExtractedRecords["AI-Extracted Records"]
+    TextDocs["<b>Input:</b> Text Data"] ---> NeedAnswers{"Need<br/>Answers?"} --> |"<b>Query Text Data</b><br/>workflow"| AnswerReports["AI Answer Reports"]
 ```
 
 
