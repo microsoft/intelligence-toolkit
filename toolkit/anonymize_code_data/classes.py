@@ -2,17 +2,22 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 from collections import defaultdict
+from typing import Any
 
 import numpy as np
 import pandas as pd
 
 
 class ErrorReport:
-    def __init__(self, src_aggregates, target_aggregates):
+    def __init__(
+        self,
+        src_aggregates: dict[tuple[str, ...], int],
+        target_aggregates: dict[tuple[str, ...], int],
+    ):
         self.src_aggregates = src_aggregates
         self.target_aggregates = target_aggregates
 
-    def calc_fabricated(self):
+    def calc_fabricated(self) -> None:
         self.fabricated_count = 0
         self.fabricated_count_by_len = defaultdict(int)
 
@@ -21,7 +26,7 @@ class ErrorReport:
                 self.fabricated_count += v
                 self.fabricated_count_by_len[len(u)] += v
 
-    def calc_suppressed(self):
+    def calc_suppressed(self) -> None:
         self.suppressed_count = 0
         self.suppressed_count_by_len = defaultdict(int)
 
@@ -30,7 +35,7 @@ class ErrorReport:
                 self.suppressed_count += v
                 self.suppressed_count_by_len[len(o)] += v
 
-    def calc_mean(self):
+    def calc_mean(self) -> None:
         mean = []
         mean_by_len = defaultdict(list)
 
@@ -41,7 +46,7 @@ class ErrorReport:
         self.mean_count = np.mean(mean)
         self.mean_count_by_len = {l: np.mean(mean_by_len[l]) for l in mean_by_len}
 
-    def calc_errors(self):
+    def calc_errors(self) -> None:
         errors = []
         errors_by_len = defaultdict(list)
 
@@ -54,27 +59,13 @@ class ErrorReport:
         self.mean_error = np.mean(errors)
         self.mean_error_by_len = {l: np.mean(errors_by_len[l]) for l in errors_by_len}
 
-    def calc_total(aggregates):
-        total = 0
-        total_by_len = defaultdict(int)
-
-        for k, v in aggregates.items():
-            total += v
-            total_by_len[len(k)] += v
-
-        return (total, total_by_len)
-
-    def gen(self):
+    def gen(self) -> pd.DataFrame:
         self.calc_fabricated()
         self.calc_suppressed()
         self.calc_mean()
         self.calc_errors()
-        self.src_total, self.src_total_by_len = ErrorReport.calc_total(
-            self.src_aggregates
-        )
-        self.target_total, self.target_total_by_len = ErrorReport.calc_total(
-            self.target_aggregates
-        )
+        self.src_total, self.src_total_by_len = calc_total(self.src_aggregates)
+        self.target_total, self.target_total_by_len = calc_total(self.target_aggregates)
 
         rows = [
             [
@@ -85,12 +76,14 @@ class ErrorReport:
             ]
             for l in sorted(self.mean_error_by_len.keys())
         ]
-        rows.append([
-            "Overall",
-            f"{self.mean_count:.2f} +/- {self.mean_error:.2f}",
-            f"{self.suppressed_count * 100.0 / self.src_total:.2f} %",
-            f"{self.fabricated_count * 100.0 / self.target_total:.2f} %",
-        ])
+        rows.append(
+            [
+                "Overall",
+                f"{self.mean_count:.2f} +/- {self.mean_error:.2f}",
+                f"{self.suppressed_count * 100.0 / self.src_total:.2f} %",
+                f"{self.fabricated_count * 100.0 / self.target_total:.2f} %",
+            ]
+        )
 
         return pd.DataFrame(
             rows,
@@ -101,3 +94,16 @@ class ErrorReport:
                 "Fabricated %",
             ],
         )
+
+
+def calc_total(
+    aggregates: dict[tuple[str, ...], int],
+) -> tuple[int, defaultdict[Any, int]]:
+    total = 0
+    total_by_len = defaultdict(int)
+
+    for k, v in aggregates.items():
+        total += v
+        total_by_len[len(k)] += v
+
+    return (total, total_by_len)
