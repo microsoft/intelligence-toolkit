@@ -5,8 +5,8 @@ from json import loads
 import pandas as pd
 
 import toolkit.AI.utils as utils
-import toolkit.generate_record_data.prompts as prompts
-import toolkit.generate_record_data.schema_builder as schema_builder
+import toolkit.generate_mock_data.prompts as prompts
+import toolkit.generate_mock_data.schema_builder as schema_builder
 import toolkit.query_text_data.helper_functions as helper_functions
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
@@ -36,6 +36,7 @@ async def generate_data(
                     )
     first_object_json = loads(first_object)
     current_object_json = {}
+    dfs = {}
     for i in range(num_iterations):
         if i == 0:
             sample_records = sample_from_record_array(first_object_json, primary_record_array, records_per_batch)
@@ -59,10 +60,8 @@ async def generate_data(
         for new_object in new_objects:
             new_object_json = loads(new_object)
             generated_objects.append(new_object_json)
-            current_object_json, conflicts = merge_json_objects(
-                current_object_json, new_object_json
-            )
-        dfs = {}
+            current_object_json, conflicts = merge_json_objects(current_object_json, new_object_json)
+        
         for record_array in record_arrays:
             df = extract_df(current_object_json, record_array)
             dfs[record_array] = df

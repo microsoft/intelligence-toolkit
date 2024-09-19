@@ -1,0 +1,20 @@
+{
+    "example_order" : ["schema", "records", "texts"],
+    "example_metadata" : {
+        "schema": {
+            "type": "json",
+            "heading": "JSON schema",
+            "description": "The JSON schema developed interactively in the user interface or uploaded from a file."
+        },
+        "records": {
+            "type": "csv",
+            "heading": "Mock records",
+            "description": "Mock records generated using the JSON schema together with the [OpenAI Structured Outputs API](https://platform.openai.com/docs/guides/structured-outputs/supported-schemas) to create schema-aligned data records"
+        },
+        "texts": {
+            "type": "csv",
+            "heading": "Mock texts",
+            "description": "Mock texts generated from the mock records using a generative AI prompt designed to produce text output in a domain-specificr style and format"
+        }
+    }
+}

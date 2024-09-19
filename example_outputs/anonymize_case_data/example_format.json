@@ -1,0 +1,25 @@
+{
+    "example_order" : ["sensitive", "prepared", "aggregate", "synthetic"],
+    "example_metadata" : {
+        "sensitive": {
+            "type": "csv",
+            "heading": "Sensitive data",
+            "description": "Sensitive data uploaded by the user which describes individual data subjects and is in need of anonymization for sharing or analysis purposes"
+        },
+        "prepared": {
+            "type": "csv",
+            "heading": "Prepared data",
+            "description": "Sensitive data prepared for anonymization by the user by removing  direct identifiers and reducing to a small number of columns, each containing a small number of categorical values"
+        },
+        "aggregate": {
+            "type": "csv",
+            "heading": "Aggregate data",
+            "description": "Anonymous data aggregated from the prepared data in ways that provide differential privacy (DP) for the overall record count and all counts of short attribute combinations (length \u2264 4)"
+        },
+        "synthetic": {
+            "type": "csv",
+            "heading": "Synthetic data",
+            "description": "Anonymous data synthesized from the aggregate data such that records capture the structure and statistics of the prepared sensitive data while retaining differential privacy (DP)"
+        }
+    }
+}

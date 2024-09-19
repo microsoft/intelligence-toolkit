@@ -14,7 +14,7 @@ filename = inspect.getframeinfo(inspect.currentframe()).filename
 path = os.path.dirname(os.path.abspath(filename))
 
 
-def get_readme():
+def get_readme_and_mermaid():
     file_path = os.path.join(path, "README.md")
     if not os.path.exists(file_path):
         file_path = os.path.join(path, "..", "README.md")
@@ -28,7 +28,8 @@ def get_readme():
             os.path.join(path, "workflows", "README.md"),
             f'{"_".join(word.capitalize() for word in f.split("_"))}',
         )
-    return content.split("```mermaid")[0]
+    parts = content.split("```mermaid")
+    return parts[0], parts[1].split("## Diving Deeper")[0].replace("```", "")
 
 
 def main():
@@ -39,32 +40,15 @@ def main():
         page_title="Intelligence Toolkit | Home",
     )
     load_multipage_app()
-    transparency_faq = get_readme()
+    transparency_faq, mermaid_text = get_readme_and_mermaid()
+    print(mermaid_text)
 
     st.markdown(
         transparency_faq
     )
 
     mermaid.mermaid(
-        code="""\
-%%{init: {"flowchart": {"htmlLabels": true}} }%%
-flowchart TD
-    NoData["<b>Input</b>: None"] --> |"<b>Generate Record Data</b><br/>workflow"| MockData["Mock Data"]
-    MockData["AI Mock Data"] --> PersonalData["<b>Input</b>: Personal Case Records"]
-    MockData["AI Mock Data"] --> CaseRecords["<b>Input</b>: Case Records"]
-    MockData["AI Mock Data"] --> EntityData["<b>Input</b>: Entity Records"]
-    PersonalData["<b>Input</b>: Personal Case Records"] ----> |"<b>Anonymize Case Data</b><br/>workflow"| AnonData["Anonymous Case Records"]
-    EntityData["<b>Input</b>: Entity Records"] ---> HasTime{"Time<br/>Attributes?"}
-    CaseRecords["<b>Input</b>: Case Records"] ---> HasTime{"Time<br/>Attributes?"}
-    HasTime{"Time<br/>Attributes?"} --> |"<b>Detect Case Patterns</b><br/>workflow"| CasePatterns["AI Pattern Reports"]
-    EntityData["<b>Input</b>: Entity Records"] ---> HasGroups{"Grouping<br/>Attributes?"}
-    CaseRecords["<b>Input</b>: Case Records"] ---> HasGroups{"Grouping<br/>Attributes?"}
-    HasGroups{"Grouping<br/>Attributes?"} --> |"<b>Compare Case Records</b><br/>workflow"| MatchedEntities["AI Group Reports"]
-    EntityData["<b>Input</b>: Entity Records"] ---> HasInconsistencies{"Inconsistent<br/>Attributes?"} --> |"<b>Match Entity Records</b><br/>workflow"| RecordLinking["AI Match Reports"]
-    EntityData["<b>Input</b>: Entity Records"] ---> HasIdentifiers{"Identifying<br/>Attributes?"} --> |"<b>Detect Entity Networks</b><br/>workflow"| NetworkAnalysis["AI Network Reports"]
-    TextDocs["<b>Input:</b> Text Data"] ------> |"<b>Query Text Data</b><br/>workflow"| AnswerReports["AI Answer Reports"]
-
-    """,
+        code=mermaid_text,
         height=1000,
     )
 

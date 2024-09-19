@@ -1,37 +1,35 @@
-# Generate Record Data
+# Extract Record Data
 
-The [`Generate Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_record_data/README.md) workflow generates mock data following a JSON schema defined by the user.
+The [`Extract Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/extract_record_data/README.md) workflow translates unstructured text into structured records via schema-aligned JSON objects uploaded or defined by the user.
 
-Navigate to [example_outputs/generate_record_data](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/generate_record_data) (on GitHub) for examples.
+Select the `View example outputs` tab (in app) or navigate to [example_outputs/extract_record_data](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/extract_record_data) (on GitHub) for examples.
 
 ## How it works
 
-1. [**Input**] A JSON file containing the JSON schema with which to generate output records (optional).
+1. [**Input**] An instance or collection of unstructured text and (optionally) an existing JSON file containing the JSON schema with which to generate output records.
 2. [**Process**] The user edits the uploaded JSON schema or creates one interactively.
-3. [**AI Calls**] The system uses generative AI to create a dataset of mock records following the data schema.
-4. [**Output**] A JSON schema defining structured data records and a dataset of mock records following this data schema.
+3. [**AI Calls**] The system uses generative AI to extract a JSON object from the text following the JSON schema.
+4. [**Output**] A dataset of structured records following the JSON schema and (optionally) a newly-defined JSON schema.
 
 ## Input requirements
 
-- The input schema, if provided, should be a JSON file conforming to the [JSON schema standard](https://json-schema.org/).
+- The input schema, if provided, should be a JSON file conforming to the [JSON schema standard](https://json-schema.org/) and following the restrictions of the [OpenAI Structured Outputs API](https://platform.openai.com/docs/guides/structured-outputs/supported-schemas).
 
 ## Use with other workflows
 
-[`Generate Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_record_data/README.md) can be used to create mock data for demonstration or evaluation of any other workflow accepting structured records as input:
+[`Extract Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/extract_record_data/README.md) can be used to create structured data suitable for input to any of the following workflows:
 
 - [`Anonymize Case Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/anonymize_case_data/README.md)
 - [`Detect Case Patterns`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/detect_case_patterns/README.md)
-- `Compare Case Groups`
-- `Match Entity Records`
-- `Detect Entity Networks`
-
-Mock data is particularly helpful when working in sensitive domains and/or with personally identifiable information (PII).
+- [`Compare Case Groups`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/compare_case_groups/README.md)
+- [`Match Entity Records`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/match_entity_records/README.md)
+- [`Detect Entity Networks`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/detect_entity_networks/README.md)
 
 ## Tutorial
 
-The task for this tutorial is creating a mock case dataset of customer complaints, where each case record describes an identified individual and the nature of their complaint regarding a specific product. This is a useful proxy for any individual-level case data or "microdata" where the privacy of data subjects must be respected.
+The task for this tutorial is extracting structured data records from transcripts of customer complaint calls (mock data).
 
-From the [`Generate Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_record_data/README.md) homepage in a running instance of Intelligence Toolkit, select `Prepare data schema`.
+From the [`Extract Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/extract_record_data/README.md) homepage in a running instance of Intelligence Toolkit, select `Prepare data schema`.
 
 ### Modifying the default schema
 
@@ -81,24 +79,46 @@ Finally, add a `quarter` string indicating in which calendar quarter the complai
 
 The schema is now complete and can be downloaded using the `Download complaint_records_[schema].json` button below the schema preview. Selecting the `Sample object` tab shows a minimal JSON object confirming to the schema.
 
-### Generating mock data
+### Extracting structured records
 
-Navigate to the `Generate mock data` tab to generate a mock dataset conforming to the `Customer Complaints` schema.
+Navigate to the `Extract structured records` tab to use this schema to extract structured records from input text provided.
 
-You will see that `Primary record array` has already been set to `complaint_records`, since this is the only array field in the schema. In the presence of multiple arrays, select the one that represents the primary record type whose records should be counted towards the `Total records to generate` target.
+With `Mode` set to `Extract from single text`, you can enter arbitrary text into the `Unstructured text input` field as desired. For example, try copying and pasting the following mock call transcript:
 
-All `Data configuration controls` are as follows:
+```code
+**Customer Service Representative:** Good afternoon, thank you for calling our customer service hotline. My name is Sarah. How can I assist you today?
 
-- `Records per batch`: How many records to generate in a single LLM call
-- `Parallel batches`: In a single iteraion, how many batches to generate via parallel LLM calls
-- `Total records to generate`: How many records to generate. Must be a multiple of `Records per batch` x `Parallel batches`
-- `Duplicate records per batch`: Within each batch, how many records should be near-duplicates of a seed record randomly selected from existing records
-- `Related records per batch`: Within each batch, how many records should appear closely related to (but not the same as) a seed record randomly selected from existing records
-- `A data generation guidance`: Guidance to the generative AI model about how mock data should be generated (e.g., targeted a specific region, time period, industry, etc.)
+**Bob Johnson:** Hi Sarah, my name is Bob Johnson. I'm calling to report an issue with a product I purchased recently.
 
-Press `Generate mock data` to generate mock data according to the schema and configuration. Each record array in the JSON schema will be converted into CSV format and shown in its own tab (in this example, there will be just a single tab for `complaint_records`). Both the JSON object for the entire dataset and CSV files for each record array may be downloaded using the buttons provided.
+**Customer Service Representative:** I'm sorry to hear that, Bob. Could you please provide me with some more details about the issue?
 
-The outputs of this tutorial are available for download either:
+**Bob Johnson:** Sure, I live at 123 Maple Street in Springfield, and I recently bought a product from your company. The product code is A, and I received it in the second quarter of 2023.
 
-- in app, via [`Generate Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_record_data/README.md) workflow &rarr; `View example outputs` tab &rarr; `Mock data` tab
-- on GitHub, at [example_outputs/generate_record_data/customer_complaints](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/generate_record_data/customer_complaints).
+**Customer Service Representative:** Thank you for that information, Bob. Could you tell me what specific issue you're experiencing with the product?
+
+**Bob Johnson:** Yes, the problem is with the quality of the product. It just doesn't meet the standards I was expecting.
+
+**Customer Service Representative:** I understand how frustrating that can be. Just to confirm, are there any other issues such as price, service, delivery, or description that you're experiencing?
+
+**Bob Johnson:** No, it's just the quality issue. Everything else, like the price and delivery, was fine.
+
+**Customer Service Representative:** Thank you for clarifying that. I see that you're 36 years old, and I have your email as bob.johnson@example.com. Is that correct?
+
+**Bob Johnson:** Yes, that's correct.
+
+**Customer Service Representative:** Great, Bob. I will escalate this quality issue to our product team for further investigation. We will get back to you via email with a resolution as soon as possible.
+
+**Bob Johnson:** Thank you, Sarah. I appreciate your help.
+
+**Customer Service Representative:** You're welcome, Bob. Thank you for bringing this to our attention, and we apologize for any inconvenience. Have a great day!
+
+**Bob Johnson:** You too, bye.
+```
+
+Next, try the same extraction process over a table containing unstructured text fields.
+
+From the `View example outputs` tab, select the `customer_complaints` example and navigate to the `Unstructured texts` tab. Download the CSV file, then return to the `Extract structured records` tab.
+
+Set the `Mode` to `Extract from rows of CSV file` and upload the `customer_complaints_texts.csv` file just downloaded.
+
+Press `Extract record data` to see the `Extracted records` generated on the right.

@@ -4,6 +4,7 @@ from json import loads
 
 import toolkit.AI.utils as utils
 import toolkit.query_text_data.helper_functions as helper_functions
+import toolkit.query_text_data.answer_schema as answer_schema
 import toolkit.query_text_data.prompts as prompts
 
 
@@ -103,3 +104,40 @@ def generate_answers(
             progress_callback(helper_functions.get_answer_progress(answer_history))
         all_selected_chunks.extend(selected_chunks)
         remaining_chunks = list(set(process_chunks) - set(all_selected_chunks))
+
+def answer_question(
+    ai_configuration,
+    question,
+    relevant_cids,
+    cid_to_text,
+    answer_batch_size,
+    answer_progress_callback=None,
+    answer_callback=None,
+):
+    answer_format = answer_schema.answer_format
+    answer_object = {
+        "question": question,
+        "title": "",
+        "introduction": "",
+        "content_id_sequence": [],
+        "content_items": [],
+        "conclusion": ""
+    }
+    answer_stream = []
+    answer_history = []
+    relevant_texts = [cid_to_text[cid] for cid in relevant_cids]
+    generate_answers(
+        ai_configuration=ai_configuration,
+        answer_object=answer_object,
+        answer_format=answer_format,
+        process_chunks=relevant_texts,
+        answer_batch_size=answer_batch_size,
+        answer_stream=answer_stream,
+        answer_callback=answer_callback,
+        answer_history=answer_history,
+        progress_callback=answer_progress_callback,
+    )
+    return (
+        answer_stream,
+        helper_functions.get_answer_progress(answer_history)
+    )

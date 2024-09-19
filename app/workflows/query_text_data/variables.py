@@ -41,6 +41,7 @@ class SessionVariables:
         self.edge_period_counts = SessionVariable({}, prefix)
         self.cid_to_summary = SessionVariable({}, prefix)
         self.analysis_window_size = SessionVariable("NONE", prefix)
+        self.hierarchical_clusters = SessionVariable(None, prefix)
 
         self.adjacent_chunk_steps = SessionVariable(1, prefix)
         self.community_relevance_tests = SessionVariable(10, prefix)

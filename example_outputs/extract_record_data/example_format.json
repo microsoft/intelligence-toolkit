@@ -1,0 +1,20 @@
+{
+    "example_order" : ["schema", "texts", "extracted_records"],
+    "example_metadata" : {
+        "schema": {
+            "type": "json",
+            "heading": "JSON schema",
+            "description": "The JSON schema describing the structure of records to be extracted"
+        },
+        "texts": {
+            "type": "csv",
+            "heading": "Unstructured texts",
+            "description": "Unstructured texts from which structured data records are to be extracted following the JSON schema"
+        },
+        "extracted_records": {
+            "type": "csv",
+            "heading": "Extracted records",
+            "description": "Records extracted from unstructrured texts using the JSON schema together with the [OpenAI Structured Outputs API](https://platform.openai.com/docs/guides/structured-outputs/supported-schemas) to create schema-aligned data records"
+        }
+    }
+}

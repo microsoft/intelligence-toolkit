@@ -1,0 +1,25 @@
+{
+    "example_order" : ["input", "prepared", "case_patterns"],
+    "example_metadata" : {
+        "input": {
+            "type": "csv",
+            "heading": "Input data",
+            "description": "Data uploaded by the user which describes individual case records created over time"
+        },
+        "prepared": {
+            "type": "csv",
+            "heading": "Prepared data",
+            "description": "Data prepared for pattern detection by the user by removing  direct identifiers and reducing to a small number of columns, each containing a small number of categorical values"
+        },
+        "case_patterns": {
+            "type": "list",
+            "item_order": ["chart", "report"],
+            "item_types" : {
+                "chart" : "png",
+                "report" : "md"
+            },
+            "heading": "Detected patterns",
+            "description": "Patterns detected in the attributes of the prepared data, including the period of detection, the attribute values representing the pattern, and the number of cases that match the pattern"
+        }
+    }
+}

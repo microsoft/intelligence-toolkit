@@ -2,6 +2,8 @@
 
 The [`Detect Case Patterns`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/detect_case_patterns/README.md) workflow generates intelligence reports on patterns of attribute values detected in streams of case records.
 
+Select the `View example outputs` tab (in app) or navigate to [example_outputs/detect_case_patterns](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/detect_case_patterns) (on GitHub) for examples.
+
 ## How it works
 
 1. [**Input**] Case records representing categorical attributes of data subjects observed at a point time. Units are treated as anonymous and independent.
@@ -21,14 +23,14 @@ The [`Detect Case Patterns`](https://github.com/microsoft/intelligence-toolkit/b
 
 ## Use with other workflows
 
-[`Detect Case Patterns`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/detect_case_patterns/README.md) can be used to detect patterns of attributes in any timestamped set of case records, including mock records created using [`Generate Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_record_data/README.md) and synthetic case records anonymized using [`Anonymize Case Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/anonymize_case_data/README.md).
+[`Detect Case Patterns`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/detect_case_patterns/README.md) can be used to detect patterns of attributes in any timestamped set of case records, including mock records created using [`Generate Mock Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_mock_data/README.md) and synthetic case records anonymized using [`Anonymize Case Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/anonymize_case_data/README.md).
 
 ## Tutorial
 
 The task for this tutorial is detecting patterns in the cooccurrences of attribute values in the `customer_complaints` dataset available for download either:
 
-- in app, via [`Generate Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_record_data/README.md) workflow &rarr; `View example outputs` tab &rarr; `Mock data` tab
-- on GitHub, at [example_outputs/generate_record_data/customer_complaints](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/generate_record_data/customer_complaints).
+- in app, via [`Generate Mock Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_mock_data/README.md) workflow &rarr; `View example outputs` tab &rarr; `Mock data` tab
+- on GitHub, at [example_outputs/generate_mock_data/customer_complaints](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/generate_mock_data/customer_complaints).
 
 The format of this dataset is as follows, with each row representing an individual customer and their complaint:
 
