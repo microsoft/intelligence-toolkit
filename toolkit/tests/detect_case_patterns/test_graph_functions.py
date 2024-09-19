@@ -6,7 +6,7 @@ import networkx as nx
 import pandas as pd
 import pytest
 
-from app.workflows.detect_case_patterns.config import min_edge_weight, missing_edge_prop
+from toolkit.detect_case_patterns.config import min_edge_weight, missing_edge_prop
 from toolkit.detect_case_patterns.graph_functions import (
     convert_edge_df_to_graph,
     create_edge_df_from_atts,

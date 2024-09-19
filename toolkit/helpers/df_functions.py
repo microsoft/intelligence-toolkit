@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 
-def fix_null_ints(in_df):
+def fix_null_ints(in_df: pd.DataFrame) -> pd.DataFrame:
     df = in_df.copy()
     for col, dt in zip(df.columns, df.dtypes, strict=False):
         if dt == "float64":
@@ -24,8 +24,9 @@ def fix_null_ints(in_df):
                 df[col] = idf["int_s"]
                 df[col] = df[col].astype("Int64")
                 df[col] = df[col].replace(-sys.maxsize, np.nan)
-    return df
+
+    return df.astype(str).replace("nan", "").replace("<NA>", "")
 
 
-def get_current_time():
+def get_current_time() -> str:
     return pd.Timestamp.now().strftime("%Y%m%d%H%M%S")

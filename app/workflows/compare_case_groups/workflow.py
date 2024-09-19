@@ -3,16 +3,22 @@
 #
 import os
 
-import pandas as pd
+import polars as pl
 import streamlit as st
 
-import app.util.df_functions as df_functions
-import app.workflows.compare_case_groups.prompts as prompts
 import app.workflows.compare_case_groups.variables as gn_variables
 from app.util import ui_components
+from toolkit.compare_case_groups import prompts
+from toolkit.compare_case_groups.build_dataframes import (build_attribute_df,
+                                                          build_grouped_df,
+                                                          build_ranked_df,
+                                                          filter_df)
+from toolkit.compare_case_groups.temporal_process import (build_temporal_data,
+                                                          create_window_df)
+from toolkit.helpers.df_functions import fix_null_ints
 
 
-def get_intro():
+def get_intro() -> str:
     file_path = os.path.join(os.path.dirname(__file__), "README.md")
     with open(file_path) as file:
         return file.read()
@@ -49,15 +55,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                 sv.case_groups_input_df,
                 sv.case_groups_final_df,
             )
-            sv.case_groups_final_df.value = df_functions.fix_null_ints(
-                sv.case_groups_final_df.value
-            )
-            sv.case_groups_final_df.value = (
-                sv.case_groups_final_df.value.astype(str)
-                .replace("<NA>", "")
-                .replace("nan", "")
-            )
-
+            sv.case_groups_final_df.value = fix_null_ints(sv.case_groups_final_df.value)
     with summarize_tab:
         if len(sv.case_groups_final_df.value) == 0:
             st.warning("Upload data to continue.")
@@ -67,6 +65,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                 st.markdown("##### Define summary model")
                 sorted_atts = []
                 sorted_cols = sorted(sv.case_groups_final_df.value.columns)
+
                 for col in sorted_cols:
                     if col == "Subject ID":
                         continue
@@ -89,11 +88,6 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                     ]
                     sorted_atts.extend(vals)
 
-                filters = st.multiselect(
-                    "After filtering to records matching these values:",
-                    sorted_atts,
-                    default=sv.case_groups_filters.value,
-                )
                 groups = st.multiselect(
                     "Compare groups of records with different combinations of these attributes:",
                     sorted_cols,
@@ -110,14 +104,19 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                     temporal_options,
                     index=temporal_options.index(sv.case_groups_temporal.value),
                 )
+                filters = st.multiselect(
+                    "After filtering to records matching these values (optional):",
+                    sorted_atts,
+                    default=sv.case_groups_filters.value,
+                )
 
-                model = st.button(
+                create = st.button(
                     "Create summary", disabled=len(groups) == 0 or len(aggregates) == 0
                 )
 
             with c2:
                 st.markdown("##### Data summary")
-                if model:
+                if create:
                     sv.case_groups_filters.value = filters
                     sv.case_groups_groups.value = groups
                     sv.case_groups_aggregates.value = aggregates
@@ -133,171 +132,47 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                     sv.case_groups_model_df.value = (
                         sv.case_groups_model_df.value.replace("", None)
                     )
+                    initial_row_count = len(sv.case_groups_model_df.value)
 
-                    # wide df for model
-                    wdf = sv.case_groups_model_df.value
-                    print(wdf)
-                    initial_row_count = len(wdf)
+                    filtered_df = (
+                        filter_df(sv.case_groups_model_df.value, filters)
+                        if len(filters) > 0
+                        else sv.case_groups_model_df.value
+                    )
 
-                    if len(filters) > 0:
-                        for f in filters:
-                            col, val = f.split(":")
-                            wdf = wdf[wdf[col] == val]
-                    filtered_row_count = len(wdf)
-                    dataset_proportion = int(
-                        round(
-                            100 * filtered_row_count / initial_row_count
-                            if initial_row_count > 0
-                            else 0,
-                            0,
-                        )
+                    grouped_df = build_grouped_df(filtered_df, groups)
+
+                    attributes_df = build_attribute_df(
+                        pl.from_pandas(filtered_df), groups, aggregates
                     )
-                    # narrow df for model
-                    id_vars = [*groups, temporal] if temporal != "" else groups
-                    ndf = wdf.melt(
-                        id_vars=id_vars,
-                        value_vars=aggregates,
-                        var_name="Attribute",
-                        value_name="Value",
-                    )
-                    ndf.dropna(subset=["Value"], inplace=True)
-                    ndf["Attribute Value"] = ndf.apply(
-                        lambda x: str(x["Attribute"]) + ":" + str(x["Value"]), axis=1
-                    )
+
+                    temporal_df = pl.DataFrame()
                     temporal_atts = []
-
-                    # create group df
-                    gdf = wdf.melt(
-                        id_vars=groups,
-                        value_vars=["Subject ID"],
-                        var_name="Attribute",
-                        value_name="Value",
-                    )
-
-                    gdf["Attribute Value"] = gdf["Attribute"] + ":" + gdf["Value"]
-                    gdf = gdf.groupby(groups).size().reset_index(name="Group Count")
-                    # Add group ranks
-                    gdf["Group Rank"] = gdf["Group Count"].rank(
-                        ascending=False, method="max", na_option="bottom"
-                    )
-
-                    # create attribute df
-                    adf = (
-                        ndf.groupby([*groups, "Attribute Value"])
-                        .size()
-                        .reset_index(name="Attribute Count")
-                    )
-                    # Ensure all groups have entries for all attribute values
-                    for name, group in adf.groupby(groups):
-                        for att_val in adf["Attribute Value"].unique():
-                            # count rows with this group and attribute value
-                            row_count = len(group[group["Attribute Value"] == att_val])
-                            if row_count == 0:
-                                adf.loc[len(adf)] = [*name, att_val, 0]
-
-                    for att_val in adf["Attribute Value"].unique():
-                        adf.loc[adf["Attribute Value"] == att_val, "Attribute Rank"] = (
-                            adf[
-                                adf["Attribute Value"] == att_val
-                            ][
-                                "Attribute Count"
-                            ].rank(ascending=False, method="max", na_option="bottom")
+                    # create Window df
+                    if temporal is not None and temporal != "":
+                        temporal_df = create_window_df(
+                            groups, temporal, aggregates, pl.from_pandas(filtered_df)
                         )
 
-                    ldf = None
-
-                    # create Window df
-                    if temporal != "":
                         temporal_atts = sorted(
                             sv.case_groups_model_df.value[temporal].astype(str).unique()
                         )
-                        ldf = wdf.melt(
-                            id_vars=[*groups, temporal],
-                            value_vars=aggregates,
-                            var_name="Attribute",
-                            value_name="Value",
+
+                        temporal_df = build_temporal_data(
+                            temporal_df, groups, temporal_atts, temporal
                         )
-                        ldf["Attribute Value"] = ldf["Attribute"] + ":" + ldf["Value"]
-                        # group by groups and count attribute values
-                        ldf = (
-                            ldf.groupby([*groups, temporal, "Attribute Value"])
-                            .size()
-                            .reset_index(name=f"{temporal} Window Count")
-                        )
-
-                    tdfs = []
-                    if len(temporal_atts) > 0:
-                        # Add in 0 counts for any missing temporal attribute values across all groups and attribute values
-                        for name, group in ldf.groupby(groups):
-                            for att_val in ldf["Attribute Value"].unique():
-                                for time_val in ldf[temporal].unique():
-                                    if (
-                                        len(
-                                            group[
-                                                (group[temporal] == time_val)
-                                                & (
-                                                    group[f"{temporal} Window Count"]
-                                                    == att_val
-                                                )
-                                            ]
-                                        )
-                                        == 0
-                                    ):
-                                        ldf.loc[len(ldf)] = [
-                                            *name,
-                                            time_val,
-                                            att_val,
-                                            0,
-                                        ]
-
-                        # Calculate deltas in counts within each group and attribute value
-                        for name, ddf in ldf.groupby([*groups, "Attribute Value"]):
-                            ldf.loc[ddf.index, f"{temporal} Window Delta"] = (
-                                ddf[f"{temporal} Window Count"].diff().fillna(0)
-                            )
-                        for tatt in temporal_atts:
-                            tdf = ldf[ldf[temporal] == tatt].copy(deep=True)
-                            # rank counts for each attribute value
-                            for att_val in tdf["Attribute Value"].unique():
-                                tdf.loc[
-                                    (tdf["Attribute Value"] == att_val),
-                                    f"{temporal} Window Rank",
-                                ] = tdf[tdf["Attribute Value"] == att_val][
-                                    f"{temporal} Window Count"
-                                ].rank(ascending=False, method="first")
-                            tdfs.append(tdf)
-                        ldf = pd.concat(tdfs).sort_values(by=temporal)
-
                     # Create overall df
-                    odf = (
-                        ldf.merge(gdf, on=[*groups], how="left", suffixes=["", "_r"])
-                        if temporal != ""
-                        else adf.merge(
-                            gdf, on=[*groups], how="left", suffixes=["", "_r"]
-                        )
+                    ranked_df = build_ranked_df(
+                        temporal_df,
+                        pl.from_pandas(grouped_df),
+                        attributes_df,
+                        temporal or "",
+                        groups,
                     )
-                    odf = odf.merge(
-                        adf,
-                        on=[*groups, "Attribute Value"],
-                        how="left",
-                        suffixes=["", "_r"],
-                    )
-                    odf = odf.sort_values(by=[*groups], ascending=True)
-                    if temporal != "":
-                        odf.rename(
-                            columns={temporal: f"{temporal} Window"}, inplace=True
-                        )
-                        odf[f"{temporal} Window Rank"] = odf[
-                            f"{temporal} Window Rank"
-                        ].astype(int)
-                        odf[f"{temporal} Window Delta"] = odf[
-                            f"{temporal} Window Delta"
-                        ].astype(int)
-                    odf["Attribute Rank"] = odf["Attribute Rank"].astype(int)
-                    odf["Group Rank"] = odf["Group Rank"].astype(int)
+                    ranked_df = ranked_df.to_pandas()
 
                     sv.case_groups_model_df.value = (
-                        odf[
+                        ranked_df[
                             [
                                 *groups,
                                 "Group Count",
@@ -312,7 +187,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                             ]
                         ]
                         if temporal != ""
-                        else odf[
+                        else ranked_df[
                             [
                                 *groups,
                                 "Group Count",
@@ -333,9 +208,19 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                         )
                         + "]"
                     )
+
+                    filtered_row_count = len(filtered_df)
+                    dataset_proportion = int(
+                        round(
+                            100 * filtered_row_count / initial_row_count
+                            if initial_row_count > 0
+                            else 0,
+                            0,
+                        )
+                    )
                     description = "This table shows:"
                     description += (
-                        f"\n- A summary of **{filtered_row_count}** data records matching {filters_text}, representing **{dataset_proportion}%** of the overall dataset"
+                        f"\n- A summary of **{len(filtered_df)}** data records matching {filters_text}, representing **{dataset_proportion}%** of the overall dataset"
                         if len(filters) > 0
                         else f"\n- A summary of all **{initial_row_count}** data records"
                     )
@@ -399,7 +284,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                         )
                     ]
                     filter_description = f'Filtered to the following groups only: {", ".join([str(s) for s in selected_groups])}'
-                elif top_group_ranks > 0:
+                elif top_group_ranks:
                     fdf = fdf[fdf["Group Rank"] <= top_group_ranks]
                     filter_description = (
                         f"Filtered to the top {top_group_ranks} groups by record count"

@@ -10,13 +10,9 @@ import numpy as np
 import pandas as pd
 import plotly.io as pio
 import streamlit as st
-from pacsynth import (
-    AccuracyMode,
-    Dataset,
-    DpAggregateSeededParametersBuilder,
-    DpAggregateSeededSynthesizer,
-    FabricationMode,
-)
+from pacsynth import (AccuracyMode, Dataset,
+                      DpAggregateSeededParametersBuilder,
+                      DpAggregateSeededSynthesizer, FabricationMode)
 
 import app.util.df_functions as df_functions
 import app.util.ui_components as ui_components
@@ -133,8 +129,6 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                         with st.spinner("Anonymizing data..."):
                             df = (
                                 df_functions.fix_null_ints(df)
-                                .astype(str)
-                                .replace("nan", "")
                             )
                             sensitive_dataset = Dataset.from_data_frame(df)
 

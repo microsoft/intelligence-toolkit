@@ -10,20 +10,15 @@ from toolkit.AI.metaprompts import do_not_harm
 from toolkit.AI.utils import generate_messages
 from toolkit.helpers import df_functions
 
-from .detection_functions import (
-    create_close_node_rows,
-    create_pattern_rows,
-    create_period_to_patterns,
-)
+from .detection_functions import (create_close_node_rows, create_pattern_rows,
+                                  create_period_to_patterns)
 from .graph_functions import convert_edge_df_to_graph, create_edge_df_from_atts
 from .prompts import report_prompt, user_prompt
 from .record_counter import RecordCounter
 
-
 # def prepare_data(data_df):
 #     melted = data_df.melt(
 #         id_vars=["Subject ID"], var_name="Attribute", value_name="Value"
-#     ).drop_duplicates()
 #     att_to_subject_to_vals = defaultdict(lambda: defaultdict(set))
 #     for _i, row in melted.iterrows():
 #         att_to_subject_to_vals[row["Attribute"]][row["Subject ID"]].add(row["Value"])
@@ -76,12 +71,8 @@ def generate_graph_model(df, period_col, type_val_sep):
     att_cols = [
         col for col in df.columns.to_numpy() if col not in ["Subject ID", period_col]
     ]
-    model_df = (
-        df_functions.fix_null_ints(df)
-        .astype(str)
-        .replace("nan", "")
-        .replace("<NA>", "")
-    )
+    model_df = df_functions.fix_null_ints(df)
+
     model_df["Subject ID"] = [str(x) for x in range(1, len(model_df) + 1)]
     model_df["Subject ID"] = model_df["Subject ID"].astype(str)
     pdf = model_df.copy(deep=True)[[period_col, "Subject ID", *att_cols]]
@@ -108,7 +99,7 @@ def generate_graph_model(df, period_col, type_val_sep):
 def compute_attribute_counts(df, pattern, period_col, period, type_val_sep):
     atts = pattern.split(" & ")
     # Combine astype and replace operations
-    fdf = df_functions.fix_null_ints(df).astype(str).replace({"nan": "", "<NA>": ""})
+    fdf = df_functions.fix_null_ints(df)
     fdf = fdf[fdf[period_col] == period]
 
     # Pre-filter columns to avoid unnecessary processing
