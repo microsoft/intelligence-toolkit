@@ -80,6 +80,9 @@ Section "!${PRODUCT_NAME}" sec_app
         [[ super() ]]
       [% endblock install_pkgs %]
     #]
+    ; Remove old installation code files
+    RMDir /r "$INSTDIR\pkgs\app"
+    RMDir /r "$INSTDIR\pkgs\toolkit"
     ; Copy pkgs data
     SetOutPath "$INSTDIR\pkgs"
     File /r "pkgs\*.*"
