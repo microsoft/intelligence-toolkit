@@ -81,7 +81,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
     with uploader_tab:
         uploader_col, model_col = st.columns([3, 2])
         with uploader_col:
-            _, selected_df = ui_components.multi_csv_uploader(
+            _, selected_df, changed = ui_components.multi_csv_uploader(
                 "Upload multiple CSVs",
                 sv.network_uploaded_files,
                 sv.network_upload_key.value,

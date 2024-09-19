@@ -316,7 +316,7 @@ async def create(sv: SessionVariables, workflow=None):
                         ]
                     )
                     st.markdown(f"**Selected concept: {selection}**")
-                    st.dataframe(selected_cids_df, hide_index=True, height=650)
+                    st.dataframe(selected_cids_df, hide_index=True, height=650, use_container_width=True)
     with search_tab:
         with st.expander("Search options", expanded=False):
             c1, c2, c3, c4, c5 = st.columns([1, 1, 1, 1, 1])

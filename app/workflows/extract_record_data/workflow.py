@@ -42,7 +42,7 @@ async def create(sv: variables.SessionVariables, workflow: None):
                     st.text_area("Unstructured text input", key=sv.text_input.key, value=sv.text_input.value, height=400)
                     input_texts.append(sv.text_input.value)
                 else:
-                    _, selected_df = ui_components.multi_csv_uploader(
+                    _, selected_df, changed = ui_components.multi_csv_uploader(
                         "Upload CSV file(s)",
                         sv.uploaded_synthesis_files,
                         "synthesis_uploader",
@@ -77,7 +77,7 @@ async def create(sv: variables.SessionVariables, workflow: None):
                         for ix, record_array in enumerate(sv.record_arrays.value):
                             with df_placeholders[ix]:
                                 df = path_to_df[record_array]
-                                st.dataframe(df, height=250)
+                                st.dataframe(df, height=250, hide_index=True, use_container_width=True)
                         sv.generated_dfs.value = path_to_df
                                     
                     if generate:
@@ -103,13 +103,13 @@ async def create(sv: variables.SessionVariables, workflow: None):
                             with df_placeholders[ix]:
                                 if record_array in sv.generated_dfs.value:
                                     df = sv.generated_dfs.value[record_array]
-                                    st.dataframe(df, height=600, use_container_width=True)
+                                    st.dataframe(df, height=600, use_container_width=True, hide_index=True)
 
                     for ix, record_array in enumerate(sv.record_arrays.value):
                         with dl_placeholders[ix]:
                             c1, c2 = st.columns([1, 1])
                             with c1:
-                                name = sv.schema.value["title"].replace(" ", "_").lower() + "_[data].json"
+                                name = sv.schema.value["title"].replace(" ", "_").lower() + "_[schema].json"
                                 st.download_button(
                                     label=f'Download {name}',
                                     data=dumps(sv.final_object.value, indent=2),
@@ -120,9 +120,9 @@ async def create(sv: variables.SessionVariables, workflow: None):
                             with c2:
                                 if record_array in sv.generated_dfs.value:
                                     st.download_button(
-                                        label=f'Download {record_array}_extracted.csv',
+                                        label=f'Download {record_array}_[extracted].csv',
                                         data=sv.generated_dfs.value[record_array].to_csv(index=False, encoding='utf-8'),
-                                        file_name=f'{record_array}_extracted.csv',
+                                        file_name=f'{record_array}_[extracted].csv',
                                         mime='text/csv',
                                         key=f'{record_array}_extracted_csv_download'
                                     )

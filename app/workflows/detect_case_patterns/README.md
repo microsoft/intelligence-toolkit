@@ -2,6 +2,8 @@
 
 The [`Detect Case Patterns`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/detect_case_patterns/README.md) workflow generates intelligence reports on patterns of attribute values detected in streams of case records.
 
+Select the `View example outputs` tab (in app) or navigate to [example_outputs/detect_case_patterns](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/detect_case_patterns) (on GitHub) for examples.
+
 ## How it works
 
 1. [**Input**] Case records representing categorical attributes of data subjects observed at a point time. Units are treated as anonymous and independent.

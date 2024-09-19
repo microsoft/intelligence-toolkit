@@ -21,7 +21,7 @@ def get_intro():
 
 
 async def create(sv: bds_variables.SessionVariables, workflow: None):
-    intro_tab, schema_tab, record_generator_tab, text_generator_tab, mock_tab = st.tabs(['Generate Mock Data workflow:', 'Prepare data schema', 'Generate mock records', 'Generate mock text', 'View example outputs'])
+    intro_tab, schema_tab, record_generator_tab, text_generator_tab, mock_tab = st.tabs(['Generate Mock Data workflow:', 'Prepare data schema', 'Generate mock records', 'Generate mock texts', 'View example outputs'])
     with intro_tab:
         st.markdown(get_intro())
     with schema_tab:
@@ -54,7 +54,7 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
             st.text_area("AI data generation guidance", key=sv.generation_guidance.key, value=sv.generation_guidance.value,
                          help="Guidance to the generative AI model about how mock data should be generated (e.g., targeting a specific region, time period, industry, etc.)")
             
-            generate = st.button('Generate mock data')
+            generate = st.button('Generate mock records')
             df_placeholders = []
             dl_placeholders = []
             if len(sv.record_arrays.value) == 0:
@@ -72,7 +72,7 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                     for ix, record_array in enumerate(sv.record_arrays.value):
                         with df_placeholders[ix]:
                             df = path_to_df[record_array]
-                            st.dataframe(df, height=250)
+                            st.dataframe(df, height=250, hide_index=True, use_container_width=True)
                     sv.generated_dfs.value = path_to_df
                                 
                 if generate:
@@ -99,13 +99,13 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                         with df_placeholders[ix]:
                             if record_array in sv.generated_dfs.value:
                                 df = sv.generated_dfs.value[record_array]
-                                st.dataframe(df, height=250)
+                                st.dataframe(df, height=250, hide_index=True, use_container_width=True)
 
                 for ix, record_array in enumerate(sv.record_arrays.value):
                     with dl_placeholders[ix]:
                         c1, c2 = st.columns([1, 1])
                         with c1:
-                            name = sv.schema.value["title"].replace(" ", "_").lower() + "_[mock_data].json"
+                            name = sv.schema.value["title"].replace(" ", "_").lower() + "_[schema].json"
                             st.download_button(
                                 label=f'Download {name}',
                                 data=dumps(sv.final_object.value, indent=2),
@@ -116,9 +116,9 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                         with c2:
                             if record_array in sv.generated_dfs.value:
                                 st.download_button(
-                                    label=f'Download {record_array}.csv',
+                                    label=f'Download {record_array}_[mock_records].csv',
                                     data=sv.generated_dfs.value[record_array].to_csv(index=False, encoding='utf-8'),
-                                    file_name=f'{record_array}.csv',
+                                    file_name=f'{record_array}_[mock_records].csv',
                                     mime='text/csv',
                                     key=f'{record_array}_csv_download'
                                 )
@@ -127,23 +127,28 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
         d1, d2 = st.columns([1, 1])
         with d1:
             st.markdown("##### Text generation controls")
-            selected_file, selected_df = ui_components.multi_csv_uploader(
+            selected_file, selected_df, changed = ui_components.multi_csv_uploader(
                 "Upload CSV file(s)",
                 sv.uploaded_synthesis_files,
                 "synthesis_uploader",
                 "synthesis_uploader",
                 sv.synthesis_max_rows_to_process,
             )
-            if selected_df is not None:
-                input_texts = []
-                for ix, row in selected_df.iterrows():
-                    input_texts.append(row.to_json())
+            if changed:
+                if selected_df is not None:
+                    sv.input_texts.value = []
+                    for ix, row in selected_df.iterrows():
+                        sv.input_texts.value.append(row.to_json())
+                sv.generated_texts.value = []
+                sv.generated_text_df.value = None
             st.text_area("AI text generation guidance", key=sv.text_generation_guidance.key, value=sv.text_generation_guidance.value,
                         help="Guidance to the generative AI model about how text should be generated from records")
-            
-            generate = st.button('Generate text data')
+            st.number_input("Temperature", min_value=0.0, max_value=2.0, value=sv.synthesis_temperature.value, step=0.1, key=sv.synthesis_temperature.key,
+                            help="Temperature is a number between 0 and 2 that affects the variation in AI outputs. Lower temperatures mean less variation, and AI outputs will be more accurate and deterministic. Higher temperatures will result in more diverse outputs.")
+            generate = st.button('Generate mock texts')
 
         with d2:
+            st.markdown("##### Generated texts")
             df_placeholders = []
             dl_placeholders = []
             
@@ -154,10 +159,10 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
 
             def on_dfs_update(df):
                 with df_placeholder:
-                    st.dataframe(df, height=250)
+                    st.dataframe(df, height=250, hide_index=True, use_container_width=True)
                 sv.generated_text_df.value = df
                             
-            if generate:
+            if generate and selected_file is not None:
                 sv.generated_texts.value = pd.DataFrame()
                 df_placeholder.empty()
 
@@ -166,18 +171,19 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                     sv.generated_text_df.value
                 ) = await text_generator.generate_text_data(
                     ai_configuration=ai_configuration,
-                    input_texts=input_texts,
+                    input_texts=sv.input_texts.value,
                     generation_guidance=sv.text_generation_guidance.value,
+                    temperature=sv.synthesis_temperature.value,
                     df_update_callback=on_dfs_update,
                     callback_batch=None
                 )
 
-            if sv.generated_text_df.value is not None:
+            if sv.generated_text_df.value is not None and selected_file is not None:
                 with df_placeholder:
-                    st.dataframe(sv.generated_text_df.value, height=600, use_container_width=True)
+                    st.dataframe(sv.generated_text_df.value, height=600, use_container_width=True, hide_index=True)
 
                 with dl_placeholder:
-                    name = '.'.join(selected_file.split(".")[:-1]) + "_[mock_text].csv"
+                    name = '.'.join(selected_file.split(".")[:-1]) + "_[mock_texts].csv"
                     st.download_button(
                         label=f'Download {name}',
                         data=sv.generated_text_df.value.to_csv(index=False, encoding='utf-8'),

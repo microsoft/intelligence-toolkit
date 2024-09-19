@@ -17,6 +17,7 @@ async def generate_text_data(
     ai_configuration,
     generation_guidance,
     input_texts,
+    temperature,
     df_update_callback,
     callback_batch,
 ):
@@ -26,6 +27,7 @@ async def generate_text_data(
         ai_configuration=ai_configuration,
         input_texts=input_texts,
         generation_guidance=generation_guidance,
+        temperature=temperature,
         callbacks=[callback_batch] if callback_batch is not None else None,
     )
     generated_texts.extend(new_texts)
@@ -40,6 +42,7 @@ async def _generate_text_parallel(
     ai_configuration,
     input_texts,
     generation_guidance,
+    temperature,
     callbacks: list[ProgressBatchCallback] | None = None,
 ):
     mapped_messages = [utils.prepare_messages(
@@ -53,7 +56,7 @@ async def _generate_text_parallel(
     return await helper_functions.map_generate_text(
         ai_configuration,
         mapped_messages,
-        temperature=0.75,
+        temperature=temperature,
         callbacks=callbacks,
     )
 

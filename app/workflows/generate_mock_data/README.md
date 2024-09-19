@@ -1,8 +1,8 @@
 # Generate Mock Data
 
-The [`Generate Mock Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_mock_data/README.md) workflow generates (a) structured records and (b) synthetic text notes aligned with each record, each according to a JSON schema uploaded or defined by the user.
+The [`Generate Mock Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_mock_data/README.md) workflow generates (a) structured records according to a JSON schema uploaded or defined by the user, and (b) synthetic texts in a user-defined format aligned with each record.
 
-Navigate to [example_outputs/generate_mock_data](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/generate_mock_data) (on GitHub) for examples.
+Select the `View example outputs` tab (in app) or navigate to [example_outputs/generate_mock_data](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/generate_mock_data) (on GitHub) for examples.
 
 ## How it works
 
@@ -13,7 +13,7 @@ Navigate to [example_outputs/generate_mock_data](https://github.com/microsoft/in
 
 ## Input requirements
 
-- The input schema, if provided, should be a JSON file conforming to the [JSON schema standard](https://json-schema.org/).
+- The input schema, if provided, should be a JSON file conforming to the [JSON schema standard](https://json-schema.org/) and following the restrictions of the [OpenAI Structured Outputs API](https://platform.openai.com/docs/guides/structured-outputs/supported-schemas).
 
 ## Use with other workflows
 
@@ -75,9 +75,9 @@ Finally, add a `quarter` string indicating in which calendar quarter the complai
 
 The schema is now complete and can be downloaded using the `Download complaint_records_[schema].json` button below the schema preview. Selecting the `Sample object` tab shows a minimal JSON object confirming to the schema.
 
-### Generating mock data
+### Generating mock records
 
-Navigate to the `Generate mock data` tab to generate a mock dataset conforming to the `Customer Complaints` schema.
+Navigate to the `Generate mock records` tab to generate a mock dataset conforming to the `Customer Complaints` schema.
 
 You will see that `Primary record array` has already been set to `complaint_records`, since this is the only array field in the schema. In the presence of multiple arrays, select the one that represents the primary record type whose records should be counted towards the `Total records to generate` target.
 
@@ -88,11 +88,22 @@ All `Data configuration controls` are as follows:
 - `Total records to generate`: How many records to generate. Must be a multiple of `Records per batch` x `Parallel batches`
 - `Duplicate records per batch`: Within each batch, how many records should be near-duplicates of a seed record randomly selected from existing records
 - `Related records per batch`: Within each batch, how many records should appear closely related to (but not the same as) a seed record randomly selected from existing records
-- `A data generation guidance`: Guidance to the generative AI model about how mock data should be generated (e.g., targeted a specific region, time period, industry, etc.)
+- `AI data generation guidance`: Guidance to the generative AI model about how mock data should be generated (e.g., targeted a specific region, time period, industry, etc.)
 
-Press `Generate mock data` to generate mock data according to the schema and configuration. Each record array in the JSON schema will be converted into CSV format and shown in its own tab (in this example, there will be just a single tab for `complaint_records`). Both the JSON object for the entire dataset and CSV files for each record array may be downloaded using the buttons provided.
+Press `Generate mock records` to generate mock data records according to the schema and configuration. Each record array in the JSON schema will be converted into CSV format and shown in its own tab (in this example, there will be just a single tab for `complaint_records`). Both the JSON object for the entire dataset and CSV files for each record array may be downloaded using the buttons provided.
 
-The outputs of this tutorial are available for download either:
+Press the `Download complaint_records_[mock_records].csv` button to download structured record data for the next step.
 
-- in app, via [`Generate Mock Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_mock_data/README.md) workflow &rarr; `View example outputs` tab &rarr; `Mock data` tab
-- on GitHub, at [example_outputs/generate_mock_data/customer_complaints](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/generate_mock_data/customer_complaints).
+### Generating mock texts
+
+Go to the `Generate mock texts`, select `Browse files`, and upload the `complaint_records_[mock_records].csv` file created in the previous step.
+
+Expand `File options` and set `Maximum rows to process (0 = all)` to 50 for test purposes.
+
+Under `AI text generation guidance`, enter any guidance to the generative AI model about how to style and format the text, e.g., in a standard document type for the relevant domain.
+
+Given the domain of the example, try `Generate output texts as transcripts of customer complaint calls`.
+
+`Temperature` is a number between 0 and 2 that affects the variation in AI outputs. Lower temperatures mean less variation, and AI outputs will be more accurate and deterministic. Higher temperatures will result in more diverse outputs.
+
+Press `Generate mock texts` to see the mock texts for the given guidance and temperature generated on the right under `Generated texts`.

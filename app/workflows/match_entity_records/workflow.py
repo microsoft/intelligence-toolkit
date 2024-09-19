@@ -50,7 +50,7 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
     with uploader_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:
-            selected_file, selected_df = ui_components.multi_csv_uploader(
+            selected_file, selected_df, changed = ui_components.multi_csv_uploader(
                 "Upload multiple CSVs",
                 sv.matching_uploaded_files,
                 sv.matching_upload_key.value,

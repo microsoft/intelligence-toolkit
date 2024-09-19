@@ -40,6 +40,7 @@ async def generate_data(
                     )
     first_object_json = loads(first_object)
     current_object_json = {}
+    dfs = {}
     for i in range(num_iterations):
         if i == 0:
             sample_records = sample_from_record_array(first_object_json, primary_record_array, records_per_batch)
@@ -62,7 +63,7 @@ async def generate_data(
             new_object_json = loads(new_object)
             generated_objects.append(new_object_json)
             current_object_json, conflicts = merge_json_objects(current_object_json, new_object_json)
-        dfs = {}
+        
         for record_array in record_arrays:
             df = extract_df(current_object_json, record_array)
             dfs[record_array] = df

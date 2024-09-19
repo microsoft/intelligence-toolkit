@@ -261,29 +261,37 @@ def multi_csv_uploader(
     files = st.file_uploader(
         upload_label, type=["csv"], accept_multiple_files=True, key=uploader_key
     )
-
+    file_names = [file.name for file in files] if files is not None else []
+    uploaded_files_var.value = [v for v in uploaded_files_var.value if v in file_names]
     if files is not None:
         for file in files:
             if file.name not in uploaded_files_var.value:
                 uploaded_files_var.value.append(file.name)
+    last_selected_file = st.session_state.get(f"{key}_last_selected_file", None)
     selected_file = st.selectbox(
         "Select a file to process",
-        options=["", *uploaded_files_var.value] if files else [],
+        options=uploaded_files_var.value if files else [],
+        key=f"{key}_file_select",
     )
+    changed = selected_file != last_selected_file
+        
     with st.expander("File options"):
         st.number_input(
             "Maximum rows to process (0 = all)",
             min_value=0,
             step=1000,
-            key=max_rows_var.key,
+            key=max_rows_var.key
         )
-        encoding = st.selectbox(
-            "File encoding",
-            options=file_options,
-            key=f"{key}_encoding_db",
-            index=file_options.index(st.session_state[f"{key}_encoding"]),
-        )
-        reload = st.button("Reload", key=f"{key}_reload")
+        c1, c2 = st.columns([3, 1])
+        with c1:
+            encoding = st.selectbox(
+                "File encoding",
+                options=file_options,
+                key=f"{key}_encoding_db",
+                index=file_options.index(st.session_state[f"{key}_encoding"]),
+            )
+        with c2:
+            reload = st.button("Reload", key=f"{key}_reload")
 
     selected_df = pd.DataFrame()
     if selected_file not in [None, ""] or reload:
@@ -313,7 +321,8 @@ def multi_csv_uploader(
             use_container_width=True,
             height=height,
         )
-    return selected_file, selected_df
+    changed = changed or reload
+    return selected_file, selected_df, changed
 
 
 def prepare_input_df(
