@@ -17,15 +17,20 @@ from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 from toolkit.match_entity_records.config import AttributeToMatch
-from toolkit.match_entity_records.detect import (build_attributes_dataframe,
-                                                 build_matches,
-                                                 build_matches_dataset,
-                                                 build_near_map,
-                                                 build_nearest_neighbors,
-                                                 build_sentence_pair_scores,
-                                                 convert_to_sentences)
+from toolkit.match_entity_records.detect import (
+    build_attributes_dataframe,
+    build_matches,
+    build_matches_dataset,
+    build_near_map,
+    build_nearest_neighbors,
+    build_sentence_pair_scores,
+    convert_to_sentences,
+)
 from toolkit.match_entity_records.prepare_model import (
-    build_attribute_list, build_attribute_options, format_dataset)
+    build_attribute_list,
+    build_attribute_options,
+    format_dataset,
+)
 
 
 def get_intro():
@@ -332,15 +337,6 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                 data = sv.matching_matches_df.value
                 st.markdown("##### Record groups")
                 if len(sv.matching_matches_df.value) > 0:
-                    if sv_home.protected_mode.value:
-                        unique_names = sv.matching_matches_df.value[
-                            "Entity name"
-                        ].unique()
-                        for i, name in enumerate(unique_names, start=1):
-                            data = data.with_columns(
-                                data["Entity name"].replace(name, f"Entity_{i}")
-                            )
-
                     st.dataframe(
                         data, height=700, use_container_width=True, hide_index=True
                     )
@@ -377,7 +373,6 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
             gen_placeholder = st.empty()
 
             if generate:
-                unique_names = sv.matching_matches_df.value["Entity name"].unique()
                 for messages in batch_messages:
                     callback = ui_components.create_markdown_callback(
                         placeholder, prefix
@@ -386,10 +381,6 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
 
                     if len(response.strip()) > 0:
                         prefix = prefix + response + "\n"
-                    if sv_home.protected_mode.value:
-                        for i, name in enumerate(unique_names, start=1):
-                            prefix = prefix.replace(name, f"Entity_{i}")
-
                 result = prefix.replace("```\n", "").strip()
                 sv.matching_evaluations.value = result
                 lines = result.split("\n")
