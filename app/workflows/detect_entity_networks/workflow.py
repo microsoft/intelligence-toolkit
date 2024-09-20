@@ -104,7 +104,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                     )
                     flag_agg = st.selectbox(
                         "Flag format",
-                        ["Instance", "Count"],
+                        ["Count", "Instance"],
                         help="How flags are represented: as individual instances or as aggregate counts in a flag value column.",
                     )
                 elif link_type == "Entity-Group":
@@ -244,7 +244,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
     with process_tab:
         index_col, part_col = st.columns([1, 1])
         with index_col:
-            st.markdown("##### Index and infer nodes (optional)")
+            st.markdown("##### Match similar nodes (optional)")
             fuzzy_options = sorted(
                 [
                     ENTITY_LABEL,

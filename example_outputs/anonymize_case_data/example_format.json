@@ -1,14 +1,14 @@
 {
-    "example_order" : ["sensitive", "prepared", "aggregate", "synthetic"],
+    "example_order" : ["input", "prepared", "aggregate", "synthetic"],
     "example_metadata" : {
-        "sensitive": {
+        "input": {
             "type": "csv",
             "heading": "Sensitive data",
             "description": "Sensitive data uploaded by the user which describes individual data subjects and is in need of anonymization for sharing or analysis purposes"
         },
         "prepared": {
             "type": "csv",
-            "heading": "Prepared data",
+            "heading": "Input data",
             "description": "Sensitive data prepared for anonymization by the user by removing  direct identifiers and reducing to a small number of columns, each containing a small number of categorical values"
         },
         "aggregate": {
