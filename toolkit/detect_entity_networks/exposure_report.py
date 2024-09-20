@@ -138,5 +138,6 @@ def build_exposure_report(
                 context += f"{indent}{step}\n"
             if ix < len(path) - 1:
                 context += f"{indent}--->\n"
+        context += "```\n\n"
 
-    return context + "\n```\n\n"
+    return context
