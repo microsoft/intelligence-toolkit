@@ -8,7 +8,7 @@ import pandas as pd
 import toolkit.AI.utils as utils
 import toolkit.generate_mock_data.prompts as prompts
 import toolkit.generate_mock_data.schema_builder as schema_builder
-import toolkit.query_text_data.helper_functions as helper_functions
+import toolkit.AI.utils as utils
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 
@@ -23,6 +23,7 @@ async def generate_data(
     parallel_batches,
     duplicate_records_per_batch,
     related_records_per_batch,
+    temperature,
     df_update_callback,
     callback_batch,
 ):
@@ -33,7 +34,8 @@ async def generate_data(
                         generation_guidance=generation_guidance,
                         primary_record_array=primary_record_array,
                         total_records=parallel_batches,
-                        data_schema=data_schema
+                        data_schema=data_schema,
+                        temperature=temperature,
                     )
     first_object_json = loads(first_object)
     current_object_json = {}
@@ -55,6 +57,7 @@ async def generate_data(
             near_duplicate_records=duplicate_records_per_batch,
             close_relation_records=related_records_per_batch,
             data_schema=data_schema,
+            temperature=temperature,
             callbacks=[callback_batch] if callback_batch is not None else None,
         )
 
@@ -76,6 +79,7 @@ def generate_unseeded_data(
         primary_record_array,
         total_records,
         data_schema,
+        temperature,
     ):
 
     answer_messages = utils.prepare_messages(
@@ -91,10 +95,11 @@ def generate_unseeded_data(
         "json_schema": {"name": "answer_object", "strict": True, "schema": data_schema},
     }
 
-    return helper_functions.generate_text(
+    return utils.generate_text(
         ai_configuration,
         answer_messages,
         response_format=answer_format,
+        temperature=temperature,
     )
 
 
@@ -107,6 +112,7 @@ async def generate_seeded_data(
     near_duplicate_records,
     close_relation_records,
     data_schema,
+    temperature,
     callbacks: list[ProgressBatchCallback] | None = None,
 ):
     answer_format = {
@@ -131,10 +137,11 @@ async def generate_seeded_data(
         }) for sample_record in sample_records
     ]
 
-    return await helper_functions.map_generate_text(
+    return await utils.map_generate_text(
         ai_configuration,
         mapped_messages,
         response_format=answer_format,
+        temperature=temperature,
         callbacks=callbacks,
     )
 

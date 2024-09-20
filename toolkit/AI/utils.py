@@ -13,9 +13,27 @@ import tiktoken
 
 from toolkit.AI.defaults import DEFAULT_ENCODING, DEFAULT_REPORT_BATCH_SIZE
 from toolkit.AI.validation_prompt import GROUNDEDNESS_PROMPT
+from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
+from toolkit.AI.base_chat import BaseChat
+from toolkit.AI.client import OpenAIClient
 
 log = logging.getLogger(__name__)
 
+def generate_text(ai_configuration, messages, **kwargs):
+    return OpenAIClient(ai_configuration).generate_chat(
+        messages, stream=False, **kwargs
+    )
+
+
+async def map_generate_text(
+    ai_configuration,
+    messages_list,
+    callbacks: list[ProgressBatchCallback] | None = None,
+    **kwargs,
+):
+    return await BaseChat(ai_configuration).generate_texts_async(
+        messages_list, callbacks, **kwargs
+    )
 
 def get_token_count(text: str, encoding=None, model=None) -> int:
     """Function that counts the number of tokens in a string."""

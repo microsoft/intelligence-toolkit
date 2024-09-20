@@ -73,7 +73,8 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                                 help="Within each batch, how many records should appear closely related to (but not the same as) a seed record randomly selected from existing records")
             st.text_area("AI data generation guidance", key=sv.generation_guidance.key, value=sv.generation_guidance.value,
                          help="Guidance to the generative AI model about how mock data should be generated (e.g., targeting a specific region, time period, industry, etc.)")
-            
+            st.number_input("Temperature", min_value=0.0, max_value=2.0, value=sv.record_synthesis_temperature.value, step=0.1, key=sv.record_synthesis_temperature.key,
+                            help="Temperature is a number between 0 and 2 that affects the variation in AI outputs. Lower temperatures mean less variation, and AI outputs will be more accurate and deterministic. Higher temperatures will result in more diverse outputs.")
             generate = st.button('Generate mock records')
             df_placeholders = []
             dl_placeholders = []
@@ -111,6 +112,7 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                         duplicate_records_per_batch=sv.duplicate_records_per_batch.value,
                         related_records_per_batch=sv.related_records_per_batch.value,
                         data_schema=sv.schema.value,
+                        temperature=sv.record_synthesis_temperature.value,
                         df_update_callback=on_dfs_update,
                         callback_batch=None
                     )
@@ -134,7 +136,7 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                                 key=f'{name}_{ix}_json_download'
                             )
                         with c2:
-                            if record_array in sv.generated_dfs.value:
+                            if record_array in sv.generated_dfs.value and len(sv.generated_dfs.value[record_array]) > 0:
                                 st.download_button(
                                     label=f'Download {record_array}_[mock_records].csv',
                                     data=sv.generated_dfs.value[record_array].to_csv(index=False, encoding='utf-8'),
@@ -163,7 +165,7 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                 sv.generated_text_df.value = None
             st.text_area("AI text generation guidance", key=sv.text_generation_guidance.key, value=sv.text_generation_guidance.value,
                         help="Guidance to the generative AI model about how text should be generated from records")
-            st.number_input("Temperature", min_value=0.0, max_value=2.0, value=sv.synthesis_temperature.value, step=0.1, key=sv.synthesis_temperature.key,
+            st.number_input("Temperature", min_value=0.0, max_value=2.0, value=sv.text_synthesis_temperature.value, step=0.1, key=sv.text_synthesis_temperature.key,
                             help="Temperature is a number between 0 and 2 that affects the variation in AI outputs. Lower temperatures mean less variation, and AI outputs will be more accurate and deterministic. Higher temperatures will result in more diverse outputs.")
             generate = st.button('Generate mock texts')
 

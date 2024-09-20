@@ -31,7 +31,8 @@ class SessionVariables:
         self.generated_text_df = SessionVariable(None, prefix)
         self.uploaded_synthesis_files = SessionVariable([], prefix)
         self.synthesis_max_rows_to_process = SessionVariable(0, prefix)
-        self.synthesis_temperature = SessionVariable(0.7, prefix)
+        self.text_synthesis_temperature = SessionVariable(0.7, prefix)
+        self.record_synthesis_temperature = SessionVariable(0.7, prefix)
         self.input_texts = SessionVariable([], prefix)
         
     def reset_workflow(self):

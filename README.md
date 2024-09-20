@@ -91,13 +91,19 @@ All use of Intelligence Toolkit should be consistent with this documentation. In
 ## Getting Started
 
 #### Setting up the AI model
-Either OpenAI or Azure OpenAI is supported.
 
-You can access the `Settings` page on the left sidebar when running the application.
+Intelligence Toolkit can be used with either OpenAI or Azure OpenAI as the generative AI API.
 
-- For OpenAI, have an active OpenAI account ([create here](https://platform.openai.com/login)) and API key ([create here](https://platform.openai.com/account/api-keys)). 
+The [`Generate Mock Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_mock_data/README.md) and [`Extract Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/extract_record_data/README.md) workflows additionally use OpenAI's Structured Outputs API, which requires a gpt-4o model as follows:
 
-- For Azure OpenAI, have an active Azure account ([create here](https://portal.azure.com/)), endpoint, key and version for the AI Service ([create here](https://portal.azure.com/#view/Microsoft_Azure_ProjectOxford/CognitiveServicesHub/~/OpenAI)).
+- `gpt-4o-mini`
+- `gpt-4o-2024-08-06` before 2 October 2024, or `gpt-4o` afterwards
+
+You can access the `Settings` page on the left sidebar when running the application:
+
+- For OpenAI, you will need an active OpenAI account ([create here](https://platform.openai.com/login)) and API key ([create here](https://platform.openai.com/account/api-keys)). 
+
+- For Azure OpenAI, you will need an active Azure account ([create here](https://portal.azure.com/)), endpoint, key and version for the AI Service ([create here](https://portal.azure.com/#view/Microsoft_Azure_ProjectOxford/CognitiveServicesHub/~/OpenAI)).
 
 
 #### Selecting the right workflow for the data and task

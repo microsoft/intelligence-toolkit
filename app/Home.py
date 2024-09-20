@@ -41,7 +41,6 @@ def main():
     )
     load_multipage_app()
     transparency_faq, mermaid_text = get_readme_and_mermaid()
-    print(mermaid_text)
 
     st.markdown(
         transparency_faq

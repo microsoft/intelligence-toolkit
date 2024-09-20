@@ -35,7 +35,7 @@ async def assess_relevance(
         cid_batch = batched_cids[mx]
         if len(test_history) + len(mapped_messages) + num_adjacent > relevance_test_budget:
             mapped_messages = mapped_messages[:relevance_test_budget - len(test_history)]
-        mapped_responses = await helper_functions.map_generate_text(
+        mapped_responses = await utils.map_generate_text(
             ai_configuration, mapped_messages, logit_bias=logit_bias, max_tokens=1
         )
         num_relevant = process_relevance_responses(

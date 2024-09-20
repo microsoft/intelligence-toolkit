@@ -9,8 +9,6 @@ import pandas as pd
 
 import toolkit.AI.utils as utils
 import toolkit.extract_record_data.prompts as prompts
-import toolkit.generate_mock_data.schema_builder as schema_builder
-import toolkit.query_text_data.helper_functions as helper_functions
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 
@@ -71,7 +69,7 @@ async def _extract_data_parallel(
         }) for input_text in input_texts
     ]
 
-    return await helper_functions.map_generate_text(
+    return await utils.map_generate_text(
         ai_configuration,
         mapped_messages,
         response_format=answer_format,

@@ -9,7 +9,6 @@ import pandas as pd
 
 import toolkit.AI.utils as utils
 import toolkit.generate_mock_data.prompts as prompts
-import toolkit.query_text_data.helper_functions as helper_functions
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 
@@ -18,23 +17,30 @@ async def generate_text_data(
     generation_guidance,
     input_texts,
     temperature,
+    batch_size,
     df_update_callback,
     callback_batch,
 ):
     generated_texts = []
     
-    new_texts = await _generate_text_parallel(
-        ai_configuration=ai_configuration,
-        input_texts=input_texts,
-        generation_guidance=generation_guidance,
-        temperature=temperature,
-        callbacks=[callback_batch] if callback_batch is not None else None,
-    )
-    generated_texts.extend(new_texts)
+    batched_texts = [input_texts[i:i + batch_size] for i in range(0, len(input_texts), batch_size)]
 
-    df = pd.DataFrame(generated_texts, columns=["mock_text"])
-    if df_update_callback is not None:
-        df_update_callback(df)
+    df = pd.DataFrame(columns=["mock_text"])
+
+    for batch in batched_texts:
+        new_texts = await _generate_text_parallel(
+            ai_configuration=ai_configuration,
+            input_texts=batch,
+            generation_guidance=generation_guidance,
+            temperature=temperature,
+            callbacks=[callback_batch] if callback_batch is not None else None,
+        )
+        generated_texts.extend(new_texts)
+
+        df = pd.DataFrame(generated_texts, columns=["mock_text"])
+        if df_update_callback is not None:
+            df_update_callback(df)
+
     return generated_texts, df
 
 
@@ -53,7 +59,7 @@ async def _generate_text_parallel(
         }) for input_text in input_texts
     ]
 
-    return await helper_functions.map_generate_text(
+    return await utils.map_generate_text(
         ai_configuration,
         mapped_messages,
         temperature=temperature,
