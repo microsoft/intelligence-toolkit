@@ -49,7 +49,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
 
     intro_tab, uploader_tab, process_tab, view_tab, report_tab = st.tabs(
         [
-            "Network analysis workflow:",
+            "Detect Entity Networks workflow:",
             "Create data model",
             "Process data model",
             "Explore networks",

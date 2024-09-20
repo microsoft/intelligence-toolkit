@@ -32,7 +32,7 @@ def get_intro():
 def create(sv: ds_variables.SessionVariables, workflow: None):
     intro_tab, prepare_tab, generate_tab, queries_tab, examples_tab = st.tabs(
         [
-            "Anonymize case data workflow:",
+            "Anonymize Case Data workflow:",
             "Prepare sensitive data",
             "Generate anonymous data",
             "Query and visualize data",
