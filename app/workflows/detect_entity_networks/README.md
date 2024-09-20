@@ -80,3 +80,39 @@ Add `city` as a supporting attribute type before pressing `Identify networks`. T
 
 Navigate to the `Explore networks` tab to begin exploring the detected networks.
 
+In the `Select entity network` expander, the default table shows each detected entity network as a single row. Double clicking on column headers reranks networks by the associated metric:
+
+- `Network Entities`: the number of entities in the network
+- `Network Flags`: the total number of flags across all entities in the network
+- `Flagged`: the total number of flagged entities in the network (i.e., with one or more flags)
+- `Flags/Entity`: the average number of flags per entity in the network
+- `Flagged/Unflagged`: the number of flagged entities for every unflagged entity
+
+Selecting `Show entities` expands this table to show network statistics for each individual entity, including the number of `Entity Flags` directly linked to the entity. Entering a `quickFilter...` query above the table can then be used to search for specific entities and their network statistics.
+
+Selecting `Show groups`, with or without `Show entities`, adds values from the specified grouping columns to the table. These are not used in the workflow, but they allow for group-based comparison of entity network using external analysis tools.
+
+Deselect `Show entities` and select a row from the table to see a visualization of the associated entity network. This visualization can be panned/zoomed using the mouse/wheel.
+
+In the visualization, entities are represented with larger nodes and attribute values with smaller nodes. Links (or edges) between an entity node and an attribute node indicate that the entity has that attribute value. Links between entity nodes or attribute nodes indicate that the names are similar based on the fuzzy matching performed.
+
+Entity nodes are coloured blue unless the entity has associated flags, in which case they are coloured red. Otherwise, the colours of attribute nodes communicate the corresponding attribute type.
+
+With `Graph type` set to `Full`, the network visualization shows all attribute values of all entity nodes, even if they are not shared by any other entity.
+
+Changing `Graph type` to `Simplified` simplies the network visualization in two key ways:
+
+1. Attribuute values are only shown if they are shared by two or more entity nodes
+2. Nodes are merged if they were matched during the fuzzy matching process
+
+`Simplified` networks are particularly helpful when evaluating the weight of evidence for a close relationship between entities, especially if one of them has a substantial number of flags.
+
+Reverting back to `Full` as the `Graph type`, selecting `Show entities`, and selecting any entity with one or more network flags shows a slightly different kind of network view. Here, the node of the selected entity is represented by a larger node size, and a `Flag Exposure Paths` report on the right summarizes the various network paths by which flagged entities are related to the selected entity. This information is used by generative AI in the next step to reason about the overall level of flag (e.g., risk) exposure for the entity within its network of closely-related entities.
+
+### Generating AI network reports
+
+Navigate to the `Generate AI network reports` tab and press `Generate` to generate a report on the selected entity or network.
+
+By default, the report will analyze entity relationships and flag exposure from a neutral perspective. To guide the generation of report text towards a "risk exposure" framing, modify the `Prompt text` accordingly. For example, try adding the following at the end of the prompt:
+
+`Interpret flags as risks and add a section analyzing the overall level of risk exposure for the selected entity. Suggest actions that could help to clarify these potential risks.`

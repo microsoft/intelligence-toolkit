@@ -117,7 +117,7 @@ def generative_ai_component(system_prompt_var, variables):
             system_prompt_var.value["user_prompt"] = instructions_text
 
     with b2:
-        message = f"AI input uses {tokens}/{DEFAULT_MAX_INPUT_TOKENS} ({round(ratio, 2)}%) of token limit"
+        message = f"AI input uses **{round(ratio, 2)}%** ({tokens}/{DEFAULT_MAX_INPUT_TOKENS}) of token limit"
         if ratio <= 100:
             st.info(message)
         else:

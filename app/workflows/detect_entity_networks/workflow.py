@@ -12,7 +12,7 @@ import workflows.detect_entity_networks.functions as functions
 import workflows.detect_entity_networks.variables as rn_variables
 from st_aggrid import (AgGrid, ColumnsAutoSizeMode, DataReturnMode,
                        GridOptionsBuilder, GridUpdateMode)
-from streamlit_agraph import Edge, Node, agraph
+from streamlit_agraph import Edge, Node, agraph, Config
 from util import ui_components
 from util.session_variables import SessionVariables
 
@@ -647,13 +647,15 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                 merged_links_df["attribute"] = merged_links_df["target"].apply(
                     lambda x: x.split(ATTRIBUTE_VALUE_SEPARATOR)[0]
                 )
-                c1, c2 = st.columns([2, 1])
 
-                with c1:
-                    container = st.container()
-                with c2:
-                    st.markdown(sv.network_risk_exposure.value)
-                with container:
+                if not show_entities:
+                    network_vis = st.container()
+                else:
+                    network_pane, path_pane = st.columns([2, 1])
+                    with network_pane:
+                        network_vis = st.container()
+                   
+                with network_vis:
                     entity_selected = (
                         f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}{selected_entity}"
                     )
@@ -662,7 +664,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                         *list(sv.network_node_types.value),
                     ]
 
-                    if graph_type == "Full":
+                    if show_entities:
                         nodes, edges = get_entity_graph(
                             network_entities_graph,
                             entity_selected,
@@ -679,22 +681,35 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                         )
 
                     if selected_entity != "":
-                        container.markdown(
+                        network_vis.markdown(
                             f"##### Entity {selected_entity} in Network {selected_network} ({graph_type.lower()})"
                         )
                     else:
-                        container.markdown(
+                        network_vis.markdown(
                             f"##### Network {selected_network} ({graph_type.lower()})"
                         )
 
                     nodes_agraph = [Node(**node) for node in nodes]
                     edges_agraph = [Edge(**edge) for edge in edges]
 
+                    default_config = rn_variables.agraph_config
+                    config = Config(
+                        height=default_config['height'],
+                        directed=default_config['directed'],
+                        physics=default_config['physics'],
+                        hierarchical=default_config['hierarchical'],
+                        timestep=default_config['timestep'],
+                        width = 850 if show_entities else 1400
+                    )
+
                     agraph(
                         nodes=nodes_agraph,
                         edges=edges_agraph,
-                        config=rn_variables.agraph_config,
+                        config=config,
                     )
+                if show_entities:
+                    with path_pane:
+                        st.markdown(sv.network_risk_exposure.value)
                 sv.network_merged_links_df.value = merged_links_df
                 sv.network_merged_nodes_df.value = merged_nodes_df
             else:
