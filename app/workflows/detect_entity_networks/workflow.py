@@ -356,29 +356,29 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                 st.markdown(f"*No inferred links*")
 
         with part_col:
-            st.markdown("##### Identify networks")
+            st.markdown("##### Constrain networks")
             attributes_df = pd.DataFrame(
                 sv.network_attributes_list.value, columns=["Attribute"]
             )
+            with st.expander("Remove attributes"):
+                search = st.text_input("Search for attributes to remove", "")
+                if search != "":
+                    attributes_df = attributes_df[
+                        attributes_df["Attribute"].str.contains(search, case=False)
+                    ]
 
-            search = st.text_input("Search for attributes to remove", "")
-            if search != "":
-                attributes_df = attributes_df[
-                    attributes_df["Attribute"].str.contains(search, case=False)
-                ]
+                selected_rows = ui_components.dataframe_with_selections(
+                    attributes_df,
+                    sv.network_additional_trimmed_attributes.value,
+                    "Attribute",
+                    "Remove",
+                    key="remove_attribute_table",
+                )
+                sv.network_additional_trimmed_attributes.value = selected_rows[
+                    "Attribute"
+                ].tolist()
 
-            selected_rows = ui_components.dataframe_with_selections(
-                attributes_df,
-                sv.network_additional_trimmed_attributes.value,
-                "Attribute",
-                "Remove",
-                key="remove_attribute_table",
-            )
-            sv.network_additional_trimmed_attributes.value = selected_rows[
-                "Attribute"
-            ].tolist()
-
-            c1, c2, c3, c4 = st.columns([1, 1, 1, 1])
+            c1, c2, c3 = st.columns([1, 1, 1])
             with c1:
                 network_max_attribute_degree = st.number_input(
                     "Maximum attribute degree",
@@ -401,10 +401,8 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                     help="Attribute types that should not be used to detect networks (e.g., because of potential noise/unreliability) but which should be added back into detected networks for context.",
                 )
             comm_count = 0
-            with c4:
-                st.text("")
-                st.text("")
-                identify = st.button("Identify networks")
+
+            identify = st.button("Identify networks")
             if identify:
                 sv.network_max_attribute_degree.value = network_max_attribute_degree
                 sv.network_max_network_entities.value = network_max_network_entities
@@ -501,7 +499,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
             st.warning("Detect networks to continue.")
         else:
             with st.expander("View entity networks", expanded=True):
-                b1, b2, b3, _b4 = st.columns([1, 1, 1, 4])
+                b1, b2, b3, _b4 = st.columns([1, 1, 1, 2])
                 with b1:
                     show_entities = st.checkbox(
                         "Show entities", value=sv.network_last_show_entities.value
@@ -564,7 +562,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                 response = AgGrid(
                     last_df,
                     key=f"report_grid_{sv.network_table_index.value}",
-                    height=400,
+                    height=250,
                     gridOptions=gridoptions,
                     enable_enterprise_modules=False,
                     update_mode=GridUpdateMode.SELECTION_CHANGED,
@@ -609,10 +607,10 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                     sv.network_inferred_links.value,
                     c_nodes,
                 )
-
                 if selected_entity != "":
                     context = "Upload risk flags to see risk exposure report."
                     if len(sv.network_integrated_flags.value) > 0:
+                        
                         context = build_exposure_report(
                             sv.network_integrated_flags.value,
                             selected_entity,

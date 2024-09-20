@@ -56,4 +56,27 @@ Press `Add links to model` to see the `Number of groups` update. The data model 
 
 Navigate to the `Process data model` tab to continue.
 
-The core modelling approach taken by `Detect Entity Networks` is to connect entities that share the same attribute values (e.g., email, phone number). However, not all shared attributes (or even entity names) will be recorded in the same format in all cases. Using the `Match similar nodes (optional)` panel on the left, you can  
+From the "bipartite" graph of entity and attributes specified by the data model, it is possible to induce a "unipartite" graph of entity nodes whose edge weights represent counts of shared attributes. Within this unipartite graph, the workflow uses [Leiden](https://www.nature.com/articles/s41598-019-41695-z) community detection to identify networks of closely-related nodes. In many cases, however, these networks require further processing before they capture the groups of entities that a human expert would identify as "closely related" in the real world.
+
+#### Connecting similar but not identical labels
+
+The core modelling approach taken by `Detect Entity Networks` is to connect entities that share the same attribute values (e.g., email, phone number). However, not all shared attributes (or even entity names) will be recorded in the same format in all cases. Using the `Match similar nodes (optional)` panel on the left, you can fuzzily match similar node values such that they become connected in the resulting networks.
+
+Under `Select node types to fuzzy match`, select `ENTITY` to match similar entity names. Pressing `Index nodes` creates a text embedding of the selected node values that can then be analyzed with different similarity thresholds to find the right matching levels. Pressing `Infer nodes` then infers pairs of similar nodes based on the current value of `Similarity threshold for fuzzy matching (max)`. The default value of `0.001` may not yield any matches, and if so, adjust the value upwards in small increments until matches are shown in a table. For example, a similarity threshold of `0.003` may infer a small number of links. The least similar matches are shown at the top of the table, so you can keep increasing the threshold while these values still represent a close match. For this example dataset, a value of `0.03` should give good-quality links.
+
+#### Removing noisy attributes
+
+There are multiple ways in which attributes can add noise to the resulting networks. For example, imagine several entities having an `address` of `USA`. These entities would likely end up in the same network, but it wouldn't represent a set of close real-world relationships. If such a situation arises (and it may not be detected until viewing the detected networks), then the `Remove attributes` controls under `Constrain networks` can be used to remove these attribute values and prevent such noisy networks from forming.
+
+Another way in which certain attribute values can add noise to the detected networks is by connecting too many entities to represent a close real-world relationship. Setting a `Maximum attribute degree` prevents this problem by removing any attributes whose degree (number of connected entities) exceeds the specified limit.
+
+Once networks exceed a certain size, it is similarly difficult to argue that they are all closely related. It is also difficult to make sense of the actual close relationships that do exist if the network visualization is too dense. The `Max network entities` field therefore sets a limit on the maximum number of entities that can be detected in a single network.
+
+Finally, there are some kinds of `Supporting attribute types` that are helpful to see only when they link entities connected by other means. In this example, `city` is a good candidate for a supporting attribute: it is not a strong enough connection on its own, but in conjunction with other shared attributes it could help to communicate an even closer relationship.
+
+Add `city` as a supporting attribute type before pressing `Identify networks`. The system will show the number of networks identified as well as a table of all attribute values removed because of their high degree.
+
+### Exploring detected networks
+
+Navigate to the `Explore networks` tab to begin exploring the detected networks.
+

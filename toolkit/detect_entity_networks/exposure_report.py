@@ -122,7 +122,7 @@ def build_exposure_report(
         selected_entity,
         graph,
     )
-    context = "##### Risk Exposure Report\n\n"
+    context = "##### Risk Exposure Paths\n\n"
     context += f"The selected entity **{selected_entity}** has **{selected_data['direct']}** direct flags and is linked to **{selected_data['indirect']}** indirect flags via **{selected_data['paths']}** paths from **{selected_data['entities']}** related entities:\n\n"
 
     for i, path in enumerate(all_paths):
@@ -132,7 +132,7 @@ def build_exposure_report(
             for step in node:
                 node_value = [val for val in nodes if val["node"] == step]
                 if ENTITY_LABEL in step:
-                    step = f"{step} [linked to {node_value[0]['flags']} flags]"
+                    step = f"{step} [linked to {node_value[0]['flags'] if len(node_value) > 0 and 'flags' in node_value[0] else 0} flags]"
                 else:
                     step = f"{step} [linked to {node_value[0]['entities']} entities]"
                 context += f"{indent}{step}\n"
