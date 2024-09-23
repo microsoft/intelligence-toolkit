@@ -13,6 +13,7 @@ import toolkit.query_text_data.input_processor as input_processor
 import toolkit.query_text_data.prompts as prompts
 import toolkit.query_text_data.answer_builder as answer_builder
 import toolkit.query_text_data.relevance_assessor as relevance_assessor
+from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
 from app.util.openai_wrapper import UIOpenAIConfiguration
@@ -139,25 +140,11 @@ def get_concept_graph(
         return_value = agraph(nodes=nodes, edges=edges, config=config)
     return return_value
 
-
-class ProgressBatchCallback:
-    """Class for progress callbacks."""
-
-    def __init__(self):
-        self.current_batch = 0
-        self.total_batches = 0
-
-    def on_batch_change(self, current: int, total: int):
-        """Handle when a new token is generated."""
-        self.current_batch = current
-        self.total_batches = total
-
-
 async def create(sv: SessionVariables, workflow=None):
     sv_home = SessionVariables("home")
     intro_tab, uploader_tab, graph_tab, search_tab, report_tab = st.tabs(
         [
-            "Query text data workflow:",
+            "Query Text Data workflow:",
             "Upload data",
             "Explore concept graph",
             "Generate AI extended answers",

@@ -43,8 +43,8 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
 
     intro_tab, uploader_tab, process_tab, evaluate_tab = st.tabs(
         [
-            "Match entity records workflow:",
-            "Upload data to match",
+            "Match Entity Records workflow:",
+            "Upload record datasets",
             "Detect record groups",
             "Evaluate record groups",
         ]

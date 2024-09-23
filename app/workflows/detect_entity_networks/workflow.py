@@ -12,7 +12,7 @@ import workflows.detect_entity_networks.functions as functions
 import workflows.detect_entity_networks.variables as rn_variables
 from st_aggrid import (AgGrid, ColumnsAutoSizeMode, DataReturnMode,
                        GridOptionsBuilder, GridUpdateMode)
-from streamlit_agraph import Edge, Node, agraph
+from streamlit_agraph import Edge, Node, agraph, Config
 from util import ui_components
 from util.session_variables import SessionVariables
 
@@ -53,7 +53,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
 
     intro_tab, uploader_tab, process_tab, view_tab, report_tab = st.tabs(
         [
-            "Network analysis workflow:",
+            "Detect Entity Networks workflow:",
             "Create data model",
             "Process data model",
             "Explore networks",
@@ -329,29 +329,29 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                 st.markdown(f"*No inferred links*")
 
         with part_col:
-            st.markdown("##### Identify networks")
+            st.markdown("##### Constrain networks")
             attributes_df = pd.DataFrame(
                 sv.network_attributes_list.value, columns=["Attribute"]
             )
+            with st.expander("Remove attributes"):
+                search = st.text_input("Search for attributes to remove", "")
+                if search != "":
+                    attributes_df = attributes_df[
+                        attributes_df["Attribute"].str.contains(search, case=False)
+                    ]
 
-            search = st.text_input("Search for attributes to remove", "")
-            if search != "":
-                attributes_df = attributes_df[
-                    attributes_df["Attribute"].str.contains(search, case=False)
-                ]
+                selected_rows = ui_components.dataframe_with_selections(
+                    attributes_df,
+                    sv.network_additional_trimmed_attributes.value,
+                    "Attribute",
+                    "Remove",
+                    key="remove_attribute_table",
+                )
+                sv.network_additional_trimmed_attributes.value = selected_rows[
+                    "Attribute"
+                ].tolist()
 
-            selected_rows = ui_components.dataframe_with_selections(
-                attributes_df,
-                sv.network_additional_trimmed_attributes.value,
-                "Attribute",
-                "Remove",
-                key="remove_attribute_table",
-            )
-            sv.network_additional_trimmed_attributes.value = selected_rows[
-                "Attribute"
-            ].tolist()
-
-            c1, c2, c3, c4 = st.columns([1, 1, 1, 1])
+            c1, c2, c3 = st.columns([1, 1, 1])
             with c1:
                 network_max_attribute_degree = st.number_input(
                     "Maximum attribute degree",
@@ -374,10 +374,8 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                     help="Attribute types that should not be used to detect networks (e.g., because of potential noise/unreliability) but which should be added back into detected networks for context.",
                 )
             comm_count = 0
-            with c4:
-                st.text("")
-                st.text("")
-                identify = st.button("Identify networks")
+
+            identify = st.button("Identify networks")
             if identify:
                 sv.network_max_attribute_degree.value = network_max_attribute_degree
                 sv.network_max_network_entities.value = network_max_network_entities
@@ -466,82 +464,85 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
         if len(sv.network_entity_df.value) == 0:
             st.warning("Detect networks to continue.")
         else:
-            with st.expander("View entity networks", expanded=True):
-                b1, b2, b3, _b4 = st.columns([1, 1, 1, 4])
-                with b1:
+            with st.expander("Select entity network", expanded=True):
+                c1, c2 = st.columns([1, 5])
+                with c1:
+                    st.markdown("##### Options")
                     show_entities = st.checkbox(
                         "Show entities", value=sv.network_last_show_entities.value
                     )
-                with b2:
                     show_groups = st.checkbox(
                         "Show groups", value=sv.network_last_show_groups.value
                     )
-                with b3:
+                    graph_type = st.radio(
+                        "Graph type", ["Full", "Simplified"], horizontal=False
+                    )
                     dl_button = st.empty()
 
-                show_df = sv.network_entity_df.value.copy()
-                if show_groups != sv.network_last_show_groups.value:
-                    sv.network_last_show_groups.value = show_groups
-                    sv.network_table_index.value += 1
-                    st.rerun()
-                if show_entities != sv.network_last_show_entities.value:
-                    sv.network_last_show_entities.value = show_entities
-                    sv.network_table_index.value += 1
-                    st.rerun()
-                if show_groups:
-                    for group_links in sv.network_group_links.value:
-                        selected_df = pd.DataFrame(
-                            group_links, columns=["Entity ID", "Group", "Value"]
-                        ).replace("nan", "")
-                        selected_df = selected_df[selected_df["Value"] != ""]
-                        # Use group values as columns with values in them
-                        selected_df = selected_df.pivot_table(
-                            index="Entity ID",
-                            columns="Group",
-                            values="Value",
-                            aggfunc="first",
-                        ).reset_index()
-                        show_df = show_df.merge(selected_df, on="Entity ID", how="left")
-                last_df = show_df.copy()
-                if not show_entities:
-                    last_df = (
-                        last_df.drop(columns=["Entity ID", "Entity Flags"])
-                        .drop_duplicates()
-                        .reset_index(drop=True)
+                    show_df = sv.network_entity_df.value.copy()
+                    if show_groups != sv.network_last_show_groups.value:
+                        sv.network_last_show_groups.value = show_groups
+                        sv.network_table_index.value += 1
+                        st.rerun()
+                    if show_entities != sv.network_last_show_entities.value:
+                        sv.network_last_show_entities.value = show_entities
+                        sv.network_table_index.value += 1
+                        st.rerun()
+                    if show_groups:
+                        for group_links in sv.network_group_links.value:
+                            selected_df = pd.DataFrame(
+                                group_links, columns=["Entity ID", "Group", "Value"]
+                            ).replace("nan", "")
+                            selected_df = selected_df[selected_df["Value"] != ""]
+                            # Use group values as columns with values in them
+                            selected_df = selected_df.pivot_table(
+                                index="Entity ID",
+                                columns="Group",
+                                values="Value",
+                                aggfunc="first",
+                            ).reset_index()
+                            show_df = show_df.merge(selected_df, on="Entity ID", how="left")
+                    last_df = show_df.copy()
+                    if not show_entities:
+                        last_df = (
+                            last_df.drop(columns=["Entity ID", "Entity Flags"])
+                            .drop_duplicates()
+                            .reset_index(drop=True)
+                        )
+                    dl_button.download_button(
+                        "Download network CSV",
+                        last_df.to_csv(index=False),
+                        "network_data.csv",
+                        "download_network_csv",
                     )
-                dl_button.download_button(
-                    "Download network data",
-                    last_df.to_csv(index=False),
-                    "network_data.csv",
-                    "Download network data",
-                )
-                gb = GridOptionsBuilder.from_dataframe(last_df)
-                gb.configure_default_column(
-                    flex=1,
-                    wrapText=True,
-                    wrapHeaderText=True,
-                    enablePivot=False,
-                    enableValue=False,
-                    enableRowGroup=False,
-                )
-                gb.configure_selection(selection_mode="single", use_checkbox=False)
-                gb.configure_side_bar()
-                gridoptions = gb.build()
-                response = AgGrid(
-                    last_df,
-                    key=f"report_grid_{sv.network_table_index.value}",
-                    height=400,
-                    gridOptions=gridoptions,
-                    enable_enterprise_modules=False,
-                    update_mode=GridUpdateMode.SELECTION_CHANGED,
-                    data_return_mode=DataReturnMode.FILTERED_AND_SORTED,
-                    fit_columns_on_grid_load=False,
-                    header_checkbox_selection_filtered_only=False,
-                    use_checkbox=False,
-                    enable_quicksearch=True,
-                    reload_data=True,
-                    columns_auto_size_mode=ColumnsAutoSizeMode.FIT_ALL_COLUMNS_TO_VIEW,
-                )
+                with c2:
+                    gb = GridOptionsBuilder.from_dataframe(last_df)
+                    gb.configure_default_column(
+                        flex=1,
+                        wrapText=True,
+                        wrapHeaderText=True,
+                        enablePivot=False,
+                        enableValue=False,
+                        enableRowGroup=False,
+                    )
+                    gb.configure_selection(selection_mode="single", use_checkbox=False)
+                    gb.configure_side_bar()
+                    gridoptions = gb.build()
+                    response = AgGrid(
+                        last_df,
+                        key=f"report_grid_{sv.network_table_index.value}",
+                        height=250,
+                        gridOptions=gridoptions,
+                        enable_enterprise_modules=False,
+                        update_mode=GridUpdateMode.SELECTION_CHANGED,
+                        data_return_mode=DataReturnMode.FILTERED_AND_SORTED,
+                        fit_columns_on_grid_load=False,
+                        header_checkbox_selection_filtered_only=False,
+                        use_checkbox=False,
+                        enable_quicksearch=True,
+                        reload_data=True,
+                        columns_auto_size_mode=ColumnsAutoSizeMode.FIT_ALL_COLUMNS_TO_VIEW,
+                    )
 
             selected_entity = (
                 response["selected_rows"][0]["Entity ID"]
@@ -575,10 +576,10 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                     sv.network_inferred_links.value,
                     c_nodes,
                 )
-
                 if selected_entity != "":
                     context = "Upload risk flags to see risk exposure report."
                     if len(sv.network_integrated_flags.value) > 0:
+                        
                         context = build_exposure_report(
                             sv.network_integrated_flags.value,
                             selected_entity,
@@ -612,16 +613,20 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                 merged_links_df["attribute"] = merged_links_df["target"].apply(
                     lambda x: x.split(ATTRIBUTE_VALUE_SEPARATOR)[0]
                 )
-                c1, c2 = st.columns([2, 1])
 
-                with c1:
-                    container = st.container()
-                with c2:
-                    graph_type = st.radio(
-                        "Graph type", ["Full", "Simplified"], horizontal=True
-                    )
-                    st.markdown(sv.network_risk_exposure.value)
-                with container:
+                if graph_type == "Full":
+                    render_graph = network_entities_graph
+                else:
+                    render_graph = network_entities_simplified_graph
+
+                if not show_entities:
+                    network_vis = st.container()
+                else:
+                    network_pane, path_pane = st.columns([2, 1])
+                    with network_pane:
+                        network_vis = st.container()
+                   
+                with network_vis:
                     entity_selected = (
                         f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}{selected_entity}"
                     )
@@ -630,9 +635,10 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                         *list(sv.network_node_types.value),
                     ]
 
-                    if graph_type == "Full":
+                    if show_entities:
+                        
                         nodes, edges = get_entity_graph(
-                            network_entities_graph,
+                            render_graph,
                             entity_selected,
                             attribute_types,
                         )
@@ -641,28 +647,41 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                         edges_agraph = [Edge(**edge) for edge in edges]
                     else:
                         nodes, edges = get_entity_graph(
-                            network_entities_simplified_graph,
+                            render_graph,
                             entity_selected,
                             attribute_types,
                         )
 
                     if selected_entity != "":
-                        container.markdown(
+                        network_vis.markdown(
                             f"##### Entity {selected_entity} in Network {selected_network} ({graph_type.lower()})"
                         )
                     else:
-                        container.markdown(
+                        network_vis.markdown(
                             f"##### Network {selected_network} ({graph_type.lower()})"
                         )
 
                     nodes_agraph = [Node(**node) for node in nodes]
                     edges_agraph = [Edge(**edge) for edge in edges]
 
+                    default_config = rn_variables.agraph_config
+                    config = Config(
+                        height=default_config['height'],
+                        directed=default_config['directed'],
+                        physics=default_config['physics'],
+                        hierarchical=default_config['hierarchical'],
+                        timestep=default_config['timestep'],
+                        width = 850 if show_entities else 1400
+                    )
+
                     agraph(
                         nodes=nodes_agraph,
                         edges=edges_agraph,
-                        config=rn_variables.agraph_config,
+                        config=config,
                     )
+                if show_entities:
+                    with path_pane:
+                        st.markdown(sv.network_risk_exposure.value)
                 sv.network_merged_links_df.value = merged_links_df
                 sv.network_merged_nodes_df.value = merged_nodes_df
             else:

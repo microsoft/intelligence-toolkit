@@ -52,7 +52,7 @@ def get_intro():
 def create(sv: ap_variables.SessionVariables, workflow):
     intro_tab, uploader_tab, detect_tab, explain_tab, examples_tab = st.tabs(
         [
-            "Detect case patterns workflow:",
+            "Detect Case Patterns workflow:",
             "Prepare case data",
             "Detect attribute patterns",
             "Generate AI pattern reports",

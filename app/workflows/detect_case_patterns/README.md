@@ -34,7 +34,7 @@ The task for this tutorial is detecting patterns in the cooccurrences of attribu
 
 The format of this dataset is as follows, with each row representing an individual customer and their complaint:
 
-| names: *string* | street: *string* | city: *string* | age: *number* | email: *string*           | \*_issue: *boolean* | product_code: *string* | quarter: *string* |
+| name: *string*  | street: *string* | city: *string* | age: *number* | email: *string*           | \*_issue: *boolean* | product_code: *string* | quarter: *string* |
 |-----------------|------------------|----------------|---------------|---------------------------|---------------------|------------------------|-------------------|
 | Bob Johnson     | 123 Maple Street | Springfield    | 36            | bob.johnson@example.com   | False               | A                      | 2023-Q2           |
 | Charlie Brown   | 321 Elm Street   | Shelbyville    | 28            | charlie.brown@example.com | True                | B                      | 2023-Q1           |

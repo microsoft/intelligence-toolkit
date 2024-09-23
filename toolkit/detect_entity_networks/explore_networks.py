@@ -162,7 +162,7 @@ def _merge_node_list(graph: nx.Graph, merge_list: list[str]) -> nx.Graph:
     merged_type = LIST_SEPARATOR.join(
         sorted([graph.nodes[n]["type"] for n in merge_list])
     )
-    merged_risk = max(graph.nodes[n]["flags"] for n in merge_list)
+    merged_risk = max(graph.nodes[n]["flags"] if "flags" in graph.nodes[n] else 0 for n in merge_list)
     graph.add_node(merged_node, type=merged_type, flags=merged_risk)
     for n in merge_list:
         for nn in graph.neighbors(n):

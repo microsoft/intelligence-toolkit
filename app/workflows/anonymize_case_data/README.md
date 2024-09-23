@@ -29,12 +29,12 @@ The task for this tutorial is creating an anonymous version of the `customer_com
 
 The format of this dataset is as follows, with each row representing an individual customer and their complaint:
 
-| names: *string* | street: *string* | city: *string* | age: *number* | email: *string*           | \*_issue: *boolean* | product_code: *string* | quarter: *string* |
-|-----------------|------------------|----------------|---------------|---------------------------|---------------------|------------------------|-------------------|
-| Bob Johnson     | 123 Maple Street | Springfield    | 36            | bob.johnson@example.com   | False               | A                      | 2023-Q2           |
-| Charlie Brown   | 321 Elm Street   | Shelbyville    | 28            | charlie.brown@example.com | True                | B                      | 2023-Q1           |
-| Laura Palmer    | 777 Twin Peaks   | Twin Peaks     | 27            | laura.palmer@example.com  | False               | C                      | 2023-Q2           |
-| ...             | ...              | ...            | ...           | ...                       | ...                 | ...                    | ...               |
+| name: *string*  | street: *string* | city: *string* | age: *number* | email: *string*             | \*_issue: *boolean* | product_code: *string* | quarter: *string* |
+|-----------------|------------------|----------------|---------------|-----------------------------|---------------------|------------------------|-------------------|
+| Bob Johnson     | 123 Maple Street | Springfield    | 36            | <bob.johnson@example.com>   | False               | A                      | 2023-Q2           |
+| Charlie Brown   | 321 Elm Street   | Shelbyville    | 28            | <charlie.brown@example.com> | True                | B                      | 2023-Q1           |
+| Laura Palmer    | 777 Twin Peaks   | Twin Peaks     | 27            | <laura.palmer@example.com>  | False               | C                      | 2023-Q2           |
+| ...             | ...              | ...            | ...           | ...                         | ...                 | ...                    | ...               |
 
 where \*_issue: *boolean* represents five different boolean attributes covering different kinds of complaint: `price_issue`, `quality_issue`, `service_issue`, `delivery_issue`, and `description_issue`. Each complaint may relate to multiple issues.
 
@@ -172,7 +172,7 @@ Try adding one or more attribute values to the query to observe the estimated co
 
 ### Visualizing anonymous data
 
-The `Chart` panel to the right visualizes the current query using the selected `Chart type`, by default set to `Top attributes`. 
+The `Chart` panel to the right visualizes the current query using the selected `Chart type`, by default set to `Top attributes`.
 
 #### Top attributes chart
 
@@ -208,4 +208,3 @@ There are three different ways to export the current visual:
 - Select `Data CSV` on the left to download a CSV file of the data displayed in the visual
 - Select `Chart JSON` on the left to download a JSON file containing the specification of the [Plotly](https://plotly.com/python/) chart shown
 - Press the camera icon above the chart to save it as a PNG image file, adjusting `Chart width` and `Chart height` as needed
-

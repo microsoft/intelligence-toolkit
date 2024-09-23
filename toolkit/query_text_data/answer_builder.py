@@ -61,7 +61,7 @@ def generate_answer(
         prompts.chunk_summarization_prompt, 
         {'chunks': selected_chunks, 'answer_object': answer_object}
     )
-    answer_response = helper_functions.generate_text(ai_configuration, answer_messages, response_format=answer_format)
+    answer_response = utils.generate_text(ai_configuration, answer_messages, response_format=answer_format)
     update_answer_object(answer_object, loads(answer_response))
     answer_text = '\n\n'.join([x['content'] for x in answer_object['content_items']])
     references = extract_chunk_references(answer_text)
