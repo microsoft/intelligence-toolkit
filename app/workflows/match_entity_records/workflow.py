@@ -239,72 +239,70 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                         )
 
                     with st.spinner("Detecting groups..."):
-                        if (
-                            len(sv.matching_merged_df.value) == 0
-                            or sv.matching_sentence_pair_embedding_threshold.value
-                            != sv.matching_last_sentence_pair_embedding_threshold.value
-                        ):
-                            sv.matching_last_sentence_pair_embedding_threshold.value = (
-                                sv.matching_sentence_pair_embedding_threshold.value
+                        # if (
+                        #     len(sv.matching_merged_df.value) == 0
+                        #     or sv.matching_sentence_pair_embedding_threshold.value
+                        #     != sv.matching_last_sentence_pair_embedding_threshold.value
+                        # ):
+                        sv.matching_last_sentence_pair_embedding_threshold.value = (
+                            sv.matching_sentence_pair_embedding_threshold.value
+                        )
+                        sv.matching_merged_df.value = build_attributes_dataframe(
+                            sv.matching_dfs.value, attributes_list
+                        )
+                        sv.matching_merged_df.value = (
+                            sv.matching_merged_df.value.with_columns(
+                                (pl.col("Entity ID").cast(pl.Utf8))
+                                + "::"
+                                + pl.col("Dataset").alias("Unique ID")
                             )
-                            sv.matching_merged_df.value = build_attributes_dataframe(
-                                sv.matching_dfs.value, attributes_list
-                            )
+                        )  ###??
+                        all_sentences_data = convert_to_sentences(
+                            sv.matching_merged_df.value
+                        )
+                        pb = st.progress(0, "Embedding text batches...")
 
-                            sv.matching_merged_df.value = (
-                                sv.matching_merged_df.value.with_columns(
-                                    (pl.col("Entity ID").cast(pl.Utf8))
-                                    + "::"
-                                    + pl.col("Dataset").alias("Unique ID")
-                                )
-                            )  ###??
-                            all_sentences_data = convert_to_sentences(
-                                sv.matching_merged_df.value
-                            )
-
-                            pb = st.progress(0, "Embedding text batches...")
-
-                            def on_embedding_batch_change(current, total):
-                                pb.progress(
-                                    (current) / total,
-                                    f"Embedding text {current} of {total}...",
-                                )
-
-                            callback = ProgressBatchCallback()
-                            callback.on_batch_change = on_embedding_batch_change
-
-                            functions_embedder = functions.embedder()
-                            data_embeddings = await functions_embedder.embed_store_many(
-                                all_sentences_data, [callback], sv_home.save_cache.value
+                        def on_embedding_batch_change(current, total):
+                            pb.progress(
+                                (current) / total,
+                                f"Embedding text {current} of {total}...",
                             )
 
-                            all_sentences = [x["text"] for x in all_sentences_data]
-                            all_embeddings = [
-                                np.array(
-                                    next(
-                                        d["vector"]
-                                        for d in data_embeddings
-                                        if d["text"] == f
-                                    )
-                                )
-                                for f in all_sentences
-                            ]
+                        callback = ProgressBatchCallback()
+                        callback.on_batch_change = on_embedding_batch_change
 
-                            pb.empty()
+                        functions_embedder = functions.embedder()
+                        data_embeddings = await functions_embedder.embed_store_many(
+                            all_sentences_data, [callback], sv_home.save_cache.value
+                        )
 
-                            distances, indices = build_nearest_neighbors(all_embeddings)
-                            near_map = build_near_map(
-                                distances,
-                                indices,
-                                all_sentences,
-                                sv.matching_sentence_pair_embedding_threshold.value,
-                            )
-
-                            sv.matching_sentence_pair_scores.value = (
-                                build_sentence_pair_scores(
-                                    near_map, sv.matching_merged_df.value
+                        all_sentences = [x["text"] for x in all_sentences_data]
+                        all_embeddings = [
+                            np.array(
+                                next(
+                                    d["vector"]
+                                    for d in data_embeddings
+                                    if d["text"] == f
                                 )
                             )
+                            for f in all_sentences
+                        ]
+
+                        pb.empty()
+
+                        distances, indices = build_nearest_neighbors(all_embeddings)
+                        near_map = build_near_map(
+                            distances,
+                            indices,
+                            all_sentences,
+                            sv.matching_sentence_pair_embedding_threshold.value,
+                        )
+
+                        sv.matching_sentence_pair_scores.value = (
+                            build_sentence_pair_scores(
+                                near_map, sv.matching_merged_df.value
+                            )
+                        )
 
                         merged_df = sv.matching_merged_df.value
                         entity_to_group, matches, pair_to_match = build_matches(
@@ -313,21 +311,22 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                             sv.matching_sentence_pair_jaccard_threshold.value,
                         )
 
+
                         sv.matching_matches_df.value = pl.DataFrame(
                             list(matches),
                             schema=["Group ID", *sv.matching_merged_df.value.columns],
                         ).sort(
                             by=["Group ID", "Entity name", "Dataset"], descending=False
                         )
+  
 
                         sv.matching_matches_df.value = build_matches_dataset(
                             sv.matching_matches_df.value, pair_to_match, entity_to_group
                         )
-
                         st.rerun()
                 if len(sv.matching_matches_df.value) > 0:
                     st.markdown(
-                        f"Identified **{len(sv.matching_matches_df.value)}** record groups."
+                        f"Identified **{len(sv.matching_matches_df.value['Group ID'].unique())}** record groups."
                     )
             with c2:
                 data = sv.matching_matches_df.value
