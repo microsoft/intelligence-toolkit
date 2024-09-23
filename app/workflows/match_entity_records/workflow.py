@@ -170,7 +170,7 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                         )
                         att_name_original = att_name
                         if att_name == "" and len(att_vals) > 0:
-                            att_name = sorted(att_vals[0].split("::"))[0]
+                            att_name = sorted(att_vals)[0].split("::")[0]
 
                         attsaa.append(
                             AttributeToMatch({"label": att_name, "columns": att_vals})
