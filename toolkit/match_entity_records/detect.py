@@ -177,7 +177,7 @@ def _calculate_mean_score(pair_to_match: dict, entity_to_group: dict) -> dict:
     group_to_mean_similarity = {}
     for group, scores in group_to_scores.items():
         group_to_mean_similarity[group] = (
-            sum(scores) / len(scores) if len(scores) > 0 else 0
+            sum(scores) / len(scores) if len(scores) > 0 else 1 # Must be the same value
         )
     return group_to_mean_similarity
 

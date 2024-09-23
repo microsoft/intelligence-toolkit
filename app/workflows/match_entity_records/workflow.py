@@ -26,7 +26,7 @@ from toolkit.match_entity_records.detect import (build_attributes_dataframe,
                                                  convert_to_sentences)
 from toolkit.match_entity_records.prepare_model import (
     build_attribute_list, build_attribute_options, format_dataset)
-
+import app.util.example_outputs_ui as example_outputs_ui
 
 def get_intro():
     file_path = os.path.join(os.path.dirname(__file__), "README.md")
@@ -36,12 +36,13 @@ def get_intro():
 async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
     sv_home = home_vars.SessionVariables("home")
 
-    intro_tab, uploader_tab, process_tab, evaluate_tab = st.tabs(
+    intro_tab, uploader_tab, process_tab, evaluate_tab, examples_tab = st.tabs(
         [
             "Match Entity Records workflow:",
             "Upload record datasets",
             "Detect record groups",
             "Evaluate record groups",
+            "View example outputs",
         ]
     )
     selected_df = None
@@ -169,7 +170,7 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                         )
                         att_name_original = att_name
                         if att_name == "" and len(att_vals) > 0:
-                            att_name = att_vals[0].split("::")[0]
+                            att_name = sorted(att_vals[0].split("::"))[0]
 
                         attsaa.append(
                             AttributeToMatch({"label": att_name, "columns": att_vals})
@@ -458,3 +459,5 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                     report,
                     workflow,
                 )
+    with examples_tab:
+        example_outputs_ui.create_example_outputs_ui(examples_tab, workflow)

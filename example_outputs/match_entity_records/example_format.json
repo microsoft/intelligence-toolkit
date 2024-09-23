@@ -1,0 +1,30 @@
+{
+    "example_order" : ["input_data_1", "input_data_2", "record_matches", "match_reports", "integrated_results"],
+    "example_metadata" : {
+        "input_data_1": {
+            "type": "csv",
+            "heading": "Input data 1",
+            "description": "..."
+        },
+        "input_data_2": {
+            "type": "csv",
+            "heading": "Input data 1",
+            "description": "..."
+        },
+        "record_matches": {
+            "type": "csv",
+            "heading": "Record matches",
+            "description": "..."
+        },
+        "match_reports": {
+            "type": "csv",
+            "heading": "AI match reports",
+            "description": "..."
+        },
+        "integrated_results": {
+            "type": "csv",
+            "heading": "Integrated results",
+            "description": "..."
+        }
+    }
+}

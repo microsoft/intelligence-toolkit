@@ -66,7 +66,7 @@ Using the controls under `Map columns to data model` on the right:
 - set `Dataset name` to `D1`
 - set `Entity name column` to `employer_name`
 - set `Entity ID column (optional)` to `employer_id`
-- set `Entity attribute columns` to `sector`, `address`, `city`, `country`, `email`, `phone`, and `owner`
+- set `Entity attribute columns` to `sector`, `address`, `city`, `country`, `email`, `phone`, and `owner` (i.e., all remaining columns)
 - press `Add records to model`
 
 In general:
@@ -79,7 +79,7 @@ Next, we repeat this process for `company_grievances_input_data_2.csv`. First, s
 - set `Dataset name` to `D2`
 - set `Entity name column` to `company_name`
 - set `Entity ID column (optional)` to `company_id`
-- set `Entity attribute columns` to `industry_sector`, `street_address`, `city_address`, `country_address`, `email_address`, `phone_number`, and `company_owner`
+- set `Entity attribute columns` to `industry_sector`, `street_address`, `city_address`, `country_address`, `email_address`, `phone_number`, and `company_owner` (i.e., all remaining columns)
 - press `Add records to model`
 
 You can see that the two datasets represent the same kind of data using different column names. These discrepancies can be fixed in the next step.
@@ -88,7 +88,7 @@ Navigate to the `Detect record groups` tab to continue.
 
 ### Configuring the text embedding model
 
-The interface on the left shows an empty selection box for `Attribute 1`. Within this field, the selectable values all have a suffix indicating their source dataset (here, `D1` or `D2`). Select `address::D1` and `street_address::D2` as the values for `Attribute 1`, and optionally enter either label (or a new label) for this attribute in the `Label (optional)` field. If no label is provided, the first value will be used as the attribute label in the unified dataset.
+The interface on the left shows an empty selection box for `Attribute 1`. Within this field, the selectable values all have a suffix indicating their source dataset (here, `D1` or `D2`). Select `address::D1` and `street_address::D2` as the values for `Attribute 1`, and optionally enter either label (or a new label) for this attribute in the `Label (optional)` field. If no label is provided, the first value alphabetically will be used as the attribute label in the unified dataset.
 
 Repeat this process to match the following pairs of attributes:
 

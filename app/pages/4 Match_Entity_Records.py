@@ -11,7 +11,7 @@ import app.workflows.match_entity_records.workflow
 from app.components.app_loader import load_multipage_app
 from app.util.helper_fn import app_in_dev_mode
 
-workflow = "matching"
+workflow = "match_entity_records"
 
 
 async def main():
