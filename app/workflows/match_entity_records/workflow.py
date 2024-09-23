@@ -34,30 +34,6 @@ def get_intro():
         return file.read()
     
 async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
-    
-    # df = pd.read_csv("C:\\Users\\daedge\\Code\\ITK\\intelligence-toolkit\\example_outputs\\match_entity_records\\company_grievances\\company_grievances_input_data_1.csv")
-    # # move employer_id to first column
-    # df = df[["employer_id"] + [col for col in df.columns if col != "employer_id"]]
-
-    # # df = df.drop(['employer_id'], axis=1)
-    # # # drop any rows with duplicate employer names
-    # # df = df.drop_duplicates(subset=['employer_name'])
-    # # # select 2000 random rows
-    # # df = df.sample(n=2000)
-    # # df = df.sort_values(by=['employer_name'])
-    # # # add id as row numer
-    # # df['employer_id'] = range(1, len(df) + 1)
-    # df.to_csv("C:\\Users\\daedge\\Code\\ITK\\intelligence-toolkit\\example_outputs\\match_entity_records\\company_grievances\\company_grievances_input_data_1_i.csv", index=False)
-
-    # df = pd.read_csv("C:\\Users\\daedge\\Code\\ITK\\intelligence-toolkit\\example_outputs\\match_entity_records\\company_grievances\\company_grievances_input_data_2.csv")
-    # df = df[["company_id"] + [col for col in df.columns if col != "company_id"]]
-    # # df = df.drop(['company_id'], axis=1)
-    # # df = df.drop_duplicates(subset=['company_name'])
-    # # df = df.sample(n=2000)
-    # # df = df.sort_values(by=['company_name'])
-    # # df['company_id'] = range(1, len(df) + 1)
-    # df.to_csv("C:\\Users\\daedge\\Code\\ITK\\intelligence-toolkit\\example_outputs\\match_entity_records\\company_grievances\\company_grievances_input_data_2_i.csv", index=False)
-
     sv_home = home_vars.SessionVariables("home")
 
     intro_tab, uploader_tab, process_tab, evaluate_tab = st.tabs(
@@ -106,7 +82,7 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                     cols,
                     help="The column containing the unique identifier of the entity to be matched. If left blank, a unique ID will be generated for each entity based on the row number.",
                 )
-                filtered_cols = [c for c in cols if c not in [entity_col, name_col]]
+                filtered_cols = [c for c in cols if c not in [entity_col, name_col, ""]]
                 att_cols = st.multiselect(
                     "Entity attribute columns",
                     filtered_cols,
@@ -448,12 +424,21 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                         use_container_width=True,
                         hide_index=True,
                     )
-                    st.download_button(
-                        "Download AI match report",
-                        data=jdf.write_csv(),
-                        file_name="record_groups_evaluated.csv",
-                        mime="text/csv",
-                    )
+                    c1, c2 = st.columns([1, 1])
+                    with c1:
+                        st.download_button(
+                            "Download AI match reports",
+                            data=csv.write_csv(),
+                            file_name="record_group_match_reports.csv",
+                            mime="text/csv",
+                        )
+                    with c2:
+                        st.download_button(
+                            "Download integrated results",
+                            data=jdf.write_csv(),
+                            file_name="integrated_record_match_results.csv",
+                            mime="text/csv",
+                        )
                 except:
                     st.markdown(sv.matching_evaluations.value)
                     add_download_pdf(
