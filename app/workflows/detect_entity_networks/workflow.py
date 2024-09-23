@@ -648,6 +648,11 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                     lambda x: x.split(ATTRIBUTE_VALUE_SEPARATOR)[0]
                 )
 
+                if graph_type == "Full":
+                    render_graph = network_entities_graph
+                else:
+                    render_graph = network_entities_simplified_graph
+
                 if not show_entities:
                     network_vis = st.container()
                 else:
@@ -665,8 +670,9 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                     ]
 
                     if show_entities:
+                        
                         nodes, edges = get_entity_graph(
-                            network_entities_graph,
+                            render_graph,
                             entity_selected,
                             attribute_types,
                         )
@@ -675,7 +681,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                         edges_agraph = [Edge(**edge) for edge in edges]
                     else:
                         nodes, edges = get_entity_graph(
-                            network_entities_simplified_graph,
+                            render_graph,
                             entity_selected,
                             attribute_types,
                         )
