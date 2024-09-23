@@ -34,6 +34,30 @@ def get_intro():
         return file.read()
     
 async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
+    
+    # df = pd.read_csv("C:\\Users\\daedge\\Code\\ITK\\intelligence-toolkit\\example_outputs\\match_entity_records\\company_grievances\\company_grievances_input_data_1.csv")
+    # # move employer_id to first column
+    # df = df[["employer_id"] + [col for col in df.columns if col != "employer_id"]]
+
+    # # df = df.drop(['employer_id'], axis=1)
+    # # # drop any rows with duplicate employer names
+    # # df = df.drop_duplicates(subset=['employer_name'])
+    # # # select 2000 random rows
+    # # df = df.sample(n=2000)
+    # # df = df.sort_values(by=['employer_name'])
+    # # # add id as row numer
+    # # df['employer_id'] = range(1, len(df) + 1)
+    # df.to_csv("C:\\Users\\daedge\\Code\\ITK\\intelligence-toolkit\\example_outputs\\match_entity_records\\company_grievances\\company_grievances_input_data_1_i.csv", index=False)
+
+    # df = pd.read_csv("C:\\Users\\daedge\\Code\\ITK\\intelligence-toolkit\\example_outputs\\match_entity_records\\company_grievances\\company_grievances_input_data_2.csv")
+    # df = df[["company_id"] + [col for col in df.columns if col != "company_id"]]
+    # # df = df.drop(['company_id'], axis=1)
+    # # df = df.drop_duplicates(subset=['company_name'])
+    # # df = df.sample(n=2000)
+    # # df = df.sort_values(by=['company_name'])
+    # # df['company_id'] = range(1, len(df) + 1)
+    # df.to_csv("C:\\Users\\daedge\\Code\\ITK\\intelligence-toolkit\\example_outputs\\match_entity_records\\company_grievances\\company_grievances_input_data_2_i.csv", index=False)
+
     sv_home = home_vars.SessionVariables("home")
 
     intro_tab, uploader_tab, process_tab, evaluate_tab = st.tabs(
