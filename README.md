@@ -31,7 +31,7 @@ It supports a variety of interactive workflows, each designed to address a speci
   - [`Detect Case Patterns`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/detect_case_patterns/README.md) generates reports on patterns of attribute values detected in streams of case records.
   - [`Compare Case Groups`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/compare_case_groups/README.md) generates reports by defining and comparing groups of case records.
 - **Entity Intelligence Workflows**
-  - [`Match Entity Records`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/match_entity_records/README.md) generates reports on record matches detected across entity datasets.
+  - [`Match Entity Records`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/match_entity_records/README.md) generates fuzzy record matches across different entity datasets.
   - [`Detect Entity Networks`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/detect_entity_networks/README.md) generates reports on risk exposure for networks of related entities.
 - **Text Intelligence Workflows**
   - [`Query Text Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/query_text_data/README.md) generates reports from a collection of text documents.
