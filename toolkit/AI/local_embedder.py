@@ -18,8 +18,9 @@ class LocalEmbedder(BaseEmbedder):
         db_name: str = "embeddings",
         db_path=CACHE_PATH,
         max_tokens=DEFAULT_LLM_MAX_TOKENS,
+        concurrent_coroutines: int | None = None,
     ):
-        super().__init__(db_name, db_path, max_tokens)
+        super().__init__(db_name, db_path, max_tokens, concurrent_coroutines)
         self.local_client = SentenceTransformer(DEFAULT_LOCAL_EMBEDDING_MODEL)
 
     def _generate_embedding(self, text: str | list[str]) -> list | Any:

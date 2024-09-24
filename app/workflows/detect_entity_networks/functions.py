@@ -20,6 +20,7 @@ def embedder() -> BaseEmbedder:
             return LocalEmbedder(
                 db_name=config.cache_name,
                 max_tokens=ai_configuration.max_tokens,
+                concurrent_coroutines=80,
             )
         return OpenAIEmbedder(
             configuration=ai_configuration,

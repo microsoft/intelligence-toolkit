@@ -15,10 +15,11 @@ class OpenAIEmbedder(BaseEmbedder):
         configuration: OpenAIConfiguration,
         db_name: str = "embeddings",
         db_path=CACHE_PATH,
+        concurrent_coroutines: int | None = None,
     ):
         super().__init__(db_name, db_path, configuration.max_tokens)
         self.configuration = configuration
-        self.openai_client = OpenAIClient(configuration)
+        self.openai_client = OpenAIClient(configuration, concurrent_coroutines)
 
     def _generate_embedding(self, text: str) -> list[float]:
         return self.openai_client.generate_embedding(text)

@@ -145,7 +145,6 @@ class BaseEmbedder(ABC, BaseBatchAsync):
             new_items = [
                 item for item in batch_data if item["text"] not in loaded_texts
             ]
-            print("got ", len(new_items), "new items")
             if len(new_items) > 0:
                 tasks = [
                     asyncio.create_task(self.embed_one_async(item, callbacks))
@@ -158,14 +157,12 @@ class BaseEmbedder(ABC, BaseBatchAsync):
                 result = await tqdm_asyncio.gather(*tasks)
                 if callbacks:
                     await progress_task
-                print("done??? save it now")
                 embeddings = [embedding[0] for embedding in result]
                 new_data = [embedding[1] for embedding in result]
                 all_data.extend(new_data)
 
                 final_embeddings.extend(embeddings)
                 if cache_data:
-                    print("store????")
                     self.vector_store.save(new_data)
                     self.vector_store.update_duckdb_data()
 
