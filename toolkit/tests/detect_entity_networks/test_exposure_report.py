@@ -93,7 +93,7 @@ class TestExposureData:
 
     def test_generation_nodes_inferred_not_passed(self, graph, flags, c_nodes):
         graph.add_edge("ENTITY==X", "ENTITY==F")
-        summary, paths, nodes = build_exposure_data(flags, c_nodes, "X", graph)
+        _, _, nodes = build_exposure_data(flags, c_nodes, "X", graph)
 
         expected_nodes = [
             {"node": "ENTITY==C", "flags": 2},
@@ -106,9 +106,7 @@ class TestExposureData:
         graph.add_edge("ENTITY==X", "ENTITY==F")
         inferred_links = defaultdict(set)
         inferred_links["ENTITY==X"].add("ENTITY==F")
-        summary, paths, nodes = build_exposure_data(
-            flags, c_nodes, "X", graph, inferred_links
-        )
+        _, _, nodes = build_exposure_data(flags, c_nodes, "X", graph, inferred_links)
 
         expected_nodes = [
             {"node": "ENTITY==C", "flags": 2},
@@ -122,23 +120,18 @@ class TestExposureData:
         graph.add_edge("ENTITY==X", "ENTITY==F")
         inferred_links = defaultdict(set)
         inferred_links["ENTITY==X"].add("ENTITY==F")
-        summary, paths, nodes = build_exposure_data(
+        _, paths, nodes = build_exposure_data(
             flags, c_nodes, "F", graph, inferred_links
         )
 
         expected_nodes = [
-            {"node": "ENTITY==A", "flags": 8},
             {"node": "ENTITY==C", "flags": 2},
             {"node": "ENTITY==D", "flags": 3},
             {"node": "ENTITY==X", "flags": 2},
         ]
-        expected_paths = [
-            [["ENTITY==A"], ["ENTITY==C"], ["ENTITY==F"]],
-            [["ENTITY==A"], ["ENTITY==D"], ["ENTITY==F"]],
-            [["ENTITY==X", "ENTITY==D", "ENTITY==C"], ["ENTITY==F"]],
-        ]
         for ex in expected_nodes:
             assert ex in nodes
 
-        for ex in expected_paths:
-            assert ex in paths
+        assert [["ENTITY==A"], ["ENTITY==C"], ["ENTITY==F"]] in paths
+        assert [["ENTITY==A"], ["ENTITY==D"], ["ENTITY==F"]] in paths
+        assert [["ENTITY==C", "ENTITY==D", "ENTITY==X"], ["ENTITY==F"]] in paths

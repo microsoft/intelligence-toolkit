@@ -27,7 +27,7 @@ class TestConvertToSentences:
         return pl.DataFrame(
             {
                 "ID1": [10, 20, 30, 40, 50],
-                "Name": ["A", "B", "C", "D", "E"],
+                "Entity name": ["A", "B", "C", "D", "E"],
                 "VehicleType": [
                     "Hatch 1",
                     "Sedan 1",
@@ -54,8 +54,8 @@ class TestConvertToSentences:
     def test_skip(self, merged_df) -> None:
         result = convert_to_sentences(merged_df, ["ID1"])
 
-        for re in result:
-            assert "ID1" not in re["text"]
+        for res in result:
+            assert "ID1" not in res["text"]
 
     def test_sentence(self, merged_df) -> None:
         result = convert_to_sentences(merged_df)
@@ -64,7 +64,7 @@ class TestConvertToSentences:
         for re in result:
             text = re["text"]
             assert "ID1:" in text
-            assert "NAME:" in text
+            assert "ENTITY NAME:" in text
             assert "VEHICLETYPE:" in text
             assert "VEHICLECOLOR:" in text
             assert "VEHICLEYEAR:" in text
@@ -77,7 +77,7 @@ class TestConvertToSentences:
                 pl.DataFrame(
                     {
                         "ID1": [60],
-                        "Name": ["F"],
+                        "Entity name": ["F"],
                         "VehicleType": ["NAN"],
                         "VehicleColor": ["Blue"],
                         "VehicleYear": ["2021"],
@@ -123,9 +123,9 @@ class TestBuildNearMap:
     @pytest.fixture()
     def all_sentences(self) -> list[str]:
         return [
-            "ID1: 10; NAME: A; VEHICLETYPE: Hatch 1; VEHICLECOLOR: Blue; VEHICLEYEAR: 2021;",
-            "ID1: 20; NAME: B; VEHICLETYPE: Sedan 1; VEHICLECOLOR: Red; VEHICLEYEAR: 2022;",
-            "ID1: 30; NAME: C; VEHICLETYPE: Truck 1; VEHICLECOLOR: Blue; VEHICLEYEAR: 2022;",
+            "ID1: 10; ENTITY NAME: A; VEHICLETYPE: Hatch 1; VEHICLECOLOR: Blue; VEHICLEYEAR: 2021;",
+            "ID1: 20; ENTITY NAME: B; VEHICLETYPE: Sedan 1; VEHICLECOLOR: Red; VEHICLEYEAR: 2022;",
+            "ID1: 30; ENTITY NAME: C; VEHICLETYPE: Truck 1; VEHICLECOLOR: Blue; VEHICLEYEAR: 2022;",
         ]
 
     def test_result(self, all_sentences) -> None:

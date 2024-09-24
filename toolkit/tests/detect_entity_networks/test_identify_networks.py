@@ -653,6 +653,29 @@ class TestIntegratedFlags:
         assert flagged == 2.0
         assert community_flags == 4
 
+    def test_inferred_links_flagged(self, integrated_flags, qualified_entities) -> None:
+        qualified_entities.append("ENTITY==5")
+        inferred_links = defaultdict(set)
+        inferred_links["ENTITY==1"].add("ENTITY==5")
+
+        integrated_flags = integrated_flags.vstack(
+            pl.DataFrame({"qualified_entity": ["ENTITY==5"], "count": [1]})
+        )
+
+        (
+            community_flags,
+            flagged,
+            flagged_per_unflagged,
+            flags_per_entity,
+            total_entities,
+        ) = get_integrated_flags(integrated_flags, qualified_entities, inferred_links)
+
+        assert flags_per_entity == 1.25
+        assert total_entities == 4
+        assert flagged_per_unflagged == 3.0
+        assert flagged == 3.0
+        assert community_flags == 5
+
 
 class TestBuildEntityRecords:
     @pytest.fixture()
@@ -668,6 +691,29 @@ class TestBuildEntityRecords:
             {
                 "qualified_entity": ["ENTITY==1", "ENTITY==2", "ENTITY==3"],
                 "count": [1, 0, 3],
+            }
+        )
+
+    @pytest.fixture()
+    def community_nodes_multiple(self) -> list[list[str]]:
+        return [
+            ["ENTITY==1", "ENTITY==2", "ENTITY==3"],
+            ["ENTITY==4", "ENTITY==5", "ENTITY==6"],
+            ["ENTITY==8", "ENTITY==9", "ENTITY==11"],
+        ]
+
+    @pytest.fixture()
+    def integrated_flags_multiple(self) -> pl.DataFrame:
+        return pl.DataFrame(
+            {
+                "qualified_entity": [
+                    "ENTITY==1",
+                    "ENTITY==2",
+                    "ENTITY==3",
+                    "ENTITY==11",
+                    "ENTITY==9",
+                ],
+                "count": [1, 0, 3, 2, 5],
             }
         )
 
@@ -753,6 +799,30 @@ class TestBuildEntityRecords:
             ("4", 0, 1, 4, 4, 2, 1.0, 1.0),
             ("5", 0, 1, 4, 4, 2, 1.0, 1.0),
             ("6", 1, 1, 4, 4, 2, 1.0, 1.0),
+        ]
+
+        assert result == expected
+
+    def test_final_count_inferred_multiple(
+        self, community_nodes_multiple, integrated_flags_multiple
+    ) -> None:
+        inferred_links = defaultdict(set)
+        inferred_links["ENTITY==3"].add("ENTITY==6")
+        inferred_links["ENTITY==3"].add("ENTITY==11")
+        result = build_entity_records(
+            community_nodes_multiple, integrated_flags_multiple, inferred_links
+        )
+
+        expected = [
+            ("1", 1, 0, 5, 6, 3, 1.2, 1.5),
+            ("2", 0, 0, 5, 6, 3, 1.2, 1.5),
+            ("3", 3, 0, 5, 6, 3, 1.2, 1.5),
+            ("4", 0, 1, 4, 3, 1, 0.75, 0.33),
+            ("5", 0, 1, 4, 3, 1, 0.75, 0.33),
+            ("6", 0, 1, 4, 3, 1, 0.75, 0.33),
+            ("8", 0, 2, 4, 10, 3, 2.5, 3.0),
+            ("9", 5, 2, 4, 10, 3, 2.5, 3.0),
+            ("11", 2, 2, 4, 10, 3, 2.5, 3.0),
         ]
 
         assert result == expected

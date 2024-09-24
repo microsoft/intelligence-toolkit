@@ -29,8 +29,11 @@ def build_exposure_data(
         for k, v in inferred_links.items():
             if k not in c_nodes and k in graph.nodes():
                 c_nodes.extend([k])
-            if v not in c_nodes and next(iter(inferred_links[k])) in graph.nodes():
-                c_nodes.extend(v)
+            if v not in c_nodes:
+                for abc in inferred_links[k]:
+                    if abc in graph.nodes():
+                        c_nodes.extend([abc])
+
     rdf = rdf.filter(pl.col("qualified_entity").is_in(c_nodes))
     rdf = rdf.group_by(["qualified_entity", "flag"]).agg(pl.col("count").sum())
     all_flagged = (
@@ -100,6 +103,7 @@ def build_exposure_data(
 
     for path, sources in path_items.items():
         path_list = []
+        sources.sort()
         path_list.append(sources)
 
         for ixx, node in enumerate(json.loads(path)):

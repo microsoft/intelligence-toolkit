@@ -210,8 +210,6 @@ def build_networks(
         max_network_entities,
     )
 
-    # add inferred links to numbers
-
     return community_nodes, entity_to_community
 
 
@@ -223,17 +221,17 @@ def get_integrated_flags(
     total_entities = len(entities)
     if integrated_flags.is_empty():
         return 0, 0, 0, 0, total_entities
-    entities = entities.copy()
+    entities_processed = entities.copy()
 
     flags_df = integrated_flags.filter(pl.col("qualified_entity").is_in(entities))
     community_flags = flags_df.get_column("count").sum()
-    flagged = flags_df.filter(pl.col("count") > 0).height
 
+    flagged = len(flags_df.filter(pl.col("count") > 0)["qualified_entity"].unique())
 
     for n in entities:  # entities from a network
         if inferred_links:
             if n in inferred_links:
-                if n not in entities:
+                if n not in entities_processed:
                     flags = integrated_flags.filter(pl.col("qualified_entity") == n)[
                         "count"
                     ].sum()
@@ -241,25 +239,27 @@ def get_integrated_flags(
                     total_entities += 1
                 else:
                     for l in inferred_links[n]:
-                        if l not in entities:
+                        if l not in entities_processed:
                             flags = integrated_flags.filter(
                                 pl.col("qualified_entity") == l
                             )["count"].sum()
                             community_flags += flags
                             total_entities += 1
-                            flagged += 1 if flags > 0 else 0
-                            entities.append(l)
+                            entities_processed.append(l)
+                            if flags > 0:
+                                flagged += 1
 
             for i in inferred_links:
                 if n in inferred_links[i]:
-                    if i not in entities:
+                    if i not in entities_processed:
                         flags = integrated_flags.filter(
                             pl.col("qualified_entity") == i
                         )["count"].sum()
                         community_flags += flags
                         total_entities += 1
-                        flagged += 1 if flags > 0 else 0
-                        entities.append(i)
+                        entities_processed.append(i)
+                        if flags > 0:
+                            flagged += 1
 
     unflagged = total_entities - flagged
     flagged_per_unflagged = flagged / unflagged if unflagged > 0 else 0
@@ -269,6 +269,7 @@ def get_integrated_flags(
     flags_per_entity = round(
         community_flags / total_entities if total_entities > 0 else 0, 2
     )
+
     return (
         community_flags,
         flagged,
