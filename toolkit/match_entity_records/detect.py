@@ -27,7 +27,7 @@ def convert_to_sentences(
     skip_columns = skip_columns or []
     cols = merged_dataframe.columns
     for row in merged_dataframe.iter_rows(named=True):
-        sentence = ""
+        sentence = 'ENTITY NAME: ' + row["Entity name"].upper() + "; "
         for field in cols:
             if field not in skip_columns:
                 val = str(row[field]).upper()
@@ -71,10 +71,12 @@ def build_near_map(
 ) -> defaultdict[Any, list]:
     near_map = defaultdict(list)
     for ix in range(len(all_sentences)):
+        n = all_sentences[ix]
         near_is = indices[ix][1:]
         near_ds = distances[ix][1:]
-        nearest = zip(near_is, near_ds, strict=False)
-        for near_i, near_d in nearest:
+        near_ns = all_sentences[ix]
+        nearest = zip(near_is, near_ds, near_ns, strict=False)
+        for near_i, near_d, near_n in nearest:
             if near_d <= max_record_distance:
                 near_map[ix].append(near_i)
 
@@ -91,15 +93,17 @@ def build_sentence_pair_scores(
             nxrec = merged_df.row(nx, named=True)
             ixn = ixrec["Entity name"].upper()
             nxn = nxrec["Entity name"].upper()
-
-            ixn_c = re.sub(r"[^\w\s]", "", ixn)
-            nxn_c = re.sub(r"[^\w\s]", "", nxn)
-            N = 3
-            igrams = {ixn_c[i : i + N] for i in range(len(ixn_c) - N + 1)}
-            ngrams = {nxn_c[i : i + N] for i in range(len(nxn_c) - N + 1)}
-            inter = len(igrams.intersection(ngrams))
-            union = len(igrams.union(ngrams))
-            score = inter / union if union > 0 else 0
+            if ixn == nxn:
+                score = 1
+            else:
+                ixn_c = re.sub(r"[^\w\s]", "", ixn)
+                nxn_c = re.sub(r"[^\w\s]", "", nxn)
+                N = 3
+                igrams = {ixn_c[i : i + N] for i in range(len(ixn_c) - N + 1)}
+                ngrams = {nxn_c[i : i + N] for i in range(len(nxn_c) - N + 1)}
+                inter = len(igrams.intersection(ngrams))
+                union = len(igrams.union(ngrams))
+                score = inter / union if union > 0 else 0
 
             sentence_pair_scores.append(
                 (
@@ -159,13 +163,12 @@ def build_matches(
         matches.add((entity_to_group[nx_id], *list(merged_df.row(nx))))
 
         pair_to_match[tuple(sorted([ix_id, nx_id]))] = score
-
     return entity_to_group, matches, pair_to_match
 
 
 def _calculate_mean_score(pair_to_match: dict, entity_to_group: dict) -> dict:
     group_to_scores = defaultdict(list)
-
+    
     for (ix_id, nx_id), score in pair_to_match.items():
         if (
             ix_id in entity_to_group
@@ -177,7 +180,7 @@ def _calculate_mean_score(pair_to_match: dict, entity_to_group: dict) -> dict:
     group_to_mean_similarity = {}
     for group, scores in group_to_scores.items():
         group_to_mean_similarity[group] = (
-            sum(scores) / len(scores) if len(scores) > 0 else 0
+            sum(scores) / len(scores) if len(scores) > 0 else 1 # Must be the same value
         )
     return group_to_mean_similarity
 

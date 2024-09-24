@@ -26,12 +26,12 @@ class SessionVariables:
         self.matching_max_rows_to_process = SessionVariable(0, prefix)
         self.matching_mapped_atts = SessionVariable([], prefix)
         self.matching_sentence_pair_scores = SessionVariable([], prefix)
-        self.matching_sentence_pair_jaccard_threshold = SessionVariable(0.75, prefix)
+        self.matching_sentence_pair_jaccard_threshold = SessionVariable(0.0, prefix)
         self.matching_sentence_pair_embedding_threshold = SessionVariable(
             DEFAULT_MAX_RECORD_DISTANCE, prefix
         )
         self.matching_last_sentence_pair_embedding_threshold = SessionVariable(
-            0.05, prefix
+            0.001, prefix
         )
         self.matching_evaluations = SessionVariable(pl.DataFrame(), prefix)
         self.matching_report_validation = SessionVariable({}, prefix)

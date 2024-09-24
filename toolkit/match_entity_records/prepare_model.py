@@ -41,6 +41,7 @@ def format_dataset(
     )
     if max_rows > 0:
         selected_df = selected_df.head(max_rows)
+    print(selected_df)    
     return selected_df
 
 
@@ -56,7 +57,6 @@ def build_attribute_options(matching_dfs: dict[str, pl.DataFrame]) -> list[str]:
 
 def build_attribute_list(attr_list: list[AttributeToMatch]) -> dict:
     df_renamed = defaultdict(dict)
-
     for attr in attr_list:
         att_name = attr.get("label")
         for val in attr.get("columns"):

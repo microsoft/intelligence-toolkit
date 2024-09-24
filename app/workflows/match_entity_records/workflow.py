@@ -9,6 +9,7 @@ import pandas as pd
 import polars as pl
 import streamlit as st
 
+import app.util.example_outputs_ui as example_outputs_ui
 import app.util.session_variables as home_vars
 import app.workflows.match_entity_records.functions as functions
 import app.workflows.match_entity_records.variables as rm_variables
@@ -41,12 +42,13 @@ def get_intro():
 async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
     sv_home = home_vars.SessionVariables("home")
 
-    intro_tab, uploader_tab, process_tab, evaluate_tab = st.tabs(
+    intro_tab, uploader_tab, process_tab, evaluate_tab, examples_tab = st.tabs(
         [
             "Match Entity Records workflow:",
             "Upload record datasets",
             "Detect record groups",
             "Evaluate record groups",
+            "View example outputs",
         ]
     )
     selected_df = None
@@ -87,7 +89,7 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                     cols,
                     help="The column containing the unique identifier of the entity to be matched. If left blank, a unique ID will be generated for each entity based on the row number.",
                 )
-                filtered_cols = [c for c in cols if c not in [entity_col, name_col]]
+                filtered_cols = [c for c in cols if c not in [entity_col, name_col, ""]]
                 att_cols = st.multiselect(
                     "Entity attribute columns",
                     filtered_cols,
@@ -174,7 +176,7 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                         )
                         att_name_original = att_name
                         if att_name == "" and len(att_vals) > 0:
-                            att_name = att_vals[0].split("::")[0]
+                            att_name = sorted(att_vals)[0].split("::")[0]
 
                         attsaa.append(
                             AttributeToMatch({"label": att_name, "columns": att_vals})
@@ -243,72 +245,70 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                         )
 
                     with st.spinner("Detecting groups..."):
-                        if (
-                            len(sv.matching_merged_df.value) == 0
-                            or sv.matching_sentence_pair_embedding_threshold.value
-                            != sv.matching_last_sentence_pair_embedding_threshold.value
-                        ):
-                            sv.matching_last_sentence_pair_embedding_threshold.value = (
-                                sv.matching_sentence_pair_embedding_threshold.value
+                        # if (
+                        #     len(sv.matching_merged_df.value) == 0
+                        #     or sv.matching_sentence_pair_embedding_threshold.value
+                        #     != sv.matching_last_sentence_pair_embedding_threshold.value
+                        # ):
+                        sv.matching_last_sentence_pair_embedding_threshold.value = (
+                            sv.matching_sentence_pair_embedding_threshold.value
+                        )
+                        sv.matching_merged_df.value = build_attributes_dataframe(
+                            sv.matching_dfs.value, attributes_list
+                        )
+                        sv.matching_merged_df.value = (
+                            sv.matching_merged_df.value.with_columns(
+                                (pl.col("Entity ID").cast(pl.Utf8))
+                                + "::"
+                                + pl.col("Dataset").alias("Unique ID")
                             )
-                            sv.matching_merged_df.value = build_attributes_dataframe(
-                                sv.matching_dfs.value, attributes_list
-                            )
+                        )  ###??
+                        all_sentences_data = convert_to_sentences(
+                            sv.matching_merged_df.value
+                        )
+                        pb = st.progress(0, "Embedding text batches...")
 
-                            sv.matching_merged_df.value = (
-                                sv.matching_merged_df.value.with_columns(
-                                    (pl.col("Entity ID").cast(pl.Utf8))
-                                    + "::"
-                                    + pl.col("Dataset").alias("Unique ID")
-                                )
-                            )  ###??
-                            all_sentences_data = convert_to_sentences(
-                                sv.matching_merged_df.value
-                            )
-
-                            pb = st.progress(0, "Embedding text batches...")
-
-                            def on_embedding_batch_change(current, total):
-                                pb.progress(
-                                    (current) / total,
-                                    f"Embedding text {current} of {total}...",
-                                )
-
-                            callback = ProgressBatchCallback()
-                            callback.on_batch_change = on_embedding_batch_change
-
-                            functions_embedder = functions.embedder()
-                            data_embeddings = await functions_embedder.embed_store_many(
-                                all_sentences_data, [callback], sv_home.save_cache.value
+                        def on_embedding_batch_change(current, total):
+                            pb.progress(
+                                (current) / total,
+                                f"Embedding text {current} of {total}...",
                             )
 
-                            all_sentences = [x["text"] for x in all_sentences_data]
-                            all_embeddings = [
-                                np.array(
-                                    next(
-                                        d["vector"]
-                                        for d in data_embeddings
-                                        if d["text"] == f
-                                    )
-                                )
-                                for f in all_sentences
-                            ]
+                        callback = ProgressBatchCallback()
+                        callback.on_batch_change = on_embedding_batch_change
 
-                            pb.empty()
+                        functions_embedder = functions.embedder()
+                        data_embeddings = await functions_embedder.embed_store_many(
+                            all_sentences_data, [callback], sv_home.save_cache.value
+                        )
 
-                            distances, indices = build_nearest_neighbors(all_embeddings)
-                            near_map = build_near_map(
-                                distances,
-                                indices,
-                                all_sentences,
-                                sv.matching_sentence_pair_embedding_threshold.value,
-                            )
-
-                            sv.matching_sentence_pair_scores.value = (
-                                build_sentence_pair_scores(
-                                    near_map, sv.matching_merged_df.value
+                        all_sentences = [x["text"] for x in all_sentences_data]
+                        all_embeddings = [
+                            np.array(
+                                next(
+                                    d["vector"]
+                                    for d in data_embeddings
+                                    if d["text"] == f
                                 )
                             )
+                            for f in all_sentences
+                        ]
+
+                        pb.empty()
+
+                        distances, indices = build_nearest_neighbors(all_embeddings)
+                        near_map = build_near_map(
+                            distances,
+                            indices,
+                            all_sentences,
+                            sv.matching_sentence_pair_embedding_threshold.value,
+                        )
+
+                        sv.matching_sentence_pair_scores.value = (
+                            build_sentence_pair_scores(
+                                near_map, sv.matching_merged_df.value
+                            )
+                        )
 
                         merged_df = sv.matching_merged_df.value
                         entity_to_group, matches, pair_to_match = build_matches(
@@ -317,21 +317,22 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                             sv.matching_sentence_pair_jaccard_threshold.value,
                         )
 
+
                         sv.matching_matches_df.value = pl.DataFrame(
                             list(matches),
                             schema=["Group ID", *sv.matching_merged_df.value.columns],
                         ).sort(
                             by=["Group ID", "Entity name", "Dataset"], descending=False
                         )
+  
 
                         sv.matching_matches_df.value = build_matches_dataset(
                             sv.matching_matches_df.value, pair_to_match, entity_to_group
                         )
-
                         st.rerun()
                 if len(sv.matching_matches_df.value) > 0:
                     st.markdown(
-                        f"Identified **{len(sv.matching_matches_df.value)}** record groups."
+                        f"Identified **{len(sv.matching_matches_df.value['Group ID'].unique())}** record groups."
                     )
             with c2:
                 data = sv.matching_matches_df.value
@@ -415,12 +416,21 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                         use_container_width=True,
                         hide_index=True,
                     )
-                    st.download_button(
-                        "Download AI match report",
-                        data=jdf.write_csv(),
-                        file_name="record_groups_evaluated.csv",
-                        mime="text/csv",
-                    )
+                    c1, c2 = st.columns([1, 1])
+                    with c1:
+                        st.download_button(
+                            "Download AI match reports",
+                            data=csv.write_csv(),
+                            file_name="record_group_match_reports.csv",
+                            mime="text/csv",
+                        )
+                    with c2:
+                        st.download_button(
+                            "Download integrated results",
+                            data=jdf.write_csv(),
+                            file_name="integrated_record_match_results.csv",
+                            mime="text/csv",
+                        )
                 except:
                     st.markdown(sv.matching_evaluations.value)
                     add_download_pdf(
@@ -440,3 +450,5 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                     report,
                     workflow,
                 )
+    with examples_tab:
+        example_outputs_ui.create_example_outputs_ui(examples_tab, workflow)

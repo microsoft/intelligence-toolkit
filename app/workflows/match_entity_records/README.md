@@ -29,7 +29,7 @@ The task for this tutorial is detecting matching records across two related `com
 
 ### How record embedding works
 
-This workflow relies on a technique called *text embedding* to create vector-vased representations of data records. Since records with similar semantic content are "embedded" at similar points in vector space, we can use text embeddings to identify fuzzy matches between records that describe the same entity in ways that are semantically similar but syntactically different (e.g., because of formatting, typos, etc.)
+This workflow relies on a technique called *text embedding* to create vector-vased representations of data records. Since records with similar semantic content are "embedded" at similar points in vector space, we can use text embeddings to identify fuzzy matches between records that describe the same entity in ways that are semantically similar but lexically different (e.g., because of formatting, typos, etc.)
 
 Using this approach, the records of the following dataset:
 
@@ -45,6 +45,7 @@ would first be converted to the following "sentences":
 company: mediawave; street: 1111 broadcast blvd; city: media city; country: newsland
 company: urbantech; street: 909 innovation dr; city: tech city; country: innovatia
 company: techgurus; street: 963 innovation dr; city: tech city; country: innovatia
+```
 
 before being transformed into embedding vectors.
 
@@ -65,7 +66,7 @@ Using the controls under `Map columns to data model` on the right:
 - set `Dataset name` to `D1`
 - set `Entity name column` to `employer_name`
 - set `Entity ID column (optional)` to `employer_id`
-- set `Entity attribute columns` to `sector`, `address`, `city`, `country`, `email`, `phone`, and `owner`
+- set `Entity attribute columns` to `sector`, `address`, `city`, `country`, `email`, `phone`, and `owner` (i.e., all remaining columns)
 - press `Add records to model`
 
 In general:
@@ -78,7 +79,7 @@ Next, we repeat this process for `company_grievances_input_data_2.csv`. First, s
 - set `Dataset name` to `D2`
 - set `Entity name column` to `company_name`
 - set `Entity ID column (optional)` to `company_id`
-- set `Entity attribute columns` to `industry_sector`, `street_address`, `city_address`, `country_address`, `email_address`, `phone_number`, and `company_owner`
+- set `Entity attribute columns` to `industry_sector`, `street_address`, `city_address`, `country_address`, `email_address`, `phone_number`, and `company_owner` (i.e., all remaining columns)
 - press `Add records to model`
 
 You can see that the two datasets represent the same kind of data using different column names. These discrepancies can be fixed in the next step.
@@ -87,7 +88,7 @@ Navigate to the `Detect record groups` tab to continue.
 
 ### Configuring the text embedding model
 
-The interface on the left shows an empty selection box for `Attribute 1`. Within this field, the selectable values all have a suffix indicating their source dataset (here, `D1` or `D2`). Select `address::D1` and `street_address::D2` as the values for `Attribute 1`, and optionally enter either label (or a new label) for this attribute in the `Label (optional)` field. If no label is provided, the first value will be used as the attribute label in the unified dataset.
+The interface on the left shows an empty selection box for `Attribute 1`. Within this field, the selectable values all have a suffix indicating their source dataset (here, `D1` or `D2`). Select `address::D1` and `street_address::D2` as the values for `Attribute 1`, and optionally enter either label (or a new label) for this attribute in the `Label (optional)` field. If no label is provided, the first value alphabetically will be used as the attribute label in the unified dataset.
 
 Repeat this process to match the following pairs of attributes:
 
@@ -106,4 +107,98 @@ In general, if more than two datasets are being matched, then select all attribu
 
 There are two key parameters for configuring the similarity-based matching process:
 
-- `Matching record distance (max)`: the maximum distance between the embedding vectors of two records 
+- `Matching record distance (max)`: the maximum distance between the embedding vectors of two records to consider an embedding match
+- `Matching name similarity (min)`: the minimum Jaccard similarity between the names of embedding-matched records to consider an overall match
+
+Starting out with a `Matching record distance (max)` of `0.001` may yield a small number of matches (~100 groups), while setting the threshold to `0.01` may return a greater number of matches (~500 groups). This *semantic* matching process can also be followed by a *lexical* matching process on entity names only, explained next.
+
+#### Understanding lexical matching
+
+With the default `Matching name similarity (min)` of `0.0`, there are no direct constraints on the match between the name fields of the record group. Setting this to a value of *p*, however, means that a fraction *p* of the 3-character combinations ("trigrams") in each name must overlap for there to be an overall match.
+
+For example, setting it to `0.75` means that 0.75 or 75% of 3-character combinations ("trigrams") must overlap.
+
+Consider `Sprout Ltd` (Entity A) and `Spout Ltd` (Entity B = Entity A with a typo) as entitiy names:
+
+| Common trigrams | Entity A trigrams only | Entity B trigrams only |
+|-----------------|------------------------|------------------------|
+|                 | "spr"                  | "spo"                  |
+|                 | "pro"                  | "pou"                  |
+|                 | "rou"                  |                        |
+| "out"           |                        |                        |
+| "ut "           |                        |                        |
+| "t l"           |                        |                        |
+| " lt"           |                        |                        |
+| "ltd"           |                        |                        |
+
+The similarity measure used is the *Jaccard* similary, defined as the size of the intersection of comparable elements (the 5 common trigrams) divided by the size of the union of comparable elements (10 distinct trigrams overall). For this example, the Jaccard similarity resulting from a single omitted character is `0.5`, which would fail to reach the target level of `0.75`.
+
+If the two entities were named `Sprout Technology Limited` (Entity A) and `Spout Tecnology Limited` (Entity B = Entity A with two typos), then the trigram sets change:
+
+| Common trigrams | Entity A trigrams only | Entity B trigrams only |
+|-----------------|------------------------|------------------------|
+|                 | "spr"                  | "spo"                  |
+|                 | "pro"                  | "pou"                  |
+|                 | "rou"                  |                        |
+| "out"           |                        |                        |
+| "ut "           |                        |                        |
+| "t t"           |                        |                        |
+| " te"           |                        |                        |
+| "tec"           |                        |                        |
+|                 | "ech"                  | "ecn"                  |
+|                 | "chn"                  | "cno"                  |
+|                 | "hno"                  |                        |
+| "nol"           |                        |                        |
+| "olo"           |                        |                        |
+| "log"           |                        |                        |
+| "ogy"           |                        |                        |
+| "gy "           |                        |                        |
+| "y l"           |                        |                        |
+| " li"           |                        |                        |
+| "lim"           |                        |                        |
+| "imi"           |                        |                        |
+| "mit"           |                        |                        |
+| "ite"           |                        |                        |
+| "ted"           |                        |                        |
+
+Now, the Jaccard simialrity is 17/27 = 0.63. Higher, but not quite at the `0.75` target.
+
+Finally, if there was only a single typo distinguishing `Sprout Technology Limited` (Entity A) and `Spout Technology Limited` (Entity B = Entity A with a typo), then the trigram sets change again:
+
+| Common trigrams | Entity A trigrams only | Entity B trigrams only |
+|-----------------|------------------------|------------------------|
+|                 | "spr"                  | "spo"                  |
+|                 | "pro"                  | "pou"                  |
+|                 | "rou"                  |                        |
+| "out"           |                        |                        |
+| "ut "           |                        |                        |
+| "t t"           |                        |                        |
+| " te"           |                        |                        |
+| "tec"           |                        |                        |
+| "ech"           |                        |                        |
+| "chn"           |                        |                        |
+| "hno"           |                        |                        |
+| "nol"           |                        |                        |
+| "olo"           |                        |                        |
+| "log"           |                        |                        |
+| "ogy"           |                        |                        |
+| "gy "           |                        |                        |
+| "y l"           |                        |                        |
+| " li"           |                        |                        |
+| "lim"           |                        |                        |
+| "imi"           |                        |                        |
+| "mit"           |                        |                        |
+| "ite"           |                        |                        |
+| "ted"           |                        |                        |
+
+Now, the Jaccard simialrity is 20/25 = 0.75, or precisely at the `0.75` target.
+
+As you can see, this *lexical* approach to determining text similarity can break down when the text representations of the same entity are substantially different (e.g., `Sprout Ltd` vs `Sprout & Partners Technology Ltd`). This is why the *semantic" approach of text embedding is so powerful. At the same time, sometimes embedding-based matching will return pairs of entity records with widely different names. In these cases, it can be helpful to require some dgeree of lexical overlap.
+
+### Detecting and explaining record groups
+
+Press `Detect record groups` to see the detected record groups on the right. The last two columns of this table show the size of the detected group and the average name similarity, the latter of which is used to create the group ranking. The results can be downloaded and used directly via the `Download record groups` button. Alternatively, you can proceed to the `Evaluate record groups` tab to have generative AI evaluate the likely real-world match represented by each of the groups. Here, press `Generate` to create a group-by-group evaluation and explanation of group relatedness.
+
+A table of `Group ID`, `Relatedness`, and `Explantion` fields will be updated dynamically as generative AI processes the candidate record groups.
+
+Press `Download AI match reports` to download the visible results, or `Download integrated results` to download a single result table combining matched records and AI group evaluations.
