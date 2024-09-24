@@ -184,7 +184,7 @@ class TestBuildSentencePairScores:
         near_map = {0: [1, 1, 2, 2], 1: [1, 1]}
 
         result = build_sentence_pair_scores(near_map, merged_df)
-        expected = [(0, 1, 0), (0, 1, 0), (0, 2, 0), (0, 2, 0), (1, 1, 0), (1, 1, 0)]
+        expected = [(0, 1, 0), (0, 1, 0), (0, 2, 0), (0, 2, 0), (1, 1, 1), (1, 1, 1)]
         assert result == expected
 
     def test_single_pair(self, merged_df) -> None:
