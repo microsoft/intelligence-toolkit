@@ -16,7 +16,7 @@ Select the `View example outputs` tab (in app) or navigate to [example_outputs/a
 [`Anonymize Case Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/anonymize_case_data/README.md) can be used to anonymize case data for privacy-preserving analysis in any other workflow accepting structured records as input:
 
 - [`Detect Case Patterns`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/detect_case_patterns/README.md)
-- `Compare Case Groups`
+- [`Compare Case Groups`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/compare_case_groups/README.md)
 
 [`Generate Mock Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_mock_data/README.md) can also be used to generate mock data for demonstration or evaluation of the [`Anonymize Case Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/anonymize_case_data/README.md) workflow.
 
