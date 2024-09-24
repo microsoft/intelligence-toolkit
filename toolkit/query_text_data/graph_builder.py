@@ -43,7 +43,7 @@ def update_concept_graph_edges(node_to_period_counts, edge_to_period_counts, per
 
 def prepare_concept_graphs(period_concept_graphs, max_cluster_size, min_edge_weight, min_node_degree):
     prepare_concept_graph(period_concept_graphs["ALL"], min_edge_weight, min_node_degree)
-    community_to_concepts, concept_to_community, hierarchy_communities = (
+    community_to_concepts, concept_to_community, hierarchical_communities = (
         detect_concept_communities(period_concept_graphs["ALL"], max_cluster_size)
     )
     for period, G in period_concept_graphs.items():
@@ -57,8 +57,30 @@ def prepare_concept_graphs(period_concept_graphs, max_cluster_size, min_edge_wei
             data['community'] = concept_to_community[node] if node in concept_to_community else -1
 
     
-    return community_to_concepts, concept_to_community, hierarchy_communities
+    return community_to_concepts, concept_to_community, hierarchical_communities
     
+def build_meta_graph(G, hierarchical_communities):
+    level_to_communities = {}
+    level_to_label_to_network = defaultdict(dict)
+    max_level = max([hc.level for hc in hierarchical_communities])
+    level_community_nodes = {}
+    for level in range(max_level+1):
+        filtered_nodes = [hc for hc in hierarchical_communities if hc.level == level]
+        community_nodes = defaultdict(set)
+        for hc in filtered_nodes:
+            community_nodes[hc.cluster].add(hc.node)
+        level_community_nodes[level] = community_nodes
+        sorted_communities = sorted(community_nodes.keys(), key=lambda x: len(community_nodes[x]), reverse=True)
+        level_to_communities[level] = sorted_communities
+    for level, community_list in level_to_communities.items():
+        for c in community_list:
+            c_nodes = level_community_nodes[level][c]
+            S = nx.subgraph(G, c_nodes)
+            top_nodes = sorted(c_nodes, key=lambda x: G.degree(x), reverse=True)[:7]
+            label = "; ".join(top_nodes)
+            level_to_label_to_network[level][label] = S
+    return level_to_label_to_network
+
 
 def prepare_concept_graph(G, min_edge_weight, min_node_degree, std_trim=4):
     degrees = [x[1] for x in G.degree()]

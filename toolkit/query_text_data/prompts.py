@@ -68,6 +68,8 @@ Content items may be reordered, merged, or split as needed to create a coherent 
 
 ALL new text chunks MUST be included and referenced in the final report PROVIDED they are relevant to the question.
 
+When generating the text of content items, do not mix factual content and commentary in the same sentence. Instead, separate factual content from commentary with a new sentence.
+
 --TASK--
 
 Input JSON object:

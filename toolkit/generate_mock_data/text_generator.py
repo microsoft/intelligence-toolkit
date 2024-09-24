@@ -17,13 +17,13 @@ async def generate_text_data(
     generation_guidance,
     input_texts,
     temperature,
-    batch_size,
+    parallel_threads,
     df_update_callback,
     callback_batch,
 ):
     generated_texts = []
     
-    batched_texts = [input_texts[i:i + batch_size] for i in range(0, len(input_texts), batch_size)]
+    batched_texts = [input_texts[i:i + parallel_threads] for i in range(0, len(input_texts), parallel_threads)]
 
     df = pd.DataFrame(columns=["mock_text"])
 

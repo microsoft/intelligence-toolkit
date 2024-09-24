@@ -1,0 +1,20 @@
+{
+    "example_order" : ["texts", "extended_answer", "condensed_answer"],
+    "example_metadata" : {
+        "texts": {
+            "type": "csv",
+            "heading": "Input texts",
+            "description": "Input texts to be queried"
+        },
+        "extended_answer": {
+            "type": "md",
+            "heading": "Extended answer",
+            "description": "An extended answer to a user query generated using multiple generative AI calls, each of which integrates batches of relevant text chunks into the answer in progress"
+        },
+        "condensed_answer": {
+            "type": "md",
+            "heading": "Condensed answer",
+            "description": "A condensed answer to a user query using a single generative AI call to summarize the extended answer"
+        }
+    }
+}
