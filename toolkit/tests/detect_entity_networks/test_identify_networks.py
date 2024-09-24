@@ -175,7 +175,7 @@ class TestProjectEntityGraph:
             simple_graph, trimmed_nodeset, inferred_links, supporting_attribute_types
         )
         assert ("ENTITY==1", "ENTITY==2") in projected.edges()
-        assert ("ENTITY==1", "ENTITY==5") not in projected.edges()
+        assert ("ENTITY==1", "ENTITY==5") in projected.edges()
         assert ("ENTITY==5", "ENTITY==3") in projected.edges()
 
     def test_edges_inferred_no_trimmed(
@@ -264,6 +264,7 @@ class TestGetEntityNeighbors:
         G.add_node("node4")
         G.add_node("node5")
         G.add_node("node6")
+        G.add_node("node7")
         G.add_edge("node0", "node1")
         G.add_edge("node1", "node2")
         G.add_edge("node1", "node1")
@@ -280,9 +281,9 @@ class TestGetEntityNeighbors:
     def test_node_not_int_graph(self, graph):
         with pytest.raises(
             ValueError,
-            match="Node node7 not in graph",
+            match="Node node77 not in graph",
         ):
-            get_entity_neighbors(graph, [], [], "node7")
+            get_entity_neighbors(graph, [], [], "node77")
 
     def test_no_inferred(self, graph):
         result = get_entity_neighbors(graph, [], [], "node5")
@@ -304,9 +305,26 @@ class TestGetEntityNeighbors:
         result = get_entity_neighbors(graph, [], [], "node1")
         assert result == ["node0", "node2", "node3"]
 
+    def test_inferred_mixed(self, graph) -> None:
+        inferred_links = defaultdict(set)
+        inferred_links["node5"].add("node2")
+        inferred_links["node12"].add("node127")
+        result = get_entity_neighbors(graph, inferred_links, [], "node2")
+        assert result == ["node1", "node3", "node5"]
 
-def mock_get_entity_neighbors(overall_graph, inferred_links, trimmed_nodeset, node):
-    return overall_graph.neighbors(node)
+    def test_inferred_mixed_contrary(self, graph) -> None:
+        inferred_links = defaultdict(set)
+        inferred_links["node5"].add("node2")
+        result = get_entity_neighbors(graph, inferred_links, [], "node5")
+        assert result == ["node2", "node4"]
+
+    def test_inferred_mixed_multiple(self, graph) -> None:
+        inferred_links = defaultdict(set)
+        inferred_links["node5"].add("node2")
+        inferred_links["node7"].add("node2")
+        inferred_links["node12"].add("node127")
+        result = get_entity_neighbors(graph, inferred_links, [], "node2")
+        assert result == ["node1", "node3", "node5", "node7"]
 
 
 class TestEntityGraph:

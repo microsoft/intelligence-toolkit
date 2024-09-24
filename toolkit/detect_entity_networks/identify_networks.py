@@ -42,7 +42,12 @@ def get_entity_neighbors(overall_graph, inferred_links, trimmed_nodeset, node) -
 
     neighbors = set(overall_graph.neighbors(node))
     if inferred_links:
-        neighbors = neighbors.union(inferred_links[node])
+        if node in inferred_links:
+            neighbors = neighbors.union(inferred_links[node])
+
+        for inferred_link in inferred_links:
+            if node in inferred_links[inferred_link]:
+                neighbors = neighbors.union([inferred_link])
 
     neighbors = neighbors.difference(trimmed_nodeset)
 
@@ -218,10 +223,12 @@ def get_integrated_flags(
     total_entities = len(entities)
     if integrated_flags.is_empty():
         return 0, 0, 0, 0, total_entities
+    entities = entities.copy()
 
     flags_df = integrated_flags.filter(pl.col("qualified_entity").is_in(entities))
     community_flags = flags_df.get_column("count").sum()
     flagged = flags_df.filter(pl.col("count") > 0).height
+
 
     for n in entities:  # entities from a network
         if inferred_links:
@@ -241,6 +248,7 @@ def get_integrated_flags(
                             community_flags += flags
                             total_entities += 1
                             flagged += 1 if flags > 0 else 0
+                            entities.append(l)
 
             for i in inferred_links:
                 if n in inferred_links[i]:
@@ -251,6 +259,7 @@ def get_integrated_flags(
                         community_flags += flags
                         total_entities += 1
                         flagged += 1 if flags > 0 else 0
+                        entities.append(i)
 
     unflagged = total_entities - flagged
     flagged_per_unflagged = flagged / unflagged if unflagged > 0 else 0
