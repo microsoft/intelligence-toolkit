@@ -1,10 +1,12 @@
 # Query Text Data
 
-The **Query Text Data** workflow generates intelligence reports from a collection of text documents.
+The [`Query Text Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/query_text_data/README.md) workflow generates intelligence reports from a collection of text documents.
+
+Select the `View example outputs` tab (in app) or navigate to [example_outputs/query_text_data](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/query_text_data) (on GitHub) for examples.
 
 ## How it works
 
-1. [**Input**] Input documents (PDF, TXT, or JSON) covering a domain of interest (e.g., scientific papers, policy articles).
+1. [**Input**] Input documents (PDF, TXT, JSON) or multi-text table (CSV) covering a domain of interest (e.g., scientific papers, policy articles).
 2. [**Process**] The documents are parsed into text and split into chunks.
 3. [**Process**] Concepts are extracted from each chunk and used to create a concept-cooccurrence graph.
 4. [**Embedding Calls**] Text chunks are embedded into a multi-dimensional semantic space, with similar ideas close to one another.
@@ -15,5 +17,5 @@ The **Query Text Data** workflow generates intelligence reports from a collectio
 
 ## Input requirements
 
-- The input files should be in PDF, TXT, or JSON format and contain text of interest.
+- The input files should be in PDF, TXT, JSON, or CSV format and contain text of interest.
 - The text extracted from input files will be sent to external APIs for embedding and text generation. Using the text in such a way must comply with all applicable laws, regulations, and policies governing their source documents, including those pertaining to privacy and security.

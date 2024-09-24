@@ -13,6 +13,8 @@ import toolkit.query_text_data.input_processor as input_processor
 import toolkit.query_text_data.prompts as prompts
 import toolkit.query_text_data.answer_builder as answer_builder
 import toolkit.query_text_data.relevance_assessor as relevance_assessor
+import toolkit.query_text_data.graph_builder as graph_builder
+import app.util.example_outputs_ui as example_outputs_ui
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
@@ -142,13 +144,14 @@ def get_concept_graph(
 
 async def create(sv: SessionVariables, workflow=None):
     sv_home = SessionVariables("home")
-    intro_tab, uploader_tab, graph_tab, search_tab, report_tab = st.tabs(
+    intro_tab, uploader_tab, graph_tab, search_tab, report_tab, examples_tab = st.tabs(
         [
             "Query Text Data workflow:",
             "Upload data",
             "Explore concept graph",
             "Generate AI extended answers",
             "Generate AI answer reports",
+            "View example outputs"
         ]
     )
 
@@ -158,7 +161,7 @@ async def create(sv: SessionVariables, workflow=None):
         st.markdown("##### Upload data for processing")
         files = st.file_uploader(
             "Upload PDF text files",
-            type=["pdf", "txt", "json"],
+            type=["pdf", "txt", "json", "csv"],
             accept_multiple_files=True,
             key=sv.upload_key.value,
         )
@@ -279,16 +282,21 @@ async def create(sv: SessionVariables, workflow=None):
             c1, c2 = st.columns([5, 2])
             selection = None
             with c1:
+
+                level_to_label_to_network = graph_builder.build_meta_graph(G, sv.hierarchical_clusters.value)
+                selected_level_labels = [''] + [str(v) for v in level_to_label_to_network[0].keys()]
+                selected_label = st.selectbox("Select topic area", options=selected_level_labels, key=f"{workflow}_community_label")
                 gp = st.empty()
-                selection = get_concept_graph(
-                    gp,
-                    G,
-                    sv.concept_to_community.value,
-                    sv.community_to_concepts.value,
-                    800,
-                    700,
-                    "graph",
-                )
+                if selected_label not in ['', None]:
+                    selection = get_concept_graph(
+                        gp,
+                        level_to_label_to_network[0][selected_label],
+                        sv.concept_to_community.value,
+                        sv.community_to_concepts.value,
+                        800,
+                        700,
+                        "graph",
+                    )
             with c2:
                 if selection is not None:
                     selected_cids = sv.concept_to_cids.value[selection]
@@ -511,26 +519,19 @@ async def create(sv: SessionVariables, workflow=None):
 
                 if len(sv.final_report.value) > 0:
                     is_download_disabled = sv.final_report.value == ""
-                    name = (
-                        sv.final_report.value.split("\n")[0]
-                        .replace("#", "")
-                        .strip()
-                        .replace(" ", "_")
-                    )
-
                     c1, c2 = st.columns([1, 1])
                     with c1:
                         st.download_button(
                             "Download AI answer report as MD",
                             data=sv.final_report.value,
-                            file_name=f"{name}.md",
+                            file_name=f"condensed_answer.md",
                             mime="text/markdown",
                             disabled=sv.final_report.value == "",
                             key="qa_download_button",
                         )
                     with c2:
                         add_download_pdf(
-                            f"{name}.pdf",
+                            f"condensed_answer.pdf",
                             sv.final_report.value,
                             "Download AI answer report as PDF",
                             disabled=is_download_disabled,
@@ -542,3 +543,5 @@ async def create(sv: SessionVariables, workflow=None):
                         sv.final_report.value,
                         workflow,
                     )
+    with examples_tab:
+        example_outputs_ui.create_example_outputs_ui(examples_tab, workflow)

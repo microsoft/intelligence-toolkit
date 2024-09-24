@@ -28,8 +28,8 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
     intro_tab, prepare_tab, summarize_tab, generate_tab = st.tabs(
         [
             "Compare case groups workflow:",
-            "Upload data to narrate",
-            "Prepare data summary",
+            "Prepare case data",
+            "Prepare group comparisons",
             "Generate AI group reports",
         ]
     )

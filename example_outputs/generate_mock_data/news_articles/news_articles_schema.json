@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yourdomain.com/example.schema.json",
+  "title": "News Articles",
+  "description": "A schema to generate mock news article metadata",
+  "type": "object",
+  "properties": {
+    "articles": {
+      "type": "array",
+      "description": "The collection of news article descriptions",
+      "items": {
+        "type": "object",
+        "description": "An object list item",
+        "properties": {
+          "datetime": {
+            "type": "string",
+            "description": "The publication timestamp of the article, from 2020 onwards"
+          },
+          "category": {
+            "type": "string",
+            "description": "The category of the news article",
+            "enum": [
+              "world events",
+              "local events",
+              "sports",
+              "politics",
+              "culture",
+              "lifestyle"
+            ]
+          },
+          "subcategory": {
+            "type": "string",
+            "description": "The subcategory of the article"
+          },
+          "people": {
+            "type": "array",
+            "description": "The people referenced in the article",
+            "items": {
+              "type": "string"
+            }
+          },
+          "places": {
+            "type": "array",
+            "description": "The places referenced in the article",
+            "items": {
+              "type": "string"
+            }
+          },
+          "organizations": {
+            "type": "array",
+            "description": "The organizations referenced in the article",
+            "items": {
+              "type": "string"
+            }
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the article"
+          },
+          "summary": {
+            "type": "string",
+            "description": "A concise summary of the article"
+          }
+        },
+        "required": [
+          "datetime",
+          "category",
+          "subcategory",
+          "people",
+          "places",
+          "organizations",
+          "title",
+          "summary"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "articles"
+  ],
+  "additionalProperties": false
+}

@@ -162,7 +162,6 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                     for ix, row in selected_df.iterrows():
                         sv.input_texts.value.append(row.to_json())
                 sv.generated_texts.value = []
-                sv.generated_text_df.value = None
             st.text_area("AI text generation guidance", key=sv.text_generation_guidance.key, value=sv.text_generation_guidance.value,
                         help="Guidance to the generative AI model about how text should be generated from records")
             st.number_input("Temperature", min_value=0.0, max_value=2.0, value=sv.text_synthesis_temperature.value, step=0.1, key=sv.text_synthesis_temperature.key,
@@ -181,7 +180,7 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
 
             def on_dfs_update(df):
                 with df_placeholder:
-                    st.dataframe(df, height=250, hide_index=True, use_container_width=True)
+                    st.dataframe(df, height=600, hide_index=True, use_container_width=True)
                 sv.generated_text_df.value = df
                             
             if generate and selected_file is not None:
@@ -195,8 +194,9 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                     ai_configuration=ai_configuration,
                     input_texts=sv.input_texts.value,
                     generation_guidance=sv.text_generation_guidance.value,
-                    temperature=sv.synthesis_temperature.value,
+                    temperature=sv.text_synthesis_temperature.value,
                     df_update_callback=on_dfs_update,
+                    parallel_threads=10,
                     callback_batch=None
                 )
 

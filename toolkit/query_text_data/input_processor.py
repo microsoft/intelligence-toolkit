@@ -6,6 +6,7 @@ from enum import Enum
 from json import dumps, loads
 
 import networkx as nx
+import pandas as pd
 import pdfplumber
 
 import toolkit.query_text_data.graph_builder as graph_builder
@@ -21,25 +22,37 @@ def process_file_bytes(input_file_bytes, analysis_window_size: PeriodOption, cal
             cb.on_batch_change(fx + 1, len(input_file_bytes.keys()))
         bytes = input_file_bytes[file_name]
 
-        if file_name.endswith(".pdf"):
-            page_texts = []
-            pdf_reader = pdfplumber.open(io.BytesIO(bytes))
-            for px in range(len(pdf_reader.pages)):
-                page_text = pdf_reader.pages[px].extract_text()
-                page_texts.append(page_text)
-            doc_text = " ".join(page_texts)
-        elif file_name.endswith(".json"):
-            text_chunks = process_json_text(loads(bytes.decode("utf-8")), analysis_window_size)
+        if file_name.endswith(".csv"):
+            doc_texts = []
+            df = pd.read_csv(io.BytesIO(bytes))
+            for ix, row in df.iterrows():
+                cols = df.columns.values
+                doc_text = "; ".join([f"{col}: {str(row[col])}" for col in cols])
+                text_chunks = splitter.split(doc_text)
+                for index, text in enumerate(text_chunks):
+                    label = f"{file_name}_{ix + 1}"
+                    chunk = {"title": label, "text_chunk": text, "chunk_id": index + 1}
+                    text_to_chunks[label].append(dumps(chunk, indent=2))
         else:
-            doc_text = bytes.decode("utf-8")
+            if file_name.endswith(".pdf"):
+                page_texts = []
+                pdf_reader = pdfplumber.open(io.BytesIO(bytes))
+                for px in range(len(pdf_reader.pages)):
+                    page_text = pdf_reader.pages[px].extract_text()
+                    page_texts.append(page_text)
+                doc_text = " ".join(page_texts)
+            elif file_name.endswith(".json"):
+                text_chunks = process_json_text(loads(bytes.decode("utf-8")), analysis_window_size)
+            else:
+                doc_text = bytes.decode("utf-8")
 
-        if not file_name.endswith(".json"):
-            text_chunks = splitter.split(doc_text)
-            for index, text in enumerate(text_chunks):
-                chunk = {"title": file_name, "text_chunk": text, "chunk_id": index + 1}
-                text_chunks[index] = dumps(chunk, indent=2)
+            if not file_name.endswith(".json"):
+                text_chunks = splitter.split(doc_text)
+                for index, text in enumerate(text_chunks):
+                    chunk = {"title": file_name, "text_chunk": text, "chunk_id": index + 1}
+                    text_chunks[index] = dumps(chunk, indent=2)
 
-        text_to_chunks[file_name] = text_chunks
+            text_to_chunks[file_name] = text_chunks
     return text_to_chunks
 
 def process_json_text(text_json, period: PeriodOption):
