@@ -414,6 +414,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                 entity_records = build_entity_records(
                     sv.network_community_nodes.value,
                     sv.network_integrated_flags.value,
+                    sv.network_inferred_links.value,
                 )
 
                 sv.network_entity_df.value = pd.DataFrame(

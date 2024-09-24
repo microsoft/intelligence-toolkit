@@ -590,38 +590,50 @@ class TestIntegratedFlags:
         integrated_flags = pl.DataFrame()
         entities = []
         result = get_integrated_flags(integrated_flags, entities)
-        assert result == (0, 0, 0, 0)
+        assert result == (0, 0, 0, 0, 0)
 
     def test_no_entities(self, integrated_flags):
         entities = []
         result = get_integrated_flags(integrated_flags, entities)
-        assert result == (0, 0, 0, 0)
+        assert result == (0, 0, 0, 0, 0)
 
-    def test_community_flags(self, integrated_flags, qualified_entities):
-        community_flags, _, _, _ = get_integrated_flags(
-            integrated_flags, qualified_entities
-        )
-
-        assert community_flags == 4
-
-    def test_flagged(self, integrated_flags, qualified_entities):
-        _, flagged, _, _ = get_integrated_flags(integrated_flags, qualified_entities)
-
-        assert flagged == 2
-
-    def test_flagged_per_unflagged(self, integrated_flags, qualified_entities):
-        _, _, flagged_per_unflagged, _ = get_integrated_flags(
-            integrated_flags, qualified_entities
-        )
-
-        assert flagged_per_unflagged == 2
-
-    def test_flags_per_entity(self, integrated_flags, qualified_entities):
-        _, _, _, flags_per_entity = get_integrated_flags(
-            integrated_flags, qualified_entities
-        )
+    def test_base_entities(self, integrated_flags, qualified_entities):
+        (
+            community_flags,
+            flagged,
+            flagged_per_unflagged,
+            flags_per_entity,
+            total_entities,
+        ) = get_integrated_flags(integrated_flags, qualified_entities)
 
         assert flags_per_entity == 1.33
+        assert total_entities == 3
+        assert flagged_per_unflagged == 2
+        assert flagged == 2
+        assert community_flags == 4
+
+    def test_inferred_links(self, integrated_flags, qualified_entities) -> None:
+        qualified_entities.append("ENTITY==5")
+        inferred_links = defaultdict(set)
+        inferred_links["ENTITY==1"].add("ENTITY==5")
+
+        integrated_flags = integrated_flags.vstack(
+            pl.DataFrame({"qualified_entity": ["ENTITY==5"], "count": [0]})
+        )
+
+        (
+            community_flags,
+            flagged,
+            flagged_per_unflagged,
+            flags_per_entity,
+            total_entities,
+        ) = get_integrated_flags(integrated_flags, qualified_entities, inferred_links)
+
+        assert flags_per_entity == 1.0
+        assert total_entities == 4
+        assert flagged_per_unflagged == 1.0
+        assert flagged == 2.0
+        assert community_flags == 4
 
 
 class TestBuildEntityRecords:
@@ -655,6 +667,78 @@ class TestBuildEntityRecords:
 
         assert result == expected
 
+    def test_final_count_inferred(self, community_nodes, integrated_flags) -> None:
+        inferred_links = defaultdict(set)
+        inferred_links["ENTITY==1"].add("ENTITY==5")
+        result = build_entity_records(community_nodes, integrated_flags, inferred_links)
+
+        expected = [
+            ("1", 1, 0, 4, 4, 2, 1.0, 1.0),
+            ("2", 0, 0, 4, 4, 2, 1.0, 1.0),
+            ("3", 3, 0, 4, 4, 2, 1.0, 1.0),
+            ("4", 0, 1, 4, 1, 1, 0.25, 0.33),
+            ("5", 0, 1, 4, 1, 1, 0.25, 0.33),
+            ("6", 0, 1, 4, 1, 1, 0.25, 0.33),
+        ]
+        assert result == expected
+
+    def test_final_count_inferred_existant(
+        self, community_nodes, integrated_flags
+    ) -> None:
+        inferred_links = defaultdict(set)
+        inferred_links["ENTITY==1"].add("ENTITY==2")
+        result = build_entity_records(community_nodes, integrated_flags, inferred_links)
+
+        expected = [
+            ("1", 1, 0, 3, 4, 2, 1.33, 2.0),
+            ("2", 0, 0, 3, 4, 2, 1.33, 2.0),
+            ("3", 3, 0, 3, 4, 2, 1.33, 2.0),
+            ("4", 0, 1, 3, 0, 0, 0.0, 0.0),
+            ("5", 0, 1, 3, 0, 0, 0.0, 0.0),
+            ("6", 0, 1, 3, 0, 0, 0.0, 0.0),
+        ]
+
+        assert result == expected
+
+    def test_final_count_inferred_with_flags(
+        self, community_nodes, integrated_flags
+    ) -> None:
+        inferred_links = defaultdict(set)
+        inferred_links["ENTITY==3"].add("ENTITY==6")
+        result = build_entity_records(community_nodes, integrated_flags, inferred_links)
+
+        expected = [
+            ("1", 1, 0, 4, 4, 2, 1.0, 1.0),
+            ("2", 0, 0, 4, 4, 2, 1.0, 1.0),
+            ("3", 3, 0, 4, 4, 2, 1.0, 1.0),
+            ("4", 0, 1, 4, 3, 1, 0.75, 0.33),
+            ("5", 0, 1, 4, 3, 1, 0.75, 0.33),
+            ("6", 0, 1, 4, 3, 1, 0.75, 0.33),
+        ]
+
+        assert result == expected
+
+    def test_final_count_inferred_both_with_flags(
+        self, community_nodes, integrated_flags
+    ) -> None:
+        inferred_links = defaultdict(set)
+        inferred_links["ENTITY==3"].add("ENTITY==6")
+        integrated_flags = integrated_flags.vstack(
+            pl.DataFrame({"qualified_entity": ["ENTITY==6"], "count": [1]})
+        )
+        result = build_entity_records(community_nodes, integrated_flags, inferred_links)
+
+        expected = [
+            ("1", 1, 0, 4, 5, 3, 1.25, 3.0),
+            ("2", 0, 0, 4, 5, 3, 1.25, 3.0),
+            ("3", 3, 0, 4, 5, 3, 1.25, 3.0),
+            ("4", 0, 1, 4, 4, 2, 1.0, 1.0),
+            ("5", 0, 1, 4, 4, 2, 1.0, 1.0),
+            ("6", 1, 1, 4, 4, 2, 1.0, 1.0),
+        ]
+
+        assert result == expected
+
     def test_final_not_integrated(self, community_nodes):
         integrated_flags = None
         result = build_entity_records(community_nodes, integrated_flags)
@@ -668,5 +752,4 @@ class TestBuildEntityRecords:
             ("6", 0, 1, 3, 0, 0, 0, 0),
         ]
 
-        assert result == expected
         assert result == expected

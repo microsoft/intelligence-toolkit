@@ -125,7 +125,7 @@ def get_subgraph(
     entity_graph: nx.Graph,
     nodes: list[str | int],
     random_seed: int = 42,
-    max_network_entities: int = 10,
+    max_network_entities: int = 20,
 ) -> tuple[list, dict]:
     entity_to_community = {}
     community_nodes = []
@@ -157,7 +157,7 @@ def get_subgraph(
 
 def get_community_nodes(
     entity_graph: nx.Graph,
-    max_network_entities: int = 50,
+    max_network_entities: int = 20,
 ) -> tuple[list, dict]:
     # get set of connected nodes list
     sorted_components = sorted(
@@ -205,41 +205,89 @@ def build_networks(
         max_network_entities,
     )
 
+    # add inferred links to numbers
+
     return community_nodes, entity_to_community
 
 
 def get_integrated_flags(
-    integrated_flags: pl.DataFrame, entities: list[str]
-) -> tuple[Any, int, float, int]:
+    integrated_flags: pl.DataFrame,
+    entities: list[str],
+    inferred_links: dict[set] | None = None,
+) -> tuple[Any, int, float, int, int]:
+    total_entities = len(entities)
     if integrated_flags.is_empty():
-        return 0, 0, 0, 0
+        return 0, 0, 0, 0, total_entities
 
     flags_df = integrated_flags.filter(pl.col("qualified_entity").is_in(entities))
     community_flags = flags_df.get_column("count").sum()
     flagged = flags_df.filter(pl.col("count") > 0).height
-    unflagged = len(entities) - flagged
+
+    for n in entities:  # entities from a network
+        if inferred_links:
+            if n in inferred_links:
+                if n not in entities:
+                    flags = integrated_flags.filter(pl.col("qualified_entity") == n)[
+                        "count"
+                    ].sum()
+                    community_flags += flags
+                    total_entities += 1
+                else:
+                    for l in inferred_links[n]:
+                        if l not in entities:
+                            flags = integrated_flags.filter(
+                                pl.col("qualified_entity") == l
+                            )["count"].sum()
+                            community_flags += flags
+                            total_entities += 1
+                            flagged += 1 if flags > 0 else 0
+
+            for i in inferred_links:
+                if n in inferred_links[i]:
+                    if i not in entities:
+                        flags = integrated_flags.filter(
+                            pl.col("qualified_entity") == i
+                        )["count"].sum()
+                        community_flags += flags
+                        total_entities += 1
+                        flagged += 1 if flags > 0 else 0
+
+    unflagged = total_entities - flagged
     flagged_per_unflagged = flagged / unflagged if unflagged > 0 else 0
+
     flagged_per_unflagged = round(flagged_per_unflagged, 2)
 
     flags_per_entity = round(
-        community_flags / len(entities) if len(entities) > 0 else 0, 2
+        community_flags / total_entities if total_entities > 0 else 0, 2
     )
-    return community_flags, flagged, flagged_per_unflagged, flags_per_entity
+    return (
+        community_flags,
+        flagged,
+        flagged_per_unflagged,
+        flags_per_entity,
+        total_entities,
+    )
 
 
 def build_entity_records(
-    community_nodes: list[str], integrated_flags: pl.DataFrame | None = None
+    community_nodes: list[str],
+    integrated_flags: pl.DataFrame | None = None,
+    inferred_links: defaultdict[set] | None = None,
 ) -> list[tuple[str, int, int, int, Any, int, float, float]]:
     if integrated_flags is None:
         integrated_flags = pl.DataFrame()
 
     entity_records = []
     for ix, entities in enumerate(community_nodes):
-        (community_flags, flagged, flagged_per_unflagged, flags_per_entity) = (
-            get_integrated_flags(integrated_flags, entities)
-        )
+        (
+            community_flags,
+            flagged,
+            flagged_per_unflagged,
+            flags_per_entity,
+            total_entities,
+        ) = get_integrated_flags(integrated_flags, entities, inferred_links)
 
-        for n in entities:
+        for n in entities:  # entities from a network
             flags = 0
             if not integrated_flags.is_empty():
                 flags = integrated_flags.filter(pl.col("qualified_entity") == n)[
@@ -251,7 +299,7 @@ def build_entity_records(
                     n.split(ATTRIBUTE_VALUE_SEPARATOR)[1],
                     flags,
                     ix,
-                    len(entities),
+                    total_entities,
                     community_flags,
                     flagged,
                     flags_per_entity,
