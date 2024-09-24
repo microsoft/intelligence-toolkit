@@ -134,7 +134,7 @@ def build_exposure_report(
                 if ENTITY_LABEL in step:
                     step = f"{step} [linked to {node_value[0]['flags'] if len(node_value) > 0 and 'flags' in node_value[0] else 0} flags]"
                 else:
-                    step = f"{step} [linked to {node_value[0]['entities']} entities]"
+                    step = f"{step} [linked to {node_value[0]['entities'] if len(node_value) > 0 else 0} entities]"
                 context += f"{indent}{step}\n"
             if ix < len(path) - 1:
                 context += f"{indent}--->\n"
