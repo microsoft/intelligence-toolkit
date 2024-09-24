@@ -38,7 +38,7 @@ class BaseEmbedder(ABC, BaseBatchAsync):
         db_name: str = "embeddings",
         db_path=CACHE_PATH,
         max_tokens=DEFAULT_LLM_MAX_TOKENS,
-        concurrent_coroutines=100,
+        concurrent_coroutines=20,
     ) -> None:
         self.vector_store = VectorStore(db_name, db_path, schema)
         self.max_tokens = max_tokens
@@ -60,7 +60,9 @@ class BaseEmbedder(ABC, BaseBatchAsync):
                 data["text"] = text
                 logger.info("Truncated text to max tokens")
             try:
-                embedding = await self._generate_embedding_async(data["text"])
+                embedding = await asyncio.wait_for(
+                    self._generate_embedding_async(data["text"]), timeout=90
+                )
                 data["additional_details"] = json.dumps(
                     data["additional_details"] if "additional_details" in data else {}
                 )
@@ -143,7 +145,7 @@ class BaseEmbedder(ABC, BaseBatchAsync):
             new_items = [
                 item for item in batch_data if item["text"] not in loaded_texts
             ]
-
+            print("got ", len(new_items), "new items")
             if len(new_items) > 0:
                 tasks = [
                     asyncio.create_task(self.embed_one_async(item, callbacks))
@@ -156,13 +158,14 @@ class BaseEmbedder(ABC, BaseBatchAsync):
                 result = await tqdm_asyncio.gather(*tasks)
                 if callbacks:
                     await progress_task
-
+                print("done??? save it now")
                 embeddings = [embedding[0] for embedding in result]
                 new_data = [embedding[1] for embedding in result]
                 all_data.extend(new_data)
 
                 final_embeddings.extend(embeddings)
                 if cache_data:
+                    print("store????")
                     self.vector_store.save(new_data)
                     self.vector_store.update_duckdb_data()
 

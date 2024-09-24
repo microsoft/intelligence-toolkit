@@ -586,6 +586,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                             selected_entity,
                             c_nodes,
                             network_entities_graph,
+                            sv.network_inferred_links.value,
                         )
                         sv.network_risk_exposure.value = context
                 else:

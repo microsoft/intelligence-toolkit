@@ -9,6 +9,7 @@ from tqdm.asyncio import tqdm_asyncio
 
 from toolkit.AI.base_batch_async import BaseBatchAsync
 from toolkit.AI.client import OpenAIClient
+from toolkit.helpers.decorators import retry_with_backoff
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 
@@ -17,6 +18,7 @@ class BaseChat(BaseBatchAsync, OpenAIClient):
         OpenAIClient.__init__(self, configuration, concurrent_coroutines)
         self.semaphore = asyncio.Semaphore(concurrent_coroutines)
 
+    @retry_with_backoff()
     async def generate_text_async(self, messages, callbacks, **llm_kwargs):
         async with self.semaphore:
             try:
@@ -29,6 +31,7 @@ class BaseChat(BaseBatchAsync, OpenAIClient):
                 raise Exception(msg) from e
             return chat
 
+    @retry_with_backoff()
     async def generate_texts_async(
         self,
         messages_list: list[list[dict[str, str]]],
