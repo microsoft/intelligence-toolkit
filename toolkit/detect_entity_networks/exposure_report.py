@@ -17,12 +17,23 @@ def build_exposure_data(
     c_nodes: list[str],
     selected_entity: str,
     graph: nx.Graph,
+    inferred_links: dict[set] | None = None,
 ):
     if integrated_flags.is_empty():
         return ""
 
     qualified_selected = f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}{selected_entity}"
     rdf = integrated_flags
+    c_nodes = c_nodes.copy()
+    if inferred_links is not None:
+        for k, v in inferred_links.items():
+            if k not in c_nodes and k in graph.nodes():
+                c_nodes.extend([k])
+            if v not in c_nodes:
+                for abc in inferred_links[k]:
+                    if abc in graph.nodes():
+                        c_nodes.extend([abc])
+
     rdf = rdf.filter(pl.col("qualified_entity").is_in(c_nodes))
     rdf = rdf.group_by(["qualified_entity", "flag"]).agg(pl.col("count").sum())
     all_flagged = (
@@ -92,6 +103,7 @@ def build_exposure_data(
 
     for path, sources in path_items.items():
         path_list = []
+        sources.sort()
         path_list.append(sources)
 
         for ixx, node in enumerate(json.loads(path)):
@@ -115,12 +127,10 @@ def build_exposure_report(
     selected_entity: str,
     c_nodes: list[str],
     graph: nx.Graph,
+    inferred_links: dict[set] | None = None,
 ) -> str:
     selected_data, all_paths, nodes = build_exposure_data(
-        integrated_flags,
-        c_nodes,
-        selected_entity,
-        graph,
+        integrated_flags, c_nodes, selected_entity, graph, inferred_links
     )
     context = "##### Flag Exposure Paths\n\n"
     context += f"The selected entity **{selected_entity}** has **{selected_data['direct']}** direct flags and is linked to **{selected_data['indirect']}** indirect flags via **{selected_data['paths']}** paths from **{selected_data['entities']}** related entities:\n\n"
@@ -134,7 +144,7 @@ def build_exposure_report(
                 if ENTITY_LABEL in step:
                     step = f"{step} [linked to {node_value[0]['flags'] if len(node_value) > 0 and 'flags' in node_value[0] else 0} flags]"
                 else:
-                    step = f"{step} [linked to {node_value[0]['entities']} entities]"
+                    step = f"{step} [linked to {node_value[0]['entities'] if len(node_value) > 0 else 0} entities]"
                 context += f"{indent}{step}\n"
             if ix < len(path) - 1:
                 context += f"{indent}--->\n"

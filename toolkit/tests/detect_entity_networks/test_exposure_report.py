@@ -2,6 +2,8 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 
+from collections import defaultdict
+
 import networkx as nx
 import polars as pl
 import pytest
@@ -29,8 +31,9 @@ class TestExposureData:
     def flags(self):
         return pl.DataFrame(
             {
-                "entity": ["A", "C", "D", "F", "Z"],
+                "entity": ["A", "C", "D", "F", "Z", "X"],
                 "type": [
+                    "flags_numb",
                     "flags_numb",
                     "flags_numb",
                     "flags_numb",
@@ -43,14 +46,16 @@ class TestExposureData:
                     "flags_numb",
                     "flags_numb",
                     "flags_numb",
+                    "flags_numb",
                 ],
-                "count": [8, 2, 3, 0, 3],
+                "count": [8, 2, 3, 0, 3, 2],
                 "qualified_entity": [
                     "ENTITY==A",
                     "ENTITY==C",
                     "ENTITY==D",
                     "ENTITY==F",
                     "ENTITY==Z",
+                    "ENTITY==X",
                 ],
             }
         )
@@ -59,23 +64,18 @@ class TestExposureData:
     def c_nodes(self):
         return ["ENTITY==A", "ENTITY==C", "ENTITY==D"]
 
-    def test_generation_summary(self, graph, flags, c_nodes):
-        summary, _, _ = build_exposure_data(flags, c_nodes, "C", graph)
-
-        expected_summary = {"direct": 2, "indirect": 11, "paths": 3, "entities": 2}
-
-        assert summary == expected_summary
-
-    def test_generation_paths(self, graph, flags, c_nodes):
-        _, paths, _ = build_exposure_data(flags, c_nodes, "C", graph)
+    def test_generation_paths_summary(self, graph, flags, c_nodes):
+        summary, paths, _ = build_exposure_data(flags, c_nodes, "C", graph)
 
         expected_paths = [
             [["ENTITY==D"], ["ENTITY==A"], ["ENTITY==C"]],
             [["ENTITY==D"], ["ENTITY==F"], ["ENTITY==C"]],
             [["ENTITY==A"], ["ENTITY==C"]],
         ]
+        expected_summary = {"direct": 2, "indirect": 11, "paths": 3, "entities": 2}
 
         assert len(paths) == len(expected_paths)
+        assert summary == expected_summary
         for ex in expected_paths:
             assert ex in paths
 
@@ -90,3 +90,48 @@ class TestExposureData:
         assert len(nodes) == len(expected_nodes)
         for ex in expected_nodes:
             assert ex in nodes
+
+    def test_generation_nodes_inferred_not_passed(self, graph, flags, c_nodes):
+        graph.add_edge("ENTITY==X", "ENTITY==F")
+        _, _, nodes = build_exposure_data(flags, c_nodes, "X", graph)
+
+        expected_nodes = [
+            {"node": "ENTITY==C", "flags": 2},
+            {"node": "ENTITY==D", "flags": 3},
+        ]
+        for ex in expected_nodes:
+            assert ex in nodes
+
+    def test_generation_nodes_inferred_passed(self, graph, flags, c_nodes):
+        graph.add_edge("ENTITY==X", "ENTITY==F")
+        inferred_links = defaultdict(set)
+        inferred_links["ENTITY==X"].add("ENTITY==F")
+        _, _, nodes = build_exposure_data(flags, c_nodes, "X", graph, inferred_links)
+
+        expected_nodes = [
+            {"node": "ENTITY==C", "flags": 2},
+            {"node": "ENTITY==D", "flags": 3},
+            {"node": "ENTITY==X", "flags": 2},
+        ]
+        for ex in expected_nodes:
+            assert ex in nodes
+
+    def test_generation_nodes_inferred_path(self, graph, flags, c_nodes) -> None:
+        graph.add_edge("ENTITY==X", "ENTITY==F")
+        inferred_links = defaultdict(set)
+        inferred_links["ENTITY==X"].add("ENTITY==F")
+        _, paths, nodes = build_exposure_data(
+            flags, c_nodes, "F", graph, inferred_links
+        )
+
+        expected_nodes = [
+            {"node": "ENTITY==C", "flags": 2},
+            {"node": "ENTITY==D", "flags": 3},
+            {"node": "ENTITY==X", "flags": 2},
+        ]
+        for ex in expected_nodes:
+            assert ex in nodes
+
+        assert [["ENTITY==A"], ["ENTITY==C"], ["ENTITY==F"]] in paths
+        assert [["ENTITY==A"], ["ENTITY==D"], ["ENTITY==F"]] in paths
+        assert [["ENTITY==C", "ENTITY==D", "ENTITY==X"], ["ENTITY==F"]] in paths

@@ -20,12 +20,12 @@ class TestBuildRankedGroups:
         ldf = pl.DataFrame(
             {
                 "Group": ["A", "A", "B", "B"],
-                "Attribute Value": [1, 2, 3, 4],
-                "Attribute Rank": [1, 2, 1, 2],
-                "Group Rank": [1, 1, 1, 1],
-                "Temporal Column": ["2021-01", "2021-02", "2021-01", "2021-02"],
-                "Temporal Column Window Rank": [1, 2, 1, 2],
-                "Temporal Column Window Delta": [0, 1, 0, 1],
+                "attribute_value": [1, 2, 3, 4],
+                "attribute_rank": [1, 2, 1, 2],
+                "group_rank": [1, 1, 1, 1],
+                "temporal column": ["2021-01", "2021-02", "2021-01", "2021-02"],
+                "temporal column_window_rank": [1, 2, 1, 2],
+                "temporal column_window_delta": [0, 1, 0, 1],
             }
         )
 
@@ -34,9 +34,9 @@ class TestBuildRankedGroups:
         adf = pl.DataFrame(
             {
                 "Group": ["A", "A", "B", "B"],
-                "Attribute Value": [1, 2, 3, 4],
-                "Attribute Rank": [1, 2, 1, 2],
-                "Group Rank": [1, 1, 1, 1],
+                "attribute_value": [1, 2, 3, 4],
+                "attribute_rank": [1, 2, 1, 2],
+                "group_rank": [1, 1, 1, 1],
             }
         )
 
@@ -44,29 +44,29 @@ class TestBuildRankedGroups:
 
     def test_build_ranked_df_temporal_columns(self, sample_data):
         ldf, gdf, adf = sample_data
-        temporal = "Temporal Column"
+        temporal = "temporal column"
         groups = ["Group"]
 
         result_df = build_ranked_df(ldf, gdf, adf, temporal, groups)
 
-        assert "Temporal Column Window" in result_df.columns
-        assert "Temporal Column Window Rank" in result_df.columns
-        assert "Temporal Column Window Delta" in result_df.columns
+        assert "temporal column_window" in result_df.columns
+        assert "temporal column_window_rank" in result_df.columns
+        assert "temporal column_window_delta" in result_df.columns
 
     def test_build_ranked_df_temporal(self, sample_data):
         ldf, gdf, adf = sample_data
-        temporal = "Temporal Column"
+        temporal = "temporal column"
         groups = ["Group"]
 
         result_df = build_ranked_df(ldf, gdf, adf, temporal, groups)
 
         expected_values = {
             "Group": ["A", "A", "B", "B"],
-            "Attribute Value": [1, 2, 3, 4],
-            "Attribute Rank": [1, 2, 1, 2],
-            "Group Rank": [1, 1, 1, 1],
-            "Temporal Column Window Rank": [1, 2, 1, 2],
-            "Temporal Column Window Delta": [0, 1, 0, 1],
+            "attribute_value": [1, 2, 3, 4],
+            "attribute_rank": [1, 2, 1, 2],
+            "group_rank": [1, 1, 1, 1],
+            "temporal column_window_rank": [1, 2, 1, 2],
+            "temporal column_window_delta": [0, 1, 0, 1],
         }
 
         for col, values in expected_values.items():
@@ -79,9 +79,9 @@ class TestBuildRankedGroups:
 
         result_df = build_ranked_df(ldf, gdf, adf, temporal, groups)
 
-        assert "Temporal Column Window" not in result_df.columns
-        assert "Temporal Column Window Rank" not in result_df.columns
-        assert "Temporal Column Window Delta" not in result_df.columns
+        assert "temporal column_window" not in result_df.columns
+        assert "temporal_column_window_rank" not in result_df.columns
+        assert "temporal_column_window_delta" not in result_df.columns
 
     def test_build_ranked_df_no_temporal(self, sample_data):
         ldf, gdf, adf = sample_data
@@ -92,9 +92,9 @@ class TestBuildRankedGroups:
 
         expected_values = {
             "Group": ["A", "A", "B", "B"],
-            "Attribute Value": [1, 2, 3, 4],
-            "Attribute Rank": [1, 2, 1, 2],
-            "Group Rank": [1, 1, 1, 1],
+            "attribute_value": [1, 2, 3, 4],
+            "attribute_rank": [1, 2, 1, 2],
+            "group_rank": [1, 1, 1, 1],
         }
 
         for col, values in expected_values.items():
@@ -102,17 +102,17 @@ class TestBuildRankedGroups:
 
     def test_build_ranked_df_attribute_rank_type(self, sample_data):
         ldf, gdf, adf = sample_data
-        temporal = "Temporal Column"
+        temporal = "temporal column"
         groups = ["Group"]
 
         result_df = build_ranked_df(ldf, gdf, adf, temporal, groups)
 
-        assert result_df["Attribute Rank"].dtype == pl.Int32
-        assert result_df["Group Rank"].dtype == pl.Int32
+        assert result_df["attribute_rank"].dtype == pl.Int32
+        assert result_df["group_rank"].dtype == pl.Int32
 
     def test_build_ranked_df_sorted(self, sample_data):
         ldf, gdf, adf = sample_data
-        temporal = "Temporal Column"
+        temporal = "temporal column"
         groups = ["Group"]
 
         result_df = build_ranked_df(ldf, gdf, adf, temporal, groups)
@@ -127,9 +127,9 @@ class TestFilterDf:
         return pd.DataFrame(
             {
                 "Group": ["A", "A", "B", "B", "C"],
-                "Attribute Value": ["X", "B", "BCD", "ABC", "X"],
-                "Attribute Rank": [1, 2, 1, 2, 1],
-                "Group Rank": [1, 1, 1, 1, 1],
+                "attribute_value": ["X", "B", "BCD", "ABC", "X"],
+                "attribute_rank": [1, 2, 1, 2, 1],
+                "group_rank": [1, 1, 1, 1, 1],
             }
         )
 
@@ -143,14 +143,14 @@ class TestFilterDf:
         assert result.equals(expected)
 
     def test_filter_multiple(self, dataset) -> None:
-        result = filter_df(dataset, ["Group:A", "Attribute Value:X"])
+        result = filter_df(dataset, ["Group:A", "attribute_value:X"])
         expected = dataset[
-            (dataset["Group"] == "A") & (dataset["Attribute Value"] == "X")
+            (dataset["Group"] == "A") & (dataset["attribute_value"] == "X")
         ]
         assert result.equals(expected)
 
     def test_filter_multiple_attr_inexistent(self, dataset) -> None:
-        result = filter_df(dataset, ["Group:A", "Attribute Value:F"])
+        result = filter_df(dataset, ["Group:A", "attribute_value:F"])
         assert len(result) == 0
 
 
@@ -199,7 +199,7 @@ class TestBuildAttributeDf:
                     "B",
                     "B",
                 ],
-                "Attribute Value": [
+                "attribute_value": [
                     "Aggregate1:20",
                     "Aggregate1:30",
                     "Aggregate1:40",
@@ -217,8 +217,8 @@ class TestBuildAttributeDf:
                     "Aggregate2:15",
                     "Aggregate2:7",
                 ],
-                "Attribute Count": [1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1],
-                "Attribute Rank": [
+                "attribute_count": [1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1],
+                "attribute_rank": [
                     1.0,
                     2.0,
                     1.0,
@@ -237,14 +237,14 @@ class TestBuildAttributeDf:
                     1.0,
                 ],
             }
-        ).sort(by=["Group", "Attribute Value"])
+        ).sort(by=["Group", "attribute_value"])
 
     @pytest.fixture()
     def expected_dataset_2(self) -> pl.DataFrame:
         return pl.DataFrame(
             {
                 "Group": ["A"] * 6 + ["B"] * 6,
-                "Attribute Value": [
+                "attribute_value": [
                     "Aggregate1:10",
                     "Aggregate1:20",
                     "Aggregate1:40",
@@ -258,10 +258,10 @@ class TestBuildAttributeDf:
                     "Aggregate2:20",
                     "Aggregate2:5",
                 ],
-                "Attribute Count": [1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0],
-                "Attribute Rank": [1, 1, 2, 2, 2, 1, 2, 2, 1, 1, 1, 2],
+                "attribute_count": [1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0],
+                "attribute_rank": [1, 1, 2, 2, 2, 1, 2, 2, 1, 1, 1, 2],
             }
-        ).sort(by=["Group", "Attribute Value"])
+        ).sort(by=["Group", "attribute_value"])
 
     @pytest.fixture()
     def expected_dataset_3(self) -> pl.DataFrame:
@@ -303,7 +303,7 @@ class TestBuildAttributeDf:
                         "BZ",
                         "BZ",
                     ],
-                    "Attribute Value": [
+                    "attribute_value": [
                         "Aggregate1:20",
                         "Aggregate2:1",
                         "Aggregate1:40",
@@ -337,17 +337,17 @@ class TestBuildAttributeDf:
                         "Aggregate1:50",
                         "Aggregate2:7",
                     ],
-                    "Attribute Count": [1] * 8 + [0] * 24,
-                    "Attribute Rank": [1.0] * 8 + [4.0] * 24,
+                    "attribute_count": [1] * 8 + [0] * 24,
+                    "attribute_rank": [1.0] * 8 + [4.0] * 24,
                 }
             )
             .with_columns(
                 [
-                    pl.col("Attribute Rank").cast(pl.UInt32),
-                    pl.col("Attribute Count").cast(pl.UInt32),
+                    pl.col("attribute_rank").cast(pl.UInt32),
+                    pl.col("attribute_count").cast(pl.UInt32),
                 ]
             )
-            .sort(by=["Group", "Group2", "Attribute Value"])
+            .sort(by=["Group", "Group2", "attribute_value"])
         )
 
     def test_build_attribute_df(self, expected_dataset_1) -> None:
@@ -363,7 +363,7 @@ class TestBuildAttributeDf:
 
         result_df1 = build_attribute_df(
             df1, ["Group"], ["Aggregate1", "Aggregate2"]
-        ).sort(by=["Group", "Attribute Value"])
+        ).sort(by=["Group", "attribute_value"])
         result_df1.equals(expected_dataset_1)
 
     def test_with_missing_values(self, dataset_2, expected_dataset_2):
@@ -371,7 +371,7 @@ class TestBuildAttributeDf:
             dataset_2,
             ["Group"],
             ["Aggregate1", "Aggregate2"],
-        ).sort(by=["Group", "Attribute Value"])
+        ).sort(by=["Group", "attribute_value"])
 
         assert result_df2.equals(expected_dataset_2)
 
@@ -380,6 +380,6 @@ class TestBuildAttributeDf:
             dataset_3,
             ["Group", "Group2"],
             ["Aggregate1", "Aggregate2"],
-        ).sort(by=["Group", "Group2", "Attribute Value"])
+        ).sort(by=["Group", "Group2", "attribute_value"])
 
         assert result_df3.equals(expected_dataset_3)

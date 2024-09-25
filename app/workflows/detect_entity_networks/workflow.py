@@ -31,9 +31,13 @@ from toolkit.detect_entity_networks.index_and_infer import (build_inferred_df,
                                                             index_nodes,
                                                             infer_nodes)
 from toolkit.detect_entity_networks.prepare_model import (
-    build_flag_links, build_flags, build_groups, build_main_graph,
-    format_data_columns, generate_attribute_links)
-from toolkit.detect_entity_networks.protected_mode import protect_data
+    build_flag_links,
+    build_flags,
+    build_groups,
+    build_main_graph,
+    format_data_columns,
+    generate_attribute_links,
+)
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
@@ -126,21 +130,6 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                             selected_df = format_data_columns(
                                 pl.from_pandas(selected_df), value_cols, entity_col
                             )
-                            if sv_home.protected_mode.value:
-                                (
-                                    selected_df,
-                                    entities_renamed,
-                                    attributes_renamed,
-                                ) = protect_data(
-                                    selected_df,
-                                    value_cols,
-                                    entity_col,
-                                    sv.network_entities_renamed.value,
-                                    sv.network_attributes_renamed.value,
-                                )
-                                sv.network_entities_renamed.value = entities_renamed
-                                sv.network_attributes_renamed.value = attributes_renamed
-
                             if link_type == "Entity-Attribute":
                                 attribute_links = generate_attribute_links(
                                     selected_df,
@@ -213,22 +202,6 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                 num_entities = len(entity_nodes)
                 num_attributes = len(all_nodes) - num_entities
                 num_edges = len(sv.network_overall_graph.value.edges())
-
-                original_df = pd.DataFrame(
-                    sv.network_attributes_list.value, columns=["Attribute"]
-                )
-                atributes_entities = []
-                unique_names = original_df["Attribute"].unique()
-                for i, name in enumerate(unique_names, start=1):
-                    name_format = name.split("==")[0].strip()
-                    atributes_entities.append(
-                        (
-                            name,
-                            f"{name_format}=={name_format}_{i!s}",
-                        )
-                    )
-
-                sv.network_attributes_renamed.value = atributes_entities
 
             if len(sv.network_integrated_flags.value) > 0:
                 num_flags = sv.network_integrated_flags.value["count"].sum()
@@ -441,6 +414,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                 entity_records = build_entity_records(
                     sv.network_community_nodes.value,
                     sv.network_integrated_flags.value,
+                    sv.network_inferred_links.value,
                 )
 
                 sv.network_entity_df.value = pd.DataFrame(
@@ -487,13 +461,6 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                         hide_index=True,
                         use_container_width=True,
                     )
-
-                entities = sv.network_entity_df.value.copy()
-                entities_renamed = []
-                for i, name in enumerate(entities["Entity ID"], start=1):
-                    entities_renamed.append((name, f"Entity ID_{i!s}"))
-                sv.network_entities_renamed.value = entities_renamed
-
     with view_tab:
         if len(sv.network_entity_df.value) == 0:
             st.warning("Detect networks to continue.")
@@ -619,6 +586,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                             selected_entity,
                             c_nodes,
                             network_entities_graph,
+                            sv.network_inferred_links.value,
                         )
                         sv.network_risk_exposure.value = context
                 else:

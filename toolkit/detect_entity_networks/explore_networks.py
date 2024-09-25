@@ -91,6 +91,9 @@ def build_network_from_entities(
         ent_neighbors = set(graph.neighbors(node))
         if node in inferred_links:
             ent_neighbors = ent_neighbors.union(inferred_links[node])
+        for i in inferred_links:
+            if node in inferred_links[i]:
+                ent_neighbors = ent_neighbors.union([node])
 
         ent_neighbors_not_trimmed = [
             ent_neighbor

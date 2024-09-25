@@ -28,5 +28,9 @@ class BaseBatchAsync:
             for callback in callbacks:
                 callback.on_batch_change(self.completed_tasks, self.total_tasks)
 
+        if self.completed_tasks == self.total_tasks:
+            for callback in callbacks:
+                callback.on_batch_change(self.completed_tasks, self.total_tasks)
+
     def progress_callback(self) -> None:
         self.completed_tasks += 1

@@ -3,7 +3,6 @@
 #
 
 
-import pandas as pd
 import polars as pl
 
 
@@ -115,7 +114,6 @@ def build_temporal_data(
             )
         tdf = tdf.with_columns(
             pl.col(f"{temporal}_window_rank").cast(pl.Int64),
-            pl.col(f"{temporal}_window_count").cast(pl.Int64),
         )
         tdfs.append(tdf)
     return pl.concat(tdfs).sort(by=temporal)

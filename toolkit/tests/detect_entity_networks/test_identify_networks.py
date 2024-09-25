@@ -175,7 +175,7 @@ class TestProjectEntityGraph:
             simple_graph, trimmed_nodeset, inferred_links, supporting_attribute_types
         )
         assert ("ENTITY==1", "ENTITY==2") in projected.edges()
-        assert ("ENTITY==1", "ENTITY==5") not in projected.edges()
+        assert ("ENTITY==1", "ENTITY==5") in projected.edges()
         assert ("ENTITY==5", "ENTITY==3") in projected.edges()
 
     def test_edges_inferred_no_trimmed(
@@ -264,6 +264,7 @@ class TestGetEntityNeighbors:
         G.add_node("node4")
         G.add_node("node5")
         G.add_node("node6")
+        G.add_node("node7")
         G.add_edge("node0", "node1")
         G.add_edge("node1", "node2")
         G.add_edge("node1", "node1")
@@ -280,9 +281,9 @@ class TestGetEntityNeighbors:
     def test_node_not_int_graph(self, graph):
         with pytest.raises(
             ValueError,
-            match="Node node7 not in graph",
+            match="Node node77 not in graph",
         ):
-            get_entity_neighbors(graph, [], [], "node7")
+            get_entity_neighbors(graph, [], [], "node77")
 
     def test_no_inferred(self, graph):
         result = get_entity_neighbors(graph, [], [], "node5")
@@ -304,9 +305,26 @@ class TestGetEntityNeighbors:
         result = get_entity_neighbors(graph, [], [], "node1")
         assert result == ["node0", "node2", "node3"]
 
+    def test_inferred_mixed(self, graph) -> None:
+        inferred_links = defaultdict(set)
+        inferred_links["node5"].add("node2")
+        inferred_links["node12"].add("node127")
+        result = get_entity_neighbors(graph, inferred_links, [], "node2")
+        assert result == ["node1", "node3", "node5"]
 
-def mock_get_entity_neighbors(overall_graph, inferred_links, trimmed_nodeset, node):
-    return overall_graph.neighbors(node)
+    def test_inferred_mixed_contrary(self, graph) -> None:
+        inferred_links = defaultdict(set)
+        inferred_links["node5"].add("node2")
+        result = get_entity_neighbors(graph, inferred_links, [], "node5")
+        assert result == ["node2", "node4"]
+
+    def test_inferred_mixed_multiple(self, graph) -> None:
+        inferred_links = defaultdict(set)
+        inferred_links["node5"].add("node2")
+        inferred_links["node7"].add("node2")
+        inferred_links["node12"].add("node127")
+        result = get_entity_neighbors(graph, inferred_links, [], "node2")
+        assert result == ["node1", "node3", "node5", "node7"]
 
 
 class TestEntityGraph:
@@ -590,38 +608,73 @@ class TestIntegratedFlags:
         integrated_flags = pl.DataFrame()
         entities = []
         result = get_integrated_flags(integrated_flags, entities)
-        assert result == (0, 0, 0, 0)
+        assert result == (0, 0, 0, 0, 0)
 
     def test_no_entities(self, integrated_flags):
         entities = []
         result = get_integrated_flags(integrated_flags, entities)
-        assert result == (0, 0, 0, 0)
+        assert result == (0, 0, 0, 0, 0)
 
-    def test_community_flags(self, integrated_flags, qualified_entities):
-        community_flags, _, _, _ = get_integrated_flags(
-            integrated_flags, qualified_entities
-        )
-
-        assert community_flags == 4
-
-    def test_flagged(self, integrated_flags, qualified_entities):
-        _, flagged, _, _ = get_integrated_flags(integrated_flags, qualified_entities)
-
-        assert flagged == 2
-
-    def test_flagged_per_unflagged(self, integrated_flags, qualified_entities):
-        _, _, flagged_per_unflagged, _ = get_integrated_flags(
-            integrated_flags, qualified_entities
-        )
-
-        assert flagged_per_unflagged == 2
-
-    def test_flags_per_entity(self, integrated_flags, qualified_entities):
-        _, _, _, flags_per_entity = get_integrated_flags(
-            integrated_flags, qualified_entities
-        )
+    def test_base_entities(self, integrated_flags, qualified_entities):
+        (
+            community_flags,
+            flagged,
+            flagged_per_unflagged,
+            flags_per_entity,
+            total_entities,
+        ) = get_integrated_flags(integrated_flags, qualified_entities)
 
         assert flags_per_entity == 1.33
+        assert total_entities == 3
+        assert flagged_per_unflagged == 2
+        assert flagged == 2
+        assert community_flags == 4
+
+    def test_inferred_links(self, integrated_flags, qualified_entities) -> None:
+        qualified_entities.append("ENTITY==5")
+        inferred_links = defaultdict(set)
+        inferred_links["ENTITY==1"].add("ENTITY==5")
+
+        integrated_flags = integrated_flags.vstack(
+            pl.DataFrame({"qualified_entity": ["ENTITY==5"], "count": [0]})
+        )
+
+        (
+            community_flags,
+            flagged,
+            flagged_per_unflagged,
+            flags_per_entity,
+            total_entities,
+        ) = get_integrated_flags(integrated_flags, qualified_entities, inferred_links)
+
+        assert flags_per_entity == 1.0
+        assert total_entities == 4
+        assert flagged_per_unflagged == 1.0
+        assert flagged == 2.0
+        assert community_flags == 4
+
+    def test_inferred_links_flagged(self, integrated_flags, qualified_entities) -> None:
+        qualified_entities.append("ENTITY==5")
+        inferred_links = defaultdict(set)
+        inferred_links["ENTITY==1"].add("ENTITY==5")
+
+        integrated_flags = integrated_flags.vstack(
+            pl.DataFrame({"qualified_entity": ["ENTITY==5"], "count": [1]})
+        )
+
+        (
+            community_flags,
+            flagged,
+            flagged_per_unflagged,
+            flags_per_entity,
+            total_entities,
+        ) = get_integrated_flags(integrated_flags, qualified_entities, inferred_links)
+
+        assert flags_per_entity == 1.25
+        assert total_entities == 4
+        assert flagged_per_unflagged == 3.0
+        assert flagged == 3.0
+        assert community_flags == 5
 
 
 class TestBuildEntityRecords:
@@ -641,6 +694,29 @@ class TestBuildEntityRecords:
             }
         )
 
+    @pytest.fixture()
+    def community_nodes_multiple(self) -> list[list[str]]:
+        return [
+            ["ENTITY==1", "ENTITY==2", "ENTITY==3"],
+            ["ENTITY==4", "ENTITY==5", "ENTITY==6"],
+            ["ENTITY==8", "ENTITY==9", "ENTITY==11"],
+        ]
+
+    @pytest.fixture()
+    def integrated_flags_multiple(self) -> pl.DataFrame:
+        return pl.DataFrame(
+            {
+                "qualified_entity": [
+                    "ENTITY==1",
+                    "ENTITY==2",
+                    "ENTITY==3",
+                    "ENTITY==11",
+                    "ENTITY==9",
+                ],
+                "count": [1, 0, 3, 2, 5],
+            }
+        )
+
     def test_final_integrated(self, community_nodes, integrated_flags):
         result = build_entity_records(community_nodes, integrated_flags)
 
@@ -651,6 +727,102 @@ class TestBuildEntityRecords:
             ("4", 0, 1, 3, 0, 0, 0.0, 0.0),
             ("5", 0, 1, 3, 0, 0, 0.0, 0.0),
             ("6", 0, 1, 3, 0, 0, 0.0, 0.0),
+        ]
+
+        assert result == expected
+
+    def test_final_count_inferred(self, community_nodes, integrated_flags) -> None:
+        inferred_links = defaultdict(set)
+        inferred_links["ENTITY==1"].add("ENTITY==5")
+        result = build_entity_records(community_nodes, integrated_flags, inferred_links)
+
+        expected = [
+            ("1", 1, 0, 4, 4, 2, 1.0, 1.0),
+            ("2", 0, 0, 4, 4, 2, 1.0, 1.0),
+            ("3", 3, 0, 4, 4, 2, 1.0, 1.0),
+            ("4", 0, 1, 4, 1, 1, 0.25, 0.33),
+            ("5", 0, 1, 4, 1, 1, 0.25, 0.33),
+            ("6", 0, 1, 4, 1, 1, 0.25, 0.33),
+        ]
+        assert result == expected
+
+    def test_final_count_inferred_existant(
+        self, community_nodes, integrated_flags
+    ) -> None:
+        inferred_links = defaultdict(set)
+        inferred_links["ENTITY==1"].add("ENTITY==2")
+        result = build_entity_records(community_nodes, integrated_flags, inferred_links)
+
+        expected = [
+            ("1", 1, 0, 3, 4, 2, 1.33, 2.0),
+            ("2", 0, 0, 3, 4, 2, 1.33, 2.0),
+            ("3", 3, 0, 3, 4, 2, 1.33, 2.0),
+            ("4", 0, 1, 3, 0, 0, 0.0, 0.0),
+            ("5", 0, 1, 3, 0, 0, 0.0, 0.0),
+            ("6", 0, 1, 3, 0, 0, 0.0, 0.0),
+        ]
+
+        assert result == expected
+
+    def test_final_count_inferred_with_flags(
+        self, community_nodes, integrated_flags
+    ) -> None:
+        inferred_links = defaultdict(set)
+        inferred_links["ENTITY==3"].add("ENTITY==6")
+        result = build_entity_records(community_nodes, integrated_flags, inferred_links)
+
+        expected = [
+            ("1", 1, 0, 4, 4, 2, 1.0, 1.0),
+            ("2", 0, 0, 4, 4, 2, 1.0, 1.0),
+            ("3", 3, 0, 4, 4, 2, 1.0, 1.0),
+            ("4", 0, 1, 4, 3, 1, 0.75, 0.33),
+            ("5", 0, 1, 4, 3, 1, 0.75, 0.33),
+            ("6", 0, 1, 4, 3, 1, 0.75, 0.33),
+        ]
+
+        assert result == expected
+
+    def test_final_count_inferred_both_with_flags(
+        self, community_nodes, integrated_flags
+    ) -> None:
+        inferred_links = defaultdict(set)
+        inferred_links["ENTITY==3"].add("ENTITY==6")
+        integrated_flags = integrated_flags.vstack(
+            pl.DataFrame({"qualified_entity": ["ENTITY==6"], "count": [1]})
+        )
+        result = build_entity_records(community_nodes, integrated_flags, inferred_links)
+
+        expected = [
+            ("1", 1, 0, 4, 5, 3, 1.25, 3.0),
+            ("2", 0, 0, 4, 5, 3, 1.25, 3.0),
+            ("3", 3, 0, 4, 5, 3, 1.25, 3.0),
+            ("4", 0, 1, 4, 4, 2, 1.0, 1.0),
+            ("5", 0, 1, 4, 4, 2, 1.0, 1.0),
+            ("6", 1, 1, 4, 4, 2, 1.0, 1.0),
+        ]
+
+        assert result == expected
+
+    def test_final_count_inferred_multiple(
+        self, community_nodes_multiple, integrated_flags_multiple
+    ) -> None:
+        inferred_links = defaultdict(set)
+        inferred_links["ENTITY==3"].add("ENTITY==6")
+        inferred_links["ENTITY==3"].add("ENTITY==11")
+        result = build_entity_records(
+            community_nodes_multiple, integrated_flags_multiple, inferred_links
+        )
+
+        expected = [
+            ("1", 1, 0, 5, 6, 3, 1.2, 1.5),
+            ("2", 0, 0, 5, 6, 3, 1.2, 1.5),
+            ("3", 3, 0, 5, 6, 3, 1.2, 1.5),
+            ("4", 0, 1, 4, 3, 1, 0.75, 0.33),
+            ("5", 0, 1, 4, 3, 1, 0.75, 0.33),
+            ("6", 0, 1, 4, 3, 1, 0.75, 0.33),
+            ("8", 0, 2, 4, 10, 3, 2.5, 3.0),
+            ("9", 5, 2, 4, 10, 3, 2.5, 3.0),
+            ("11", 2, 2, 4, 10, 3, 2.5, 3.0),
         ]
 
         assert result == expected
@@ -668,5 +840,4 @@ class TestBuildEntityRecords:
             ("6", 0, 1, 3, 0, 0, 0, 0),
         ]
 
-        assert result == expected
         assert result == expected
