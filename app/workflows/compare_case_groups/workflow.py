@@ -285,7 +285,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                     ]
                     filter_description = f'Filtered to the following groups only: {", ".join([str(s) for s in selected_groups])}'
                 elif top_group_ranks:
-                    fdf = fdf[fdf["Group Rank"] <= top_group_ranks]
+                    fdf = fdf[fdf["group_rank"] <= top_group_ranks]
                     filter_description = (
                         f"Filtered to the top {top_group_ranks} groups by record count"
                     )
