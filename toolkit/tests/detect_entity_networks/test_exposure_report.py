@@ -116,6 +116,22 @@ class TestExposureData:
         for ex in expected_nodes:
             assert ex in nodes
 
+    def test_generation_nodes_inferred_c_nodes_set(self, graph, flags, c_nodes) -> None:
+        # c_nodes as set
+        c_nodes = {"ENTITY==A", "ENTITY==C", "ENTITY==D"}
+        graph.add_edge("ENTITY==X", "ENTITY==F")
+        inferred_links = defaultdict(set)
+        inferred_links["ENTITY==X"].add("ENTITY==F")
+        _, _, nodes = build_exposure_data(flags, c_nodes, "X", graph, inferred_links)
+
+        expected_nodes = [
+            {"node": "ENTITY==C", "flags": 2},
+            {"node": "ENTITY==D", "flags": 3},
+            {"node": "ENTITY==X", "flags": 2},
+        ]
+        for ex in expected_nodes:
+            assert ex in nodes
+
     def test_generation_nodes_inferred_path(self, graph, flags, c_nodes) -> None:
         graph.add_edge("ENTITY==X", "ENTITY==F")
         inferred_links = defaultdict(set)
