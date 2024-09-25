@@ -3,14 +3,11 @@
 #
 import streamlit as st
 from util.openai_wrapper import UIOpenAIConfiguration
-from util.session_variables import SessionVariables
 
 import toolkit.detect_entity_networks.config as config
 from toolkit.AI.base_embedder import BaseEmbedder
 from toolkit.AI.local_embedder import LocalEmbedder
 from toolkit.AI.openai_embedder import OpenAIEmbedder
-
-sv_home = SessionVariables("home")
 
 
 def embedder(local_embedding: bool | None = True) -> BaseEmbedder:

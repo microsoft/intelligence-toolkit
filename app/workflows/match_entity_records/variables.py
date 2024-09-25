@@ -38,6 +38,7 @@ class SessionVariables:
         self.matching_report_validation_messages = SessionVariable("", prefix)
         self.matching_system_prompt = SessionVariable(prompts.list_prompts, prefix)
         self.matching_upload_key = SessionVariable(random.randint(1, 100), prefix)
+        self.matching_local_embedding_enabled = SessionVariable(False, prefix)
 
     def reset_workflow(self):
         for key in st.session_state:

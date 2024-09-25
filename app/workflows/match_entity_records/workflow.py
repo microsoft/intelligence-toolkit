@@ -204,6 +204,11 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                     st.rerun()
                 attributes_list = build_attribute_list(attsa)
 
+                local_embedding = st.toggle(
+                    "Use local embeddings",
+                    sv.matching_local_embedding_enabled.value,
+                    help="Use local embeddings to index nodes. If disabled, the model will use OpenAI embeddings.",
+                )
                 st.markdown("##### Configure similarity thresholds")
                 b1, b2 = st.columns([1, 1])
                 with b1:
@@ -277,7 +282,7 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                         callback = ProgressBatchCallback()
                         callback.on_batch_change = on_embedding_batch_change
 
-                        functions_embedder = functions.embedder()
+                        functions_embedder = functions.embedder(local_embedding)
                         data_embeddings = await functions_embedder.embed_store_many(
                             all_sentences_data, [callback], sv_home.save_cache.value
                         )
