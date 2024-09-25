@@ -36,6 +36,7 @@ def create_example_outputs_ui(container, workflow):
                                 for item in seq:
                                     item_type = this_metadata['item_types'][item]
                                     filename = f'{selected_data}_{this_key}_{item}_{index}.{item_type}'
+                                    print(filename)
                                     if os.path.exists(f'{workflow_home}/{selected_data}/{filename}'):
                                         if item_type == 'csv':
                                             df = pd.read_csv(f'{workflow_home}/{selected_data}/{filename}')

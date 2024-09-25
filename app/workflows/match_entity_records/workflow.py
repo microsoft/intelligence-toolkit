@@ -390,11 +390,11 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                     lines = lines[:30]
                     result = "\n".join(lines)
 
-                validation, messages_to_llm = ui_components.validate_ai_report(
-                    batch_messages[0], result
-                )
-                sv.matching_report_validation.value = validation
-                sv.matching_report_validation_messages.value = messages_to_llm
+                # validation, messages_to_llm = ui_components.validate_ai_report(
+                #     batch_messages[0], result
+                # )
+                # sv.matching_report_validation.value = validation
+                # sv.matching_report_validation_messages.value = messages_to_llm
                 st.rerun()
             else:
                 if len(sv.matching_evaluations.value) == 0:

@@ -509,11 +509,11 @@ async def create(sv: SessionVariables, workflow=None):
                     )
                     sv.final_report.value = result
 
-                    validation, messages_to_llm = ui_components.validate_ai_report(
-                        messages, result
-                    )
-                    sv.report_validation.value = validation
-                    sv.report_validation_messages.value = messages_to_llm
+                    # validation, messages_to_llm = ui_components.validate_ai_report(
+                    #     messages, result
+                    # )
+                    # sv.report_validation.value = validation
+                    # sv.report_validation_messages.value = messages_to_llm
                     st.rerun()
                 else:
                     if sv.final_report.value == "":
