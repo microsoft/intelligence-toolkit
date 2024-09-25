@@ -38,7 +38,7 @@ class BaseEmbedder(ABC, BaseBatchAsync):
         db_name: str = "embeddings",
         db_path=CACHE_PATH,
         max_tokens=DEFAULT_LLM_MAX_TOKENS,
-        concurrent_coroutines=20,
+        concurrent_coroutines=50,
     ) -> None:
         self.vector_store = VectorStore(db_name, db_path, schema)
         self.max_tokens = max_tokens
@@ -68,7 +68,7 @@ class BaseEmbedder(ABC, BaseBatchAsync):
                 )
                 data["vector"] = embedding
             except Exception as e:
-                msg = f"Problem in embedding generation. {e}"
+                msg = f"Timeout in embedding generation. {e} Please try again."
                 raise Exception(msg)
 
             if has_callback:
