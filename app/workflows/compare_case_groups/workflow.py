@@ -29,7 +29,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
         [
             "Compare case groups workflow:",
             "Prepare case data",
-            "Prepare group comparisons",
+            "Specify group comparisons",
             "Generate AI group reports",
         ]
     )
@@ -111,7 +111,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                 )
 
                 create = st.button(
-                    "Create summary", disabled=len(groups) == 0 or len(aggregates) == 0
+                    "Create data summary", disabled=len(groups) == 0 or len(aggregates) == 0
                 )
 
             with c2:
@@ -174,27 +174,27 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                     sv.case_groups_model_df.value = (
                         ranked_df[
                             [
-                                *groups,
-                                "Group Count",
-                                "Group Rank",
-                                "Attribute Value",
-                                "Attribute Count",
-                                "Attribute Rank",
-                                f"{temporal} Window",
-                                f"{temporal} Window Count",
-                                f"{temporal} Window Rank",
-                                f"{temporal} Window Delta",
+                                *[g.lower() for g in groups],
+                                "group_count",
+                                "group_rank",
+                                "attribute_value",
+                                "attribute_count",
+                                "attribute_rank",
+                                f"{temporal}_window",
+                                f"{temporal}_window_count",
+                                f"{temporal}_window_rank",
+                                f"{temporal}_window_delta",
                             ]
                         ]
                         if temporal != ""
                         else ranked_df[
                             [
-                                *groups,
-                                "Group Count",
-                                "Group Rank",
-                                "Attribute Value",
-                                "Attribute Count",
-                                "Attribute Rank",
+                                *[g.lower() for g in groups],
+                                "group_count",
+                                "group_rank",
+                                "attribute_value",
+                                "attribute_count",
+                                "attribute_rank",
                             ]
                         ]
                     )
@@ -224,11 +224,11 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                         if len(filters) > 0
                         else f"\n- A summary of all **{initial_row_count}** data records"
                     )
-                    description += f"\n- The **Group Count** of records for all {groups_text} groups, and corresponding **Group Rank**"
-                    description += f"\n- The **Attribute Count** of each **Attribute Value** for all {groups_text} groups, and corresponding **Attribute Rank**"
+                    description += f"\n- The **group_count** of records for all {groups_text} groups, and corresponding **group_rank**"
+                    description += f"\n- The **attribute_count** of each **attribute_value** for all {groups_text} groups, and corresponding **attribute_rank**"
                     if temporal != "":
-                        description += f"\n- The **{temporal} Window Count** of each **Attribute Value** for each **{temporal} Window** for all {groups_text} groups, and corresponding **{temporal} Window Rank**"
-                        description += f"\n- The **{temporal} Window Delta**, or change in the **Attribute Value Count** for successive **{temporal} Window** values, within each {groups_text} group"
+                        description += f"\n- The **{temporal}_window_count** of each **attribute_value** for each **{temporal}_window** for all {groups_text} groups, and corresponding **{temporal}_window_rank**"
+                        description += f"\n- The **{temporal}_window_delta**, or change in the **attribute_value_count** for successive **{temporal}_window** values, within each {groups_text} group"
                     sv.case_groups_description.value = description
                     st.rerun()
                 if len(sv.case_groups_model_df.value) > 0:
