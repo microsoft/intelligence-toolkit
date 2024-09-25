@@ -13,10 +13,10 @@ from toolkit.AI.openai_embedder import OpenAIEmbedder
 sv_home = SessionVariables("home")
 
 
-def embedder() -> BaseEmbedder:
+def embedder(local_embedding: bool | None = True) -> BaseEmbedder:
     try:
         ai_configuration = UIOpenAIConfiguration().get_configuration()
-        if sv_home.local_embeddings.value:
+        if local_embedding:
             return LocalEmbedder(
                 db_name=config.cache_name,
                 max_tokens=ai_configuration.max_tokens,
