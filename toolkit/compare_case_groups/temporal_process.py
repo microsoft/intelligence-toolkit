@@ -25,6 +25,11 @@ def create_window_df(
         (pl.col("Attribute") + ":" + pl.col("Value")).alias("Attribute Value")
     )
 
+    ldf = ldf.filter(pl.col("Value").is_not_null())
+    for group in groups:
+        ldf = ldf.filter(pl.col(group).is_not_null())
+    print(ldf)
+
     # Group by groups and count attribute values
     return (
         ldf.group_by([*groups, temporal, "Attribute Value"])
@@ -73,7 +78,6 @@ def build_temporal_data(
     tdfs = []
     if ldf.shape[0] == 0:
         return ldf
-
     ldf = build_temporal_count(ldf, groups, temporal)
     if ldf.is_empty():
         return ldf
@@ -109,6 +113,9 @@ def build_temporal_data(
                     f"{temporal} Window Count_r",
                 ]
             )
-
+        tdf = tdf.with_columns(
+            pl.col(f"{temporal} Window Rank").cast(pl.Int64),
+            pl.col(f"{temporal} Window Count").cast(pl.Int64),
+        )
         tdfs.append(tdf)
     return pl.concat(tdfs).sort(by=temporal)

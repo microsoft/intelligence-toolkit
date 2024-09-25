@@ -150,7 +150,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                     temporal_atts = []
                     # create Window df
                     if temporal is not None and temporal != "":
-                        temporal_df = create_window_df(
+                        window_df = create_window_df(
                             groups, temporal, aggregates, pl.from_pandas(filtered_df)
                         )
 
@@ -159,7 +159,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                         )
 
                         temporal_df = build_temporal_data(
-                            temporal_df, groups, temporal_atts, temporal
+                            window_df, groups, temporal_atts, temporal
                         )
                     # Create overall df
                     ranked_df = build_ranked_df(

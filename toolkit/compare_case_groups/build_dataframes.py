@@ -93,16 +93,15 @@ def build_attribute_df_pd(filtered_df, groups, aggregates=""):
 def build_attribute_df(
     filtered_df: pl.DataFrame, groups: list[str], aggregates: str = ""
 ) -> pl.DataFrame:
+
     ndf = filtered_df.melt(
         id_vars=groups,
         value_vars=aggregates,
         variable_name="Attribute",
         value_name="Value",
     )
-
     # Drop rows with NaN values in the "Value" column
     ndf = ndf.drop_nulls(subset=["Value"])
-
     # Create "Attribute Value" column
     ndf = ndf.with_columns(
         (pl.col("Attribute") + ":" + pl.col("Value").cast(str)).alias("Attribute Value")
@@ -112,7 +111,6 @@ def build_attribute_df(
     attributes_df = ndf.group_by([*groups, "Attribute Value"]).agg(
         pl.len().alias("Attribute Count")
     )
-
     # Ensure all groups have entries for all attribute values
     all_attribute_values = attributes_df["Attribute Value"].unique().to_list()
     groups_df = filtered_df.select(groups).unique()
@@ -122,7 +120,6 @@ def build_attribute_df(
     attributes_df = all_combinations.join(
         attributes_df, on=[*groups, "Attribute Value"], how="left"
     ).fill_null(0)
-
     # Calculate the rank
     return attributes_df.with_columns(
         [
