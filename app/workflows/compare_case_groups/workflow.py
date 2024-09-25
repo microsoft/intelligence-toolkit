@@ -241,11 +241,11 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
 
                     st.markdown(sv.case_groups_description.value)
                     st.download_button(
-                        "Download data",
+                        "Download data summary",
                         data=sv.case_groups_model_df.value.to_csv(
                             index=False, encoding="utf-8-sig"
                         ),
-                        file_name="narrative_data_summary.csv",
+                        file_name="group_data_summary.csv",
                         mime="text/csv",
                     )
 
@@ -264,13 +264,13 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                 b1, b2 = st.columns([1, 1])
                 with b1:
                     selected_groups = st.multiselect(
-                        "Select specific groups to narrate:",
+                        "Select specific groups to report on:",
                         list(groups),
                         default=sv.case_groups_selected_groups.value,
                     )
                 with b2:
                     top_group_ranks = st.number_input(
-                        "OR Select top group ranks to narrate:",
+                        "OR Select top group ranks to report on:",
                         min_value=0,
                         max_value=9999999999,
                         value=sv.case_groups_top_groups.value,
@@ -290,7 +290,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                         f"Filtered to the top {top_group_ranks} groups by record count"
                     )
                 num_rows = len(fdf)
-                st.markdown(f"##### Filtered data summary to narrate ({num_rows} rows)")
+                st.markdown(f"##### Filtered data summary to report on ({num_rows} rows)")
                 st.dataframe(fdf, hide_index=True, use_container_width=True, height=280)
                 variables = {
                     "description": sv.case_groups_description.value,
@@ -306,7 +306,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                     )
                     st.rerun()
             with c2:
-                st.markdown("##### Data narrative")
+                st.markdown("##### Group comparison report")
 
                 narrative_placeholder = st.empty()
                 gen_placeholder = st.empty()
@@ -337,9 +337,9 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
 
                 ui_components.report_download_ui(sv.case_groups_report, "group_report")
 
-                ui_components.build_validation_ui(
-                    sv.case_groups_report_validation.value,
-                    sv.case_groups_report_validation_messages.value,
-                    sv.case_groups_report.value,
-                    workflow,
-                )
+                # ui_components.build_validation_ui(
+                #     sv.case_groups_report_validation.value,
+                #     sv.case_groups_report_validation_messages.value,
+                #     sv.case_groups_report.value,
+                #     workflow,
+                # )

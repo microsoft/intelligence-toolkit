@@ -401,11 +401,11 @@ def create(sv: ap_variables.SessionVariables, workflow):
                     sv.detect_case_patterns_report, "pattern_report"
                 )
 
-                ui_components.build_validation_ui(
-                    sv.detect_case_patterns_report_validation.value,
-                    sv.detect_case_patterns_report_validation_messages.value,
-                    report_data,
-                    workflow,
-                )
+                # ui_components.build_validation_ui(
+                #     sv.detect_case_patterns_report_validation.value,
+                #     sv.detect_case_patterns_report_validation_messages.value,
+                #     report_data,
+                #     workflow,
+                # )
     with examples_tab:
         example_outputs_ui.create_example_outputs_ui(examples_tab, workflow)

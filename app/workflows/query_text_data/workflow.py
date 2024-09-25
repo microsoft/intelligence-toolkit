@@ -542,11 +542,11 @@ async def create(sv: SessionVariables, workflow=None):
                             disabled=is_download_disabled,
                         )
 
-                    ui_components.build_validation_ui(
-                        sv.report_validation.value,
-                        sv.report_validation_messages.value,
-                        sv.final_report.value,
-                        workflow,
-                    )
+                    # ui_components.build_validation_ui(
+                    #     sv.report_validation.value,
+                    #     sv.report_validation_messages.value,
+                    #     sv.final_report.value,
+                    #     workflow,
+                    # )
     with examples_tab:
         example_outputs_ui.create_example_outputs_ui(examples_tab, workflow)
