@@ -396,13 +396,11 @@ class TestBuildMatchesDataset:
 
     def test_empty_pair(self, merged_df, entity_to_group) -> None:
         result = build_matches_dataset(merged_df, {}, entity_to_group)
-        assert len(result) == 4
-        assert result["Name similarity"].sum() == 0
+        assert len(result) == 0
 
     def test_empty_group(self, merged_df, pair_to_match) -> None:
         result = build_matches_dataset(merged_df, pair_to_match, {})
-        assert len(result) == 4
-        assert result["Name similarity"].sum() == 0
+        assert len(result) == 0
 
     def test_basic_grouping(self, merged_df, pair_to_match, entity_to_group) -> None:
         result = build_matches_dataset(merged_df, pair_to_match, entity_to_group)

@@ -2,7 +2,6 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 
-import pandas as pd
 import polars as pl
 import pytest
 
@@ -35,7 +34,7 @@ class TestCreateWindowDf:
             "group1": ["A", "A", "A", "A", "B", "B", "B", "B"],
             "group2": ["X", "X", "X", "X", "Y", "Y", "Y", "Y"],
             "time": [1, 1, 2, 2, 1, 1, 2, 2],
-            "Attribute Value": [
+            "attribute_value": [
                 "agg1:10",
                 "agg2:5",
                 "agg1:20",
@@ -45,10 +44,10 @@ class TestCreateWindowDf:
                 "agg1:40",
                 "agg2:35",
             ],
-            "time Window Count": [1, 1, 1, 1, 1, 1, 1, 1],
+            "time_window_count": [1, 1, 1, 1, 1, 1, 1, 1],
         }
         expected_df = pl.DataFrame(expected_data).sort(
-            [*groups, temporal, "Attribute Value"]
+            [*groups, temporal, "attribute_value"]
         )
 
         # Call the function with the sample DataFrame
@@ -61,76 +60,76 @@ class TestCalculateWindowDelta:
     def test_basic(self) -> None:
         data = {
             "Group": ["A", "A", "B", "B"],
-            "Temporal": [1, 2, 1, 2],
-            "Attribute Value": ["X:10", "X:20", "Y:30", "Y:40"],
-            "Temporal Window Count": [5, 3, 8, 6],
+            "temporal": [1, 2, 1, 2],
+            "attribute_value": ["X:10", "X:20", "Y:30", "Y:40"],
+            "temporal_window_count": [5, 3, 8, 6],
         }
         sample_data = pl.DataFrame(data)
-        temporal = "Temporal"
+        temporal = "temporal"
 
         result = calculate_window_delta(sample_data, temporal)
 
-        assert "Temporal Window Delta" in result.columns
-        assert all(result["Temporal Window Delta"].is_not_nan())
+        assert all(result["temporal_window_delta"].is_not_nan())
 
     def test_missing_values(self):
         data = {
             "Group": ["A", "A", "B", "B"],
-            "Temporal": [1, 2, 1, 2],
-            "Attribute Value": ["X:10", "X:20", "Y:30", "Y:40"],
-            "Temporal Window Count": [5, None, 8, None],
+            "temporal": [1, 2, 1, 2],
+            "attribute_value": ["X:10", "X:20", "Y:30", "Y:40"],
+            "temporal_window_count": [5, None, 8, None],
         }
         sample_data = pl.DataFrame(data)
-        temporal = "Temporal"
+        temporal = "temporal"
 
         result = calculate_window_delta(sample_data, temporal)
 
-        assert result["Temporal Window Count"].is_nan().sum() == 0
-        assert result.filter(pl.col("Temporal Window Delta") == 0).height == 4
+        assert result["temporal_window_count"].is_nan().sum() == 0
+        assert result.filter(pl.col("temporal_window_delta") == 0).height == 4
 
-class TestBuildTemporalCount:
+
+class TestBuildtemporalCount:
     def test_basic(self) -> None:
         data = {
             "Group": ["A", "A", "B", "B"],
-            "Temporal": [1, 2, 1, 2],
-            "Attribute Value": ["X:10", "X:20", "Y:30", "Y:40"],
-            "Temporal Window Count": [5, 3, 8, 6],
+            "temporal": [1, 2, 1, 2],
+            "attribute_value": ["X:10", "X:20", "Y:30", "Y:40"],
+            "temporal_window_count": [5, 3, 8, 6],
         }
         sample_data = pl.DataFrame(data)
         groups = ["Group"]
-        temporal = "Temporal"
+        temporal = "temporal"
 
         result = build_temporal_count(sample_data, groups, temporal)
 
-        assert "Temporal Window Delta" in result.columns
-        assert all(result["Temporal Window Delta"].is_not_nan())
+        assert "temporal_window_delta" in result.columns
+        assert all(result["temporal_window_delta"].is_not_nan())
 
     def test_missing_values(self):
         data = {
             "Group": ["A", "A", "B", "B"],
-            "Temporal": [1, 2, 1, 20],
-            "Attribute Value": ["X:10", "X:20", "Y:30", "Y:40"],
-            "Temporal Window Count": [5, None, 8, None],
+            "temporal": [1, 2, 1, 20],
+            "attribute_value": ["X:10", "X:20", "Y:30", "Y:40"],
+            "temporal_window_count": [5, None, 8, None],
         }
         sample_data = pl.DataFrame(data)
         groups = ["Group"]
-        temporal = "Temporal"
+        temporal = "temporal"
 
         result = build_temporal_count(sample_data, groups, temporal)
 
-        assert result["Temporal Window Count"].is_nan().sum() == 0
+        assert result["temporal_window_count"].is_nan().sum() == 0
 
     def test_multiple_groups(self):
         data = {
             "Group": ["A", "A", "B", "B"],
             "SubGroup": ["X", "Y", "X", "Y"],
-            "Temporal": [1, 2, 1, 2],
-            "Attribute Value": ["V1:10", "V2:20", "V1:30", "V2:40"],
-            "Temporal Window Count": [5, 3, 8, 6],
+            "temporal": [1, 2, 1, 2],
+            "attribute_value": ["V1:10", "V2:20", "V1:30", "V2:40"],
+            "temporal_window_count": [5, 3, 8, 6],
         }
         sample_data = pl.DataFrame(data)
         groups = ["Group", "SubGroup"]
-        temporal = "Temporal"
+        temporal = "temporal"
 
         result = build_temporal_count(sample_data, groups, temporal)
 
@@ -142,29 +141,29 @@ class TestBuildTemporalCount:
     def test_delta_calculation(self):
         data = {
             "Group": ["A", "A", "A", "B", "B", "B"],
-            "Temporal": [1, 2, 3, 1, 2, 3],
-            "Attribute Value": ["X:10", "X:20", "X:30", "Y:40", "Y:50", "Y:60"],
-            "Temporal Window Count": [5, 3, 1, 8, 6, 4],
+            "temporal": [1, 2, 3, 1, 2, 3],
+            "attribute_value": ["X:10", "X:20", "X:30", "Y:40", "Y:50", "Y:60"],
+            "temporal_window_count": [5, 3, 1, 8, 6, 4],
         }
         sample_data = pl.DataFrame(data)
         groups = ["Group"]
-        temporal = "Temporal"
+        temporal = "temporal"
         result = build_temporal_count(sample_data, groups, temporal)
 
         group_a_deltas = result.filter(pl.col("Group") == "A").select(
-            "Temporal Window Delta"
+            "temporal_window_delta"
         )
         group_a_deltas_values = (
-            group_a_deltas.filter(pl.col("Temporal Window Delta") != 0.0)
+            group_a_deltas.filter(pl.col("temporal_window_delta") != 0.0)
             .to_series()
             .to_list()
         )
 
         group_b_deltas = result.filter(pl.col("Group") == "B").select(
-            "Temporal Window Delta"
+            "temporal_window_delta"
         )
         group_b_deltas_values = (
-            group_b_deltas.filter(pl.col("Temporal Window Delta") != 0.0)
+            group_b_deltas.filter(pl.col("temporal_window_delta") != 0.0)
             .to_series()
             .to_list()
         )
@@ -178,28 +177,28 @@ class TestBuildTemporalCount:
             assert v in group_b_deltas_values
 
         assert (
-            result.select(pl.col("Temporal Window Delta").is_not_nan())
+            result.select(pl.col("temporal_window_delta").is_not_nan())
             .to_series()
             .all()
         )
 
         data = {
             "Group": ["A", "A", "B", "B"],
-            "Temporal": [1, 2, 1, 2],
-            "Attribute Value": ["X:10", "X:20", "Y:30", "Y:40"],
-            "Temporal Window Count": [5, 3, 8, 6],
+            "temporal": [1, 2, 1, 2],
+            "attribute_value": ["X:10", "X:20", "Y:30", "Y:40"],
+            "temporal_window_count": [5, 3, 8, 6],
         }
 
 
-class TestBuildTemporalData:
+class TestBuildtemporalData:
     @pytest.fixture()
     def expected_df_mock(self):
         return pl.DataFrame(
             {
                 "Group": ["A", "A", "B", "B"],
-                "Temporal": ["2023-01-01", "2023-01-02", "2023-01-01", "2023-01-02"],
-                "Attribute Value": ["V1:10", "V2:20", "V1:30", "V2:40"],
-                "Temporal Window Count": [5, 3, 8, 6],
+                "temporal": ["2023-01-01", "2023-01-02", "2023-01-01", "2023-01-02"],
+                "attribute_value": ["V1:10", "V2:20", "V1:30", "V2:40"],
+                "temporal_window_count": [5, 3, 8, 6],
             }
         )
 
@@ -211,8 +210,8 @@ class TestBuildTemporalData:
     def test_single_temporal_attribute(self, expected_df_mock, mocker):
         data = {
             "Group": ["A", "A", "B", "B"],
-            "Attribute Value": ["V1:10", "V2:20", "V1:30", "V2:40"],
-            "Temporal": ["2023-01-01", "2023-01-02", "2023-01-01", "2023-01-02"],
+            "attribute_value": ["V1:10", "V2:20", "V1:30", "V2:40"],
+            "temporal": ["2023-01-01", "2023-01-02", "2023-01-01", "2023-01-02"],
         }
         ldf = pl.DataFrame(data)
 
@@ -220,14 +219,14 @@ class TestBuildTemporalData:
             "toolkit.compare_case_groups.temporal_process.build_temporal_count"
         ).return_value = expected_df_mock
         result = build_temporal_data(
-            ldf, groups=["Group"], temporal_atts=["2023-01-01"], temporal="Temporal"
+            ldf, groups=["Group"], temporal_atts=["2023-01-01"], temporal="temporal"
         )
         expected_data = {
             "Group": ["A", "B"],
-            "Temporal": ["2023-01-01", "2023-01-01"],
-            "Attribute Value": ["V1:10", "V1:30"],
-            "Temporal Window Count": [5, 8],
-            "Temporal Window Rank": [1.0, 1.0],
+            "temporal": ["2023-01-01", "2023-01-01"],
+            "attribute_value": ["V1:10", "V1:30"],
+            "temporal_window_count": [5, 8],
+            "temporal_window_rank": [1.0, 1.0],
         }
         expected_df = pl.DataFrame(expected_data)
         assert result.equals(expected_df)
@@ -235,8 +234,8 @@ class TestBuildTemporalData:
     def test_multiple_temporal_attributes(self, expected_df_mock, mocker):
         data = {
             "Group": ["A", "A", "B", "B"],
-            "Attribute Value": [1, 2, 3, 4],
-            "Temporal": ["2023-01-01", "2023-01-02", "2023-01-01", "2023-01-02"],
+            "attribute_value": [1, 2, 3, 4],
+            "temporal": ["2023-01-01", "2023-01-02", "2023-01-01", "2023-01-02"],
         }
         ldf = pl.DataFrame(data)
 
@@ -247,14 +246,14 @@ class TestBuildTemporalData:
             ldf,
             groups=["Group"],
             temporal_atts=["2023-01-01", "2023-01-02"],
-            temporal="Temporal",
+            temporal="temporal",
         )
         expected_data = {
             "Group": ["A", "B", "A", "B"],
-            "Temporal": ["2023-01-01", "2023-01-01", "2023-01-02", "2023-01-02"],
-            "Attribute Value": ["V1:10", "V1:30", "V2:20", "V2:40"],
-            "Temporal Window Count": [5, 8, 3, 6],
-            "Temporal Window Rank": [1.0, 1.0, 1.0, 1.0],
+            "temporal": ["2023-01-01", "2023-01-01", "2023-01-02", "2023-01-02"],
+            "attribute_value": ["V1:10", "V1:30", "V2:20", "V2:40"],
+            "temporal_window_count": [5, 8, 3, 6],
+            "temporal_window_rank": [1.0, 1.0, 1.0, 1.0],
         }
         expected_df = pl.DataFrame(expected_data)
         assert result.equals(expected_df)
@@ -263,8 +262,8 @@ class TestBuildTemporalData:
         data = {
             "Group": ["A", "A", "B", "B"],
             "SubGroup": ["X", "Y", "X", "Y"],
-            "Attribute Value": [1, 2, 3, 4],
-            "Temporal": ["2023-01-01", "2023-01-02", "2023-01-01", "2023-01-02"],
+            "attribute_value": [1, 2, 3, 4],
+            "temporal": ["2023-01-01", "2023-01-02", "2023-01-01", "2023-01-02"],
         }
         ldf = pl.DataFrame(data)
 
@@ -272,9 +271,9 @@ class TestBuildTemporalData:
             {
                 "Group": ["A", "A", "B", "B"],
                 "SubGroup": ["X", "Y", "X", "Y"],
-                "Temporal": ["2023-01-01", "2023-01-02", "2023-01-01", "2023-01-02"],
-                "Attribute Value": ["V1:10", "V2:20", "V1:30", "V2:40"],
-                "Temporal Window Count": [5, 3, 8, 6],
+                "temporal": ["2023-01-01", "2023-01-02", "2023-01-01", "2023-01-02"],
+                "attribute_value": ["V1:10", "V2:20", "V1:30", "V2:40"],
+                "temporal_window_count": [5, 3, 8, 6],
             }
         )
         mocker.patch(
@@ -284,15 +283,15 @@ class TestBuildTemporalData:
             ldf,
             groups=["Group", "SubGroup"],
             temporal_atts=["2023-01-01", "2023-01-02"],
-            temporal="Temporal",
+            temporal="temporal",
         )
         expected_data = {
             "Group": ["A", "B", "A", "B"],
             "SubGroup": ["X", "X", "Y", "Y"],
-            "Temporal": ["2023-01-01", "2023-01-01", "2023-01-02", "2023-01-02"],
-            "Attribute Value": ["V1:10", "V1:30", "V2:20", "V2:40"],
-            "Temporal Window Count": [5, 8, 3, 6],
-            "Temporal Window Rank": [1.0, 1.0, 1.0, 1.0],
+            "temporal": ["2023-01-01", "2023-01-01", "2023-01-02", "2023-01-02"],
+            "attribute_value": ["V1:10", "V1:30", "V2:20", "V2:40"],
+            "temporal_window_count": [5, 8, 3, 6],
+            "temporal_window_rank": [1.0, 1.0, 1.0, 1.0],
         }
         expected_df = pl.DataFrame(expected_data)
         assert result.equals(expected_df)
@@ -300,8 +299,8 @@ class TestBuildTemporalData:
     def test_missing_values(self, expected_df_mock, mocker):
         data = {
             "Group": ["A", "A", "B", "B"],
-            "Attribute Value": [1, 2, 3, 4],
-            "Temporal": ["2023-01-01", "2023-01-02", "2023-01-01", "2023-01-02"],
+            "attribute_value": [1, 2, 3, 4],
+            "temporal": ["2023-01-01", "2023-01-02", "2023-01-01", "2023-01-02"],
         }
         ldf = pl.DataFrame(data)
 
@@ -312,16 +311,16 @@ class TestBuildTemporalData:
             ldf,
             groups=["Group"],
             temporal_atts=["2023-01-01", "2023-01-02"],
-            temporal="Temporal",
+            temporal="temporal",
         )
 
-        assert result["Temporal Window Count"].is_nan().sum() == 0
+        assert result["temporal_window_count"].is_nan().sum() == 0
 
     def test_non_existent_temporal_values(self, expected_df_mock, mocker):
         data = {
             "Group": ["A", "A", "B", "B"],
-            "Attribute Value": [1, 2, 3, 4],
-            "Temporal": ["2023-01-01", "2023-01-02", "2023-01-01", "2023-01-02"],
+            "attribute_value": [1, 2, 3, 4],
+            "temporal": ["2023-01-01", "2023-01-02", "2023-01-01", "2023-01-02"],
         }
         ldf = pl.DataFrame(data)
 
@@ -332,7 +331,7 @@ class TestBuildTemporalData:
             ldf,
             groups=["Group"],
             temporal_atts=["2023-01-03"],
-            temporal="Temporal",
+            temporal="temporal",
         )
 
         assert result.is_empty()
@@ -340,8 +339,8 @@ class TestBuildTemporalData:
     def test_incorrect_groups(self, mocker):
         data = {
             "Group": ["A", "A", "B", "B"],
-            "Attribute Value": [1, 2, 3, 4],
-            "Temporal": ["2023-01-01", "2023-01-02", "2023-01-01", "2023-01-02"],
+            "attribute_value": [1, 2, 3, 4],
+            "temporal": ["2023-01-01", "2023-01-02", "2023-01-01", "2023-01-02"],
         }
         ldf = pl.DataFrame(data)
 
@@ -352,7 +351,7 @@ class TestBuildTemporalData:
             ldf,
             groups=["Group", "NonExistent"],
             temporal_atts=["2023-01-01", "2023-01-02"],
-            temporal="Temporal",
+            temporal="temporal",
         )
 
         assert result.is_empty()
