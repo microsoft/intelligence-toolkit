@@ -1,7 +1,6 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 #
-import asyncio
 import logging
 
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
@@ -19,9 +18,7 @@ class OpenAIClient:
     _client = None
     _async_client = None
 
-    def __init__(
-        self, configuration: OpenAIConfiguration | None = None, concurrent_coroutines=10
-    ) -> None:
+    def __init__(self, configuration: OpenAIConfiguration | None = None) -> None:
         self.configuration = configuration or OpenAIConfiguration()
         self._create_openai_client()
 

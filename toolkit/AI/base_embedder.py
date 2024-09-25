@@ -19,6 +19,7 @@ from toolkit.helpers.constants import CACHE_PATH
 from toolkit.helpers.decorators import retry_with_backoff
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
+from .defaults import DEFAULT_CONCURRENT_COROUTINES
 from .utils import get_token_count, hash_text
 
 logger = logging.getLogger(__name__)
@@ -38,7 +39,7 @@ class BaseEmbedder(ABC, BaseBatchAsync):
         db_name: str = "embeddings",
         db_path=CACHE_PATH,
         max_tokens=DEFAULT_LLM_MAX_TOKENS,
-        concurrent_coroutines=50,
+        concurrent_coroutines=DEFAULT_CONCURRENT_COROUTINES,
     ) -> None:
         self.vector_store = VectorStore(db_name, db_path, schema)
         self.max_tokens = max_tokens

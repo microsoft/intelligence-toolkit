@@ -233,10 +233,11 @@ def build_matches_dataset(
 
     matches_df = matches_df.with_columns(
         matches_df["Group ID"]
-        .map_elements(lambda x: group_to_mean_similarity.get(x, 0))
+        .map_elements(lambda x: group_to_mean_similarity.get(x))
         .alias("Name similarity")
     )
 
+    matches_df = matches_df.filter(pl.col("Name similarity").is_not_null())
     return matches_df.sort(by=["Name similarity", "Group ID"])
 
 
