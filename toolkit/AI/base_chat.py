@@ -18,7 +18,7 @@ class BaseChat(BaseBatchAsync, OpenAIClient):
     def __init__(
         self, configuration=None, concurrent_coroutines=DEFAULT_CONCURRENT_COROUTINES
     ) -> None:
-        OpenAIClient.__init__(self, configuration, concurrent_coroutines)
+        OpenAIClient.__init__(self, configuration)
         self.semaphore = asyncio.Semaphore(concurrent_coroutines)
 
     @retry_with_backoff()

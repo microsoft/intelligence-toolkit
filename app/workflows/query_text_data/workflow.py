@@ -8,27 +8,25 @@ import streamlit as st
 from seaborn import color_palette
 from streamlit_agraph import Config, Edge, Node, agraph
 
+import app.util.example_outputs_ui as example_outputs_ui
+import app.workflows.query_text_data.functions as functions
+import toolkit.query_text_data.answer_builder as answer_builder
+import toolkit.query_text_data.graph_builder as graph_builder
 import toolkit.query_text_data.helper_functions as helper_functions
 import toolkit.query_text_data.input_processor as input_processor
 import toolkit.query_text_data.prompts as prompts
-import toolkit.query_text_data.answer_builder as answer_builder
 import toolkit.query_text_data.relevance_assessor as relevance_assessor
-import toolkit.query_text_data.graph_builder as graph_builder
-import app.util.example_outputs_ui as example_outputs_ui
-from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
 from app.util.openai_wrapper import UIOpenAIConfiguration
 from app.util.session_variables import SessionVariables
-from app.workflows.query_text_data import config
-from toolkit.AI.base_embedder import BaseEmbedder
 from toolkit.AI.defaults import CHUNK_SIZE
-from toolkit.AI.local_embedder import LocalEmbedder
-from toolkit.AI.openai_embedder import OpenAIEmbedder
 from toolkit.graph.graph_fusion_encoder_embedding import (
+    create_concept_to_community_hierarchy,
     generate_graph_fusion_encoder_embedding,
-    create_concept_to_community_hierarchy
 )
+from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
+from toolkit.query_text_data import config
 from toolkit.query_text_data.pattern_detector import (
     combine_chunk_text_and_explantion,
     detect_converging_pairs,
@@ -58,27 +56,6 @@ def create_progress_callback(template: str):
     callback = ProgressBatchCallback()
     callback.on_batch_change = on_change
     return pb, callback
-
-
-def embedder() -> BaseEmbedder:
-    try:
-        ai_configuration = UIOpenAIConfiguration().get_configuration()
-        if sv_home.local_embeddings.value:
-            return LocalEmbedder(
-                db_name=config.cache_name,
-                max_tokens=ai_configuration.max_tokens,
-            )
-
-        return OpenAIEmbedder(
-            configuration=ai_configuration,
-            db_name=config.cache_name,
-        )
-    except Exception as e:
-        st.error(f"Error creating connection: {e}")
-        st.stop()
-
-
-text_embedder = embedder()
 
 
 def get_concept_graph(
@@ -172,6 +149,11 @@ async def create(sv: SessionVariables, workflow=None):
         # )
         # window_period = input_processor.PeriodOption[window_size]
         window_period = input_processor.PeriodOption.NONE
+        local_embedding = st.toggle(
+            "Use local embeddings",
+            sv.answer_local_embedding_enabled.value,
+            help="Use local embeddings to index nodes. If disabled, the model will use OpenAI embeddings.",
+        )
         if files is not None and st.button("Process files"):
             file_pb, file_callback = create_progress_callback(
                 "Loaded {} of {} files..."
@@ -250,6 +232,8 @@ async def create(sv: SessionVariables, workflow=None):
             embed_pb, embed_callback = create_progress_callback(
                 "Embedded {} of {} text chunks..."
             )
+            text_embedder = functions.embedder(local_embedding)
+
             sv.cid_to_vector.value = await helper_functions.embed_texts(
                 sv.cid_to_explained_text.value,
                 text_embedder,
@@ -454,7 +438,7 @@ async def create(sv: SessionVariables, workflow=None):
                 concept_to_community=sv.concept_to_community.value,
                 previous_cid=sv.previous_cid.value,
                 next_cid=sv.next_cid.value,
-                embedder=embedder(),
+                embedder=functions.embedder(local_embedding),
                 embedding_cache=sv_home.save_cache.value,
                 select_logit_bias=5,
                 adjacent_search_steps=sv.adjacent_chunk_steps.value,

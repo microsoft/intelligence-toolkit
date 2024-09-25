@@ -14,4 +14,3 @@ class SessionVariables:
         self.embedding_model = sv.SessionVariable("text-embedding-ada-002")
         self.max_embedding_size = sv.SessionVariable(500)
         self.save_cache = sv.SessionVariable(True)
-        self.local_embeddings = sv.SessionVariable(False)

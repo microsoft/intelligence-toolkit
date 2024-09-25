@@ -56,6 +56,8 @@ class SessionVariables:
         self.chunk_progress = SessionVariable("", prefix)
         self.answer_progress = SessionVariable("", prefix)
 
+        self.answer_local_embedding_enabled = SessionVariable(False, prefix)
+
     def reset_workflow(self):
         for key in st.session_state:
             if key.startswith(self.prefix):
