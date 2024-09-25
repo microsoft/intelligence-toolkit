@@ -30,10 +30,6 @@ Counts of attributes in cases linked to the pattern:
 
 {attribute_counts}
 
-"""
-
-user_prompt = """\
-Your goal is to produce a short report on the pattern. The report should be structured in markdown and use plain language accessible to non-native speakers and non-technical audiences.
 
 Report format:
 
@@ -58,6 +54,11 @@ List seven competing hypotheses about why the pattern may have been observed in 
 ## Suggested actions
 
 List seven potential actions targeted at the specific details of the identified pattern. Do not make broad recommendations that would apply to all patterns. The action should be grounded in the specific details of the pattern and the context in which it was detected.
+
+"""
+
+user_prompt = """\
+Your goal is to produce a short report on the pattern. The report should be structured in markdown and use plain language accessible to non-native speakers and non-technical audiences.
 """
 
 list_prompts = {

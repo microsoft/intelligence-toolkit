@@ -46,11 +46,6 @@ For calibration, the mean and maximum counts of entity flags are as follows:
 Maximum flags of a flagged entity: {max_flags}
 Mean flags of flagged entities: {mean_flags}
 
-"""
-
-user_prompt = """\
-The report should be structured in markdown and use plain English accessible to non-native speakers and non-technical audiences.
-
 Begin your response with the heading:
 
 "##### Evaluation of <Entity ID> in Network <Network ID>"
@@ -58,6 +53,10 @@ Begin your response with the heading:
 if there is a selected entity, or else:
 
 "##### Evaluation of Entity Network <Network ID>"
+"""
+
+user_prompt = """\
+The report should be structured in markdown and use plain English accessible to non-native speakers and non-technical audiences.
 """
 
 list_prompts = {

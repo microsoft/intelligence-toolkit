@@ -23,13 +23,12 @@ Dataset:
 
 {dataset}
 
+Where possible, the text should add numeric counts, ranks, and deltas in parentheses to support its claims, but should avoid using complex column names directly.
+
 """
 
 user_prompt = """\
 The report should be structured in markdown and use plain English accessible to non-native speakers and non-technical audiences.
-
-Where possible, the text should add numeric counts, ranks, and deltas in parentheses to support its claims, but should avoid using complex column names directly.
-
 """
 
 list_prompts = {
