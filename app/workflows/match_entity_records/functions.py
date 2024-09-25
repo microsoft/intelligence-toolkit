@@ -4,19 +4,16 @@
 import streamlit as st
 
 from app.util.openai_wrapper import UIOpenAIConfiguration
-from app.util.session_variables import SessionVariables
 from toolkit.AI.base_embedder import BaseEmbedder
 from toolkit.AI.local_embedder import LocalEmbedder
 from toolkit.AI.openai_embedder import OpenAIEmbedder
 from toolkit.match_entity_records import config
 
-sv_home = SessionVariables("home")
 
-
-def embedder() -> BaseEmbedder:
+def embedder(local_embedding: bool | None = False) -> BaseEmbedder:
     try:
         ai_configuration = UIOpenAIConfiguration().get_configuration()
-        if sv_home.local_embeddings.value:
+        if local_embedding:
             return LocalEmbedder(
                 db_name=config.cache_name,
                 max_tokens=ai_configuration.max_tokens,

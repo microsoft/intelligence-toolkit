@@ -9,13 +9,16 @@ from tqdm.asyncio import tqdm_asyncio
 
 from toolkit.AI.base_batch_async import BaseBatchAsync
 from toolkit.AI.client import OpenAIClient
+from toolkit.AI.defaults import DEFAULT_CONCURRENT_COROUTINES
 from toolkit.helpers.decorators import retry_with_backoff
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 
 class BaseChat(BaseBatchAsync, OpenAIClient):
-    def __init__(self, configuration=None, concurrent_coroutines=20) -> None:
-        OpenAIClient.__init__(self, configuration, concurrent_coroutines)
+    def __init__(
+        self, configuration=None, concurrent_coroutines=DEFAULT_CONCURRENT_COROUTINES
+    ) -> None:
+        OpenAIClient.__init__(self, configuration)
         self.semaphore = asyncio.Semaphore(concurrent_coroutines)
 
     @retry_with_backoff()

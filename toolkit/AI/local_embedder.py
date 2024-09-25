@@ -8,7 +8,11 @@ from typing import Any
 from sentence_transformers import SentenceTransformer
 
 from toolkit.AI.base_embedder import BaseEmbedder
-from toolkit.AI.defaults import DEFAULT_LLM_MAX_TOKENS, DEFAULT_LOCAL_EMBEDDING_MODEL
+from toolkit.AI.defaults import (
+    DEFAULT_CONCURRENT_COROUTINES,
+    DEFAULT_LLM_MAX_TOKENS,
+    DEFAULT_LOCAL_EMBEDDING_MODEL,
+)
 from toolkit.helpers.constants import CACHE_PATH
 
 
@@ -18,7 +22,7 @@ class LocalEmbedder(BaseEmbedder):
         db_name: str = "embeddings",
         db_path=CACHE_PATH,
         max_tokens=DEFAULT_LLM_MAX_TOKENS,
-        concurrent_coroutines: int | None = None,
+        concurrent_coroutines: int | None = DEFAULT_CONCURRENT_COROUTINES,
     ):
         super().__init__(db_name, db_path, max_tokens, concurrent_coroutines)
         self.local_client = SentenceTransformer(DEFAULT_LOCAL_EMBEDDING_MODEL)
