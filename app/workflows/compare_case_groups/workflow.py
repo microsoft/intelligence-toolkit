@@ -29,7 +29,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
         [
             "Compare case groups workflow:",
             "Prepare case data",
-            "Prepare group comparisons",
+            "Specify group comparisons",
             "Generate AI group reports",
         ]
     )
@@ -111,7 +111,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                 )
 
                 create = st.button(
-                    "Create summary", disabled=len(groups) == 0 or len(aggregates) == 0
+                    "Create data summary", disabled=len(groups) == 0 or len(aggregates) == 0
                 )
 
             with c2:
@@ -150,7 +150,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                     temporal_atts = []
                     # create Window df
                     if temporal is not None and temporal != "":
-                        temporal_df = create_window_df(
+                        window_df = create_window_df(
                             groups, temporal, aggregates, pl.from_pandas(filtered_df)
                         )
 
@@ -159,7 +159,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                         )
 
                         temporal_df = build_temporal_data(
-                            temporal_df, groups, temporal_atts, temporal
+                            window_df, groups, temporal_atts, temporal
                         )
                     # Create overall df
                     ranked_df = build_ranked_df(
@@ -174,27 +174,27 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                     sv.case_groups_model_df.value = (
                         ranked_df[
                             [
-                                *groups,
-                                "Group Count",
-                                "Group Rank",
-                                "Attribute Value",
-                                "Attribute Count",
-                                "Attribute Rank",
-                                f"{temporal} Window",
-                                f"{temporal} Window Count",
-                                f"{temporal} Window Rank",
-                                f"{temporal} Window Delta",
+                                *[g.lower() for g in groups],
+                                "group_count",
+                                "group_rank",
+                                "attribute_value",
+                                "attribute_count",
+                                "attribute_rank",
+                                f"{temporal}_window",
+                                f"{temporal}_window_count",
+                                f"{temporal}_window_rank",
+                                f"{temporal}_window_delta",
                             ]
                         ]
                         if temporal != ""
                         else ranked_df[
                             [
-                                *groups,
-                                "Group Count",
-                                "Group Rank",
-                                "Attribute Value",
-                                "Attribute Count",
-                                "Attribute Rank",
+                                *[g.lower() for g in groups],
+                                "group_count",
+                                "group_rank",
+                                "attribute_value",
+                                "attribute_count",
+                                "attribute_rank",
                             ]
                         ]
                     )
@@ -224,11 +224,11 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                         if len(filters) > 0
                         else f"\n- A summary of all **{initial_row_count}** data records"
                     )
-                    description += f"\n- The **Group Count** of records for all {groups_text} groups, and corresponding **Group Rank**"
-                    description += f"\n- The **Attribute Count** of each **Attribute Value** for all {groups_text} groups, and corresponding **Attribute Rank**"
+                    description += f"\n- The **group_count** of records for all {groups_text} groups, and corresponding **group_rank**"
+                    description += f"\n- The **attribute_count** of each **attribute_value** for all {groups_text} groups, and corresponding **attribute_rank**"
                     if temporal != "":
-                        description += f"\n- The **{temporal} Window Count** of each **Attribute Value** for each **{temporal} Window** for all {groups_text} groups, and corresponding **{temporal} Window Rank**"
-                        description += f"\n- The **{temporal} Window Delta**, or change in the **Attribute Value Count** for successive **{temporal} Window** values, within each {groups_text} group"
+                        description += f"\n- The **{temporal}_window_count** of each **attribute_value** for each **{temporal}_window** for all {groups_text} groups, and corresponding **{temporal}_window_rank**"
+                        description += f"\n- The **{temporal}_window_delta**, or change in the **attribute_value_count** for successive **{temporal}_window** values, within each {groups_text} group"
                     sv.case_groups_description.value = description
                     st.rerun()
                 if len(sv.case_groups_model_df.value) > 0:
@@ -241,11 +241,11 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
 
                     st.markdown(sv.case_groups_description.value)
                     st.download_button(
-                        "Download data",
+                        "Download data summary",
                         data=sv.case_groups_model_df.value.to_csv(
                             index=False, encoding="utf-8-sig"
                         ),
-                        file_name="narrative_data_summary.csv",
+                        file_name="group_data_summary.csv",
                         mime="text/csv",
                     )
 
@@ -264,13 +264,13 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                 b1, b2 = st.columns([1, 1])
                 with b1:
                     selected_groups = st.multiselect(
-                        "Select specific groups to narrate:",
+                        "Select specific groups to report on:",
                         list(groups),
                         default=sv.case_groups_selected_groups.value,
                     )
                 with b2:
                     top_group_ranks = st.number_input(
-                        "OR Select top group ranks to narrate:",
+                        "OR Select top group ranks to report on:",
                         min_value=0,
                         max_value=9999999999,
                         value=sv.case_groups_top_groups.value,
@@ -285,12 +285,12 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                     ]
                     filter_description = f'Filtered to the following groups only: {", ".join([str(s) for s in selected_groups])}'
                 elif top_group_ranks:
-                    fdf = fdf[fdf["Group Rank"] <= top_group_ranks]
+                    fdf = fdf[fdf["group_rank"] <= top_group_ranks]
                     filter_description = (
                         f"Filtered to the top {top_group_ranks} groups by record count"
                     )
                 num_rows = len(fdf)
-                st.markdown(f"##### Filtered data summary to narrate ({num_rows} rows)")
+                st.markdown(f"##### Filtered data summary to report on ({num_rows} rows)")
                 st.dataframe(fdf, hide_index=True, use_container_width=True, height=280)
                 variables = {
                     "description": sv.case_groups_description.value,
@@ -306,7 +306,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                     )
                     st.rerun()
             with c2:
-                st.markdown("##### Data narrative")
+                st.markdown("##### Group comparison report")
 
                 narrative_placeholder = st.empty()
                 gen_placeholder = st.empty()
@@ -337,9 +337,9 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
 
                 ui_components.report_download_ui(sv.case_groups_report, "group_report")
 
-                ui_components.build_validation_ui(
-                    sv.case_groups_report_validation.value,
-                    sv.case_groups_report_validation_messages.value,
-                    sv.case_groups_report.value,
-                    workflow,
-                )
+                # ui_components.build_validation_ui(
+                #     sv.case_groups_report_validation.value,
+                #     sv.case_groups_report_validation_messages.value,
+                #     sv.case_groups_report.value,
+                #     workflow,
+                # )

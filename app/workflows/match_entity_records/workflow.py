@@ -444,11 +444,11 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                     if type(sv.matching_evaluations.value) == pl.DataFrame
                     else sv.matching_evaluations.value
                 )
-                ui_components.build_validation_ui(
-                    sv.matching_report_validation.value,
-                    sv.matching_report_validation_messages.value,
-                    report,
-                    workflow,
-                )
+                # ui_components.build_validation_ui(
+                #     sv.matching_report_validation.value,
+                #     sv.matching_report_validation_messages.value,
+                #     report,
+                #     workflow,
+                # )
     with examples_tab:
         example_outputs_ui.create_example_outputs_ui(examples_tab, workflow)

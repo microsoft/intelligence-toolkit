@@ -6,7 +6,7 @@ The project page can be found at [github.com/microsoft/intelligence-toolkit](htt
 
 ## Transparency FAQ
 
-#### What can Intelligence Toolkit do?  
+#### What can Intelligence Toolkit do?
 
 The Intelligence Toolkit aims to help domain experts make sense of real-world data at a speed and scale that wouldn't otherwise be possible. It was specifically designed for analysis of case, entity, and text data:
 
@@ -37,6 +37,8 @@ It supports a variety of interactive workflows, each designed to address a speci
   - [`Query Text Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/query_text_data/README.md) generates reports from a collection of text documents.
   - [`Extract Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/extract_record_data/README.md) generate schema-aligned JSON objects and CSV records from unstructured text.
   - [`Generate Mock Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_mock_data/README.md) generates mock records and text from a JSON schema defined or uploaded by the user.
+
+All tutorial data and examples used in Intelligence Toolkit were created for this purpose using the [`Generate Mock Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_mock_data/README.md) workflow.
 
 #### How was Intelligence Toolkit evaluated?
 
@@ -130,7 +132,6 @@ flowchart TD
     TextDocs["<b>Input:</b> Text Data"] ---> NeedRecords{"Need<br/>Records?"} --> |"<b>Extract Record Data</b><br/>workflow"| ExtractedRecords["AI-Extracted Records"]
     TextDocs["<b>Input:</b> Text Data"] ---> NeedAnswers{"Need<br/>Answers?"} --> |"<b>Query Text Data</b><br/>workflow"| AnswerReports["AI Answer Reports"]
 ```
-
 
 ## Diving Deeper
 

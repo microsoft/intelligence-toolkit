@@ -147,7 +147,7 @@ async def create(sv: SessionVariables, workflow=None):
     intro_tab, uploader_tab, graph_tab, search_tab, report_tab, examples_tab = st.tabs(
         [
             "Query Text Data workflow:",
-            "Upload data",
+            "Prepare data",
             "Explore concept graph",
             "Generate AI extended answers",
             "Generate AI answer reports",
@@ -313,7 +313,7 @@ async def create(sv: SessionVariables, workflow=None):
                     st.markdown(f"**Selected concept: {selection}**")
                     st.dataframe(selected_cids_df, hide_index=True, height=650, use_container_width=True)
     with search_tab:
-        with st.expander("Search options", expanded=False):
+        with st.expander("Options", expanded=False):
             c1, c2, c3, c4, c5 = st.columns([1, 1, 1, 1, 1])
             with c1:
                 st.number_input(
@@ -321,6 +321,7 @@ async def create(sv: SessionVariables, workflow=None):
                     value=sv.relevance_test_budget.value,
                     key=sv.relevance_test_budget.key,
                     min_value=0,
+                    help="The query method works by asking an LLM to evaluate the relevance of potentially-relevant text chunks, returning a single token, yes/no judgement. This parameter allows the user to cap the number of relvance tests that may be performed prior to generating an answer using all relevant chunks. Larger budgets will generally give better answers for a greater cost."
                 )
             with c2:
                 st.number_input(
@@ -328,6 +329,7 @@ async def create(sv: SessionVariables, workflow=None):
                     value=sv.relevance_test_batch_size.value,
                     key=sv.relevance_test_batch_size.key,
                     min_value=0,
+                    help="How many relevant tests to perform for each topic in each round. Larger values reduce the likelihood of prematurely discarding topics whose relevant chunks may not be at the top of the similarity-based ranking, but may result in smaller values of `Relevance test budget` being spread across fewer topics and thus not capturing the full breadth of the data."
                 )
             with c3:
                 st.number_input(
@@ -335,6 +337,7 @@ async def create(sv: SessionVariables, workflow=None):
                     value=sv.irrelevant_community_restart.value,
                     key=sv.irrelevant_community_restart.key,
                     min_value=0,
+                    help="When this number of topics in a row fail to return any relevant chunks in their `Tests/topic/round`, return to the start of the topic ranking and continue testing `Tests/topic/round` text chunks from each topic with (a) relevance in the previous round and (b) previously untested text chunks. Higher values can avoid prematurely discarding topics that are relevant but whose relevant chunks are not at the top of the similarity-based ranking, but may result in a larger number of irrelevant topics being tested multiple times."
                 )
             with c4:
                 st.number_input(
@@ -342,6 +345,7 @@ async def create(sv: SessionVariables, workflow=None):
                     value=sv.adjacent_chunk_steps.value,
                     key=sv.adjacent_chunk_steps.key,
                     min_value=0,
+                    help="If a text chunk is relevant to the query, then adjacent text chunks in the original document may be able to add additional context to the relevant points. The value of this parameter determines how many chunks before and after each relevant text chunk will be evaluated at the end of the process (or `Relevance test budget`) if they are yet to be tested."
                 )
             with c5:
                 st.number_input(
@@ -349,6 +353,7 @@ async def create(sv: SessionVariables, workflow=None):
                     value=sv.answer_update_batch_size.value,
                     key=sv.answer_update_batch_size.key,
                     min_value=0,
+                    help="Determines how many relevant chunks at a time are incorporated into the extended answer in progress. Higher values may require fewer updates, but may miss more details from the chunks provided."
                 )
         c1, c2 = st.columns([6, 1])
         with c1:
@@ -537,11 +542,11 @@ async def create(sv: SessionVariables, workflow=None):
                             disabled=is_download_disabled,
                         )
 
-                    ui_components.build_validation_ui(
-                        sv.report_validation.value,
-                        sv.report_validation_messages.value,
-                        sv.final_report.value,
-                        workflow,
-                    )
+                    # ui_components.build_validation_ui(
+                    #     sv.report_validation.value,
+                    #     sv.report_validation_messages.value,
+                    #     sv.final_report.value,
+                    #     workflow,
+                    # )
     with examples_tab:
         example_outputs_ui.create_example_outputs_ui(examples_tab, workflow)

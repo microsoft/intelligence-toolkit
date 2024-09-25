@@ -129,7 +129,7 @@ def generative_batch_ai_component(
     system_prompt_var, variables, batch_name, batch_val, batch_size
 ):
     st.markdown("##### Generative AI instructions")
-    with st.expander("Edit AI System Prompt (advanced)", expanded=True):
+    with st.expander("Edit AI System Prompt", expanded=True):
         instructions_text = st.text_area(
             "Contents of System Prompt used to generate AI outputs.",
             value=system_prompt_var.value["user_prompt"],

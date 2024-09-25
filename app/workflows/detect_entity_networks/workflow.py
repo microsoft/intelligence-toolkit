@@ -773,9 +773,9 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
 
                 ui_components.report_download_ui(report_data, "network_report")
 
-                ui_components.build_validation_ui(
-                    sv.network_report_validation.value,
-                    sv.network_report_validation_messages.value,
-                    sv.network_report.value,
-                    workflow,
-                )
+                # ui_components.build_validation_ui(
+                #     sv.network_report_validation.value,
+                #     sv.network_report_validation_messages.value,
+                #     sv.network_report.value,
+                #     workflow,
+                # )
