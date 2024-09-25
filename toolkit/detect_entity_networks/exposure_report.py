@@ -22,6 +22,9 @@ def build_exposure_data(
     if integrated_flags.is_empty():
         return ""
 
+    if isinstance(c_nodes, set):
+        c_nodes = list(c_nodes)
+
     qualified_selected = f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}{selected_entity}"
     rdf = integrated_flags
     c_nodes = c_nodes.copy()
