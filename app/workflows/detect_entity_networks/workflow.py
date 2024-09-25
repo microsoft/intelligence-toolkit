@@ -230,6 +230,11 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                 options=fuzzy_options,
                 help="Select the node types to embed into a multi-dimensional semantic space for fuzzy matching.",
             )
+            local_embedding = st.toggle(
+                "Use local embeddings",
+                sv.network_local_embedding_enabled.value,
+                help="Use local embeddings to index nodes. If disabled, the model will use OpenAI embeddings.",
+            )
             index = st.button(
                 "Index nodes",
                 disabled=len(network_indexed_node_types) == 0,
@@ -244,17 +249,17 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                 help="The maximum cosine similarity threshold for inferring links between nodes based on their embeddings. Higher values will infer more links, but may also infer more false positives.",
             )
 
-            c_1, c_2 = st.columns([2, 2])
+            c_1, c_2 = st.columns([4, 1])
             with c_1:
                 infer = st.button(
                     "Infer nodes",
-                    disabled=len(network_indexed_node_types) == 0,
+                    disabled=len(sv.network_embedded_texts.value) == 0
+                    or len(network_indexed_node_types) == 0,
                 )
             with c_2:
                 clear_inferring = st.button(
                     "Clear inferred links",
                     disabled=len(sv.network_inferred_links.value) == 0,
-                    use_container_width=True,
                 )
             if clear_inferring:
                 sv.network_inferred_links.value = []
@@ -273,7 +278,8 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
 
                 callback = ProgressBatchCallback()
                 callback.on_batch_change = on_embedding_batch_change
-                functions_embedder = functions.embedder()
+
+                functions_embedder = functions.embedder(local_embedding)
                 sv.network_indexed_node_types.value = network_indexed_node_types
 
                 (
@@ -289,6 +295,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                     sv_home.save_cache.value,
                 )
                 pb.empty()
+                st.rerun()
 
             if infer:
                 pb = st.progress(0, "Inferring texts...")
