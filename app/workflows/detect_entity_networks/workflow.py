@@ -555,13 +555,13 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                     )
 
             selected_entity = (
-                response["selected_rows"][0]["Entity ID"]
+                response["selected_rows"][0]["entity_id"]
                 if len(response["selected_rows"]) > 0
-                and "Entity ID" in response["selected_rows"][0]
+                and "entity_id" in response["selected_rows"][0]
                 else ""
             )
             selected_network = (
-                response["selected_rows"][0]["Network ID"]
+                response["selected_rows"][0]["network_id"]
                 if len(response["selected_rows"]) > 0
                 else ""
             )
@@ -647,7 +647,6 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                     ]
 
                     if show_entities:
-                        
                         nodes, edges = get_entity_graph(
                             render_graph,
                             entity_selected,
@@ -672,6 +671,20 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                             f"##### Network {selected_network} ({graph_type.lower()})"
                         )
 
+                    AgGrid(
+                        last_df[last_df["network_id"] == selected_network]
+                        if selected_entity == ""
+                        else last_df[last_df["entity_id"] == selected_entity],
+                        key=f"report_grid_{sv.network_table_index.value}_selected",
+                        height=90,
+                        enable_enterprise_modules=False,
+                        fit_columns_on_grid_load=False,
+                        header_checkbox_selection_filtered_only=False,
+                        use_checkbox=False,
+                        update_mode=GridUpdateMode.NO_UPDATE,
+                        reload_data=True,
+                        columns_auto_size_mode=ColumnsAutoSizeMode.FIT_ALL_COLUMNS_TO_VIEW,
+                    )
                     nodes_agraph = [Node(**node) for node in nodes]
                     edges_agraph = [Edge(**edge) for edge in edges]
 
