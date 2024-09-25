@@ -1,0 +1,1843 @@
+network_id,network_entities,network_flags,flagged,flags/entity,flagged/unflagged,sector,country
+35,10,93,9,9.3,9.0,Media,Broadcastland
+35,10,93,9,9.3,9.0,Art,Artland
+35,10,93,9,9.3,9.0,Media,Waveland
+35,10,93,9,9.3,9.0,Media,MediaLand
+73,22,118,15,5.36,2.14,Agriculture,EcoLand
+73,22,118,15,5.36,2.14,Agriculture,Farmville
+73,22,118,15,5.36,2.14,Agriculture,Leafland
+73,22,118,15,5.36,2.14,Energy,Sustainland
+73,22,118,15,5.36,2.14,Agriculture,Agroland
+384,3,12,2,4.0,2.0,Entertainment,JoyLand
+384,3,12,2,4.0,2.0,Entertainment,Funland
+384,3,12,2,4.0,2.0,Entertainment,South Korea
+339,14,112,9,8.0,1.8,Technology,TechLand
+339,14,112,9,8.0,1.8,Technology,Innovatia
+339,14,112,9,8.0,1.8,Information Technology,Futuristan
+360,11,58,7,5.27,1.75,Aerospace,USA
+360,11,58,7,5.27,1.75,Aviation,Flyland
+360,11,58,7,5.27,1.75,Transportation,Flyland
+341,15,112,9,7.47,1.5,Technology,Innovatia
+341,15,112,9,7.47,1.5,Information Technology,Futuristan
+1,9,16,5,1.78,1.25,Technology,Techland
+1,9,16,5,1.78,1.25,Manufacturing,Innovatia
+370,11,137,6,12.45,1.2,Construction,GreenLand
+370,11,137,6,12.45,1.2,Construction,BuildLand
+370,11,137,6,12.45,1.2,Construction,ConstructLand
+56,21,359,11,17.1,1.1,Transportation,Airland
+56,21,359,11,17.1,1.1,Aviation,Flyland
+56,21,359,11,17.1,1.1,Aviation,Skyland
+56,21,359,11,17.1,1.1,Logistics,SkyLand
+56,21,359,11,17.1,1.1,Transportation,Flyland
+290,22,269,11,12.23,1.0,Construction,Skyland
+290,22,269,11,12.23,1.0,Engineering,BuildLand
+290,22,269,11,12.23,1.0,Engineering,Buildland
+290,22,269,11,12.23,1.0,Construction,BuildLand
+332,6,7,3,1.17,1.0,Technology,Techland
+332,6,7,3,1.17,1.0,Technology,Innovatia
+290,22,269,11,12.23,1.0,Agriculture,Agroland
+290,22,269,11,12.23,1.0,Construction,Archland
+290,22,269,11,12.23,1.0,Urban Planning,Buildland
+414,2,5,1,2.5,1.0,Sports,Athletica
+290,22,269,11,12.23,1.0,Agriculture,Farmville
+290,22,269,11,12.23,1.0,Interior Design,Archland
+414,2,5,1,2.5,1.0,Sports,Sportland
+332,6,7,3,1.17,1.0,Technology,Gadgetland
+290,22,269,11,12.23,1.0,Architecture,Archland
+51,27,109,13,4.04,0.93,Finance,Bankland
+51,27,109,13,4.04,0.93,Finance,Wealthland
+51,27,109,13,4.04,0.93,Transportation,MoveLand
+51,27,109,13,4.04,0.93,Finance,SapphireLand
+51,27,109,13,4.04,0.93,Technology,TechLand
+51,27,109,13,4.04,0.93,Finance,Finland
+51,27,109,13,4.04,0.93,Transportation,SilverLand
+276,30,498,14,16.6,0.88,Construction,Constructia
+304,15,166,7,11.07,0.88,Real Estate,Urbia
+276,30,498,14,16.6,0.88,Construction,USA
+276,30,498,14,16.6,0.88,Construction,BuildLand
+276,30,498,14,16.6,0.88,Landscape Architecture,DesignLand
+276,30,498,14,16.6,0.88,Agriculture,Agroland
+276,30,498,14,16.6,0.88,Construction,Buildland
+276,30,498,14,16.6,0.88,Construction,Brazil
+304,15,166,7,11.07,0.88,Technology,Innovatia
+304,15,166,7,11.07,0.88,Real Estate,Realtyland
+304,15,166,7,11.07,0.88,Construction,BuildLand
+276,30,498,14,16.6,0.88,Construction,Constructland
+304,15,166,7,11.07,0.88,Construction,Buildland
+303,32,538,15,16.81,0.88,Construction,Buildland
+303,32,538,15,16.81,0.88,Construction,USA
+303,32,538,15,16.81,0.88,Construction,Constructia
+303,32,538,15,16.81,0.88,Construction,Highland
+303,32,538,15,16.81,0.88,Construction,BuildLand
+368,13,162,6,12.46,0.86,Construction,Buildland
+291,11,109,5,9.91,0.83,Agriculture,Farmia
+291,11,109,5,9.91,0.83,Education,EduNation
+361,11,242,5,22.0,0.83,Aerospace,SkyLand
+361,11,242,5,22.0,0.83,Aerospace,SkyNation
+361,11,242,5,22.0,0.83,Aviation,Flyland
+291,11,109,5,9.91,0.83,Construction,Buildland
+291,11,109,5,9.91,0.83,Construction,BuildLand
+291,11,109,5,9.91,0.83,Education,Educatia
+291,11,109,5,9.91,0.83,Architecture,Designia
+291,11,109,5,9.91,0.83,Architecture,Buildland
+101,16,278,7,17.38,0.78,Automotive,Autoland
+338,29,243,12,8.38,0.71,Technology,TechLand
+338,29,243,12,8.38,0.71,Technology,Techland
+338,29,243,12,8.38,0.71,Technology,USA
+338,29,243,12,8.38,0.71,Technology,Innovatia
+338,29,243,12,8.38,0.71,Aerospace,Cosmoland
+208,15,45,6,3.0,0.67,NonProfit,Netherlands
+208,15,45,6,3.0,0.67,Utilities,WaterLand
+208,15,45,6,3.0,0.67,Water,Italy
+208,15,45,6,3.0,0.67,Utilities,Hydroland
+50,15,28,6,1.87,0.67,Finance,Moneyland
+102,15,101,6,6.73,0.67,Retail,Shopland
+102,15,101,6,6.73,0.67,Retail,Retailia
+117,5,14,2,2.8,0.67,Food & Beverage,Culinaryland
+170,5,26,2,5.2,0.67,Logistics,MoveLand
+170,5,26,2,5.2,0.67,Logistics,Moveland
+117,5,14,2,2.8,0.67,Food & Beverage,FlavorNation
+50,15,28,6,1.87,0.67,Insurance,WealthLand
+2,20,71,8,3.55,0.67,Agriculture,EcoLand
+2,20,71,8,3.55,0.67,Agriculture,Farmville
+327,15,82,6,5.47,0.67,Technology,Innovatia
+327,15,82,6,5.47,0.67,Technology,TechLand
+327,15,82,6,5.47,0.67,Technology,Cyberland
+102,15,101,6,6.73,0.67,Retail,USA
+102,15,101,6,6.73,0.67,Retail,RetailLand
+102,15,101,6,6.73,0.67,Consulting,Adviseland
+50,15,28,6,1.87,0.67,Finance,Bankland
+50,15,28,6,1.87,0.67,Finance,Wealthland
+170,5,26,2,5.2,0.67,Logistics,LogisticsLand
+327,15,82,6,5.47,0.67,Technology,Digitalia
+327,15,82,6,5.47,0.67,IT Services,CyberLand
+2,20,71,8,3.55,0.67,Agriculture,Agroland
+2,20,71,8,3.55,0.67,Agriculture,AgriLand
+117,5,14,2,2.8,0.67,Food & Beverage,Foodland
+50,15,28,6,1.87,0.67,Finance,FinanceLand
+50,15,28,6,1.87,0.67,Finance,WealthLand
+50,15,28,6,1.87,0.67,Finance,Finland
+327,15,82,6,5.47,0.67,Technology,Techland
+327,15,82,6,5.47,0.67,Technology,InnovLand
+302,23,182,9,7.91,0.64,Construction,Archland
+302,23,182,9,7.91,0.64,Interior Design,Archland
+302,23,182,9,7.91,0.64,Construction,Buildland
+302,23,182,9,7.91,0.64,Construction,Constructia
+302,23,182,9,7.91,0.64,Urban Planning,Visionland
+314,16,177,6,11.06,0.6,Media,Mediaville
+37,8,34,3,4.25,0.6,Real Estate,Greenland
+37,8,34,3,4.25,0.6,Aviation,Skyland
+314,16,177,6,11.06,0.6,Technology,Techland
+190,16,27,6,1.69,0.6,Education,Eduworld
+190,16,27,6,1.69,0.6,Education,EduNation
+314,16,177,6,11.06,0.6,Technology,Innovatia
+113,8,61,3,7.62,0.6,Agriculture,OrangeLand
+190,16,27,6,1.69,0.6,Education,Learnland
+314,16,177,6,11.06,0.6,Pet Care,Animaland
+113,8,61,3,7.62,0.6,Automotive,Autoland
+113,8,61,3,7.62,0.6,Mining,BlackLand
+113,8,61,3,7.62,0.6,Finance,RubyLand
+37,8,34,3,4.25,0.6,Energy,EcoNation
+37,8,34,3,4.25,0.6,Food & Beverage,GourmetLand
+33,19,80,7,4.21,0.58,Media,Newland
+284,19,275,7,14.47,0.58,Construction,BuildLand
+33,19,80,7,4.21,0.58,Marine,Marineland
+33,19,80,7,4.21,0.58,Media,Mediatown
+33,19,80,7,4.21,0.58,Media,Infotainland
+33,19,80,7,4.21,0.58,Media,Broadcastland
+33,19,80,7,4.21,0.58,Media,Broadcastia
+33,19,80,7,4.21,0.58,Media,Infotainia
+33,19,80,7,4.21,0.58,Media,Mediaville
+33,19,80,7,4.21,0.58,Media,Mediatopia
+33,19,80,7,4.21,0.58,Media,Waveland
+33,19,80,7,4.21,0.58,Media,BroadcastLand
+284,19,275,7,14.47,0.58,Construction,Buildland
+305,30,439,11,14.63,0.58,Construction,Buildland
+305,30,439,11,14.63,0.58,Construction,ConstructLand
+305,30,439,11,14.63,0.58,Construction,BuildLand
+284,19,275,7,14.47,0.58,Construction,Constructia
+305,30,439,11,14.63,0.58,Construction,Constructland
+284,19,275,7,14.47,0.58,Technology,Techland
+284,19,275,7,14.47,0.58,Technology,TechLand
+285,11,171,4,15.55,0.57,Construction,Buildland
+285,11,171,4,15.55,0.57,Construction,Constructia
+367,22,203,8,9.23,0.57,Construction,Buildland
+285,11,171,4,15.55,0.57,Construction,USA
+367,22,203,8,9.23,0.57,Construction,Greenland
+367,22,203,8,9.23,0.57,Energy,Sustainland
+367,22,203,8,9.23,0.57,Real Estate,Greenland
+367,22,203,8,9.23,0.57,Construction,EcoLand
+367,22,203,8,9.23,0.57,Real Estate,EcoLand
+206,17,73,6,4.29,0.55,Logistics,Logistica
+206,17,73,6,4.29,0.55,Energy,Waterland
+206,17,73,6,4.29,0.55,Security,BronzeLand
+206,17,73,6,4.29,0.55,Water Management,Aquaria
+206,17,73,6,4.29,0.55,Telecommunications,SkyLand
+206,17,73,6,4.29,0.55,Logistics,Transportland
+206,17,73,6,4.29,0.55,Beverages,VioletLand
+210,17,50,6,2.94,0.55,Finance,PurpleLand
+206,17,73,6,4.29,0.55,Utilities,Hydroland
+210,17,50,6,2.94,0.55,Water Management,Hydroland
+210,17,50,6,2.94,0.55,Utilities,Netherlands
+210,17,50,6,2.94,0.55,Utilities,Hydroland
+210,17,50,6,2.94,0.55,Utilities,Aquaterra
+210,17,50,6,2.94,0.55,Water Treatment,Utopia
+183,20,59,7,2.95,0.54,Education,EduNation
+183,20,59,7,2.95,0.54,Education,Learnia
+183,20,59,7,2.95,0.54,Technology,Techland
+371,26,275,9,10.58,0.53,Construction,Constructia
+371,26,275,9,10.58,0.53,Construction,Buildland
+371,26,275,9,10.58,0.53,Construction,EcoLand
+371,26,275,9,10.58,0.53,Energy,Greenland
+371,26,275,9,10.58,0.53,Retail,Utopia
+371,26,275,9,10.58,0.53,Environmental,EcoLand
+371,26,275,9,10.58,0.53,Construction,GreenLand
+371,26,275,9,10.58,0.53,Construction,USA
+4,12,44,4,3.67,0.5,Agriculture,Farmville
+4,12,44,4,3.67,0.5,Agriculture,AgriLand
+137,15,234,5,15.6,0.5,Healthcare,Healthland
+137,15,234,5,15.6,0.5,Healthcare,Careland
+137,15,234,5,15.6,0.5,Healthcare,HealthLand
+369,12,126,4,10.5,0.5,Construction,Constructia
+4,12,44,4,3.67,0.5,Agriculture,USA
+188,15,61,5,4.07,0.5,Education,EduNation
+137,15,234,5,15.6,0.5,Healthcare,CareLand
+188,15,61,5,4.07,0.5,Education,Learnia
+188,15,61,5,4.07,0.5,Healthcare,Mediland
+188,15,61,5,4.07,0.5,Education,Knowland
+188,15,61,5,4.07,0.5,Education,EduLand
+53,6,12,2,2.0,0.5,Finance,Wealthland
+53,6,12,2,2.0,0.5,Finance,FinanceLand
+369,12,126,4,10.5,0.5,Retail,EcoLand
+369,12,126,4,10.5,0.5,Fashion,EcoLand
+369,12,126,4,10.5,0.5,Construction,Buildland
+369,12,126,4,10.5,0.5,Energy,Greenland
+4,12,44,4,3.67,0.5,Agriculture,Utopia
+160,12,52,4,4.33,0.5,Media,Imagiland
+109,6,71,2,11.83,0.5,Automotive,Autoland
+358,12,22,4,1.83,0.5,Architecture,Archland
+309,3,1,1,0.33,0.5,Construction,Buildland
+358,12,22,4,1.83,0.5,Entertainment,Playland
+358,12,22,4,1.83,0.5,Architecture,Designland
+358,12,22,4,1.83,0.5,Design,Denmark
+109,6,71,2,11.83,0.5,Biotechnology,Bioland
+277,9,31,3,3.44,0.5,Construction,Masterland
+217,6,21,2,3.5,0.5,Utilities,Hydroland
+217,6,21,2,3.5,0.5,Utilities,Aquatica
+217,6,21,2,3.5,0.5,Utilities,Aquaterra
+320,12,44,4,3.67,0.5,Technology,Innovatia
+320,12,44,4,3.67,0.5,Information Technology,Techland
+277,9,31,3,3.44,0.5,Construction,Buildland
+160,12,52,4,4.33,0.5,Art,Creativeland
+369,12,126,4,10.5,0.5,Construction,Greenland
+369,12,126,4,10.5,0.5,Construction,ConstructLand
+320,12,44,4,3.67,0.5,Technology,Techland
+320,12,44,4,3.67,0.5,Technology,TechLand
+320,12,44,4,3.67,0.5,Technology,InnovateLand
+385,3,13,1,4.33,0.5,Mining,Mineralia
+385,3,13,1,4.33,0.5,Mining,MineralLand
+277,9,31,3,3.44,0.5,Hospitality,TasteLand
+277,9,31,3,3.44,0.5,Technology,InnovLand
+385,3,13,1,4.33,0.5,Mining,Rockland
+358,12,22,4,1.83,0.5,Agriculture,USA
+358,12,22,4,1.83,0.5,Fashion,Trendland
+168,6,10,2,1.67,0.5,Logistics,Moveland
+168,6,10,2,1.67,0.5,Logistics,Netherlands
+168,6,10,2,1.67,0.5,Biotechnology,Bioland
+168,6,10,2,1.67,0.5,Biotechnology,BioLand
+160,12,52,4,4.33,0.5,Arts & Entertainment,Creativeland
+160,12,52,4,4.33,0.5,Media,Mediatopia
+160,12,52,4,4.33,0.5,Arts,Artland
+358,12,22,4,1.83,0.5,Agriculture,Agroland
+160,12,52,4,4.33,0.5,Art,CultureLand
+160,12,52,4,4.33,0.5,Arts,ArtLand
+39,25,102,8,4.08,0.47,Technology,TitaniumLand
+48,22,83,7,3.77,0.47,Finance,Bankland
+39,25,102,8,4.08,0.47,Utilities,Aquaterra
+39,25,102,8,4.08,0.47,Marine,Oceanica
+48,22,83,7,3.77,0.47,Energy,PowerLand
+39,25,102,8,4.08,0.47,Utilities,Aquatica
+48,22,83,7,3.77,0.47,Energy,Utopia
+48,22,83,7,3.77,0.47,Finance,Finland
+48,22,83,7,3.77,0.47,Construction,ConstructLand
+48,22,83,7,3.77,0.47,Technology,Innovateland
+48,22,83,7,3.77,0.47,Finance,Richland
+48,22,83,7,3.77,0.47,Finance,Wealthland
+39,25,102,8,4.08,0.47,Utilities,Hydroland
+48,22,83,7,3.77,0.47,Finance,Moneyland
+48,22,83,7,3.77,0.47,Construction,Constructland
+39,25,102,8,4.08,0.47,Healthcare,Careland
+39,25,102,8,4.08,0.47,Construction,RedLand
+39,25,102,8,4.08,0.47,Agriculture,BrownLand
+48,22,83,7,3.77,0.47,Construction,USA
+240,22,193,7,8.77,0.47,Agriculture,USA
+240,22,193,7,8.77,0.47,Urban Development,Urbania
+240,22,193,7,8.77,0.47,Construction,Constructia
+240,22,193,7,8.77,0.47,Landscaping,Greentopia
+240,22,193,7,8.77,0.47,Environmental,Utopia
+240,22,193,7,8.77,0.47,Construction,Greenland
+40,19,14,6,0.74,0.46,Manufacturing,Atlantis
+40,19,14,6,0.74,0.46,Automotive,CarLand
+40,19,14,6,0.74,0.46,Finance,Aquatica
+40,19,14,6,0.74,0.46,Marine,OceanLand
+40,19,14,6,0.74,0.46,Marine,Waterland
+40,19,14,6,0.74,0.46,Marine,USA
+187,19,53,6,2.79,0.46,Education,LearnLand
+187,19,53,6,2.79,0.46,Education,Knowland
+187,19,53,6,2.79,0.46,Education Technology,Learnland
+187,19,53,6,2.79,0.46,Education,Learnia
+187,19,53,6,2.79,0.46,Education,EduLand
+187,19,53,6,2.79,0.46,Education,EduNation
+306,32,363,10,11.34,0.45,Construction,Buildland
+306,32,363,10,11.34,0.45,Technology,Techland
+306,32,363,10,11.34,0.45,Urban Development,Urbana
+306,32,363,10,11.34,0.45,Technology,USA
+306,32,363,10,11.34,0.45,Construction,BuildLand
+306,32,363,10,11.34,0.45,Technology,Innovatia
+362,26,156,8,6.0,0.44,Aerospace,Spaceland
+362,26,156,8,6.0,0.44,Transportation,Flyland
+362,26,156,8,6.0,0.44,Aviation,Airland
+362,26,156,8,6.0,0.44,Aerospace,Skyland
+362,26,156,8,6.0,0.44,Finance,Finland
+362,26,156,8,6.0,0.44,Aerospace,SkyLand
+362,26,156,8,6.0,0.44,Aerospace,AeroLand
+362,26,156,8,6.0,0.44,Transportation,TravelLand
+362,26,156,8,6.0,0.44,Entertainment,Funland
+362,26,156,8,6.0,0.44,Aerospace,Aerospace
+49,20,81,6,4.05,0.43,Finance,FinanceLand
+49,20,81,6,4.05,0.43,Finance,Wealthland
+49,20,81,6,4.05,0.43,Finance,Moneyland
+49,20,81,6,4.05,0.43,Finance,Bankland
+49,20,81,6,4.05,0.43,Finance,Finland
+49,20,81,6,4.05,0.43,Finance,Finlandia
+49,20,81,6,4.05,0.43,Urban Planning,Planland
+49,20,81,6,4.05,0.43,Finance,Cashland
+268,17,67,5,3.94,0.42,Construction,Buildland
+268,17,67,5,3.94,0.42,Construction,ConstructLand
+268,17,67,5,3.94,0.42,Construction,Constructia
+268,17,67,5,3.94,0.42,Construction,BuildLand
+268,17,67,5,3.94,0.42,Construction,Smartland
+32,24,76,7,3.17,0.41,Media,Broadcastland
+32,24,76,7,3.17,0.41,Media,Artland
+32,24,76,7,3.17,0.41,Media,Mediatopia
+275,31,387,9,12.48,0.41,Construction,Buildland
+32,24,76,7,3.17,0.41,Agriculture,Agroland
+275,31,387,9,12.48,0.41,Construction,BuildLand
+275,31,387,9,12.48,0.41,Manufacturing,ManufactureLand
+32,24,76,7,3.17,0.41,Art,Artland
+32,24,76,7,3.17,0.41,Media,Mediatown
+32,24,76,7,3.17,0.41,Media,Waveland
+32,24,76,7,3.17,0.41,Media,Broadcastia
+32,24,76,7,3.17,0.41,Media,Infotainia
+34,24,66,7,2.75,0.41,Media,MediaLand
+275,31,387,9,12.48,0.41,Construction,ProLand
+34,24,66,7,2.75,0.41,Media,Mediatopia
+34,24,66,7,2.75,0.41,Media,Medialand
+34,24,66,7,2.75,0.41,Media,Entertainia
+34,24,66,7,2.75,0.41,Media,NewsLand
+34,24,66,7,2.75,0.41,Transportation,Transland
+34,24,66,7,2.75,0.41,Media,USA
+34,24,66,7,2.75,0.41,Media,Infotainia
+34,24,66,7,2.75,0.41,Media,Mediaville
+275,31,387,9,12.48,0.41,Construction,Greenland
+34,24,66,7,2.75,0.41,Media,BroadcastLand
+162,7,10,2,1.43,0.4,Art,Artland
+145,14,49,4,3.5,0.4,Healthcare,Careland
+145,14,49,4,3.5,0.4,Healthcare,Healthland
+89,7,20,2,2.86,0.4,Travel,Wanderland
+89,7,20,2,2.86,0.4,Logistics,Utopia
+89,7,20,2,2.86,0.4,Tourism,Tourland
+359,14,241,4,17.21,0.4,Transportation,Aeroland
+359,14,241,4,17.21,0.4,Aviation,Flyland
+162,7,10,2,1.43,0.4,Art & Design,Artland
+359,14,241,4,17.21,0.4,Aerospace,Skyland
+359,14,241,4,17.21,0.4,Transportation,Airland
+359,14,241,4,17.21,0.4,Travel,Wanderland
+359,14,241,4,17.21,0.4,Transportation,SkyLand
+164,7,21,2,3.0,0.4,Security,Secureland
+164,7,21,2,3.0,0.4,Security,Protectland
+89,7,20,2,2.86,0.4,Travel,USA
+87,14,33,4,2.36,0.4,Travel,Wanderland
+145,14,49,4,3.5,0.4,Healthcare,CareLand
+145,14,49,4,3.5,0.4,Pharmaceuticals,HealthLand
+87,14,33,4,2.36,0.4,Travel,Voyageland
+162,7,10,2,1.43,0.4,Design,Creativia
+87,14,33,4,2.36,0.4,Travel,Spain
+87,14,33,4,2.36,0.4,Travel,Tourland
+87,14,33,4,2.36,0.4,Travel,Traveland
+87,14,33,4,2.36,0.4,Travel,Explorland
+212,14,61,4,4.36,0.4,Utilities,Aquatica
+292,21,166,6,7.9,0.4,Manufacturing,Buildland
+209,21,45,6,2.14,0.4,Water,Hydroland
+209,21,45,6,2.14,0.4,Utilities,Aquatica
+209,21,45,6,2.14,0.4,Utilities,Waterland
+292,21,166,6,7.9,0.4,Education,Educatia
+292,21,166,6,7.9,0.4,Construction,Constructia
+292,21,166,6,7.9,0.4,Construction,Archland
+292,21,166,6,7.9,0.4,Construction,Buildland
+292,21,166,6,7.9,0.4,Agriculture,Farmville
+212,14,61,4,4.36,0.4,Mining,Rockland
+212,14,61,4,4.36,0.4,Utilities,Waterland
+212,14,61,4,4.36,0.4,Mining,StoneLand
+207,21,44,6,2.1,0.4,Water,Hydroland
+207,21,44,6,2.1,0.4,Utilities,AquaLand
+207,21,44,6,2.1,0.4,Utilities,Hydroland
+207,21,44,6,2.1,0.4,Water Management,Hydroland
+207,21,44,6,2.1,0.4,Water Treatment,Hydroland
+207,21,44,6,2.1,0.4,Marine,WaterWorld
+212,14,61,4,4.36,0.4,Manufacturing,IronLand
+212,14,61,4,4.36,0.4,Logistics,Atlantis
+216,7,66,2,9.43,0.4,Aviation,Skyland
+216,7,66,2,9.43,0.4,Utilities,Aquatica
+216,7,66,2,9.43,0.4,Food & Beverage,GourmetLand
+212,14,61,4,4.36,0.4,Retail,PinkLand
+207,21,44,6,2.1,0.4,Water Management,Aquaria
+292,21,166,6,7.9,0.4,Real Estate,Skyland
+292,21,166,6,7.9,0.4,Agriculture,Agroland
+292,21,166,6,7.9,0.4,Construction,BuildLand
+62,29,183,8,6.31,0.38,Agriculture,Agroland
+43,11,35,3,3.18,0.38,Utilities,Aquatica
+67,11,24,3,2.18,0.38,Agriculture,Farmland
+67,11,24,3,2.18,0.38,Agriculture,Agraria
+67,11,24,3,2.18,0.38,Agriculture,Farmville
+43,11,35,3,3.18,0.38,Utilities,Hydroland
+184,18,43,5,2.39,0.38,Education,EduLand
+43,11,35,3,3.18,0.38,Utilities,Aquaterra
+184,18,43,5,2.39,0.38,Education,Learnland
+62,29,183,8,6.31,0.38,Agriculture,Farmville
+184,18,43,5,2.39,0.38,Transport,GoldLand
+184,18,43,5,2.39,0.38,Education,LearnLand
+62,29,183,8,6.31,0.38,Agriculture,AgriLand
+62,29,183,8,6.31,0.38,Agriculture,AgroNation
+62,29,183,8,6.31,0.38,Agriculture,EcoLand
+62,29,183,8,6.31,0.38,Agriculture,USA
+67,11,24,3,2.18,0.38,Horticulture,Plantland
+184,18,43,5,2.39,0.38,Education,Educatia
+184,18,43,5,2.39,0.38,Education,EduNation
+67,11,24,3,2.18,0.38,Agriculture,Plantland
+283,15,133,4,8.87,0.36,Construction,Buildland
+189,19,47,5,2.47,0.36,Education,Eduworld
+189,19,47,5,2.47,0.36,Education,Learnland
+189,19,47,5,2.47,0.36,Education,Knowland
+189,19,47,5,2.47,0.36,Education,EduNation
+65,30,188,8,6.27,0.36,Agriculture,Farmland
+65,30,188,8,6.27,0.36,Food Production,Utopia
+65,30,188,8,6.27,0.36,Agriculture,AgriLand
+65,30,188,8,6.27,0.36,Agriculture,Agroland
+158,15,181,4,12.07,0.36,Fashion,Fashionland
+65,30,188,8,6.27,0.36,Agriculture,AgriNation
+158,15,181,4,12.07,0.36,Fashion,USA
+158,15,181,4,12.07,0.36,Fashion,Trendland
+283,15,133,4,8.87,0.36,Education,EduNation
+283,15,133,4,8.87,0.36,Travel,TravelLand
+366,15,66,4,4.4,0.36,Energy,GreenLand
+283,15,133,4,8.87,0.36,Agriculture,Farmia
+283,15,133,4,8.87,0.36,Food & Beverage,Culinary
+65,30,188,8,6.27,0.36,Agriculture,FarmLand
+366,15,66,4,4.4,0.36,Energy,Solaria
+366,15,66,4,4.4,0.36,Energy,CleanLand
+366,15,66,4,4.4,0.36,Energy,Sustainland
+158,15,181,4,12.07,0.36,Retail,Trendland
+65,30,188,8,6.27,0.36,Agriculture,USA
+366,15,66,4,4.4,0.36,Energy,EcoLand
+158,15,181,4,12.07,0.36,Fashion,Stylia
+366,15,66,4,4.4,0.36,Energy,Greenland
+65,30,188,8,6.27,0.36,Agriculture,Farmville
+65,30,188,8,6.27,0.36,Agriculture,Growland
+65,30,188,8,6.27,0.36,Food & Beverage,Gastronia
+65,30,188,8,6.27,0.36,Sports,Athletica
+36,23,45,6,1.96,0.35,Media,Mediaville
+237,27,174,7,6.44,0.35,Home & Living,Comfortland
+36,23,45,6,1.96,0.35,Technology,Innovatia
+36,23,45,6,1.96,0.35,Media,Newsland
+36,23,45,6,1.96,0.35,Media,Mediatopia
+36,23,45,6,1.96,0.35,Media,BroadcastLand
+36,23,45,6,1.96,0.35,Media,MediaLand
+36,23,45,6,1.96,0.35,Media,Infotainia
+36,23,45,6,1.96,0.35,Media,Artland
+36,23,45,6,1.96,0.35,Media,Mediatown
+36,23,45,6,1.96,0.35,Media,Medialand
+237,27,174,7,6.44,0.35,Construction,Constructia
+237,27,174,7,6.44,0.35,Real Estate,Houseland
+237,27,174,7,6.44,0.35,Construction,Greenland
+237,27,174,7,6.44,0.35,Real Estate,SmartLand
+237,27,174,7,6.44,0.35,Interior Design,EcoNation
+237,27,174,7,6.44,0.35,Home,HomeLand
+237,27,174,7,6.44,0.35,Architecture,EcoNation
+281,16,227,4,14.19,0.33,Construction,Buildland
+281,16,227,4,14.19,0.33,Construction,Archland
+129,16,20,4,1.25,0.33,Food & Beverage,HealthLand
+129,16,20,4,1.25,0.33,Healthcare,Careland
+129,16,20,4,1.25,0.33,Healthcare,Medica
+129,16,20,4,1.25,0.33,Food & Beverage,Healthland
+129,16,20,4,1.25,0.33,Healthcare,Mediland
+330,24,90,6,3.75,0.33,Technology,TechLand
+281,16,227,4,14.19,0.33,Construction,BuildLand
+281,16,227,4,14.19,0.33,Agriculture,Farmville
+97,16,115,4,7.19,0.33,Automotive,Autoland
+129,16,20,4,1.25,0.33,Healthcare,Healthland
+97,16,115,4,7.19,0.33,Automotive,Carland
+129,16,20,4,1.25,0.33,Food,Gourmetland
+330,24,90,6,3.75,0.33,Technology,Gadgetland
+70,4,11,1,2.75,0.33,Agriculture,Agroland
+159,8,21,2,2.62,0.33,Construction,Buildland
+281,16,227,4,14.19,0.33,Education,EduNation
+97,16,115,4,7.19,0.33,Automotive,AutoLand
+220,8,20,2,2.5,0.33,Utilities,Aquatica
+220,8,20,2,2.5,0.33,Utilities,Hydroland
+220,8,20,2,2.5,0.33,Utilities,Aquaterra
+221,12,43,3,3.58,0.33,Water Management,AquaLand
+221,12,43,3,3.58,0.33,Utilities,Hydroland
+221,12,43,3,3.58,0.33,Utilities,Aquaterra
+380,4,13,1,3.25,0.33,Utilities,Hydroland
+380,4,13,1,3.25,0.33,Water Management,HydroLand
+221,12,43,3,3.58,0.33,Water Management,HydroNation
+159,8,21,2,2.62,0.33,Fashion,Trendland
+159,8,21,2,2.62,0.33,Fashion,Fashionland
+159,8,21,2,2.62,0.33,Retail,Stylia
+221,12,43,3,3.58,0.33,Water Management,Aquaria
+221,12,43,3,3.58,0.33,Technology,WaterLand
+221,12,43,3,3.58,0.33,Water Management,Waterland
+20,33,208,8,6.3,0.32,Pharmaceuticals,MediLand
+20,33,208,8,6.3,0.32,Healthcare,Greenland
+20,33,208,8,6.3,0.32,Healthcare,Careland
+301,29,55,7,1.9,0.32,Architecture,Archland
+20,33,208,8,6.3,0.32,Healthcare,CareLand
+20,33,208,8,6.3,0.32,Healthcare,Healthland
+301,29,55,7,1.9,0.32,Technology,Sustainia
+20,33,208,8,6.3,0.32,Biotechnology,BioLand
+301,29,55,7,1.9,0.32,Construction,Buildland
+20,33,208,8,6.3,0.32,Healthcare,Mediland
+280,17,75,4,4.41,0.31,Construction,BuildLand
+280,17,75,4,4.41,0.31,Construction,Buildland
+329,21,72,5,3.43,0.31,Technology,Techland
+157,17,184,4,10.82,0.31,Retail,StyleLand
+329,21,72,5,3.43,0.31,Technology,Gadgetland
+157,17,184,4,10.82,0.31,Fashion,Trendland
+231,21,105,5,5.0,0.31,Energy,GreenLand
+231,21,105,5,5.0,0.31,Energy,Greentopia
+157,17,184,4,10.82,0.31,Energy,Powerland
+157,17,184,4,10.82,0.31,Retail,Trendland
+231,21,105,5,5.0,0.31,Energy,EcoLand
+157,17,184,4,10.82,0.31,Fashion,Stylia
+329,21,72,5,3.43,0.31,Technology,Innovatia
+329,21,72,5,3.43,0.31,Information Technology,Innovland
+157,17,184,4,10.82,0.31,Retail,Stylia
+231,21,105,5,5.0,0.31,Energy,Powerland
+231,21,105,5,5.0,0.31,Renewable Energy,EcoWorld
+231,21,105,5,5.0,0.31,Energy,USA
+231,21,105,5,5.0,0.31,Energy,Ecoland
+287,13,50,3,3.85,0.3,Construction,USA
+287,13,50,3,3.85,0.3,Architecture,Buildland
+287,13,50,3,3.85,0.3,Construction,ProLand
+287,13,50,3,3.85,0.3,Technology,TechLand
+289,30,206,7,6.87,0.3,Construction,Buildland
+287,13,50,3,3.85,0.3,Technology,InnovLand
+287,13,50,3,3.85,0.3,Construction,Constructland
+289,30,206,7,6.87,0.3,Agriculture,EcoLand
+178,13,20,3,1.54,0.3,Education,Educatia
+178,13,20,3,1.54,0.3,Education,Eduworld
+178,13,20,3,1.54,0.3,Education,Learnia
+178,13,20,3,1.54,0.3,Education,Learnland
+178,13,20,3,1.54,0.3,Education,EduNation
+289,30,206,7,6.87,0.3,Construction,ConstructLand
+326,43,172,10,4.0,0.3,Technology,TechLand
+111,13,59,3,4.54,0.3,Automotive,Autoland
+326,43,172,10,4.0,0.3,Technology,Techland
+111,13,59,3,4.54,0.3,Logistics,Autoland
+326,43,172,10,4.0,0.3,Technology,Utopia
+347,18,48,4,2.67,0.29,Healthcare,Mediland
+24,18,16,4,0.89,0.29,Agriculture,Agroland
+347,18,48,4,2.67,0.29,Technology,Techland
+347,18,48,4,2.67,0.29,Technology,Innovatia
+347,18,48,4,2.67,0.29,Media,Mediapolis
+24,18,16,4,0.89,0.29,Fashion,Trendland
+25,31,192,7,6.19,0.29,Retail,Trendland
+24,18,16,4,0.89,0.29,Fashion,Fashionland
+24,18,16,4,0.89,0.29,Construction,Buildland
+24,18,16,4,0.89,0.29,Construction,BuildLand
+24,18,16,4,0.89,0.29,Retail,StyleLand
+279,9,25,2,2.78,0.29,Biotechnology,Germany
+24,18,16,4,0.89,0.29,Fashion,Fashionia
+25,31,192,7,6.19,0.29,Telecommunications,Connectland
+25,31,192,7,6.19,0.29,Fashion,Trendland
+25,31,192,7,6.19,0.29,Retail,TrendLand
+24,18,16,4,0.89,0.29,Education,EduLand
+24,18,16,4,0.89,0.29,Retail,Trendland
+24,18,16,4,0.89,0.29,Real Estate,LuxuryLand
+299,9,12,2,1.33,0.29,Architecture,Designland
+279,9,25,2,2.78,0.29,Biotechnology,Bioland
+279,9,25,2,2.78,0.29,Real Estate,Landland
+364,9,25,2,2.78,0.29,Energy,Greenland
+279,9,25,2,2.78,0.29,Construction,Buildland
+279,9,25,2,2.78,0.29,Biotechnology,BioNation
+279,9,25,2,2.78,0.29,Agriculture,Agroland
+262,9,9,2,1.0,0.29,Agriculture,Leafland
+262,9,9,2,1.0,0.29,Transportation,WaveLand
+262,9,9,2,1.0,0.29,Agriculture,Agriland
+82,9,11,2,1.22,0.29,Agriculture,FarmLand
+82,9,11,2,1.22,0.29,Agriculture,Greenland
+82,9,11,2,1.22,0.29,Agriculture,Agroland
+82,9,11,2,1.22,0.29,Agriculture,AgriLand
+82,9,11,2,1.22,0.29,Agriculture,Agriland
+82,9,11,2,1.22,0.29,Agriculture,AgriNation
+262,9,9,2,1.0,0.29,Agriculture,Agroland
+262,9,9,2,1.0,0.29,Technology,USA
+262,9,9,2,1.0,0.29,Agriculture,FarmLand
+262,9,9,2,1.0,0.29,Environmental,Greentopia
+201,9,6,2,0.67,0.29,Education,EduNation
+201,9,6,2,0.67,0.29,Fashion,Stylia
+201,9,6,2,0.67,0.29,Agriculture,AgriLand
+201,9,6,2,0.67,0.29,Travel,Wanderland
+201,9,6,2,0.67,0.29,Education,EduLand
+299,9,12,2,1.33,0.29,Architecture,Archland
+364,9,25,2,2.78,0.29,Energy,EnergyLand
+86,22,81,5,3.68,0.29,Travel,Travelia
+86,22,81,5,3.68,0.29,Travel,Wanderland
+25,31,192,7,6.19,0.29,Fashion,FashionLand
+25,31,192,7,6.19,0.29,Fashion,StyleLand
+86,22,81,5,3.68,0.29,Travel,TravelLand
+86,22,81,5,3.68,0.29,Travel,Traveland
+86,22,81,5,3.68,0.29,Travel & Tourism,Touristan
+259,14,48,3,3.43,0.27,Environment,Greenland
+259,14,48,3,3.43,0.27,Construction,USA
+259,14,48,3,3.43,0.27,Transportation,Transland
+259,14,48,3,3.43,0.27,Energy,Netherlands
+259,14,48,3,3.43,0.27,Transportation,Moveland
+259,14,48,3,3.43,0.27,Energy,GreenLand
+232,19,24,4,1.26,0.27,Energy,PowerLand
+373,14,13,3,0.93,0.27,Renewable Energy,BioWorld
+232,19,24,4,1.26,0.27,Energy,Sunland
+288,19,132,4,6.95,0.27,Construction,Buildland
+288,19,132,4,6.95,0.27,Construction,Solutionland
+232,19,24,4,1.26,0.27,Energy,Energia
+232,19,24,4,1.26,0.27,Energy,EnergyLand
+232,19,24,4,1.26,0.27,Healthcare,CareLand
+288,19,132,4,6.95,0.27,Construction,BuildLand
+282,14,254,3,18.14,0.27,Construction,Buildland
+282,14,254,3,18.14,0.27,Construction,Constructia
+282,14,254,3,18.14,0.27,Construction,BuildLand
+232,19,24,4,1.26,0.27,Renewable Energy,Solaria
+232,19,24,4,1.26,0.27,Solar Energy,Sunland
+373,14,13,3,0.93,0.27,Manufacturing,GreenLand
+186,14,43,3,3.07,0.27,Education,EduNation
+186,14,43,3,3.07,0.27,Education,LearnLand
+282,14,254,3,18.14,0.27,Energy,EcoNation
+373,14,13,3,0.93,0.27,Energy,EcoLand
+373,14,13,3,0.93,0.27,Energy,GreenLand
+373,14,13,3,0.93,0.27,Construction,Greenland
+373,14,13,3,0.93,0.27,Urban Development,Urbia
+373,14,13,3,0.93,0.27,Renewables,Bioland
+186,14,43,3,3.07,0.27,Education,EduLand
+234,24,41,5,1.71,0.26,Energy,Energia
+64,24,156,5,6.5,0.26,Agriculture,Farmville
+198,24,49,5,2.04,0.26,Education,EduNation
+198,24,49,5,2.04,0.26,Renewables,Bioland
+198,24,49,5,2.04,0.26,Education,Learnia
+198,24,49,5,2.04,0.26,Education,Learnland
+198,24,49,5,2.04,0.26,Construction,Buildland
+234,24,41,5,1.71,0.26,Energy,Sustainland
+234,24,41,5,1.71,0.26,Renewable Energy,Greenland
+198,24,49,5,2.04,0.26,Healthcare,Utopia
+234,24,41,5,1.71,0.26,Energy,Greenland
+234,24,41,5,1.71,0.26,Renewable Energy,EcoWorld
+198,24,49,5,2.04,0.26,Biotechnology,BioLand
+198,24,49,5,2.04,0.26,Education,Eduworld
+234,24,41,5,1.71,0.26,Energy,GreenLand
+234,24,41,5,1.71,0.26,Energy,EcoLand
+64,24,156,5,6.5,0.26,Agriculture,HarvestNation
+64,24,156,5,6.5,0.26,Agriculture,Growland
+64,24,156,5,6.5,0.26,Agriculture,FarmLand
+64,24,156,5,6.5,0.26,Construction,Buildland
+64,24,156,5,6.5,0.26,Agriculture,AgriLand
+64,24,156,5,6.5,0.26,Agriculture,Agroland
+64,24,156,5,6.5,0.26,Agriculture,EcoLand
+372,15,13,3,0.87,0.25,Media,Mediatopia
+271,20,102,4,5.1,0.25,Construction,Constructia
+271,20,102,4,5.1,0.25,Construction,Buildland
+372,15,13,3,0.87,0.25,Environment,Greenland
+10,20,56,4,2.8,0.25,Energy,EcoNation
+271,20,102,4,5.1,0.25,Construction,Smartland
+10,20,56,4,2.8,0.25,Travel,Traveland
+372,15,13,3,0.87,0.25,Retail,Sustainia
+10,20,56,4,2.8,0.25,Travel,Travelia
+372,15,13,3,0.87,0.25,Retail,Sustainland
+136,5,11,1,2.2,0.25,Healthcare,Careland
+10,20,56,4,2.8,0.25,Travel,ExploreLand
+124,10,26,2,2.6,0.25,Food & Beverage,Foodland
+124,10,26,2,2.6,0.25,Hospitality,TasteLand
+124,10,26,2,2.6,0.25,Agriculture,EcoLand
+10,20,56,4,2.8,0.25,Travel & Tourism,Brazil
+372,15,13,3,0.87,0.25,Environment,Sustainia
+167,5,21,1,4.2,0.25,Transportation,Transland
+167,5,21,1,4.2,0.25,Logistics,Moveland
+66,10,4,2,0.4,0.25,Landscaping,EcoLand
+167,5,21,1,4.2,0.25,Logistics,LogisticsLand
+10,20,56,4,2.8,0.25,Tourism,Tourland
+10,20,56,4,2.8,0.25,Energy,CleanLand
+10,20,56,4,2.8,0.25,Travel,Wanderland
+10,20,56,4,2.8,0.25,Travel,TravelLand
+271,20,102,4,5.1,0.25,Real Estate,Houseland
+10,20,56,4,2.8,0.25,Environmental,GreenLand
+211,10,42,2,4.2,0.25,Manufacturing,Aquaterra
+66,10,4,2,0.4,0.25,Landscaping,USA
+214,5,10,1,2.0,0.25,Technology,GreenLand
+139,15,178,3,11.87,0.25,Healthcare,Careland
+66,10,4,2,0.4,0.25,Landscaping,Landland
+139,15,178,3,11.87,0.25,Healthcare,Healthland
+139,15,178,3,11.87,0.25,Healthcare,Medica
+180,15,9,3,0.6,0.25,Education,Learnland
+180,15,9,3,0.6,0.25,Education,EduNation
+180,15,9,3,0.6,0.25,Education,EduLand
+88,10,8,2,0.8,0.25,Travel,Wanderland
+88,10,8,2,0.8,0.25,Travel,Traveland
+88,10,8,2,0.8,0.25,Travel & Leisure,Travelia
+180,15,9,3,0.6,0.25,Education,KnowledgeLand
+88,10,8,2,0.8,0.25,Travel,Voyageland
+88,10,8,2,0.8,0.25,Travel,TravelLand
+139,15,178,3,11.87,0.25,Healthcare,CareLand
+222,5,10,1,2.0,0.25,Renewable Energy,HydroLand
+222,5,10,1,2.0,0.25,Utilities,Hydroland
+139,15,178,3,11.87,0.25,Media,SilverLand
+214,5,10,1,2.0,0.25,Logistics,Maritima
+211,10,42,2,4.2,0.25,Technology,BlueLand
+260,10,32,2,3.2,0.25,Transportation,TransitLand
+260,10,32,2,3.2,0.25,Transportation,Mobilia
+260,10,32,2,3.2,0.25,Transportation,Moveland
+211,10,42,2,4.2,0.25,Utilities,Aquatica
+211,10,42,2,4.2,0.25,Logistics,Atlantis
+211,10,42,2,4.2,0.25,Construction,BuildLand
+211,10,42,2,4.2,0.25,Aviation,Skyland
+211,10,42,2,4.2,0.25,Energy,USA
+211,10,42,2,4.2,0.25,Food & Beverage,GourmetLand
+66,10,4,2,0.4,0.25,Landscaping,Gardenland
+66,10,4,2,0.4,0.25,Services,LandLand
+66,10,4,2,0.4,0.25,Agriculture,Agroland
+260,10,32,2,3.2,0.25,Transportation,TransportLand
+260,10,32,2,3.2,0.25,Transportation,Transland
+214,5,10,1,2.0,0.25,Technology,TechLand
+260,10,32,2,3.2,0.25,Transport,EcoLand
+214,5,10,1,2.0,0.25,Environmental Services,EcoLand
+199,21,23,4,1.1,0.24,Education,EduLand
+199,21,23,4,1.1,0.24,Technology,LearnLand
+199,21,23,4,1.1,0.24,Education,EduNation
+199,21,23,4,1.1,0.24,Education,LearnLand
+199,21,23,4,1.1,0.24,Education,Learnland
+98,16,211,3,13.19,0.23,Automotive,Autoland
+229,32,109,6,3.41,0.23,Energy,Greenland
+229,32,109,6,3.41,0.23,Fashion,Trendland
+229,32,109,6,3.41,0.23,Energy,Sustainland
+229,32,109,6,3.41,0.23,Energy,EcoNation
+229,32,109,6,3.41,0.23,Energy,Powerland
+331,16,75,3,4.69,0.23,Technology,Innovateland
+331,16,75,3,4.69,0.23,Research,Innovatia
+331,16,75,3,4.69,0.23,Technology,Innovatia
+229,32,109,6,3.41,0.23,Veterinary,Animalland
+98,16,211,3,13.19,0.23,Transportation,Transland
+229,32,109,6,3.41,0.23,Energy,EcoLand
+98,16,211,3,13.19,0.23,Automotive,Japan
+98,16,211,3,13.19,0.23,Automotive,DriveLand
+98,16,211,3,13.19,0.23,Automotive,MotorLand
+98,16,211,3,13.19,0.23,Transportation,Moveland
+175,11,8,2,0.73,0.22,Biotechnology,Bioland
+175,11,8,2,0.73,0.22,Biotechnology,Healthland
+175,11,8,2,0.73,0.22,Pharmaceuticals,HealthLand
+203,22,27,4,1.23,0.22,Energy,EcoNation
+203,22,27,4,1.23,0.22,Education,Learnland
+335,33,208,6,6.3,0.22,Technology,USA
+335,33,208,6,6.3,0.22,Technology,TechLand
+335,33,208,6,6.3,0.22,Technology,Innovatia
+335,33,208,6,6.3,0.22,Technology,Innovaland
+335,33,208,6,6.3,0.22,Technology,InnovateLand
+203,22,27,4,1.23,0.22,Energy,PowerLand
+335,33,208,6,6.3,0.22,Retail,TradeLand
+335,33,208,6,6.3,0.22,Technology,Techland
+252,11,16,2,1.45,0.22,Consumer Goods,EcoLand
+175,11,8,2,0.73,0.22,Arts & Crafts,Creativeland
+13,11,47,2,4.27,0.22,Automotive,Autoland
+252,11,16,2,1.45,0.22,Automotive,Carland
+252,11,16,2,1.45,0.22,Art,Artland
+272,11,64,2,5.82,0.22,Construction,Buildland
+272,11,64,2,5.82,0.22,Construction,Smartland
+13,11,47,2,4.27,0.22,Automotive,Japan
+252,11,16,2,1.45,0.22,Media,Waveland
+252,11,16,2,1.45,0.22,Consulting,EcoLand
+13,11,47,2,4.27,0.22,Transportation,TravelLand
+203,22,27,4,1.23,0.22,Education,Eduworld
+203,22,27,4,1.23,0.22,Education,EduNation
+203,22,27,4,1.23,0.22,Education Technology,Learnland
+175,11,8,2,0.73,0.22,Healthcare,Bioland
+252,11,16,2,1.45,0.22,Automotive,Japan
+103,23,61,4,2.65,0.21,Food & Beverage,Gourmetland
+103,23,61,4,2.65,0.21,Transportation,Mobilia
+103,23,61,4,2.65,0.21,Food & Beverage,Gourmetia
+103,23,61,4,2.65,0.21,Food & Beverage,Utopia
+103,23,61,4,2.65,0.21,Food & Beverage,Culinary
+103,23,61,4,2.65,0.21,Automotive,Autoland
+103,23,61,4,2.65,0.21,Agriculture,Farmia
+239,35,104,6,2.97,0.21,Environmental,Sustainland
+16,17,20,3,1.18,0.21,Food & Beverage,Cuisineland
+103,23,61,4,2.65,0.21,Retail,Greenland
+16,17,20,3,1.18,0.21,Food & Beverage,Tasteland
+16,17,20,3,1.18,0.21,Food & Beverage,Gourmetland
+16,17,20,3,1.18,0.21,Food & Beverage,Foodland
+16,17,20,3,1.18,0.21,Food & Beverage,GourmetLand
+16,17,20,3,1.18,0.21,Food,Gastronomia
+239,35,104,6,2.97,0.21,Energy,Greenland
+239,35,104,6,2.97,0.21,Real Estate,EcoLand
+239,35,104,6,2.97,0.21,Energy,Energia
+239,35,104,6,2.97,0.21,Real Estate,Sustainland
+239,35,104,6,2.97,0.21,Interior Design,EcoNation
+239,35,104,6,2.97,0.21,Environment,Greenland
+239,35,104,6,2.97,0.21,Sports,AthleteLand
+219,17,27,3,1.59,0.21,Utilities,Hydroland
+239,35,104,6,2.97,0.21,Agriculture,Organica
+239,35,104,6,2.97,0.21,Retail,Sustainland
+239,35,104,6,2.97,0.21,Real Estate,Greenland
+103,23,61,4,2.65,0.21,Transportation,TransitLand
+103,23,61,4,2.65,0.21,Agriculture,AgriLand
+103,23,61,4,2.65,0.21,Transportation,Moveland
+239,35,104,6,2.97,0.21,Energy,EcoLand
+103,23,61,4,2.65,0.21,Retail,CommerceLand
+239,35,104,6,2.97,0.21,Sports,Athletica
+239,35,104,6,2.97,0.21,Energy,Sustainland
+103,23,61,4,2.65,0.21,Logistics,GreenLand
+224,18,19,3,1.06,0.2,Technology,WaterLand
+224,18,19,3,1.06,0.2,Marine,Marineland
+224,18,19,3,1.06,0.2,Marine,Atlantis
+224,18,19,3,1.06,0.2,Energy,YellowLand
+224,18,19,3,1.06,0.2,Marine,Sealand
+224,18,19,3,1.06,0.2,Manufacturing,Atlantis
+224,18,19,3,1.06,0.2,Healthcare,WhiteLand
+255,18,22,3,1.22,0.2,Environmental,USA
+255,18,22,3,1.22,0.2,Art,Artland
+47,24,26,4,1.08,0.2,Finance,FinLand
+47,24,26,4,1.08,0.2,Finance,WealthLand
+47,24,26,4,1.08,0.2,Finance,Finland
+47,24,26,4,1.08,0.2,Finance,Wealthland
+47,24,26,4,1.08,0.2,Finance,FinanceLand
+47,24,26,4,1.08,0.2,Finance,Bankland
+47,24,26,4,1.08,0.2,Finance,Moneyland
+47,24,26,4,1.08,0.2,Finance,Finlandia
+297,12,25,2,2.08,0.2,Construction,ConstructLand
+41,6,31,1,5.17,0.2,Aviation,Skyland
+255,18,22,3,1.22,0.2,Technology,Innovatia
+297,12,25,2,2.08,0.2,Utilities,Aquaterra
+255,18,22,3,1.22,0.2,Technology,TechLand
+255,18,22,3,1.22,0.2,Technology,Sustainia
+96,6,5,1,0.83,0.2,Sports,Athleteland
+255,18,22,3,1.22,0.2,Technology,Sustainland
+255,18,22,3,1.22,0.2,Media,Waveland
+255,18,22,3,1.22,0.2,Technology,GreenLand
+255,18,22,3,1.22,0.2,Renewable Energy,Greenland
+255,18,22,3,1.22,0.2,Manufacturing,Greentopia
+41,6,31,1,5.17,0.2,Food & Beverage,GourmetLand
+41,6,31,1,5.17,0.2,Utilities,Hydroland
+41,6,31,1,5.17,0.2,Real Estate,Greenland
+96,6,5,1,0.83,0.2,Sports,Championland
+96,6,5,1,0.83,0.2,Sports,Sportland
+96,6,5,1,0.83,0.2,Mining,MineralLand
+96,6,5,1,0.83,0.2,Retail,Adventureland
+363,12,27,2,2.25,0.2,Aviation,Flyland
+363,12,27,2,2.25,0.2,Aerospace,Flyland
+363,12,27,2,2.25,0.2,Aerospace,SkyLand
+121,12,262,2,21.83,0.2,Food Services,TasteLand
+121,12,262,2,21.83,0.2,Food & Beverage,TasteLand
+121,12,262,2,21.83,0.2,Food & Beverage,Cuisineland
+224,18,19,3,1.06,0.2,Finance,EmeraldLand
+363,12,27,2,2.25,0.2,Transportation,Atlantis
+47,24,26,4,1.08,0.2,Finance,Economica
+41,6,31,1,5.17,0.2,Utilities,Aquatica
+96,6,5,1,0.83,0.2,Sports,Athletica
+141,12,9,2,0.75,0.2,Healthcare,Mediland
+317,12,13,2,1.08,0.2,Technology,Innovatia
+15,18,49,3,2.72,0.2,Healthcare,Careland
+15,18,49,3,2.72,0.2,Utilities,Hydroland
+15,18,49,3,2.72,0.2,Food & Beverage,GourmetLand
+15,18,49,3,2.72,0.2,Aviation,Skyland
+15,18,49,3,2.72,0.2,Real Estate,Greenland
+141,12,9,2,0.75,0.2,Healthcare,Healthland
+141,12,9,2,0.75,0.2,Food & Beverage,Gourmetland
+141,12,9,2,0.75,0.2,Food,Nutriland
+323,12,10,2,0.83,0.2,Construction,Smartland
+323,12,10,2,0.83,0.2,Technology,Techland
+323,12,10,2,0.83,0.2,Technology,TechLand
+15,18,49,3,2.72,0.2,Energy,Australia
+297,12,25,2,2.08,0.2,Agriculture,AgriLand
+297,12,25,2,2.08,0.2,Construction,Buildland
+297,12,25,2,2.08,0.2,Healthcare,Careland
+323,12,10,2,0.83,0.2,Technology,SmartLand
+235,32,50,5,1.56,0.19,Energy,Powerland
+235,32,50,5,1.56,0.19,Energy,Ecoland
+235,32,50,5,1.56,0.19,Energy,Energyland
+230,25,58,4,2.32,0.19,Energy,GreenLand
+235,32,50,5,1.56,0.19,Energy,USA
+235,32,50,5,1.56,0.19,Energy,EcoNation
+235,32,50,5,1.56,0.19,Utilities,Hydroland
+235,32,50,5,1.56,0.19,Energy,PowerLand
+63,31,158,5,5.1,0.19,Agriculture,AgroLand
+235,32,50,5,1.56,0.19,Energy,GreenLand
+63,31,158,5,5.1,0.19,Finance,PlatinumLand
+63,31,158,5,5.1,0.19,Agriculture,Farmia
+27,32,40,5,1.25,0.19,Construction,Buildland
+27,32,40,5,1.25,0.19,Fashion,FashionLand
+27,32,40,5,1.25,0.19,Retail,Stylia
+27,32,40,5,1.25,0.19,Retail,StyleLand
+27,32,40,5,1.25,0.19,Fashion,StyleLand
+27,32,40,5,1.25,0.19,Education,Learnland
+230,25,58,4,2.32,0.19,Energy,Sunland
+230,25,58,4,2.32,0.19,Energy,Greentopia
+230,25,58,4,2.32,0.19,Energy,Greenland
+230,25,58,4,2.32,0.19,Environment,Greenlandia
+230,25,58,4,2.32,0.19,Energy,Sustainland
+230,25,58,4,2.32,0.19,Energy,EcoNation
+27,32,40,5,1.25,0.19,Education,Knowland
+27,32,40,5,1.25,0.19,Retail,Trendland
+63,31,158,5,5.1,0.19,Agriculture,Agroland
+235,32,50,5,1.56,0.19,Energy,Sustainland
+63,31,158,5,5.1,0.19,Agriculture,FarmLand
+63,31,158,5,5.1,0.19,Textiles,MagentaLand
+230,25,58,4,2.32,0.19,Solar Energy,Sunland
+230,25,58,4,2.32,0.19,Energy,Solaria
+27,32,40,5,1.25,0.19,Fashion,Trendland
+27,32,40,5,1.25,0.19,Fashion,Stylia
+143,19,46,3,2.42,0.19,Healthcare,HealthLand
+63,31,158,5,5.1,0.19,Agriculture,Farmland
+143,19,46,3,2.42,0.19,Healthcare,Healthland
+204,13,2,2,0.15,0.18,Education,Learnland
+91,13,27,2,2.08,0.18,Retail,ExploreLand
+91,13,27,2,2.08,0.18,Retail,Exploreland
+204,13,2,2,0.15,0.18,Education,EduLand
+91,13,27,2,2.08,0.18,Tourism,Wanderlust
+204,13,2,2,0.15,0.18,Education,EduNation
+333,40,213,6,5.33,0.18,Technology,Techland
+333,40,213,6,5.33,0.18,Technology,Innovatia
+42,13,40,2,3.08,0.18,Marine,Waterland
+185,13,24,2,1.85,0.18,Education,Educatia
+91,13,27,2,2.08,0.18,Recreation,Adventureland
+185,13,24,2,1.85,0.18,Education,EduLand
+192,13,7,2,0.54,0.18,Education,EduLand
+333,40,213,6,5.33,0.18,Technology,TechLand
+91,13,27,2,2.08,0.18,Real Estate,UAE
+91,13,27,2,2.08,0.18,Travel,Wanderland
+91,13,27,2,2.08,0.18,Retail,Adventureland
+91,13,27,2,2.08,0.18,Retail,Exploria
+91,13,27,2,2.08,0.18,Education,EduNation
+185,13,24,2,1.85,0.18,Education,EduNation
+42,13,40,2,3.08,0.18,Transportation,Sealand
+192,13,7,2,0.54,0.18,Education,Eduworld
+192,13,7,2,0.54,0.18,Healthcare,VisionLand
+191,20,33,3,1.65,0.18,Education,Educatia
+191,20,33,3,1.65,0.18,Education,EduNation
+333,40,213,6,5.33,0.18,Technology,InnovLand
+42,13,40,2,3.08,0.18,Logistics,Atlantis
+185,13,24,2,1.85,0.18,Education,Learnia
+42,13,40,2,3.08,0.18,Logistics,Shipland
+42,13,40,2,3.08,0.18,Marine,WaterWorld
+42,13,40,2,3.08,0.18,Utilities,Hydroland
+42,13,40,2,3.08,0.18,Logistics,MaritimeLand
+42,13,40,2,3.08,0.18,Renewables,Aeroland
+42,13,40,2,3.08,0.18,Logistics,Maritima
+42,13,40,2,3.08,0.18,Logistics,Sealand
+334,45,216,7,4.8,0.18,Technology,Futuristan
+334,45,216,7,4.8,0.18,Technology,Innovatia
+334,45,216,7,4.8,0.18,Technology,InnovateLand
+17,20,25,3,1.25,0.18,Food & Beverage,Flavoria
+17,20,25,3,1.25,0.18,Food & Beverage,GastroLand
+17,20,25,3,1.25,0.18,Food & Beverage,Foodland
+17,20,25,3,1.25,0.18,Automotive,Autoland
+17,20,25,3,1.25,0.18,Retail,Gastronia
+17,20,25,3,1.25,0.18,Food & Beverage,GourmetLand
+334,45,216,7,4.8,0.18,Food & Beverage,Culinaryland
+17,20,25,3,1.25,0.18,Retail,Gourmetia
+17,20,25,3,1.25,0.18,Food & Beverage,Gourmetia
+17,20,25,3,1.25,0.18,Food & Beverage,Cuisineland
+334,45,216,7,4.8,0.18,Technology,Techland
+334,45,216,7,4.8,0.18,Technology,TechLand
+333,40,213,6,5.33,0.18,Technology,InnovateLand
+333,40,213,6,5.33,0.18,Construction,Buildland
+334,45,216,7,4.8,0.18,Hospitality,Tranquilia
+17,20,25,3,1.25,0.18,Retail,RetailLand
+21,39,231,6,5.92,0.18,Healthcare,Mediland
+334,45,216,7,4.8,0.18,Technology,USA
+334,45,216,7,4.8,0.18,Technology,Greenland
+21,39,231,6,5.92,0.18,Pharmaceuticals,HealthLand
+21,39,231,6,5.92,0.18,Healthcare,Healthland
+21,39,231,6,5.92,0.18,Healthcare,Careland
+21,39,231,6,5.92,0.18,Healthcare,HealthLand
+200,14,4,2,0.29,0.17,Education,Eduworld
+324,27,54,4,2.0,0.17,Technology,Innovatia
+194,21,45,3,2.14,0.17,Education,EduLand
+194,21,45,3,2.14,0.17,Education,EduNation
+194,21,45,3,2.14,0.17,Education,Eduworld
+349,14,29,2,2.07,0.17,Technology,Techland
+257,21,91,3,4.33,0.17,Technology,Sustainland
+130,21,178,3,8.48,0.17,Healthcare,Careland
+324,27,54,4,2.0,0.17,Construction,Innovateland
+324,27,54,4,2.0,0.17,Technology,TechLand
+324,27,54,4,2.0,0.17,Technology,Techland
+324,27,54,4,2.0,0.17,Information Technology,Techland
+257,21,91,3,4.33,0.17,Technology,Innovatia
+257,21,91,3,4.33,0.17,Energy,Australia
+257,21,91,3,4.33,0.17,Energy,Greenland
+246,14,7,2,0.5,0.17,Technology,Solaria
+257,21,91,3,4.33,0.17,Technology,InnovateLand
+200,14,4,2,0.29,0.17,Education,Learnland
+200,14,4,2,0.29,0.17,Technology,LearnLand
+200,14,4,2,0.29,0.17,Real Estate,RealtyLand
+200,14,4,2,0.29,0.17,Education,LearnLand
+200,14,4,2,0.29,0.17,Environment,Greenland
+200,14,4,2,0.29,0.17,Construction,Futuraland
+349,14,29,2,2.07,0.17,Technology,Innovatia
+246,14,7,2,0.5,0.17,Energy,SolarLand
+200,14,4,2,0.29,0.17,Technology,Innovatia
+246,14,7,2,0.5,0.17,Energy,Solaria
+246,14,7,2,0.5,0.17,Renewable Energy,Solaria
+349,14,29,2,2.07,0.17,Technology,Utopia
+257,21,91,3,4.33,0.17,Finance,Finlandia
+257,21,91,3,4.33,0.17,Food & Beverage,Cuisineland
+257,21,91,3,4.33,0.17,Construction,EcoLand
+257,21,91,3,4.33,0.17,Energy,Sustainland
+165,14,21,2,1.5,0.17,Security,Secureland
+264,14,12,2,0.86,0.17,Renewable Energy,Greenland
+264,14,12,2,0.86,0.17,Energy,Greenland
+365,27,62,4,2.3,0.17,Energy,Greenland
+365,27,62,4,2.3,0.17,Environment,GreenLand
+69,21,42,3,2.0,0.17,Agriculture,FarmLand
+69,21,42,3,2.0,0.17,Agriculture,Agroland
+176,7,2,1,0.29,0.17,Biotechnology,Bioland
+264,14,12,2,0.86,0.17,Energy,Greentopia
+365,27,62,4,2.3,0.17,Renewable Energy,Greenland
+130,21,178,3,8.48,0.17,Healthcare,CareLand
+264,14,12,2,0.86,0.17,Energy,GreenLand
+264,14,12,2,0.86,0.17,Energy,Sustainland
+365,27,62,4,2.3,0.17,Energy,Sustainia
+365,27,62,4,2.3,0.17,Technology,Techland
+104,21,17,3,0.81,0.17,Food & Beverage,Gourmetia
+165,14,21,2,1.5,0.17,Construction,Buildland
+165,14,21,2,1.5,0.17,Security,Protectia
+104,21,17,3,0.81,0.17,Food,FreshLand
+264,14,12,2,0.86,0.17,Education,LearnLand
+365,27,62,4,2.3,0.17,Environmental,Greentopia
+104,21,17,3,0.81,0.17,Food & Beverage,GastroLand
+365,27,62,4,2.3,0.17,Agriculture,USA
+365,27,62,4,2.3,0.17,Energy,Energia
+365,27,62,4,2.3,0.17,Agriculture,EcoLand
+365,27,62,4,2.3,0.17,Agriculture,Agroland
+365,27,62,4,2.3,0.17,Technology,Solaria
+264,14,12,2,0.86,0.17,Energy,EcoLand
+165,14,21,2,1.5,0.17,Environmental,Rainland
+60,21,151,3,7.19,0.17,Transportation,Airland
+236,21,98,3,4.67,0.17,Retail,Retailia
+60,21,151,3,7.19,0.17,Aviation,Flyland
+60,21,151,3,7.19,0.17,Technology,Techland
+60,21,151,3,7.19,0.17,Aerospace,Skyland
+60,21,151,3,7.19,0.17,Real Estate,SkyLand
+119,21,269,3,12.81,0.17,Food & Beverage,Flavorland
+236,21,98,3,4.67,0.17,Energy,Sustainland
+119,21,269,3,12.81,0.17,Food & Beverage,Culinaryland
+119,21,269,3,12.81,0.17,Food & Beverage,Tasteland
+119,21,269,3,12.81,0.17,Food & Beverage,Cuisineland
+119,21,269,3,12.81,0.17,Food & Beverage,Gourmetland
+119,21,269,3,12.81,0.17,Food & Beverage,Gourmetia
+119,21,269,3,12.81,0.17,Food & Beverage,TasteLand
+119,21,269,3,12.81,0.17,Biotechnology,BioLand
+119,21,269,3,12.81,0.17,Technology,Visionland
+119,21,269,3,12.81,0.17,Technology,TechLand
+236,21,98,3,4.67,0.17,Renewable Energy,EcoLand
+236,21,98,3,4.67,0.17,Energy,EcoLand
+104,21,17,3,0.81,0.17,Retail,EcoLand
+236,21,98,3,4.67,0.17,Energy,PowerLand
+130,21,178,3,8.48,0.17,Healthcare,HealthLand
+236,21,98,3,4.67,0.17,Energy,Utopia
+236,21,98,3,4.67,0.17,Energy,Greenland
+119,21,269,3,12.81,0.17,Energy,Terraland
+236,21,98,3,4.67,0.17,Energy,Powerland
+165,14,21,2,1.5,0.17,Security,SecureLand
+132,22,70,3,3.18,0.16,Healthcare,CareLand
+132,22,70,3,3.18,0.16,Healthcare,Careland
+132,22,70,3,3.18,0.16,Retail,AdventureLand
+132,22,70,3,3.18,0.16,Healthcare,Healthland
+132,22,70,3,3.18,0.16,Tourism,Exploreland
+144,15,19,2,1.27,0.15,Healthcare,Medica
+144,15,19,2,1.27,0.15,Healthcare,Medland
+144,15,19,2,1.27,0.15,Healthcare,CareLand
+172,15,10,2,0.67,0.15,Security,SecureLand
+172,15,10,2,0.67,0.15,Logistics,Moveland
+172,15,10,2,0.67,0.15,Logistics,Transportland
+172,15,10,2,0.67,0.15,Travel,Wanderland
+172,15,10,2,0.67,0.15,Energy,PowerLand
+172,15,10,2,0.67,0.15,Energy,Powerland
+52,30,18,4,0.6,0.15,Finance,Wealthland
+52,30,18,4,0.6,0.15,Food,Culinaryland
+31,31,51,4,1.65,0.15,Education,EduNation
+31,31,51,4,1.65,0.15,Healthcare,Careland
+31,31,51,4,1.65,0.15,Education,Knowland
+243,23,26,3,1.13,0.15,Energy,EcoLand
+52,30,18,4,0.6,0.15,Finance,WealthLand
+52,30,18,4,0.6,0.15,Finance,Moneyland
+31,31,51,4,1.65,0.15,Education,Learnland
+31,31,51,4,1.65,0.15,Education,Learnia
+31,31,51,4,1.65,0.15,Retail,GoldLand
+31,31,51,4,1.65,0.15,Education,Educatia
+31,31,51,4,1.65,0.15,Education,LearnLand
+243,23,26,3,1.13,0.15,Energy,Sustainia
+243,23,26,3,1.13,0.15,Energy,GreenLand
+31,31,51,4,1.65,0.15,Technology,Techland
+31,31,51,4,1.65,0.15,Agriculture,FarmLand
+52,30,18,4,0.6,0.15,Energy,Powerland
+144,15,19,2,1.27,0.15,Healthcare,Careland
+31,31,51,4,1.65,0.15,Education,EduLand
+52,30,18,4,0.6,0.15,Security,Safeland
+243,23,26,3,1.13,0.15,Renewable Energy,EcoNation
+52,30,18,4,0.6,0.15,Finance,Bankland
+243,23,26,3,1.13,0.15,Energy,Greentopia
+243,23,26,3,1.13,0.15,Renewable Energy,Solaria
+319,25,15,3,0.6,0.14,Technology,InnovateLand
+322,24,32,3,1.33,0.14,Technology,Techland
+322,24,32,3,1.33,0.14,Technology,TechLand
+319,25,15,3,0.6,0.14,Technology,Techland
+319,25,15,3,0.6,0.14,Technology,FutureLand
+319,25,15,3,0.6,0.14,Technology,Innovatia
+319,25,15,3,0.6,0.14,Technology,TechLand
+319,25,15,3,0.6,0.14,Media,Newsland
+322,24,32,3,1.33,0.14,Technology,Innovatia
+322,24,32,3,1.33,0.14,Construction,Buildland
+300,24,28,3,1.17,0.14,Construction,BuildLand
+238,24,22,3,0.92,0.14,Environmental,Sustainland
+269,16,56,2,3.5,0.14,Technology,Techland
+269,16,56,2,3.5,0.14,Technology,Innovatia
+269,16,56,2,3.5,0.14,Construction,Smartland
+318,16,13,2,0.81,0.14,Technology,Techland
+238,24,22,3,0.92,0.14,Technology,Sustainland
+322,24,32,3,1.33,0.14,Information Technology,Techland
+322,24,32,3,1.33,0.14,Technology,InnovLand
+318,16,13,2,0.81,0.14,Technology,TechLand
+238,24,22,3,0.92,0.14,Renewable Energy,Greenland
+244,8,3,1,0.38,0.14,Energy,Energyland
+261,8,5,1,0.62,0.14,Retail,ExploreLand
+269,16,56,2,3.5,0.14,Construction,Buildland
+269,16,56,2,3.5,0.14,Consulting,Adviseland
+269,16,56,2,3.5,0.14,Technology,Smartland
+269,16,56,2,3.5,0.14,Innovation,Smartland
+244,8,3,1,0.38,0.14,Energy,Solaria
+244,8,3,1,0.38,0.14,Energy,EcoNation
+244,8,3,1,0.38,0.14,Renewable Energy,SunLand
+244,8,3,1,0.38,0.14,Energy,Greenland
+300,24,28,3,1.17,0.14,Real Estate,Houseland
+300,24,28,3,1.17,0.14,Construction,Buildland
+300,24,28,3,1.17,0.14,Real Estate,Urbania
+300,24,28,3,1.17,0.14,Real Estate,UrbanLand
+300,24,28,3,1.17,0.14,Urban Development,Urbania
+300,24,28,3,1.17,0.14,Real Estate,BuildLand
+261,8,5,1,0.62,0.14,Renewable Energy,GreenLand
+238,24,22,3,0.92,0.14,Energy,Sustainland
+318,16,13,2,0.81,0.14,Technology,Innovatia
+238,24,22,3,0.92,0.14,Consulting,EcoNation
+238,24,22,3,0.92,0.14,Environmental Services,EcoLand
+294,8,12,1,1.5,0.14,Construction,ProLand
+261,8,5,1,0.62,0.14,Real Estate,UAE
+294,8,12,1,1.5,0.14,Construction,Proland
+294,8,12,1,1.5,0.14,Construction,Buildland
+261,8,5,1,0.62,0.14,Energy,EcoLand
+261,8,5,1,0.62,0.14,Renewable Energy,EcoLand
+300,24,28,3,1.17,0.14,Real Estate,Urbia
+148,24,20,3,0.83,0.14,Healthcare,HealthLand
+215,8,17,1,2.12,0.14,Utilities,Hydroland
+72,8,16,1,2.0,0.14,Agriculture,Agroland
+92,16,14,2,0.88,0.14,Tourism,Tourland
+92,16,14,2,0.88,0.14,Travel,Touristia
+92,16,14,2,0.88,0.14,Travel & Tourism,Wanderland
+72,8,16,1,2.0,0.14,Agriculture,AgriLand
+6,25,20,3,0.8,0.14,Agriculture,Agroland
+6,25,20,3,0.8,0.14,Agriculture,Farmville
+6,25,20,3,0.8,0.14,Agriculture,Botania
+92,16,14,2,0.88,0.14,Healthcare,Healthland
+92,16,14,2,0.88,0.14,Travel,Wanderland
+154,16,9,2,0.56,0.14,Retail,Trendland
+134,8,15,1,1.88,0.14,Healthcare,Mediland
+134,8,15,1,1.88,0.14,Transportation,GreenLand
+134,8,15,1,1.88,0.14,Manufacturing,Greenland
+146,8,8,1,1.0,0.14,Healthcare,Careland
+148,24,20,3,0.83,0.14,Healthcare,Mediland
+148,24,20,3,0.83,0.14,Healthcare,CareLand
+148,24,20,3,0.83,0.14,Healthcare,Wellland
+154,16,9,2,0.56,0.14,Fashion,Fashionia
+154,16,9,2,0.56,0.14,Retail,StyleLand
+154,16,9,2,0.56,0.14,Fashion,Fashionland
+134,8,15,1,1.88,0.14,Healthcare,CareLand
+6,25,20,3,0.8,0.14,Agriculture,Farmland
+215,8,17,1,2.12,0.14,Technology,TechLand
+6,25,20,3,0.8,0.14,Agriculture,AgroNation
+6,25,20,3,0.8,0.14,Agriculture,AgriLand
+6,25,20,3,0.8,0.14,Agriculture,FarmLand
+308,17,71,2,4.18,0.13,Construction,Buildland
+296,17,12,2,0.71,0.13,Architecture,Creativia
+296,17,12,2,0.71,0.13,Architecture,DesignLand
+296,17,12,2,0.71,0.13,Finance,Moneyland
+296,17,12,2,0.71,0.13,Architecture,Designland
+296,17,12,2,0.71,0.13,Architecture,Creativeland
+296,17,12,2,0.71,0.13,Construction,BuildLand
+308,17,71,2,4.18,0.13,Construction,USA
+308,17,71,2,4.18,0.13,Construction,BuildLand
+46,17,22,2,1.29,0.13,Finance,BuildLand
+296,17,12,2,0.71,0.13,Architecture,ArchLand
+46,17,22,2,1.29,0.13,Technology,BuildLand
+46,17,22,2,1.29,0.13,Real Estate,BuildLand
+46,17,22,2,1.29,0.13,Logistics,BuildLand
+46,17,22,2,1.29,0.13,Manufacturing,BuildLand
+46,17,22,2,1.29,0.13,Real Estate,Buildland
+46,17,22,2,1.29,0.13,Consulting,BuildLand
+308,17,71,2,4.18,0.13,Education,LearnLand
+249,27,53,3,1.96,0.12,Energy,Greenland
+325,27,136,3,5.04,0.12,Technology,Innovatia
+336,18,41,2,2.28,0.12,Technology,TechLand
+336,18,41,2,2.28,0.12,Technology,InnovLand
+336,18,41,2,2.28,0.12,Agriculture,EcoLand
+336,18,41,2,2.28,0.12,Technology,Techland
+142,9,8,1,0.89,0.12,Healthcare,Mediland
+142,9,8,1,0.89,0.12,Healthcare,Careland
+99,9,33,1,3.67,0.12,Automotive,AutoLand
+99,9,33,1,3.67,0.12,Automotive,CarLand
+142,9,8,1,0.89,0.12,Healthcare,Healthland
+99,9,33,1,3.67,0.12,Automotive,Autoland
+99,9,33,1,3.67,0.12,Automotive,Carland
+99,9,33,1,3.67,0.12,Automotive,Motorland
+325,27,136,3,5.04,0.12,Technology,Techland
+325,27,136,3,5.04,0.12,Information Technology,Futuristan
+325,27,136,3,5.04,0.12,Consulting,Advisoria
+325,27,136,3,5.04,0.12,Technology,TechLand
+166,9,4,1,0.44,0.12,Security,Protectia
+166,9,4,1,0.44,0.12,Technology,USA
+120,9,248,1,27.56,0.12,Food,Cuisineland
+249,27,53,3,1.96,0.12,Environment,Sustainia
+120,9,248,1,27.56,0.12,Food & Beverage,TasteLand
+120,9,248,1,27.56,0.12,Food & Beverage,FlavorLand
+266,18,11,2,0.61,0.12,Energy,Greenland
+266,18,11,2,0.61,0.12,Energy,Powerland
+266,18,11,2,0.61,0.12,Energy,EcoNation
+266,18,11,2,0.61,0.12,Renewable Energy,EcoWorld
+266,18,11,2,0.61,0.12,Energy,Sustainland
+266,18,11,2,0.61,0.12,Aerospace,Skyland
+266,18,11,2,0.61,0.12,Energy,GreenLand
+266,18,11,2,0.61,0.12,Energy,Ecoland
+266,18,11,2,0.61,0.12,Renewable Energy,Windland
+266,18,11,2,0.61,0.12,Energy,Solaria
+249,27,53,3,1.96,0.12,Energy,EcoNation
+249,27,53,3,1.96,0.12,Technology,Innovatia
+249,27,53,3,1.96,0.12,Technology,TechLand
+249,27,53,3,1.96,0.12,Technology,Sustainland
+249,27,53,3,1.96,0.12,Technology,GreenLand
+166,9,4,1,0.44,0.12,Security,Safeland
+166,9,4,1,0.44,0.12,Technology,Cyberland
+313,9,15,1,1.67,0.12,Technology,Techland
+313,9,15,1,1.67,0.12,Technology,InnovateLand
+166,9,4,1,0.44,0.12,Security,USA
+313,9,15,1,1.67,0.12,Technology,TechLand
+313,9,15,1,1.67,0.12,Technology,Innovatia
+310,19,23,2,1.21,0.12,Construction,ProLand
+310,19,23,2,1.21,0.12,Agriculture,AgroNation
+310,19,23,2,1.21,0.12,Construction,Constructia
+310,19,23,2,1.21,0.12,Utilities,Aquaterra
+310,19,23,2,1.21,0.12,Construction,Buildland
+310,19,23,2,1.21,0.12,Healthcare,Careland
+325,27,136,3,5.04,0.12,Construction,InnovateLand
+325,27,136,3,5.04,0.12,Technology,USA
+325,27,136,3,5.04,0.12,Technology,LearnLand
+127,10,11,1,1.1,0.11,Food & Beverage,Foodland
+127,10,11,1,1.1,0.11,Food & Beverage,Culinaryland
+11,20,7,2,0.35,0.11,Travel,Tourland
+127,10,11,1,1.1,0.11,Food & Beverage,FoodLand
+258,20,13,2,0.65,0.11,Real Estate,Sustainland
+258,20,13,2,0.65,0.11,Finance,Monetaria
+11,20,7,2,0.35,0.11,Travel,TravelLand
+11,20,7,2,0.35,0.11,Travel,Wanderland
+11,20,7,2,0.35,0.11,Travel,Voyageland
+258,20,13,2,0.65,0.11,Technology,EcoLand
+350,21,29,2,1.38,0.11,Technology,Innovatia
+3,20,15,2,0.75,0.11,Construction,Buildland
+3,20,15,2,0.75,0.11,Agriculture,FarmLand
+3,20,15,2,0.75,0.11,Agriculture,AgroNation
+11,20,7,2,0.35,0.11,Travel,Traveland
+11,20,7,2,0.35,0.11,Tourism,Tourland
+3,20,15,2,0.75,0.11,Agriculture,Agroland
+258,20,13,2,0.65,0.11,Retail,Sustainland
+3,20,15,2,0.75,0.11,Agriculture,Farmland
+258,20,13,2,0.65,0.11,Real Estate,EcoLand
+258,20,13,2,0.65,0.11,Media,Mediatopia
+258,20,13,2,0.65,0.11,Real Estate,Greenland
+258,20,13,2,0.65,0.11,Manufacturing,EcoLand
+258,20,13,2,0.65,0.11,Interior Design,EcoNation
+107,21,91,2,4.33,0.11,Automotive,Autoland
+374,20,8,2,0.4,0.11,Environmental,Earthland
+374,20,8,2,0.4,0.11,Manufacturing,GreenLand
+374,20,8,2,0.4,0.11,Construction,EcoLand
+374,20,8,2,0.4,0.11,Manufacturing,Sustainland
+374,20,8,2,0.4,0.11,Education,Learnia
+374,20,8,2,0.4,0.11,Consulting,Sustainland
+90,10,2,1,0.2,0.11,Travel,TravelLand
+107,21,91,2,4.33,0.11,Automotive,USA
+107,21,91,2,4.33,0.11,Automotive,Carland
+350,21,29,2,1.38,0.11,Technology,Techland
+90,10,2,1,0.2,0.11,Travel,Exploreland
+354,21,22,2,1.05,0.11,Technology,Innovatia
+354,21,22,2,1.05,0.11,Retail,Shopland
+354,21,22,2,1.05,0.11,Food & Beverage,GourmetLand
+354,21,22,2,1.05,0.11,Marine,Marineland
+354,21,22,2,1.05,0.11,Food & Beverage,Flavorland
+11,20,7,2,0.35,0.11,Travel,Travelia
+273,21,14,2,0.67,0.11,Construction,Buildland
+107,21,91,2,4.33,0.11,Automotive,AutoLand
+90,10,2,1,0.2,0.11,Travel,Traveland
+346,20,63,2,3.15,0.11,Information Technology,Futuristan
+193,30,33,3,1.1,0.11,Education,Learnland
+193,30,33,3,1.1,0.11,Education,Learnia
+193,30,33,3,1.1,0.11,Education,EduNation
+193,30,33,3,1.1,0.11,Education,LearnLand
+193,30,33,3,1.1,0.11,Education,Educatia
+193,30,33,3,1.1,0.11,Healthcare,Mediland
+346,20,63,2,3.15,0.11,Technology,Innovatia
+193,30,33,3,1.1,0.11,Education Technology,Learnland
+346,20,63,2,3.15,0.11,Technology,TechLand
+346,20,63,2,3.15,0.11,Technology,InnovLand
+245,10,4,1,0.4,0.11,Renewable Energy,SolarWorld
+245,10,4,1,0.4,0.11,Energy,Solaria
+245,10,4,1,0.4,0.11,Energy,Spain
+245,10,4,1,0.4,0.11,Renewable Energy,SolarLand
+245,10,4,1,0.4,0.11,Energy,Ecoland
+197,10,25,1,2.5,0.11,Education,Learnland
+197,10,25,1,2.5,0.11,Education,Educatia
+197,10,25,1,2.5,0.11,Construction,Buildland
+197,10,25,1,2.5,0.11,Education,EduNation
+377,32,35,3,1.09,0.1,Energy,Sustainland
+377,32,35,3,1.09,0.1,Wave Energy,Sealand
+9,23,11,2,0.48,0.1,Agriculture,USA
+30,11,16,1,1.45,0.1,Security,SkyLand
+30,11,16,1,1.45,0.1,Information Technology,SecureLand
+9,23,11,2,0.48,0.1,Agriculture,Farmland
+30,11,16,1,1.45,0.1,Security,Safeland
+30,11,16,1,1.45,0.1,Cybersecurity,Secureland
+345,11,13,1,1.18,0.1,Technology,Innovatia
+30,11,16,1,1.45,0.1,Security,Secureland
+377,32,35,3,1.09,0.1,Energy,Ecotopia
+274,11,8,1,0.73,0.1,Construction,Greenland
+345,11,13,1,1.18,0.1,Information Technology,Futuristan
+274,11,8,1,0.73,0.1,Interior Design,EcoNation
+274,11,8,1,0.73,0.1,Construction,GreenLand
+274,11,8,1,0.73,0.1,Real Estate,Greenland
+376,34,29,3,0.85,0.1,Logistics,GreenLand
+376,34,29,3,0.85,0.1,Renewable Energy,EcoWorld
+376,34,29,3,0.85,0.1,Automotive,Autoland
+376,34,29,3,0.85,0.1,Technology,Innovatia
+9,23,11,2,0.48,0.1,Agriculture,AgriLand
+9,23,11,2,0.48,0.1,Agriculture,AgroNation
+9,23,11,2,0.48,0.1,Travel,WanderLand
+9,23,11,2,0.48,0.1,Travel,Wanderland
+9,23,11,2,0.48,0.1,Education,EduNation
+9,23,11,2,0.48,0.1,Fashion,Stylia
+9,23,11,2,0.48,0.1,Travel,Voyageland
+233,24,11,2,0.46,0.09,Energy,Sustainland
+83,12,7,1,0.58,0.09,Construction,Buildland
+71,25,22,2,0.88,0.09,Agriculture,FarmLand
+71,25,22,2,0.88,0.09,Agriculture,Farmland
+83,12,7,1,0.58,0.09,Agriculture,Farmville
+71,25,22,2,0.88,0.09,Agriculture,AgroNation
+83,12,7,1,0.58,0.09,Agriculture,Agroland
+233,24,11,2,0.46,0.09,Environmental,Greentopia
+233,24,11,2,0.46,0.09,Energy,Greenland
+233,24,11,2,0.46,0.09,Real Estate,Greenland
+233,24,11,2,0.46,0.09,Technology,Techland
+71,25,22,2,0.88,0.09,Agriculture,Farmville
+71,25,22,2,0.88,0.09,Agriculture,Australia
+344,25,20,2,0.8,0.09,Technology,TechLand
+344,25,20,2,0.8,0.09,Technology,Techland
+233,24,11,2,0.46,0.09,Sustainability,USA
+344,25,20,2,0.8,0.09,Technology,TechWorld
+83,12,7,1,0.58,0.09,Agriculture,Farmland
+344,25,20,2,0.8,0.09,Technology,Innovatia
+71,25,22,2,0.88,0.09,Agriculture,Agroland
+83,12,7,1,0.58,0.09,Agriculture,FarmLand
+71,25,22,2,0.88,0.09,Agriculture,USA
+177,12,2,1,0.17,0.09,Biotechnology,Bioland
+26,12,26,1,2.17,0.09,Retail,Stylia
+26,12,26,1,2.17,0.09,Retail,StyleLand
+202,12,1,1,0.08,0.09,Education,EduLand
+202,12,1,1,0.08,0.09,Education,EduNation
+26,12,26,1,2.17,0.09,Retail,Trendland
+26,12,26,1,2.17,0.09,Fashion,StyleLand
+71,25,22,2,0.88,0.09,Construction,Buildland
+233,24,11,2,0.46,0.09,Renewable Energy,Greenland
+233,24,11,2,0.46,0.09,Energy,EcoLand
+233,24,11,2,0.46,0.09,Environment,Greenland
+233,24,11,2,0.46,0.09,Technology,Tomorrowland
+233,24,11,2,0.46,0.09,Renewable Energy,EcoLand
+233,24,11,2,0.46,0.09,Technology,TechLand
+152,12,4,1,0.33,0.09,Healthcare,Careland
+116,12,18,1,1.5,0.09,Hospitality,TasteLand
+152,12,4,1,0.33,0.09,Healthcare,CareLand
+256,24,16,2,0.67,0.09,Renewable Energy,Greenland
+256,24,16,2,0.67,0.09,Finance,FinanceLand
+256,24,16,2,0.67,0.09,Energy,Sustainia
+256,24,16,2,0.67,0.09,Healthcare,CareLand
+256,24,16,2,0.67,0.09,Renewable Energy,Windland
+256,24,16,2,0.67,0.09,Energy,Sustainland
+116,12,18,1,1.5,0.09,Food & Beverage,Gastronomia
+116,12,18,1,1.5,0.09,Food & Beverage,Culinaryland
+116,12,18,1,1.5,0.09,Food Services,FoodLand
+116,12,18,1,1.5,0.09,Food & Beverage,Gourmetland
+152,12,4,1,0.33,0.09,Healthcare,Mediland
+116,12,18,1,1.5,0.09,Food & Beverage,Foodland
+147,26,95,2,3.65,0.08,Healthcare,Mediland
+213,14,13,1,0.93,0.08,Technology,Utopia
+213,14,13,1,0.93,0.08,Aerospace,Skyland
+213,14,13,1,0.93,0.08,Technology,Techland
+213,14,13,1,0.93,0.08,Technology,Sunland
+196,14,6,1,0.43,0.08,Education,EduNation
+196,14,6,1,0.43,0.08,Education,Learnland
+147,26,95,2,3.65,0.08,Healthcare,Healthland
+213,14,13,1,0.93,0.08,Technology,Skyland
+147,26,95,2,3.65,0.08,Healthcare,Careland
+173,13,14,1,1.08,0.08,Logistics,TrackLand
+147,26,95,2,3.65,0.08,Healthcare,HealthLand
+173,13,14,1,1.08,0.08,Logistics,Moveland
+147,26,95,2,3.65,0.08,Healthcare,CareLand
+76,28,22,2,0.79,0.08,Agriculture,Farmland
+195,13,21,1,1.62,0.08,Education,Learnia
+343,27,29,2,1.07,0.08,Technology,Innovatia
+343,27,29,2,1.07,0.08,Technology,TechLand
+321,14,47,1,3.36,0.08,Travel,ExploreLand
+173,13,14,1,1.08,0.08,Environment,Cleanland
+196,14,6,1,0.43,0.08,Education,Eduworld
+343,27,29,2,1.07,0.08,Information Technology,Futuristan
+195,13,21,1,1.62,0.08,Education,EduNation
+76,28,22,2,0.79,0.08,Agriculture,Australia
+321,14,47,1,3.36,0.08,Technology,USA
+321,14,47,1,3.36,0.08,Information Technology,Futuristan
+321,14,47,1,3.36,0.08,Construction,Futuraland
+321,14,47,1,3.36,0.08,Construction,Buildland
+195,13,21,1,1.62,0.08,Education,Learnland
+321,14,47,1,3.36,0.08,Technology,Techland
+213,14,13,1,0.93,0.08,Aviation,AirLand
+173,13,14,1,1.08,0.08,Logistics,TransportLand
+321,14,47,1,3.36,0.08,Media,Mediatopia
+343,27,29,2,1.07,0.08,Finance,FinanceLand
+343,27,29,2,1.07,0.08,Technology,Techland
+76,28,22,2,0.79,0.08,Agriculture,FarmLand
+356,16,2,1,0.12,0.07,Technology,Innovatia
+155,15,9,1,0.6,0.07,Retail,Italy
+265,16,7,1,0.44,0.07,Energy,Sustainia
+248,29,24,2,0.83,0.07,Technology,TechLand
+248,29,24,2,0.83,0.07,Technology,Greenland
+352,15,11,1,0.73,0.07,Technology,Innovatia
+155,15,9,1,0.6,0.07,Fashion,Fashionland
+352,15,11,1,0.73,0.07,Marine,Marineland
+248,29,24,2,0.83,0.07,Technology,Sustainland
+265,16,7,1,0.44,0.07,Energy,EcoLand
+248,29,24,2,0.83,0.07,Technology,Innovatia
+248,29,24,2,0.83,0.07,Energy,Greenland
+248,29,24,2,0.83,0.07,Manufacturing,GreenLand
+355,30,134,2,4.47,0.07,Technology,Innovatia
+355,30,134,2,4.47,0.07,Energy,Sustainland
+355,30,134,2,4.47,0.07,Technology,TechLand
+355,30,134,2,4.47,0.07,Information Technology,Futuristan
+265,16,7,1,0.44,0.07,Transportation,Sustainland
+265,16,7,1,0.44,0.07,Healthcare,CareLand
+265,16,7,1,0.44,0.07,Transportation,Greenland
+265,16,7,1,0.44,0.07,Renewable Energy,Windland
+315,15,47,1,3.13,0.07,Technology,USA
+315,15,47,1,3.13,0.07,Environmental,GreenLand
+315,15,47,1,3.13,0.07,Technology,TechLand
+315,15,47,1,3.13,0.07,Technology,Innovatia
+315,15,47,1,3.13,0.07,Construction,Innovateland
+315,15,47,1,3.13,0.07,Technology,Techland
+265,16,7,1,0.44,0.07,Energy,GreenLand
+293,16,1,1,0.06,0.07,Agriculture,EcoLand
+270,16,13,1,0.81,0.07,Construction,Smartland
+357,16,2,1,0.12,0.07,Technology,Innovatia
+375,29,24,2,0.83,0.07,Energy,Sustainland
+375,29,24,2,0.83,0.07,Urban Agriculture,Urbana
+375,29,24,2,0.83,0.07,Construction,EcoLand
+375,29,24,2,0.83,0.07,Technology,Techland
+375,29,24,2,0.83,0.07,Technology,Sustainland
+375,29,24,2,0.83,0.07,Technology,Innovatia
+227,16,11,1,0.69,0.07,Technology,WaterLand
+227,16,11,1,0.69,0.07,Technology,Techland
+227,16,11,1,0.69,0.07,Marine,Marineland
+74,15,7,1,0.47,0.07,Agriculture,USA
+74,15,7,1,0.47,0.07,Agriculture,Farmville
+74,15,7,1,0.47,0.07,Agriculture,Agroland
+293,16,1,1,0.06,0.07,Construction,Buildland
+74,15,7,1,0.47,0.07,Agriculture,Farmland
+270,16,13,1,0.81,0.07,Construction,ProLand
+155,15,9,1,0.6,0.07,Retail,Trendland
+155,15,9,1,0.6,0.07,Media,Mediatopia
+155,15,9,1,0.6,0.07,Fashion,Trendland
+293,16,1,1,0.06,0.07,Hospitality,TasteLand
+356,16,2,1,0.12,0.07,Technology,InnovLand
+356,16,2,1,0.12,0.07,Technology,Techland
+270,16,13,1,0.81,0.07,Construction,Buildland
+58,17,1,1,0.06,0.06,Research,SkyLand
+58,17,1,1,0.06,0.06,Consulting,SkyLand
+58,17,1,1,0.06,0.06,Engineering,SkyLand
+295,19,1,1,0.05,0.06,Construction,BuildLand
+295,19,1,1,0.05,0.06,Urban Planning,Planland
+295,19,1,1,0.05,0.06,Real Estate,UrbanLand
+295,19,1,1,0.05,0.06,Construction,Buildland
+58,17,1,1,0.06,0.06,Aerospace,SkyLand
+58,17,1,1,0.06,0.06,Manufacturing,SkyLand
+58,17,1,1,0.06,0.06,Logistics,SkyLand
+58,17,1,1,0.06,0.06,Development,SkyLand
+353,22,17,1,0.77,0.05,Technology,Innovatia
+14,20,30,1,1.5,0.05,Automotive,Autoland
+14,20,30,1,1.5,0.05,Automotive,CarLand
+353,22,17,1,0.77,0.05,Technology,TechLand
+353,22,17,1,0.77,0.05,Real Estate,Urbania
+14,20,30,1,1.5,0.05,Automotive,Carland
+23,23,3,1,0.13,0.05,Healthcare,Careland
+23,23,3,1,0.13,0.05,Healthcare,WellnessLand
+23,23,3,1,0.13,0.05,Healthcare,HealthLand
+23,23,3,1,0.13,0.05,Healthcare,CareLand
+23,23,3,1,0.13,0.05,Healthcare,Mediland
+23,23,3,1,0.13,0.05,Healthcare,Healthland
+54,23,51,1,2.22,0.05,Construction,Buildland
+54,23,51,1,2.22,0.05,Technology,TechLand
+54,23,51,1,2.22,0.05,Construction,USA
+54,23,51,1,2.22,0.05,Construction,Venturia
+54,23,51,1,2.22,0.05,Technology,Innovatia
+54,23,51,1,2.22,0.05,Technology,InnovateLand
+54,23,51,1,2.22,0.05,Technology,Techland
+54,23,51,1,2.22,0.05,Healthcare,Careland
+151,21,4,1,0.19,0.05,Healthcare,Careland
+151,21,4,1,0.19,0.05,Healthcare,WellnessLand
+151,21,4,1,0.19,0.05,Healthcare,Mediland
+54,23,51,1,2.22,0.05,Construction,Enterpriseland
+115,20,248,1,12.4,0.05,Food & Beverage,Foodland
+115,20,248,1,12.4,0.05,Food & Beverage,Cuisinia
+115,20,248,1,12.4,0.05,Food & Beverage,Flavorland
+115,20,248,1,12.4,0.05,Food & Beverage,FlavorLand
+115,20,248,1,12.4,0.05,Food & Beverage,Culinaryland
+378,6,0,0,0.0,0.0,Manufacturing,Leafland
+413,2,0,0,0.0,0.0,Food & Beverage,Foodland
+413,2,0,0,0.0,0.0,Food & Beverage,GastroLand
+418,2,0,0,0.0,0.0,Healthcare,Careland
+412,2,0,0,0.0,0.0,Real Estate,Houseland
+412,2,0,0,0.0,0.0,Retail,Shopland
+411,2,0,0,0.0,0.0,Construction,Buildland
+408,2,0,0,0.0,0.0,Healthcare,Healthland
+410,2,0,0,0.0,0.0,Healthcare,WellnessLand
+378,6,0,0,0.0,0.0,Energy,Sunland
+409,2,0,0,0.0,0.0,Energy,CleanLand
+409,2,0,0,0.0,0.0,Technology,Innovatia
+407,2,0,0,0.0,0.0,Retail,Sightland
+407,2,0,0,0.0,0.0,Entertainment,Fantasia
+337,6,0,0,0.0,0.0,Technology,Techland
+340,3,0,0,0.0,0.0,Technology,Techland
+340,3,0,0,0.0,0.0,Technology,Innovatia
+342,18,0,0,0.0,0.0,Information Technology,Futuristan
+379,4,0,0,0.0,0.0,Manufacturing,Leafland
+342,18,0,0,0.0,0.0,Technology,Techland
+348,5,0,0,0.0,0.0,Technology,Innovatia
+337,6,0,0,0.0,0.0,Technology,Innovatia
+337,6,0,0,0.0,0.0,Technology,TechLand
+415,2,0,0,0.0,0.0,Healthcare,Wellland
+416,2,0,0,0.0,0.0,Technology,TechLand
+417,2,0,0,0.0,0.0,Environment,Sustainia
+379,4,0,0,0.0,0.0,Energy,Sunland
+404,2,0,0,0.0,0.0,Urban Farming,USA
+391,2,0,0,0.0,0.0,Healthcare,Wellland
+401,2,0,0,0.0,0.0,Geothermal Energy,Earthland
+394,2,0,0,0.0,0.0,Retail,Shopland
+394,2,0,0,0.0,0.0,Real Estate,Houseland
+393,2,0,0,0.0,0.0,Technology,WaterLand
+393,2,0,0,0.0,0.0,Marine,Sealand
+392,2,0,0,0.0,0.0,Aviation,Flyland
+387,3,0,0,0.0,0.0,Agriculture,Agroland
+390,2,0,0,0.0,0.0,Automotive,Carland
+389,2,0,0,0.0,0.0,Real Estate,Urbania
+388,3,0,0,0.0,0.0,Construction,ProLand
+400,2,41,2,20.5,0.0,Aviation,Skyland
+400,2,41,2,20.5,0.0,Aviation,Flyland
+399,2,0,0,0.0,0.0,Real Estate,Houseland
+395,2,0,0,0.0,0.0,Real Estate,Houseland
+398,2,0,0,0.0,0.0,Real Estate,Greenland
+342,18,0,0,0.0,0.0,Technology,Innovatia
+342,18,0,0,0.0,0.0,Technology,InnovateLand
+398,2,0,0,0.0,0.0,Interior Design,EcoNation
+397,2,0,0,0.0,0.0,Geothermal Energy,Earthland
+397,2,0,0,0.0,0.0,Renewable Energy,GeoWorld
+396,2,0,0,0.0,0.0,Aerospace,Skyland
+396,2,0,0,0.0,0.0,Transportation,Flyland
+387,3,0,0,0.0,0.0,Agriculture,Farmville
+403,2,0,0,0.0,0.0,Transportation,Transland
+351,4,0,0,0.0,0.0,Technology,Techland
+401,2,0,0,0.0,0.0,Renewable Energy,GeoLand
+402,2,0,0,0.0,0.0,Technology,TechLand
+404,2,0,0,0.0,0.0,Agriculture,USA
+386,3,0,0,0.0,0.0,Automotive,Carland
+405,2,0,0,0.0,0.0,Logistics,Logistiland
+406,2,0,0,0.0,0.0,Environment,Sustainia
+351,4,0,0,0.0,0.0,Technology,Innovatia
+381,4,0,0,0.0,0.0,Marine,Marineland
+383,3,0,0,0.0,0.0,Real Estate,UAE
+328,11,0,0,0.0,0.0,Electronics,Gadgetland
+328,11,0,0,0.0,0.0,Renewable Energy,HydroWorld
+328,11,0,0,0.0,0.0,Technology,Innovatia
+328,11,0,0,0.0,0.0,Technology,Innovia
+328,11,0,0,0.0,0.0,Electronics,Innovatia
+382,4,0,0,0.0,0.0,Renewable Energy,WindWorld
+382,4,0,0,0.0,0.0,Energy,Greenland
+382,4,0,0,0.0,0.0,Energy,EcoLand
+382,4,0,0,0.0,0.0,Renewables,Aeroland
+328,11,0,0,0.0,0.0,Technology,Techland
+0,8,0,0,0.0,0.0,Media,Dreamland
+328,11,0,0,0.0,0.0,Technology,USA
+77,8,0,0,0.0,0.0,Agriculture,FarmLand
+68,9,0,0,0.0,0.0,Agriculture,Agraria
+75,12,0,0,0.0,0.0,Agriculture,Agroland
+75,12,0,0,0.0,0.0,Agriculture,FarmLand
+75,12,0,0,0.0,0.0,Agriculture,USA
+75,12,0,0,0.0,0.0,Logistics,Farmville
+77,8,0,0,0.0,0.0,Education,EduNation
+114,12,0,0,0.0,0.0,Automotive,Carland
+78,7,0,0,0.0,0.0,Agriculture,Agroland
+78,7,0,0,0.0,0.0,Agriculture,Farmland
+78,7,0,0,0.0,0.0,Agriculture,AgriLand
+79,5,0,0,0.0,0.0,Energy,Solaria
+79,5,0,0,0.0,0.0,Energy,Windland
+79,5,0,0,0.0,0.0,Technology,Moonland
+80,2,0,0,0.0,0.0,Agriculture,Agroland
+80,2,0,0,0.0,0.0,Agriculture,AgroLand
+57,23,0,0,0.0,0.0,Utilities,Airland
+59,16,0,0,0.0,0.0,Aviation,Flyland
+59,16,0,0,0.0,0.0,Aerospace,SkyLand
+59,16,0,0,0.0,0.0,Aerospace,Skyland
+59,16,0,0,0.0,0.0,Security,Airland
+59,16,0,0,0.0,0.0,Real Estate,UAE
+59,16,0,0,0.0,0.0,Transportation,Flyland
+59,16,0,0,0.0,0.0,Transportation,Airland
+61,9,0,0,0.0,0.0,Renewable Energy,Windland
+61,9,0,0,0.0,0.0,Energy,Netherlands
+81,22,0,0,0.0,0.0,Agriculture,FarmLand
+105,3,0,0,0.0,0.0,Retail,Retailia
+105,3,0,0,0.0,0.0,Retail,ShopLand
+106,15,0,0,0.0,0.0,Automotive,Carland
+106,15,0,0,0.0,0.0,Automotive,CarLand
+106,15,0,0,0.0,0.0,Manufacturing,Atlantis
+108,2,0,0,0.0,0.0,Automotive,MotorLand
+110,3,0,0,0.0,0.0,Automotive,Autoland
+110,3,0,0,0.0,0.0,Automotive,Carland
+110,3,0,0,0.0,0.0,Automotive,CarLand
+112,3,0,0,0.0,0.0,Real Estate,BuildLand
+112,3,0,0,0.0,0.0,Real Estate,Urbania
+112,3,0,0,0.0,0.0,Marine,Marineland
+114,12,0,0,0.0,0.0,Automotive,CarLand
+105,3,0,0,0.0,0.0,Retail,Urbia
+100,2,0,0,0.0,0.0,Automotive,DriveLand
+100,2,0,0,0.0,0.0,Automotive,Japan
+84,3,0,0,0.0,0.0,Agriculture,Agroland
+85,4,0,0,0.0,0.0,Agriculture,Agroland
+85,4,0,0,0.0,0.0,Urban Farming,Urbania
+93,8,0,0,0.0,0.0,Tourism,Exploreland
+93,8,0,0,0.0,0.0,Tourism,Highlandia
+93,8,0,0,0.0,0.0,Tourism,Explorland
+94,12,0,0,0.0,0.0,Energy,Energland
+94,12,0,0,0.0,0.0,Manufacturing,Mountland
+94,12,0,0,0.0,0.0,Hospitality,Alpinia
+94,12,0,0,0.0,0.0,Construction,Constructia
+94,12,0,0,0.0,0.0,Tourism,Mountland
+94,12,0,0,0.0,0.0,Tourism,Highlandia
+94,12,0,0,0.0,0.0,Tourism,Adventureland
+94,12,0,0,0.0,0.0,Tourism,Utopia
+94,12,0,0,0.0,0.0,Tourism,Tourland
+95,7,0,0,0.0,0.0,Tourism,Explorland
+95,7,0,0,0.0,0.0,Tourism,Mountland
+57,23,0,0,0.0,0.0,Technology,Airland
+8,26,0,0,0.0,0.0,Fashion,Stylia
+8,26,0,0,0.0,0.0,Travel,Wanderland
+8,26,0,0,0.0,0.0,Travel,ExploreLand
+8,26,0,0,0.0,0.0,Travel,Traveland
+12,14,0,0,0.0,0.0,Travel,Traveland
+12,14,0,0,0.0,0.0,Travel,ExploreLand
+12,14,0,0,0.0,0.0,Travel,Wanderland
+18,15,0,0,0.0,0.0,Food & Beverage,Gourmetland
+18,15,0,0,0.0,0.0,Food & Beverage,Gourmetia
+19,6,0,0,0.0,0.0,Food & Beverage,Foodland
+19,6,0,0,0.0,0.0,Food & Beverage,Flavorland
+22,6,0,0,0.0,0.0,Healthcare,Healthland
+8,26,0,0,0.0,0.0,Travel,Exploreland
+22,6,0,0,0.0,0.0,Healthcare,CareLand
+8,26,0,0,0.0,0.0,Travel & Leisure,Travelia
+5,5,0,0,0.0,0.0,Education,EduNation
+5,5,0,0,0.0,0.0,Automotive,Autoland
+7,8,0,0,0.0,0.0,Travel,TravelLand
+7,8,0,0,0.0,0.0,Travel,Wanderland
+8,26,0,0,0.0,0.0,Retail,ExploreLand
+22,6,0,0,0.0,0.0,Healthcare,Wellland
+44,6,0,0,0.0,0.0,Agriculture,Agroland
+44,6,0,0,0.0,0.0,Technology,Starland
+44,6,0,0,0.0,0.0,Utilities,Hydroland
+44,6,0,0,0.0,0.0,Urban Farming,Urbania
+45,7,0,0,0.0,0.0,Construction,BuildLand
+55,8,0,0,0.0,0.0,Technology,Techland
+55,8,0,0,0.0,0.0,Technology,Innovatia
+57,23,0,0,0.0,0.0,Renewable Energy,Windland
+57,23,0,0,0.0,0.0,Energy,Netherlands
+57,23,0,0,0.0,0.0,Energy,Solaria
+57,23,0,0,0.0,0.0,Renewables,Aeroland
+57,23,0,0,0.0,0.0,Aviation,Flyland
+44,6,0,0,0.0,0.0,Manufacturing,Leafland
+38,6,0,0,0.0,0.0,Fisheries,CyanLand
+28,21,0,0,0.0,0.0,Construction,Buildland
+28,21,0,0,0.0,0.0,Media,Dreamland
+28,21,0,0,0.0,0.0,Media,Mediatopia
+28,21,0,0,0.0,0.0,Retail,Italy
+28,21,0,0,0.0,0.0,Retail,Trendland
+28,21,0,0,0.0,0.0,Construction,Constructia
+29,5,0,0,0.0,0.0,Arts,CultureLand
+38,6,0,0,0.0,0.0,Technology,GreenLand
+38,6,0,0,0.0,0.0,Consumer Goods,EcoLand
+38,6,0,0,0.0,0.0,Real Estate,Sustainland
+38,6,0,0,0.0,0.0,Mining,CopperLand
+118,7,0,0,0.0,0.0,Food & Beverage,Gourmetland
+316,5,0,0,0.0,0.0,Technology,Innovatia
+241,16,0,0,0.0,0.0,Real Estate,EstateLand
+225,6,0,0,0.0,0.0,Marine,Marineland
+226,5,0,0,0.0,0.0,Marine,Aquatica
+226,5,0,0,0.0,0.0,Energy,Australia
+226,5,0,0,0.0,0.0,Marine,MarineLand
+226,5,0,0,0.0,0.0,Marine,AquaLand
+228,3,0,0,0.0,0.0,Marine,Marineland
+241,16,0,0,0.0,0.0,Sports,Athletica
+241,16,0,0,0.0,0.0,Fitness,Healthland
+241,16,0,0,0.0,0.0,Retail,Athletica
+241,16,0,0,0.0,0.0,Agriculture,EcoLand
+241,16,0,0,0.0,0.0,Health & Fitness,Healthland
+241,16,0,0,0.0,0.0,Retail,Homeland
+241,16,0,0,0.0,0.0,Real Estate,Houseland
+241,16,0,0,0.0,0.0,Manufacturing,FilterLand
+242,11,0,0,0.0,0.0,Technology,Icelandia
+242,11,0,0,0.0,0.0,Agriculture,Leafland
+242,11,0,0,0.0,0.0,Energy,Greenland
+242,11,0,0,0.0,0.0,Manufacturing,Leafland
+247,17,0,0,0.0,0.0,Retail,Greenland
+225,6,0,0,0.0,0.0,Media,Mediatopia
+223,6,0,0,0.0,0.0,Marine,Aquatica
+181,8,0,0,0.0,0.0,Education,EduLand
+182,3,0,0,0.0,0.0,Education,Learnland
+205,14,0,0,0.0,0.0,Publishing,LearnLand
+205,14,0,0,0.0,0.0,Technology,LearnLand
+205,14,0,0,0.0,0.0,Consulting,LearnLand
+218,9,0,0,0.0,0.0,Technology,TechLand
+223,6,0,0,0.0,0.0,Marine,Marineland
+223,6,0,0,0.0,0.0,Marine Services,Atlantis
+247,17,0,0,0.0,0.0,Renewable Energy,GreenLand
+286,4,0,0,0.0,0.0,Construction,Buildland
+298,2,0,0,0.0,0.0,Retail,Shopland
+298,2,0,0,0.0,0.0,Real Estate,Houseland
+307,16,0,0,0.0,0.0,Construction,Buildland
+311,6,0,0,0.0,0.0,Construction,FutureLand
+311,6,0,0,0.0,0.0,Construction,ConstructLand
+311,6,0,0,0.0,0.0,Construction,Futuraland
+311,6,0,0,0.0,0.0,Construction,Futureland
+312,8,0,0,0.0,0.0,Construction,FutureLand
+316,5,0,0,0.0,0.0,Manufacturing,Leafland
+316,5,0,0,0.0,0.0,Entertainment,Cosmoland
+316,5,0,0,0.0,0.0,Energy,Sunland
+250,13,0,0,0.0,0.0,Consulting,EcoLand
+278,7,0,0,0.0,0.0,Construction,Buildland
+250,13,0,0,0.0,0.0,Consumer Goods,EcoLand
+250,13,0,0,0.0,0.0,Manufacturing,EcoLand
+251,6,0,0,0.0,0.0,Finance,FinanceLand
+251,6,0,0,0.0,0.0,Technology,TechLand
+253,11,0,0,0.0,0.0,Consumer Goods,EcoLand
+253,11,0,0,0.0,0.0,Consumer Services,EcoLand
+254,4,0,0,0.0,0.0,Consumer Goods,EcoLand
+254,4,0,0,0.0,0.0,Consumer Services,EcoLand
+254,4,0,0,0.0,0.0,Electronics,LightLand
+254,4,0,0,0.0,0.0,Retail,EcoLand
+263,3,0,0,0.0,0.0,Energy,EcoLand
+263,3,0,0,0.0,0.0,Travel,TravelLand
+263,3,0,0,0.0,0.0,Retail,Sustainland
+267,4,0,0,0.0,0.0,Energy,EcoNation
+267,4,0,0,0.0,0.0,Energy,EcoLand
+267,4,0,0,0.0,0.0,Energy,Sustainland
+278,7,0,0,0.0,0.0,Construction,Constructia
+278,7,0,0,0.0,0.0,Construction,BuildLand
+181,8,0,0,0.0,0.0,Education,Learnland
+181,8,0,0,0.0,0.0,Education,EduNation
+181,8,0,0,0.0,0.0,Education,Learnia
+126,8,0,0,0.0,0.0,Food & Beverage,Foodland
+128,8,0,0,0.0,0.0,Food & Beverage,Culinaryland
+128,8,0,0,0.0,0.0,Food & Beverage,Foodland
+128,8,0,0,0.0,0.0,Food & Beverage,Flavorland
+131,8,0,0,0.0,0.0,Healthcare,Careland
+131,8,0,0,0.0,0.0,Healthcare,HealthLand
+131,8,0,0,0.0,0.0,Technology,Innovatia
+131,8,0,0,0.0,0.0,Healthcare,Healthland
+131,8,0,0,0.0,0.0,Healthcare,Medica
+133,9,0,0,0.0,0.0,Healthcare,CareLand
+133,9,0,0,0.0,0.0,Wellness,Healthland
+133,9,0,0,0.0,0.0,Healthcare,Careland
+133,9,0,0,0.0,0.0,Construction,Buildland
+133,9,0,0,0.0,0.0,Healthcare,WellnessLand
+135,9,0,0,0.0,0.0,Healthcare,Careland
+135,9,0,0,0.0,0.0,Healthcare,Healthland
+135,9,0,0,0.0,0.0,Energy,PowerLand
+135,9,0,0,0.0,0.0,Healthcare,Mediland
+126,8,0,0,0.0,0.0,Food & Beverage,Tasteland
+138,9,0,0,0.0,0.0,Healthcare,Mediland
+126,8,0,0,0.0,0.0,Hospitality,Foodland
+118,7,0,0,0.0,0.0,Food & Beverage,Foodland
+122,4,0,0,0.0,0.0,Food & Beverage,Cuisineland
+122,4,0,0,0.0,0.0,Food & Beverage,Culinaryland
+122,4,0,0,0.0,0.0,Food & Beverage,Foodland
+123,13,0,0,0.0,0.0,Food & Beverage,Foodland
+123,13,0,0,0.0,0.0,Food & Beverage,Gastronomia
+123,13,0,0,0.0,0.0,Food Services,GourmetLand
+123,13,0,0,0.0,0.0,Food & Beverage,Gourmetland
+123,13,0,0,0.0,0.0,Food Services,Culinary
+123,13,0,0,0.0,0.0,Food & Beverage,GourmetLand
+125,11,0,0,0.0,0.0,Food & Beverage,Foodland
+125,11,0,0,0.0,0.0,Food & Beverage,Cuisineland
+125,11,0,0,0.0,0.0,Food,Gastronomia
+126,8,0,0,0.0,0.0,Food & Beverage,GourmetLand
+126,8,0,0,0.0,0.0,Food & Beverage,Gastronomia
+138,9,0,0,0.0,0.0,Healthcare,WellnessLand
+138,9,0,0,0.0,0.0,Healthcare,Healthland
+161,2,0,0,0.0,0.0,Art & Design,Designland
+163,2,0,0,0.0,0.0,Information Technology,Techland
+169,10,0,0,0.0,0.0,Logistics,GreenLand
+169,10,0,0,0.0,0.0,Logistics,LogiLand
+169,10,0,0,0.0,0.0,Transportation,EcoLand
+169,10,0,0,0.0,0.0,Transport,EcoLand
+169,10,0,0,0.0,0.0,Renewable Energy,Windland
+171,7,0,0,0.0,0.0,Consumer Goods,EcoLand
+171,7,0,0,0.0,0.0,Consumer Services,EcoLand
+171,7,0,0,0.0,0.0,Furniture,NestLand
+171,7,0,0,0.0,0.0,Logistics,EcoLand
+174,5,0,0,0.0,0.0,Logistics,TrackLand
+174,5,0,0,0.0,0.0,Logistics,Moveland
+179,14,0,0,0.0,0.0,Education,EduLand
+179,14,0,0,0.0,0.0,Education,EduNation
+179,14,0,0,0.0,0.0,Education,Knowland
+179,14,0,0,0.0,0.0,Agriculture,Agroland
+179,14,0,0,0.0,0.0,Education,LearnLand
+179,14,0,0,0.0,0.0,Education,Learnland
+179,14,0,0,0.0,0.0,Education,Learnia
+181,8,0,0,0.0,0.0,Utilities,Airland
+161,2,0,0,0.0,0.0,Arts,Creativeland
+156,3,0,0,0.0,0.0,Fashion,Vogueville
+138,9,0,0,0.0,0.0,Healthcare,Careland
+156,3,0,0,0.0,0.0,Retail,Trendland
+138,9,0,0,0.0,0.0,Healthcare,CareLand
+140,13,0,0,0.0,0.0,Healthcare,Careland
+140,13,0,0,0.0,0.0,Food,AgroLand
+140,13,0,0,0.0,0.0,Healthcare,Healthland
+140,13,0,0,0.0,0.0,Healthcare,CareLand
+149,8,0,0,0.0,0.0,Healthcare,Careland
+149,8,0,0,0.0,0.0,Healthcare,Mediland
+150,9,0,0,0.0,0.0,Healthcare,WellnessLand
+150,9,0,0,0.0,0.0,Healthcare,Wellland
+153,14,0,0,0.0,0.0,Fashion,Fashionland
+153,14,0,0,0.0,0.0,Fashion,Trendland
+418,2,0,0,0.0,0.0,Healthcare,WellnessLand

@@ -1,0 +1,29 @@
+{
+    "example_order" : ["input", "network_table", "entity_table", "example"],
+    "example_metadata" : {
+        "input": {
+            "type": "csv",
+            "heading": "Input data",
+            "description": "Data uploaded by the user which describes entity attributes and flags"
+        },
+        "network_table": {
+            "type": "csv",
+            "heading": "Network table",
+            "description": "A table of entity networks detected in the input data"
+        },
+        "entity_table": {
+            "type": "csv",
+            "heading": "Entity table",
+            "description": "A table of entity networks detected in the input data, broken down by entity"
+        },
+        "example": {
+            "type": "list",
+            "item_order": ["report"],
+            "item_types" : {
+                "report" : "md"
+            },
+            "heading": "Entity reports",
+            "description": "Reports generated for selected entity networks, assessing entity relationships and the potential for flag exposure"
+        }
+    }
+}

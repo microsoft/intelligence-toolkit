@@ -10,6 +10,7 @@ import polars as pl
 import streamlit as st
 import workflows.detect_entity_networks.functions as functions
 import workflows.detect_entity_networks.variables as rn_variables
+import app.util.example_outputs_ui as example_outputs_ui
 from st_aggrid import (AgGrid, ColumnsAutoSizeMode, DataReturnMode,
                        GridOptionsBuilder, GridUpdateMode)
 from streamlit_agraph import Edge, Node, agraph, Config
@@ -51,13 +52,14 @@ def get_intro():
 async def create(sv: rn_variables.SessionVariables, workflow=None):
     sv_home = SessionVariables("home")
 
-    intro_tab, uploader_tab, process_tab, view_tab, report_tab = st.tabs(
+    intro_tab, uploader_tab, process_tab, view_tab, report_tab, examples_tab = st.tabs(
         [
             "Detect Entity Networks workflow:",
             "Create data model",
             "Process data model",
             "Explore networks",
             "Generate AI network reports",
+            "View example outputs"
         ]
     )
     selected_df = None
@@ -97,13 +99,13 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                 if link_type == "Entity-Attribute":
                     value_cols = st.multiselect(
                         "Attribute value column(s) to link on",
-                        options,
+                        [o for o in options if o != entity_col],
                         help="The column(s) containing attribute values that would only be shared by closely related entities.",
                     )
                 elif link_type == "Entity-Flag":
                     value_cols = st.multiselect(
                         "Flag value column(s)",
-                        options,
+                        [o for o in options if o != entity_col],
                         help="The column(s) containing risk flags associated with entities.",
                     )
                     flag_agg = st.selectbox(
@@ -114,7 +116,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                 elif link_type == "Entity-Group":
                     value_cols = st.multiselect(
                         "Group value column(s) to group on",
-                        options,
+                        [o for o in options if o != entity_col],
                         help="The column(s) containing group values that are shared by groups of broadly related entities.",
                     )
                 b1, b2 = st.columns([1, 1])
@@ -247,7 +249,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
             c_1, c_2 = st.columns([2, 2])
             with c_1:
                 infer = st.button(
-                    "Infer nodes",
+                    "Infer links",
                     disabled=len(network_indexed_node_types) == 0,
                 )
             with c_2:
@@ -420,18 +422,18 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                 sv.network_entity_df.value = pd.DataFrame(
                     entity_records,
                     columns=[
-                        "Entity ID",
-                        "Entity Flags",
-                        "Network ID",
-                        "Network Entities",
-                        "Network Flags",
-                        "Flagged",
-                        "Flags/Entity",
-                        "Flagged/Unflagged",
+                        "entity_id",
+                        "entity_flags",
+                        "network_id",
+                        "network_entities",
+                        "network_flags",
+                        "flagged",
+                        "flags/entity",
+                        "flagged/unflagged",
                     ],
                 )
                 sv.network_entity_df.value = sv.network_entity_df.value.sort_values(
-                    by=["Flagged/Unflagged"], ascending=False
+                    by=["flagged/unflagged"], ascending=False
                 ).reset_index(drop=True)
                 sv.network_table_index.value += 1
                 st.rerun()
@@ -492,21 +494,21 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                     if show_groups:
                         for group_links in sv.network_group_links.value:
                             selected_df = pd.DataFrame(
-                                group_links, columns=["Entity ID", "Group", "Value"]
+                                group_links, columns=["entity_id", "group", "value"]
                             ).replace("nan", "")
-                            selected_df = selected_df[selected_df["Value"] != ""]
+                            selected_df = selected_df[selected_df["value"] != ""]
                             # Use group values as columns with values in them
                             selected_df = selected_df.pivot_table(
-                                index="Entity ID",
-                                columns="Group",
-                                values="Value",
+                                index="entity_id",
+                                columns="group",
+                                values="value",
                                 aggfunc="first",
                             ).reset_index()
-                            show_df = show_df.merge(selected_df, on="Entity ID", how="left")
+                            show_df = show_df.merge(selected_df, on="entity_id", how="left")
                     last_df = show_df.copy()
                     if not show_entities:
                         last_df = (
-                            last_df.drop(columns=["Entity ID", "Entity Flags"])
+                            last_df.drop(columns=["entity_id", "entity_flags"])
                             .drop_duplicates()
                             .reset_index(drop=True)
                         )
@@ -753,11 +755,11 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
 
                         sv.network_report.value = result
 
-                        validation, messages_to_llm = ui_components.validate_ai_report(
-                            messages, result
-                        )
-                        sv.network_report_validation.value = validation
-                        sv.network_report_validation_messages.value = messages_to_llm
+                        # validation, messages_to_llm = ui_components.validate_ai_report(
+                        #     messages, result
+                        # )
+                        # sv.network_report_validation.value = validation
+                        # sv.network_report_validation_messages.value = messages_to_llm
                         st.rerun()
                     except Exception as _e:
                         empty_connection_bar(_e)
@@ -779,3 +781,5 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                 #     sv.network_report.value,
                 #     workflow,
                 # )
+    with examples_tab:
+        example_outputs_ui.create_example_outputs_ui(examples_tab, workflow)

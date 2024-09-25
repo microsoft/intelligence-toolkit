@@ -322,11 +322,11 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                     )
                     sv.case_groups_report.value = result
 
-                    validation, messages_to_llm = ui_components.validate_ai_report(
-                        messages, result
-                    )
-                    sv.case_groups_report_validation.value = validation
-                    sv.case_groups_report_validation_messages.value = messages_to_llm
+                    # validation, messages_to_llm = ui_components.validate_ai_report(
+                    #     messages, result
+                    # )
+                    # sv.case_groups_report_validation.value = validation
+                    # sv.case_groups_report_validation_messages.value = messages_to_llm
                     st.rerun()
                 else:
                     if sv.case_groups_report.value == "":

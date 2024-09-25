@@ -377,13 +377,13 @@ def create(sv: ap_variables.SessionVariables, workflow):
 
                         sv.detect_case_patterns_report.value = result
 
-                        validation, messages_to_llm = ui_components.validate_ai_report(
-                            messages, result
-                        )
-                        sv.detect_case_patterns_report_validation.value = validation
-                        sv.detect_case_patterns_report_validation_messages.value = (
-                            messages_to_llm
-                        )
+                        # validation, messages_to_llm = ui_components.validate_ai_report(
+                        #     messages, result
+                        # )
+                        # sv.detect_case_patterns_report_validation.value = validation
+                        # sv.detect_case_patterns_report_validation_messages.value = (
+                        #     messages_to_llm
+                        # )
                         st.rerun()
                     except Exception as _e:
                         empty_connection_bar()
