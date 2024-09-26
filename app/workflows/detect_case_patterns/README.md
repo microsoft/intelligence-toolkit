@@ -71,7 +71,7 @@ In either case, first navigate to the `Prepare case data` tab, select `Browse fi
 If using prepared data directly:
 
 - under `Select attribute columns to include`, press `Select all`
-- advance to the [Detecting attribute patterns](#detecting-attribute-patterns) section
+- advance to the [Create the attribute model](#create-the-attribute-model) section
 
 Otherwise, continue by working though the steps of senstive data preparation below using the `customer_complaints_input.csv` dataset.
 
