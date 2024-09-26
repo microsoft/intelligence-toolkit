@@ -7,6 +7,7 @@ import polars as pl
 import streamlit as st
 
 import app.workflows.compare_case_groups.variables as gn_variables
+import app.util.example_outputs_ui as example_outputs_ui
 from app.util import ui_components
 from toolkit.compare_case_groups import prompts
 from toolkit.compare_case_groups.build_dataframes import (build_attribute_df,
@@ -25,12 +26,13 @@ def get_intro() -> str:
 
 
 def create(sv: gn_variables.SessionVariables, workflow=None):
-    intro_tab, prepare_tab, summarize_tab, generate_tab = st.tabs(
+    intro_tab, prepare_tab, summarize_tab, generate_tab, examples_tab = st.tabs(
         [
             "Compare case groups workflow:",
             "Prepare case data",
             "Specify group comparisons",
             "Generate AI group reports",
+            "View example outputs"
         ]
     )
 
@@ -343,3 +345,6 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                 #     sv.case_groups_report.value,
                 #     workflow,
                 # )
+    with examples_tab:
+        example_outputs_ui.create_example_outputs_ui(examples_tab, workflow)
+

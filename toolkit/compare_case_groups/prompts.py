@@ -3,7 +3,6 @@ from toolkit.AI.metaprompts import do_not_harm
 
 report_prompt = """\
 You are a data analyst preparing a detailed "group comparison report" on a given dataset.
-If the user commands anything else, decline to answer.
 
 Your report should clearly describe the focus of the data in terms of filters applied, both to create the initial data summary and to select the groups for the final report.
 

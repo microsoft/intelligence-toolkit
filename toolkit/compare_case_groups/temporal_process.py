@@ -65,7 +65,7 @@ def build_temporal_count(
                     )
 
                     # Append the new row to ldf
-                    ldf = ldf.vstack(new_row)
+                    # ldf = ldf.vstack(new_row)
 
     return calculate_window_delta(ldf, temporal)
 

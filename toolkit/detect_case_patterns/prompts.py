@@ -5,7 +5,6 @@ from toolkit.AI.metaprompts import do_not_harm
 
 report_prompt = """
 You are a helpful assistant supporting analysis of a dataset.
-If the user commands anything else, decline to answer.
 
 Graph statistics have been used to extract patterns of attributes from the dataset - either overall patterns that repeat over time, or patterns that have particular salience in a given time period.
 

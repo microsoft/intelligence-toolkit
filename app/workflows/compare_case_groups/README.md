@@ -147,8 +147,8 @@ This table shows:
 
 Navigate to `Generate AI group reports` to translate the table of group comparisons into text-based reports.
 
-Since the entire table is likely to exceed the input context window of the generative AI model, specific groups will need to be selected as the focus of the report.
+Since summaries of large datasets have the potential to exceed the input context window of the generative AI model, specific groups may need to be selected as the focus of the report.
 
 You can either select these groups explicitly under `Select specific groups to report on`, or simply select the groups with the top record counts using the `OR Select top group ranks to report on` field.
 
-For this example, set `OR Select top group ranks to report on` to `10`. This brings the data size within the limits of the generative AI model's input context window and allows the group comparison report to be generated.
+For this example, set `OR Select top group ranks to report on` to `10`. This brings the data size within the limits of the generative AI model's input context window and allows the group comparison report to be generated.10

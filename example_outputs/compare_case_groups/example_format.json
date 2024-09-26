@@ -1,25 +1,29 @@
 {
-    "example_order" : ["input", "prepared", "aggregate", "synthetic"],
+    "example_order" : ["input", "prepared", "summary", "group"],
     "example_metadata" : {
         "input": {
             "type": "csv",
             "heading": "Input data",
-            "description": "Sensitive data uploaded by the user which describes individual data subjects and is in need of anonymization for sharing or analysis purposes"
+            "description": "Data uploaded by the user which describes individual case records"
         },
         "prepared": {
             "type": "csv",
             "heading": "Prepared data",
-            "description": "Sensitive data prepared for anonymization by the user by removing  direct identifiers and reducing to a small number of columns, each containing a small number of categorical values"
+            "description": "Data prepared for group comparison by the user by removing direct identifiers and reducing to a small number of columns, each containing a small number of categorical values"
         },
-        "aggregate": {
+        "summary": {
             "type": "csv",
-            "heading": "Aggregate data",
-            "description": "Anonymous data aggregated from the prepared data in ways that provide differential privacy (DP) for the overall record count and all counts of short attribute combinations (length \u2264 4)"
+            "heading": "Summary table",
+            "description": "A table summarizing the counts and ranks of specified attribute values across both groups and time periods/ordinal attributes"
         },
-        "synthetic": {
-            "type": "csv",
-            "heading": "Synthetic data",
-            "description": "Anonymous data synthesized from the aggregate data such that records capture the structure and statistics of the prepared sensitive data while retaining differential privacy (DP)"
+        "group": {
+            "type": "list",
+            "item_order": ["report"],
+            "item_types" : {
+                "report" : "md"
+            },
+            "heading": "Group reports",
+            "description": "Reports generated for selected groups, making comparisons between groups and over time periods/ordinal attributes"
         }
     }
 }

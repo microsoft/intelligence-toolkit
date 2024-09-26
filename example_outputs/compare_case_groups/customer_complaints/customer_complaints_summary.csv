@@ -1,0 +1,1698 @@
+city,group_count,group_rank,attribute_value,attribute_count,attribute_rank,period_window,period_window_count,period_window_rank,period_window_delta
+Baytown,8,50,product_code:G,1,44,2020-H1,1,3,0
+Baytown,8,50,service_issue:True,2,57,2020-H1,1,3,0
+Baytown,8,50,product_code:F,3,22,2020-H2,1,3,0
+Baytown,8,50,quality_issue:True,2,59,2020-H2,1,3,0
+Baytown,8,50,delivery_issue:True,2,56,2021-H2,1,4,0
+Baytown,8,50,description_issue:True,3,41,2021-H2,1,4,0
+Baytown,8,50,product_code:A,1,38,2021-H2,1,5,0
+Baytown,8,50,description_issue:True,3,41,2023-H1,1,16,0
+Baytown,8,50,price_issue:True,3,50,2023-H1,1,18,0
+Baytown,8,50,product_code:F,3,22,2023-H1,1,13,0
+Baytown,8,50,delivery_issue:True,2,56,2023-H2,1,16,0
+Baytown,8,50,description_issue:True,3,41,2023-H2,1,15,0
+Baytown,8,50,price_issue:True,3,50,2023-H2,1,14,0
+Baytown,8,50,product_code:D,2,27,2023-H2,2,10,1
+Baytown,8,50,product_code:F,3,22,2023-H2,1,7,-1
+Baytown,8,50,quality_issue:True,2,59,2023-H2,1,15,0
+Baytown,8,50,service_issue:True,2,57,2023-H2,1,15,0
+Baytown,8,50,price_issue:True,3,50,2025-H1,1,1,0
+Baytown,8,50,product_code:H,1,49,2025-H1,1,1,0
+Bayview,18,26,delivery_issue:True,8,20,2020-H1,1,2,0
+Bayview,18,26,product_code:E,13,10,2020-H1,1,1,0
+Bayview,18,26,delivery_issue:True,8,20,2020-H2,1,3,0
+Bayview,18,26,product_code:D,4,17,2020-H2,1,1,0
+Bayview,18,26,product_code:E,13,10,2020-H2,1,4,0
+Bayview,18,26,quality_issue:True,6,24,2020-H2,2,2,1
+Bayview,18,26,description_issue:True,4,34,2021-H1,1,2,-1
+Bayview,18,26,product_code:D,4,17,2021-H1,1,1,0
+Bayview,18,26,delivery_issue:True,8,20,2023-H1,2,16,1
+Bayview,18,26,description_issue:True,4,34,2023-H1,2,15,0
+Bayview,18,26,price_issue:True,5,26,2023-H1,1,18,-1
+Bayview,18,26,product_code:C,1,44,2023-H1,1,9,0
+Bayview,18,26,product_code:E,13,10,2023-H1,3,5,2
+Bayview,18,26,quality_issue:True,6,24,2023-H1,1,16,-2
+Bayview,18,26,service_issue:True,2,57,2023-H1,1,16,0
+Bayview,18,26,price_issue:True,5,26,2023-H2,3,12,2
+Bayview,18,26,product_code:D,4,17,2023-H2,2,10,-1
+Bayview,18,26,product_code:E,13,10,2023-H2,1,11,-1
+Bayview,18,26,quality_issue:True,6,24,2023-H2,1,15,0
+Bayview,18,26,delivery_issue:True,8,20,2024-H1,3,1,2
+Bayview,18,26,description_issue:True,4,34,2024-H1,1,1,-2
+Bayview,18,26,price_issue:True,5,26,2024-H1,1,1,0
+Bayview,18,26,product_code:E,13,10,2024-H1,6,1,5
+Bayview,18,26,quality_issue:True,6,24,2024-H1,1,1,-5
+Bayview,18,26,service_issue:True,2,57,2024-H1,1,3,0
+Bayview,18,26,delivery_issue:True,8,20,2025-H2,1,2,0
+Bayview,18,26,product_code:E,13,10,2025-H2,1,1,0
+Bayview,18,26,quality_issue:True,6,24,2025-H2,1,1,0
+Birch City,8,50,product_code:G,2,32,2022-H1,1,4,0
+Birch City,8,50,quality_issue:True,3,47,2022-H1,1,5,0
+Birch City,8,50,delivery_issue:True,2,56,2023-H2,2,15,1
+Birch City,8,50,description_issue:True,4,34,2023-H2,4,12,2
+Birch City,8,50,price_issue:True,1,67,2023-H2,1,14,-3
+Birch City,8,50,product_code:G,2,32,2023-H2,1,8,0
+Birch City,8,50,product_code:H,6,16,2023-H2,6,9,5
+Birch City,8,50,quality_issue:True,3,47,2023-H2,2,14,-4
+Birch City,8,50,service_issue:True,4,31,2023-H2,4,12,2
+Brookfield,19,25,description_issue:True,5,28,2022-H2,1,6,-3
+Brookfield,19,25,product_code:F,1,47,2022-H2,1,4,0
+Brookfield,19,25,delivery_issue:True,9,19,2023-H1,1,17,0
+Brookfield,19,25,price_issue:True,7,23,2023-H1,1,18,0
+Brookfield,19,25,product_code:A,2,26,2023-H1,1,10,0
+Brookfield,19,25,product_code:G,3,24,2023-H1,2,10,1
+Brookfield,19,25,quality_issue:True,5,33,2023-H1,1,16,-1
+Brookfield,19,25,delivery_issue:True,9,19,2023-H2,8,10,7
+Brookfield,19,25,description_issue:True,5,28,2023-H2,4,12,-4
+Brookfield,19,25,price_issue:True,7,23,2023-H2,6,9,2
+Brookfield,19,25,product_code:A,2,26,2023-H2,1,10,-5
+Brookfield,19,25,product_code:C,7,14,2023-H2,7,6,6
+Brookfield,19,25,product_code:D,1,40,2023-H2,1,11,-6
+Brookfield,19,25,product_code:E,2,41,2023-H2,2,10,1
+Brookfield,19,25,product_code:G,3,24,2023-H2,1,8,-1
+Brookfield,19,25,product_code:H,3,25,2023-H2,3,12,2
+Brookfield,19,25,quality_issue:True,5,33,2023-H2,4,12,1
+Brookfield,19,25,service_issue:True,5,28,2023-H2,5,11,1
+Brookside,111,8,product_code:D,20,3,2020-H1,1,1,-4
+Brookside,111,8,quality_issue:True,38,7,2020-H1,1,2,0
+Brookside,111,8,delivery_issue:True,36,8,2020-H2,1,3,0
+Brookside,111,8,description_issue:True,33,7,2020-H2,1,3,0
+Brookside,111,8,product_code:E,6,17,2020-H2,1,4,0
+Brookside,111,8,delivery_issue:True,36,8,2021-H1,1,2,0
+Brookside,111,8,description_issue:True,33,7,2021-H1,2,1,1
+Brookside,111,8,product_code:B,18,5,2021-H1,1,3,-1
+Brookside,111,8,product_code:D,20,3,2021-H1,1,1,0
+Brookside,111,8,delivery_issue:True,36,8,2021-H2,1,4,0
+Brookside,111,8,description_issue:True,33,7,2021-H2,2,3,1
+Brookside,111,8,price_issue:True,45,6,2021-H2,1,4,-1
+Brookside,111,8,product_code:B,18,5,2021-H2,1,5,0
+Brookside,111,8,product_code:C,6,16,2021-H2,2,3,1
+Brookside,111,8,delivery_issue:True,36,8,2022-H1,1,3,-1
+Brookside,111,8,price_issue:True,45,6,2022-H1,2,5,1
+Brookside,111,8,product_code:D,20,3,2022-H1,1,2,-1
+Brookside,111,8,product_code:F,23,4,2022-H1,1,4,0
+Brookside,111,8,product_code:G,16,8,2022-H1,3,2,2
+Brookside,111,8,product_code:H,9,11,2022-H1,1,3,-2
+Brookside,111,8,quality_issue:True,38,7,2022-H1,2,4,1
+Brookside,111,8,service_issue:True,33,8,2022-H1,2,4,0
+Brookside,111,8,delivery_issue:True,36,8,2022-H2,1,6,-1
+Brookside,111,8,description_issue:True,33,7,2022-H2,2,5,1
+Brookside,111,8,product_code:E,6,17,2022-H2,1,6,-1
+Brookside,111,8,product_code:F,23,4,2022-H2,1,4,0
+Brookside,111,8,delivery_issue:True,36,8,2023-H1,19,7,18
+Brookside,111,8,description_issue:True,33,7,2023-H1,12,8,-7
+Brookside,111,8,price_issue:True,45,6,2023-H1,27,5,15
+Brookside,111,8,product_code:A,13,7,2023-H1,4,8,-23
+Brookside,111,8,product_code:B,18,5,2023-H1,15,5,11
+Brookside,111,8,product_code:C,6,16,2023-H1,3,7,-12
+Brookside,111,8,product_code:D,20,3,2023-H1,3,5,0
+Brookside,111,8,product_code:E,6,17,2023-H1,1,7,-2
+Brookside,111,8,product_code:F,23,4,2023-H1,15,2,14
+Brookside,111,8,product_code:G,16,8,2023-H1,12,3,-3
+Brookside,111,8,product_code:H,9,11,2023-H1,4,2,-8
+Brookside,111,8,quality_issue:True,38,7,2023-H1,24,4,20
+Brookside,111,8,service_issue:True,33,8,2023-H1,20,4,-4
+Brookside,111,8,delivery_issue:True,36,8,2023-H2,11,9,-9
+Brookside,111,8,description_issue:True,33,7,2023-H2,13,6,2
+Brookside,111,8,price_issue:True,45,6,2023-H2,14,7,1
+Brookside,111,8,product_code:A,13,7,2023-H2,8,5,-6
+Brookside,111,8,product_code:B,18,5,2023-H2,1,8,-7
+Brookside,111,8,product_code:C,6,16,2023-H2,1,12,0
+Brookside,111,8,product_code:D,20,3,2023-H2,14,4,13
+Brookside,111,8,product_code:E,6,17,2023-H2,2,10,-12
+Brookside,111,8,product_code:F,23,4,2023-H2,6,3,4
+Brookside,111,8,product_code:G,16,8,2023-H2,1,8,-5
+Brookside,111,8,product_code:H,9,11,2023-H2,4,11,3
+Brookside,111,8,quality_issue:True,38,7,2023-H2,11,6,7
+Brookside,111,8,service_issue:True,33,8,2023-H2,11,8,0
+Brookside,111,8,description_issue:True,33,7,2024-H1,1,1,-10
+Brookside,111,8,product_code:E,6,17,2024-H1,1,2,0
+Brookside,111,8,delivery_issue:True,36,8,2024-H2,1,1,0
+Brookside,111,8,price_issue:True,45,6,2024-H2,1,1,0
+Brookside,111,8,product_code:A,13,7,2024-H2,1,1,0
+Capital City,6,69,delivery_issue:True,1,70,2023-H1,1,17,0
+Capital City,6,69,description_issue:True,2,51,2023-H1,1,16,0
+Capital City,6,69,price_issue:True,2,56,2023-H1,2,17,1
+Capital City,6,69,product_code:F,2,32,2023-H1,2,12,0
+Capital City,6,69,description_issue:True,2,51,2023-H2,1,15,-1
+Capital City,6,69,product_code:A,2,26,2023-H2,2,9,1
+Capital City,6,69,product_code:C,2,31,2023-H2,2,11,0
+Capital City,6,69,quality_issue:True,2,59,2023-H2,2,14,0
+Capital City,6,69,service_issue:True,3,39,2023-H2,3,13,1
+Cedar City,7,57,delivery_issue:True,4,35,2022-H2,1,6,-2
+Cedar City,7,57,price_issue:True,4,35,2022-H2,1,6,0
+Cedar City,7,57,product_code:A,2,26,2022-H2,1,4,0
+Cedar City,7,57,delivery_issue:True,4,35,2023-H1,1,17,0
+Cedar City,7,57,description_issue:True,3,41,2023-H1,1,16,0
+Cedar City,7,57,product_code:E,1,52,2023-H1,1,7,0
+Cedar City,7,57,delivery_issue:True,4,35,2023-H2,2,15,1
+Cedar City,7,57,description_issue:True,3,41,2023-H2,2,14,0
+Cedar City,7,57,price_issue:True,4,35,2023-H2,3,12,1
+Cedar City,7,57,product_code:A,2,26,2023-H2,1,10,-2
+Cedar City,7,57,product_code:D,2,27,2023-H2,2,10,1
+Cedar City,7,57,product_code:G,1,44,2023-H2,1,8,-1
+Cedar City,7,57,product_code:H,1,49,2023-H2,1,14,0
+Cedar City,7,57,service_issue:True,2,57,2023-H2,2,14,1
+Cedarville,7,57,product_code:C,4,21,2022-H1,1,3,-1
+Cedarville,7,57,quality_issue:True,1,68,2022-H1,1,5,0
+Cedarville,7,57,delivery_issue:True,3,43,2023-H1,3,15,2
+Cedarville,7,57,description_issue:True,4,34,2023-H1,3,14,0
+Cedarville,7,57,product_code:B,2,30,2023-H1,2,12,-1
+Cedarville,7,57,product_code:C,4,21,2023-H1,2,8,0
+Cedarville,7,57,product_code:C,4,21,2023-H2,1,12,-1
+Cedarville,7,57,service_issue:True,1,67,2023-H2,1,15,0
+Cedarville,7,57,description_issue:True,4,34,2024-H2,1,1,0
+Cedarville,7,57,product_code:G,1,44,2024-H2,1,2,0
+Central City,16,31,product_code:C,4,21,2022-H1,1,3,0
+Central City,16,31,quality_issue:True,5,33,2022-H1,1,5,0
+Central City,16,31,delivery_issue:True,1,70,2022-H2,1,6,0
+Central City,16,31,description_issue:True,3,41,2022-H2,2,5,1
+Central City,16,31,price_issue:True,3,50,2022-H2,2,5,0
+Central City,16,31,product_code:E,1,52,2022-H2,1,6,-1
+Central City,16,31,product_code:F,7,15,2022-H2,6,1,5
+Central City,16,31,quality_issue:True,5,33,2022-H2,1,6,-5
+Central City,16,31,service_issue:True,4,31,2022-H2,1,5,0
+Central City,16,31,description_issue:True,3,41,2023-H1,1,16,0
+Central City,16,31,price_issue:True,3,50,2023-H1,1,18,0
+Central City,16,31,product_code:D,1,40,2023-H1,1,7,0
+Central City,16,31,product_code:F,7,15,2023-H1,1,13,0
+Central City,16,31,product_code:G,1,44,2023-H1,1,11,0
+Central City,16,31,product_code:H,2,33,2023-H1,2,3,1
+Central City,16,31,quality_issue:True,5,33,2023-H1,3,14,1
+Central City,16,31,product_code:C,4,21,2023-H2,3,10,0
+Central City,16,31,service_issue:True,4,31,2023-H2,3,13,0
+Clearwater,13,35,price_issue:True,3,50,2020-H2,1,3,-2
+Clearwater,13,35,product_code:E,3,32,2020-H2,1,4,0
+Clearwater,13,35,product_code:F,4,18,2020-H2,2,2,1
+Clearwater,13,35,quality_issue:True,5,33,2020-H2,2,2,0
+Clearwater,13,35,product_code:D,4,17,2021-H2,1,3,-1
+Clearwater,13,35,service_issue:True,4,31,2021-H2,1,5,0
+Clearwater,13,35,delivery_issue:True,3,43,2023-H1,1,17,0
+Clearwater,13,35,price_issue:True,3,50,2023-H1,2,17,1
+Clearwater,13,35,product_code:D,4,17,2023-H1,1,7,-1
+Clearwater,13,35,product_code:E,3,32,2023-H1,1,7,0
+Clearwater,13,35,product_code:F,4,18,2023-H1,1,13,0
+Clearwater,13,35,service_issue:True,4,31,2023-H1,1,16,0
+Clearwater,13,35,delivery_issue:True,3,43,2023-H2,2,15,1
+Clearwater,13,35,description_issue:True,2,51,2023-H2,1,15,-1
+Clearwater,13,35,product_code:D,4,17,2023-H2,2,10,1
+Clearwater,13,35,product_code:E,3,32,2023-H2,1,11,-1
+Clearwater,13,35,product_code:H,1,49,2023-H2,1,14,0
+Clearwater,13,35,quality_issue:True,5,33,2023-H2,2,14,1
+Clearwater,13,35,service_issue:True,4,31,2023-H2,1,15,-1
+Clearwater,13,35,description_issue:True,2,51,2024-H1,1,1,0
+Clearwater,13,35,product_code:G,1,44,2024-H1,1,1,0
+Clearwater,13,35,quality_issue:True,5,33,2024-H1,1,1,0
+Clearwater,13,35,product_code:F,4,18,2024-H2,1,1,0
+Clearwater,13,35,service_issue:True,4,31,2024-H2,1,2,0
+Clifftown,28,18,price_issue:True,7,23,2020-H2,1,3,0
+Clifftown,28,18,product_code:E,1,52,2020-H2,1,4,0
+Clifftown,28,18,delivery_issue:True,7,21,2021-H1,2,1,1
+Clifftown,28,18,price_issue:True,7,23,2021-H1,1,5,-1
+Clifftown,28,18,product_code:C,5,18,2021-H1,4,2,3
+Clifftown,28,18,quality_issue:True,4,38,2021-H1,1,4,-3
+Clifftown,28,18,service_issue:True,15,18,2021-H1,2,3,1
+Clifftown,28,18,delivery_issue:True,7,21,2023-H1,2,16,0
+Clifftown,28,18,description_issue:True,7,20,2023-H1,2,15,0
+Clifftown,28,18,product_code:B,2,30,2023-H1,2,12,0
+Clifftown,28,18,product_code:C,5,18,2023-H1,1,9,-1
+Clifftown,28,18,delivery_issue:True,7,21,2023-H2,2,15,1
+Clifftown,28,18,description_issue:True,7,20,2023-H2,4,12,2
+Clifftown,28,18,price_issue:True,7,23,2023-H2,3,12,-1
+Clifftown,28,18,product_code:D,19,5,2023-H2,6,6,3
+Clifftown,28,18,product_code:F,1,47,2023-H2,1,7,-5
+Clifftown,28,18,quality_issue:True,4,38,2023-H2,2,14,1
+Clifftown,28,18,service_issue:True,15,18,2023-H2,3,13,1
+Clifftown,28,18,delivery_issue:True,7,21,2024-H1,1,2,-2
+Clifftown,28,18,price_issue:True,7,23,2024-H1,1,1,0
+Clifftown,28,18,product_code:D,19,5,2024-H1,12,1,11
+Clifftown,28,18,quality_issue:True,4,38,2024-H1,1,1,-11
+Clifftown,28,18,service_issue:True,15,18,2024-H1,10,1,9
+Clifftown,28,18,description_issue:True,7,20,2025-H2,1,2,-9
+Clifftown,28,18,price_issue:True,7,23,2025-H2,1,1,0
+Clifftown,28,18,product_code:D,19,5,2025-H2,1,1,0
+Coast City,14,32,product_code:G,3,24,2022-H1,1,4,0
+Coast City,14,32,quality_issue:True,5,33,2022-H1,1,5,0
+Coast City,14,32,delivery_issue:True,5,28,2023-H1,4,14,3
+Coast City,14,32,description_issue:True,1,64,2023-H1,1,16,-3
+Coast City,14,32,price_issue:True,3,50,2023-H1,3,16,2
+Coast City,14,32,product_code:B,7,12,2023-H1,7,7,4
+Coast City,14,32,product_code:E,2,41,2023-H1,2,6,-5
+Coast City,14,32,product_code:F,1,47,2023-H1,1,13,-1
+Coast City,14,32,product_code:G,3,24,2023-H1,2,10,1
+Coast City,14,32,quality_issue:True,5,33,2023-H1,4,13,2
+Coast City,14,32,service_issue:True,2,57,2023-H1,2,15,-2
+Coast City,14,32,delivery_issue:True,5,28,2023-H2,1,16,-1
+Coast City,14,32,product_code:D,1,40,2023-H2,1,11,0
+Crystal Lake,8,50,description_issue:True,5,28,2020-H1,2,1,1
+Crystal Lake,8,50,product_code:H,6,16,2020-H1,2,1,0
+Crystal Lake,8,50,quality_issue:True,7,22,2020-H1,2,1,0
+Crystal Lake,8,50,delivery_issue:True,1,70,2020-H2,1,3,-1
+Crystal Lake,8,50,product_code:H,6,16,2020-H2,2,1,1
+Crystal Lake,8,50,quality_issue:True,7,22,2020-H2,2,2,0
+Crystal Lake,8,50,description_issue:True,5,28,2021-H1,1,2,-1
+Crystal Lake,8,50,product_code:H,6,16,2021-H1,2,1,1
+Crystal Lake,8,50,quality_issue:True,7,22,2021-H1,2,3,0
+Crystal Lake,8,50,service_issue:True,1,67,2021-H1,1,4,-1
+Crystal Lake,8,50,description_issue:True,5,28,2023-H2,1,15,0
+Crystal Lake,8,50,price_issue:True,1,67,2023-H2,1,14,0
+Crystal Lake,8,50,product_code:C,1,44,2023-H2,1,12,0
+Crystal Lake,8,50,description_issue:True,5,28,2024-H2,1,1,0
+Crystal Lake,8,50,product_code:G,1,44,2024-H2,1,2,0
+Crystal Lake,8,50,quality_issue:True,7,22,2024-H2,1,2,0
+Emerald Town,8,50,price_issue:True,4,35,2021-H1,1,5,0
+Emerald Town,8,50,product_code:A,5,15,2021-H1,2,3,1
+Emerald Town,8,50,product_code:B,1,39,2021-H1,1,3,-1
+Emerald Town,8,50,product_code:F,1,47,2021-H1,1,2,0
+Emerald Town,8,50,quality_issue:True,2,59,2021-H1,1,4,0
+Emerald Town,8,50,service_issue:True,2,57,2021-H1,2,3,1
+Emerald Town,8,50,delivery_issue:True,2,56,2021-H2,1,4,-1
+Emerald Town,8,50,description_issue:True,1,64,2021-H2,1,4,0
+Emerald Town,8,50,price_issue:True,4,35,2021-H2,2,3,1
+Emerald Town,8,50,product_code:A,5,15,2021-H2,2,4,0
+Emerald Town,8,50,product_code:C,1,44,2022-H1,1,3,-1
+Emerald Town,8,50,quality_issue:True,2,59,2022-H1,1,5,0
+Emerald Town,8,50,delivery_issue:True,2,56,2023-H1,1,17,0
+Emerald Town,8,50,price_issue:True,4,35,2023-H1,1,18,0
+Emerald Town,8,50,product_code:A,5,15,2023-H1,1,10,0
+Fawcett City,8,50,product_code:B,7,12,2021-H1,1,3,0
+Fawcett City,8,50,quality_issue:True,2,59,2021-H1,1,4,0
+Fawcett City,8,50,delivery_issue:True,1,70,2021-H2,1,4,0
+Fawcett City,8,50,description_issue:True,2,51,2021-H2,2,3,1
+Fawcett City,8,50,price_issue:True,2,56,2021-H2,2,3,0
+Fawcett City,8,50,product_code:B,7,12,2021-H2,6,1,4
+Fawcett City,8,50,service_issue:True,1,67,2021-H2,1,5,-5
+Fawcett City,8,50,product_code:H,1,49,2023-H2,1,14,0
+Fawcett City,8,50,quality_issue:True,2,59,2023-H2,1,15,0
+Fir Town,6,69,delivery_issue:True,3,43,2021-H2,1,4,0
+Fir Town,6,69,product_code:D,1,40,2021-H2,1,3,0
+Fir Town,6,69,delivery_issue:True,3,43,2023-H1,1,17,0
+Fir Town,6,69,description_issue:True,2,51,2023-H1,2,15,1
+Fir Town,6,69,price_issue:True,3,50,2023-H1,2,17,0
+Fir Town,6,69,product_code:C,1,44,2023-H1,1,9,-1
+Fir Town,6,69,product_code:E,2,41,2023-H1,1,7,0
+Fir Town,6,69,product_code:F,2,32,2023-H1,2,12,1
+Fir Town,6,69,quality_issue:True,1,68,2023-H1,1,16,-1
+Fir Town,6,69,service_issue:True,2,57,2023-H1,2,15,1
+Fir Town,6,69,delivery_issue:True,3,43,2023-H2,1,16,-1
+Fir Town,6,69,price_issue:True,3,50,2023-H2,1,14,0
+Fir Town,6,69,product_code:E,2,41,2023-H2,1,11,0
+Foggy Bottom,6,69,delivery_issue:True,4,35,2020-H2,4,1,3
+Foggy Bottom,6,69,description_issue:True,1,64,2020-H2,1,3,-3
+Foggy Bottom,6,69,price_issue:True,1,67,2020-H2,1,3,0
+Foggy Bottom,6,69,product_code:G,5,18,2020-H2,5,2,4
+Foggy Bottom,6,69,product_code:H,1,49,2020-H2,1,2,-4
+Foggy Bottom,6,69,quality_issue:True,1,68,2020-H2,1,3,0
+Foggy Bottom,6,69,service_issue:True,1,67,2020-H2,1,4,0
+Forest City,6,69,price_issue:True,3,50,2023-H1,2,17,1
+Forest City,6,69,product_code:E,1,52,2023-H1,1,7,-1
+Forest City,6,69,product_code:F,1,47,2023-H1,1,13,0
+Forest City,6,69,quality_issue:True,3,47,2023-H1,1,16,0
+Forest City,6,69,delivery_issue:True,1,70,2023-H2,1,16,0
+Forest City,6,69,price_issue:True,3,50,2023-H2,1,14,0
+Forest City,6,69,product_code:A,1,38,2023-H2,1,10,0
+Forest City,6,69,product_code:D,1,40,2023-H2,1,11,0
+Forest City,6,69,product_code:H,2,33,2023-H2,2,13,1
+Forest City,6,69,quality_issue:True,3,47,2023-H2,2,14,0
+Forest City,6,69,service_issue:True,2,57,2023-H2,2,14,0
+Foresthill,11,40,product_code:H,3,25,2022-H1,1,3,-1
+Foresthill,11,40,service_issue:True,6,26,2022-H1,1,5,0
+Foresthill,11,40,product_code:H,3,25,2022-H2,1,3,0
+Foresthill,11,40,service_issue:True,6,26,2022-H2,1,5,0
+Foresthill,11,40,delivery_issue:True,3,43,2023-H1,1,17,0
+Foresthill,11,40,price_issue:True,2,56,2023-H1,1,18,0
+Foresthill,11,40,product_code:A,1,38,2023-H1,1,10,0
+Foresthill,11,40,product_code:B,2,30,2023-H1,2,12,1
+Foresthill,11,40,service_issue:True,6,26,2023-H1,2,15,0
+Foresthill,11,40,delivery_issue:True,3,43,2023-H2,1,16,-1
+Foresthill,11,40,price_issue:True,2,56,2023-H2,1,14,0
+Foresthill,11,40,product_code:C,2,31,2023-H2,1,12,0
+Foresthill,11,40,product_code:D,1,40,2023-H2,1,11,0
+Foresthill,11,40,product_code:E,2,41,2023-H2,1,11,0
+Foresthill,11,40,product_code:H,3,25,2023-H2,1,14,0
+Foresthill,11,40,quality_issue:True,4,38,2023-H2,3,13,2
+Foresthill,11,40,service_issue:True,6,26,2023-H2,1,15,-2
+Foresthill,11,40,product_code:E,2,41,2024-H1,1,2,0
+Foresthill,11,40,quality_issue:True,4,38,2024-H1,1,1,0
+Foresthill,11,40,delivery_issue:True,3,43,2025-H1,1,1,0
+Foresthill,11,40,product_code:C,2,31,2025-H1,1,1,0
+Foresthill,11,40,service_issue:True,6,26,2025-H1,1,1,0
+Forestville,61,13,delivery_issue:True,15,14,2021-H2,1,4,0
+Forestville,61,13,price_issue:True,31,9,2021-H2,6,1,5
+Forestville,61,13,product_code:A,11,11,2021-H2,3,3,-3
+Forestville,61,13,product_code:B,11,8,2021-H2,2,4,-1
+Forestville,61,13,product_code:H,11,8,2021-H2,2,1,0
+Forestville,61,13,quality_issue:True,18,12,2021-H2,1,3,-1
+Forestville,61,13,service_issue:True,30,10,2021-H2,2,4,1
+Forestville,61,13,delivery_issue:True,15,14,2022-H1,3,1,1
+Forestville,61,13,description_issue:True,11,13,2022-H1,1,5,-2
+Forestville,61,13,price_issue:True,31,9,2022-H1,3,4,2
+Forestville,61,13,product_code:A,11,11,2022-H1,2,3,-1
+Forestville,61,13,product_code:F,3,22,2022-H1,2,3,0
+Forestville,61,13,product_code:G,2,32,2022-H1,1,4,-1
+Forestville,61,13,product_code:H,11,8,2022-H1,1,3,0
+Forestville,61,13,quality_issue:True,18,12,2022-H1,1,5,0
+Forestville,61,13,service_issue:True,30,10,2022-H1,2,4,1
+Forestville,61,13,delivery_issue:True,15,14,2022-H2,1,6,-1
+Forestville,61,13,product_code:A,11,11,2022-H2,1,4,0
+Forestville,61,13,product_code:H,11,8,2022-H2,1,3,0
+Forestville,61,13,service_issue:True,30,10,2022-H2,1,5,0
+Forestville,61,13,delivery_issue:True,15,14,2023-H1,5,13,4
+Forestville,61,13,description_issue:True,11,13,2023-H1,6,11,1
+Forestville,61,13,price_issue:True,31,9,2023-H1,19,6,13
+Forestville,61,13,product_code:A,11,11,2023-H1,1,10,-18
+Forestville,61,13,product_code:B,11,8,2023-H1,6,8,5
+Forestville,61,13,product_code:C,17,5,2023-H1,16,3,10
+Forestville,61,13,product_code:D,2,27,2023-H1,1,7,-15
+Forestville,61,13,product_code:E,4,22,2023-H1,1,7,0
+Forestville,61,13,product_code:F,3,22,2023-H1,1,13,0
+Forestville,61,13,product_code:G,2,32,2023-H1,1,11,0
+Forestville,61,13,product_code:H,11,8,2023-H1,2,3,1
+Forestville,61,13,quality_issue:True,18,12,2023-H1,7,11,5
+Forestville,61,13,service_issue:True,30,10,2023-H1,19,5,12
+Forestville,61,13,delivery_issue:True,15,14,2023-H2,5,13,-14
+Forestville,61,13,description_issue:True,11,13,2023-H2,3,13,-2
+Forestville,61,13,price_issue:True,31,9,2023-H2,2,13,-1
+Forestville,61,13,product_code:A,11,11,2023-H2,4,7,2
+Forestville,61,13,product_code:B,11,8,2023-H2,3,6,-1
+Forestville,61,13,product_code:C,17,5,2023-H2,1,12,-2
+Forestville,61,13,product_code:D,2,27,2023-H2,1,11,0
+Forestville,61,13,product_code:E,4,22,2023-H2,2,10,1
+Forestville,61,13,product_code:H,11,8,2023-H2,4,11,2
+Forestville,61,13,quality_issue:True,18,12,2023-H2,8,9,4
+Forestville,61,13,service_issue:True,30,10,2023-H2,6,10,-2
+Forestville,61,13,description_issue:True,11,13,2024-H1,1,1,-5
+Forestville,61,13,price_issue:True,31,9,2024-H1,1,1,0
+Forestville,61,13,product_code:E,4,22,2024-H1,1,2,0
+Forestville,61,13,product_code:H,11,8,2024-H1,1,1,0
+Forestville,61,13,quality_issue:True,18,12,2024-H1,1,1,0
+Gotham,19,25,description_issue:True,4,34,2021-H1,1,2,0
+Gotham,19,25,product_code:F,3,22,2021-H1,1,2,0
+Gotham,19,25,product_code:D,13,6,2022-H2,1,5,0
+Gotham,19,25,service_issue:True,3,39,2022-H2,1,5,0
+Gotham,19,25,delivery_issue:True,9,19,2023-H1,2,16,1
+Gotham,19,25,description_issue:True,4,34,2023-H1,2,15,0
+Gotham,19,25,price_issue:True,3,50,2023-H1,2,17,0
+Gotham,19,25,product_code:A,1,38,2023-H1,1,10,-1
+Gotham,19,25,product_code:D,13,6,2023-H1,6,3,5
+Gotham,19,25,product_code:F,3,22,2023-H1,1,13,-5
+Gotham,19,25,quality_issue:True,5,33,2023-H1,2,15,1
+Gotham,19,25,service_issue:True,3,39,2023-H1,1,16,-1
+Gotham,19,25,delivery_issue:True,9,19,2023-H2,7,11,6
+Gotham,19,25,description_issue:True,4,34,2023-H2,1,15,-6
+Gotham,19,25,price_issue:True,3,50,2023-H2,1,14,0
+Gotham,19,25,product_code:B,1,39,2023-H2,1,8,0
+Gotham,19,25,product_code:C,1,44,2023-H2,1,12,0
+Gotham,19,25,product_code:D,13,6,2023-H2,6,6,5
+Gotham,19,25,product_code:F,3,22,2023-H2,1,7,-5
+Gotham,19,25,quality_issue:True,5,33,2023-H2,3,13,2
+Gotham,19,25,service_issue:True,3,39,2023-H2,1,15,-2
+Greenfield,104,9,description_issue:True,38,5,2021-H1,1,2,0
+Greenfield,104,9,price_issue:True,30,11,2021-H1,1,5,0
+Greenfield,104,9,product_code:C,8,13,2021-H1,1,4,0
+Greenfield,104,9,product_code:E,25,4,2021-H1,1,1,0
+Greenfield,104,9,quality_issue:True,29,9,2021-H1,1,4,0
+Greenfield,104,9,price_issue:True,30,11,2022-H1,2,5,1
+Greenfield,104,9,product_code:B,9,10,2022-H1,2,2,0
+Greenfield,104,9,product_code:E,25,4,2022-H1,2,2,0
+Greenfield,104,9,quality_issue:True,29,9,2022-H1,3,3,1
+Greenfield,104,9,delivery_issue:True,23,11,2022-H2,1,6,-2
+Greenfield,104,9,description_issue:True,38,5,2022-H2,1,6,0
+Greenfield,104,9,price_issue:True,30,11,2022-H2,3,4,2
+Greenfield,104,9,product_code:D,12,7,2022-H2,1,5,-2
+Greenfield,104,9,product_code:E,25,4,2022-H2,3,4,2
+Greenfield,104,9,product_code:F,16,8,2022-H2,1,4,-2
+Greenfield,104,9,quality_issue:True,29,9,2022-H2,2,5,1
+Greenfield,104,9,delivery_issue:True,23,11,2023-H1,7,11,5
+Greenfield,104,9,description_issue:True,38,5,2023-H1,20,3,13
+Greenfield,104,9,price_issue:True,30,11,2023-H1,18,7,-2
+Greenfield,104,9,product_code:A,10,12,2023-H1,6,6,-12
+Greenfield,104,9,product_code:B,9,10,2023-H1,5,9,-1
+Greenfield,104,9,product_code:C,8,13,2023-H1,4,6,-1
+Greenfield,104,9,product_code:D,12,7,2023-H1,4,4,0
+Greenfield,104,9,product_code:E,25,4,2023-H1,11,2,7
+Greenfield,104,9,product_code:F,16,8,2023-H1,14,3,3
+Greenfield,104,9,quality_issue:True,29,9,2023-H1,13,8,-1
+Greenfield,104,9,service_issue:True,31,9,2023-H1,11,9,-2
+Greenfield,104,9,delivery_issue:True,23,11,2023-H2,15,7,4
+Greenfield,104,9,description_issue:True,38,5,2023-H2,16,4,1
+Greenfield,104,9,price_issue:True,30,11,2023-H2,6,9,-10
+Greenfield,104,9,product_code:A,10,12,2023-H2,4,7,-2
+Greenfield,104,9,product_code:B,9,10,2023-H2,2,7,-2
+Greenfield,104,9,product_code:C,8,13,2023-H2,3,10,1
+Greenfield,104,9,product_code:D,12,7,2023-H2,7,5,4
+Greenfield,104,9,product_code:E,25,4,2023-H2,8,4,1
+Greenfield,104,9,product_code:G,7,15,2023-H2,7,4,-1
+Greenfield,104,9,product_code:H,17,5,2023-H2,17,3,10
+Greenfield,104,9,quality_issue:True,29,9,2023-H2,10,7,-7
+Greenfield,104,9,service_issue:True,31,9,2023-H2,19,5,9
+Greenfield,104,9,product_code:F,16,8,2024-H2,1,1,-18
+Greenfield,104,9,service_issue:True,31,9,2024-H2,1,2,0
+Greenville,16,31,delivery_issue:True,3,43,2021-H1,1,2,0
+Greenville,16,31,product_code:E,3,32,2021-H1,1,1,0
+Greenville,16,31,quality_issue:True,5,33,2021-H1,1,4,0
+Greenville,16,31,product_code:H,2,33,2022-H1,1,3,0
+Greenville,16,31,quality_issue:True,5,33,2022-H1,1,5,0
+Greenville,16,31,price_issue:True,4,35,2022-H2,1,6,0
+Greenville,16,31,product_code:E,3,32,2022-H2,1,6,0
+Greenville,16,31,quality_issue:True,5,33,2022-H2,1,6,0
+Greenville,16,31,delivery_issue:True,3,43,2023-H1,1,17,0
+Greenville,16,31,description_issue:True,1,64,2023-H1,1,16,0
+Greenville,16,31,product_code:B,2,30,2023-H1,2,12,1
+Greenville,16,31,quality_issue:True,5,33,2023-H1,1,16,-1
+Greenville,16,31,service_issue:True,9,24,2023-H1,1,16,0
+Greenville,16,31,product_code:C,8,13,2023-H2,8,5,7
+Greenville,16,31,quality_issue:True,5,33,2023-H2,1,15,-7
+Greenville,16,31,service_issue:True,9,24,2023-H2,7,9,6
+Greenville,16,31,price_issue:True,4,35,2024-H1,1,1,-6
+Greenville,16,31,product_code:E,3,32,2024-H1,1,2,0
+Greenville,16,31,price_issue:True,4,35,2024-H2,1,1,0
+Greenville,16,31,product_code:H,2,33,2024-H2,1,1,0
+Greenville,16,31,service_issue:True,9,24,2024-H2,1,2,0
+Hell's Kitchen,13,35,delivery_issue:True,2,56,2023-H1,1,17,0
+Hell's Kitchen,13,35,description_issue:True,1,64,2023-H1,1,16,0
+Hell's Kitchen,13,35,price_issue:True,9,19,2023-H1,1,18,0
+Hell's Kitchen,13,35,product_code:C,1,44,2023-H1,1,9,0
+Hell's Kitchen,13,35,product_code:F,1,47,2023-H1,1,13,0
+Hell's Kitchen,13,35,quality_issue:True,2,59,2023-H1,1,16,0
+Hell's Kitchen,13,35,delivery_issue:True,2,56,2023-H2,1,16,0
+Hell's Kitchen,13,35,price_issue:True,9,19,2023-H2,8,8,7
+Hell's Kitchen,13,35,product_code:A,11,11,2023-H2,11,3,3
+Hell's Kitchen,13,35,quality_issue:True,2,59,2023-H2,1,15,-10
+Hell's Kitchen,13,35,service_issue:True,1,67,2023-H2,1,15,0
+Hillcrest,11,40,price_issue:True,5,26,2020-H2,1,3,0
+Hillcrest,11,40,product_code:E,2,41,2020-H2,1,4,0
+Hillcrest,11,40,description_issue:True,3,41,2022-H1,1,5,0
+Hillcrest,11,40,price_issue:True,5,26,2022-H1,2,5,1
+Hillcrest,11,40,product_code:G,4,19,2022-H1,2,3,0
+Hillcrest,11,40,product_code:H,3,25,2022-H1,1,3,-1
+Hillcrest,11,40,quality_issue:True,3,47,2022-H1,1,5,0
+Hillcrest,11,40,delivery_issue:True,6,26,2023-H1,4,14,3
+Hillcrest,11,40,description_issue:True,3,41,2023-H1,1,16,-3
+Hillcrest,11,40,price_issue:True,5,26,2023-H1,1,18,0
+Hillcrest,11,40,product_code:C,1,44,2023-H1,1,9,0
+Hillcrest,11,40,product_code:F,1,47,2023-H1,1,13,0
+Hillcrest,11,40,product_code:G,4,19,2023-H1,2,10,1
+Hillcrest,11,40,quality_issue:True,3,47,2023-H1,1,16,-1
+Hillcrest,11,40,delivery_issue:True,6,26,2023-H2,2,15,1
+Hillcrest,11,40,price_issue:True,5,26,2023-H2,1,14,-1
+Hillcrest,11,40,product_code:E,2,41,2023-H2,1,11,0
+Hillcrest,11,40,product_code:H,3,25,2023-H2,1,14,0
+Hillcrest,11,40,quality_issue:True,3,47,2023-H2,1,15,0
+Hillcrest,11,40,description_issue:True,3,41,2024-H2,1,1,0
+Hillcrest,11,40,product_code:H,3,25,2024-H2,1,1,0
+Hilltop,259,3,delivery_issue:True,104,1,2020-H1,2,1,1
+Hilltop,259,3,product_code:H,42,1,2020-H1,2,1,0
+Hilltop,259,3,quality_issue:True,75,4,2020-H1,1,2,-1
+Hilltop,259,3,delivery_issue:True,104,1,2020-H2,1,3,0
+Hilltop,259,3,product_code:C,27,4,2020-H2,1,1,0
+Hilltop,259,3,price_issue:True,60,5,2021-H1,1,5,0
+Hilltop,259,3,product_code:C,27,4,2021-H1,1,4,0
+Hilltop,259,3,service_issue:True,76,2,2021-H1,1,4,0
+Hilltop,259,3,delivery_issue:True,104,1,2021-H2,6,1,5
+Hilltop,259,3,description_issue:True,53,4,2021-H2,2,3,-4
+Hilltop,259,3,price_issue:True,60,5,2021-H2,1,4,-1
+Hilltop,259,3,product_code:C,27,4,2021-H2,2,3,1
+Hilltop,259,3,product_code:D,107,1,2021-H2,7,1,5
+Hilltop,259,3,product_code:H,42,1,2021-H2,1,2,-6
+Hilltop,259,3,quality_issue:True,75,4,2021-H2,1,3,0
+Hilltop,259,3,service_issue:True,76,2,2021-H2,1,5,0
+Hilltop,259,3,description_issue:True,53,4,2022-H1,4,2,3
+Hilltop,259,3,price_issue:True,60,5,2022-H1,1,6,-3
+Hilltop,259,3,product_code:B,14,7,2022-H1,1,3,0
+Hilltop,259,3,product_code:C,27,4,2022-H1,1,3,0
+Hilltop,259,3,product_code:D,107,1,2022-H1,4,1,3
+Hilltop,259,3,quality_issue:True,75,4,2022-H1,2,4,-2
+Hilltop,259,3,delivery_issue:True,104,1,2022-H2,11,2,9
+Hilltop,259,3,description_issue:True,53,4,2022-H2,6,2,-5
+Hilltop,259,3,price_issue:True,60,5,2022-H2,5,2,-1
+Hilltop,259,3,product_code:B,14,7,2022-H2,1,2,-4
+Hilltop,259,3,product_code:C,27,4,2022-H2,4,1,3
+Hilltop,259,3,product_code:D,107,1,2022-H2,11,1,7
+Hilltop,259,3,product_code:E,31,2,2022-H2,7,2,-4
+Hilltop,259,3,quality_issue:True,75,4,2022-H2,4,3,-3
+Hilltop,259,3,service_issue:True,76,2,2022-H2,3,3,-1
+Hilltop,259,3,delivery_issue:True,104,1,2023-H1,34,2,31
+Hilltop,259,3,description_issue:True,53,4,2023-H1,10,9,-24
+Hilltop,259,3,price_issue:True,60,5,2023-H1,10,11,0
+Hilltop,259,3,product_code:A,3,18,2023-H1,1,10,-9
+Hilltop,259,3,product_code:B,14,7,2023-H1,6,8,5
+Hilltop,259,3,product_code:C,27,4,2023-H1,7,5,1
+Hilltop,259,3,product_code:D,107,1,2023-H1,27,1,20
+Hilltop,259,3,product_code:E,31,2,2023-H1,6,3,-21
+Hilltop,259,3,product_code:F,7,15,2023-H1,6,9,0
+Hilltop,259,3,product_code:G,28,3,2023-H1,7,6,1
+Hilltop,259,3,product_code:H,42,1,2023-H1,5,1,-2
+Hilltop,259,3,quality_issue:True,75,4,2023-H1,15,6,10
+Hilltop,259,3,service_issue:True,76,2,2023-H1,16,7,1
+Hilltop,259,3,delivery_issue:True,104,1,2023-H2,49,1,33
+Hilltop,259,3,description_issue:True,53,4,2023-H2,31,2,-18
+Hilltop,259,3,price_issue:True,60,5,2023-H2,42,2,11
+Hilltop,259,3,product_code:A,3,18,2023-H2,2,9,-40
+Hilltop,259,3,product_code:B,14,7,2023-H2,6,3,4
+Hilltop,259,3,product_code:C,27,4,2023-H2,11,4,5
+Hilltop,259,3,product_code:D,107,1,2023-H2,57,1,46
+Hilltop,259,3,product_code:E,31,2,2023-H2,18,1,-39
+Hilltop,259,3,product_code:F,7,15,2023-H2,1,7,-17
+Hilltop,259,3,product_code:G,28,3,2023-H2,21,1,20
+Hilltop,259,3,product_code:H,42,1,2023-H2,34,1,13
+Hilltop,259,3,quality_issue:True,75,4,2023-H2,51,2,17
+Hilltop,259,3,service_issue:True,76,2,2023-H2,55,1,4
+Hilltop,259,3,delivery_issue:True,104,1,2024-H1,1,2,-54
+Hilltop,259,3,product_code:D,107,1,2024-H1,1,2,0
+Hilltop,259,3,quality_issue:True,75,4,2024-H1,1,1,0
+Hilltown,72,11,delivery_issue:True,27,10,2020-H2,1,3,0
+Hilltown,72,11,product_code:E,13,10,2020-H2,1,4,0
+Hilltown,72,11,quality_issue:True,24,11,2020-H2,1,3,0
+Hilltown,72,11,product_code:D,19,5,2021-H2,1,3,0
+Hilltown,72,11,service_issue:True,20,12,2021-H2,1,5,0
+Hilltown,72,11,product_code:C,8,13,2022-H1,1,3,0
+Hilltown,72,11,product_code:E,13,10,2022-H1,1,3,0
+Hilltown,72,11,quality_issue:True,24,11,2022-H1,2,4,1
+Hilltown,72,11,delivery_issue:True,27,10,2022-H2,1,6,-1
+Hilltown,72,11,description_issue:True,9,17,2022-H2,1,6,0
+Hilltown,72,11,price_issue:True,16,15,2022-H2,1,6,0
+Hilltown,72,11,product_code:D,19,5,2022-H2,2,4,1
+Hilltown,72,11,product_code:E,13,10,2022-H2,2,5,0
+Hilltown,72,11,quality_issue:True,24,11,2022-H2,1,6,-1
+Hilltown,72,11,service_issue:True,20,12,2022-H2,1,5,0
+Hilltown,72,11,delivery_issue:True,27,10,2023-H1,9,10,8
+Hilltown,72,11,description_issue:True,9,17,2023-H1,5,12,-4
+Hilltown,72,11,price_issue:True,16,15,2023-H1,9,12,4
+Hilltown,72,11,product_code:A,6,13,2023-H1,3,9,-6
+Hilltown,72,11,product_code:B,6,15,2023-H1,5,9,2
+Hilltown,72,11,product_code:C,8,13,2023-H1,2,8,-3
+Hilltown,72,11,product_code:D,19,5,2023-H1,1,7,-1
+Hilltown,72,11,product_code:E,13,10,2023-H1,6,3,5
+Hilltown,72,11,product_code:F,11,12,2023-H1,8,7,2
+Hilltown,72,11,product_code:G,6,17,2023-H1,4,8,-4
+Hilltown,72,11,product_code:H,3,25,2023-H1,1,4,-3
+Hilltown,72,11,quality_issue:True,24,11,2023-H1,11,9,10
+Hilltown,72,11,service_issue:True,20,12,2023-H1,7,12,-4
+Hilltown,72,11,delivery_issue:True,27,10,2023-H2,16,6,9
+Hilltown,72,11,description_issue:True,9,17,2023-H2,3,13,-13
+Hilltown,72,11,price_issue:True,16,15,2023-H2,6,9,3
+Hilltown,72,11,product_code:A,6,13,2023-H2,3,8,-3
+Hilltown,72,11,product_code:B,6,15,2023-H2,1,8,-2
+Hilltown,72,11,product_code:C,8,13,2023-H2,5,8,4
+Hilltown,72,11,product_code:D,19,5,2023-H2,15,3,10
+Hilltown,72,11,product_code:E,13,10,2023-H2,3,9,-12
+Hilltown,72,11,product_code:F,11,12,2023-H2,3,5,0
+Hilltown,72,11,product_code:G,6,17,2023-H2,2,7,-1
+Hilltown,72,11,product_code:H,3,25,2023-H2,2,13,0
+Hilltown,72,11,quality_issue:True,24,11,2023-H2,9,8,7
+Hilltown,72,11,service_issue:True,20,12,2023-H2,11,8,2
+Hillview,6,69,delivery_issue:True,4,35,2021-H2,1,4,-10
+Hillview,6,69,price_issue:True,1,67,2021-H2,1,4,0
+Hillview,6,69,product_code:A,1,38,2021-H2,1,5,0
+Hillview,6,69,delivery_issue:True,4,35,2023-H1,1,17,0
+Hillview,6,69,product_code:B,1,39,2023-H1,1,13,0
+Hillview,6,69,delivery_issue:True,4,35,2023-H2,2,15,1
+Hillview,6,69,description_issue:True,1,64,2023-H2,1,15,-1
+Hillview,6,69,product_code:C,2,31,2023-H2,2,11,1
+Hillview,6,69,product_code:E,1,52,2023-H2,1,11,-1
+Hillview,6,69,product_code:H,1,49,2023-H2,1,14,0
+Hillview,6,69,service_issue:True,2,57,2023-H2,2,14,1
+Lakeside,349,1,delivery_issue:True,75,3,2020-H1,1,2,-1
+Lakeside,349,1,description_issue:True,64,2,2020-H1,1,2,0
+Lakeside,349,1,product_code:B,54,2,2020-H1,1,1,0
+Lakeside,349,1,product_code:G,29,2,2020-H1,2,2,1
+Lakeside,349,1,product_code:H,30,2,2020-H1,2,1,0
+Lakeside,349,1,quality_issue:True,123,1,2020-H1,1,2,-1
+Lakeside,349,1,service_issue:True,123,1,2020-H1,2,2,1
+Lakeside,349,1,delivery_issue:True,75,3,2020-H2,1,3,-1
+Lakeside,349,1,description_issue:True,64,2,2020-H2,1,3,0
+Lakeside,349,1,price_issue:True,93,2,2020-H2,2,2,1
+Lakeside,349,1,product_code:D,48,2,2020-H2,1,1,-1
+Lakeside,349,1,product_code:E,22,5,2020-H2,2,3,1
+Lakeside,349,1,product_code:F,22,6,2020-H2,2,2,0
+Lakeside,349,1,quality_issue:True,123,1,2020-H2,1,3,-1
+Lakeside,349,1,service_issue:True,123,1,2020-H2,1,4,0
+Lakeside,349,1,delivery_issue:True,75,3,2021-H1,1,2,0
+Lakeside,349,1,description_issue:True,64,2,2021-H1,1,2,0
+Lakeside,349,1,price_issue:True,93,2,2021-H1,4,2,3
+Lakeside,349,1,product_code:A,42,2,2021-H1,1,4,-3
+Lakeside,349,1,product_code:B,54,2,2021-H1,2,2,1
+Lakeside,349,1,product_code:C,102,1,2021-H1,2,3,0
+Lakeside,349,1,product_code:D,48,2,2021-H1,1,1,-1
+Lakeside,349,1,product_code:G,29,2,2021-H1,1,2,0
+Lakeside,349,1,service_issue:True,123,1,2021-H1,2,3,1
+Lakeside,349,1,delivery_issue:True,75,3,2021-H2,6,1,4
+Lakeside,349,1,description_issue:True,64,2,2021-H2,3,2,-3
+Lakeside,349,1,price_issue:True,93,2,2021-H2,2,3,-1
+Lakeside,349,1,product_code:A,42,2,2021-H2,2,4,0
+Lakeside,349,1,product_code:C,102,1,2021-H2,38,1,36
+Lakeside,349,1,product_code:G,29,2,2021-H2,1,1,-37
+Lakeside,349,1,quality_issue:True,123,1,2021-H2,2,2,1
+Lakeside,349,1,service_issue:True,123,1,2021-H2,33,1,31
+Lakeside,349,1,delivery_issue:True,75,3,2022-H1,2,2,-31
+Lakeside,349,1,description_issue:True,64,2,2022-H1,1,5,-1
+Lakeside,349,1,price_issue:True,93,2,2022-H1,1,6,0
+Lakeside,349,1,product_code:A,42,2,2022-H1,1,4,0
+Lakeside,349,1,product_code:C,102,1,2022-H1,8,1,7
+Lakeside,349,1,product_code:H,30,2,2022-H1,2,2,-6
+Lakeside,349,1,quality_issue:True,123,1,2022-H1,2,4,0
+Lakeside,349,1,service_issue:True,123,1,2022-H1,6,1,4
+Lakeside,349,1,delivery_issue:True,75,3,2022-H2,5,3,-1
+Lakeside,349,1,description_issue:True,64,2,2022-H2,5,3,0
+Lakeside,349,1,price_issue:True,93,2,2022-H2,4,3,-1
+Lakeside,349,1,product_code:A,42,2,2022-H2,1,4,-3
+Lakeside,349,1,product_code:B,54,2,2022-H2,1,2,0
+Lakeside,349,1,product_code:C,102,1,2022-H2,3,2,2
+Lakeside,349,1,product_code:D,48,2,2022-H2,4,2,1
+Lakeside,349,1,product_code:E,22,5,2022-H2,6,3,2
+Lakeside,349,1,product_code:F,22,6,2022-H2,3,2,-3
+Lakeside,349,1,quality_issue:True,123,1,2022-H2,5,2,2
+Lakeside,349,1,service_issue:True,123,1,2022-H2,7,1,2
+Lakeside,349,1,delivery_issue:True,75,3,2023-H1,18,8,11
+Lakeside,349,1,description_issue:True,64,2,2023-H1,18,5,0
+Lakeside,349,1,price_issue:True,93,2,2023-H1,31,4,13
+Lakeside,349,1,product_code:A,42,2,2023-H1,8,4,-23
+Lakeside,349,1,product_code:B,54,2,2023-H1,24,2,16
+Lakeside,349,1,product_code:C,102,1,2023-H1,23,2,-1
+Lakeside,349,1,product_code:D,48,2,2023-H1,7,2,-16
+Lakeside,349,1,product_code:E,22,5,2023-H1,4,4,-3
+Lakeside,349,1,product_code:F,22,6,2023-H1,14,3,10
+Lakeside,349,1,product_code:G,29,2,2023-H1,10,4,-4
+Lakeside,349,1,product_code:H,30,2,2023-H1,4,2,-6
+Lakeside,349,1,quality_issue:True,123,1,2023-H1,34,3,30
+Lakeside,349,1,service_issue:True,123,1,2023-H1,24,3,-10
+Lakeside,349,1,delivery_issue:True,75,3,2023-H2,40,2,16
+Lakeside,349,1,description_issue:True,64,2,2023-H2,33,1,-7
+Lakeside,349,1,price_issue:True,93,2,2023-H2,48,1,15
+Lakeside,349,1,product_code:A,42,2,2023-H2,29,1,-19
+Lakeside,349,1,product_code:B,54,2,2023-H2,26,1,-3
+Lakeside,349,1,product_code:C,102,1,2023-H2,27,2,1
+Lakeside,349,1,product_code:D,48,2,2023-H2,35,2,8
+Lakeside,349,1,product_code:E,22,5,2023-H2,10,3,-25
+Lakeside,349,1,product_code:F,22,6,2023-H2,2,6,-8
+Lakeside,349,1,product_code:G,29,2,2023-H2,14,2,12
+Lakeside,349,1,product_code:H,30,2,2023-H2,21,2,7
+Lakeside,349,1,quality_issue:True,123,1,2023-H2,78,1,57
+Lakeside,349,1,service_issue:True,123,1,2023-H2,47,2,-31
+Lakeside,349,1,delivery_issue:True,75,3,2024-H1,1,2,-46
+Lakeside,349,1,description_issue:True,64,2,2024-H1,1,1,0
+Lakeside,349,1,product_code:C,102,1,2024-H1,1,1,0
+Lakeside,349,1,product_code:G,29,2,2024-H1,1,1,0
+Lakeside,349,1,price_issue:True,93,2,2024-H2,1,1,0
+Lakeside,349,1,product_code:F,22,6,2024-H2,1,1,0
+Lakeside,349,1,product_code:H,30,2,2024-H2,1,1,0
+Lakeside,349,1,service_issue:True,123,1,2024-H2,1,2,0
+Lakeview,7,57,price_issue:True,2,56,2023-H1,1,18,0
+Lakeview,7,57,product_code:F,1,47,2023-H1,1,13,0
+Lakeview,7,57,delivery_issue:True,1,70,2023-H2,1,16,0
+Lakeview,7,57,description_issue:True,5,28,2023-H2,5,11,4
+Lakeview,7,57,price_issue:True,2,56,2023-H2,1,14,-4
+Lakeview,7,57,product_code:C,6,16,2023-H2,6,7,5
+Lakeview,7,57,quality_issue:True,1,68,2023-H2,1,15,-5
+Lakeview,7,57,service_issue:True,6,26,2023-H2,6,10,5
+Lima,17,29,delivery_issue:True,9,19,2023-H1,2,16,-4
+Lima,17,29,description_issue:True,2,51,2023-H1,1,16,-1
+Lima,17,29,price_issue:True,3,50,2023-H1,2,17,1
+Lima,17,29,product_code:D,2,27,2023-H1,1,7,-1
+Lima,17,29,product_code:E,2,41,2023-H1,2,6,1
+Lima,17,29,product_code:F,2,32,2023-H1,1,13,-1
+Lima,17,29,product_code:G,3,24,2023-H1,1,11,0
+Lima,17,29,product_code:H,6,16,2023-H1,1,4,0
+Lima,17,29,quality_issue:True,3,47,2023-H1,1,16,0
+Lima,17,29,service_issue:True,5,28,2023-H1,1,16,0
+Lima,17,29,delivery_issue:True,9,19,2023-H2,7,11,6
+Lima,17,29,description_issue:True,2,51,2023-H2,1,15,-6
+Lima,17,29,price_issue:True,3,50,2023-H2,1,14,0
+Lima,17,29,product_code:C,2,31,2023-H2,2,11,1
+Lima,17,29,product_code:D,2,27,2023-H2,1,11,-1
+Lima,17,29,product_code:F,2,32,2023-H2,1,7,0
+Lima,17,29,product_code:G,3,24,2023-H2,2,7,1
+Lima,17,29,product_code:H,6,16,2023-H2,5,10,3
+Lima,17,29,quality_issue:True,3,47,2023-H2,2,14,-3
+Lima,17,29,service_issue:True,5,28,2023-H2,4,12,2
+London,6,69,delivery_issue:True,6,26,2023-H2,6,12,2
+London,6,69,product_code:H,6,16,2023-H2,6,9,0
+London,6,69,quality_issue:True,6,24,2023-H2,6,11,0
+Maple City,5,72,delivery_issue:True,4,35,2022-H1,2,2,-4
+Maple City,5,72,product_code:G,2,32,2022-H1,2,3,0
+Maple City,5,72,service_issue:True,3,39,2022-H1,2,4,0
+Maple City,5,72,delivery_issue:True,4,35,2023-H1,1,17,-1
+Maple City,5,72,price_issue:True,1,67,2023-H1,1,18,0
+Maple City,5,72,product_code:B,1,39,2023-H1,1,13,0
+Maple City,5,72,delivery_issue:True,4,35,2023-H2,1,16,0
+Maple City,5,72,description_issue:True,1,64,2023-H2,1,15,0
+Maple City,5,72,product_code:C,1,44,2023-H2,1,12,0
+Maple City,5,72,product_code:D,1,40,2023-H2,1,11,0
+Maple City,5,72,quality_issue:True,1,68,2023-H2,1,15,0
+Maple City,5,72,service_issue:True,3,39,2023-H2,1,15,0
+Maple Town,17,29,delivery_issue:True,2,56,2021-H1,1,2,0
+Maple Town,17,29,price_issue:True,7,23,2021-H1,3,3,2
+Maple Town,17,29,product_code:A,12,8,2021-H1,5,2,2
+Maple Town,17,29,quality_issue:True,2,59,2021-H1,2,3,-3
+Maple Town,17,29,description_issue:True,10,15,2021-H2,7,1,5
+Maple Town,17,29,price_issue:True,7,23,2021-H2,1,4,-6
+Maple Town,17,29,product_code:A,12,8,2021-H2,7,1,6
+Maple Town,17,29,product_code:E,1,52,2021-H2,1,1,-6
+Maple Town,17,29,service_issue:True,1,67,2021-H2,1,5,0
+Maple Town,17,29,delivery_issue:True,2,56,2023-H1,1,17,0
+Maple Town,17,29,description_issue:True,10,15,2023-H1,2,15,1
+Maple Town,17,29,price_issue:True,7,23,2023-H1,2,17,0
+Maple Town,17,29,product_code:F,1,47,2023-H1,1,13,-1
+Maple Town,17,29,product_code:G,2,32,2023-H1,2,10,1
+Maple Town,17,29,description_issue:True,10,15,2023-H2,1,15,-1
+Maple Town,17,29,price_issue:True,7,23,2023-H2,1,14,0
+Maple Town,17,29,product_code:H,1,49,2023-H2,1,14,0
+Mapleton,6,69,price_issue:True,3,50,2023-H2,2,13,1
+Mapleton,6,69,product_code:D,1,40,2023-H2,1,11,-1
+Mapleton,6,69,product_code:E,3,32,2023-H2,2,10,1
+Mapleton,6,69,product_code:H,1,49,2023-H2,1,14,-1
+Mapleton,6,69,quality_issue:True,3,47,2023-H2,3,13,2
+Mapleton,6,69,service_issue:True,1,67,2023-H2,1,15,-2
+Mapleton,6,69,delivery_issue:True,1,70,2024-H1,1,2,0
+Mapleton,6,69,description_issue:True,1,64,2024-H1,1,1,0
+Mapleton,6,69,price_issue:True,3,50,2024-H1,1,1,0
+Mapleton,6,69,product_code:C,1,44,2024-H1,1,1,0
+Mapleton,6,69,product_code:E,3,32,2024-H1,1,2,0
+Meadowbrook,13,35,delivery_issue:True,6,26,2023-H1,4,14,3
+Meadowbrook,13,35,description_issue:True,5,28,2023-H1,2,15,-2
+Meadowbrook,13,35,price_issue:True,2,56,2023-H1,2,17,0
+Meadowbrook,13,35,product_code:A,2,26,2023-H1,1,10,-1
+Meadowbrook,13,35,product_code:C,3,23,2023-H1,2,8,1
+Meadowbrook,13,35,product_code:F,1,47,2023-H1,1,13,-1
+Meadowbrook,13,35,product_code:H,4,18,2023-H1,2,3,1
+Meadowbrook,13,35,quality_issue:True,7,22,2023-H1,3,14,1
+Meadowbrook,13,35,delivery_issue:True,6,26,2023-H2,2,15,-1
+Meadowbrook,13,35,description_issue:True,5,28,2023-H2,3,13,1
+Meadowbrook,13,35,product_code:A,2,26,2023-H2,1,10,-2
+Meadowbrook,13,35,product_code:B,1,39,2023-H2,1,8,0
+Meadowbrook,13,35,product_code:C,3,23,2023-H2,1,12,0
+Meadowbrook,13,35,product_code:E,2,41,2023-H2,1,11,0
+Meadowbrook,13,35,product_code:H,4,18,2023-H2,2,13,1
+Meadowbrook,13,35,quality_issue:True,7,22,2023-H2,4,12,2
+Meadowbrook,13,35,service_issue:True,2,57,2023-H2,1,15,-3
+Meadowbrook,13,35,product_code:E,2,41,2024-H1,1,2,0
+Meadowbrook,13,35,service_issue:True,2,57,2024-H1,1,3,0
+Meadowland,34,15,product_code:F,22,6,2020-H1,1,2,0
+Meadowland,34,15,service_issue:True,19,13,2020-H1,1,3,0
+Meadowland,34,15,delivery_issue:True,2,56,2020-H2,1,3,0
+Meadowland,34,15,description_issue:True,4,34,2020-H2,2,2,1
+Meadowland,34,15,price_issue:True,4,35,2020-H2,3,1,1
+Meadowland,34,15,product_code:E,3,32,2020-H2,2,3,-1
+Meadowland,34,15,product_code:F,22,6,2020-H2,10,1,8
+Meadowland,34,15,service_issue:True,19,13,2020-H2,10,2,0
+Meadowland,34,15,product_code:F,22,6,2021-H1,6,1,-4
+Meadowland,34,15,quality_issue:True,15,14,2021-H1,6,1,0
+Meadowland,34,15,product_code:C,2,31,2021-H2,1,4,-5
+Meadowland,34,15,product_code:F,22,6,2021-H2,2,1,1
+Meadowland,34,15,quality_issue:True,15,14,2021-H2,3,1,1
+Meadowland,34,15,product_code:F,22,6,2022-H1,2,3,-1
+Meadowland,34,15,product_code:H,2,33,2022-H1,1,3,-1
+Meadowland,34,15,quality_issue:True,15,14,2022-H1,2,4,1
+Meadowland,34,15,service_issue:True,19,13,2022-H1,1,5,-1
+Meadowland,34,15,product_code:F,22,6,2022-H2,1,4,0
+Meadowland,34,15,quality_issue:True,15,14,2022-H2,1,6,0
+Meadowland,34,15,delivery_issue:True,2,56,2023-H1,1,17,0
+Meadowland,34,15,product_code:G,3,24,2023-H1,1,11,0
+Meadowland,34,15,service_issue:True,19,13,2023-H1,1,16,0
+Meadowland,34,15,description_issue:True,4,34,2023-H2,2,14,1
+Meadowland,34,15,price_issue:True,4,35,2023-H2,1,14,-1
+Meadowland,34,15,product_code:A,1,38,2023-H2,1,10,0
+Meadowland,34,15,product_code:C,2,31,2023-H2,1,12,0
+Meadowland,34,15,product_code:D,1,40,2023-H2,1,11,0
+Meadowland,34,15,product_code:E,3,32,2023-H2,1,11,0
+Meadowland,34,15,product_code:G,3,24,2023-H2,2,7,1
+Meadowland,34,15,quality_issue:True,15,14,2023-H2,2,14,0
+Meadowland,34,15,service_issue:True,19,13,2023-H2,5,11,3
+Meadowland,34,15,product_code:H,2,33,2024-H2,1,1,-4
+Meadowland,34,15,quality_issue:True,15,14,2024-H2,1,2,0
+Meadowland,34,15,service_issue:True,19,13,2024-H2,1,2,0
+Meadowville,94,10,delivery_issue:True,28,9,2020-H2,3,2,2
+Meadowville,94,10,description_issue:True,28,11,2020-H2,9,1,6
+Meadowville,94,10,price_issue:True,30,11,2020-H2,2,2,-7
+Meadowville,94,10,product_code:E,33,1,2020-H2,18,1,16
+Meadowville,94,10,quality_issue:True,24,11,2020-H2,2,2,-16
+Meadowville,94,10,service_issue:True,24,11,2020-H2,2,3,0
+Meadowville,94,10,price_issue:True,30,11,2021-H1,1,5,-1
+Meadowville,94,10,product_code:B,6,15,2021-H1,1,3,0
+Meadowville,94,10,product_code:A,4,17,2021-H2,1,5,0
+Meadowville,94,10,service_issue:True,24,11,2021-H2,1,5,0
+Meadowville,94,10,delivery_issue:True,28,9,2022-H1,1,3,0
+Meadowville,94,10,description_issue:True,28,11,2022-H1,1,5,0
+Meadowville,94,10,price_issue:True,30,11,2022-H1,1,6,0
+Meadowville,94,10,product_code:E,33,1,2022-H1,2,2,1
+Meadowville,94,10,product_code:G,25,5,2022-H1,4,1,2
+Meadowville,94,10,quality_issue:True,24,11,2022-H1,4,2,0
+Meadowville,94,10,service_issue:True,24,11,2022-H1,2,4,-2
+Meadowville,94,10,delivery_issue:True,28,9,2022-H2,1,6,-1
+Meadowville,94,10,description_issue:True,28,11,2022-H2,2,5,1
+Meadowville,94,10,price_issue:True,30,11,2022-H2,1,6,-1
+Meadowville,94,10,product_code:B,6,15,2022-H2,1,2,0
+Meadowville,94,10,product_code:E,33,1,2022-H2,3,4,2
+Meadowville,94,10,product_code:F,6,16,2022-H2,1,4,-2
+Meadowville,94,10,product_code:G,25,5,2022-H2,2,2,1
+Meadowville,94,10,product_code:H,12,7,2022-H2,1,3,-1
+Meadowville,94,10,quality_issue:True,24,11,2022-H2,4,3,3
+Meadowville,94,10,service_issue:True,24,11,2022-H2,1,5,-3
+Meadowville,94,10,delivery_issue:True,28,9,2023-H1,6,12,5
+Meadowville,94,10,description_issue:True,28,11,2023-H1,5,12,-1
+Meadowville,94,10,price_issue:True,30,11,2023-H1,5,14,0
+Meadowville,94,10,product_code:B,6,15,2023-H1,3,11,-2
+Meadowville,94,10,product_code:C,5,18,2023-H1,2,8,-1
+Meadowville,94,10,product_code:D,3,19,2023-H1,1,7,-1
+Meadowville,94,10,product_code:E,33,1,2023-H1,4,4,3
+Meadowville,94,10,product_code:F,6,16,2023-H1,4,11,0
+Meadowville,94,10,product_code:G,25,5,2023-H1,7,6,3
+Meadowville,94,10,product_code:H,12,7,2023-H1,1,4,-6
+Meadowville,94,10,quality_issue:True,24,11,2023-H1,7,11,6
+Meadowville,94,10,service_issue:True,24,11,2023-H1,7,12,0
+Meadowville,94,10,delivery_issue:True,28,9,2023-H2,17,5,10
+Meadowville,94,10,description_issue:True,28,11,2023-H2,9,9,-8
+Meadowville,94,10,price_issue:True,30,11,2023-H2,20,3,11
+Meadowville,94,10,product_code:A,4,17,2023-H2,3,8,-17
+Meadowville,94,10,product_code:B,6,15,2023-H2,1,8,-2
+Meadowville,94,10,product_code:C,5,18,2023-H2,3,10,2
+Meadowville,94,10,product_code:D,3,19,2023-H2,2,10,-1
+Meadowville,94,10,product_code:E,33,1,2023-H2,5,7,3
+Meadowville,94,10,product_code:F,6,16,2023-H2,1,7,-4
+Meadowville,94,10,product_code:G,25,5,2023-H2,12,3,11
+Meadowville,94,10,product_code:H,12,7,2023-H2,9,7,-3
+Meadowville,94,10,quality_issue:True,24,11,2023-H2,7,10,-2
+Meadowville,94,10,service_issue:True,24,11,2023-H2,11,8,4
+Meadowville,94,10,description_issue:True,28,11,2024-H2,1,1,-10
+Meadowville,94,10,product_code:E,33,1,2024-H2,1,2,0
+Meadowville,94,10,description_issue:True,28,11,2025-H1,1,1,0
+Meadowville,94,10,product_code:H,12,7,2025-H1,1,1,0
+Metropolis,12,36,delivery_issue:True,3,43,2022-H2,3,4,2
+Metropolis,12,36,product_code:E,3,32,2022-H2,3,4,0
+Metropolis,12,36,price_issue:True,4,35,2023-H1,4,15,1
+Metropolis,12,36,product_code:A,4,17,2023-H1,4,8,0
+Metropolis,12,36,product_code:B,1,39,2023-H1,1,13,-3
+Metropolis,12,36,product_code:C,2,31,2023-H1,2,8,1
+Metropolis,12,36,product_code:G,1,44,2023-H1,1,11,-1
+Metropolis,12,36,product_code:H,1,49,2023-H1,1,4,0
+Metropolis,12,36,quality_issue:True,2,59,2023-H1,2,15,1
+Metropolis,12,36,service_issue:True,3,39,2023-H1,3,14,1
+Mountainview,119,7,delivery_issue:True,58,4,2020-H1,1,2,-2
+Mountainview,119,7,product_code:G,7,15,2020-H1,2,2,1
+Mountainview,119,7,service_issue:True,35,7,2020-H1,1,3,-1
+Mountainview,119,7,price_issue:True,35,8,2020-H2,1,3,0
+Mountainview,119,7,product_code:F,14,9,2020-H2,1,3,0
+Mountainview,119,7,delivery_issue:True,58,4,2021-H1,2,1,1
+Mountainview,119,7,price_issue:True,35,8,2021-H1,1,5,-1
+Mountainview,119,7,product_code:C,54,2,2021-H1,5,1,4
+Mountainview,119,7,service_issue:True,35,7,2021-H1,4,1,-1
+Mountainview,119,7,delivery_issue:True,58,4,2021-H2,3,3,-1
+Mountainview,119,7,description_issue:True,53,4,2021-H2,1,4,-2
+Mountainview,119,7,price_issue:True,35,8,2021-H2,1,4,0
+Mountainview,119,7,product_code:B,9,10,2021-H2,4,2,3
+Mountainview,119,7,product_code:C,54,2,2021-H2,2,3,-2
+Mountainview,119,7,quality_issue:True,29,9,2021-H2,2,2,0
+Mountainview,119,7,service_issue:True,35,7,2021-H2,1,5,-1
+Mountainview,119,7,delivery_issue:True,58,4,2022-H1,1,3,0
+Mountainview,119,7,description_issue:True,53,4,2022-H1,2,4,1
+Mountainview,119,7,price_issue:True,35,8,2022-H1,2,5,0
+Mountainview,119,7,product_code:F,14,9,2022-H1,3,2,1
+Mountainview,119,7,product_code:H,10,10,2022-H1,1,3,-2
+Mountainview,119,7,quality_issue:True,29,9,2022-H1,1,5,0
+Mountainview,119,7,delivery_issue:True,58,4,2022-H2,2,5,1
+Mountainview,119,7,description_issue:True,53,4,2022-H2,4,4,2
+Mountainview,119,7,price_issue:True,35,8,2022-H2,2,5,-2
+Mountainview,119,7,product_code:D,9,10,2022-H2,3,3,1
+Mountainview,119,7,product_code:E,5,19,2022-H2,1,6,-2
+Mountainview,119,7,product_code:F,14,9,2022-H2,1,4,0
+Mountainview,119,7,product_code:G,7,15,2022-H2,2,2,1
+Mountainview,119,7,product_code:H,10,10,2022-H2,1,3,-1
+Mountainview,119,7,quality_issue:True,29,9,2022-H2,3,4,2
+Mountainview,119,7,service_issue:True,35,7,2022-H2,1,5,-2
+Mountainview,119,7,delivery_issue:True,58,4,2023-H1,31,3,30
+Mountainview,119,7,description_issue:True,53,4,2023-H1,32,2,1
+Mountainview,119,7,price_issue:True,35,8,2023-H1,12,10,-20
+Mountainview,119,7,product_code:A,11,11,2023-H1,7,5,-5
+Mountainview,119,7,product_code:B,9,10,2023-H1,4,10,-3
+Mountainview,119,7,product_code:C,54,2,2023-H1,35,1,31
+Mountainview,119,7,product_code:D,9,10,2023-H1,2,6,-33
+Mountainview,119,7,product_code:E,5,19,2023-H1,3,5,1
+Mountainview,119,7,product_code:F,14,9,2023-H1,5,10,2
+Mountainview,119,7,product_code:G,7,15,2023-H1,1,11,-4
+Mountainview,119,7,quality_issue:True,29,9,2023-H1,14,7,13
+Mountainview,119,7,service_issue:True,35,7,2023-H1,13,8,-1
+Mountainview,119,7,delivery_issue:True,58,4,2023-H2,17,5,4
+Mountainview,119,7,description_issue:True,53,4,2023-H2,14,5,-3
+Mountainview,119,7,price_issue:True,35,8,2023-H2,15,6,1
+Mountainview,119,7,product_code:A,11,11,2023-H2,3,8,-12
+Mountainview,119,7,product_code:B,9,10,2023-H2,1,8,-2
+Mountainview,119,7,product_code:C,54,2,2023-H2,12,3,11
+Mountainview,119,7,product_code:D,9,10,2023-H2,4,8,-8
+Mountainview,119,7,product_code:E,5,19,2023-H2,1,11,-3
+Mountainview,119,7,product_code:F,14,9,2023-H2,4,4,3
+Mountainview,119,7,product_code:G,7,15,2023-H2,2,7,-2
+Mountainview,119,7,product_code:H,10,10,2023-H2,8,8,6
+Mountainview,119,7,quality_issue:True,29,9,2023-H2,9,8,1
+Mountainview,119,7,service_issue:True,35,7,2023-H2,15,7,6
+Mountainview,119,7,delivery_issue:True,58,4,2024-H2,1,1,-14
+Mountainview,119,7,price_issue:True,35,8,2024-H2,1,1,0
+Mountainview,119,7,product_code:A,11,11,2024-H2,1,1,0
+Mountainville,32,17,price_issue:True,19,13,2021-H1,1,5,0
+Mountainville,32,17,product_code:E,3,32,2021-H1,1,1,0
+Mountainville,32,17,delivery_issue:True,4,35,2022-H1,2,2,1
+Mountainville,32,17,description_issue:True,9,17,2022-H1,1,5,-1
+Mountainville,32,17,price_issue:True,19,13,2022-H1,4,3,3
+Mountainville,32,17,product_code:E,3,32,2022-H1,1,3,-3
+Mountainville,32,17,product_code:F,16,8,2022-H1,2,3,1
+Mountainville,32,17,product_code:G,12,9,2022-H1,3,2,1
+Mountainville,32,17,quality_issue:True,8,19,2022-H1,1,5,-2
+Mountainville,32,17,description_issue:True,9,17,2022-H2,1,6,0
+Mountainville,32,17,price_issue:True,19,13,2022-H2,2,5,1
+Mountainville,32,17,product_code:F,16,8,2022-H2,3,2,1
+Mountainville,32,17,quality_issue:True,8,19,2022-H2,2,5,-1
+Mountainville,32,17,service_issue:True,9,24,2022-H2,1,5,-1
+Mountainville,32,17,delivery_issue:True,4,35,2023-H1,2,16,1
+Mountainville,32,17,description_issue:True,9,17,2023-H1,1,16,-1
+Mountainville,32,17,price_issue:True,19,13,2023-H1,6,13,5
+Mountainville,32,17,product_code:E,3,32,2023-H1,1,7,-5
+Mountainville,32,17,product_code:F,16,8,2023-H1,4,11,3
+Mountainville,32,17,product_code:G,12,9,2023-H1,3,9,-1
+Mountainville,32,17,product_code:H,1,49,2023-H1,1,4,-2
+Mountainville,32,17,quality_issue:True,8,19,2023-H1,5,12,4
+Mountainville,32,17,service_issue:True,9,24,2023-H1,1,16,-4
+Mountainville,32,17,description_issue:True,9,17,2023-H2,6,10,5
+Mountainville,32,17,price_issue:True,19,13,2023-H2,6,9,0
+Mountainville,32,17,product_code:F,16,8,2023-H2,7,2,1
+Mountainville,32,17,product_code:G,12,9,2023-H2,6,5,-1
+Mountainville,32,17,service_issue:True,9,24,2023-H2,7,9,1
+New York,5,72,product_code:B,2,30,2023-H1,2,12,-5
+New York,5,72,product_code:G,1,44,2023-H1,1,11,-1
+New York,5,72,quality_issue:True,2,59,2023-H1,2,15,1
+New York,5,72,service_issue:True,2,57,2023-H1,1,16,-1
+New York,5,72,price_issue:True,2,56,2023-H2,2,13,1
+New York,5,72,product_code:A,2,26,2023-H2,2,9,0
+New York,5,72,service_issue:True,2,57,2023-H2,1,15,-1
+North Haverbrook,6,69,delivery_issue:True,2,56,2023-H1,2,16,1
+North Haverbrook,6,69,price_issue:True,4,35,2023-H1,3,16,1
+North Haverbrook,6,69,product_code:C,2,31,2023-H1,2,8,-1
+North Haverbrook,6,69,product_code:F,2,32,2023-H1,2,12,0
+North Haverbrook,6,69,quality_issue:True,3,47,2023-H1,3,14,1
+North Haverbrook,6,69,price_issue:True,4,35,2023-H2,1,14,-2
+North Haverbrook,6,69,product_code:H,2,33,2023-H2,2,13,1
+North Haverbrook,6,69,service_issue:True,2,57,2023-H2,2,14,0
+Oak Town,6,69,price_issue:True,4,35,2022-H1,1,6,-1
+Oak Town,6,69,product_code:F,2,32,2022-H1,1,4,0
+Oak Town,6,69,delivery_issue:True,1,70,2023-H1,1,17,0
+Oak Town,6,69,price_issue:True,4,35,2023-H1,2,17,1
+Oak Town,6,69,product_code:A,1,38,2023-H1,1,10,-1
+Oak Town,6,69,product_code:B,1,39,2023-H1,1,13,0
+Oak Town,6,69,product_code:F,2,32,2023-H1,1,13,0
+Oak Town,6,69,quality_issue:True,2,59,2023-H1,2,15,1
+Oak Town,6,69,description_issue:True,2,51,2023-H2,2,14,0
+Oak Town,6,69,price_issue:True,4,35,2023-H2,1,14,-1
+Oak Town,6,69,product_code:E,1,52,2023-H2,1,11,0
+Oak Town,6,69,product_code:H,1,49,2023-H2,1,14,0
+Oak Town,6,69,service_issue:True,1,67,2023-H2,1,15,0
+Ogdenville,6,69,description_issue:True,2,51,2023-H1,2,15,1
+Ogdenville,6,69,price_issue:True,1,67,2023-H1,1,18,-1
+Ogdenville,6,69,product_code:B,2,30,2023-H1,2,12,1
+Ogdenville,6,69,product_code:G,2,32,2023-H1,2,10,0
+Ogdenville,6,69,quality_issue:True,2,59,2023-H1,2,15,0
+Ogdenville,6,69,service_issue:True,3,39,2023-H1,3,14,1
+Ogdenville,6,69,delivery_issue:True,2,56,2023-H2,2,15,-1
+Ogdenville,6,69,product_code:D,2,27,2023-H2,2,10,0
+Opal City,17,29,product_code:E,17,8,2020-H2,15,2,13
+Opal City,17,29,service_issue:True,17,16,2020-H2,15,1,0
+Opal City,17,29,product_code:E,17,8,2023-H2,2,10,-13
+Opal City,17,29,service_issue:True,17,16,2023-H2,2,14,0
+Opal Town,11,40,product_code:E,3,32,2020-H2,2,3,0
+Opal Town,11,40,service_issue:True,3,39,2020-H2,2,3,0
+Opal Town,11,40,description_issue:True,7,20,2022-H1,1,5,-1
+Opal Town,11,40,product_code:F,2,32,2022-H1,1,4,0
+Opal Town,11,40,delivery_issue:True,1,70,2023-H1,1,17,0
+Opal Town,11,40,description_issue:True,7,20,2023-H1,6,11,5
+Opal Town,11,40,price_issue:True,6,24,2023-H1,6,13,0
+Opal Town,11,40,product_code:E,3,32,2023-H1,1,7,-5
+Opal Town,11,40,product_code:F,2,32,2023-H1,1,13,0
+Opal Town,11,40,product_code:G,6,17,2023-H1,6,7,5
+Opal Town,11,40,quality_issue:True,1,68,2023-H1,1,16,-5
+Opal Town,11,40,service_issue:True,3,39,2023-H1,1,16,0
+Pine City,6,69,product_code:B,4,18,2021-H1,2,2,1
+Pine City,6,69,quality_issue:True,4,38,2021-H1,2,3,0
+Pine City,6,69,price_issue:True,1,67,2022-H1,1,6,-1
+Pine City,6,69,product_code:B,4,18,2022-H1,2,2,1
+Pine City,6,69,service_issue:True,2,57,2022-H1,1,5,-1
+Pine City,6,69,delivery_issue:True,1,70,2023-H2,1,16,0
+Pine City,6,69,product_code:A,1,38,2023-H2,1,10,0
+Pine City,6,69,product_code:H,1,49,2023-H2,1,14,0
+Pine City,6,69,quality_issue:True,4,38,2023-H2,2,14,1
+Pine City,6,69,service_issue:True,2,57,2023-H2,1,15,-1
+Pine Town,5,72,price_issue:True,3,50,2021-H1,1,5,0
+Pine Town,5,72,product_code:B,2,30,2021-H1,1,3,0
+Pine Town,5,72,delivery_issue:True,1,70,2023-H1,1,17,0
+Pine Town,5,72,product_code:B,2,30,2023-H1,1,13,0
+Pine Town,5,72,quality_issue:True,4,38,2023-H1,1,16,0
+Pine Town,5,72,description_issue:True,1,64,2023-H2,1,15,0
+Pine Town,5,72,price_issue:True,3,50,2023-H2,2,13,1
+Pine Town,5,72,product_code:C,1,44,2023-H2,1,12,-1
+Pine Town,5,72,product_code:D,1,40,2023-H2,1,11,0
+Pine Town,5,72,product_code:E,1,52,2023-H2,1,11,0
+Pine Town,5,72,quality_issue:True,4,38,2023-H2,3,13,2
+Pinehill,6,69,delivery_issue:True,5,28,2020-H1,2,1,-1
+Pinehill,6,69,description_issue:True,1,64,2020-H1,1,2,-1
+Pinehill,6,69,product_code:G,2,32,2020-H1,2,2,1
+Pinehill,6,69,delivery_issue:True,5,28,2021-H2,1,4,-1
+Pinehill,6,69,product_code:E,1,52,2021-H2,1,1,0
+Pinehill,6,69,delivery_issue:True,5,28,2023-H2,1,16,0
+Pinehill,6,69,price_issue:True,1,67,2023-H2,1,14,0
+Pinehill,6,69,product_code:D,2,27,2023-H2,2,10,1
+Pinehill,6,69,delivery_issue:True,5,28,2024-H1,1,2,-1
+Pinehill,6,69,product_code:F,1,47,2024-H1,1,2,0
+Quartz City,22,23,description_issue:True,2,51,2022-H1,1,5,0
+Quartz City,22,23,price_issue:True,18,14,2022-H1,1,6,0
+Quartz City,22,23,product_code:A,21,5,2022-H1,1,4,0
+Quartz City,22,23,delivery_issue:True,20,13,2022-H2,19,1,18
+Quartz City,22,23,description_issue:True,2,51,2022-H2,1,6,-18
+Quartz City,22,23,price_issue:True,18,14,2022-H2,17,1,16
+Quartz City,22,23,product_code:A,21,5,2022-H2,20,1,3
+Quartz City,22,23,quality_issue:True,3,47,2022-H2,2,5,-18
+Quartz City,22,23,service_issue:True,2,57,2022-H2,2,4,0
+Quartz City,22,23,delivery_issue:True,20,13,2023-H2,1,16,-1
+Quartz City,22,23,product_code:H,1,49,2023-H2,1,14,0
+Quartz City,22,23,quality_issue:True,3,47,2023-H2,1,15,0
+Ridgetown,7,57,product_code:F,1,47,2020-H2,1,3,0
+Ridgetown,7,57,quality_issue:True,2,59,2020-H2,1,3,0
+Ridgetown,7,57,delivery_issue:True,6,26,2021-H2,6,1,5
+Ridgetown,7,57,description_issue:True,1,64,2021-H2,1,4,-5
+Ridgetown,7,57,price_issue:True,1,67,2021-H2,1,4,0
+Ridgetown,7,57,product_code:B,6,15,2021-H2,6,1,5
+Ridgetown,7,57,quality_issue:True,2,59,2021-H2,1,3,-5
+Ridgetown,7,57,service_issue:True,1,67,2021-H2,1,5,0
+Ridgewood,10,41,description_issue:True,2,51,2021-H1,1,2,0
+Ridgewood,10,41,product_code:C,2,31,2021-H1,1,4,0
+Ridgewood,10,41,product_code:H,3,25,2022-H2,2,2,1
+Ridgewood,10,41,quality_issue:True,5,33,2022-H2,1,6,-1
+Ridgewood,10,41,service_issue:True,3,39,2022-H2,1,5,0
+Ridgewood,10,41,delivery_issue:True,2,56,2023-H1,2,16,1
+Ridgewood,10,41,description_issue:True,2,51,2023-H1,1,16,-1
+Ridgewood,10,41,product_code:B,3,21,2023-H1,3,11,2
+Ridgewood,10,41,product_code:C,2,31,2023-H1,1,9,-2
+Ridgewood,10,41,product_code:E,1,52,2023-H1,1,7,0
+Ridgewood,10,41,quality_issue:True,5,33,2023-H1,2,15,1
+Ridgewood,10,41,service_issue:True,3,39,2023-H1,2,15,0
+Ridgewood,10,41,product_code:G,1,44,2023-H2,1,8,-1
+Ridgewood,10,41,product_code:H,3,25,2023-H2,1,14,0
+Ridgewood,10,41,quality_issue:True,5,33,2023-H2,2,14,1
+River Heights,7,57,delivery_issue:True,2,56,2023-H2,2,15,0
+River Heights,7,57,description_issue:True,4,34,2023-H2,4,12,2
+River Heights,7,57,price_issue:True,3,50,2023-H2,3,12,-1
+River Heights,7,57,product_code:E,6,17,2023-H2,6,6,3
+River Heights,7,57,product_code:G,1,44,2023-H2,1,8,-5
+River Heights,7,57,quality_issue:True,2,59,2023-H2,2,14,1
+River Heights,7,57,service_issue:True,2,57,2023-H2,2,14,0
+Riverbend,39,14,delivery_issue:True,12,15,2020-H1,1,2,-1
+Riverbend,39,14,description_issue:True,12,12,2020-H1,1,2,0
+Riverbend,39,14,product_code:C,3,23,2020-H1,1,1,0
+Riverbend,39,14,product_code:H,3,25,2020-H1,1,2,0
+Riverbend,39,14,description_issue:True,12,12,2021-H1,1,2,0
+Riverbend,39,14,product_code:D,2,27,2021-H1,1,1,0
+Riverbend,39,14,price_issue:True,13,16,2021-H2,1,4,0
+Riverbend,39,14,product_code:A,5,15,2021-H2,2,4,1
+Riverbend,39,14,quality_issue:True,10,16,2021-H2,1,3,-1
+Riverbend,39,14,service_issue:True,17,16,2021-H2,1,5,0
+Riverbend,39,14,delivery_issue:True,12,15,2022-H1,1,3,0
+Riverbend,39,14,description_issue:True,12,12,2022-H1,1,5,0
+Riverbend,39,14,price_issue:True,13,16,2022-H1,2,5,1
+Riverbend,39,14,product_code:A,5,15,2022-H1,1,4,-1
+Riverbend,39,14,product_code:G,9,11,2022-H1,3,2,2
+Riverbend,39,14,product_code:H,3,25,2022-H1,1,3,-2
+Riverbend,39,14,quality_issue:True,10,16,2022-H1,2,4,1
+Riverbend,39,14,service_issue:True,17,16,2022-H1,3,3,1
+Riverbend,39,14,description_issue:True,12,12,2022-H2,1,6,-2
+Riverbend,39,14,price_issue:True,13,16,2022-H2,3,4,2
+Riverbend,39,14,product_code:A,5,15,2022-H2,1,4,-2
+Riverbend,39,14,product_code:D,2,27,2022-H2,1,5,0
+Riverbend,39,14,product_code:F,13,11,2022-H2,1,4,0
+Riverbend,39,14,product_code:G,9,11,2022-H2,1,3,0
+Riverbend,39,14,product_code:H,3,25,2022-H2,1,3,0
+Riverbend,39,14,quality_issue:True,10,16,2022-H2,2,5,1
+Riverbend,39,14,service_issue:True,17,16,2022-H2,2,4,0
+Riverbend,39,14,delivery_issue:True,12,15,2023-H1,7,11,5
+Riverbend,39,14,description_issue:True,12,12,2023-H1,7,10,0
+Riverbend,39,14,price_issue:True,13,16,2023-H1,5,14,-2
+Riverbend,39,14,product_code:C,3,23,2023-H1,1,9,-4
+Riverbend,39,14,product_code:E,4,22,2023-H1,4,4,3
+Riverbend,39,14,product_code:F,13,11,2023-H1,10,5,6
+Riverbend,39,14,product_code:G,9,11,2023-H1,3,9,-7
+Riverbend,39,14,quality_issue:True,10,16,2023-H1,2,15,-1
+Riverbend,39,14,service_issue:True,17,16,2023-H1,9,10,7
+Riverbend,39,14,delivery_issue:True,12,15,2023-H2,2,15,-7
+Riverbend,39,14,description_issue:True,12,12,2023-H2,1,15,-1
+Riverbend,39,14,price_issue:True,13,16,2023-H2,1,14,0
+Riverbend,39,14,product_code:A,5,15,2023-H2,1,10,0
+Riverbend,39,14,product_code:C,3,23,2023-H2,1,12,0
+Riverbend,39,14,product_code:G,9,11,2023-H2,1,8,0
+Riverbend,39,14,quality_issue:True,10,16,2023-H2,2,14,1
+Riverbend,39,14,delivery_issue:True,12,15,2024-H1,1,2,-1
+Riverbend,39,14,product_code:F,13,11,2024-H1,2,1,1
+Riverbend,39,14,service_issue:True,17,16,2024-H1,2,2,0
+Riverbend,39,14,price_issue:True,13,16,2025-H1,1,1,-1
+Riverbend,39,14,product_code:G,9,11,2025-H1,1,1,0
+Riverbend,39,14,quality_issue:True,10,16,2025-H1,1,1,0
+Riverdale,8,50,delivery_issue:True,1,70,2022-H2,1,6,0
+Riverdale,8,50,product_code:D,1,40,2022-H2,1,5,0
+Riverdale,8,50,description_issue:True,6,22,2023-H2,6,10,5
+Riverdale,8,50,product_code:E,6,17,2023-H2,6,6,0
+Riverdale,8,50,product_code:H,1,49,2023-H2,1,14,-5
+Riverdale,8,50,quality_issue:True,1,68,2023-H2,1,15,0
+Riverside,184,5,price_issue:True,76,3,2020-H1,1,1,0
+Riverside,184,5,product_code:F,28,2,2020-H1,2,1,1
+Riverside,184,5,product_code:G,18,7,2020-H1,1,3,-1
+Riverside,184,5,quality_issue:True,50,5,2020-H1,2,1,1
+Riverside,184,5,service_issue:True,58,4,2020-H1,2,2,0
+Riverside,184,5,delivery_issue:True,54,5,2020-H2,1,3,-1
+Riverside,184,5,price_issue:True,76,3,2020-H2,1,3,0
+Riverside,184,5,product_code:A,41,3,2020-H2,1,1,0
+Riverside,184,5,product_code:H,28,3,2020-H2,1,2,0
+Riverside,184,5,delivery_issue:True,54,5,2021-H1,1,2,0
+Riverside,184,5,description_issue:True,64,2,2021-H1,1,2,0
+Riverside,184,5,product_code:B,25,3,2021-H1,1,3,0
+Riverside,184,5,product_code:C,15,6,2021-H1,2,3,1
+Riverside,184,5,quality_issue:True,50,5,2021-H1,2,3,0
+Riverside,184,5,delivery_issue:True,54,5,2021-H2,4,2,2
+Riverside,184,5,price_issue:True,76,3,2021-H2,1,4,-3
+Riverside,184,5,product_code:A,41,3,2021-H2,1,5,0
+Riverside,184,5,product_code:C,15,6,2021-H2,6,2,5
+Riverside,184,5,product_code:D,10,9,2021-H2,2,2,-4
+Riverside,184,5,product_code:E,19,7,2021-H2,1,1,-1
+Riverside,184,5,product_code:H,28,3,2021-H2,1,2,0
+Riverside,184,5,quality_issue:True,50,5,2021-H2,1,3,0
+Riverside,184,5,service_issue:True,58,4,2021-H2,8,2,7
+Riverside,184,5,description_issue:True,64,2,2022-H1,2,4,-6
+Riverside,184,5,price_issue:True,76,3,2022-H1,6,2,4
+Riverside,184,5,product_code:A,41,3,2022-H1,3,2,-3
+Riverside,184,5,product_code:F,28,2,2022-H1,3,2,0
+Riverside,184,5,product_code:G,18,7,2022-H1,2,3,-1
+Riverside,184,5,product_code:H,28,3,2022-H1,1,3,-1
+Riverside,184,5,quality_issue:True,50,5,2022-H1,2,4,1
+Riverside,184,5,service_issue:True,58,4,2022-H1,4,2,2
+Riverside,184,5,delivery_issue:True,54,5,2022-H2,2,5,-2
+Riverside,184,5,description_issue:True,64,2,2022-H2,2,5,0
+Riverside,184,5,price_issue:True,76,3,2022-H2,1,6,-1
+Riverside,184,5,product_code:E,19,7,2022-H2,1,6,0
+Riverside,184,5,product_code:F,28,2,2022-H2,3,2,2
+Riverside,184,5,product_code:H,28,3,2022-H2,4,1,1
+Riverside,184,5,quality_issue:True,50,5,2022-H2,3,4,-1
+Riverside,184,5,service_issue:True,58,4,2022-H2,3,3,0
+Riverside,184,5,delivery_issue:True,54,5,2023-H1,21,6,18
+Riverside,184,5,description_issue:True,64,2,2023-H1,39,1,18
+Riverside,184,5,price_issue:True,76,3,2023-H1,46,2,7
+Riverside,184,5,product_code:A,41,3,2023-H1,31,2,-15
+Riverside,184,5,product_code:B,25,3,2023-H1,20,3,-11
+Riverside,184,5,product_code:C,15,6,2023-H1,3,7,-17
+Riverside,184,5,product_code:D,10,9,2023-H1,3,5,0
+Riverside,184,5,product_code:F,28,2,2023-H1,13,4,10
+Riverside,184,5,product_code:G,18,7,2023-H1,10,4,-3
+Riverside,184,5,product_code:H,28,3,2023-H1,5,1,-5
+Riverside,184,5,quality_issue:True,50,5,2023-H1,20,5,15
+Riverside,184,5,service_issue:True,58,4,2023-H1,20,4,0
+Riverside,184,5,delivery_issue:True,54,5,2023-H2,24,4,4
+Riverside,184,5,description_issue:True,64,2,2023-H2,20,3,-4
+Riverside,184,5,price_issue:True,76,3,2023-H2,19,4,-1
+Riverside,184,5,product_code:A,41,3,2023-H2,5,6,-14
+Riverside,184,5,product_code:B,25,3,2023-H2,4,5,-1
+Riverside,184,5,product_code:C,15,6,2023-H2,4,9,0
+Riverside,184,5,product_code:D,10,9,2023-H2,5,7,1
+Riverside,184,5,product_code:E,19,7,2023-H2,17,2,12
+Riverside,184,5,product_code:F,28,2,2023-H2,6,3,-11
+Riverside,184,5,product_code:G,18,7,2023-H2,5,6,-1
+Riverside,184,5,product_code:H,28,3,2023-H2,15,4,10
+Riverside,184,5,quality_issue:True,50,5,2023-H2,19,4,4
+Riverside,184,5,service_issue:True,58,4,2023-H2,20,4,1
+Riverside,184,5,price_issue:True,76,3,2024-H1,1,1,-19
+Riverside,184,5,product_code:F,28,2,2024-H1,1,2,0
+Riverside,184,5,quality_issue:True,50,5,2024-H1,1,1,0
+Riverside,184,5,delivery_issue:True,54,5,2025-H1,1,1,0
+Riverside,184,5,product_code:H,28,3,2025-H1,1,1,0
+Riverside,184,5,service_issue:True,58,4,2025-H1,1,1,0
+Rivertown,204,4,delivery_issue:True,45,6,2020-H1,2,1,1
+Rivertown,204,4,description_issue:True,32,9,2020-H1,2,1,0
+Rivertown,204,4,price_issue:True,66,4,2020-H1,1,1,-1
+Rivertown,204,4,product_code:A,39,4,2020-H1,1,1,0
+Rivertown,204,4,product_code:G,18,7,2020-H1,1,3,0
+Rivertown,204,4,product_code:H,16,6,2020-H1,2,1,1
+Rivertown,204,4,description_issue:True,32,9,2020-H2,1,3,-1
+Rivertown,204,4,product_code:G,18,7,2020-H2,1,4,0
+Rivertown,204,4,quality_issue:True,92,3,2020-H2,1,3,0
+Rivertown,204,4,delivery_issue:True,45,6,2021-H1,2,1,1
+Rivertown,204,4,description_issue:True,32,9,2021-H1,1,2,-1
+Rivertown,204,4,price_issue:True,66,4,2021-H1,2,4,1
+Rivertown,204,4,product_code:A,39,4,2021-H1,2,3,0
+Rivertown,204,4,product_code:B,79,1,2021-H1,7,1,5
+Rivertown,204,4,product_code:C,11,9,2021-H1,1,4,-6
+Rivertown,204,4,product_code:D,4,17,2021-H1,1,1,0
+Rivertown,204,4,quality_issue:True,92,3,2021-H1,6,1,5
+Rivertown,204,4,service_issue:True,56,5,2021-H1,2,3,-4
+Rivertown,204,4,product_code:B,79,1,2021-H2,3,3,1
+Rivertown,204,4,quality_issue:True,92,3,2021-H2,1,3,-2
+Rivertown,204,4,service_issue:True,56,5,2021-H2,2,4,1
+Rivertown,204,4,delivery_issue:True,45,6,2022-H1,2,2,0
+Rivertown,204,4,price_issue:True,66,4,2022-H1,2,5,0
+Rivertown,204,4,product_code:B,79,1,2022-H1,6,1,4
+Rivertown,204,4,product_code:C,11,9,2022-H1,2,2,-4
+Rivertown,204,4,product_code:F,30,1,2022-H1,1,4,-1
+Rivertown,204,4,product_code:G,18,7,2022-H1,1,4,0
+Rivertown,204,4,quality_issue:True,92,3,2022-H1,7,1,6
+Rivertown,204,4,service_issue:True,56,5,2022-H1,1,5,-6
+Rivertown,204,4,delivery_issue:True,45,6,2022-H2,3,4,2
+Rivertown,204,4,description_issue:True,32,9,2022-H2,1,6,-2
+Rivertown,204,4,price_issue:True,66,4,2022-H2,4,3,3
+Rivertown,204,4,product_code:B,79,1,2022-H2,21,1,17
+Rivertown,204,4,product_code:F,30,1,2022-H2,2,3,-19
+Rivertown,204,4,product_code:H,16,6,2022-H2,1,3,-1
+Rivertown,204,4,quality_issue:True,92,3,2022-H2,17,1,16
+Rivertown,204,4,service_issue:True,56,5,2022-H2,2,4,-15
+Rivertown,204,4,delivery_issue:True,45,6,2023-H1,22,5,20
+Rivertown,204,4,description_issue:True,32,9,2023-H1,17,6,-5
+Rivertown,204,4,price_issue:True,66,4,2023-H1,39,3,22
+Rivertown,204,4,product_code:A,39,4,2023-H1,26,3,-13
+Rivertown,204,4,product_code:B,79,1,2023-H1,34,1,8
+Rivertown,204,4,product_code:C,11,9,2023-H1,7,5,-27
+Rivertown,204,4,product_code:D,4,17,2023-H1,1,7,-6
+Rivertown,204,4,product_code:E,7,13,2023-H1,4,4,3
+Rivertown,204,4,product_code:F,30,1,2023-H1,17,1,13
+Rivertown,204,4,product_code:G,18,7,2023-H1,9,5,-8
+Rivertown,204,4,product_code:H,16,6,2023-H1,2,3,-7
+Rivertown,204,4,quality_issue:True,92,3,2023-H1,40,2,38
+Rivertown,204,4,service_issue:True,56,5,2023-H1,28,2,-12
+Rivertown,204,4,delivery_issue:True,45,6,2023-H2,14,8,-14
+Rivertown,204,4,description_issue:True,32,9,2023-H2,10,8,-4
+Rivertown,204,4,price_issue:True,66,4,2023-H2,17,5,7
+Rivertown,204,4,product_code:A,39,4,2023-H2,9,4,-8
+Rivertown,204,4,product_code:B,79,1,2023-H2,8,2,-1
+Rivertown,204,4,product_code:C,11,9,2023-H2,1,12,-7
+Rivertown,204,4,product_code:D,4,17,2023-H2,2,10,1
+Rivertown,204,4,product_code:E,7,13,2023-H2,3,9,1
+Rivertown,204,4,product_code:F,30,1,2023-H2,10,1,7
+Rivertown,204,4,product_code:G,18,7,2023-H2,6,5,-4
+Rivertown,204,4,product_code:H,16,6,2023-H2,11,6,5
+Rivertown,204,4,quality_issue:True,92,3,2023-H2,19,4,8
+Rivertown,204,4,service_issue:True,56,5,2023-H2,21,3,2
+Rivertown,204,4,price_issue:True,66,4,2024-H2,1,1,-20
+Rivertown,204,4,product_code:A,39,4,2024-H2,1,1,0
+Rivertown,204,4,quality_issue:True,92,3,2024-H2,1,2,0
+Seaside,127,6,price_issue:True,37,7,2020-H1,1,1,0
+Seaside,127,6,product_code:F,13,11,2020-H1,1,2,0
+Seaside,127,6,service_issue:True,44,6,2020-H1,1,3,0
+Seaside,127,6,product_code:F,13,11,2020-H2,2,2,1
+Seaside,127,6,quality_issue:True,42,6,2020-H2,1,3,-1
+Seaside,127,6,service_issue:True,44,6,2020-H2,1,4,0
+Seaside,127,6,product_code:F,13,11,2021-H1,1,2,0
+Seaside,127,6,quality_issue:True,42,6,2021-H1,1,4,0
+Seaside,127,6,product_code:A,14,6,2021-H2,1,5,0
+Seaside,127,6,product_code:B,17,6,2021-H2,2,4,1
+Seaside,127,6,quality_issue:True,42,6,2021-H2,2,2,0
+Seaside,127,6,service_issue:True,44,6,2021-H2,1,5,-1
+Seaside,127,6,delivery_issue:True,42,7,2022-H1,2,2,1
+Seaside,127,6,price_issue:True,37,7,2022-H1,3,4,1
+Seaside,127,6,product_code:E,21,6,2022-H1,1,3,-2
+Seaside,127,6,product_code:F,13,11,2022-H1,2,3,1
+Seaside,127,6,product_code:G,25,5,2022-H1,2,3,0
+Seaside,127,6,product_code:H,19,4,2022-H1,1,3,-1
+Seaside,127,6,quality_issue:True,42,6,2022-H1,3,3,2
+Seaside,127,6,service_issue:True,44,6,2022-H1,1,5,-2
+Seaside,127,6,delivery_issue:True,42,7,2022-H2,5,3,4
+Seaside,127,6,description_issue:True,32,9,2022-H2,1,6,-4
+Seaside,127,6,price_issue:True,37,7,2022-H2,3,4,2
+Seaside,127,6,product_code:A,14,6,2022-H2,4,2,1
+Seaside,127,6,product_code:D,7,12,2022-H2,1,5,-3
+Seaside,127,6,product_code:E,21,6,2022-H2,1,6,0
+Seaside,127,6,product_code:F,13,11,2022-H2,1,4,0
+Seaside,127,6,product_code:G,25,5,2022-H2,3,1,2
+Seaside,127,6,product_code:H,19,4,2022-H2,2,2,-1
+Seaside,127,6,quality_issue:True,42,6,2022-H2,4,3,2
+Seaside,127,6,service_issue:True,44,6,2022-H2,4,2,0
+Seaside,127,6,delivery_issue:True,42,7,2023-H1,23,4,19
+Seaside,127,6,description_issue:True,32,9,2023-H1,16,7,-7
+Seaside,127,6,price_issue:True,37,7,2023-H1,16,8,0
+Seaside,127,6,product_code:A,14,6,2023-H1,5,7,-11
+Seaside,127,6,product_code:B,17,6,2023-H1,13,6,8
+Seaside,127,6,product_code:C,11,9,2023-H1,3,7,-10
+Seaside,127,6,product_code:D,7,12,2023-H1,3,5,0
+Seaside,127,6,product_code:E,21,6,2023-H1,6,3,3
+Seaside,127,6,product_code:F,13,11,2023-H1,5,10,-1
+Seaside,127,6,product_code:G,25,5,2023-H1,13,2,8
+Seaside,127,6,product_code:H,19,4,2023-H1,2,3,-11
+Seaside,127,6,quality_issue:True,42,6,2023-H1,11,9,9
+Seaside,127,6,service_issue:True,44,6,2023-H1,18,6,7
+Seaside,127,6,delivery_issue:True,42,7,2023-H2,11,9,-7
+Seaside,127,6,description_issue:True,32,9,2023-H2,14,5,3
+Seaside,127,6,price_issue:True,37,7,2023-H2,14,7,0
+Seaside,127,6,product_code:A,14,6,2023-H2,4,7,-10
+Seaside,127,6,product_code:B,17,6,2023-H2,2,7,-2
+Seaside,127,6,product_code:C,11,9,2023-H2,8,5,6
+Seaside,127,6,product_code:D,7,12,2023-H2,3,9,-5
+Seaside,127,6,product_code:E,21,6,2023-H2,7,5,4
+Seaside,127,6,product_code:F,13,11,2023-H2,1,7,-6
+Seaside,127,6,product_code:G,25,5,2023-H2,5,6,4
+Seaside,127,6,product_code:H,19,4,2023-H2,14,5,9
+Seaside,127,6,quality_issue:True,42,6,2023-H2,14,5,0
+Seaside,127,6,service_issue:True,44,6,2023-H2,17,6,3
+Seaside,127,6,delivery_issue:True,42,7,2024-H1,1,2,-16
+Seaside,127,6,product_code:G,25,5,2024-H1,1,1,0
+Seaside,127,6,description_issue:True,32,9,2024-H2,1,1,0
+Seaside,127,6,product_code:E,21,6,2024-H2,6,1,5
+Seaside,127,6,product_code:G,25,5,2024-H2,1,2,-5
+Seaside,127,6,quality_issue:True,42,6,2024-H2,6,1,5
+Seaside,127,6,service_issue:True,44,6,2024-H2,1,2,-5
+Shelbyville,8,50,price_issue:True,4,35,2023-H1,2,17,1
+Shelbyville,8,50,product_code:A,1,38,2023-H1,1,10,-1
+Shelbyville,8,50,product_code:B,3,21,2023-H1,3,11,2
+Shelbyville,8,50,quality_issue:True,3,47,2023-H1,3,14,0
+Shelbyville,8,50,delivery_issue:True,3,43,2023-H2,3,14,0
+Shelbyville,8,50,description_issue:True,1,64,2023-H2,1,15,-2
+Shelbyville,8,50,price_issue:True,4,35,2023-H2,2,13,1
+Shelbyville,8,50,product_code:E,2,41,2023-H2,2,10,0
+Shelbyville,8,50,product_code:H,2,33,2023-H2,2,13,0
+Shelbyville,8,50,service_issue:True,2,57,2023-H2,2,14,0
+Springfield,265,2,description_issue:True,36,6,2020-H1,1,2,-1
+Springfield,265,2,product_code:G,67,1,2020-H1,1,3,0
+Springfield,265,2,product_code:H,10,10,2020-H1,2,1,1
+Springfield,265,2,quality_issue:True,96,2,2020-H1,1,2,-1
+Springfield,265,2,service_issue:True,75,3,2020-H1,2,2,1
+Springfield,265,2,description_issue:True,36,6,2020-H2,1,3,-1
+Springfield,265,2,price_issue:True,93,2,2020-H2,1,3,0
+Springfield,265,2,product_code:E,5,19,2020-H2,1,4,0
+Springfield,265,2,product_code:F,4,18,2020-H2,1,3,0
+Springfield,265,2,product_code:G,67,1,2020-H2,13,1,12
+Springfield,265,2,quality_issue:True,96,2,2020-H2,13,1,0
+Springfield,265,2,service_issue:True,75,3,2020-H2,1,4,-12
+Springfield,265,2,price_issue:True,93,2,2021-H1,8,1,7
+Springfield,265,2,product_code:A,98,1,2021-H1,9,1,1
+Springfield,265,2,product_code:D,8,11,2021-H1,1,1,-8
+Springfield,265,2,product_code:G,67,1,2021-H1,2,1,1
+Springfield,265,2,quality_issue:True,96,2,2021-H1,1,4,-1
+Springfield,265,2,service_issue:True,75,3,2021-H1,3,2,2
+Springfield,265,2,delivery_issue:True,88,2,2021-H2,1,4,-2
+Springfield,265,2,price_issue:True,93,2,2021-H2,4,2,3
+Springfield,265,2,product_code:A,98,1,2021-H2,6,2,2
+Springfield,265,2,product_code:B,24,4,2021-H2,1,5,-5
+Springfield,265,2,product_code:G,67,1,2021-H2,1,1,0
+Springfield,265,2,quality_issue:True,96,2,2021-H2,1,3,0
+Springfield,265,2,service_issue:True,75,3,2021-H2,4,3,3
+Springfield,265,2,delivery_issue:True,88,2,2022-H1,3,1,-1
+Springfield,265,2,description_issue:True,36,6,2022-H1,3,3,0
+Springfield,265,2,price_issue:True,93,2,2022-H1,8,1,5
+Springfield,265,2,product_code:A,98,1,2022-H1,9,1,1
+Springfield,265,2,product_code:B,24,4,2022-H1,1,3,-8
+Springfield,265,2,product_code:D,8,11,2022-H1,1,2,0
+Springfield,265,2,product_code:G,67,1,2022-H1,2,3,1
+Springfield,265,2,product_code:H,10,10,2022-H1,3,1,1
+Springfield,265,2,quality_issue:True,96,2,2022-H1,4,2,1
+Springfield,265,2,service_issue:True,75,3,2022-H1,2,4,-2
+Springfield,265,2,delivery_issue:True,88,2,2022-H2,1,6,-1
+Springfield,265,2,price_issue:True,93,2,2022-H2,2,5,1
+Springfield,265,2,product_code:A,98,1,2022-H2,2,3,0
+Springfield,265,2,delivery_issue:True,88,2,2023-H1,44,1,42
+Springfield,265,2,description_issue:True,36,6,2023-H1,19,4,-25
+Springfield,265,2,price_issue:True,93,2,2023-H1,49,1,30
+Springfield,265,2,product_code:A,98,1,2023-H1,45,1,-4
+Springfield,265,2,product_code:B,24,4,2023-H1,17,4,-28
+Springfield,265,2,product_code:C,49,3,2023-H1,14,4,-3
+Springfield,265,2,product_code:E,5,19,2023-H1,3,5,-11
+Springfield,265,2,product_code:F,4,18,2023-H1,2,12,-1
+Springfield,265,2,product_code:G,67,1,2023-H1,47,1,45
+Springfield,265,2,product_code:H,10,10,2023-H1,1,4,-46
+Springfield,265,2,quality_issue:True,96,2,2023-H1,51,1,50
+Springfield,265,2,service_issue:True,75,3,2023-H1,46,1,-5
+Springfield,265,2,delivery_issue:True,88,2,2023-H2,38,3,-8
+Springfield,265,2,description_issue:True,36,6,2023-H2,12,7,-26
+Springfield,265,2,price_issue:True,93,2,2023-H2,20,3,8
+Springfield,265,2,product_code:A,98,1,2023-H2,27,2,7
+Springfield,265,2,product_code:B,24,4,2023-H2,5,4,-22
+Springfield,265,2,product_code:C,49,3,2023-H2,35,1,30
+Springfield,265,2,product_code:D,8,11,2023-H2,5,7,-30
+Springfield,265,2,product_code:E,5,19,2023-H2,1,11,-4
+Springfield,265,2,product_code:F,4,18,2023-H2,1,7,0
+Springfield,265,2,product_code:H,10,10,2023-H2,4,11,3
+Springfield,265,2,quality_issue:True,96,2,2023-H2,25,3,21
+Springfield,265,2,service_issue:True,75,3,2023-H2,17,6,-8
+Springfield,265,2,price_issue:True,93,2,2024-H1,1,1,-16
+Springfield,265,2,product_code:D,8,11,2024-H1,1,2,0
+Springfield,265,2,delivery_issue:True,88,2,2025-H1,1,1,0
+Springfield,265,2,product_code:G,67,1,2025-H1,1,1,0
+Star City,11,40,price_issue:True,3,50,2020-H2,1,3,0
+Star City,11,40,product_code:G,1,44,2020-H2,1,4,0
+Star City,11,40,price_issue:True,3,50,2022-H1,1,6,0
+Star City,11,40,product_code:A,1,38,2022-H1,1,4,0
+Star City,11,40,delivery_issue:True,1,70,2022-H2,1,6,0
+Star City,11,40,description_issue:True,2,51,2022-H2,1,6,0
+Star City,11,40,product_code:C,1,44,2022-H2,1,3,0
+Star City,11,40,product_code:E,3,32,2022-H2,1,6,0
+Star City,11,40,product_code:B,2,30,2023-H1,1,13,0
+Star City,11,40,product_code:F,1,47,2023-H1,1,13,0
+Star City,11,40,quality_issue:True,4,38,2023-H1,2,15,1
+Star City,11,40,description_issue:True,2,51,2023-H2,1,15,-1
+Star City,11,40,price_issue:True,3,50,2023-H2,1,14,0
+Star City,11,40,product_code:B,2,30,2023-H2,1,8,0
+Star City,11,40,product_code:D,1,40,2023-H2,1,11,0
+Star City,11,40,product_code:E,3,32,2023-H2,2,10,1
+Star City,11,40,product_code:H,1,49,2023-H2,1,14,-1
+Star City,11,40,quality_issue:True,4,38,2023-H2,2,14,1
+Star City,11,40,service_issue:True,2,57,2023-H2,2,14,0
+Stonebridge,7,57,description_issue:True,5,28,2020-H1,1,2,-1
+Stonebridge,7,57,product_code:H,7,12,2020-H1,1,2,0
+Stonebridge,7,57,delivery_issue:True,6,26,2025-H2,6,1,5
+Stonebridge,7,57,description_issue:True,5,28,2025-H2,4,1,-2
+Stonebridge,7,57,price_issue:True,1,67,2025-H2,1,1,-3
+Stonebridge,7,57,product_code:H,7,12,2025-H2,6,1,5
+Stonebridge,7,57,quality_issue:True,1,68,2025-H2,1,1,-5
+Stonebridge,7,57,service_issue:True,1,67,2025-H2,1,1,0
+Summerville,27,19,description_issue:True,10,15,2020-H1,1,2,0
+Summerville,27,19,product_code:C,8,13,2020-H1,1,1,0
+Summerville,27,19,price_issue:True,3,50,2022-H1,1,6,0
+Summerville,27,19,product_code:G,2,32,2022-H1,1,4,0
+Summerville,27,19,delivery_issue:True,4,35,2022-H2,1,6,0
+Summerville,27,19,description_issue:True,10,15,2022-H2,7,1,6
+Summerville,27,19,product_code:E,9,11,2022-H2,8,1,1
+Summerville,27,19,delivery_issue:True,4,35,2023-H1,1,17,-7
+Summerville,27,19,product_code:B,1,39,2023-H1,1,13,0
+Summerville,27,19,product_code:E,9,11,2023-H1,1,7,0
+Summerville,27,19,quality_issue:True,8,19,2023-H1,1,16,0
+Summerville,27,19,service_issue:True,11,20,2023-H1,2,15,1
+Summerville,27,19,delivery_issue:True,4,35,2023-H2,2,15,0
+Summerville,27,19,description_issue:True,10,15,2023-H2,1,15,-1
+Summerville,27,19,price_issue:True,3,50,2023-H2,2,13,1
+Summerville,27,19,product_code:C,8,13,2023-H2,7,6,5
+Summerville,27,19,product_code:D,2,27,2023-H2,2,10,-5
+Summerville,27,19,product_code:G,2,32,2023-H2,1,8,-1
+Summerville,27,19,product_code:H,3,25,2023-H2,3,12,2
+Summerville,27,19,quality_issue:True,8,19,2023-H2,6,11,3
+Summerville,27,19,service_issue:True,11,20,2023-H2,7,9,1
+Summerville,27,19,product_code:F,2,32,2024-H1,1,2,-6
+Summerville,27,19,quality_issue:True,8,19,2024-H1,1,1,0
+Summerville,27,19,service_issue:True,11,20,2024-H1,1,3,0
+Sunnydale,22,23,product_code:B,4,18,2021-H1,2,2,1
+Sunnydale,22,23,product_code:C,11,9,2021-H1,1,4,-1
+Sunnydale,22,23,quality_issue:True,7,22,2021-H1,3,2,2
+Sunnydale,22,23,service_issue:True,9,24,2021-H1,1,4,-2
+Sunnydale,22,23,delivery_issue:True,2,56,2021-H2,1,4,0
+Sunnydale,22,23,product_code:B,4,18,2021-H2,1,5,0
+Sunnydale,22,23,delivery_issue:True,2,56,2022-H2,1,6,0
+Sunnydale,22,23,description_issue:True,6,22,2022-H2,1,6,0
+Sunnydale,22,23,product_code:F,3,22,2022-H2,1,4,0
+Sunnydale,22,23,description_issue:True,6,22,2023-H1,2,15,1
+Sunnydale,22,23,price_issue:True,4,35,2023-H1,2,17,0
+Sunnydale,22,23,product_code:B,4,18,2023-H1,1,13,-1
+Sunnydale,22,23,product_code:C,11,9,2023-H1,7,5,6
+Sunnydale,22,23,product_code:E,1,52,2023-H1,1,7,-6
+Sunnydale,22,23,product_code:F,3,22,2023-H1,1,13,0
+Sunnydale,22,23,product_code:G,2,32,2023-H1,1,11,0
+Sunnydale,22,23,quality_issue:True,7,22,2023-H1,2,15,1
+Sunnydale,22,23,service_issue:True,9,24,2023-H1,7,12,5
+Sunnydale,22,23,description_issue:True,6,22,2023-H2,3,13,-4
+Sunnydale,22,23,price_issue:True,4,35,2023-H2,2,13,-1
+Sunnydale,22,23,product_code:A,1,38,2023-H2,1,10,-1
+Sunnydale,22,23,product_code:C,11,9,2023-H2,3,10,2
+Sunnydale,22,23,product_code:G,2,32,2023-H2,1,8,-2
+Sunnydale,22,23,quality_issue:True,7,22,2023-H2,1,15,0
+Sunnydale,22,23,service_issue:True,9,24,2023-H2,1,15,0
+Sunnydale,22,23,product_code:F,3,22,2024-H1,1,2,0
+Sunnydale,22,23,quality_issue:True,7,22,2024-H1,1,1,0
+Sunnyvale,32,17,price_issue:True,11,17,2020-H2,1,3,0
+Sunnyvale,32,17,product_code:H,4,18,2020-H2,1,2,0
+Sunnyvale,32,17,service_issue:True,15,18,2020-H2,1,4,0
+Sunnyvale,32,17,delivery_issue:True,10,16,2022-H2,1,6,0
+Sunnyvale,32,17,product_code:G,9,11,2022-H2,1,3,0
+Sunnyvale,32,17,product_code:H,4,18,2022-H2,1,3,0
+Sunnyvale,32,17,quality_issue:True,8,19,2022-H2,1,6,0
+Sunnyvale,32,17,delivery_issue:True,10,16,2023-H1,3,15,2
+Sunnyvale,32,17,description_issue:True,5,28,2023-H1,5,12,2
+Sunnyvale,32,17,price_issue:True,11,17,2023-H1,5,14,0
+Sunnyvale,32,17,product_code:B,1,39,2023-H1,1,13,-4
+Sunnyvale,32,17,product_code:D,3,19,2023-H1,1,7,0
+Sunnyvale,32,17,product_code:E,3,32,2023-H1,1,7,0
+Sunnyvale,32,17,product_code:F,10,13,2023-H1,7,8,6
+Sunnyvale,32,17,product_code:G,9,11,2023-H1,7,6,0
+Sunnyvale,32,17,quality_issue:True,8,19,2023-H1,5,12,-2
+Sunnyvale,32,17,service_issue:True,15,18,2023-H1,8,11,3
+Sunnyvale,32,17,delivery_issue:True,10,16,2023-H2,6,12,-2
+Sunnyvale,32,17,price_issue:True,11,17,2023-H2,5,10,-1
+Sunnyvale,32,17,product_code:A,2,26,2023-H2,2,9,-3
+Sunnyvale,32,17,product_code:D,3,19,2023-H2,2,10,0
+Sunnyvale,32,17,product_code:E,3,32,2023-H2,2,10,0
+Sunnyvale,32,17,product_code:F,10,13,2023-H2,3,5,1
+Sunnyvale,32,17,product_code:G,9,11,2023-H2,1,8,-2
+Sunnyvale,32,17,product_code:H,4,18,2023-H2,2,13,1
+Sunnyvale,32,17,quality_issue:True,8,19,2023-H2,2,14,0
+Sunnyvale,32,17,service_issue:True,15,18,2023-H2,6,10,4
+Sunset,8,50,product_code:F,2,32,2020-H1,1,2,-5
+Sunset,8,50,quality_issue:True,3,47,2020-H1,1,2,0
+Sunset,8,50,service_issue:True,3,39,2020-H1,1,3,0
+Sunset,8,50,price_issue:True,3,50,2020-H2,1,3,0
+Sunset,8,50,product_code:E,2,41,2020-H2,1,4,0
+Sunset,8,50,delivery_issue:True,2,56,2021-H1,1,2,0
+Sunset,8,50,product_code:D,1,40,2021-H1,1,1,0
+Sunset,8,50,price_issue:True,3,50,2023-H2,2,13,1
+Sunset,8,50,product_code:C,1,44,2023-H2,1,12,-1
+Sunset,8,50,product_code:E,2,41,2023-H2,1,11,0
+Sunset,8,50,product_code:H,2,33,2023-H2,1,14,0
+Sunset,8,50,quality_issue:True,3,47,2023-H2,1,15,0
+Sunset,8,50,service_issue:True,3,39,2023-H2,1,15,0
+Sunset,8,50,delivery_issue:True,2,56,2024-H1,1,2,0
+Sunset,8,50,product_code:F,2,32,2024-H1,1,2,0
+Sunset,8,50,service_issue:True,3,39,2024-H1,1,3,0
+Sunset,8,50,description_issue:True,1,64,2024-H2,1,1,0
+Sunset,8,50,product_code:H,2,33,2024-H2,1,1,0
+Sunset,8,50,quality_issue:True,3,47,2024-H2,1,2,0
+Themyscira,8,50,delivery_issue:True,2,56,2023-H1,1,17,0
+Themyscira,8,50,product_code:E,7,13,2023-H1,1,7,0
+Themyscira,8,50,delivery_issue:True,2,56,2023-H2,1,16,0
+Themyscira,8,50,description_issue:True,3,41,2023-H2,3,13,2
+Themyscira,8,50,price_issue:True,1,67,2023-H2,1,14,-2
+Themyscira,8,50,product_code:E,7,13,2023-H2,6,6,5
+Themyscira,8,50,product_code:F,1,47,2023-H2,1,7,-5
+Themyscira,8,50,quality_issue:True,1,68,2023-H2,1,15,0
+Themyscira,8,50,service_issue:True,2,57,2023-H2,2,14,1
+Turquoise City,7,57,description_issue:True,3,41,2023-H1,2,15,0
+Turquoise City,7,57,price_issue:True,3,50,2023-H1,1,18,-1
+Turquoise City,7,57,product_code:E,6,17,2023-H1,2,6,1
+Turquoise City,7,57,product_code:F,1,47,2023-H1,1,13,-1
+Turquoise City,7,57,quality_issue:True,5,33,2023-H1,3,14,2
+Turquoise City,7,57,delivery_issue:True,1,70,2023-H2,1,16,-2
+Turquoise City,7,57,description_issue:True,3,41,2023-H2,1,15,0
+Turquoise City,7,57,price_issue:True,3,50,2023-H2,2,13,1
+Turquoise City,7,57,product_code:E,6,17,2023-H2,4,8,2
+Turquoise City,7,57,quality_issue:True,5,33,2023-H2,2,14,-2
+Turquoise City,7,57,service_issue:True,2,57,2023-H2,2,14,0
+Valleytown,26,20,delivery_issue:True,4,35,2021-H1,1,2,-1
+Valleytown,26,20,description_issue:True,8,18,2021-H1,1,2,0
+Valleytown,26,20,product_code:C,4,21,2021-H1,1,4,0
+Valleytown,26,20,product_code:D,4,17,2021-H1,1,1,0
+Valleytown,26,20,price_issue:True,9,19,2022-H2,2,5,1
+Valleytown,26,20,product_code:C,4,21,2022-H2,1,3,-1
+Valleytown,26,20,product_code:E,3,32,2022-H2,1,6,0
+Valleytown,26,20,product_code:G,7,15,2022-H2,1,3,0
+Valleytown,26,20,quality_issue:True,5,33,2022-H2,2,5,1
+Valleytown,26,20,service_issue:True,10,21,2022-H2,1,5,-1
+Valleytown,26,20,delivery_issue:True,4,35,2023-H1,2,16,1
+Valleytown,26,20,description_issue:True,8,18,2023-H1,4,13,2
+Valleytown,26,20,price_issue:True,9,19,2023-H1,3,16,-1
+Valleytown,26,20,product_code:A,2,26,2023-H1,1,10,-2
+Valleytown,26,20,product_code:B,4,18,2023-H1,2,12,1
+Valleytown,26,20,product_code:C,4,21,2023-H1,1,9,-1
+Valleytown,26,20,product_code:E,3,32,2023-H1,1,7,0
+Valleytown,26,20,product_code:F,2,32,2023-H1,2,12,1
+Valleytown,26,20,quality_issue:True,5,33,2023-H1,1,16,-1
+Valleytown,26,20,service_issue:True,10,21,2023-H1,1,16,0
+Valleytown,26,20,delivery_issue:True,4,35,2023-H2,1,16,0
+Valleytown,26,20,description_issue:True,8,18,2023-H2,2,14,1
+Valleytown,26,20,price_issue:True,9,19,2023-H2,4,11,2
+Valleytown,26,20,product_code:A,2,26,2023-H2,1,10,-3
+Valleytown,26,20,product_code:B,4,18,2023-H2,1,8,0
+Valleytown,26,20,product_code:C,4,21,2023-H2,1,12,0
+Valleytown,26,20,product_code:D,4,17,2023-H2,3,9,2
+Valleytown,26,20,product_code:E,3,32,2023-H2,1,11,-2
+Valleytown,26,20,quality_issue:True,5,33,2023-H2,1,15,0
+Valleytown,26,20,service_issue:True,10,21,2023-H2,2,14,1
+Valleytown,26,20,product_code:G,7,15,2024-H2,6,1,4
+Valleytown,26,20,service_issue:True,10,21,2024-H2,6,1,0
+Valleytown,26,20,description_issue:True,8,18,2025-H1,1,1,-5
+Valleytown,26,20,product_code:B,4,18,2025-H1,1,1,0
+Valleytown,26,20,quality_issue:True,5,33,2025-H1,1,1,0
+Valleyview,69,12,description_issue:True,29,10,2020-H2,1,3,0
+Valleyview,69,12,price_issue:True,23,12,2020-H2,1,3,0
+Valleyview,69,12,product_code:B,3,21,2020-H2,1,1,0
+Valleyview,69,12,product_code:D,11,8,2020-H2,1,1,0
+Valleyview,69,12,price_issue:True,23,12,2021-H1,1,5,0
+Valleyview,69,12,product_code:B,3,21,2021-H1,1,3,0
+Valleyview,69,12,quality_issue:True,16,13,2021-H1,1,4,0
+Valleyview,69,12,delivery_issue:True,20,13,2021-H2,1,4,0
+Valleyview,69,12,description_issue:True,29,10,2021-H2,2,3,1
+Valleyview,69,12,product_code:D,11,8,2021-H2,2,2,0
+Valleyview,69,12,product_code:E,25,4,2021-H2,1,1,-1
+Valleyview,69,12,delivery_issue:True,20,13,2022-H1,2,2,1
+Valleyview,69,12,description_issue:True,29,10,2022-H1,6,1,4
+Valleyview,69,12,price_issue:True,23,12,2022-H1,1,6,-5
+Valleyview,69,12,product_code:E,25,4,2022-H1,3,1,2
+Valleyview,69,12,product_code:F,23,4,2022-H1,5,1,2
+Valleyview,69,12,product_code:G,3,24,2022-H1,2,3,-3
+Valleyview,69,12,quality_issue:True,16,13,2022-H1,2,4,0
+Valleyview,69,12,service_issue:True,18,14,2022-H1,3,3,1
+Valleyview,69,12,delivery_issue:True,20,13,2022-H2,3,4,0
+Valleyview,69,12,description_issue:True,29,10,2022-H2,4,4,1
+Valleyview,69,12,price_issue:True,23,12,2022-H2,3,4,-1
+Valleyview,69,12,product_code:D,11,8,2022-H2,1,5,-2
+Valleyview,69,12,product_code:E,25,4,2022-H2,3,4,2
+Valleyview,69,12,product_code:F,23,4,2022-H2,6,1,3
+Valleyview,69,12,quality_issue:True,16,13,2022-H2,2,5,-4
+Valleyview,69,12,delivery_issue:True,20,13,2023-H1,11,9,9
+Valleyview,69,12,description_issue:True,29,10,2023-H1,10,9,-1
+Valleyview,69,12,price_issue:True,23,12,2023-H1,13,9,3
+Valleyview,69,12,product_code:A,2,26,2023-H1,1,10,-12
+Valleyview,69,12,product_code:B,3,21,2023-H1,1,13,0
+Valleyview,69,12,product_code:D,11,8,2023-H1,3,5,2
+Valleyview,69,12,product_code:E,25,4,2023-H1,13,1,10
+Valleyview,69,12,product_code:F,23,4,2023-H1,9,6,-4
+Valleyview,69,12,product_code:H,2,33,2023-H1,1,4,-8
+Valleyview,69,12,quality_issue:True,16,13,2023-H1,9,10,8
+Valleyview,69,12,service_issue:True,18,14,2023-H1,8,11,-1
+Valleyview,69,12,delivery_issue:True,20,13,2023-H2,3,14,-5
+Valleyview,69,12,description_issue:True,29,10,2023-H2,5,11,2
+Valleyview,69,12,price_issue:True,23,12,2023-H2,3,12,-2
+Valleyview,69,12,product_code:A,2,26,2023-H2,1,10,-2
+Valleyview,69,12,product_code:D,11,8,2023-H2,3,9,2
+Valleyview,69,12,product_code:E,25,4,2023-H2,4,8,1
+Valleyview,69,12,product_code:F,23,4,2023-H2,3,5,-1
+Valleyview,69,12,product_code:G,3,24,2023-H2,1,8,-2
+Valleyview,69,12,product_code:H,2,33,2023-H2,1,14,0
+Valleyview,69,12,quality_issue:True,16,13,2023-H2,2,14,1
+Valleyview,69,12,service_issue:True,18,14,2023-H2,6,10,4
+Valleyview,69,12,description_issue:True,29,10,2024-H1,1,1,-5
+Valleyview,69,12,price_issue:True,23,12,2024-H1,1,1,0
+Valleyview,69,12,product_code:D,11,8,2024-H1,1,2,0
+Valleyview,69,12,product_code:E,25,4,2024-H1,1,2,0
+Valleyview,69,12,service_issue:True,18,14,2024-H1,1,3,0
+Woodland,23,21,price_issue:True,8,20,2020-H1,1,1,0
+Woodland,23,21,product_code:G,8,12,2020-H1,4,1,3
+Woodland,23,21,quality_issue:True,10,16,2020-H1,1,2,-3
+Woodland,23,21,service_issue:True,14,19,2020-H1,4,1,3
+Woodland,23,21,description_issue:True,3,41,2020-H2,1,3,-3
+Woodland,23,21,product_code:G,8,12,2020-H2,2,3,1
+Woodland,23,21,service_issue:True,14,19,2020-H2,2,3,0
+Woodland,23,21,price_issue:True,8,20,2021-H1,1,5,-1
+Woodland,23,21,product_code:D,4,17,2021-H1,1,1,0
+Woodland,23,21,product_code:H,1,49,2022-H1,1,3,0
+Woodland,23,21,quality_issue:True,10,16,2022-H1,1,5,0
+Woodland,23,21,delivery_issue:True,3,43,2023-H1,1,17,0
+Woodland,23,21,description_issue:True,3,41,2023-H1,1,16,0
+Woodland,23,21,price_issue:True,8,20,2023-H1,3,16,2
+Woodland,23,21,product_code:B,2,30,2023-H1,2,12,-1
+Woodland,23,21,product_code:C,1,44,2023-H1,1,9,-1
+Woodland,23,21,product_code:E,4,22,2023-H1,1,7,0
+Woodland,23,21,product_code:F,2,32,2023-H1,1,13,0
+Woodland,23,21,product_code:G,8,12,2023-H1,1,11,0
+Woodland,23,21,quality_issue:True,10,16,2023-H1,2,15,1
+Woodland,23,21,service_issue:True,14,19,2023-H1,5,13,3
+Woodland,23,21,delivery_issue:True,3,43,2023-H2,1,16,-4
+Woodland,23,21,description_issue:True,3,41,2023-H2,1,15,0
+Woodland,23,21,price_issue:True,8,20,2023-H2,3,12,2
+Woodland,23,21,product_code:A,1,38,2023-H2,1,10,-2
+Woodland,23,21,product_code:D,4,17,2023-H2,3,9,2
+Woodland,23,21,product_code:E,4,22,2023-H2,3,9,0
+Woodland,23,21,product_code:F,2,32,2023-H2,1,7,-2
+Woodland,23,21,quality_issue:True,10,16,2023-H2,6,11,5
+Woodland,23,21,service_issue:True,14,19,2023-H2,3,13,-3
+Woodland,23,21,delivery_issue:True,3,43,2024-H2,1,1,-2
+Woodland,23,21,product_code:G,8,12,2024-H2,1,2,0

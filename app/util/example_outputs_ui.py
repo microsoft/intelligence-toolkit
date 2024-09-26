@@ -30,13 +30,15 @@ def create_example_outputs_ui(container, workflow):
                             index = 1
                             terminate = False
                             while not terminate:
-                                st.divider()
-                                st.info(f'**Example {index}**')
+                                
                                 st.markdown('')
-                                for item in seq:
+                                for sx, item in enumerate(seq):
                                     item_type = this_metadata['item_types'][item]
                                     filename = f'{selected_data}_{this_key}_{item}_{index}.{item_type}'
                                     if os.path.exists(f'{workflow_home}/{selected_data}/{filename}'):
+                                        if sx == 0:
+                                            st.divider()
+                                            st.info(f'**Example {index}**')
                                         if item_type == 'csv':
                                             df = pd.read_csv(f'{workflow_home}/{selected_data}/{filename}')
                                             st.dataframe(df, height=450, hide_index=True, use_container_width=True)
