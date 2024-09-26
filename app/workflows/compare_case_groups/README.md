@@ -26,7 +26,7 @@ The **Compare Case Groups** workflow generates intelligence reports by defining 
 The task for this tutorial is detecting patterns in the cooccurrences of attribute values in the `customer_complaints` dataset available for download either:
 
 - in app, via `View example outputs` tab &rarr; `Input data` tab
-- on GitHub, at [example_outputs/detect_case_patterns/customer_complaints](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/detect_case_patterns/customer_complaints).
+- on GitHub, at [example_outputs/detect_case_patterns/customer_complaints/customer_complaints_input.csv](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/detect_case_patterns/customer_complaints/customer_complaints_input.csv).
 
 The format of this dataset is as follows, with each row representing an individual customer and their complaint:
 
@@ -39,7 +39,7 @@ The format of this dataset is as follows, with each row representing an individu
 
 where \*_issue: *boolean* represents five different boolean attributes covering different kinds of complaint: `price_issue`, `quality_issue`, `service_issue`, `delivery_issue`, and `description_issue`. Each complaint may relate to multiple issues.
 
-### Preparing data for group comparisons
+### Understanding the data preparation process
 
 The approach to comparing groups of cases relies on comparing counts of cases with specific attributes both across groups and over time. It is therefore important that attribute values represent broad categories that are likely to be observed in multiple cases across multiple groups and time periods. This typically means:
 
@@ -47,9 +47,21 @@ The approach to comparing groups of cases relies on comparing counts of cases wi
 2. Suppressing insignificant values that hold little analytical value (e.g., binary 0 or boolean false indicating absence of an attribute)
 3. Selecting the minimum set of data columns (i.e., attributes) necessary to support downstream analysis and reporting tasks.
 
-We can now work though the steps of senstive preparation using the `customer_complaints_data.csv` dataset above.
+### Preparing data for group comparisons
 
-First, navigate to the `Prepare case data` tab, select `Browse files`, and upload the `customer_complaints_data.csv` dataset. A preview of the dataset should appear below.
+The following steps show how to prepare a typical sensitive dataset for group comparisons. To skip these steps and go straight to the definition of case groups, download an already-prepared dataset either:
+
+- in app, via `View example outputs` tab &rarr; `Prepared data` tab
+- on GitHub, at [example_outputs/compare_case_groups/customer_complaints/customer_complaints_prepared.csv](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/compare_case_groups/customer_complaints/customer_complaints_prepared.csv).
+
+In either case, first navigate to the `Prepare case data` tab, select `Browse files`, and upload the `customer_complaints_input.csv` or `customer_complaints_prepared.csv` dataset. A preview of the dataset should appear below.
+
+If using prepared data directly:
+
+- under `Select attribute columns to include`, press `Select all`
+- advance to the [Specifying group comparisons](#specifying-group-comparisons) section
+
+Otherwise, continue by working though the steps of case data preparation below using the `customer_complaints_input.csv` dataset.
 
 #### Select attribute columns to include
 
@@ -124,7 +136,7 @@ The user interface also presents an overall summary, as follows:
 ```code
 This table shows:
 
-- A summary of all 3000 data records
+- A summary of all 2769 data records with values for all grouping attributes
 - The group_count of records for all [city] groups, and corresponding group_rank
 - The attribute_count of each attribute_value for all [city] groups, and corresponding attribute_rank
 - The period_window_count of each attribute_value for each period_window for all [city] groups, and corresponding period_window_rank

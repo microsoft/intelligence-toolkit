@@ -30,7 +30,7 @@ Select the `View example outputs` tab (in app) or navigate to [example_outputs/d
 The task for this tutorial is detecting patterns in the cooccurrences of attribute values in the `customer_complaints` dataset available for download either:
 
 - in app, via `View example outputs` tab &rarr; `Input data` tab
-- on GitHub, at [example_outputs/detect_case_patterns/customer_complaints](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/detect_case_patterns/customer_complaints).
+- on GitHub, at [example_outputs/detect_case_patterns/customer_complaints/customer_complaints_input.csv](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/detect_case_patterns/customer_complaints/customer_complaints_input.csv).
 
 The format of this dataset is as follows, with each row representing an individual customer and their complaint:
 
@@ -51,7 +51,7 @@ The foundation of the attribute pattern detection algorithm is the ability to de
 
 In other words, our pattern detection algoritm identifies groups of records characterized by combinations of attributes that "stand out" in a given time period, potentially warranting further review.
 
-### Preparing data for pattern detection
+### Understanding the data preparation process
 
 The statistical approach for detecting attribute patterns measures changes in the cooccurrence of pairs of attribute values over time, relative to both other time periods and other pairs. It is therefore important that attribute values represent broad categories that are likely to be observed in multiple cases across multiple time periods. This typically means:
 
@@ -59,9 +59,21 @@ The statistical approach for detecting attribute patterns measures changes in th
 2. Suppressing insignificant values that hold little analytical value (e.g., binary 0 or boolean false indicating absence of an attribute)
 3. Selecting the minimum set of data columns (i.e., attributes) necessary to support downstream analysis and reporting tasks.
 
-We can now work though the steps of senstive preparation using the `customer_complaints_data.csv` dataset above.
+### Preparing case data for pattern detection
 
-First, navigate to the `Prepare case data` tab, select `Browse files`, and upload the `customer_complaints_data.csv` dataset. A preview of the dataset should appear below.
+The following steps show how to prepare a typical case dataset for pattern detection. To skip these steps and go straight to the detection of case patterns, download an already-prepared dataset either:
+
+- in app, via `View example outputs` tab &rarr; `Prepared data` tab
+- on GitHub, at [example_outputs/detect_case_patterns/customer_complaints/customer_complaints_prepared.csv](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/detect_case_patterns/customer_complaints/customer_complaints_prepared.csv).
+
+In either case, first navigate to the `Prepare case data` tab, select `Browse files`, and upload the `customer_complaints_input.csv` or `customer_complaints_prepared.csv` dataset. A preview of the dataset should appear below.
+
+If using prepared data directly:
+
+- under `Select attribute columns to include`, press `Select all`
+- advance to the [Detecting attribute patterns](#detecting-attribute-patterns) section
+
+Otherwise, continue by working though the steps of senstive data preparation below using the `customer_complaints_input.csv` dataset.
 
 #### Select attribute columns to include
 

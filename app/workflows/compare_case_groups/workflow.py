@@ -67,8 +67,6 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                 sorted_cols = sorted(sv.case_groups_final_df.value.columns)
 
                 for col in sorted_cols:
-                    if col == "Subject ID":
-                        continue
                     vals = [
                         f"{col}:{x}"
                         for x in sorted(
@@ -122,12 +120,14 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                     sv.case_groups_aggregates.value = aggregates
                     sv.case_groups_temporal.value = temporal
 
+                    for group in sv.case_groups_groups.value:
+                        sv.case_groups_final_df.value = sv.case_groups_final_df.value[
+                            sv.case_groups_final_df.value[group] != ""
+                        ]
+
                     sv.case_groups_model_df.value = sv.case_groups_final_df.value.copy(
                         deep=True
                     )
-                    sv.case_groups_model_df.value["Subject ID"] = [
-                        str(x) for x in range(1, len(sv.case_groups_model_df.value) + 1)
-                    ]
 
                     sv.case_groups_model_df.value = (
                         sv.case_groups_model_df.value.replace("", None)
@@ -220,9 +220,9 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                     )
                     description = "This table shows:"
                     description += (
-                        f"\n- A summary of **{len(filtered_df)}** data records matching {filters_text}, representing **{dataset_proportion}%** of the overall dataset"
+                        f"\n- A summary of **{len(filtered_df)}** data records matching {filters_text}, representing **{dataset_proportion}%** of the overall dataset with values for all grouping attributes"
                         if len(filters) > 0
-                        else f"\n- A summary of all **{initial_row_count}** data records"
+                        else f"\n- A summary of all **{initial_row_count}** data records with values for all grouping attributes"
                     )
                     description += f"\n- The **group_count** of records for all {groups_text} groups, and corresponding **group_rank**"
                     description += f"\n- The **attribute_count** of each **attribute_value** for all {groups_text} groups, and corresponding **attribute_rank**"

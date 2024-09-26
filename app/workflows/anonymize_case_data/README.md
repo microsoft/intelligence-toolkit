@@ -22,10 +22,10 @@ Select the `View example outputs` tab (in app) or navigate to [example_outputs/a
 
 ## Tutorial
 
-The task for this tutorial is creating an anonymous version of the `customer_complaints` dataset available for download either:
+The task for this tutorial is creating an anonymous version of a `customer_complaints` dataset available for download either:
 
 - in app, via `View example outputs` tab &rarr; `Input data` tab
-- on GitHub, at [example_outputs/anonymize_case_data/customer_complaints](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/anonymize_case_data/customer_complaints).
+- on GitHub, at [example_outputs/anonymize_case_data/customer_complaints/customer_complaints_input.csv](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/anonymize_case_data/customer_complaints/customer_complaints_input.csv).
 
 The format of this dataset is as follows, with each row representing an individual customer and their complaint:
 
@@ -59,7 +59,7 @@ The [`Anonymize Case Data`](https://github.com/microsoft/intelligence-toolkit/bl
 1. All possible combinations of up to four attribute values are considered (even those not present in the data), and calibrated noise is added to the associated counts of records such that the presence or absense of any arbitrary record is not detectable (i.e., the counts are differentially private).
 2. These DP aggregate counts or "marginals" are iteratively sampled to create synthetic data records consistent with the counts of individual attribute values in the original sensitive dataset, reproducing the DP aggregate counts as accurately as possible while retaining differential privacy.
 
-### Preparing sensitive data for anonymization
+### Understanding the data preparation process
 
 Since the above approach to DP data synthesis works by controlling the release of attribute combinations, it is important that the sensitive input dataset has as few unique or rare attribute combinations as possible before attempting the anonymization process. This typically means:
 
@@ -67,9 +67,21 @@ Since the above approach to DP data synthesis works by controlling the release o
 2. Suppressing insignificant values that hold little analytical value (e.g., binary 0 or boolean false indicating absence of an attribute)
 3. Selecting the minimum set of data columns (i.e., attributes) necessary to support downstream analysis and reporting tasks.
 
-We can now work though the steps of senstive data preparation using the `customer_complaints_data.csv` dataset above.
+### Preparing sensitive data for anonymization
 
-First, navigate to the `Prepare sensitive data` tab, select `Browse files`, and upload the `customer_complaints_data.csv` dataset. A preview of the dataset should appear below.
+The following steps show how to prepare a typical sensitive dataset for anonymization. To skip these steps and go straight to the generation of anonymous data, download an already-prepared dataset either:
+
+- in app, via `View example outputs` tab &rarr; `Prepared data` tab
+- on GitHub, at [example_outputs/anonymize_case_data/customer_complaints/customer_complaints_prepared.csv](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/anonymize_case_data/customer_complaints/customer_complaints_prepared.csv).
+
+In either case, first navigate to the `Prepare sensitive data` tab, select `Browse files`, and upload the `customer_complaints_input.csv` or `customer_complaints_prepared.csv` dataset. A preview of the dataset should appear below.
+
+If using prepared data directly:
+
+- under `Select attribute columns to include`, press `Select all`
+- advance to the [Generating anonymous data](#generating-anonymous-data) section
+
+Otherwise, continue by working though the steps of senstive data preparation below using the `customer_complaints_input.csv` dataset.
 
 #### Select attribute columns to include
 

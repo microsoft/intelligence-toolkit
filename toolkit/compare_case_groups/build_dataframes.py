@@ -39,9 +39,11 @@ def build_ranked_df(
 
 
 def build_grouped_df(main_dataset, groups) -> pd.DataFrame:
-    gdf = main_dataset.melt(
+    index_df = main_dataset.copy(deep=True)
+    index_df['record_id'] = [str(x) for x in index_df.index]
+    gdf = index_df.melt(
         id_vars=groups,
-        value_vars=["Subject ID"],
+        value_vars=['record_id'],
         var_name="Attribute",
         value_name="Value",
     )
