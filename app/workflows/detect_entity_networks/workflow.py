@@ -251,7 +251,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                 help="The maximum cosine similarity threshold for inferring links between nodes based on their embeddings. Higher values will infer more links, but may also infer more false positives.",
             )
 
-            c_1, c_2 = st.columns([4, 1])
+            c_1, c_2 = st.columns([3, 1])
             with c_1:
                 infer = st.button(
                     "Infer links",
@@ -694,10 +694,8 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                         directed=default_config['directed'],
                         physics=default_config['physics'],
                         hierarchical=default_config['hierarchical'],
-                        timestep=default_config['timestep'],
-                        width = 850 if show_entities else 1400
+                        width = 1200 if show_entities else 1400
                     )
-
                     agraph(
                         nodes=nodes_agraph,
                         edges=edges_agraph,

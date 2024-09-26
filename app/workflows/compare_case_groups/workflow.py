@@ -46,7 +46,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                 sv.case_groups_input_df,
                 sv.case_groups_final_df,
                 uploader_key=sv.case_groups_upload_key.value,
-                key="narrative_uploader",
+                key="group_comparison_uploader",
                 height=400,
             )
         with model_col:

@@ -96,7 +96,7 @@ In the `Compare groups of records with different combinations of these attribute
 
 For this example, we could select `city`, `product_code`, or both of these as defining groups of interest. For simplicity, select `city` here.
 
-Under `Using counts of these attributes`, select the attributes whose counts should form the basis of comparisons. For this dataset, select all of the "issue" attributes: `delivery_issue`, `description_issue`, `price_issue`, `quality_issue`, and `service_issue`.
+Under `Using counts of these attributes`, select the attributes whose counts should form the basis of comparisons. For this dataset, select `product_code` and all of the "issue" attributes: `delivery_issue`, `description_issue`, `price_issue`, `quality_issue`, and `service_issue`.
 
 The `Across windows of this temporal/ordinal attribute (optional)` provides an opportunity to track the period-by-period or level-by-level changes in these counts for temporal or ordinal attributes respectively. In the context of the example dataset, `period` would be an appropriate temporal attribute, while `age-range` would be an appropriate ordinal attribute. Select `period` for this example.
 

@@ -27,7 +27,6 @@ def create_window_df(
     ldf = ldf.filter(pl.col("Value").is_not_null())
     for group in groups:
         ldf = ldf.filter(pl.col(group).is_not_null())
-    print(ldf)
 
     # Group by groups and count attribute values
     return (

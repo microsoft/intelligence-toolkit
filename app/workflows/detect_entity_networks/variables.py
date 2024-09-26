@@ -10,13 +10,14 @@ from util.session_variable import SessionVariable
 from toolkit.detect_entity_networks import prompts
 
 agraph_config = {
-    "height": 700,
+    "height": 1400,
     "directed": False,
-    "physics": True,
     "hierarchical": False,
-    "timestep": 0.1,
+    "timestep": 0.01,
+    "physics": True
 }
 
+ 
 
 class SessionVariables:
     prefix = None
