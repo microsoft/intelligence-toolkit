@@ -25,7 +25,7 @@ Select the `View example outputs` tab (in app) or navigate to [example_outputs/m
 The task for this tutorial is detecting matching records across two related `company_grievances` datasets available for download either:
 
 - in app, via `View example outputs` tab &rarr; `Input dataset 1`, `Input dataset 2` tabs
-- on GitHub, at [example_outputs/match_entity_records/company_grievances](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/match_entity_records/company_grievances).
+- on GitHub, at [example_outputs/match_entity_records/company_grievances/company_grievances_input_data_1.csv](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/match_entity_records/company_grievances/company_grievances_input_data_1.csv) and [example_outputs/match_entity_records/company_grievances/company_grievances_input_data_2.csv](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/match_entity_records/company_grievances/company_grievances_input_data_2.csv).
 
 ### How record embedding works
 

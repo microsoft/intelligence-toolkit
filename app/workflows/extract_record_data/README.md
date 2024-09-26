@@ -27,7 +27,10 @@ Select the `View example outputs` tab (in app) or navigate to [example_outputs/e
 
 ## Tutorial
 
-The task for this tutorial is extracting structured data records from transcripts of customer complaint calls (mock data).
+The task for this tutorial is extracting structured data records from transcripts of customer complaint calls (mock data) available for download either:
+
+- in app, via `View example outputs` tab &rarr; `Input data` tab
+- on GitHub, at [example_outputs/detect_entity_networks/customer_complaints/customer_complaints_texts.csv](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/extract_record_data/customer_complaints/customer_complaints_texts.csv)
 
 From the [`Extract Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/extract_record_data/README.md) homepage in a running instance of Intelligence Toolkit, select `Prepare data schema`.
 

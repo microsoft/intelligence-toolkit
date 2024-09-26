@@ -27,7 +27,7 @@ Select the `View example outputs` tab (in app) or navigate to [example_outputs/q
 The task for this tutorial is querying the `news_articles` dataset available for download either:
 
 - in app, via `View example outputs` tab &rarr; `Input texts` tab
-- on GitHub, at [example_outputs/query_text_data/news_articles](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/query_text_data/news_articles)
+- on GitHub, at [example_outputs/query_text_data/news_articles/news_articles_texts.csv](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/query_text_data/news_articles/news_articles_texts.csv)
 
 This dataset contains mock news articles spanning a range of categories including world events, local events, sports, politics, lifestyle, and culture.
 

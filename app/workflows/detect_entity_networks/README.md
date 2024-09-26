@@ -26,23 +26,23 @@ Select the `View example outputs` tab (in app) or navigate to [example_outputs/d
 The task for this tutorial is detect networks of entities and their associated level of relationship-based risk using the `company_grievances` dataset available for download either:
 
 - in app, via `View example outputs` tab &rarr; `Input data` tab
-- on GitHub, at [example_outputs/detect_entity_networks/company_grievances](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/detect_entity_networks/company_grievances)
+- on GitHub, at [example_outputs/detect_entity_networks/company_grievances/company_grievances_input.csv](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/detect_entity_networks/company_grievances/company_grievances_input.csv)
 
 ### Creating the data model
 
-Navigate to the `Create data model` tab and upload the `company_grievances_data.csv` file.
+Navigate to the `Create data model` tab and upload the `company_grievances_input.csv` file.
 
 Under `Map columns to model`, we will start with the `Link type` of `Entity-Attribute` to link entities to their attributes. These should be distinctive, i.e., linked only to that entity or closely related entities.
 
 Set `name` as the `Entity ID column` and select `address`, `city`, `email`, `phone`, and `owner`  as `Attribute column(s) to link on`.
 
-We would not select `sector` or `country` as attribute columns to link on since these are too broad, and would connect too many unrelated entities into the same networks. While `city` could be narrow or broad depending on the dataset (and city), the workflow has a way of showing shared attributes of relevance (like `city`) without using them to detect the entity networks. 
+We would not select `sector` or `country` as attribute columns to link on since these are too broad, and would connect too many unrelated entities into the same networks. While `city` could be narrow or broad depending on the dataset (and city), the workflow has a way of showing shared attributes of relevance (like `city`) without using them to detect the entity networks.
 
 Press `Add links to model` to see a summary of data model so far.
 
 Next, set `Link type` to `Entity-Flag`, keep `name` as the `Entity ID column`, and set `safety_grievances`, `pay_grievances`, `conditions_grievances`, `treatment_grievances`, and `workload_grievances` as `Flag value column(s)`.
 
-The format of these columns is as counts of the corresponding grievances, or "flags" more generally, so set `Flag format` to `Count`. 
+The format of these columns is as counts of the corresponding grievances, or "flags" more generally, so set `Flag format` to `Count`.
 
 If flags were formatted as a column of flag labels representing instances of that flag type for the adjacent entity, then you would select `Instance` instead.
 
