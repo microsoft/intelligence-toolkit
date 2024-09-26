@@ -110,7 +110,7 @@ There are two key parameters for configuring the similarity-based matching proce
 - `Matching record distance (max)`: the maximum distance between the embedding vectors of two records to consider an embedding match
 - `Matching name similarity (min)`: the minimum Jaccard similarity between the names of embedding-matched records to consider an overall match
 
-Starting out with a `Matching record distance (max)` of `0.001` may yield a small number of matches (~100 groups), while setting the threshold to `0.01` may return a greater number of matches (~500 groups). This *semantic* matching process can also be followed by a *lexical* matching process on entity names only, explained next.
+Starting out with a `Matching record distance (max)` of `0.001` may yield a small number of matches, while setting the threshold to `0.01` may return a greater number of matches. This *semantic* matching process can also be followed by a *lexical* matching process on entity names only, explained next.
 
 #### Understanding lexical matching
 

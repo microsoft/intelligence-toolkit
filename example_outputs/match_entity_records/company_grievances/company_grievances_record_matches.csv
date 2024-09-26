@@ -1,506 +1,354 @@
-Group ID,Dataset,Entity ID,Entity name,address,city,company_owner,country,email,industry_sector,phone,Group size,Name similarity
-24,D1,1356,Quantum Solutions,127 Innovation Drive,Techville,Jordan Quantum,Futuristan,support@quantum.solutions,Information Technology,1234567893,2,0.0
-24,D2,1368,Quantum Solutions,126 Innovation Drive,Techville,Jordan Quantum,Futuristan,support@quantum.solutions,Information Technology,1234567893,2,0.0
-38,D1,1985,WellnessFirst Group,1400 Wellness Way,HealthCity,Lucas Health,HealthLand,group@wellnessfirst.com,Healthcare,9900555566,2,0.0
-38,D2,1977,WellnessFirst Group,1400 Wellness Way,HealthCity,Lucas Health,HealthLand,group@wellnessfirst.com,Healthcare,9900555566,2,0.0
-45,D1,1452,SkyBound Flights,789 Skyway Blvd,Aero City,Taylor Wing,Flyland,contact@skybound.air,Aviation,1122334455,2,0.0
-45,D2,1465,SkyBound Flightz,789 Skyway Blvd,Aero City,Taylor Wing,Flyland,contact@skybound.air,Aviation,1122334455,2,0.0
-91,D2,234,BrightFutre Education,321 Knowledge Avenue,EduCity,Liam Johnson,LearnLand,info@brightfuture.edu,Education,1234567891,2,0.0
-91,D1,224,BrightFuture Education,321 Knowledge Ave,EduCity,Liam Johnson,LearnLand,contact@brightfuture.edu,Education,1234567891,2,0.0
-181,D2,1705,TechLand Innovations,131 Innovation Blvd,TechVille,Taylor Tech,TechLand,innovations@techland.com,Technology,1234567898,2,0.0
-181,D2,1735,TechVille Innovations,128 Innovation Blvd,TechVille,Taylor Tech,TechLand,contact@techvilleinnovations.com,Technology,1234567895,2,0.0
-186,D1,1348,Quantum Creations,131 Innovation Drive,Techville,Jordan Quantum,Futuristan,info@quantumcreations.com,Information Technology,1234567898,2,0.0
-186,D2,1362,Quantum Innovations,130 Innovation Drive,Techville,Jordan Quantum,Futuristan,contact@quantuminnovations.com,Information Technology,1234567897,2,0.0
-205,D1,399,Constructo Design,330 Builder Street,Constructopolis,Jordan Alex,Buildland,design@constructo.con,Construction,5566778892,2,0.0
-205,D1,1187,Jordan Construction,333 Builder Street,Constructopolis,Alex Jordan,Buildland,jordan@constructo.con,Construction,5566778895,2,0.0
-217,D1,166,BioGene Research,1414 Bio Street,Biotown,Life Gene,Bioland,info@biogene.sci,Biotechnology,9988776655,3,0.09583333333333333
-217,D1,173,BioLife Sci,1414 Bio St.,Biotown,Life Gene,Bioland,info@biolife.sci,Biotechnology,9988776655,3,0.09583333333333333
-217,D1,873,GeneLife Innovations,1414 Bio Street,Biotown,Life Gene,Bioland,info@genelife.sci,Biotechnology,9988776655,3,0.09583333333333333
-221,D2,1710,TechLand Venturs,1300 Venture St.,TechVille,Morgan Green,TechLand,contact@techlandventurs.com,Technology,9900223353,2,0.1
-221,D2,1734,TechVille Enterprises,1300 Venture St.,TechVille,Morgan Green,TechLand,hello@techvilleenterprises.com,Technology,9900223357,2,0.1
-220,D1,560,EcoLeaf Enterprises,12 Greenway,Greenville,Leafy Green,EcoLand,hello@ecoleaf.org,Agriculture,1122334455,2,0.10344827586206896
-220,D2,995,GreenLeaf Organix,34 Greenway,Greenville,Leafy Green,EcoLand,contact@greenleaf.org,Agriculture,1122334455,2,0.10344827586206896
-219,D2,720,FarmTech Enterprises,126 Harvest Road,AgroCity,Field Crop,FarmLand,info@farmtechenterprises.com,Agriculture,5566773347,2,0.10714285714285714
-219,D2,1045,HarvestTech Inc.,126 Harvest Road,AgroCity,Field Crop,FarmLand,info@harvesttech.com,Agriculture,5566773347,2,0.10714285714285714
-218,D2,89,AquaFlow Corp,123 Water Lane,HydroCity,Jordan River,Aquaterra,contact@aquaflow.com,Utilities,3344556684,2,0.12
-218,D2,1121,HydroFlow Solutions,123 Aqua Lane,HydroCity,Jordan River,Aquaterra,info@hydroflow.com,Utilities,3344556679,2,0.12
-216,D2,538,EcoDrive Services,509 Drive Blvd,Motor City,Alex Motor,Autoland,services@ecodrive.auto,Automotive,1333444557,2,0.13043478260869565
-216,D1,535,EcoDrv Motors,505 Drive Blvd,Motor City,Alex Motor,Autoland,contact@ecodrive.auto,Automotive,1333444555,2,0.13043478260869565
-215,D2,486,Eco Buildrs,789 Green Lane,Buildtown,Alex Construct,Constructia,info@ecobuilders.com,Construction,5566778894,2,0.14285714285714285
-215,D1,487,Eco Homes,789 Green Lane,Buildtown,Alex Construct,Constructia,homes@ecobuilders.com,Construction,5566778894,2,0.14285714285714285
-214,D2,877,GearTech Innovations,104 Innovation Dr,Techville,Taylor Gear,Innovatia,contact@geartech.tech,Technology,1234567893,2,0.14814814814814814
-214,D1,1783,TechnoGears Ltd.,104 Innovation Drive,Techville,Taylor Gear,Innovatia,hello@technogears.tech,Technology,1234567893,2,0.14814814814814814
-213,D2,885,Global Logistics Corp.,99 Cargo Lane,Port City,Sam Cargo,Logistiland,contact@globallogistics.com,Logistics,9988776655,2,0.15625
-213,D1,886,Global Transport Inc.,138 Cargo Lane,Port City,Sam Cargo,Logistiland,contact@globaltransport.com,Logistics,9988776655,2,0.15625
-212,D1,1844,Urban Architechts,12 Urban Street,Design City,Chris Urban,Archland,contact@urbanarchitects.com,Architecture,1122334455,2,0.17391304347826086
-212,D2,1857,Urban Desgners,137 Urban Street,Design City,Chris Urban,Archland,contact@urbandesigners.com,Architecture,1122334455,2,0.17391304347826086
-211,D1,1959,WellCare Services,1400 Wellness Way,HealthCity,Lucas Wellness,HealthLand,info@wellcare.com,Healthcare,9900555566,2,0.19230769230769232
-211,D1,1983,WellnessCare Group,1400 Wellness Way,HealthCity,Lucas Care,HealthLand,info@wellnesscare.com,Healthcare,9900555566,2,0.19230769230769232
-210,D1,1849,Urban Builders Ltd,456 Builder Blvd,Construct City,Chris Mason,Buildland,contact@urbanbuilders.com,Construction,1122446688,2,0.1935483870967742
-210,D2,1895,UrbanBuild Construktors,56 Builder Blvd,Construct City,Chris Mason,Buildland,contact@urbanbuild.con,Construction,1122446688,2,0.1935483870967742
-208,D1,737,Fields of Green Inc.,463 Farm Lane,Greenville,Alex Fields,EcoLand,hello@fieldsofgreen.org,Agriculture,9876543217,2,0.21428571428571427
-208,D2,974,GreenField Ventures,460 Farm Lane,Greenville,Alex Fields,EcoLand,hello@greenfield.org,Agriculture,9876543214,2,0.21428571428571427
-200,D1,1165,Innovative Gears Co.,128 Innovation Dr.,Techville,Jordan Tech,Innovatia,contact@innovativegears.com,Technology,1234567895,4,0.24180461951187596
-200,D1,1781,TechnoGears Innovations,160 Innovation Drive,Techville,Jordan Gear,Innovatia,innovations@technogears.com,Technology,1234567822,4,0.24180461951187596
-200,D2,1769,TechnoGears Partnerz,128 Innovation Dr.,Techville,Jordan Gear,Innovatia,contact@technogears.com,Technology,1234567895,4,0.24180461951187596
-200,D2,1773,TechnoGearz Enterprises,110 Innovation Drive,Techville,Jordan Gear,Innovatia,enterprises@technogears.tech,Technology,1234567899,4,0.24180461951187596
-207,D2,576,EcoLife Enterprises,111 Green Street,EcoCity,Taylor Branch,EcoLand,enterprises@ecolife.com,Consumer Goods,9900112240,2,0.25
-207,D2,581,EcoLife Network,121 Green Street,EcoCity,Taylor Branch,EcoLand,network@ecolife.com,Consumer Goods,9900112245,2,0.25
-206,D1,526,EcoCity Solutions,12000 Greenway,Eco City,Ella Greenfield,Sustainland,info@ecocitysolutions.com,Environmental,9988776655,2,0.2631578947368421
-206,D1,586,EcoSolutons,12000 Greenway,Eco City,Ella Green,Sustainland,contact@ecosolutions.com,Environmental,9988776655,2,0.2631578947368421
-204,D1,1244,Mason & Co. Builders,789 Builder Avenue,Constructopolis,Taylor Mason,Buildland,info@masonco.com,Construction,2233445572,2,0.2962962962962963
-204,D1,1245,Mason & Co. Construction,789 Builder Avenue,Constructopolis,Taylor Mason,Buildland,contact@masonco.com,Construction,2233445571,2,0.2962962962962963
-203,D2,1770,TechnoGears Solutions,131 Innovation Drive,Techville,Morgan Gear,Innovatia,solutions@technogears.com,Technology,1234567898,2,0.3076923076923077
-203,D2,1774,TechnoGearz Group,112 Innovation Drive,Techville,Morgan Gear,Innovatia,group@technogears.tech,Technology,1234567801,2,0.3076923076923077
-113,D1,1720,TechLand Associates,135 Innovation Blvd,TechVille,Taylor Tech,TechLand,associates@techland.com,Technology,1234567802,9,0.31931359771784845
-113,D2,1702,TechLand Enterprises,144 Innovation Blvd,TechVille,Taylor Tech,TechLand,enterprises@techland.com,Technology,1234567811,9,0.31931359771784845
-113,D2,1703,TechLand Group,137 Innovation Blvd,TechVille,Taylor Tech,TechLand,group@techland.com,Technology,1234567804,9,0.31931359771784845
-113,D2,1704,TechLand Holdings Inc.,136 Innovation Blvd,TechVille,Taylor Tech,TechLand,contact@techlandholdings.com,Technology,1234567803,9,0.31931359771784845
-113,D2,1705,TechLand Innovations,131 Innovation Blvd,TechVille,Taylor Tech,TechLand,innovations@techland.com,Technology,1234567898,9,0.31931359771784845
-113,D1,1722,TechLand Networks,147 Innovation Blvd,TechVille,Taylor Tech,TechLand,networks@techland.com,Technology,1234567814,9,0.31931359771784845
-113,D2,1706,TechLand Solutions,126 Innovation Blvd,TechVille,Taylor Tech,TechLand,contact@techlandsolutions.com,Technology,1234567893,9,0.31931359771784845
-113,D1,1723,TechLand Solutons,126 Innovation Blvd,TechVille,Taylor Tech,TechLand,contact@techlandsolutons.com,Technology,1234567893,9,0.31931359771784845
-113,D2,1708,TechLand Systems,146 Innovation Blvd,TechVille,Taylor Tech,TechLand,systems@techland.com,Technology,1234567813,9,0.31931359771784845
-201,D1,1725,TechNova Enterprises,64 Innovation Drive,Tech City,Nova Tech,Innovatia,enterprises@technova.tech,Technology,2233445575,2,0.32
-201,D1,1732,TechNova Ventures,62 Innovation Drive,Tech City,Nova Tech,Innovatia,ventures@technova.tech,Technology,2233445573,2,0.32
-202,D1,1754,TechWave Enterprises,621 Silicon St,Tech City,Gadget Guru,Innovatia,enterprises@techwave.tech,Technology,1990011231,2,0.32
-202,D1,1761,TechWave Ventures,622 Silicon St,Tech City,Gadget Guru,Innovatia,ventures@techwave.tech,Technology,1990011232,2,0.32
-13,D2,429,Culinary Crafts,654 Taste Ave,Culinary City,Chef Spice,Foodland,crafts@gastronomyhub.com,Food & Beverage,6677889904,3,0.3333333333333333
-13,D1,871,Gastronomy Hub,654 Taste Avenue,Culinary City,Chef Spice,Foodland,contact@gastronomyhub.com,Food & Beverage,6677889904,3,0.3333333333333333
-13,D2,875,Gastronomy Hub,654 Taste Ave,Culinary City,Chef Spice,Foodland,info@gastronomyhub.com,Food & Beverage,6677889904,3,0.3333333333333333
-189,D2,1918,UrbanTech Enterprises,98 Tech Park,Techville,Tech Urban,Innovatia,enterprises@urbantech.tech,Technology,9988776685,3,0.33738612175393784
-189,D1,1919,UrbanTech Innov8tions,90 Tech Park,Techville,Tech Urban,Innovatia,contact@urbantech.tech,Technology,9988776677,3,0.33738612175393784
-189,D1,1920,UrbanTech Solutions,94 Tech Park,Techville,Tech Urban,Innovatia,solutions@urbantech.tech,Technology,9988776681,3,0.33738612175393784
-199,D2,861,FutureTech Holdings,139 Innovation Blvd,TechVille,Taylor Tech,TechLand,contact@futuretech.com,Technology,1234567806,2,0.34615384615384615
-199,D1,862,FutureTech Solutions,129 Innovation Blvd,TechVille,Taylor Tech,TechLand,support@futuretechsolutions.com,Technology,1234567896,2,0.34615384615384615
-198,D1,1068,Health First Corp,303 Wellness Way,Health City,Dr. Heal,Careland,support@healthfirst.com,Healthcare,3456789012,2,0.34782608695652173
-198,D2,1083,HealthFirst Klinic,300 Wellness Way,Health City,Dr. Heal,Careland,contact@healthfirst.com,Healthcare,1122334455,2,0.34782608695652173
-209,D1,1348,Quantum Creations,131 Innovation Drive,Techville,Jordan Quantum,Futuristan,info@quantumcreations.com,Information Technology,1234567898,6,0.34984885803851323
-209,D2,1361,Quantum Enterprises Ltd.,137 Innovation Drive,Techville,Jordan Quantum,Futuristan,enterprises@quantum.com,Information Technology,1234567804,6,0.34984885803851323
-209,D2,1362,Quantum Innovations,130 Innovation Drive,Techville,Jordan Quantum,Futuristan,contact@quantuminnovations.com,Information Technology,1234567897,6,0.34984885803851323
-209,D1,1355,Quantum Networks,137 Innovation Drive,Techville,Jordan Quantum,Futuristan,networks@quantum.com,Information Technology,1234567899,6,0.34984885803851323
-209,D1,1356,Quantum Solutions,127 Innovation Drive,Techville,Jordan Quantum,Futuristan,support@quantum.solutions,Information Technology,1234567893,6,0.34984885803851323
-209,D2,1368,Quantum Solutions,126 Innovation Drive,Techville,Jordan Quantum,Futuristan,support@quantum.solutions,Information Technology,1234567893,6,0.34984885803851323
-80,D2,1492,Skyline Engineering,1417 Tech St,Constructopolis,Alex Skyline,Buildland,support@skylineeng.com,Engineering,2233445578,4,0.35566679026078357
-80,D1,1496,Skyline Engineering Ltd.,1417 Tech St,Constructopolis,Alex Skyline,Buildland,info@skylineeng.com,Engineering,2233445579,4,0.35566679026078357
-80,D1,1499,Skyline Innovations,1419 Tech St,Constructopolis,Alex Skyline,Buildland,support@skylineinnovations.com,Engineering,2233445581,4,0.35566679026078357
-80,D2,1501,Skyline Solutions,1418 Tech St,Constructopolis,Alex Skyline,Buildland,solutions@skylineeng.com,Engineering,2233445582,4,0.35566679026078357
-197,D1,1066,Health First Clinic,202 Wellness Way,Healthtown,Dr. Heal,Careland,info@healthfirstclinic.com,Healthcare,6677889900,2,0.36363636363636365
-197,D2,1082,HealthFirst Inc.,456 Wellness Way,Healthtown,Dr. Heal,Careland,info@healthfirst.org,Healthcare,1987654321,2,0.36363636363636365
-196,D1,630,EduLearn Global,56 Knowledge Ln,LearnVille,Edu Group,EduLand,global@edulearninstitute.com,Education,6677889907,2,0.3684210526315789
-196,D2,647,EduLearn Online,56 Knowledge Ln,LearnVille,Edu Group,EduLand,online@edulearninstitute.com,Education,6677889906,2,0.3684210526315789
-136,D1,1955,WellCare Clincs,202 Wellness Way,Healthville,Wellness Corp,Careland,contact@wellcare.com,Healthcare,1987654322,3,0.3740530303030303
-136,D1,1957,WellCare Clinics,202 Wellness Way,Healthville,Wellness Corp,Careland,info@wellcare.com,Healthcare,1987654322,3,0.3740530303030303
-136,D1,1971,Wellness Health Services,208 Wellness Way,Healthville,Wellness Corp,Careland,contact@wellnesshealth.com,Healthcare,1987654325,3,0.3740530303030303
-105,D2,400,Constructo Builders,329 Builder St.,Constructopolis,Alex Jordan,Buildland,contact@constructo.com,Construction,5566778891,3,0.38633303343829656
-105,D2,401,Constructo Buildrs,329 Builder St.,Constructopolis,Alex Jordan,Buildland,contact@constructo.con,Construction,5566778891,3,0.38633303343829656
-105,D1,1187,Jordan Construction,333 Builder Street,Constructopolis,Alex Jordan,Buildland,jordan@constructo.con,Construction,5566778895,3,0.38633303343829656
-194,D1,1025,GreenWave Solutions,202 Tech Avenue,TechVille,Jordan Green,TechLand,info@greenwavesolutions.com,Technology,9900223346,2,0.391304347826087
-194,D2,1026,GreenWave Systems,202 Tech Ave.,TechVille,Jordan Green,TechLand,info@greenwavesystems.com,Technology,9900223346,2,0.391304347826087
-195,D1,1417,Sea Green Manufacturing,789 Ocean Drive,Seaside,Jill Blue,Atlantis,support@seagreen.com,Manufacturing,1234567890,2,0.391304347826087
-195,D1,1418,Sea Green Mfg.,789 Ocean Dr.,Seaside,Jill Blue,Atlantis,support@seagreenmfg.com,Manufacturing,1234567890,2,0.391304347826087
-149,D1,282,BuildSmart Construction Co.,203 Build Lane,Constructopolis,Builder Alice,Buildland,contact@buildsmartco.com,Construction,6667778889,5,0.3949308608058608
-149,D1,284,BuildSmart Corp.,203 Build Lane,Constructopolis,Builder Alice,Buildland,smart@buildsmart.com,Construction,6667778889,5,0.3949308608058608
-149,D2,285,BuildSmart Corporation,203 Build Lane,Constructopolis,Builder Alice,Buildland,contact@buildsmartcorp.com,Construction,6667778889,5,0.3949308608058608
-149,D1,285,BuildSmart Developments,203 Build Lane,Constructopolis,Builder Alice,Buildland,developments@buildsmart.com,Construction,6667778889,5,0.3949308608058608
-149,D1,288,BuildSmart Group,203 Build Lane,Constructopolis,Builder Alice,Buildland,group@buildsmart.com,Construction,6667778889,5,0.3949308608058608
-192,D2,46,AgriGrowth Farmz,78 Harvest Road,Farmville,Farmer Fields,Agroland,info@agrigrowth.farmz,Agriculture,3344556677,2,0.4090909090909091
-192,D1,53,AgriGrowth Supplies,82 Harvest Road,Farmville,Farmer Fields,Agroland,contact@agrigrowth.supplies,Agriculture,3344556681,2,0.4090909090909091
-193,D2,1051,Hawk's Nest Academy,412 Knowledge Blvd,Learnville,Clever Hawk,EduNation,admin@hawksnest.edu,Education,8899001147,2,0.4090909090909091
-193,D1,1057,Hawk's Nest School,414 Knowledge Blvd,Learnville,Clever Hawk,EduNation,contact@hawksnest.edu,Education,8899001188,2,0.4090909090909091
-179,D1,1148,Innovate Tech,123 Tech Avenue,Innovate City,Jamie Lee,Techland,innovate@techinnovators.com,Technology,1234567890,4,0.4210758377425044
-179,D1,1654,Tech Innovaterz,123 Tech Avenue,Innovate City,Jamie Lee,Techland,contact@techinnovaterz.com,Technology,1234567890,4,0.4210758377425044
-179,D1,1662,Tech Innovators Incorporated,123 Tech Avenue,Innovate City,Jamie Lee,Techland,contact@techinnovators.com,Technology,1234567890,4,0.4210758377425044
-179,D2,1647,Tech Innovators Ltd,132 Tech Avenue,Innovate City,Jamie Lee,Techland,ltd@techinnovators.com,Technology,1234567899,4,0.4210758377425044
-61,D2,594,EcoLyfe Products,101 Green Street,EcoCity,Sam Eco,EcoLand,info@ecolyfeproducts.com,Consumer Goods,9900112233,4,0.4212121212121212
-61,D1,575,EcoLyfe Productz,101 Green St.,EcoCity,Sam Eco,EcoLand,contact@ecolyfeproductz.com,Consumer Goods,9900112233,4,0.4212121212121212
-61,D1,576,EcoLyfe Services,107 Green St.,EcoCity,Sam Eco,EcoLand,contact@ecolyfe.com,Consumer Services,9900112239,4,0.4212121212121212
-61,D2,595,EcoLyfe Ventures,105 Green St.,EcoCity,Sam Eco,EcoLand,contact@ecolyfe.com,Consumer Goods,9900112237,4,0.4212121212121212
-191,D2,1417,RiverStream Services,789 River Road,HydroCity,Jordan River,Aquaterra,support@riverstream.com,Utilities,3344556680,2,0.4230769230769231
-191,D2,1418,RiverStream Solutions,789 River Road,HydroCity,Jordan River,Aquaterra,contact@riverstream.com,Utilities,3344556681,2,0.4230769230769231
-144,D1,1497,Skyline Financial Group,410 Build St,Construct City,Taylor Erect,BuildLand,group@skyline.com,Finance,2233445580,3,0.4242424242424242
-144,D1,1498,Skyline Holdings Inc.,410 Build St,Construct City,Taylor Erect,BuildLand,contact@skyline.com,Finance,2233445576,3,0.4242424242424242
-144,D2,1495,Skyline Holdings Incorporated,410 Build Street,Construct City,Taylor Erect,BuildLand,info@skyline.com,Finance,2233445576,3,0.4242424242424242
-190,D2,1641,Tech Innovators Associates,130 Tech Ave,Techville,Tech Leader,Techland,associates@techinnovators.tech,Technology,9023456796,2,0.4375
-190,D2,1649,Tech Innovators Partners,129 Tech Ave,Techville,Tech Leader,Techland,partners@techinnovators.tech,Technology,9023456795,2,0.4375
-188,D1,1154,Innovatech,1111 Progress Blvd,Techville,Progressive Thinker,Innovatia,info@innovatech.inn,Technology,9876543214,2,0.4444444444444444
-188,D2,1154,Innovatech Solutions,1111 Progress Blvd,Techville,Progressive Thinker,Innovatia,contact@innovatech.inn,Technology,9876543214,2,0.4444444444444444
-187,D2,1642,Tech Innovators Group,1500 Silicon Alley,Techville,Innovator Prime,Innovatia,group@techinnovators.com,Technology,1234567896,2,0.45161290322580644
-187,D1,1663,Tech Innovators International,1600 Silicon Alley,Techville,Innovator Prime,Innovatia,international@techinnovators.com,Technology,1234567897,2,0.45161290322580644
-157,D2,371,CloudReach Tech,102 Skyway Blvd.,AeroCity,Samuel Blue,Skyland,info@cloudreachtech.com,Aerospace,9900334457,3,0.4526546250684182
-157,D1,361,CloudReach Technologies,102 Skyway Blvd.,AeroCity,Samuel Blue,Skyland,contact@cloudreachtech.com,Aerospace,9900334457,3,0.4526546250684182
-157,D1,362,CloudReach Ventures,102 Skyway Blvd.,AeroCity,Samuel Blue,Skyland,ventures@cloudreachtech.com,Aerospace,9900334457,3,0.4526546250684182
-185,D1,1218,Life Wellness Group,321 Life Street,Health City,Casey Life,Wellland,info@lifewellnessgroup.com,Healthcare,4455667792,2,0.46153846153846156
-185,D1,1219,Life Wellness Solutions,321 Life Street,Health City,Casey Life,Wellland,solutions@lifewellness.com,Healthcare,4455667792,2,0.46153846153846156
-168,D2,1133,InnoGears Ltd.,124 Innovation Drive,Techville,Jordan Tech,Innovatia,support@innogears.com,Technology,1234567891,3,0.46694677871148466
-168,D2,1134,InnoGearz Limited,124 Innovation Drive,Techville,Jordan Tech,Innovatia,support@innogearz.com,Technology,1234567891,3,0.46694677871148466
-168,D2,1135,InnoGearz Ltd.,124 Innovation Dr.,Techville,Jordan Tech,Innovatia,support@innogearz.com,Technology,1234567891,3,0.46694677871148466
-184,D1,795,Flow Dynamics,789 Canal Avenue,Watertown,Lake Smith,Hydroland,info@flowdynamics.water,Utilities,9988776657,2,0.47058823529411764
-184,D1,798,FlowDynamics Inc.,789 Canal Avenue,Watertown,Lake Smith,Hydroland,info@flowdynamics.water,Utilities,9988776655,2,0.47058823529411764
-182,D1,1508,Smart Edu Hub,401 Knowledge Road,Learn City,Alex Scholar,Eduworld,contact@smartedu.com,Education,6677889901,2,0.47368421052631576
-182,D2,1509,Smart Education Hub,401 Knowledge Rd,Learn City,Alex Scholar,Eduworld,hello@smarteducation.com,Education,6677889901,2,0.47368421052631576
-183,D2,1655,Tech Solutions Corp.,123 Tech Avenue,Innovate City,Jamie Tech,Techland,contact@techsolutions.com,Technology,1234567890,2,0.47368421052631576
-183,D2,1657,Tech Solutons,123 Tech Avenue,Innovate City,Jamie Tech,TechLand,contact@techsolutions.com,Technology,1122334455,2,0.47368421052631576
-180,D1,1773,TechnoCraft Innovations,123 Industrial Ave,Techville,Alex Forge,Innovatia,innovations@technocraft.com,Manufacturing,1234567890,2,0.48148148148148145
-180,D2,1759,TechnoCraft Solutions,123 Industrial Ave,Techville,Alex Forge,Innovatia,solutions@technocraft.com,Manufacturing,1234567890,2,0.48148148148148145
-164,D2,918,Green Energy Group,456 Solar Road,Eco Town,Pat Green,Greenland,info@greenenergy.com,Energy,1987654321,3,0.5
-164,D1,970,GreenEnergy Inc.,300 Solar St,Eco Town,Pat Green,Greenland,contact@greenenergy.com,Energy,9876543210,3,0.5
-164,D1,971,GreenEnergy Ltd.,300 Solar St,Eco Town,Pat Green,Greenland,info@greenenergyltd.com,Energy,9876543210,3,0.5
-177,D1,493,Eco Living,707 Greenway,Eco City,Green Builder,Sustainland,info@ecoliving.com,Real Estate,1122446688,2,0.5
-177,D1,494,Eco Livng,707 Greenway,Eco City,Green Builder,Sustainland,contact@ecoliving.com,Real Estate,1122446688,2,0.5
-178,D1,1063,Health & Wellness Company,987 Wellness Way,Health City,Taylor Health,Wellland,contact@healthwellnessco.com,Healthcare,4455667788,2,0.5
-178,D2,1056,Health & Wellness Partners,987 Wellness Way,Health City,Taylor Health,Wellland,partners@healthwellnessco.com,Healthcare,4455667788,2,0.5
-3,D2,234,BrightFutre Education,321 Knowledge Avenue,EduCity,Liam Johnson,LearnLand,info@brightfuture.edu,Education,1234567891,6,0.5021554834054834
-3,D1,222,BrightFuture Consulting,321 Knowledge Ave,EduCity,Liam Johnson,LearnLand,consult@brightfuture.edu,Consulting,1234567891,6,0.5021554834054834
-3,D1,224,BrightFuture Education,321 Knowledge Ave,EduCity,Liam Johnson,LearnLand,contact@brightfuture.edu,Education,1234567891,6,0.5021554834054834
-3,D1,226,BrightFuture Enterprises,327 Knowledge Ave,EduCity,Liam Johnson,LearnLand,enterprises@brightfuture.edu,Technology,1234567899,6,0.5021554834054834
-3,D1,230,BrightFuture Ventures,325 Knowledge Ave,EduCity,Liam Johnson,LearnLand,ventures@brightfuture.edu,Technology,1234567897,6,0.5021554834054834
-3,D2,242,BrightFuture Ventures,321 Knowledge Ave,EduCity,Liam Johnson,LearnLand,ventures@brightfuture.edu,Finance,1234567891,6,0.5021554834054834
-85,D1,213,Bright Horizon Academy,406 Knowledge Blvd,Learnville,Clever Hawk,EduNation,contact@brighthorizons.edu,Education,8899001144,3,0.5232351566152408
-85,D1,215,Bright Horizons Learning,418 Knowledge Blvd,Learnville,Clever Hawk,EduNation,contact@brighthorizonslearning.edu,Education,8899001151,3,0.5232351566152408
-85,D1,216,Bright Horizonz Academy,406 Knowledge Blvd,Learnville,Clever Hawk,EduNation,info@brighthorizons.edu,Education,8899001144,3,0.5232351566152408
-176,D2,1452,SecureNet Limited,1212 Secure Blvd,Safe City,Jordan Secure,Secureland,contact@securenet.com,Cybersecurity,1434455667,2,0.5294117647058824
-176,D2,1453,SecureNet Ltd.,1212 Secure Blvd,Safe City,Jordan Secure,Secureland,info@securenet.com,Cybersecurity,1434455667,2,0.5294117647058824
-175,D2,1698,TechInnov8ors,15005 Pioneer Road,Tech City,Jordan Wise,Techland,info@techinnov8ors.tech,Technology,1555000989,2,0.5333333333333333
-175,D2,1700,TechInnovators,15005 Pioneer Rd,Tech City,Jordan Wise,Techland,contact@techinnovators.tech,Technology,1555000989,2,0.5333333333333333
-35,D1,1874,Urban Tech,909 Innovation Dr,Tech City,Jordan Tech,Innovatia,contact@urbantech.com,Technology,1333444555,4,0.5353276353276354
-35,D1,1875,Urban Tech Innovations,909 Innovation Dr,Tech City,Jordan Tech,Innovatia,innovations@urbantech.com,Technology,1333444555,4,0.5353276353276354
-35,D1,1876,Urban Tech Solutions,909 Innovation Dr,Tech City,Jordan Tech,Innovatia,solutions@urbantech.com,Technology,1333444555,4,0.5353276353276354
-35,D2,1883,Urban Tech Solutions,909 Innovation Dr,Tech City,Jordan Tech,Innovatia,contact@urbantechsolutions.com,Technology,1333444555,4,0.5353276353276354
-174,D1,122,Auto Driv,500 Motorway,Car City,Taylor Speed,Autoland,contact@autodrive.com,Automotive,5566443322,2,0.5384615384615384
-174,D2,126,Auto Drive Plus,505 Motorway,Car City,Taylor Speed,Autoland,plus@autodrive.com,Automotive,5566443327,2,0.5384615384615384
-173,D1,1963,Wellness & Health Inc,123 Wellness Way,Health City,Jordan Wellness,Wellland,info@wellnesshealthinc.com,Healthcare,4455667789,2,0.5416666666666666
-173,D2,1963,Wellness Health Group,123 Wellness Way,Health City,Jordan Wellness,Wellland,group@wellnesshealth.com,Healthcare,4455667789,2,0.5416666666666666
-93,D1,1473,SkyReach Engineering,417 Sky St.,SkyCity,Sky Engineer,SkyLand,engineering@skyreach.com,Engineering,9900990024,3,0.547077922077922
-93,D2,1478,SkyReach Manufacturing,414 Sky St.,SkyCity,Sky Engineer,SkyLand,manufacturing@skyreach.com,Manufacturing,9900990021,3,0.547077922077922
-93,D2,1479,SkyReach Manufcturing,414 Sky St.,SkyCity,Sky Engineer,SkyLand,contact@skyreach.com,Manufacturing,9900990021,3,0.547077922077922
-171,D2,1887,UrbanBuild Co,202 Build Blvd,Construct City,Casey Builder,Buildland,contact@urbanbuildco.com,Construction,3344556677,2,0.55
-171,D1,1887,UrbanBuild Corporation,202 Build Blvd,Construct City,Casey Builder,Buildland,info@urbanbuildcorp.com,Construction,3344556677,2,0.55
-172,D2,1956,Wellbeing Inc,317 Wellness Way,Health City,Dr. Balance,Careland,info@wellbeinginc.com,Healthcare,3344556684,2,0.55
-172,D1,1962,Wellbeing Incorporated,317 Wellness Way,Health City,Dr. Balance,Careland,contact@wellbeinginc.com,Healthcare,3344556684,2,0.55
-123,D1,1179,Innovative TechWave,188 Digital Drive,Techville,Wave Tech,Innovatia,info@innovativetechwave.innov,Technology,1314151619,3,0.5545454545454546
-123,D1,1940,Wave Innovations,190 Digital Drive,Techville,Wave Tech,Innovatia,info@waveinnovations.innov,Technology,1314151621,3,0.5545454545454546
-123,D1,1941,Wave Innovations Group,999 Digital Drive,Techville,Wave Tech,Innovatia,contact@waveinnovationsgroup.innov,Technology,2829303132,3,0.5545454545454546
-64,D1,1903,UrbanFarmers Colective,714 Farm Lane,Harvest,Farmer Urban,Agroland,info@urbanfarmers.co,Agriculture,1112131421,3,0.5546336379669713
-64,D2,1905,UrbanFarmers Collective,714 Farm Lane,Harvest,Farmer Urban,Agroland,contact@urbanfarmers.co,Agriculture,1112131421,3,0.5546336379669713
-64,D2,1906,UrbanFarmers Network,723 Farm Lane,Harvest,Farmer Urban Sr.,Agroland,network@urbanfarmers.co,Agriculture,1112131430,3,0.5546336379669713
-170,D2,459,Digital Dynamics Inc.,606 Tech Park,InnovateCity,Dana Digital,Techland,info@digitaldynamics.com,Technology,9638527411,2,0.5555555555555556
-170,D2,460,Digital Dynamics Solutions,610 Tech Park,InnovateCity,Dana Digital,Techland,solutions@digitaldynamics.com,Technology,9638527415,2,0.5555555555555556
-169,D2,1016,GreenTech Solutions Incorporated,200 Tech Avenue,TechVille,Chris Green,TechLand,contact@greentechsolutions.com,Technology,9900223344,2,0.5625
-169,D2,1019,GreenTech Solutons Inc.,200 Tech Avenue,TechVille,Chris Green,TechLand,info@greentechsolutons.com,Technology,9900223344,2,0.5625
-153,D1,1252,MediCare Health Group,808 Health Blvd,Health City,Care Healer,Healthland,group@medicare.health,Healthcare,9988776655,3,0.5716273849607183
-153,D2,1247,MediCare Health Inc.,808 Health Blvd,Health City,Care Healer,Healthland,info@medicare.health,Healthcare,9988776655,3,0.5716273849607183
-153,D2,1248,MediCare Health Services,808 Health Blvd,Health City,Care Healer,Healthland,services@medicare.health,Healthcare,9988776655,3,0.5716273849607183
-167,D2,1177,Innovative TechnoGears,127 Innovation Drive,Techville,Casey Gear,Innovatia,contact@innovativetechnogears.com,Technology,1234567894,2,0.5769230769230769
-167,D2,1768,TechnoGears Innovations,130 Innovation Drive,Techville,Casey Tech,Innovatia,innovations@technogears.com,Technology,1234567897,2,0.5769230769230769
-148,D2,135,Auto Innovators Limited,609 Drive Avenue,Car City,Auto Leader,Autoland,contact@autoinnovators.auto,Automotive,5678901240,3,0.5785024154589372
-148,D2,136,Auto Innovators Ltd,609 Drive Ave,Car City,Auto Leader,Autoland,ltd@autoinnovators.auto,Automotive,5678901240,3,0.5785024154589372
-148,D2,138,Auto Innovators Network,609 Drive Ave,Car City,Auto Leader,Autoland,network@autoinnovators.auto,Automotive,5678901248,3,0.5785024154589372
-142,D1,1285,MediaPulse,12000 Broadcast Blvd,Mediaville,Chris M. News,Infotainia,contact@mediapulse.com,Media,9988776533,3,0.5891690009337068
-142,D2,1287,MediaPulse Group,12005 Broadcast Blvd,Mediaville,Chris M. News,Infotainia,group@mediapulse.com,Media,9988776538,3,0.5891690009337068
-142,D2,1288,MediaPulse Inc.,12000 Broadcast Blvd,Mediaville,Chris M. News,Infotainia,info@mediapulse.com,Media,9988776533,3,0.5891690009337068
-166,D1,1780,TechnoGears Inc.,123 Innovation Drive,Techville,Alex Tech,Innovatia,contact@technogears.com,Technology,1234567890,2,0.5909090909090909
-166,D2,1767,TechnoGears Incorporated,123 Innovation Dr.,Techville,Alex Tech,Innovatia,info@technogears.com,Technology,1234567890,2,0.5909090909090909
-141,D1,1191,Journey Planners Group,321 Explore St,Adventure City,Jamie Travel,Traveland,group@journeyplanners.com,Travel,7788995566,3,0.5958635265700484
-141,D1,1192,Journey Planners Inc.,321 Explore St,Adventure City,Jamie Travel,Traveland,info@journeyplanners.com,Travel,7788990055,3,0.5958635265700484
-141,D1,1193,Journey Planners Incorporated,321 Explore Street,Adventure City,Jamie Travel,Traveland,contact@journeyplanners.com,Travel,7788990055,3,0.5958635265700484
-160,D1,209,Bright Future Academy,789 Learning Lane,Learn City,Patrick Bright,EduLand,info@brightfutureacademy.com,Education,6677889905,2,0.6
-160,D2,846,Future Bright Academies,789 Learning Lane,Learn City,Patrick Bright,EduLand,info@futurebrightacademies.com,Education,6677889901,2,0.6
-161,D1,353,CleanEnergi Co,900 Solar St.,Energy City,Power Corp,Powerland,info@cleanenergi.com,Energy,1777888999,2,0.6
-161,D2,363,CleanEnergy Co,900 Solar Street,Energy City,Power Corp,Powerland,contact@cleanenergy.com,Energy,1777888999,2,0.6
-162,D1,623,EduInnov8,109 Learning Avenue,Knowledge Town,Jamie Teach,Learnia,contact@eduinnov8.com,Education,4455667796,2,0.6
-162,D1,624,EduInnovate,109 Learning Ave,Knowledge Town,Jamie Teach,Learnia,info@eduinnovate.com,Education,4455667796,2,0.6
-163,D2,830,Fresh Foods Co.,202 Market Street,Foodville,Jamie Fresh,Gourmetia,contact@freshfoods.com,Food & Beverage,5566443322,2,0.6
-163,D1,826,Fresh Foodz Co.,202 Market St.,Foodville,Jamie Fresh,Gourmetia,info@freshfoodz.com,Food & Beverage,5566443322,2,0.6
-165,D2,1222,LogiMove,1500 Transport Ave,Logi City,Jordan Track,TrackLand,info@logimove.com,Logistics,9900666679,2,0.6
-165,D2,1223,LogiMove Inc.,1500 Transport Avenue,Logi City,Jordan Track,TrackLand,contact@logimove.com,Logistics,9900666679,2,0.6
-159,D2,1410,RightBuild Co.,123 Construct Lane,Build City,Jamie Right,Constructia,contact@rightbuild.com,Construction,1122334455,2,0.6153846153846154
-159,D1,1397,RightBuld Co.,123 Construct Lane,Build City,Jamie Right,Constructia,contact@rightbuld.com,Construction,1122334455,2,0.6153846153846154
-156,D2,194,Blue Ocean Tech,12 Ocean Way,Seaside,Chris Ocean,WaterLand,contact@blueoceantech.com,Technology,9876543215,2,0.6190476190476191
-156,D1,185,Blue Ocean Technologies,12 Ocean Way,Seaside,Chris Ocean,WaterLand,info@blueoceantech.com,Technology,9876543215,2,0.6190476190476191
-158,D1,1994,Windy Heights Limited,202 Windy Way,BreezyTown,Breeze Holdings,Windland,info@windyheights.com,Renewable Energy,2345678901,2,0.6190476190476191
-158,D1,1995,Windy Heights Ltd.,202 Windy Way,BreezyTown,Breeze Holdings,Windland,contact@windyheights.com,Renewable Energy,2345678901,2,0.6190476190476191
-155,D1,1107,HealthPlus Pharma,600 Health Blvd,Med City,Dana Health,HealthLand,contact@healthplus.com,Pharmaceuticals,5566778899,2,0.625
-155,D2,1096,HealthPlus Pharmaceuticals,600 Health Blvd,Med City,Dana Health,HealthLand,info@healthplus.com,Pharmaceuticals,5566778899,2,0.625
-154,D1,1290,MediaWave,1111 Broadcast Blvd,Media City,News Anchor,NewsLand,contact@mediawave.com,Media,1123456789,2,0.6363636363636364
-154,D2,1294,MediaWave Inc.,1111 Broadcast Blvd,Media City,News Anchor,NewsLand,info@mediawaveinc.com,Media,1123456789,2,0.6363636363636364
-152,D2,1894,UrbanBuild Constructors Inc.,321 Builder Avenue,Constructopolis,Taylor Mason,Buildland,contact@urbanbuild.com,Construction,2233445568,2,0.6428571428571429
-152,D1,1886,UrbanBuild Construktors,321 Builder St.,Constructopolis,Taylor Mason,Buildland,contact@urbanbuild.con,Construction,5566778899,2,0.6428571428571429
-150,D1,394,ConstructiveBld,10000 Constructive Road,ConstructCity,Ivy Cyan,BuildLand,contact@constructivebld.com,Construction,9012345678,2,0.6470588235294118
-150,D1,395,ConstructiveBuild,10000 Constructive Rd,ConstructCity,Ivy Cyan,BuildLand,info@constructivebuild.com,Construction,9012345678,2,0.6470588235294118
-151,D1,1058,Healing Hands,309 Wellness Way,Health City,Dr. Comfort,Careland,contact@healinghands.com,Healthcare,3344556680,2,0.6470588235294118
-151,D1,1059,Healing Hands Clinic,303 Wellness Way,Health City,Dr. Comfort,Careland,contact@healinghands.com,Healthcare,1122334458,2,0.6470588235294118
-39,D2,1976,WellnessFirst Clinics,1400 Wellness Way,HealthCity,Lucas Health,HealthLand,info@wellnessfirstclinics.com,Healthcare,9900555566,6,0.6510137254605021
-39,D1,1985,WellnessFirst Group,1400 Wellness Way,HealthCity,Lucas Health,HealthLand,group@wellnessfirst.com,Healthcare,9900555566,6,0.6510137254605021
-39,D2,1977,WellnessFirst Group,1400 Wellness Way,HealthCity,Lucas Health,HealthLand,group@wellnessfirst.com,Healthcare,9900555566,6,0.6510137254605021
-39,D2,1978,WellnessFirst Health,1400 Wellness Way,HealthCity,Lucas Health,HealthLand,contact@wellnessfirst.com,Healthcare,9900555566,6,0.6510137254605021
-39,D1,1986,WellnessFirst HealthCare,1400 Wellness Way,HealthCity,Lucas Health,HealthLand,contact@wellnessfirst.com,Healthcare,9900555566,6,0.6510137254605021
-39,D2,1979,WellnessFirst Healthcare,1400 Wellness Way,HealthCity,Lucas Health,HealthLand,info@wellnessfirst.com,Healthcare,9900555566,6,0.6510137254605021
-147,D1,816,Foodies Delight Limited,789 Gourmet Avenue,Taste Town,Chef Delight,Foodland,contact@foodiesdelight.food,Food & Beverage,3456789012,2,0.6521739130434783
-147,D2,821,Foodies Delight Ltd.,789 Gourmet Ave,Taste Town,Chef Delight,Foodland,hello@foodiesdelight.food,Food & Beverage,3456789012,2,0.6521739130434783
-1,D1,153,AutoTech Innovations,512 Driveway,Autoville,Driver Fast,Carland,innovate@autotech.auto,Automotive,9900112277,3,0.6666666666666666
-1,D2,161,AutoTech Innovators,512 Driveway,Autoville,Driver Fast,Carland,innovate@autotech.auto,Automotive,9900112277,3,0.6666666666666666
-1,D2,1156,Innovative AutoTech,520 Driveway,Autoville,Driver Fast,Carland,innovate@autotech.auto,Automotive,9900112277,3,0.6666666666666666
-139,D1,312,Car Innovations,1001 Drive Lane,AutoCity,Jill Orange,CarLand,info@carinnovations.com,Automotive,123456789,2,0.6666666666666666
-139,D2,316,Car Innovatons,1001 Drive Lane,AutoCity,Jill Orange,CarLand,contact@carinnovations.com,Automotive,123456789,2,0.6666666666666666
-140,D1,950,Green Solutions,25 Solar Drive,Eco City,George Green,Greenland,contact@greensolutions.com,Energy,9876543216,2,0.6666666666666666
-140,D2,952,Green Solutons,25 Solar Dr.,Eco City,George Green,Greenland,info@greensolutions.com,Energy,9876543216,2,0.6666666666666666
-143,D2,1327,Oceanic Ventures Limited,2324 Surf St.,Wave City,Jordan Bay,Marineland,info@oceanicventures.com,Marine,1765432123,2,0.6666666666666666
-143,D1,1329,Oceanic Ventures Ltd.,2324 Surf Street,Wave City,Jordan Bay,Marineland,contact@oceanicventures.com,Marine,1765432123,2,0.6666666666666666
-145,D2,1529,SmartHomes,55 Living St,HomeCity,Home Builder,Houseland,info@smarthomes.com,Real Estate,1213141516,2,0.6666666666666666
-145,D1,1531,SmartHomes Inc.,55 Living Street,HomeCity,Home Builder,Houseland,contact@smarthomes.com,Real Estate,1213141516,2,0.6666666666666666
-146,D2,424,CropCircle,1010 Field Ave,Greenville,Circle Master,Agroland,hello@cropcircle.agr,Agriculture,1122334453,2,0.6666666666666666
-146,D2,425,CropCircle Inc.,1010 Field Avenue,Greenville,Circle Master,Agroland,contact@cropcircle.agr,Agriculture,1122334453,2,0.6666666666666666
-87,D1,1353,Quantum Innovations Inc.,138 Innovation Drive,Techville,Alexis Quantum,Futuristan,inc@quantum.innovations,Information Technology,1234567805,3,0.6758893280632412
-87,D2,1363,Quantum Innovations Ltd.,147 Innovation Drive,Techville,Alexis Quantum,Futuristan,info@quantum.innovations,Information Technology,1234567804,3,0.6758893280632412
-87,D2,1364,Quantum Innovatons,125 Innovation Dr.,Techville,Alexis Quantum,Futuristan,info@quantum.innovations,Information Technology,1234567892,3,0.6758893280632412
-137,D1,412,Creative Minds Inc.,456 Tech Park,Innovate City,Morgan Design,Techland,hello@creativeminds.com,Information Technology,1223344556,2,0.6842105263157895
-137,D2,417,Creative Mindz Inc.,456 Tech Park,Innovate City,Morgan Design,Techland,contact@creativemindz.com,Information Technology,1223344556,2,0.6842105263157895
-138,D2,667,EduTech Innovaterz,75 Learning Blvd,Edu City,Taylor Teach,Learnland,contact@edutech.com,Education Technology,3344556677,2,0.6842105263157895
-138,D2,669,EduTech Innovators,75 Learning Blvd,Edu City,Taylor Teach,Learnland,info@edutech.com,Education Technology,3344556677,2,0.6842105263157895
-57,D1,1361,Quest Adventures,1515 Adventure Road,Travel City,Explorer Quest,Tourland,adventures@quest.adv,Tourism,9988776658,4,0.6864357864357865
-57,D2,1370,Quest Ventures,1520 Adventure Road,Travel City,Quest Explorer,Tourland,info@questventures.adv,Tourism,9988776659,4,0.6864357864357865
-57,D2,1823,TravelQuest Adventures,1515 Adventure Road,Travel City,Quest Explorer,Tourland,info@travelquest.adv,Tourism,9988776655,4,0.6864357864357865
-57,D1,1825,TravelQuest Adventurez,1515 Adventure Rd,Travel City,Quest Explorer,Tourland,contact@travelquest.adv,Tourism,9988776655,4,0.6864357864357865
-130,D1,33,AgriFutur Farms,123 Farm Rd,Greenville,Taylor Jordan,EcoLand,contact@agrifuture.org,Agriculture,7890123456,2,0.6875
-130,D1,37,AgriFuture Farms,123 Farm Road,Greenville,Taylor Jordan,EcoLand,info@agrifuture.org,Agriculture,7890123456,2,0.6875
-131,D1,42,AgriGroth Farms,789 Harvest Lane,Farmville,Farmer Fields,Agroland,support@agrigrowth.farm,Agriculture,1990044556,2,0.6875
-131,D1,50,AgriGrowth Farms,300 Harvest Rd,Farmville,Farmer Fields,Agroland,support@agrigrowth.farm,Agriculture,1990045678,2,0.6875
-132,D1,174,BioLife Sciences,951 Bio Blvd,Bio City,Pat Bio,Bioland,info@biolifesciences.com,Biotechnology,1889900112,2,0.6875
-132,D2,182,BioLife Siences,951 Bio Blvd,Bio City,Pat Bio,Bioland,contact@biolifesciences.com,Biotechnology,1889900112,2,0.6875
-133,D1,544,EcoFinanc Group,800 Finance Avenue,FinanceCity,Sam Money,FinanceLand,support@ecofinancegroup.com,Finance,9900889900,2,0.6875
-133,D1,545,EcoFinance Group,800 Finance Ave.,FinanceCity,Sam Money,FinanceLand,support@ecofinancegroup.com,Finance,9900889900,2,0.6875
-134,D1,597,EcoTravel Agency,1000 Travel Rd.,TravelCity,Pat Journey,TravelLand,info@ecotravelagency.com,Travel,9900111122,2,0.6875
-134,D1,598,EcoTravl Agency,1000 Travel Rd.,TravelCity,Pat Journey,TravelLand,contact@ecotravelagency.com,Travel,9900111122,2,0.6875
-135,D1,1585,Style Innovators,654 Trend Avenue,Fashion City,Liam Taylor,StyleLand,info@styleinnovators.com,Retail,5678901234,2,0.6875
-135,D2,1585,StyleInnovators,654 Style Street,Fashion City,Liam Taylor,StyleLand,info@styleinnovators.com,Retail,5678901234,2,0.6875
-128,D1,162,BeverageHub,407 Market Street,Food Town,Alex Cook,GourmetLand,contact@beveragehub.com,Food & Beverage,1122334462,2,0.6923076923076923
-128,D2,168,BeverageHub Inc.,407 Market St.,Food Town,Alex Cook,GourmetLand,info@beveragehub.com,Food & Beverage,1122334462,2,0.6923076923076923
-129,D2,1772,TechnoGearz,101 Innovation Drive,Techville,Jamie Tech,Innovatia,contact@technogears.tech,Technology,1234567890,2,0.6923076923076923
-129,D2,1776,TechnoGearz Inc.,101 Innovation Dr.,Techville,Jamie Tech,Innovatia,info@technogears.tech,Technology,1234567890,2,0.6923076923076923
-127,D1,721,FashionForward Designs,800 Style Street,Fashionville,Chic Trend,Stylia,contact@fashionforward.sol,Fashion,8899001122,2,0.6956521739130435
-127,D1,723,FashionFoward Designz,800 Style St.,Fashionville,Chic Trend,Stylia,contact@fashionfoward.sol,Fashion,8899001122,2,0.6956521739130435
-124,D2,180,BioLife Innov8tions,1414 Bio St.,Biotown,Gene Life,Bioland,innov8@biolife.sci,Biotechnology,9988776655,2,0.7
-124,D2,181,BioLife Innovations,1414 Bio Street,Biotown,Gene Life,Bioland,innovate@biolife.sci,Biotechnology,9988776655,2,0.7
-125,D2,1163,Innovative Media,1212 Vision Blvd,Media City,Mr. Visionary Innovator,Dreamland,hello@innovativemedia.com,Media,1122334455,2,0.7
-125,D2,1164,Innovative Media Group,1212 Vision Blvd,Media City,Mr. Visionary Innovator,Dreamland,group@innovativemedia.com,Media,1122334455,2,0.7
-126,D2,1958,Wellness Care Group,123 Wellness Ave,Wellness City,Alex Well,Healthland,info@wellnesscare.com,Healthcare,1122334455,2,0.7
-126,D2,1965,Wellness Kare Group,123 Wellness Avenue,Wellness City,Alex Well,Healthland,contact@wellnesscare.com,Healthcare,1122334455,2,0.7
-16,D1,992,GreenLeaf Agriculture,300 Farm Lane,Agro Town,Sam Farmer,Farmville,contact@greenleaf.com,Agriculture,1987654321,3,0.7000000000000001
-16,D2,989,GreenLeaf Agriculture,456 Farm Road,Agro Town,Sam Farmer,Farmville,info@greenleaf.com,Agriculture,9876543210,3,0.7000000000000001
-16,D1,993,GreenLeaf Agro,456 Farm Road,Agro Town,Sam Farmer,Farmville,contact@greenleafagro.com,Agriculture,9876543211,3,0.7000000000000001
-117,D1,1220,LifeCare Assoc.,313 Wellness Way,Healthville,Morgan Wellness,Mediland,contact@lifecareassociates.com,Healthcare,4455667793,2,0.7058823529411765
-117,D2,1219,LifeCare Associates,313 Wellness Way,Healthville,Morgan Wellness,Mediland,info@lifecareassociates.com,Healthcare,4455667793,2,0.7058823529411765
-118,D1,1448,Sky High Airlines,202 Flight Way,Air City,Avery Pilot,Flyland,info@skyhighairlines.com,Aviation,1444555666,2,0.7058823529411765
-118,D2,1463,Sky High Airlnes,202 Flight Way,Air City,Avery Pilot,Flyland,contact@skyhighairlines.com,Aviation,1444555666,2,0.7058823529411765
-119,D1,1965,Wellness Assoc.,789 Health Avenue,Healthtown,Dr. Care,Mediland,contact@wellnessassoc.com,Healthcare,3334445556,2,0.7058823529411765
-119,D1,1966,Wellness Associates,789 Health Ave,Healthtown,Dr. Care,Mediland,info@wellnessassociates.com,Healthcare,3334445556,2,0.7058823529411765
-120,D2,17,Aero Dynamics Inc,4444 Jetstream Rd,Aero City,Morgan Wind,Flyland,contact@aerodynamics.inc,Aviation,1122334455,2,0.7058823529411765
-120,D2,18,Aero Dynmics Inc.,4444 Jetstream Road,Aero City,Morgan Wind,Flyland,info@aerodynamics.inc,Aviation,1122334455,2,0.7058823529411765
-121,D2,829,Fresh Foods Co,101 Market St,Foodtown,Diana Fresh,Culinary,contact@freshfoodsco.com,Food & Beverage,2233445566,2,0.7058823529411765
-121,D2,831,Fresh Foods Company,102 Market St,Foodtown,Diana Fresh,Culinary,info@freshfoodscompany.com,Food & Beverage,2233445567,2,0.7058823529411765
-122,D2,1685,TechFlow Dynamics,808 Flow Ave.,FlowCity,Flow Tech,TechLand,contact@techflow.com,Technology,9900445566,2,0.7058823529411765
-122,D2,1686,TechFlow Dynmics,808 Flow Avenue,FlowCity,Flow Tech,TechLand,info@techflow.com,Technology,9900445566,2,0.7058823529411765
-116,D1,473,Eco Energi Solutions,456 Solar Street,Energy City,Leo Power,Powerland,support@ecoenergi.com,Energy,9900112233,2,0.7142857142857143
-116,D1,476,Eco Energy Solutions,456 Solar St,Energy City,Leo Power,Powerland,support@ecoenergy.com,Energy,9900112233,2,0.7142857142857143
-110,D2,399,ConstructiveFutre,13000 Future Blvd,FutureCity,Leo Indigo,FutureLand,contact@constructivefutre.com,Construction,2345678902,2,0.7222222222222222
-110,D1,396,ConstructiveFuture,13000 Future Blvd,FutureCity,Leo Indigo,FutureLand,info@constructivefuture.com,Construction,2345678902,2,0.7222222222222222
-111,D2,575,EcoLife Consulting,111 Green Street,EcoCity,Sam Eco,EcoLand,consulting@ecolife.com,Consulting,9900112243,2,0.7222222222222222
-111,D1,562,EcoLife Consultng,111 Green St.,EcoCity,Sam Eco,EcoLand,contact@ecolife.com,Consulting,9900112243,2,0.7222222222222222
-112,D1,1678,Tech Solutions Inc.,123 Silicon Ave,Techville,Sam Tech,Innovatia,info@techsolutions.com,Technology,1234567890,2,0.7222222222222222
-112,D2,1658,Tech Solutons Inc.,123 Silicon Avenue,Techville,Sam Tech,Innovatia,contact@techsolutions.com,Technology,1234567890,2,0.7222222222222222
-114,D1,1842,Trendsetters Co.,204 Style St,Trend City,Fashionista Mode,Fashionland,hello@trendsetters.fashion,Fashion,5678905678,2,0.7222222222222222
-114,D2,1843,Trendsetters Company,204 Style Street,Trend City,Fashionista Mode,Fashionland,contact@trendsetters.fashion,Fashion,5678905678,2,0.7222222222222222
-115,D2,1126,HydroSolutions Ltd.,789 Lakeview Ave,Watertown,River Lake,Hydroland,info@hydrosolutions.water,Utilities,9988776659,2,0.7222222222222222
-115,D2,1127,HydroSolutons Ltd.,789 Lakeview Avenue,Watertown,River Lake,Hydroland,contact@hydrosolutions.water,Utilities,9988776659,2,0.7222222222222222
-17,D1,1079,Health Solutions Ltd.,812 Health Blvd,Health City,Caregiver Heal,Healthland,contact@healthsolutions.health,Healthcare,9988776657,3,0.7255434782608696
-17,D2,1073,Health Solutons Limited,812 Health Blvd,Health City,Caregiver Heal,Healthland,info@healthsolutions.health,Healthcare,9988776657,3,0.7255434782608696
-17,D2,1074,Health Solutons Ltd.,812 Health Blvd,Health City,Caregiver Heal,Healthland,contact@healthsolutions.health,Healthcare,9988776657,3,0.7255434782608696
-108,D2,393,Constructive Cre8tions,810 Builder St.,Constructopolis,Jordan Casey,Buildland,contact@constructivecre8tions.com,Construction,5566778899,2,0.7272727272727273
-108,D1,386,Constructive Creations,810 Builder Street,Constructopolis,Jordan Casey,Buildland,info@constructivecreations.com,Construction,5566778899,2,0.7272727272727273
-109,D1,1687,TechBuild Innov8tions,123 Tech Avenue,Innovate City,Jamie Tech,TechLand,contact@techbuild.com,Technology,1234567890,2,0.7272727272727273
-109,D2,1672,TechBuild Innovations,123 Tech Ave,Innovate City,Jamie Tech,TechLand,contact@techbuild.com,Technology,1234567890,2,0.7272727272727273
-107,D1,1103,HealthPlus Group,1212 Health St,Health City,Alex Care,Careland,info@healthplusgroup.com,Healthcare,5566778890,2,0.7333333333333333
-107,D2,1093,HealthPlus Grp,1212 Health St,Health City,Alex Care,Careland,contact@healthplusgroup.com,Healthcare,5566778890,2,0.7333333333333333
-104,D1,1690,TechBuild Solutions,101 Tech Park,Tech City,Jamie Tech,TechLand,info@techbuild.com,Technology,1234567890,2,0.7368421052631579
-104,D2,1674,TechBuild Solutons,101 Tech Park,Tech City,Jamie Tech,TechLand,contact@techbuild.com,Technology,1234567890,2,0.7368421052631579
-106,D2,1014,GreenTech Solutions,1010 Eco Lane,Eco City,Alex Green,Sustainland,info@greentech.com,Technology,9876543216,2,0.7368421052631579
-106,D2,1018,GreenTech Solutons,1010 Eco Lane,Eco City,Alex Green,Sustainland,contact@greentech.com,Technology,9876543216,2,0.7368421052631579
-103,D1,417,Culinary Creations Inc.,789 Flavor Blvd,Culinary City,Chef Pastry,Foodland,info@culinarycreations.com,Food & Beverage,6677889902,2,0.7391304347826086
-103,D1,418,Culinary Creations Ltd.,789 Flavour Blvd,Culinary City,Chef Pastry,Foodland,contact@culinarycreations.co,Food & Beverage,6677889902,2,0.7391304347826086
-6,D1,333,Casey Constrctn Co.,815 Builder Avenue,Constructopolis,Jordan Casey,Buildland,support@caseyconstruct.com,Construction,5566778899,2,0.75
-6,D1,334,Casey Construction Co.,815 Builder Avenue,Constructopolis,Jordan Casey,Buildland,support@caseyconstruct.com,Construction,5566778899,2,0.75
-99,D1,3,Adventure Gear Co.,555 Adventure St,Outdoor City,Explorer Jane,ExploreLand,info@adventuregear.com,Retail,6655443322,2,0.75
-99,D1,4,Adventure Gear Company,555 Adventure Street,Outdoor City,Explorer Jane,ExploreLand,contact@adventuregear.com,Retail,6655443322,2,0.75
-100,D1,1006,GreenPower Solutions,456 Eco Rd,GreenCity,Eco Light,EcoWorld,contact@greenpowersolutions.com,Renewable Energy,9988773344,2,0.75
-100,D1,1007,GreenPower Solutons,456 Eco Road,GreenCity,Eco Light,EcoWorld,info@greenpowersolutions.com,Renewable Energy,9988773344,2,0.75
-101,D2,1880,Urban Planners,405 Build St,Construct City,Morgan Plan,BuildLand,info@urbanplanners.com,Construction,2233445571,2,0.75
-101,D1,1873,Urban Planners Inc.,405 Build St,Construct City,Morgan Plan,BuildLand,contact@urbanplanners.com,Construction,2233445571,2,0.75
-102,D2,214,Breeze Energi Solutions,1300 Windy Lane,BreezyTown,Breeze Holdings,Windland,info@breezeenergysolutions.com,Renewable Energy,2345678906,2,0.75
-102,D2,215,Breeze Energy Solutions,1300 Windy Lane,BreezyTown,Breeze Holdings,Windland,contact@breezeenergysolutions.com,Renewable Energy,2345678906,2,0.75
-98,D2,1552,SolarTech Innovations,404 Solar Ave.,SunCity,Eco Innovations,EcoLand,contact@solartech.com,Energy,1100778899,2,0.7619047619047619
-98,D1,1551,SolarTech Innovatons,404 Solar Avenue,SunCity,Eco Innovations,EcoLand,info@solartech.com,Energy,1100778899,2,0.7619047619047619
-96,D2,795,FlavorBurst Snacks,2222 Crunch St,Flavor City,Jamie Spice,Gourmetland,info@flavorburst.snack,Food & Beverage,1999000222,2,0.7647058823529411
-96,D1,781,FlavorBurst Snax,2222 Crunch St,Flavor City,Jamie Spice,Gourmetland,contact@flavorburst.snack,Food & Beverage,1999000222,2,0.7647058823529411
-97,D2,909,Green Defenders,1200 Green St,Eco City,Planet Champion,Sustainia,hello@greendefenders.com,Environment,7766554433,2,0.7647058823529411
-97,D1,910,Green Defenders Inc.,1200 Green Street,Eco City,Planet Champion,Sustainia,contact@greendefenders.com,Environment,7766554433,2,0.7647058823529411
-94,D2,249,Build It Quick,760 Build Blvd,Construct City,Taylor Builder,Buildland,quick@builditquick.com,Construction,1667788998,2,0.7692307692307693
-94,D1,246,Build It Quik,760 Build Blvd,Construct City,Taylor Builder,Buildland,quick@builditquik.com,Construction,1667788998,2,0.7692307692307693
-95,D2,745,FashionPioneers,422 Trend Blvd,Fashion City,Jordan Trend,Trendland,support@fashionpioneers.retail,Retail,5566778802,2,0.7692307692307693
-95,D1,729,FashionPioners,422 Trend Blvd,Fashion City,Jordan Trend,Trendland,support@fashionpioners.retail,Retail,5566778802,2,0.7692307692307693
-76,D1,130,Auto Innovators,666 Drive St,Auto City,Car Creator,Carland,contact@autoinnovators.car,Automotive,9134567890,3,0.7713493292053664
-76,D2,134,Auto Innovators Inc.,666 Drive St,Auto City,Car Creator,Carland,info@autoinnovators.auto,Automotive,9134567890,3,0.7713493292053664
-76,D2,137,Auto Innovators Ltd.,673 Drive St,Auto City,Car Creator,Carland,ltd@autoinnovators.auto,Automotive,9134567897,3,0.7713493292053664
-34,D1,1814,Travel Time,909 Journey Road,Travel City,Wander Lust,Wanderland,contact@traveltime.com,Travel,6699001122,3,0.7727272727272727
-34,D2,1809,Travel Time,1414 Journey Rd,Travel City,Wander Lust,Wanderland,contact@traveltime.com,Travel,1445566778,3,0.7727272727272727
-34,D2,1826,TravelTime,10000 Journey Rd,Travel City,Wander Lust,Wanderland,info@traveltime.com,Travel,7788990011,3,0.7727272727272727
-92,D2,351,CityBuild Developments,607 Build Street,Construct City,Builder Strong,USA,info@citybuild.construct,Construction,4455667788,2,0.7727272727272727
-92,D2,352,CityBuild Devlopments,607 Build St.,Construct City,Builder Strong,USA,contact@citybuild.construct,Construction,4455667788,2,0.7727272727272727
-14,D2,924,Green Feilds Ltd.,717 Farm Lane,Harvest,Farmer Blue,Agroland,support@greenfields.co,Agriculture,1112131424,2,0.7777777777777778
-14,D1,933,Green Fields Ltd.,717 Farm Lane,Harvest,Farmer Blue,Agroland,support@greenfields.co,Agriculture,1112131424,2,0.7777777777777778
-88,D2,289,BuildSmart Innov8tions Ltd.,203 Build Lane,Constructopolis,Builder Alice,Buildland,innov8tions@buildsmart.com,Construction,6667778889,2,0.7777777777777778
-88,D1,290,BuildSmart Innovations Ltd.,203 Build Lane,Constructopolis,Builder Alice,Buildland,innovations@buildsmart.com,Construction,6667778889,2,0.7777777777777778
-89,D2,1305,Motorway Mechanics,803 Motorway,Autotown,Mr. Quick,Carland,service@motorwaymech.com,Automotive,5566778899,2,0.7777777777777778
-89,D1,1307,Motorway Mechaniqs,803 Motorway,Autotown,Mr. Quick,Carland,contact@motorwaymech.com,Automotive,5566778899,2,0.7777777777777778
-90,D2,1054,Health & Wellness,1500 Wellness Way,HealthCity,Nina Health,WellnessLand,support@healthwellness.com,Healthcare,134455667,2,0.7777777777777778
-90,D2,1055,Health & Wellness Inc.,1500 Wellness Way,HealthCity,Nina Health,WellnessLand,support@healthwellnessinc.com,Healthcare,134455667,2,0.7777777777777778
-86,D1,820,ForestEdge Lumber Co.,174 Timber Trail,Woodland,Bark Wood,Leafland,info@forestedgelumber.com,Manufacturing,4455667812,2,0.782608695652174
-86,D2,826,ForestEdge Lumber Company,174 Timber Trl,Woodland,Bark Wood,Leafland,contact@forestedgelumber.com,Manufacturing,4455667812,2,0.782608695652174
-84,D2,448,DesertSun Solar,186 Sunbeam Blvd,Desert City,Sunny Ray,Sunland,info@desertsun.solar,Energy,4455667813,2,0.7857142857142857
-84,D2,449,DesertSun Solr,186 Sunbeam Blvd,Desert City,Sunny Ray,Sunland,contact@desertsun.solar,Energy,4455667813,2,0.7857142857142857
-81,D1,371,Construct It Fast,766 Build Blvd,Construct City,Jordan Construct,Buildland,fast@constructitfast.com,Construction,1667788904,2,0.7894736842105263
-81,D1,372,Construct It Fast Ltd.,766 Build Blvd,Construct City,Jordan Construct,Buildland,info@constructitfast.com,Construction,1667788904,2,0.7894736842105263
-82,D2,840,FreshFarm Produce,707 Farm Lane,Harvest,Farmer Fresh,Agroland,contact@freshfarm.produce,Agriculture,1112131415,2,0.7894736842105263
-82,D2,841,FreshFarm Produce Inc.,707 Farm Lane,Harvest,Farmer Fresh,Agroland,info@freshfarm.produce,Agriculture,1112131415,2,0.7894736842105263
-83,D2,1166,Innovative Motors,1005 Drive Lane,AutoCity,Jill Red,CarLand,contact@innovativemotors.com,Automotive,123456789,2,0.7894736842105263
-83,D2,1167,Innovative Motors Inc.,1005 Drive Lane,AutoCity,Jill Red,CarLand,info@innovativemotors.com,Automotive,123456789,2,0.7894736842105263
-79,D1,1269,Media Magic,1000 Broadcast Blvd,Media City,Media Star,Mediatopia,info@mediamagic.com,Media,8899001122,2,0.8
-79,D1,1271,Media Magik,1000 Broadcast Blvd,Media City,Media Star,Mediatopia,contact@mediamagik.com,Media,8899001122,2,0.8
-41,D2,143,AutoDriv Inc,500 Motorway,Drive City,Pat Driver,AutoLand,support@autodrive.com,Automotive,9988776655,2,0.8076923076923077
-41,D1,140,AutoDrive Inc,500 Motorway,Drive City,Pat Driver,AutoLand,support@autodrive.com,Automotive,9988776655,2,0.8076923076923077
-46,D1,1452,SkyBound Flights,789 Skyway Blvd,Aero City,Taylor Wing,Flyland,contact@skybound.air,Aviation,1122334455,3,0.8086274509803921
-46,D2,1465,SkyBound Flightz,789 Skyway Blvd,Aero City,Taylor Wing,Flyland,contact@skybound.air,Aviation,1122334455,3,0.8086274509803921
-46,D2,1466,SkyBound Flitez,789 Skyway Blvd,Aero City,Taylor Wing,Flyland,contact@skybound.air,Aviation,1122334455,3,0.8086274509803921
-25,D1,1398,RightConstruct Group,456 Right Way,Build City,Sam Right,Constructia,hello@rightconstruct.com,Construction,1122334455,2,0.8095238095238095
-25,D2,1411,RightConstruct Inc.,456 Right Way,Build City,Sam Right,Constructia,hello@rightconstruct.com,Construction,1122334455,2,0.8095238095238095
-77,D1,1937,Waterway Enterprises,321 Canal Street,HydroCity,Jordan River,Aquaterra,contact@waterway.com,Utilities,3344556681,2,0.8095238095238095
-77,D1,1938,Waterway Enterprises Ltd.,321 Canal Street,HydroCity,Jordan River,Aquaterra,info@waterway.com,Utilities,3344556682,2,0.8095238095238095
-78,D2,103,AquaPure Waterworks,210 Aqua Lane,Watertown,River Brooks,Hydroland,contact@aquapure.water,Utilities,9988776655,2,0.8095238095238095
-78,D2,104,AquaPure Waterworks Inc.,654 Aqua Ave,Watertown,River Brooks,Hydroland,contact@aquapure.water,Utilities,9988776655,2,0.8095238095238095
-72,D1,105,AquaTech Innovations,654 Waterway Blvd,HydroCity,Jordan River,Aquaterra,service@aquatech.com,Utilities,3344556677,2,0.8181818181818182
-72,D1,106,AquaTech Innovations Ltd.,654 Waterway Blvd,HydroCity,Jordan River,Aquaterra,contact@aquatech.com,Utilities,3344556678,2,0.8181818181818182
-73,D1,674,EnergySecure,369 Power Ave,Energy City,Chris Cyan,Powerland,contact@energysecure.com,Energy,1122446688,2,0.8181818181818182
-73,D2,689,EnergySecurr,369 Power Avenue,Energy City,Chris Cyan,Powerland,contact@energysecure.com,Energy,1122446688,2,0.8181818181818182
-74,D1,1419,Seas the Dae,2324 Surf St,Wave City,Morgan Bay,Marineland,contact@seastheday.com,Marine,1765432123,2,0.8181818181818182
-74,D2,1445,Seas the Day,2324 Surf St,Wave City,Morgan Bay,Marineland,hello@seastheday.com,Marine,1765432123,2,0.8181818181818182
-75,D1,1634,Sustainable Ventures,123 Green Rd,EcoCity,Olivia Green,Sustainland,contact@sustainableventures.com,Energy,9876543210,2,0.8181818181818182
-75,D1,1635,Sustainable Ventures Ltd.,123 Green Road,EcoCity,Olivia Green,Sustainland,info@sustainableventures.com,Energy,9876543210,2,0.8181818181818182
-0,D1,92,AquaFl0w Systems,789 Water Way,Aquaville,Sophia Waters,Hydroland,support@aquaflow.com,Utilities,2233445566,2,0.8235294117647058
-0,D1,93,AquaFlow Systems,789 Water Way,Aquaville,Sophia Waters,Hydroland,support@aquaflow.com,Utilities,2233445566,2,0.8235294117647058
-71,D1,805,Food Delights,123 Gourmet St,Food City,Chef Delight,Cuisineland,support@fooddelights.com,Food,8877665544,2,0.8333333333333334
-71,D1,806,Food Delightz,123 Gourmet Street,Food City,Chef Delight,Cuisineland,support@fooddelightz.com,Food,8877665544,2,0.8333333333333334
-70,D2,1307,Mountain Adventures,808 Summit Street,Adventure City,Morgan Explorer,Explorland,contact@mountainadventures.com,Tourism,1444555666,2,0.8421052631578947
-70,D1,1309,Mountain Adventurres,808 Summit St.,Adventure City,Morgan Explorer,Explorland,info@mountainadventures.com,Tourism,1444555666,2,0.8421052631578947
-43,D2,565,EcoHome Builders,1212 Green St,Eco City,Sam Right,Constructia,contact@ecohome.com,Construction,1122334455,2,0.84375
-43,D2,566,EcoHome Buildrs,1212 Green St,Eco City,Sam Right,Constructia,contact@ecohome.com,Construction,1122334455,2,0.84375
-47,D2,1568,Sprout Solutions,1050 Plant Path,Garden City,Flora Bloom,Agraria,support@sproutsolutions.agri,Agriculture,1415161722,2,0.84375
-47,D2,1569,Sprout Solutons,1050 Plant Path,Garden City,Flora Bloom,Agraria,support@sproutsolutions.agri,Agriculture,1415161722,2,0.84375
-68,D2,700,Epicurean Eats,321 Flavor Blvd,Culinary City,Chef Savory,Foodland,hello@epicureaneats.com,Food & Beverage,6677889903,2,0.8461538461538461
-68,D1,680,Epicurean Eatz,321 Flavor Blvd,Culinary City,Chef Savory,Foodland,contact@epicureaneats.com,Food & Beverage,6677889903,2,0.8461538461538461
-69,D2,1793,TrackLogistics,1500 Transport Ave,Logi City,Jamie Track,TrackLand,support@tracklogistics.com,Logistics,9900666678,2,0.8461538461538461
-69,D1,1801,TrackLogisticz,1500 Transport Avenue,Logi City,Jamie Track,TrackLand,support@tracklogistics.com,Logistics,9900666678,2,0.8461538461538461
-18,D1,1091,HealthFirst Medical,789 Wellness Blvd,Health City,Dr. Heal Good,Medica,contact@healthfirst.com,Healthcare,1555765432,2,0.85
-18,D2,1085,HealthFirst Medikal,789 Wellness Blvd,Health City,Dr. Heal Good,Medica,contact@healthfirst.com,Healthcare,1555765432,2,0.85
-48,D2,1738,TechWave Dynamics,620 Silicon St,Tech City,Gadget Guru,Innovatia,dynamics@techwave.tech,Technology,1990011230,2,0.8529411764705883
-48,D2,1739,TechWave Dynmics,620 Silicon St,Tech City,Gadget Guru,Innovatia,dynamics@techwave.tech,Technology,1990011230,2,0.8529411764705883
-66,D2,559,EcoGreen Energi,5678 Solar Road,Green City,Pat Green,Sustainland,info@ecogreen.energy,Energy,1777000222,2,0.8571428571428571
-66,D1,552,EcoGreen Energy,5678 Solar Rd,Green City,Pat Green,Sustainland,contact@ecogreen.energy,Energy,1777000222,2,0.8571428571428571
-67,D1,1948,WaveNet Systems,1010 Waterfall Way,Watertown,Brooke R. Rivers,Hydroland,info@wavenet.systems,Utilities,9988776655,2,0.8571428571428571
-67,D1,1949,WaveNet Systemz,1010 Waterfall Way,Watertown,Brooke R. Rivers,Hydroland,contact@wavenet.systems,Utilities,9988776655,2,0.8571428571428571
-31,D1,1697,TechCorp Solutions,200 Tech Park,Innovate City,Sam Innovate,Techland,contact@techcorpsolutions.com,Technology,1234567890,2,0.8611111111111112
-31,D2,1676,TechCorp Solutons,200 Tech Park,Innovate City,Sam Innovate,Techland,contact@techcorpsolutions.com,Technology,1234567890,2,0.8611111111111112
-65,D2,1602,Sustainability Pioneers,1200 Green St,Eco City,Nature Advocate,Sustainia,contact@sustainpioneers.com,Environment,7766554433,2,0.8636363636363636
-65,D2,1603,Sustainability Pioners,1200 Green St.,Eco City,Nature Advocate,Sustainia,info@sustainpioneers.com,Environment,7766554433,2,0.8636363636363636
-60,D2,423,CrispCraze Foods,2255 Crunch St,Flavor City,Morgan Spice,Gourmetland,contact@crispcraze.foods,Food & Beverage,1999000226,2,0.8666666666666667
-60,D1,414,CrispCraze Foodz,2255 Crunch St,Flavor City,Morgan Spice,Gourmetland,info@crispcraze.foods,Food & Beverage,1999000226,2,0.8666666666666667
-62,D2,661,EduSmart Schools,303 Learning Lane,Eduville,Alex Teach,Learnland,info@edusmart.school,Education,4455667788,2,0.8666666666666667
-62,D1,652,EduSmart Schoolz,303 Learning Lane,Eduville,Alex Teach,Learnland,contact@edusmart.school,Education,4455667788,2,0.8666666666666667
-63,D1,1023,GreenWave Energi,123 River Rd,Watertown,River Brooks,Hydroland,info@greenwave.energy,Utilities,9988776655,2,0.8666666666666667
-63,D1,1024,GreenWave Energy,123 River Road,Watertown,River Brooks,Hydroland,contact@greenwave.energy,Utilities,9988776655,2,0.8666666666666667
-8,D2,380,ConstructCo Enterprises,1212 Enterprise Blvd,Enterprise City,Enterprise Builder,USA,info@constructco.enterprises,Construction,1314151617,3,0.875
-8,D1,375,ConstructCo Enterprizes,1212 Enterprise Blvd,Enterprise City,Enterprise Builder,USA,contact@constructco.enterprises,Construction,1314151617,3,0.875
-8,D2,381,ConstructCo Enterprizes,1212 Enterprise Blvd,Enterprise City,Enterprise Builder,USA,contact@constructco.enterprises,Construction,1314151617,3,0.875
-44,D2,926,Green Fields Agriculture,56 Greenway,Greenville,Hank Field,Farmville,contact@greenfieldsagri.com,Agriculture,1122334466,2,0.88
-44,D1,934,Green Fieldz Agriculture,56 Greenway,Greenville,Hank Field,Farmville,contact@greenfieldsagri.com,Agriculture,1122334466,2,0.88
-49,D2,1940,WaterTech Innovations,789 Water Lane,Hydro City,Jordan Blue,Waterland,support@watertech.water,Utilities,1122334458,2,0.8809523809523809
-49,D2,1941,WaterTech Innovatons,789 Water Lane,Hydro City,Jordan Blue,Waterland,support@watertech.water,Utilities,1122334458,2,0.8809523809523809
-2,D1,202,BlueWave Utilities,321 Ocean Avenue,Watertown,Brook Rivers,Hydroland,contact@bluewave.water,Utilities,9988776655,3,0.8823529411764706
-2,D1,203,BlueWave Utility,321 Ocean Ave,Watertown,Brook Rivers,Hydroland,info@bluewave.water,Utilities,9988776655,3,0.8823529411764706
-2,D2,212,BlueWave Utility,321 Ocean Ave,Watertown,Brook Rivers,Hydroland,info@bluewave.water,Utilities,9988776655,3,0.8823529411764706
-59,D1,602,EcoWealth Partners,802 Finance Ave.,FinanceCity,Jamie Rich,FinanceLand,info@ecowealthpartners.com,Finance,9900889902,2,0.8823529411764706
-59,D1,603,EcoWealth Partnerz,802 Finance Avenue,FinanceCity,Jamie Rich,FinanceLand,contact@ecowealthpartnerz.com,Finance,9900889902,2,0.8823529411764706
-58,D2,15,AdventureWorld Tours,707 Journey St,Explore City,Wendy Lust,Travelia,info@adventureworld.com,Travel,1555666777,2,0.8947368421052632
-58,D1,16,AdventureWorld Tourz,707 Journey St,Explore City,Wendy Lust,Travelia,contact@adventureworld.com,Travel,1555666777,2,0.8947368421052632
-9,D1,408,Creative Engines,1005 Drive Lane,AutoCity,Jack Red,CarLand,support@creativeengines.com,Automotive,123456789,2,0.9
-9,D1,409,Creative Engins,1005 Drive Lane,AutoCity,Jack Red,CarLand,support@creativeengines.com,Automotive,123456789,2,0.9
-55,D1,1221,LivingSpaces,62 Living St,HomeCity,Space Designer,Houseland,info@livingspaces.com,Real Estate,1213141523,2,0.9090909090909091
-55,D2,1221,LivingSpacess,62 Living St,HomeCity,Space Designer,Houseland,contact@livingspaces.com,Real Estate,1213141523,2,0.9090909090909091
-56,D1,1432,SecureFinanc,1212 Wealth Street,Finance City,Chris Cyan,Moneyland,info@securefinanc.com,Finance,1434455667,2,0.9090909090909091
-56,D1,1433,SecureFinance,1212 Wealth St,Finance City,Chris Cyan,Moneyland,contact@securefinance.com,Finance,1434455667,2,0.9090909090909091
-40,D2,102,AquaPure Waters,789 Water Lane,Hydro City,Chris Blue,Waterland,support@aquapure.water,Utilities,1122334455,2,0.9285714285714286
-40,D1,102,AquaPure Waterz,789 Water Lane,Hydro City,Chris Blue,Waterland,support@aquapure.water,Utilities,1122334455,2,0.9285714285714286
-53,D1,269,BuildPro Services,654 Pro Rd,Build City,Casey Pro,ProLand,contact@buildpro.com,Construction,3344556677,2,0.9375
-53,D2,274,BuildPro Servicess,654 Pro Road,Build City,Casey Pro,ProLand,contact@buildpro.com,Construction,3344556677,2,0.9375
-54,D1,1528,SmartEdu Services,102 Learning Ave,Knowledge Town,Alex Teach,Learnia,support@smarteduservices.com,Education,4455667789,2,0.9375
-54,D2,1526,SmartEdu Servicess,102 Learning Avenue,Knowledge Town,Alex Teach,Learnia,support@smarteduservices.com,Education,4455667789,2,0.9375
-42,D2,216,BreezeFlow Systems,93 Windy Way,Breezyville,Storm Gale,Airland,contact@breezeflow.systems,Utilities,4455667791,2,0.9411764705882353
-42,D2,217,BreezeFlow Systemz,93 Windy Way,Breezyville,Storm Gale,Airland,contact@breezeflow.systems,Utilities,4455667791,2,0.9411764705882353
-51,D1,1347,PurplePeak Finance,202 Purple Ave.,PurpleCity,Purple Banker,PurpleLand,contact@purplepeak.com,Finance,4400440055,2,0.9411764705882353
-51,D2,1359,PurplePeak Finances,202 Purple Avenue,PurpleCity,Purple Banker,PurpleLand,info@purplepeak.com,Finance,4400440055,2,0.9411764705882353
-52,D2,1525,SmartEdu Institute,305 Learning Ln,Eduville,Jamie Teach,Learnland,support@smartedu.sch,Education,4455667789,2,0.9411764705882353
-52,D1,1527,SmartEdu Institutes,305 Learning Lane,Eduville,Jamie Teach,Learnland,support@smartedu.school,Education,4455667789,2,0.9411764705882353
-50,D2,1358,PureStream Services,103 Waterway Blvd,Hydro City,Taylor Brooks,Aquatica,contact@purestream.com,Utilities,1122334457,2,0.9444444444444444
-50,D1,1346,PureStream Servicess,103 Waterway Blvd,Hydro City,Taylor Brooks,Aquatica,contact@purestream.co,Utilities,1122334457,2,0.9444444444444444
-22,D1,1312,MountainPeak Adventures,505 Summit St,Highland,Climber Hill,Mountland,contact@mountainpeak.adventures,Tourism,6677889900,3,0.9545454545454546
-22,D1,1313,MountainPeak Adventurez,505 Summit Street,Highland,Climber Hill,Mountland,info@mountainpeak.adventures,Tourism,6677889900,3,0.9545454545454546
-22,D2,1313,MountainPeak Adventurez,505 Summit Street,Highland,Climber Hill,Mountland,info@mountainpeak.adventures,Tourism,6677889900,3,0.9545454545454546
-4,D1,260,BuildLand Architects,406 Build St,Construct City,Morgan Design,BuildLand,contact@buildlandarchitects.com,Construction,2233445572,2,1.0
-4,D2,266,BuildLand Architects,406 Build St,Construct City,Morgan Design,BuildLand,contact@buildlandarchitects.com,Construction,2233445572,2,1.0
-5,D1,277,BuildRite Enterprises,456 Right Way,Build City,Sam Right,Constructia,contact@buildrite.com,Construction,1122334455,2,1.0
-5,D2,279,BuildRite Enterprises,456 Right Way,Build City,Sam Right,Constructia,contact@buildrite.com,Construction,1122334455,2,1.0
-7,D1,370,Construct Innovators,608 Build St,Construct City,Innovate Builder,Buildland,contact@constructinnovators.build,Construction,9012345680,2,1.0
-7,D2,378,Construct Innovators,608 Build St,Construct City,Innovate Builder,Buildland,contact@constructinnovators.build,Construction,9012345680,2,1.0
-10,D1,449,Digital Ventures,951 Tech Park,Innovation City,Alex Digital,Techland,contact@digitalventures.com,Technology,1122446688,2,1.0
-10,D2,468,Digital Ventures,951 Tech Park,Innovation City,Alex Digital,Techland,contact@digitalventures.com,Technology,1122446688,2,1.0
-11,D1,532,EcoDrive Innovations,511 Drive Blvd,Motor City,Alex Motor,Autoland,innovations@ecodrive.auto,Automotive,1333444558,2,1.0
-11,D2,534,EcoDrive Innovations,511 Drive Blvd,Motor City,Alex Motor,Autoland,innovations@ecodrive.auto,Automotive,1333444558,2,1.0
-12,D1,722,FashionFoward,654 Style St.,Fashion City,Sophia Taylor,StyleLand,contact@fashionfoward.com,Retail,5678901234,2,1.0
-12,D2,741,FashionFoward,654 Style St.,Fashion City,Sophia Taylor,StyleLand,contact@fashionfoward.com,Retail,5678901234,2,1.0
-15,D1,977,GreenField Innovations,125 Harvest Road,AgroCity,Field Crop,FarmLand,contact@greenfieldinnovations.com,Agriculture,5566773346,2,1.0
-15,D2,973,GreenField Innovations,125 Harvest Rd,AgroCity,Field Crop,FarmLand,support@greenfieldinnovations.com,Agriculture,5566773346,2,1.0
-19,D1,1129,Horizon Learning Center,408 Knowledge Blvd,Learnville,Wise Eagle,EduNation,contact@horizonlearning.edu,Education,8899001145,2,1.0
-19,D2,1117,Horizon Learning Center,408 Knowledge Blvd,Learnville,Wise Eagle,EduNation,info@horizonlearning.edu,Education,8899001155,2,1.0
-20,D1,1146,Innovate Systems,201 Tech Park,Innovate City,Alex Innovate,Techland,info@innovatesystems.com,Technology,1234567891,2,1.0
-20,D2,1143,Innovate Systems,204 Tech Park,Innovate City,Alex Innovate,Techland,contact@innovatesystems.com,Technology,1234567894,2,1.0
-21,D1,1227,Logistics Leaders,1200 Transport Rd,Logistics City,Mover Shaker,Moveland,contact@logisticsleaders.log,Logistics,1234567890,2,1.0
-21,D2,1230,Logistics Leaders,357 Transport Rd,Logistics City,Mover Shaker,Moveland,contact@logisticsleaders.com,Logistics,1122334455,2,1.0
-23,D1,1350,Quantum Enterprises,129 Innovation Drive,Techville,Taylor Quantum,Futuristan,contact@quantum.enterprises,Information Technology,1234567894,2,1.0
-23,D2,1360,Quantum Enterprises,137 Innovation Drive,Techville,Taylor Quantum,Futuristan,info@quantumenterprises.com,Information Technology,1234567804,2,1.0
-26,D1,1502,Skyline Logistics,410 Build St,Construct City,Taylor Erect,BuildLand,logistics@skyline.com,Logistics,2233445583,2,1.0
-26,D2,1497,Skyline Logistics,407 Build St,Construct City,Taylor Erect,BuildLand,logistics@skyline.com,Logistics,2233445573,2,1.0
-27,D1,1503,Skyline Real Estate,410 Build St,Construct City,Taylor Erect,BuildLand,realestate@skyline.com,Real Estate,2233445582,2,1.0
-27,D2,1499,Skyline Real Estate,410 Build St,Construct City,Taylor Erect,BuildLand,realestate@skyline.com,Real Estate,2233445576,2,1.0
-28,D1,1601,Summit Explorers,505 Summit St,Highland,Hiker Dale,Mountland,explore@summitadventures.com,Tourism,6677889901,2,1.0
-28,D2,1587,Summit Explorers,505 Summit St,Highland,Hiker Dale,Mountland,explore@summitadventures.com,Tourism,6677889901,2,1.0
-29,D1,1646,Tasteful Treetz,789 Savory Lane,Culinary City,Chef Spice,Foodland,contact@tastefultreats.com,Food & Beverage,6677889906,2,1.0
-29,D2,1626,Tasteful Treetz,789 Savory Lane,Culinary City,Chef Spice,Foodland,contact@tastefultreats.com,Food & Beverage,6677889906,2,1.0
-30,D1,1655,Tech Innovations,951 Tech Park,Innovation City,Jordan Digital,Techland,support@techinnovations.com,Technology,1122446688,2,1.0
-30,D2,1636,Tech Innovations,951 Tech Park,Innovation City,Jordan Digital,Techland,support@techinnovations.com,Technology,1122446688,2,1.0
-32,D1,1712,TechGrow,456 Silicon Avenue,TechVille,Alice Green,InnovLand,info@techgrow.com,Technology,1234567890,2,1.0
-32,D2,1693,TechGrow,789 Silicon Ave,TechVille,Alice Green,InnovLand,contact@techgrow.com,Technology,1234567890,2,1.0
-33,D1,1736,TechPioners,127 Innovation Dr.,Techville,Alexis Quantum,Futuristan,contact@techpioners.com,Information Technology,1234567894,2,1.0
-33,D2,1722,TechPioners,127 Innovation Dr.,Techville,Alexis Quantum,Futuristan,contact@techpioners.com,Information Technology,1234567894,2,1.0
-36,D1,1877,Urban Tek,909 Innovation Drive,Tech City,Jordan Tech,Innovatia,info@urbantek.com,Technology,1333444555,2,1.0
-36,D2,1884,Urban Tek,909 Innovation Drive,Tech City,Jordan Tech,Innovatia,info@urbantek.com,Technology,1333444555,2,1.0
-37,D1,1879,UrbanBuild,22 Builder St,Construct City,Builder Bob,Buildland,contact@urbanbuild.com,Construction,5566778899,2,1.0
-37,D2,1886,UrbanBuild,78 Builder St,ConstructCity,Builder Bob,BuildLand,contact@urbanbuild.com,Construction,9876543210,2,1.0
+Group ID,Dataset,Entity ID,Entity name,address,city,country,email,owner,phone,sector,Group size,Name similarity
+169,D1,1244,Mason & Co. Builders,789 Builder Avenue,Constructopolis,Buildland,info@masonco.com,Taylor Mason,2233445572,Construction,2,0.2962962962962963
+169,D1,1245,Mason & Co. Construction,789 Builder Avenue,Constructopolis,Buildland,contact@masonco.com,Taylor Mason,2233445571,Construction,2,0.2962962962962963
+168,D1,1874,Urban Tech,909 Innovation Dr,Tech City,Innovatia,contact@urbantech.com,Jordan Tech,1333444555,Technology,2,0.4
+168,D1,1875,Urban Tech Innovations,909 Innovation Dr,Tech City,Innovatia,innovations@urbantech.com,Jordan Tech,1333444555,Technology,2,0.4
+167,D2,1051,Hawk's Nest Academy,412 Knowledge Blvd,Learnville,EduNation,admin@hawksnest.edu,Clever Hawk,8899001147,Education,2,0.4090909090909091
+167,D1,1057,Hawk's Nest School,414 Knowledge Blvd,Learnville,EduNation,contact@hawksnest.edu,Clever Hawk,8899001188,Education,2,0.4090909090909091
+166,D1,795,Flow Dynamics,789 Canal Avenue,Watertown,Hydroland,info@flowdynamics.water,Lake Smith,9988776657,Utilities,2,0.47058823529411764
+166,D1,798,FlowDynamics Inc.,789 Canal Avenue,Watertown,Hydroland,info@flowdynamics.water,Lake Smith,9988776655,Utilities,2,0.47058823529411764
+165,D2,1655,Tech Solutions Corp.,123 Tech Avenue,Innovate City,Techland,contact@techsolutions.com,Jamie Tech,1234567890,Technology,2,0.47368421052631576
+165,D2,1657,Tech Solutons,123 Tech Avenue,Innovate City,TechLand,contact@techsolutions.com,Jamie Tech,1122334455,Technology,2,0.47368421052631576
+162,D1,333,Casey Constrctn Co.,815 Builder Avenue,Constructopolis,Buildland,support@caseyconstruct.com,Jordan Casey,5566778899,Construction,2,0.5
+162,D1,334,Casey Construction Co.,815 Builder Avenue,Constructopolis,Buildland,support@caseyconstruct.com,Jordan Casey,5566778899,Construction,2,0.5
+163,D1,493,Eco Living,707 Greenway,Eco City,Sustainland,info@ecoliving.com,Green Builder,1122446688,Real Estate,2,0.5
+163,D1,494,Eco Livng,707 Greenway,Eco City,Sustainland,contact@ecoliving.com,Green Builder,1122446688,Real Estate,2,0.5
+164,D1,1662,Tech Innovators Incorporated,123 Tech Avenue,Innovate City,Techland,contact@techinnovators.com,Jamie Lee,1234567890,Technology,2,0.5
+164,D2,1647,Tech Innovators Ltd,132 Tech Avenue,Innovate City,Techland,ltd@techinnovators.com,Jamie Lee,1234567899,Technology,2,0.5
+161,D1,271,BuildRight Co.,330 Builder St.,Constructopolis,Buildland,info@buildright.com,Jordan Alex,5566778892,Construction,2,0.5238095238095238
+161,D2,277,BuildRight Constructions,1212 Build St,Constructopolis,Buildland,info@buildright.com,Jordan Builder,2233445573,Construction,2,0.5238095238095238
+160,D2,1452,SecureNet Limited,1212 Secure Blvd,Safe City,Secureland,contact@securenet.com,Jordan Secure,1434455667,Cybersecurity,2,0.5294117647058824
+160,D2,1453,SecureNet Ltd.,1212 Secure Blvd,Safe City,Secureland,info@securenet.com,Jordan Secure,1434455667,Cybersecurity,2,0.5294117647058824
+141,D1,282,BuildSmart Construction Co.,203 Build Lane,Constructopolis,Buildland,contact@buildsmartco.com,Builder Alice,6667778889,Construction,3,0.5416666666666667
+141,D1,284,BuildSmart Corp.,203 Build Lane,Constructopolis,Buildland,smart@buildsmart.com,Builder Alice,6667778889,Construction,3,0.5416666666666667
+141,D2,285,BuildSmart Corporation,203 Build Lane,Constructopolis,Buildland,contact@buildsmartcorp.com,Builder Alice,6667778889,Construction,3,0.5416666666666667
+159,D2,1956,Wellbeing Inc,317 Wellness Way,Health City,Careland,info@wellbeinginc.com,Dr. Balance,3344556684,Healthcare,2,0.55
+159,D1,1962,Wellbeing Incorporated,317 Wellness Way,Health City,Careland,contact@wellbeinginc.com,Dr. Balance,3344556684,Healthcare,2,0.55
+156,D2,1133,InnoGears Ltd.,124 Innovation Drive,Techville,Innovatia,support@innogears.com,Jordan Tech,1234567891,Technology,3,0.5504201680672269
+156,D2,1134,InnoGearz Limited,124 Innovation Drive,Techville,Innovatia,support@innogearz.com,Jordan Tech,1234567891,Technology,3,0.5504201680672269
+156,D2,1135,InnoGearz Ltd.,124 Innovation Dr.,Techville,Innovatia,support@innogearz.com,Jordan Tech,1234567891,Technology,3,0.5504201680672269
+158,D2,924,Green Feilds Ltd.,717 Farm Lane,Harvest,Agroland,support@greenfields.co,Farmer Blue,1112131424,Agriculture,2,0.5555555555555556
+158,D1,933,Green Fields Ltd.,717 Farm Lane,Harvest,Agroland,support@greenfields.co,Farmer Blue,1112131424,Agriculture,2,0.5555555555555556
+157,D2,1016,GreenTech Solutions Incorporated,200 Tech Avenue,TechVille,TechLand,contact@greentechsolutions.com,Chris Green,9900223344,Technology,2,0.5625
+157,D2,1019,GreenTech Solutons Inc.,200 Tech Avenue,TechVille,TechLand,info@greentechsolutons.com,Chris Green,9900223344,Technology,2,0.5625
+154,D2,1716,TechNova Solutions Inc.,123 Innovation Drive,Techville,Futuristan,info@technovasolutions.com,Alex Quantum,1234567891,Information Technology,2,0.5909090909090909
+154,D1,1730,TechNova Solutons,123 Innovation Dr.,Techville,Futuristan,info@technova.solutions,Alexis Quantum,1234567890,Information Technology,2,0.5909090909090909
+155,D1,1780,TechnoGears Inc.,123 Innovation Drive,Techville,Innovatia,contact@technogears.com,Alex Tech,1234567890,Technology,2,0.5909090909090909
+155,D2,1767,TechnoGears Incorporated,123 Innovation Dr.,Techville,Innovatia,info@technogears.com,Alex Tech,1234567890,Technology,2,0.5909090909090909
+151,D1,209,Bright Future Academy,789 Learning Lane,Learn City,EduLand,info@brightfutureacademy.com,Patrick Bright,6677889905,Education,2,0.6
+151,D2,846,Future Bright Academies,789 Learning Lane,Learn City,EduLand,info@futurebrightacademies.com,Patrick Bright,6677889901,Education,2,0.6
+152,D1,970,GreenEnergy Inc.,300 Solar St,Eco Town,Greenland,contact@greenenergy.com,Pat Green,9876543210,Energy,2,0.6
+152,D1,971,GreenEnergy Ltd.,300 Solar St,Eco Town,Greenland,info@greenenergyltd.com,Pat Green,9876543210,Energy,2,0.6
+153,D2,1222,LogiMove,1500 Transport Ave,Logi City,TrackLand,info@logimove.com,Jordan Track,9900666679,Logistics,2,0.6
+153,D2,1223,LogiMove Inc.,1500 Transport Avenue,Logi City,TrackLand,contact@logimove.com,Jordan Track,9900666679,Logistics,2,0.6
+150,D2,143,AutoDriv Inc,500 Motorway,Drive City,AutoLand,support@autodrive.com,Pat Driver,9988776655,Automotive,2,0.6153846153846154
+150,D1,140,AutoDrive Inc,500 Motorway,Drive City,AutoLand,support@autodrive.com,Pat Driver,9988776655,Automotive,2,0.6153846153846154
+147,D2,194,Blue Ocean Tech,12 Ocean Way,Seaside,WaterLand,contact@blueoceantech.com,Chris Ocean,9876543215,Technology,2,0.6190476190476191
+147,D1,185,Blue Ocean Technologies,12 Ocean Way,Seaside,WaterLand,info@blueoceantech.com,Chris Ocean,9876543215,Technology,2,0.6190476190476191
+148,D2,371,CloudReach Tech,102 Skyway Blvd.,AeroCity,Skyland,info@cloudreachtech.com,Samuel Blue,9900334457,Aerospace,2,0.6190476190476191
+148,D1,361,CloudReach Technologies,102 Skyway Blvd.,AeroCity,Skyland,contact@cloudreachtech.com,Samuel Blue,9900334457,Aerospace,2,0.6190476190476191
+149,D1,1994,Windy Heights Limited,202 Windy Way,BreezyTown,Windland,info@windyheights.com,Breeze Holdings,2345678901,Renewable Energy,2,0.6190476190476191
+149,D1,1995,Windy Heights Ltd.,202 Windy Way,BreezyTown,Windland,contact@windyheights.com,Breeze Holdings,2345678901,Renewable Energy,2,0.6190476190476191
+146,D1,1107,HealthPlus Pharma,600 Health Blvd,Med City,HealthLand,contact@healthplus.com,Dana Health,5566778899,Pharmaceuticals,2,0.625
+146,D2,1096,HealthPlus Pharmaceuticals,600 Health Blvd,Med City,HealthLand,info@healthplus.com,Dana Health,5566778899,Pharmaceuticals,2,0.625
+98,D1,1079,Health Solutions Ltd.,812 Health Blvd,Health City,Healthland,contact@healthsolutions.health,Caregiver Heal,9988776657,Healthcare,3,0.6340579710144928
+98,D2,1073,Health Solutons Limited,812 Health Blvd,Health City,Healthland,info@healthsolutions.health,Caregiver Heal,9988776657,Healthcare,3,0.6340579710144928
+98,D2,1074,Health Solutons Ltd.,812 Health Blvd,Health City,Healthland,contact@healthsolutions.health,Caregiver Heal,9988776657,Healthcare,3,0.6340579710144928
+145,D1,1290,MediaWave,1111 Broadcast Blvd,Media City,NewsLand,contact@mediawave.com,News Anchor,1123456789,Media,2,0.6363636363636364
+145,D2,1294,MediaWave Inc.,1111 Broadcast Blvd,Media City,NewsLand,info@mediawaveinc.com,News Anchor,1123456789,Media,2,0.6363636363636364
+143,D1,1676,Tech Solutions,101 Tech Ave,Innovate City,Techland,contact@techsolutions.com,Tech Guru,1555666777,Technology,2,0.6428571428571429
+143,D1,1743,TechSolutions,101 Tech Ave,InnovateCity,Techland,info@techsolutions.com,Tech Guru,1234567890,Technology,2,0.6428571428571429
+144,D2,1894,UrbanBuild Constructors Inc.,321 Builder Avenue,Constructopolis,Buildland,contact@urbanbuild.com,Taylor Mason,2233445568,Construction,2,0.6428571428571429
+144,D1,1886,UrbanBuild Construktors,321 Builder St.,Constructopolis,Buildland,contact@urbanbuild.con,Taylor Mason,5566778899,Construction,2,0.6428571428571429
+142,D1,92,AquaFl0w Systems,789 Water Way,Aquaville,Hydroland,support@aquaflow.com,Sophia Waters,2233445566,Utilities,2,0.6470588235294118
+142,D1,93,AquaFlow Systems,789 Water Way,Aquaville,Hydroland,support@aquaflow.com,Sophia Waters,2233445566,Utilities,2,0.6470588235294118
+139,D1,816,Foodies Delight Limited,789 Gourmet Avenue,Taste Town,Foodland,contact@foodiesdelight.food,Chef Delight,3456789012,Food & Beverage,2,0.6521739130434783
+139,D2,821,Foodies Delight Ltd.,789 Gourmet Ave,Taste Town,Foodland,hello@foodiesdelight.food,Chef Delight,3456789012,Food & Beverage,2,0.6521739130434783
+140,D2,135,Auto Innovators Limited,609 Drive Avenue,Car City,Autoland,contact@autoinnovators.auto,Auto Leader,5678901240,Automotive,2,0.6521739130434783
+140,D2,136,Auto Innovators Ltd,609 Drive Ave,Car City,Autoland,ltd@autoinnovators.auto,Auto Leader,5678901240,Automotive,2,0.6521739130434783
+86,D2,1494,Skyline Holdings,410 Build St,Construct City,BuildLand,holdings@skyline.com,Taylor Erect,2233445576,Finance,3,0.6543209876543209
+86,D1,1498,Skyline Holdings Inc.,410 Build St,Construct City,BuildLand,contact@skyline.com,Taylor Erect,2233445576,Finance,3,0.6543209876543209
+86,D2,1495,Skyline Holdings Incorporated,410 Build Street,Construct City,BuildLand,info@skyline.com,Taylor Erect,2233445576,Finance,3,0.6543209876543209
+102,D1,1352,Quantum Innovations,456 Future Lane,Techville,Futuristan,info@quantuminnovations.com,Alexis Quantum,1234567891,Information Technology,4,0.6606337979335691
+102,D1,1353,Quantum Innovations Inc.,138 Innovation Drive,Techville,Futuristan,inc@quantum.innovations,Alexis Quantum,1234567805,Information Technology,4,0.6606337979335691
+102,D2,1363,Quantum Innovations Ltd.,147 Innovation Drive,Techville,Futuristan,info@quantum.innovations,Alexis Quantum,1234567804,Information Technology,4,0.6606337979335691
+102,D2,1364,Quantum Innovatons,125 Innovation Dr.,Techville,Futuristan,info@quantum.innovations,Alexis Quantum,1234567892,Information Technology,4,0.6606337979335691
+131,D1,153,AutoTech Innovations,512 Driveway,Autoville,Carland,innovate@autotech.auto,Driver Fast,9900112277,Automotive,2,0.6666666666666666
+131,D2,161,AutoTech Innovators,512 Driveway,Autoville,Carland,innovate@autotech.auto,Driver Fast,9900112277,Automotive,2,0.6666666666666666
+132,D1,312,Car Innovations,1001 Drive Lane,AutoCity,CarLand,info@carinnovations.com,Jill Orange,123456789,Automotive,2,0.6666666666666666
+132,D2,316,Car Innovatons,1001 Drive Lane,AutoCity,CarLand,contact@carinnovations.com,Jill Orange,123456789,Automotive,2,0.6666666666666666
+133,D2,406,Constructo Supplies,331 Builder St.,Constructopolis,Buildland,supplies@constructo.com,Jamie Jordan,5566778893,Construction,2,0.6666666666666666
+133,D1,401,Constructo Supply Co.,331 Builder Street,Constructopolis,Buildland,contact@constructosupply.com,Jamie Jordan,5566778893,Construction,2,0.6666666666666666
+134,D1,950,Green Solutions,25 Solar Drive,Eco City,Greenland,contact@greensolutions.com,George Green,9876543216,Energy,2,0.6666666666666666
+134,D2,952,Green Solutons,25 Solar Dr.,Eco City,Greenland,info@greensolutions.com,George Green,9876543216,Energy,2,0.6666666666666666
+135,D1,1192,Journey Planners Inc.,321 Explore St,Adventure City,Traveland,info@journeyplanners.com,Jamie Travel,7788990055,Travel,2,0.6666666666666666
+135,D1,1193,Journey Planners Incorporated,321 Explore Street,Adventure City,Traveland,contact@journeyplanners.com,Jamie Travel,7788990055,Travel,2,0.6666666666666666
+136,D1,1285,MediaPulse,12000 Broadcast Blvd,Mediaville,Infotainia,contact@mediapulse.com,Chris M. News,9988776533,Media,2,0.6666666666666666
+136,D2,1288,MediaPulse Inc.,12000 Broadcast Blvd,Mediaville,Infotainia,info@mediapulse.com,Chris M. News,9988776533,Media,2,0.6666666666666666
+137,D2,1327,Oceanic Ventures Limited,2324 Surf St.,Wave City,Marineland,info@oceanicventures.com,Jordan Bay,1765432123,Marine,2,0.6666666666666666
+137,D1,1329,Oceanic Ventures Ltd.,2324 Surf Street,Wave City,Marineland,contact@oceanicventures.com,Jordan Bay,1765432123,Marine,2,0.6666666666666666
+138,D2,424,CropCircle,1010 Field Ave,Greenville,Agroland,hello@cropcircle.agr,Circle Master,1122334453,Agriculture,2,0.6666666666666666
+138,D2,425,CropCircle Inc.,1010 Field Avenue,Greenville,Agroland,contact@cropcircle.agr,Circle Master,1122334453,Agriculture,2,0.6666666666666666
+124,D1,33,AgriFutur Farms,123 Farm Rd,Greenville,EcoLand,contact@agrifuture.org,Taylor Jordan,7890123456,Agriculture,2,0.6875
+124,D1,37,AgriFuture Farms,123 Farm Road,Greenville,EcoLand,info@agrifuture.org,Taylor Jordan,7890123456,Agriculture,2,0.6875
+125,D1,42,AgriGroth Farms,789 Harvest Lane,Farmville,Agroland,support@agrigrowth.farm,Farmer Fields,1990044556,Agriculture,2,0.6875
+125,D1,50,AgriGrowth Farms,300 Harvest Rd,Farmville,Agroland,support@agrigrowth.farm,Farmer Fields,1990045678,Agriculture,2,0.6875
+126,D1,174,BioLife Sciences,951 Bio Blvd,Bio City,Bioland,info@biolifesciences.com,Pat Bio,1889900112,Biotechnology,2,0.6875
+126,D2,182,BioLife Siences,951 Bio Blvd,Bio City,Bioland,contact@biolifesciences.com,Pat Bio,1889900112,Biotechnology,2,0.6875
+127,D1,544,EcoFinanc Group,800 Finance Avenue,FinanceCity,FinanceLand,support@ecofinancegroup.com,Sam Money,9900889900,Finance,2,0.6875
+127,D1,545,EcoFinance Group,800 Finance Ave.,FinanceCity,FinanceLand,support@ecofinancegroup.com,Sam Money,9900889900,Finance,2,0.6875
+128,D1,1955,WellCare Clincs,202 Wellness Way,Healthville,Careland,contact@wellcare.com,Wellness Corp,1987654322,Healthcare,2,0.6875
+128,D1,1957,WellCare Clinics,202 Wellness Way,Healthville,Careland,info@wellcare.com,Wellness Corp,1987654322,Healthcare,2,0.6875
+129,D2,565,EcoHome Builders,1212 Green St,Eco City,Constructia,contact@ecohome.com,Sam Right,1122334455,Construction,2,0.6875
+129,D2,566,EcoHome Buildrs,1212 Green St,Eco City,Constructia,contact@ecohome.com,Sam Right,1122334455,Construction,2,0.6875
+130,D2,1568,Sprout Solutions,1050 Plant Path,Garden City,Agraria,support@sproutsolutions.agri,Flora Bloom,1415161722,Agriculture,2,0.6875
+130,D2,1569,Sprout Solutons,1050 Plant Path,Garden City,Agraria,support@sproutsolutions.agri,Flora Bloom,1415161722,Agriculture,2,0.6875
+122,D1,162,BeverageHub,407 Market Street,Food Town,GourmetLand,contact@beveragehub.com,Alex Cook,1122334462,Food & Beverage,2,0.6923076923076923
+122,D2,168,BeverageHub Inc.,407 Market St.,Food Town,GourmetLand,info@beveragehub.com,Alex Cook,1122334462,Food & Beverage,2,0.6923076923076923
+123,D2,1772,TechnoGearz,101 Innovation Drive,Techville,Innovatia,contact@technogears.tech,Jamie Tech,1234567890,Technology,2,0.6923076923076923
+123,D2,1776,TechnoGearz Inc.,101 Innovation Dr.,Techville,Innovatia,info@technogears.tech,Jamie Tech,1234567890,Technology,2,0.6923076923076923
+121,D1,1091,HealthFirst Medical,789 Wellness Blvd,Health City,Medica,contact@healthfirst.com,Dr. Heal Good,1555765432,Healthcare,2,0.7
+121,D2,1085,HealthFirst Medikal,789 Wellness Blvd,Health City,Medica,contact@healthfirst.com,Dr. Heal Good,1555765432,Healthcare,2,0.7
+21,D1,992,GreenLeaf Agriculture,300 Farm Lane,Agro Town,Farmville,contact@greenleaf.com,Sam Farmer,1987654321,Agriculture,3,0.7000000000000001
+21,D2,989,GreenLeaf Agriculture,456 Farm Road,Agro Town,Farmville,info@greenleaf.com,Sam Farmer,9876543210,Agriculture,3,0.7000000000000001
+21,D1,993,GreenLeaf Agro,456 Farm Road,Agro Town,Farmville,contact@greenleafagro.com,Sam Farmer,9876543211,Agriculture,3,0.7000000000000001
+115,D1,1220,LifeCare Assoc.,313 Wellness Way,Healthville,Mediland,contact@lifecareassociates.com,Morgan Wellness,4455667793,Healthcare,2,0.7058823529411765
+115,D2,1219,LifeCare Associates,313 Wellness Way,Healthville,Mediland,info@lifecareassociates.com,Morgan Wellness,4455667793,Healthcare,2,0.7058823529411765
+116,D1,1448,Sky High Airlines,202 Flight Way,Air City,Flyland,info@skyhighairlines.com,Avery Pilot,1444555666,Aviation,2,0.7058823529411765
+116,D2,1463,Sky High Airlnes,202 Flight Way,Air City,Flyland,contact@skyhighairlines.com,Avery Pilot,1444555666,Aviation,2,0.7058823529411765
+117,D1,1965,Wellness Assoc.,789 Health Avenue,Healthtown,Mediland,contact@wellnessassoc.com,Dr. Care,3334445556,Healthcare,2,0.7058823529411765
+117,D1,1966,Wellness Associates,789 Health Ave,Healthtown,Mediland,info@wellnessassociates.com,Dr. Care,3334445556,Healthcare,2,0.7058823529411765
+118,D2,17,Aero Dynamics Inc,4444 Jetstream Rd,Aero City,Flyland,contact@aerodynamics.inc,Morgan Wind,1122334455,Aviation,2,0.7058823529411765
+118,D2,18,Aero Dynmics Inc.,4444 Jetstream Road,Aero City,Flyland,info@aerodynamics.inc,Morgan Wind,1122334455,Aviation,2,0.7058823529411765
+119,D2,1685,TechFlow Dynamics,808 Flow Ave.,FlowCity,TechLand,contact@techflow.com,Flow Tech,9900445566,Technology,2,0.7058823529411765
+119,D2,1686,TechFlow Dynmics,808 Flow Avenue,FlowCity,TechLand,info@techflow.com,Flow Tech,9900445566,Technology,2,0.7058823529411765
+120,D2,1738,TechWave Dynamics,620 Silicon St,Tech City,Innovatia,dynamics@techwave.tech,Gadget Guru,1990011230,Technology,2,0.7058823529411765
+120,D2,1739,TechWave Dynmics,620 Silicon St,Tech City,Innovatia,dynamics@techwave.tech,Gadget Guru,1990011230,Technology,2,0.7058823529411765
+114,D1,473,Eco Energi Solutions,456 Solar Street,Energy City,Powerland,support@ecoenergi.com,Leo Power,9900112233,Energy,2,0.7142857142857143
+114,D1,476,Eco Energy Solutions,456 Solar St,Energy City,Powerland,support@ecoenergy.com,Leo Power,9900112233,Energy,2,0.7142857142857143
+108,D2,399,ConstructiveFutre,13000 Future Blvd,FutureCity,FutureLand,contact@constructivefutre.com,Leo Indigo,2345678902,Construction,2,0.7222222222222222
+108,D1,396,ConstructiveFuture,13000 Future Blvd,FutureCity,FutureLand,info@constructivefuture.com,Leo Indigo,2345678902,Construction,2,0.7222222222222222
+109,D2,575,EcoLife Consulting,111 Green Street,EcoCity,EcoLand,consulting@ecolife.com,Sam Eco,9900112243,Consulting,2,0.7222222222222222
+109,D1,562,EcoLife Consultng,111 Green St.,EcoCity,EcoLand,contact@ecolife.com,Sam Eco,9900112243,Consulting,2,0.7222222222222222
+110,D1,1678,Tech Solutions Inc.,123 Silicon Ave,Techville,Innovatia,info@techsolutions.com,Sam Tech,1234567890,Technology,2,0.7222222222222222
+110,D2,1658,Tech Solutons Inc.,123 Silicon Avenue,Techville,Innovatia,contact@techsolutions.com,Sam Tech,1234567890,Technology,2,0.7222222222222222
+111,D1,1697,TechCorp Solutions,200 Tech Park,Innovate City,Techland,contact@techcorpsolutions.com,Sam Innovate,1234567890,Technology,2,0.7222222222222222
+111,D2,1676,TechCorp Solutons,200 Tech Park,Innovate City,Techland,contact@techcorpsolutions.com,Sam Innovate,1234567890,Technology,2,0.7222222222222222
+112,D2,1706,TechLand Solutions,126 Innovation Blvd,TechVille,TechLand,contact@techlandsolutions.com,Taylor Tech,1234567893,Technology,2,0.7222222222222222
+112,D1,1723,TechLand Solutons,126 Innovation Blvd,TechVille,TechLand,contact@techlandsolutons.com,Taylor Tech,1234567893,Technology,2,0.7222222222222222
+113,D2,1126,HydroSolutions Ltd.,789 Lakeview Ave,Watertown,Hydroland,info@hydrosolutions.water,River Lake,9988776659,Utilities,2,0.7222222222222222
+113,D2,1127,HydroSolutons Ltd.,789 Lakeview Avenue,Watertown,Hydroland,contact@hydrosolutions.water,River Lake,9988776659,Utilities,2,0.7222222222222222
+106,D2,393,Constructive Cre8tions,810 Builder St.,Constructopolis,Buildland,contact@constructivecre8tions.com,Jordan Casey,5566778899,Construction,2,0.7272727272727273
+106,D1,386,Constructive Creations,810 Builder Street,Constructopolis,Buildland,info@constructivecreations.com,Jordan Casey,5566778899,Construction,2,0.7272727272727273
+107,D1,1687,TechBuild Innov8tions,123 Tech Avenue,Innovate City,TechLand,contact@techbuild.com,Jamie Tech,1234567890,Technology,2,0.7272727272727273
+107,D2,1672,TechBuild Innovations,123 Tech Ave,Innovate City,TechLand,contact@techbuild.com,Jamie Tech,1234567890,Technology,2,0.7272727272727273
+103,D1,1690,TechBuild Solutions,101 Tech Park,Tech City,TechLand,info@techbuild.com,Jamie Tech,1234567890,Technology,2,0.7368421052631579
+103,D2,1674,TechBuild Solutons,101 Tech Park,Tech City,TechLand,contact@techbuild.com,Jamie Tech,1234567890,Technology,2,0.7368421052631579
+104,D2,400,Constructo Builders,329 Builder St.,Constructopolis,Buildland,contact@constructo.com,Alex Jordan,5566778891,Construction,2,0.7368421052631579
+104,D2,401,Constructo Buildrs,329 Builder St.,Constructopolis,Buildland,contact@constructo.con,Alex Jordan,5566778891,Construction,2,0.7368421052631579
+105,D2,1014,GreenTech Solutions,1010 Eco Lane,Eco City,Sustainland,info@greentech.com,Alex Green,9876543216,Technology,2,0.7368421052631579
+105,D2,1018,GreenTech Solutons,1010 Eco Lane,Eco City,Sustainland,contact@greentech.com,Alex Green,9876543216,Technology,2,0.7368421052631579
+96,D1,3,Adventure Gear Co.,555 Adventure St,Outdoor City,ExploreLand,info@adventuregear.com,Explorer Jane,6655443322,Retail,2,0.75
+96,D1,4,Adventure Gear Company,555 Adventure Street,Outdoor City,ExploreLand,contact@adventuregear.com,Explorer Jane,6655443322,Retail,2,0.75
+97,D1,1006,GreenPower Solutions,456 Eco Rd,GreenCity,EcoWorld,contact@greenpowersolutions.com,Eco Light,9988773344,Renewable Energy,2,0.75
+97,D1,1007,GreenPower Solutons,456 Eco Road,GreenCity,EcoWorld,info@greenpowersolutions.com,Eco Light,9988773344,Renewable Energy,2,0.75
+99,D1,1518,Smart Solutons,4040 Smart Avenue,Tech City,Techland,contact@smartsolutions.com,Smart Guru,6655667788,Technology,2,0.75
+99,D1,1519,Smart Solutons Inc.,4040 Smart Avenue,Tech City,Techland,info@smartsolutons.com,Smart Guru,6655667788,Technology,2,0.75
+100,D2,1880,Urban Planners,405 Build St,Construct City,BuildLand,info@urbanplanners.com,Morgan Plan,2233445571,Construction,2,0.75
+100,D1,1873,Urban Planners Inc.,405 Build St,Construct City,BuildLand,contact@urbanplanners.com,Morgan Plan,2233445571,Construction,2,0.75
+101,D2,214,Breeze Energi Solutions,1300 Windy Lane,BreezyTown,Windland,info@breezeenergysolutions.com,Breeze Holdings,2345678906,Renewable Energy,2,0.75
+101,D2,215,Breeze Energy Solutions,1300 Windy Lane,BreezyTown,Windland,contact@breezeenergysolutions.com,Breeze Holdings,2345678906,Renewable Energy,2,0.75
+95,D2,926,Green Fields Agriculture,56 Greenway,Greenville,Farmville,contact@greenfieldsagri.com,Hank Field,1122334466,Agriculture,2,0.76
+95,D1,934,Green Fieldz Agriculture,56 Greenway,Greenville,Farmville,contact@greenfieldsagri.com,Hank Field,1122334466,Agriculture,2,0.76
+93,D2,1552,SolarTech Innovations,404 Solar Ave.,SunCity,EcoLand,contact@solartech.com,Eco Innovations,1100778899,Energy,2,0.7619047619047619
+93,D1,1551,SolarTech Innovatons,404 Solar Avenue,SunCity,EcoLand,info@solartech.com,Eco Innovations,1100778899,Energy,2,0.7619047619047619
+94,D2,1940,WaterTech Innovations,789 Water Lane,Hydro City,Waterland,support@watertech.water,Jordan Blue,1122334458,Utilities,2,0.7619047619047619
+94,D2,1941,WaterTech Innovatons,789 Water Lane,Hydro City,Waterland,support@watertech.water,Jordan Blue,1122334458,Utilities,2,0.7619047619047619
+90,D1,682,Epicurean Escapade,708 Gourmet Avenue,FoodTown,TasteLand,contact@epicureanescapade.com,Grace Purple,7890123460,Hospitality,2,0.7647058823529411
+90,D2,702,Epicurean Escape,708 Gourmet Ave,FoodTown,TasteLand,info@epicureanescape.com,Grace Purple,7890123460,Hospitality,2,0.7647058823529411
+91,D2,795,FlavorBurst Snacks,2222 Crunch St,Flavor City,Gourmetland,info@flavorburst.snack,Jamie Spice,1999000222,Food & Beverage,2,0.7647058823529411
+91,D1,781,FlavorBurst Snax,2222 Crunch St,Flavor City,Gourmetland,contact@flavorburst.snack,Jamie Spice,1999000222,Food & Beverage,2,0.7647058823529411
+92,D2,909,Green Defenders,1200 Green St,Eco City,Sustainia,hello@greendefenders.com,Planet Champion,7766554433,Environment,2,0.7647058823529411
+92,D1,910,Green Defenders Inc.,1200 Green Street,Eco City,Sustainia,contact@greendefenders.com,Planet Champion,7766554433,Environment,2,0.7647058823529411
+89,D2,745,FashionPioneers,422 Trend Blvd,Fashion City,Trendland,support@fashionpioneers.retail,Jordan Trend,5566778802,Retail,2,0.7692307692307693
+89,D1,729,FashionPioners,422 Trend Blvd,Fashion City,Trendland,support@fashionpioners.retail,Jordan Trend,5566778802,Retail,2,0.7692307692307693
+40,D1,1814,Travel Time,909 Journey Road,Travel City,Wanderland,contact@traveltime.com,Wander Lust,6699001122,Travel,3,0.7727272727272727
+40,D2,1809,Travel Time,1414 Journey Rd,Travel City,Wanderland,contact@traveltime.com,Wander Lust,1445566778,Travel,3,0.7727272727272727
+40,D2,1826,TravelTime,10000 Journey Rd,Travel City,Wanderland,info@traveltime.com,Wander Lust,7788990011,Travel,3,0.7727272727272727
+87,D2,234,BrightFutre Education,321 Knowledge Avenue,EduCity,LearnLand,info@brightfuture.edu,Liam Johnson,1234567891,Education,2,0.7727272727272727
+87,D1,224,BrightFuture Education,321 Knowledge Ave,EduCity,LearnLand,contact@brightfuture.edu,Liam Johnson,1234567891,Education,2,0.7727272727272727
+88,D2,1478,SkyReach Manufacturing,414 Sky St.,SkyCity,SkyLand,manufacturing@skyreach.com,Sky Engineer,9900990021,Manufacturing,2,0.7727272727272727
+88,D2,1479,SkyReach Manufcturing,414 Sky St.,SkyCity,SkyLand,contact@skyreach.com,Sky Engineer,9900990021,Manufacturing,2,0.7727272727272727
+84,D2,289,BuildSmart Innov8tions Ltd.,203 Build Lane,Constructopolis,Buildland,innov8tions@buildsmart.com,Builder Alice,6667778889,Construction,2,0.7777777777777778
+84,D1,290,BuildSmart Innovations Ltd.,203 Build Lane,Constructopolis,Buildland,innovations@buildsmart.com,Builder Alice,6667778889,Construction,2,0.7777777777777778
+85,D2,1305,Motorway Mechanics,803 Motorway,Autotown,Carland,service@motorwaymech.com,Mr. Quick,5566778899,Automotive,2,0.7777777777777778
+85,D1,1307,Motorway Mechaniqs,803 Motorway,Autotown,Carland,contact@motorwaymech.com,Mr. Quick,5566778899,Automotive,2,0.7777777777777778
+82,D1,213,Bright Horizon Academy,406 Knowledge Blvd,Learnville,EduNation,contact@brighthorizons.edu,Clever Hawk,8899001144,Education,2,0.782608695652174
+82,D1,216,Bright Horizonz Academy,406 Knowledge Blvd,Learnville,EduNation,info@brighthorizons.edu,Clever Hawk,8899001144,Education,2,0.782608695652174
+83,D1,820,ForestEdge Lumber Co.,174 Timber Trail,Woodland,Leafland,info@forestedgelumber.com,Bark Wood,4455667812,Manufacturing,2,0.782608695652174
+83,D2,826,ForestEdge Lumber Company,174 Timber Trl,Woodland,Leafland,contact@forestedgelumber.com,Bark Wood,4455667812,Manufacturing,2,0.782608695652174
+80,D2,840,FreshFarm Produce,707 Farm Lane,Harvest,Agroland,contact@freshfarm.produce,Farmer Fresh,1112131415,Agriculture,2,0.7894736842105263
+80,D2,841,FreshFarm Produce Inc.,707 Farm Lane,Harvest,Agroland,info@freshfarm.produce,Farmer Fresh,1112131415,Agriculture,2,0.7894736842105263
+81,D2,1166,Innovative Motors,1005 Drive Lane,AutoCity,CarLand,contact@innovativemotors.com,Jill Red,123456789,Automotive,2,0.7894736842105263
+81,D2,1167,Innovative Motors Inc.,1005 Drive Lane,AutoCity,CarLand,info@innovativemotors.com,Jill Red,123456789,Automotive,2,0.7894736842105263
+78,D1,408,Creative Engines,1005 Drive Lane,AutoCity,CarLand,support@creativeengines.com,Jack Red,123456789,Automotive,2,0.8
+78,D1,409,Creative Engins,1005 Drive Lane,AutoCity,CarLand,support@creativeengines.com,Jack Red,123456789,Automotive,2,0.8
+79,D2,1492,Skyline Engineering,1417 Tech St,Constructopolis,Buildland,support@skylineeng.com,Alex Skyline,2233445578,Engineering,2,0.8
+79,D1,1496,Skyline Engineering Ltd.,1417 Tech St,Constructopolis,Buildland,info@skylineeng.com,Alex Skyline,2233445579,Engineering,2,0.8
+76,D1,1937,Waterway Enterprises,321 Canal Street,HydroCity,Aquaterra,contact@waterway.com,Jordan River,3344556681,Utilities,2,0.8095238095238095
+76,D1,1938,Waterway Enterprises Ltd.,321 Canal Street,HydroCity,Aquaterra,info@waterway.com,Jordan River,3344556682,Utilities,2,0.8095238095238095
+77,D2,103,AquaPure Waterworks,210 Aqua Lane,Watertown,Hydroland,contact@aquapure.water,River Brooks,9988776655,Utilities,2,0.8095238095238095
+77,D2,104,AquaPure Waterworks Inc.,654 Aqua Ave,Watertown,Hydroland,contact@aquapure.water,River Brooks,9988776655,Utilities,2,0.8095238095238095
+75,D1,130,Auto Innovators,666 Drive St,Auto City,Carland,contact@autoinnovators.car,Car Creator,9134567890,Automotive,2,0.8125
+75,D2,134,Auto Innovators Inc.,666 Drive St,Auto City,Carland,info@autoinnovators.auto,Car Creator,9134567890,Automotive,2,0.8125
+73,D1,674,EnergySecure,369 Power Ave,Energy City,Powerland,contact@energysecure.com,Chris Cyan,1122446688,Energy,2,0.8181818181818182
+73,D2,689,EnergySecurr,369 Power Avenue,Energy City,Powerland,contact@energysecure.com,Chris Cyan,1122446688,Energy,2,0.8181818181818182
+74,D1,1634,Sustainable Ventures,123 Green Rd,EcoCity,Sustainland,contact@sustainableventures.com,Olivia Green,9876543210,Energy,2,0.8181818181818182
+74,D1,1635,Sustainable Ventures Ltd.,123 Green Road,EcoCity,Sustainland,info@sustainableventures.com,Olivia Green,9876543210,Energy,2,0.8181818181818182
+72,D1,805,Food Delights,123 Gourmet St,Food City,Cuisineland,support@fooddelights.com,Chef Delight,8877665544,Food,2,0.8333333333333334
+72,D1,806,Food Delightz,123 Gourmet Street,Food City,Cuisineland,support@fooddelightz.com,Chef Delight,8877665544,Food,2,0.8333333333333334
+71,D2,1307,Mountain Adventures,808 Summit Street,Adventure City,Explorland,contact@mountainadventures.com,Morgan Explorer,1444555666,Tourism,2,0.8421052631578947
+71,D1,1309,Mountain Adventurres,808 Summit St.,Adventure City,Explorland,info@mountainadventures.com,Morgan Explorer,1444555666,Tourism,2,0.8421052631578947
+68,D2,102,AquaPure Waters,789 Water Lane,Hydro City,Waterland,support@aquapure.water,Chris Blue,1122334455,Utilities,2,0.8571428571428571
+68,D1,102,AquaPure Waterz,789 Water Lane,Hydro City,Waterland,support@aquapure.water,Chris Blue,1122334455,Utilities,2,0.8571428571428571
+69,D2,559,EcoGreen Energi,5678 Solar Road,Green City,Sustainland,info@ecogreen.energy,Pat Green,1777000222,Energy,2,0.8571428571428571
+69,D1,552,EcoGreen Energy,5678 Solar Rd,Green City,Sustainland,contact@ecogreen.energy,Pat Green,1777000222,Energy,2,0.8571428571428571
+70,D1,1948,WaveNet Systems,1010 Waterfall Way,Watertown,Hydroland,info@wavenet.systems,Brooke R. Rivers,9988776655,Utilities,2,0.8571428571428571
+70,D1,1949,WaveNet Systemz,1010 Waterfall Way,Watertown,Hydroland,contact@wavenet.systems,Brooke R. Rivers,9988776655,Utilities,2,0.8571428571428571
+66,D1,1903,UrbanFarmers Colective,714 Farm Lane,Harvest,Agroland,info@urbanfarmers.co,Farmer Urban,1112131421,Agriculture,2,0.8636363636363636
+66,D2,1905,UrbanFarmers Collective,714 Farm Lane,Harvest,Agroland,contact@urbanfarmers.co,Farmer Urban,1112131421,Agriculture,2,0.8636363636363636
+67,D2,1602,Sustainability Pioneers,1200 Green St,Eco City,Sustainia,contact@sustainpioneers.com,Nature Advocate,7766554433,Environment,2,0.8636363636363636
+67,D2,1603,Sustainability Pioners,1200 Green St.,Eco City,Sustainia,info@sustainpioneers.com,Nature Advocate,7766554433,Environment,2,0.8636363636363636
+61,D2,423,CrispCraze Foods,2255 Crunch St,Flavor City,Gourmetland,contact@crispcraze.foods,Morgan Spice,1999000226,Food & Beverage,2,0.8666666666666667
+61,D1,414,CrispCraze Foodz,2255 Crunch St,Flavor City,Gourmetland,info@crispcraze.foods,Morgan Spice,1999000226,Food & Beverage,2,0.8666666666666667
+62,D2,594,EcoLyfe Products,101 Green Street,EcoCity,EcoLand,info@ecolyfeproducts.com,Sam Eco,9900112233,Consumer Goods,2,0.8666666666666667
+62,D1,575,EcoLyfe Productz,101 Green St.,EcoCity,EcoLand,contact@ecolyfeproductz.com,Sam Eco,9900112233,Consumer Goods,2,0.8666666666666667
+63,D2,661,EduSmart Schools,303 Learning Lane,Eduville,Learnland,info@edusmart.school,Alex Teach,4455667788,Education,2,0.8666666666666667
+63,D1,652,EduSmart Schoolz,303 Learning Lane,Eduville,Learnland,contact@edusmart.school,Alex Teach,4455667788,Education,2,0.8666666666666667
+64,D1,1023,GreenWave Energi,123 River Rd,Watertown,Hydroland,info@greenwave.energy,River Brooks,9988776655,Utilities,2,0.8666666666666667
+64,D1,1024,GreenWave Energy,123 River Road,Watertown,Hydroland,contact@greenwave.energy,River Brooks,9988776655,Utilities,2,0.8666666666666667
+65,D1,1452,SkyBound Flights,789 Skyway Blvd,Aero City,Flyland,contact@skybound.air,Taylor Wing,1122334455,Aviation,2,0.8666666666666667
+65,D2,1465,SkyBound Flightz,789 Skyway Blvd,Aero City,Flyland,contact@skybound.air,Taylor Wing,1122334455,Aviation,2,0.8666666666666667
+9,D2,380,ConstructCo Enterprises,1212 Enterprise Blvd,Enterprise City,USA,info@constructco.enterprises,Enterprise Builder,1314151617,Construction,3,0.875
+9,D1,375,ConstructCo Enterprizes,1212 Enterprise Blvd,Enterprise City,USA,contact@constructco.enterprises,Enterprise Builder,1314151617,Construction,3,0.875
+9,D2,381,ConstructCo Enterprizes,1212 Enterprise Blvd,Enterprise City,USA,contact@constructco.enterprises,Enterprise Builder,1314151617,Construction,3,0.875
+1,D1,105,AquaTech Innovations,654 Waterway Blvd,HydroCity,Aquaterra,service@aquatech.com,Jordan River,3344556677,Utilities,3,0.8787878787878789
+1,D2,107,AquaTech Innovations,1122 Waterway Blvd,HydroCity,Aquaterra,info@aquatech.com,Jordan Aqua,1314151617,Utilities,3,0.8787878787878789
+1,D1,106,AquaTech Innovations Ltd.,654 Waterway Blvd,HydroCity,Aquaterra,contact@aquatech.com,Jordan River,3344556678,Utilities,3,0.8787878787878789
+47,D2,1978,WellnessFirst Health,1400 Wellness Way,HealthCity,HealthLand,contact@wellnessfirst.com,Lucas Health,9900555566,Healthcare,3,0.8787878787878789
+47,D1,1986,WellnessFirst HealthCare,1400 Wellness Way,HealthCity,HealthLand,contact@wellnessfirst.com,Lucas Health,9900555566,Healthcare,3,0.8787878787878789
+47,D2,1979,WellnessFirst Healthcare,1400 Wellness Way,HealthCity,HealthLand,info@wellnessfirst.com,Lucas Health,9900555566,Healthcare,3,0.8787878787878789
+2,D1,202,BlueWave Utilities,321 Ocean Avenue,Watertown,Hydroland,contact@bluewave.water,Brook Rivers,9988776655,Utilities,3,0.8823529411764706
+2,D1,203,BlueWave Utility,321 Ocean Ave,Watertown,Hydroland,info@bluewave.water,Brook Rivers,9988776655,Utilities,3,0.8823529411764706
+2,D2,212,BlueWave Utility,321 Ocean Ave,Watertown,Hydroland,info@bluewave.water,Brook Rivers,9988776655,Utilities,3,0.8823529411764706
+59,D1,602,EcoWealth Partners,802 Finance Ave.,FinanceCity,FinanceLand,info@ecowealthpartners.com,Jamie Rich,9900889902,Finance,2,0.8823529411764706
+59,D1,603,EcoWealth Partnerz,802 Finance Avenue,FinanceCity,FinanceLand,contact@ecowealthpartnerz.com,Jamie Rich,9900889902,Finance,2,0.8823529411764706
+60,D2,216,BreezeFlow Systems,93 Windy Way,Breezyville,Airland,contact@breezeflow.systems,Storm Gale,4455667791,Utilities,2,0.8823529411764706
+60,D2,217,BreezeFlow Systemz,93 Windy Way,Breezyville,Airland,contact@breezeflow.systems,Storm Gale,4455667791,Utilities,2,0.8823529411764706
+58,D2,15,AdventureWorld Tours,707 Journey St,Explore City,Travelia,info@adventureworld.com,Wendy Lust,1555666777,Travel,2,0.8947368421052632
+58,D1,16,AdventureWorld Tourz,707 Journey St,Explore City,Travelia,contact@adventureworld.com,Wendy Lust,1555666777,Travel,2,0.8947368421052632
+57,D2,1823,TravelQuest Adventures,1515 Adventure Road,Travel City,Tourland,info@travelquest.adv,Quest Explorer,9988776655,Tourism,2,0.9047619047619048
+57,D1,1825,TravelQuest Adventurez,1515 Adventure Rd,Travel City,Tourland,contact@travelquest.adv,Quest Explorer,9988776655,Tourism,2,0.9047619047619048
+55,D1,1221,LivingSpaces,62 Living St,HomeCity,Houseland,info@livingspaces.com,Space Designer,1213141523,Real Estate,2,0.9090909090909091
+55,D2,1221,LivingSpacess,62 Living St,HomeCity,Houseland,contact@livingspaces.com,Space Designer,1213141523,Real Estate,2,0.9090909090909091
+56,D1,1432,SecureFinanc,1212 Wealth Street,Finance City,Moneyland,info@securefinanc.com,Chris Cyan,1434455667,Finance,2,0.9090909090909091
+56,D1,1433,SecureFinance,1212 Wealth St,Finance City,Moneyland,contact@securefinance.com,Chris Cyan,1434455667,Finance,2,0.9090909090909091
+52,D1,269,BuildPro Services,654 Pro Rd,Build City,ProLand,contact@buildpro.com,Casey Pro,3344556677,Construction,2,0.9375
+52,D2,274,BuildPro Servicess,654 Pro Road,Build City,ProLand,contact@buildpro.com,Casey Pro,3344556677,Construction,2,0.9375
+53,D2,660,EduSmart Learning,400 Knowledge St,Learnville,EduNation,info@edusmart.edu,Prof. Wise,2233445566,Education,2,0.9375
+53,D1,650,EduSmart Learnings,101 Knowledge Blvd,Learnville,Educatia,contact@edusmart.learn,Professor Wise,2233445566,Education,2,0.9375
+54,D1,1528,SmartEdu Services,102 Learning Ave,Knowledge Town,Learnia,support@smarteduservices.com,Alex Teach,4455667789,Education,2,0.9375
+54,D2,1526,SmartEdu Servicess,102 Learning Avenue,Knowledge Town,Learnia,support@smarteduservices.com,Alex Teach,4455667789,Education,2,0.9375
+50,D1,1347,PurplePeak Finance,202 Purple Ave.,PurpleCity,PurpleLand,contact@purplepeak.com,Purple Banker,4400440055,Finance,2,0.9411764705882353
+50,D2,1359,PurplePeak Finances,202 Purple Avenue,PurpleCity,PurpleLand,info@purplepeak.com,Purple Banker,4400440055,Finance,2,0.9411764705882353
+51,D2,1525,SmartEdu Institute,305 Learning Ln,Eduville,Learnland,support@smartedu.sch,Jamie Teach,4455667789,Education,2,0.9411764705882353
+51,D1,1527,SmartEdu Institutes,305 Learning Lane,Eduville,Learnland,support@smartedu.school,Jamie Teach,4455667789,Education,2,0.9411764705882353
+49,D2,1358,PureStream Services,103 Waterway Blvd,Hydro City,Aquatica,contact@purestream.com,Taylor Brooks,1122334457,Utilities,2,0.9444444444444444
+49,D1,1346,PureStream Servicess,103 Waterway Blvd,Hydro City,Aquatica,contact@purestream.co,Taylor Brooks,1122334457,Utilities,2,0.9444444444444444
+28,D1,1312,MountainPeak Adventures,505 Summit St,Highland,Mountland,contact@mountainpeak.adventures,Climber Hill,6677889900,Tourism,3,0.9545454545454546
+28,D1,1313,MountainPeak Adventurez,505 Summit Street,Highland,Mountland,info@mountainpeak.adventures,Climber Hill,6677889900,Tourism,3,0.9545454545454546
+28,D2,1313,MountainPeak Adventurez,505 Summit Street,Highland,Mountland,info@mountainpeak.adventures,Climber Hill,6677889900,Tourism,3,0.9545454545454546
+0,D1,86,Aqua Marine Services,600 Ocean Dr,Marine City,Sealand,contact@aquamarineservices.com,Chris Ocean,6667686970,Marine,2,1.0
+0,D2,84,Aqua Marine Services,987 Ocean Dr,Marine City,WaterLand,contact@aquamarineservices.com,Chris Ocean,6677889900,Marine,2,1.0
+3,D1,230,BrightFuture Ventures,325 Knowledge Ave,EduCity,LearnLand,ventures@brightfuture.edu,Liam Johnson,1234567897,Technology,2,1.0
+3,D2,242,BrightFuture Ventures,321 Knowledge Ave,EduCity,LearnLand,ventures@brightfuture.edu,Liam Johnson,1234567891,Finance,2,1.0
+4,D1,260,BuildLand Architects,406 Build St,Construct City,BuildLand,contact@buildlandarchitects.com,Morgan Design,2233445572,Construction,2,1.0
+4,D2,266,BuildLand Architects,406 Build St,Construct City,BuildLand,contact@buildlandarchitects.com,Morgan Design,2233445572,Construction,2,1.0
+5,D1,277,BuildRite Enterprises,456 Right Way,Build City,Constructia,contact@buildrite.com,Sam Right,1122334455,Construction,2,1.0
+5,D2,279,BuildRite Enterprises,456 Right Way,Build City,Constructia,contact@buildrite.com,Sam Right,1122334455,Construction,2,1.0
+6,D1,280,BuildSmart Co.,1122 Builder's Way,Constructopolis,Buildland,info@buildsmart.com,Taylor Jordan,5566778894,Construction,2,1.0
+6,D2,283,BuildSmart Co.,331 Builder Street,Constructopolis,Buildland,contact@buildsmart.com,Taylor Morgan,5566778895,Construction,2,1.0
+7,D1,318,Care Solutions Group,814 Health Blvd,Health City,Healthland,support@caresolutions.health,Nurture Well,9988776659,Healthcare,2,1.0
+7,D2,323,Care Solutions Group,814 Health Blvd,Health City,Healthland,support@caresolutions.health,Nurturer Heal,9988776659,Healthcare,2,1.0
+8,D1,370,Construct Innovators,608 Build St,Construct City,Buildland,contact@constructinnovators.build,Innovate Builder,9012345680,Construction,2,1.0
+8,D2,378,Construct Innovators,608 Build St,Construct City,Buildland,contact@constructinnovators.build,Innovate Builder,9012345680,Construction,2,1.0
+10,D1,399,Constructo Design,330 Builder Street,Constructopolis,Buildland,design@constructo.con,Jordan Alex,5566778892,Construction,2,1.0
+10,D2,402,Constructo Design,335 Builder St.,Constructopolis,Buildland,design@constructo.com,Alex J.,5566778897,Construction,2,1.0
+11,D1,449,Digital Ventures,951 Tech Park,Innovation City,Techland,contact@digitalventures.com,Alex Digital,1122446688,Technology,2,1.0
+11,D2,468,Digital Ventures,951 Tech Park,Innovation City,Techland,contact@digitalventures.com,Alex Digital,1122446688,Technology,2,1.0
+12,D1,532,EcoDrive Innovations,511 Drive Blvd,Motor City,Autoland,innovations@ecodrive.auto,Alex Motor,1333444558,Automotive,2,1.0
+12,D2,534,EcoDrive Innovations,511 Drive Blvd,Motor City,Autoland,innovations@ecodrive.auto,Alex Motor,1333444558,Automotive,2,1.0
+13,D1,554,EcoHarvest Co.,457 Farm Lane,Greenville,EcoLand,info@ecoharvest.org,Jamie Fields,9876543211,Agriculture,2,1.0
+13,D2,562,EcoHarvest Co.,457 Farm Lane,Greenville,EcoLand,contact@ecoharvest.org,Jamie Meadows,9876543211,Agriculture,2,1.0
+14,D1,628,EduLearn Academy,654 Knowledge Ave,Learnville,USA,info@edulearn.academy,Prof. Wise,1334455667,Education,2,1.0
+14,D2,643,EduLearn Academy,404 Knowledge Blvd,Learnville,Educatia,contact@edulearn.edu,Professor Wise,3344556677,Education,2,1.0
+15,D2,714,Farm Fresh Co,80 Harvest Road,Farmville,Agroland,support@farmfresh.co,Farmer Fields Jr.,3344556679,Agriculture,2,1.0
+15,D1,697,Farm Fresh Co.,80 Harvest Rd,Farmville,Agroland,hello@farmfresh.co,Farmer Fields Jr.,3344556679,Agriculture,2,1.0
+16,D1,708,Fashion Forward Inc.,206 Style St,Trend City,Fashionland,support@fashionforward.fashion,Mode Fashionista,5678905680,Fashion,2,1.0
+16,D2,732,Fashion Forward Inc.,202 Style St,Trend City,Fashionland,contact@fashionforward.fashion,Stylist Trend,5678901234,Fashion,2,1.0
+17,D1,722,FashionFoward,654 Style St.,Fashion City,StyleLand,contact@fashionfoward.com,Sophia Taylor,5678901234,Retail,2,1.0
+17,D2,741,FashionFoward,654 Style St.,Fashion City,StyleLand,contact@fashionfoward.com,Sophia Taylor,5678901234,Retail,2,1.0
+18,D1,871,Gastronomy Hub,654 Taste Avenue,Culinary City,Foodland,contact@gastronomyhub.com,Chef Spice,6677889904,Food & Beverage,2,1.0
+18,D2,875,Gastronomy Hub,654 Taste Ave,Culinary City,Foodland,info@gastronomyhub.com,Chef Spice,6677889904,Food & Beverage,2,1.0
+19,D1,872,GearTech Innovations,132 Innovation Drive,Techville,Innovatia,support@geartech.com,Taylor Gear,1234567897,Technology,2,1.0
+19,D2,877,GearTech Innovations,104 Innovation Dr,Techville,Innovatia,contact@geartech.tech,Taylor Gear,1234567893,Technology,2,1.0
+20,D1,977,GreenField Innovations,125 Harvest Road,AgroCity,FarmLand,contact@greenfieldinnovations.com,Field Crop,5566773346,Agriculture,2,1.0
+20,D2,973,GreenField Innovations,125 Harvest Rd,AgroCity,FarmLand,support@greenfieldinnovations.com,Field Crop,5566773346,Agriculture,2,1.0
+22,D1,1046,Harvest Organics,722 Farm Lane,Harvest,Agroland,info@harvestorganics.co,Farmer Orange,1112131430,Agriculture,2,1.0
+22,D2,1037,Harvest Organics,713 Farm Lane,Harvest,Agroland,info@harvestorganics.com,Farmer Organic,1112131420,Agriculture,2,1.0
+23,D1,1069,Health First Corp.,789 Wellness Blvd,Healthtown,CareLand,support@healthfirst.com,Pat Heal,3344556677,Healthcare,2,1.0
+23,D2,1062,Health First Corp.,789 Wellness Blvd,Healthtown,Careland,contact@healthfirst.com,Pat Health,1122334455,Healthcare,2,1.0
+24,D1,1129,Horizon Learning Center,408 Knowledge Blvd,Learnville,EduNation,contact@horizonlearning.edu,Wise Eagle,8899001145,Education,2,1.0
+24,D2,1117,Horizon Learning Center,408 Knowledge Blvd,Learnville,EduNation,info@horizonlearning.edu,Wise Eagle,8899001155,Education,2,1.0
+25,D1,1139,HydroTech Solutions,456 Stream Street,Watertown,Hydroland,support@hydrotech.water,River Brooks,9988776655,Utilities,2,1.0
+25,D2,1130,HydroTech Solutions,789 Stream Blvd,Watertown,Hydroland,hello@hydrotech.solutions,River Brook,9988776655,Utilities,2,1.0
+26,D1,1146,Innovate Systems,201 Tech Park,Innovate City,Techland,info@innovatesystems.com,Alex Innovate,1234567891,Technology,2,1.0
+26,D2,1143,Innovate Systems,204 Tech Park,Innovate City,Techland,contact@innovatesystems.com,Alex Innovate,1234567894,Technology,2,1.0
+27,D1,1227,Logistics Leaders,1200 Transport Rd,Logistics City,Moveland,contact@logisticsleaders.log,Mover Shaker,1234567890,Logistics,2,1.0
+27,D2,1230,Logistics Leaders,357 Transport Rd,Logistics City,Moveland,contact@logisticsleaders.com,Mover Shaker,1122334455,Logistics,2,1.0
+29,D1,1350,Quantum Enterprises,129 Innovation Drive,Techville,Futuristan,contact@quantum.enterprises,Taylor Quantum,1234567894,Information Technology,2,1.0
+29,D2,1360,Quantum Enterprises,137 Innovation Drive,Techville,Futuristan,info@quantumenterprises.com,Taylor Quantum,1234567804,Information Technology,2,1.0
+30,D1,1356,Quantum Solutions,127 Innovation Drive,Techville,Futuristan,support@quantum.solutions,Jordan Quantum,1234567893,Information Technology,2,1.0
+30,D2,1368,Quantum Solutions,126 Innovation Drive,Techville,Futuristan,support@quantum.solutions,Jordan Quantum,1234567893,Information Technology,2,1.0
+31,D1,1502,Skyline Logistics,410 Build St,Construct City,BuildLand,logistics@skyline.com,Taylor Erect,2233445583,Logistics,2,1.0
+31,D2,1497,Skyline Logistics,407 Build St,Construct City,BuildLand,logistics@skyline.com,Taylor Erect,2233445573,Logistics,2,1.0
+32,D1,1503,Skyline Real Estate,410 Build St,Construct City,BuildLand,realestate@skyline.com,Taylor Erect,2233445582,Real Estate,2,1.0
+32,D2,1499,Skyline Real Estate,410 Build St,Construct City,BuildLand,realestate@skyline.com,Taylor Erect,2233445576,Real Estate,2,1.0
+33,D1,1586,Style Innovators Ltd,505 Style Street,Trend City,Fashionland,info@styleinnovators.com,Creative Trendsetter,3344556677,Fashion,2,1.0
+33,D1,1587,Style Innovators Ltd.,205 Style St,Trend City,Fashionland,info@styleinnovators.fashion,Fashionista Mode,5678905679,Fashion,2,1.0
+34,D1,1601,Summit Explorers,505 Summit St,Highland,Mountland,explore@summitadventures.com,Hiker Dale,6677889901,Tourism,2,1.0
+34,D2,1587,Summit Explorers,505 Summit St,Highland,Mountland,explore@summitadventures.com,Hiker Dale,6677889901,Tourism,2,1.0
+35,D1,1646,Tasteful Treetz,789 Savory Lane,Culinary City,Foodland,contact@tastefultreats.com,Chef Spice,6677889906,Food & Beverage,2,1.0
+35,D2,1626,Tasteful Treetz,789 Savory Lane,Culinary City,Foodland,contact@tastefultreats.com,Chef Spice,6677889906,Food & Beverage,2,1.0
+36,D1,1655,Tech Innovations,951 Tech Park,Innovation City,Techland,support@techinnovations.com,Jordan Digital,1122446688,Technology,2,1.0
+36,D2,1636,Tech Innovations,951 Tech Park,Innovation City,Techland,support@techinnovations.com,Jordan Digital,1122446688,Technology,2,1.0
+37,D1,1698,TechEdu Innovations,654 Knowledge Rd,Learn City,EduLand,support@techeduinnovations.com,Dr. Edu Smart,1334455667,Education,2,1.0
+37,D2,1681,TechEdu Innovations,102 Knowledge Ave,LearnCity,EduNation,support@techedu.com,Dr. Edu Smart,6677889901,Education,2,1.0
+38,D1,1712,TechGrow,456 Silicon Avenue,TechVille,InnovLand,info@techgrow.com,Alice Green,1234567890,Technology,2,1.0
+38,D2,1693,TechGrow,789 Silicon Ave,TechVille,InnovLand,contact@techgrow.com,Alice Green,1234567890,Technology,2,1.0
+39,D1,1736,TechPioners,127 Innovation Dr.,Techville,Futuristan,contact@techpioners.com,Alexis Quantum,1234567894,Information Technology,2,1.0
+39,D2,1722,TechPioners,127 Innovation Dr.,Techville,Futuristan,contact@techpioners.com,Alexis Quantum,1234567894,Information Technology,2,1.0
+41,D1,1821,TravelExperts,1000 Journey Ln,Travel City,Wanderland,support@travelexperts.travel,Jamie Journey,8899001122,Travel,2,1.0
+41,D2,1818,TravelExperts,951 Journey Road,Travel City,Wanderland,info@travelexperts.travel,Jamie Journey,8899001122,Travel,2,1.0
+42,D1,1853,Urban Developers Co,987 Build Ave,Construct City,Buildland,info@urbandevelopers.com,Builder Bob,4455667788,Construction,2,1.0
+42,D2,1862,Urban Developers Co.,321 Build Ave,Construct City,Buildland,info@urbandevelopers.com,Bob Builder,1223344556,Construction,2,1.0
+43,D1,1876,Urban Tech Solutions,909 Innovation Dr,Tech City,Innovatia,solutions@urbantech.com,Jordan Tech,1333444555,Technology,2,1.0
+43,D2,1883,Urban Tech Solutions,909 Innovation Dr,Tech City,Innovatia,contact@urbantechsolutions.com,Jordan Tech,1333444555,Technology,2,1.0
+44,D1,1877,Urban Tek,909 Innovation Drive,Tech City,Innovatia,info@urbantek.com,Jordan Tech,1333444555,Technology,2,1.0
+44,D2,1884,Urban Tek,909 Innovation Drive,Tech City,Innovatia,info@urbantek.com,Jordan Tech,1333444555,Technology,2,1.0
+45,D1,1879,UrbanBuild,22 Builder St,Construct City,Buildland,contact@urbanbuild.com,Builder Bob,5566778899,Construction,2,1.0
+45,D2,1886,UrbanBuild,78 Builder St,ConstructCity,BuildLand,contact@urbanbuild.com,Builder Bob,9876543210,Construction,2,1.0
+46,D1,1985,WellnessFirst Group,1400 Wellness Way,HealthCity,HealthLand,group@wellnessfirst.com,Lucas Health,9900555566,Healthcare,2,1.0
+46,D2,1977,WellnessFirst Group,1400 Wellness Way,HealthCity,HealthLand,group@wellnessfirst.com,Lucas Health,9900555566,Healthcare,2,1.0
+48,D2,1081,HealthFirst Inc,101 Wellness Way,Healthtown,Careland,info@healthfirst.com,Jordan Health,6677889900,Healthcare,2,1.0
+48,D2,1082,HealthFirst Inc.,456 Wellness Way,Healthtown,Careland,info@healthfirst.org,Dr. Heal,1987654321,Healthcare,2,1.0

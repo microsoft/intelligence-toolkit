@@ -4,27 +4,27 @@
         "input_data_1": {
             "type": "csv",
             "heading": "Input data 1",
-            "description": "..."
+            "description": "The first entity dataset to be matched"
         },
         "input_data_2": {
             "type": "csv",
-            "heading": "Input data 1",
-            "description": "..."
+            "heading": "Input data 2",
+            "description": "The second entity dataset to be matched"
         },
         "record_matches": {
             "type": "csv",
             "heading": "Record matches",
-            "description": "..."
+            "description": "The groups of matching records identified within and between the two input datasets"
         },
         "match_reports": {
             "type": "csv",
             "heading": "AI match reports",
-            "description": "..."
+            "description": "AI-generated reports on each record group, including an overall relatedness score and rxplantion"
         },
         "integrated_results": {
             "type": "csv",
             "heading": "Integrated results",
-            "description": "..."
+            "description": "A final table integrating both the groups of matching records and the AI match reports"
         }
     }
 }
