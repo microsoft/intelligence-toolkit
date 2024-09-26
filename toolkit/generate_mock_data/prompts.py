@@ -47,6 +47,9 @@ The content of the generated records and fields should follow the guidance below
 --Record Targets--
 
 {record_targets}
+
+
+It should be possible to reconstruct the input record from the generated text, but the text should not simply list the values of the input record. Ensure that all values are embedded in a narrative that is plausible and coherent. Values may be aggregated, but they must ALL be present individually in the generated text.
 """
 
 text_generation_prompt = """
@@ -54,7 +57,6 @@ You are a helpful assistant tasked with generating a text document consistent wi
 
 You can fabricate any narrative that is consistent with the input record, but do not fabricate additional data values that are not present in the input text.
 
-It should be possible to reconstruct the input record from the generated text, but the text should not simply list the values of the input record. Ensure that all values are embedded in a narrative that is plausible and coherent. Values may be aggregated, but they must ALL be present individually in the generated text.
 
 --Generation guidance--
 
