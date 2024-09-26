@@ -232,6 +232,13 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                 options=fuzzy_options,
                 help="Select the node types to embed into a multi-dimensional semantic space for fuzzy matching.",
             )
+
+            total_embeddings = sum(
+                1
+                for _, data in sv.network_overall_graph.value.nodes(data=True)
+                if data["type"] in network_indexed_node_types
+            )
+            st.caption(f"Total of {total_embeddings} nodes to index")
             local_embedding = st.toggle(
                 "Use local embeddings",
                 sv.network_local_embedding_enabled.value,

@@ -32,16 +32,20 @@ async def index_nodes(
         msg = "No node types to index"
         raise ValueError(msg)
     text_types = [
-        (n, d["type"])
-        for n, d in main_graph.nodes(data=True)
-        if d["type"] in indexed_node_types
+        (node, data["type"])
+        for node, data in main_graph.nodes(data=True)
+        if data["type"] in indexed_node_types
     ]
     text_types.sort()
     texts = [t[0] for t in text_types]
 
     data = [
-        {"hash": hash_text(t), "text": t, "additional_details": {"type": ty}}
-        for t, ty in text_types
+        {
+            "hash": hash_text(text),
+            "text": text,
+            "additional_details": {"type": text_type},
+        }
+        for text, text_type in text_types
     ]
 
     if functions_embedder is None:
