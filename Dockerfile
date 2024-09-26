@@ -18,6 +18,7 @@ COPY ./README.md ./
 
 COPY ./app ./app
 COPY ./toolkit ./toolkit
+COPY ./example_outputs ./example_outputs
 
 RUN poetry install
 
