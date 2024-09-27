@@ -5,6 +5,7 @@ import os
 
 from .defaults import (
     DEFAULT_AZ_AUTH_TYPE,
+    DEFAULT_EMBEDDING_MODEL,
     DEFAULT_LLM_MAX_TOKENS,
     DEFAULT_LLM_MODEL,
     DEFAULT_OPENAI_VERSION,
@@ -33,6 +34,7 @@ class OpenAIConfiguration:
     _max_tokens: int | None
     _api_type: str
     _az_auth_type: str
+    _embedding_model: str
 
     def __init__(
         self,
@@ -53,6 +55,9 @@ class OpenAIConfiguration:
         self._max_tokens = config.get("max_tokens", DEFAULT_LLM_MAX_TOKENS)
         self._az_auth_type = config.get("az_auth_type", self._get_az_auth_type())
         self._api_type = config.get("api_type", oai_type)
+        self._embedding_model = config.get(
+            "embedding_model", self._get_embedding_model()
+        )
 
     def _get_openai_type(self):
         return os.environ.get("OPENAI_TYPE", "OpenAI")
@@ -65,6 +70,9 @@ class OpenAIConfiguration:
 
     def _get_chat_model(self):
         return os.environ.get("OPENAI_API_MODEL", DEFAULT_LLM_MODEL)
+
+    def _get_embedding_model(self):
+        return os.environ.get("OPENAI_EMBEDDING_MODEL", DEFAULT_EMBEDDING_MODEL)
 
     def _get_azure_api_base(self):
         return os.environ.get("AZURE_OPENAI_ENDPOINT", "")
@@ -103,6 +111,10 @@ class OpenAIConfiguration:
     def max_tokens(self) -> int | None:
         """Max tokens property definition."""
         return self._max_tokens
+
+    @property
+    def embedding_model(self) -> str | None:
+        return self._embedding_model
 
     @property
     def api_type(self) -> str | None:

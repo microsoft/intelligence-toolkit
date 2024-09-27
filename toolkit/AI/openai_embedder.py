@@ -25,7 +25,11 @@ class OpenAIEmbedder(BaseEmbedder):
         self.openai_client = OpenAIClient(configuration)
 
     def _generate_embedding(self, text: str) -> list[float]:
-        return self.openai_client.generate_embedding(text)
+        return self.openai_client.generate_embedding(
+            text, model=self.configuration.embedding_model
+        )
 
     async def _generate_embedding_async(self, text: str) -> list[float]:
-        return await self.openai_client.generate_embedding_async(text)
+        return await self.openai_client.generate_embedding_async(
+            text, model=self.configuration.embedding_model
+        )
