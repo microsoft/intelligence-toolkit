@@ -7,12 +7,13 @@ import time
 
 import streamlit as st
 from components.app_loader import load_multipage_app
-from util.constants import MAX_SIZE_EMBEDDINGS_KEY
+from util.constants import LOCAL_EMBEDDING_MODEL_KEY, MAX_SIZE_EMBEDDINGS_KEY
 from util.enums import Mode
 from util.openai_wrapper import (
     UIOpenAIConfiguration,
     key,
     openai_azure_auth_type,
+    openai_embedding_model,
     openai_endpoint_key,
     openai_model_key,
     openai_type_key,
@@ -20,8 +21,29 @@ from util.openai_wrapper import (
 )
 from util.secrets_handler import SecretsHandler
 
+from toolkit.AI.defaults import DEFAULT_LOCAL_EMBEDDING_MODEL
 from toolkit.AI.vector_store import VectorStore
 from toolkit.helpers.constants import CACHE_PATH
+
+openai_embedding_models = [
+    "text-embedding-3-large",
+    "text-embedding-3-small",
+    "text-embedding-ada-002",
+]
+
+local_embedding_models = [
+    "all-mpnet-base-v2",
+    "multi-qa-mpnet-base-dot-v1",
+    "all-distilroberta-v1",
+    "all-MiniLM-L12-v2",
+    "multi-qa-distilbert-cos-v1",
+    "paraphrase-multilingual-mpnet-base-v2",
+    "paraphrase-albert-small-v2",
+    "paraphrase-multilingual-MiniLM-L12-v2",
+    "paraphrase-MiniLM-L3-v2",
+    "distiluse-base-multilingual-cased-v1",
+    "distiluse-base-multilingual-cased-v2",
+]
 
 
 def on_change(handler, key=None, value=None):
@@ -148,6 +170,35 @@ def main():
 
     st.subheader("Embeddings")
     max_size = int(secrets_handler.get_secret(MAX_SIZE_EMBEDDINGS_KEY) or 0)
+    local_embedding_value = (
+        secrets_handler.get_secret(LOCAL_EMBEDDING_MODEL_KEY)
+        or DEFAULT_LOCAL_EMBEDDING_MODEL
+    )
+
+    st.markdown("Select the embedding model you want to use.")
+    e1, e2 = st.columns(2)
+    with e1:
+        openai_model = st.selectbox(
+            "OpenAI embedding model",
+            openai_embedding_models,
+            index=openai_embedding_models.index(openai_config.embedding_model),
+            key="openai_embedding_model",
+            help="Select the embedding model you want to use.",
+        )
+        if openai_model != openai_config.embedding_model:
+            on_change(secrets_handler, openai_embedding_model, openai_model)()
+            st.rerun()
+    with e2:
+        local_model = st.selectbox(
+            "Local embedding model",
+            local_embedding_models,
+            index=local_embedding_models.index(local_embedding_value),
+            key="local_embedding_model",
+            help="Select the embedding model you want to use.",
+        )
+        if local_model != local_embedding_value:
+            on_change(secrets_handler, LOCAL_EMBEDDING_MODEL_KEY, local_model)()
+            st.rerun()
 
     c1, c2 = st.columns(2)
     with c1:

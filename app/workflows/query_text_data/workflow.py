@@ -237,7 +237,7 @@ async def create(sv: SessionVariables, workflow=None):
             sv.cid_to_vector.value = await helper_functions.embed_texts(
                 sv.cid_to_explained_text.value,
                 text_embedder,
-                config.cache_name,
+                sv_home.save_cache.value,
                 callbacks=[embed_callback],
             )
             chunk_pb.empty()

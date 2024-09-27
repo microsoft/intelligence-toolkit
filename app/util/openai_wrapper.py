@@ -11,6 +11,7 @@ openai_version_key = "openai_version"
 openai_endpoint_key = "openai_endpoint"
 openai_model_key = "openai_model"
 openai_azure_auth_type = "openai_azure_auth_type"
+openai_embedding_model = "openai_embedding_model"
 
 
 class UIOpenAIConfiguration:
@@ -26,6 +27,7 @@ class UIOpenAIConfiguration:
         secret_key = self._secrets.get_secret(key) or None
         model = self._secrets.get_secret(openai_model_key) or None
         az_auth_type = self._secrets.get_secret(openai_azure_auth_type) or None
+        embedding_model = self._secrets.get_secret(openai_embedding_model) or None
 
         config = {
             "api_type": api_type,
@@ -34,6 +36,7 @@ class UIOpenAIConfiguration:
             "api_key": secret_key,
             "model": model,
             "az_auth_type": az_auth_type,
+            "embedding_model": embedding_model,
         }
         values = {k: v for k, v in config.items() if v is not None}
         return OpenAIConfiguration(values)
