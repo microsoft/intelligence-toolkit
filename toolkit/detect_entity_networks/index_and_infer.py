@@ -37,7 +37,7 @@ async def index_nodes(
         if data["type"] in indexed_node_types
     ]
     text_types.sort()
-    texts = [t[0] for t in text_types]
+    texts = [text_type[0] for text_type in text_types]
 
     data = [
         {

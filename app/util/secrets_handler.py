@@ -28,7 +28,7 @@ class SecretsHandler:
 
     def get_secret(self, value):
         values = self.read_values_from_file()
-        for key in self.read_values_from_file():
+        for key in values:
             if key == value:
                 return values[key]
         return ""
