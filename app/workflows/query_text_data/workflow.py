@@ -359,10 +359,10 @@ async def create(sv: SessionVariables, workflow=None):
             answer_progress_placeholder = st.empty()
         with c2:
             answer_placeholder = st.empty()
-            if len(sv.partial_answers.value) > 0 and len(sv.partial_answers.value[0]) > 0:
+            if len(sv.partial_answers.value) > 0 and len(sv.partial_answers.value[-1]) > 0:
                 st.download_button(
                     "Download extended answer as MD",
-                    data=sv.partial_answers.value[0],
+                    data=sv.partial_answers.value[-1],
                     file_name="extended_answer.md",
                     mime="text/markdown",
                     key="qa_extended_download_button",
@@ -386,7 +386,7 @@ async def create(sv: SessionVariables, workflow=None):
             )
 
         def on_answer(message):
-            answer_placeholder.markdown(message[0], unsafe_allow_html=True)
+            answer_placeholder.markdown(message[-1], unsafe_allow_html=True)
 
         chunk_progress_placeholder.markdown(sv.chunk_progress.value, unsafe_allow_html=True)
         answer_progress_placeholder.markdown(sv.answer_progress.value, unsafe_allow_html=True)
@@ -400,7 +400,7 @@ async def create(sv: SessionVariables, workflow=None):
             use_container_width=True,
         )
         answer_text = (
-            sv.partial_answers.value[0] if len(sv.partial_answers.value) > 0 else ""
+            sv.partial_answers.value[-1] if len(sv.partial_answers.value) > 0 else ""
         )
         answer_placeholder.markdown(answer_text, unsafe_allow_html=True)
 
@@ -421,7 +421,7 @@ async def create(sv: SessionVariables, workflow=None):
                 use_container_width=True,
             )
             answer_text = (
-                sv.partial_answers.value[0] if len(sv.partial_answers.value) > 0 else ""
+                sv.partial_answers.value[-1] if len(sv.partial_answers.value) > 0 else ""
             )
             answer_placeholder.markdown(answer_text, unsafe_allow_html=True)
 

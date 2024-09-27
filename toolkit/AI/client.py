@@ -99,7 +99,6 @@ class OpenAIClient:
                 stream=stream,
                 **kwargs,
             )
-            print(messages)
             if stream and callbacks is not None:
                 full_response = ""
                 for chunk in response:

@@ -65,7 +65,7 @@ def generate_answer(
     update_answer_object(answer_object, loads(answer_response))
     answer_text = '\n\n'.join([x['content'] for x in answer_object['content_items']])
     references = extract_chunk_references(answer_text)
-    answer_stream.insert(0, convert_answer_object_to_text(answer_object))
+    answer_stream.append(convert_answer_object_to_text(answer_object))
     if answer_callback is not None:
         answer_callback(answer_stream)
     return selected_chunks, references
