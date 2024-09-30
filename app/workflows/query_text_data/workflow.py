@@ -6,6 +6,7 @@ import os
 import pandas as pd
 import streamlit as st
 from seaborn import color_palette
+from collections import defaultdict
 from streamlit_agraph import Config, Edge, Node, agraph
 
 import app.util.example_outputs_ui as example_outputs_ui
@@ -59,7 +60,7 @@ def create_progress_callback(template: str):
 
 
 def get_concept_graph(
-    placeholder, G, concept_to_community, community_to_concepts, width, height, key
+    placeholder, G, hierarchical_communities, width, height, key
 ):
     """
     Implements the concept graph visualization
@@ -67,6 +68,11 @@ def get_concept_graph(
     nodes = []
     edges = []
     max_degree = max([G.degree(node) for node in G.nodes()])
+    concept_to_community = hierarchical_communities.final_level_hierarchical_clustering()
+    community_to_concepts = defaultdict(set)
+    for concept, community in concept_to_community.items():
+        community_to_concepts[community].add(concept)
+
     num_communities = len(community_to_concepts.keys())
     community_colors = color_palette("husl", num_communities)
     sorted_communities = sorted(
@@ -171,8 +177,8 @@ async def create(sv: SessionVariables, workflow=None):
                 sv.cid_to_text.value,
                 sv.text_to_cid.value,
                 sv.period_concept_graphs.value,
-                sv.community_to_concepts.value,
-                sv.concept_to_community.value,
+                sv.hierarchical_communities.value,
+                sv.community_to_label.value,
                 sv.concept_to_cids.value,
                 sv.cid_to_concepts.value,
                 sv.previous_cid.value,
@@ -180,7 +186,6 @@ async def create(sv: SessionVariables, workflow=None):
                 sv.period_to_cids.value,
                 sv.node_period_counts.value,
                 sv.edge_period_counts.value,
-                sv.hierarchical_clusters.value,
             ) = input_processor.process_chunks(
                 file_to_chunks=sv.file_to_chunks.value,
                 max_cluster_size=50,
@@ -267,7 +272,7 @@ async def create(sv: SessionVariables, workflow=None):
             selection = None
             with c1:
 
-                level_to_label_to_network = graph_builder.build_meta_graph(G, sv.hierarchical_clusters.value)
+                level_to_label_to_network = graph_builder.build_meta_graph(G, sv.hierarchical_communities.value)
                 selected_level_labels = [''] + [str(v) for v in level_to_label_to_network[0].keys()]
                 selected_label = st.selectbox("Select topic area", options=selected_level_labels, key=f"{workflow}_community_label")
                 gp = st.empty()
@@ -275,8 +280,7 @@ async def create(sv: SessionVariables, workflow=None):
                     selection = get_concept_graph(
                         gp,
                         level_to_label_to_network[0][selected_label],
-                        sv.concept_to_community.value,
-                        sv.community_to_concepts.value,
+                        sv.hierarchical_communities.value,
                         800,
                         700,
                         "graph",
@@ -434,14 +438,15 @@ async def create(sv: SessionVariables, workflow=None):
                 cid_to_text=sv.cid_to_explained_text.value,
                 cid_to_concepts=sv.cid_to_concepts.value,
                 cid_to_vector=sv.cid_to_vector.value,
-                community_to_concepts=sv.community_to_concepts.value,
-                concept_to_community=sv.concept_to_community.value,
+                hierarchical_communities=sv.hierarchical_communities.value,
+                community_to_label=sv.community_to_label.value,
                 previous_cid=sv.previous_cid.value,
                 next_cid=sv.next_cid.value,
                 embedder=functions.embedder(local_embedding),
                 embedding_cache=sv_home.save_cache.value,
                 select_logit_bias=5,
                 adjacent_search_steps=sv.adjacent_chunk_steps.value,
+                community_ranking_chunks=sv.relevance_test_batch_size.value,
                 relevance_test_budget=sv.relevance_test_budget.value,
                 community_relevance_tests=sv.relevance_test_batch_size.value,
                 relevance_test_batch_size=sv.relevance_test_batch_size.value,

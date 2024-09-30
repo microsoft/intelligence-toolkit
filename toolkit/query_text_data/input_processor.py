@@ -23,7 +23,6 @@ def process_file_bytes(input_file_bytes, analysis_window_size: PeriodOption, cal
         bytes = input_file_bytes[file_name]
 
         if file_name.endswith(".csv"):
-            doc_texts = []
             df = pd.read_csv(io.BytesIO(bytes))
             for ix, row in df.iterrows():
                 cols = df.columns.values
@@ -96,8 +95,6 @@ def process_json_texts(file_to_text_jsons, period: PeriodOption):
         file_to_chunks[file] = process_json_text(text_json, period)
     return file_to_chunks
 
-def test_fun():
-    return 'none'
 def process_chunks(
     file_to_chunks, max_cluster_size, callbacks=[]
 ):
@@ -157,9 +154,8 @@ def process_chunks(
             period_concept_graphs[period].add_edge(edge[0], edge[1], weight=count)
 
     (
-        community_to_concepts,
-        concept_to_community,
-        hierarchical_communities
+        hierarchical_communities,
+        community_to_label
     ) = graph_builder.prepare_concept_graphs(
         period_concept_graphs,
         max_cluster_size=max_cluster_size,
@@ -170,8 +166,8 @@ def process_chunks(
         cid_to_text,
         text_to_cid,
         period_concept_graphs,
-        community_to_concepts,
-        concept_to_community,
+        hierarchical_communities,
+        community_to_label,
         concept_to_cids,
         cid_to_concepts,
         previous_chunk,
@@ -179,5 +175,4 @@ def process_chunks(
         period_to_cids,
         node_period_counts,
         edge_period_counts,
-        hierarchical_communities
     )
