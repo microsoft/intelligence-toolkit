@@ -126,15 +126,20 @@ async def detect_relevant_chunks(
         reverse=False,
     )
     semantic_search_cids = [x[0] for x in cosine_distances]
+    print(f'Semantic search cids: {semantic_search_cids[:100]}')
 
     level_to_community_sequence = {}
 
     max_level = max([hc.level for hc in hierarchical_communities])
     concept_to_level_to_community = defaultdict(dict)
-    level_to_community_to_cids = defaultdict(lambda: defaultdict(set))
+    level_to_community_to_candidate_cids = defaultdict(lambda: defaultdict(set))
+    level_to_community_to_cids = defaultdict(lambda: defaultdict(list))
     level_to_cid_to_communities = defaultdict(lambda: defaultdict(set))
+    community_to_parent = {}
     for hc in hierarchical_communities:
         concept_to_level_to_community[hc.node][hc.level] = community_to_label[hc.cluster]
+        if hc.parent_cluster is not None:
+            community_to_parent[community_to_label[hc.cluster]] = community_to_label[hc.parent_cluster]
     cid_to_level_to_communities = defaultdict(lambda: defaultdict(set))
     for level in range(0, max_level+1):
         for cid, concepts in cid_to_concepts.items():
@@ -144,34 +149,39 @@ async def detect_relevant_chunks(
                         community = concept_to_level_to_community[concept][level]
                         cid_to_level_to_communities[cid][level].add(community)
                         level_to_cid_to_communities[level][cid].add(community)
-                        level_to_community_to_cids[level][community].add(cid)
+                        level_to_community_to_candidate_cids[level][community].add(cid)
                     else:
                         # use the community from the previous level
                         if level - 1 in concept_to_level_to_community[concept].keys():
                             community = concept_to_level_to_community[concept][level - 1]
                             cid_to_level_to_communities[cid][level].add(community)
                             level_to_cid_to_communities[level][cid].add(community)
-                            level_to_community_to_cids[level][community].add(cid)
+                            level_to_community_to_candidate_cids[level][community].add(cid)
 
         community_sequence = []
         community_mean_rank = []
         
-
-        for community, cids in level_to_community_to_cids[level].items():
+        for community, cids in level_to_community_to_candidate_cids[level].items():
             mean_rank = np.mean(sorted([semantic_search_cids.index(c) for c in cids])[:community_ranking_chunks])
             community_mean_rank.append((community, mean_rank))
         community_sequence = [x[0] for x in sorted(community_mean_rank, key=lambda x: x[1])]
+        print(f'Level {level} community sequence: {community_sequence}')
         level_to_community_sequence[level] = community_sequence
 
         for cid in semantic_search_cids:
             chunk_communities = cid_to_level_to_communities[cid][level]
             if len(chunk_communities) > 0:
                 assigned_community = sorted(chunk_communities, key=lambda x: community_sequence.index(x))[0]
-                level_to_community_to_cids[level][assigned_community].add(cid)
+                if cid not in level_to_community_to_cids[level][assigned_community]:
+                    level_to_community_to_cids[level][assigned_community].append(cid)
+
+    for level, community_to_cids in level_to_community_to_cids.items():
+        for community, cids in community_to_cids.items():
+            cids.sort(key=lambda x: semantic_search_cids.index(x))
 
     # Set level -1 as everything in the dataset
     level_to_community_sequence[-1] = ['1']
-    level_to_community_to_cids[-1]['1'] = set(semantic_search_cids)
+    level_to_community_to_cids[-1]['1'] = semantic_search_cids
     for concept, level_to_community in concept_to_level_to_community.items():
         level_to_community[-1] = '1'
 
@@ -186,12 +196,24 @@ async def detect_relevant_chunks(
         print(f'New level {current_level} loop after {len(test_history)} tests')
         relevant_this_loop = False
 
-        community_sequence = level_to_community_sequence[current_level]
+        community_sequence = []
+        for community in level_to_community_sequence[current_level]:
+            if community in community_to_parent.keys():
+                parent = community_to_parent[community]
+                if parent not in eliminated_communities:
+                    community_sequence.append(community)
+                else:
+                    eliminated_communities.add(community)
+                    print(f'Eliminated community {community} due to parent {parent}')
+            else:
+                community_sequence.append(community)
+        print(f'Community sequence: {community_sequence}')
         community_to_cids = level_to_community_to_cids[current_level]
         for community in community_sequence:
             relevant, seen, adjacent = helper_functions.test_history_elements(test_history, previous_cid, next_cid, adjacent_search_steps)
             unseen_cids = [c for c in community_to_cids[community] if c not in seen][:community_relevance_tests]
             if len(unseen_cids) > 0:
+                print(f'Assessing relevance for community {community} with chunks {unseen_cids}')
                 is_relevant = await assess_relevance(
                     ai_configuration=ai_configuration,
                     search_label=f"topic {community}",
@@ -208,23 +230,23 @@ async def detect_relevant_chunks(
                 )
                 relevant_this_loop |= is_relevant
                 print(f'Community {community} relevant? {is_relevant}')
-                if not is_relevant:
+                if current_level > -1 and not is_relevant: # don't stop after failure at the root level
                     eliminated_communities.add(community)
                     successive_irrelevant += 1
                     if successive_irrelevant == irrelevant_community_restart:
                         successive_irrelevant = 0
-                        print(f'{successive_irrelevant} successive irrelevant communities; breaking')
+                        print(f'{successive_irrelevant} successive irrelevant communities; restarting')
                         break
                 else:
                     successive_irrelevant = 0
-        if not relevant_this_loop:
+        if current_level > -1 and not relevant_this_loop: # don't stop after failure at the root level
             print('Nothing relevant this loop')
             break
         if current_level + 1 in level_to_community_sequence.keys():
             print('Incrementing level')
             current_level += 1
         else:
-            print(f'{current_level+1} not in {level_to_community_sequence.keys()}')
+            print('Reached final level')
 
     relevant, seen, adjacent = helper_functions.test_history_elements(test_history, previous_cid, next_cid, adjacent_search_steps)
 
