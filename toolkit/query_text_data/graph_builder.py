@@ -43,9 +43,10 @@ def update_concept_graph_edges(node_to_period_counts, edge_to_period_counts, per
 
 def prepare_concept_graphs(period_concept_graphs, max_cluster_size, min_edge_weight, min_node_degree):
     prepare_concept_graph(period_concept_graphs["ALL"], min_edge_weight, min_node_degree)
-    community_to_concepts, concept_to_community, hierarchical_communities = (
+    hierarchical_communities, community_to_label = (
         detect_concept_communities(period_concept_graphs["ALL"], max_cluster_size)
     )
+    concept_to_community = hierarchical_communities.final_level_hierarchical_clustering()
     for period, G in period_concept_graphs.items():
         for node in list(G.nodes()):
             if node not in concept_to_community:
@@ -57,7 +58,7 @@ def prepare_concept_graphs(period_concept_graphs, max_cluster_size, min_edge_wei
             data['community'] = concept_to_community[node] if node in concept_to_community else -1
 
     
-    return community_to_concepts, concept_to_community, hierarchical_communities
+    return hierarchical_communities, community_to_label
     
 def build_meta_graph(G, hierarchical_communities):
     level_to_communities = {}
@@ -65,7 +66,7 @@ def build_meta_graph(G, hierarchical_communities):
     max_level = max([hc.level for hc in hierarchical_communities])
     level_community_nodes = {}
     for level in range(max_level+1):
-        filtered_nodes = [hc for hc in hierarchical_communities if hc.level == level]
+        filtered_nodes = [hc for hc in hierarchical_communities if hc.level == level and hc.node != "dummynode"]
         community_nodes = defaultdict(set)
         for hc in filtered_nodes:
             community_nodes[hc.cluster].add(hc.node)
@@ -102,12 +103,27 @@ def prepare_concept_graph(G, min_edge_weight, min_node_degree, std_trim=4):
 
 
 def detect_concept_communities(G, max_cluster_size):
-    clustering = partition.hierarchical_leiden(G, max_cluster_size, random_seed=42)
-    node_to_community = clustering.final_level_hierarchical_clustering()
-    community_to_nodes = defaultdict(list)
-    for node, community in node_to_community.items():
-        community_to_nodes[community].append(node)
-    # sort nodes
-    for community in community_to_nodes.keys():
-        community_to_nodes[community] = sorted(community_to_nodes[community])
-    return community_to_nodes, node_to_community, clustering
+    hierarchical_communities = partition.hierarchical_leiden(G, max_cluster_size, random_seed=42)
+    level_to_community_to_concepts = defaultdict(lambda: defaultdict(set))
+    level_to_community_to_parent = defaultdict(dict)
+    level_to_community_to_children = defaultdict(lambda: defaultdict(set))
+    for hc in hierarchical_communities:
+        level_to_community_to_concepts[hc.level][hc.cluster].add(hc.node)
+        if hc.parent_cluster is not None:
+            level_to_community_to_parent[hc.level][hc.cluster] = hc.parent_cluster
+            level_to_community_to_children[hc.level][hc.parent_cluster].add(hc.cluster)
+
+    community_to_label = {}
+    # rename communities as X.Y.Z where X is the size rank of the top-level community, Y is the size rank of the second-level community among all children of X, Y is the size rank of the third-level community among all children of Y, etc.
+    for level, community_to_concepts in level_to_community_to_concepts.items():
+        for community, concepts in community_to_concepts.items():
+            if level == 0:
+                root_rank = sorted(community_to_concepts, key=lambda x: len(community_to_concepts[x]), reverse=True).index(community)
+                community_to_label[community] = f"1.{root_rank+1}"
+            else:
+                parent = level_to_community_to_parent[level][community]
+                parent_label = community_to_label[parent]
+                children = level_to_community_to_children[level][parent]
+                child_rank = sorted(children, key=lambda x: len(level_to_community_to_concepts[level][x]), reverse=True).index(community)
+                community_to_label[community] = f"{parent_label}.{child_rank+1}"
+    return hierarchical_communities, community_to_label
