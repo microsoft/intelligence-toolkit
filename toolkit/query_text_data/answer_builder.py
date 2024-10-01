@@ -6,6 +6,7 @@ import toolkit.AI.utils as utils
 import toolkit.query_text_data.helper_functions as helper_functions
 import toolkit.query_text_data.answer_schema as answer_schema
 import toolkit.query_text_data.prompts as prompts
+import asyncio
 
 
 def extract_chunk_references(text):
@@ -70,6 +71,30 @@ def generate_answer(
         answer_callback(answer_stream)
     return selected_chunks, references
 
+def generate_intermediate_answer(
+        ai_configuration,
+        answer_format,
+        processing_queue,
+        answer_batch_size,
+        answer_stream,
+        answer_callback
+    ):
+    selected_chunks = processing_queue[:answer_batch_size]
+    for s in selected_chunks:
+        processing_queue.remove(s)
+    answer_messages = utils.prepare_messages(
+        prompts.chunk_summarization_prompt, 
+        {'chunks': selected_chunks, 'answer_object': answer_object}
+    )
+    answer_response = utils.generate_text(ai_configuration, answer_messages, response_format=answer_format)
+    update_answer_object(answer_object, loads(answer_response))
+    answer_text = '\n\n'.join([x['content'] for x in answer_object['content_items']])
+    references = extract_chunk_references(answer_text)
+    answer_stream.append(convert_answer_object_to_text(answer_object))
+    if answer_callback is not None:
+        answer_callback(answer_stream)
+    return selected_chunks, references
+
 def generate_answers(
         ai_configuration,
         answer_object,
@@ -105,39 +130,59 @@ def generate_answers(
         all_selected_chunks.extend(selected_chunks)
         remaining_chunks = list(set(process_chunks) - set(all_selected_chunks))
 
-def answer_question(
+def generate_intermediate_answers(
+        ai_configuration,
+        answer_format,
+        process_chunks,
+        answer_batch_size,
+        answer_stream,
+        answer_callback,
+        answer_history,
+        progress_callback
+    ):
+    all_selected_chunks = []
+    remaining_chunks = list(set(process_chunks) - set(all_selected_chunks))
+    while len(remaining_chunks) > 0:
+        selected_chunks, references = generate_intermediate_answer(
+            ai_configuration,
+            answer_object,
+            answer_format,
+            remaining_chunks,
+            answer_batch_size,
+            answer_stream,
+            answer_callback
+        )
+        selected_metadata = set()
+        for c in selected_chunks:
+            c_json = loads(c)
+            selected_metadata.add(f'{c_json["title"]} ({c_json["chunk_id"]})')
+
+        used_references = [r for r in references if r in selected_metadata]
+        answer_history.append((len(used_references), len(selected_chunks)))
+        if progress_callback is not None:
+            progress_callback(helper_functions.get_answer_progress(answer_history))
+        all_selected_chunks.extend(selected_chunks)
+        remaining_chunks = list(set(process_chunks) - set(all_selected_chunks))
+
+async def answer_question(
     ai_configuration,
     question,
     relevant_cids,
     cid_to_text,
     answer_batch_size,
-    answer_progress_callback=None,
-    answer_callback=None,
 ):
-    answer_format = answer_schema.answer_format
-    answer_object = {
-        "question": question,
-        "title": "",
-        "introduction": "",
-        "content_id_sequence": [],
-        "content_items": [],
-        "conclusion": ""
-    }
-    answer_stream = []
-    answer_history = []
+    intermediate_answer_format = answer_schema.intermediate_answer_format
     relevant_texts = [cid_to_text[cid] for cid in relevant_cids]
-    generate_answers(
-        ai_configuration=ai_configuration,
-        answer_object=answer_object,
-        answer_format=answer_format,
-        process_chunks=relevant_texts,
-        answer_batch_size=answer_batch_size,
-        answer_stream=answer_stream,
-        answer_callback=answer_callback,
-        answer_history=answer_history,
-        progress_callback=answer_progress_callback,
+    # batch texts into groups of answer_batch_size
+    batched_texts = [
+        relevant_texts[i:i + answer_batch_size]
+        for i in range(0, len(relevant_texts), answer_batch_size)
+    ]
+    batched_messages = [utils.prepare_messages(prompts.intermediate_answer_prompt, {'chunks': batch, 'question': question}) 
+                        for batch in batched_texts]
+
+    intermediate_answers = await utils.map_generate_text(
+        ai_configuration, batched_messages, response_format=intermediate_answer_format
     )
-    return (
-        answer_stream,
-        helper_functions.get_answer_progress(answer_history)
-    )
+    return intermediate_answers
+

@@ -49,3 +49,51 @@ answer_format = {
         }
     }
 }
+
+
+intermediate_answer_format = {
+    "type": "json_schema",
+    "json_schema": {
+        "name": "intermediate_answer_object",
+        "strict": True,
+        "schema": {
+            "type": "object",
+            "properties": {
+                "content_items": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "number"
+                            },
+                            "claim_summary": {
+                                "type": "string"
+                            },
+                            "claim_text": {
+                                "type": "string"
+                            },
+                            "claim_type": {
+                                "type": "string",
+                                "enum": ["fact", "value", "policy"]
+                            },
+                            "grounds": {
+                                "type": "string"
+                            },
+                            "attribution": {
+                                "type": "string"
+                            },
+                            "source": {
+                                "type": "string"
+                            }
+                        },
+                        "required": ["id", "claim_text", "claim_type", "grounds", "attribution", "source"],
+                        "additionalProperties": False,
+                    }
+                },
+            },
+            "required": ["content_items"],
+            "additionalProperties": False,
+        }
+    }
+}

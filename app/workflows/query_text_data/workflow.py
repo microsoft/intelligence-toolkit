@@ -455,18 +455,27 @@ async def create(sv: SessionVariables, workflow=None):
                 chunk_callback=on_chunk_relevant,
             )
 
-            (
-                sv.partial_answers.value,
-                sv.answer_progress.value,
-            ) = answer_builder.answer_question(
+            # (
+            #     sv.partial_answers.value,
+            #     sv.answer_progress.value,
+            # ) = answer_builder.answer_question(
+            #     ai_configuration=ai_configuration,
+            #     question=sv.last_question.value,
+            #     relevant_cids=sv.relevant_cids.value,
+            #     cid_to_text=sv.cid_to_explained_text.value,
+            #     answer_batch_size=sv.answer_update_batch_size.value,
+            #     answer_progress_callback=on_answer_progress,
+            #     answer_callback=on_answer,
+            # )
+        if st.button("Generate intermediate answers"):
+            intermediate_answers = await answer_builder.answer_question(
                 ai_configuration=ai_configuration,
                 question=sv.last_question.value,
                 relevant_cids=sv.relevant_cids.value,
                 cid_to_text=sv.cid_to_explained_text.value,
                 answer_batch_size=sv.answer_update_batch_size.value,
-                answer_progress_callback=on_answer_progress,
-                answer_callback=on_answer,
             )
+            st.write(intermediate_answers)
             
 
     with report_tab:
