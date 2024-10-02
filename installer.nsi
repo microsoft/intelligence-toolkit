@@ -83,6 +83,7 @@ Section "!${PRODUCT_NAME}" sec_app
     ; Remove old installation code files
     RMDir /r "$INSTDIR\pkgs\app"
     RMDir /r "$INSTDIR\pkgs\toolkit"
+    RMDir /r "$INSTDIR\pkgs\example_outputs"
     ; Copy pkgs data
     SetOutPath "$INSTDIR\pkgs"
     File /r "pkgs\*.*"
