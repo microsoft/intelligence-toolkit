@@ -1,9 +1,5 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-import asyncio
-import random
-import re
-from json import dumps, loads
-from operator import call
+from json import loads
 
 import pandas as pd
 
