@@ -90,7 +90,7 @@ stages:
               Dockerfile: '**/Dockerfile'
               tags: '$(TAG)'
           - script: |
-              docker save -o $(Build.ArtifactStagingDirectory)/intelligence-toolkit.tar ***/intelligence-toolkit:$(TAG)
+              docker save -o $(Build.ArtifactStagingDirectory)/intelligence-toolkit.tar intelligence-toolkit:$(TAG)
             displayName: 'Save Docker image as tarball'
           
           # Publish the tarball as a build artifact
