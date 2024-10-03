@@ -473,6 +473,7 @@ async def create(sv: SessionVariables, workflow=None):
                 question=sv.last_question.value,
                 relevant_cids=sv.relevant_cids.value,
                 cid_to_text=sv.cid_to_explained_text.value,
+                cid_to_vector=sv.cid_to_vector.value,
                 answer_batch_size=sv.answer_update_batch_size.value,
             )
             st.write(intermediate_answers)

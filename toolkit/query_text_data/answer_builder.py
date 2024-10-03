@@ -7,7 +7,7 @@ import toolkit.query_text_data.helper_functions as helper_functions
 import toolkit.query_text_data.answer_schema as answer_schema
 import toolkit.query_text_data.prompts as prompts
 import asyncio
-
+import sklearn.cluster as cluster
 
 def extract_chunk_references(text):
     source_spans = re.finditer(r'\[source: (.+)\]', text, re.MULTILINE)
@@ -169,20 +169,39 @@ async def answer_question(
     question,
     relevant_cids,
     cid_to_text,
+    cid_to_vector,
     answer_batch_size,
 ):
+    target_clusters = len(relevant_cids) // answer_batch_size
+    if len(relevant_cids) / answer_batch_size > target_clusters:
+        target_clusters += 1
+    clustered_cids = cluster_cids(relevant_cids, cid_to_vector, target_clusters)
+    print(clustered_cids)
+    clustered_texts = [[cid_to_text[cid] for cid in cids] for cids in clustered_cids.values()]
     intermediate_answer_format = answer_schema.intermediate_answer_format
-    relevant_texts = [cid_to_text[cid] for cid in relevant_cids]
-    # batch texts into groups of answer_batch_size
-    batched_texts = [
-        relevant_texts[i:i + answer_batch_size]
-        for i in range(0, len(relevant_texts), answer_batch_size)
-    ]
-    batched_messages = [utils.prepare_messages(prompts.intermediate_answer_prompt, {'chunks': batch, 'question': question}) 
-                        for batch in batched_texts]
+    batched_messages = [utils.prepare_messages(prompts.intermediate_answer_prompt, {'chunks': texts, 'question': question}) 
+                        for texts in clustered_texts]
 
     intermediate_answers = await utils.map_generate_text(
         ai_configuration, batched_messages, response_format=intermediate_answer_format
     )
     return intermediate_answers
 
+def cluster_cids(
+    relevant_cids,
+    cid_to_vector,
+    target_clusters
+):
+    # use k-means clustering to group relevant cids into target_clusters clusters
+    cids = [cid for cid in relevant_cids]
+    vectors = [cid_to_vector[cid] for cid in cids]
+    kmeans = cluster.KMeans(n_clusters=target_clusters)
+    kmeans.fit(vectors)
+    cluster_assignments = kmeans.predict(vectors)
+    clustered_cids = {}
+    for i, cid in enumerate(cids):
+        cluster_assignment = cluster_assignments[i]
+        if cluster_assignment not in clustered_cids:
+            clustered_cids[cluster_assignment] = []
+        clustered_cids[cluster_assignment].append(cid)
+    return clustered_cids

@@ -118,37 +118,17 @@ Partial answers:
 intermediate_answer_prompt = """\
 You are a helpful assistant tasked with creating a JSON object that organizes content relevant to a given user question.
 
-The output object should:
+The output object should extract relevant claims from input text chunks that will help to answer the user question as comprehensively as possible, as follows:
 
-- extract relevant content from input text chunks that will help to answer the user question as comprehensively as possible
-- report on identified claims rather than offering an analysis or interpretation
-- support each claim with a source reference to the file and text chunk: "[source: <file> (<chunk_id>), <file> (<chunk_id>)]. Always use the full name of the file - do not abbreviate - and enter the full filename before each chunk id, even if the same file contains multiple relevant chunks."
-
---FORMAT--
-
-The JSON object should be structured as follows:
-
-{{
-    "content_items":
-    {{
-        "<content item id>":
-        {{
-            "claim_summary": "<a brief summary of the claim and grounds, including any relevant context>",
-            "claim_text": "<a claim made by the input text, quoted verbatim>",
-            "claim_type": "<the type of claim: 'fact', making a claim that something is true or false; 'value', making a claim that something is good or bad; or 'policy', making a claim that something should or should not be done>",
-            "grounds": "<the data, evidence, or reasoning provided to support the claim, quoted verbatim>",
-            "attribution": "<the source of the claim, e.g., the author, named source, anonymous source, etc.>",
-            "source": "[source: <file> (<chunk_id>), <file> (<chunk_id>)]"
-        }},
-        ...
-    }}
-}}
-
-ALL input text chunks MUST be included and referenced in the final report PROVIDED they are relevant to the question.
+- "text_title": the title of the text from which the chunk was exracted
+- "chunk_id": the id of the chunk within the text
+- "claim_context": the context in which claims are made
+- "claim_statement": a statement-based formatting of a claim
+- "claim_attribution": any named source or author of a claim, beyond the title of the text 
 
 --TASK--
 
-Input text chunks:
+Input text chunks JSON:
 
 {chunks}
 

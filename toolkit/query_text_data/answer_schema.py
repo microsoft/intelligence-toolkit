@@ -59,40 +59,43 @@ intermediate_answer_format = {
         "schema": {
             "type": "object",
             "properties": {
-                "content_items": {
+                "chunk_analysis": {
                     "type": "array",
                     "items": {
                         "type": "object",
                         "properties": {
-                            "id": {
+                            "text_title": {
+                                "type": "string"
+                            },
+                            "chunk_id": {
                                 "type": "number"
                             },
-                            "claim_summary": {
+                            "claim_context": {
                                 "type": "string"
                             },
-                            "claim_text": {
-                                "type": "string"
-                            },
-                            "claim_type": {
-                                "type": "string",
-                                "enum": ["fact", "value", "policy"]
-                            },
-                            "grounds": {
-                                "type": "string"
-                            },
-                            "attribution": {
-                                "type": "string"
-                            },
-                            "source": {
-                                "type": "string"
+                            "claims": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "claim_statement": {
+                                            "type": "string"
+                                        },
+                                        "claim_attribution": {
+                                            "type": "string"
+                                        },
+                                    },
+                                    "required": ["claim_statement", "claim_attribution"],
+                                    "additionalProperties": False,
+                                }
                             }
                         },
-                        "required": ["id", "claim_text", "claim_type", "grounds", "attribution", "source"],
+                        "required": ["text_title", "chunk_id", "claim_context", "claims"],
                         "additionalProperties": False,
                     }
                 },
             },
-            "required": ["content_items"],
+            "required": ["chunk_analysis"],
             "additionalProperties": False,
         }
     }
