@@ -13,6 +13,8 @@ RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor
 
 # Copy application files
 COPY . .
+RUN rm -rf .streamlit/app_secrets.toml
+
 
 # Final stage
 FROM mcr.microsoft.com/oryx/python:3.11
