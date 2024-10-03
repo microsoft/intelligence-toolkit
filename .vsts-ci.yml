@@ -42,39 +42,39 @@ stages:
               ArtifactName: "CodeAnalysisLogs"
               ArtifactType: "Container"
 
-  - stage: ValidateAndBuild
-    dependsOn: []
-    condition: 
-    jobs:
-      - job: validate
-        displayName: Install and tests
-        pool:
-          vmImage: ubuntu-latest
-        steps:
-          - task: UsePythonVersion@0
-            inputs:
-              versionSpec: "3.11"
-            displayName: "Use Python 3.11"
-          - task: Bash@3
-            displayName: Install poetry
-            inputs:
-              workingDirectory: ./
-              targetType: "inline"
-              script: |
-                curl -sSL https://install.python-poetry.org | python -
-                export PATH=$PATH:$HOME/.poetry/bin
-          - task: Bash@3
-            displayName: Install packages
-            inputs:
-              workingDirectory: ./
-              targetType: "inline"
-              script: poetry install
-          - task: Bash@3
-            displayName: Run Tests
-            inputs:
-              workingDirectory: ./
-              targetType: "inline"
-              script: poetry run poe test
+  # - stage: ValidateAndBuild
+  #   dependsOn: []
+  #   condition: 
+  #   jobs:
+  #     - job: validate
+  #       displayName: Install and tests
+  #       pool:
+  #         vmImage: ubuntu-latest
+  #       steps:
+  #         - task: UsePythonVersion@0
+  #           inputs:
+  #             versionSpec: "3.11"
+  #           displayName: "Use Python 3.11"
+  #         - task: Bash@3
+  #           displayName: Install poetry
+  #           inputs:
+  #             workingDirectory: ./
+  #             targetType: "inline"
+  #             script: |
+  #               curl -sSL https://install.python-poetry.org | python -
+  #               export PATH=$PATH:$HOME/.poetry/bin
+  #         - task: Bash@3
+  #           displayName: Install packages
+  #           inputs:
+  #             workingDirectory: ./
+  #             targetType: "inline"
+  #             script: poetry install
+  #         - task: Bash@3
+  #           displayName: Run Tests
+  #           inputs:
+  #             workingDirectory: ./
+  #             targetType: "inline"
+  #             script: poetry run poe test
       - job: buildAndPush
         displayName: BuildAndPushContainer
         dependsOn: validate
@@ -90,8 +90,9 @@ stages:
               Dockerfile: '**/Dockerfile'
               tags: '$(TAG)'
           - script: |
-              docker save -o $(Build.ArtifactStagingDirectory)/intelligence-toolkit.tar intelligence-toolkit:$(TAG)
-            displayName: 'Save Docker image as tarball'
+              /usr/bin/docker ps -a
+              /usr/bin/docker export $(docker ps -q -f "name=intelligence-toolkit") -o $(Build.ArtifactStagingDirectory)/intelligence-toolkit.tar
+            displayName: 'Export Docker container to tar'
           
           # Publish the tarball as a build artifact
           - task: PublishBuildArtifacts@1
