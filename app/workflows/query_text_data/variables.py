@@ -21,7 +21,6 @@ class SessionVariables:
         self.cid_to_explained_text = SessionVariable({}, prefix)
         self.text_to_cid = SessionVariable({}, prefix)
         self.cid_to_vector = SessionVariable({}, prefix)
-        self.upload_key = SessionVariable(random.randint(1, 100), prefix)
         self.period_concept_graphs = SessionVariable(None, prefix)
         self.hierarchical_communities = SessionVariable({}, prefix)
         self.community_to_label = SessionVariable({}, prefix)
@@ -48,7 +47,7 @@ class SessionVariables:
         self.relevance_test_batch_size = SessionVariable(5, prefix)
         self.relevance_test_budget = SessionVariable(100, prefix)
         self.answer_update_batch_size = SessionVariable(10, prefix)
-        self.irrelevant_community_restart = SessionVariable(3, prefix)
+        self.irrelevant_community_restart = SessionVariable(5, prefix)
 
         self.report_validation_messages = SessionVariable("", prefix)
         self.report_validation = SessionVariable({}, prefix)

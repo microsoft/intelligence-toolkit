@@ -146,7 +146,7 @@ async def create(sv: SessionVariables, workflow=None):
             "Upload PDF text files",
             type=["pdf", "txt", "json", "csv"],
             accept_multiple_files=True,
-            key=sv.upload_key.value,
+            key="qtd_uploader",
         )
         # window_size = st.selectbox(
         #     "Analysis time window",
@@ -161,6 +161,7 @@ async def create(sv: SessionVariables, workflow=None):
             help="Use local embeddings to index nodes. If disabled, the model will use OpenAI embeddings.",
         )
         if files is not None and st.button("Process files"):
+            sv.reset_workflow()
             file_pb, file_callback = create_progress_callback(
                 "Loaded {} of {} files..."
             )
