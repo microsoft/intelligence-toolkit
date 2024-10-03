@@ -8,12 +8,15 @@ RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor
 RUN curl -sSL https://install.python-poetry.org | python -
 ENV PATH="/root/.local/bin:$PATH"
 
-COPY Dockerfile . && pyproject.toml . && \ 
-    poetry.lock . && ./.streamlit . && \ 
-    ./README.md ./
+COPY Dockerfile .
+COPY pyproject.toml .
+COPY poetry.lock .
+COPY ./.streamlit ./.streamlit
+COPY ./README.md ./
 
-COPY ./app . && ./toolkit . && \
-    ./example_outputs .
+COPY ./app ./app
+COPY ./toolkit ./toolkit
+COPY ./example_outputs ./example_outputs
 
 RUN poetry install --no-dev
 
