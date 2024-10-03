@@ -89,41 +89,13 @@ stages:
               command: 'buildAndPush'
               Dockerfile: '**/Dockerfile'
               tags: '$(TAG)'
-
-  - stage: Build_NSIS
-    dependsOn: []
-    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['BUILD_EXE'], 'true'))
-    jobs:
-      - job: NSIS_Build
-        pool:
-          vmImage: 'windows-latest'
-        steps:
-          - task: UsePythonVersion@0
+          - script: |
+              docker save -o $(Build.ArtifactStagingDirectory)/intelligence-toolkit.tar $(CONTAINER_REGISTRY)/intelligence-toolkit:$(TAG)
+            displayName: 'Save Docker image as tarball'
+          
+          # Publish the tarball as a build artifact
+          - task: PublishBuildArtifacts@1
             inputs:
-              versionSpec: "3.11"
-            displayName: "Use Python 3.11"
-          - task: PowerShell@2
-            displayName: Install Dependencies
-            inputs:
-              targetType: "inline"
-              script: |
-                pip install -r requirements.txt
-          - task: PowerShell@2
-            displayName: 'Install NSIS'
-            inputs:
-              targetType: 'inline'
-              script: |
-                # Install NSIS using Scoop
-                iwr -useb get.scoop.sh -outfile 'install.ps1'
-                .\install.ps1 -RunAsAdmin
-                scoop update
-                scoop bucket add extras
-                scoop install nsis
-          - task: PowerShell@2
-            displayName: 'Create exe'
-            inputs:
-              targetType: 'inline'
-              script: '.\installer_script.ps1'
-          - task: PublishPipelineArtifact@1
-            inputs:
-              targetPath: '$(System.DefaultWorkingDirectory)/build/nsis/Intelligence_toolkit_installer.exe' 
+              path: '$(Build.ArtifactStagingDirectory)/intelligence-toolkit.tar'
+              artifactName: 'intelligence-toolkit'
+              publishLocation: 'Container'
