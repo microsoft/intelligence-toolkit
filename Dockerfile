@@ -6,9 +6,8 @@ FROM mcr.microsoft.com/cbl-mariner/base/python:3
 # RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg && \
 #     apt-get update -y && \
 #     apt-get install wkhtmltopdf -y && \
-RUN curl -sSL https://install.python-poetry.org | python3 -
-    #how to know where poetry is installed?
-RUN pip install poetry
+# RUN curl -sSL https://install.python-poetry.org | python3 -
+RUN pip install poetry==1.8
 RUN poetry  --version
 
 COPY Dockerfile .
@@ -24,6 +23,5 @@ COPY ./example_outputs ./example_outputs
 
 RUN poetry install --no-dev
 
-Run application
 EXPOSE 8501
 ENTRYPOINT ["poetry", "run", "poe", "run_streamlit"]
