@@ -90,8 +90,7 @@ stages:
               Dockerfile: '**/Dockerfile'
               tags: '$(TAG)'
           - script: |
-              /usr/bin/docker ps -a
-              /usr/bin/docker export $(docker ps -q -f "name=intelligence-toolkit") -o $(Build.ArtifactStagingDirectory)/intelligence-toolkit.tar
+              /usr/bin/docker save $(docker ps -q -f "name=intelligence-toolkit") -o $(Build.ArtifactStagingDirectory)/intelligence-toolkit.tar
             displayName: 'Export Docker container to tar'
           
           # Publish the tarball as a build artifact
