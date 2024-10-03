@@ -1,6 +1,6 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import re
-from json import loads
+from json import loads, dumps
 
 import toolkit.AI.utils as utils
 import toolkit.query_text_data.helper_functions as helper_functions
@@ -178,30 +178,61 @@ async def answer_question(
     clustered_cids = cluster_cids(relevant_cids, cid_to_vector, target_clusters)
     print(clustered_cids)
     clustered_texts = [[cid_to_text[cid] for cid in cids] for cids in clustered_cids.values()]
-    intermediate_answer_format = answer_schema.intermediate_answer_format
-    batched_messages = [utils.prepare_messages(prompts.intermediate_answer_prompt, {'chunks': texts, 'question': question}) 
+    batched_extraction_messages = [utils.prepare_messages(prompts.claim_extraction_prompt, {'chunks': texts, 'question': question}) 
                         for texts in clustered_texts]
 
-    intermediate_answers = await utils.map_generate_text(
-        ai_configuration, batched_messages, response_format=intermediate_answer_format
+    extracted_claims = await utils.map_generate_text(
+        ai_configuration, batched_extraction_messages, response_format=answer_schema.claim_extraction_format
     )
-    return intermediate_answers
+
+    batched_summarization_messages = [utils.prepare_messages(prompts.claim_summarization_prompt, {'analysis': claims, 'data': clustered_texts[i], 'question': question}) 
+                        for i, claims in enumerate(extracted_claims)]
+
+    summarized_claims = await utils.map_generate_text(
+        ai_configuration, batched_summarization_messages, response_format=answer_schema.claim_summarization_format
+    )
+    content_items_list = []
+    for content_items in summarized_claims:
+        json_content_items = loads(content_items)
+        for item in json_content_items['content_items']:
+            content_items_list.append(item)
+    content_items_dict = {i: v for i, v in enumerate(content_items_list)}
+    content_items_context = dumps(content_items_dict, indent=2, ensure_ascii=False)
+    content_item_messages = utils.prepare_messages(prompts.content_integration_prompt, {'content': content_items_context, 'question': question})
+    content_structure = loads(utils.generate_text(ai_configuration, content_item_messages, response_format=answer_schema.content_integration_format))
+
+    report = build_report_markdown(question, content_items_dict, content_structure)
+
+    return report
+
+def build_report_markdown(question, content_items_dict, content_structure):
+    report = f'# {content_structure["report_title"]}\n\n*In response to: {question}*\n\n## Executive summary\n\n{content_structure["report_summary"]}\n\n'
+    for theme in content_structure['theme_order']:
+        report += f'## Theme: {theme["theme_title"]}\n\n{theme["theme_summary"]}\n\n'
+        for item_id in theme['content_id_order']:
+            item = content_items_dict[item_id]
+            report += f'### {item["content_title"]}\n\n{item["content_summary"]}\n\n{item["content_commentary"]}\n\n'
+        report += f'### AI theme commentary\n\n{theme["theme_commentary"]}\n\n'
+    report += f'## AI report commentary\n\n{content_structure["report_commentary"]}\n\n'
+    return report
 
 def cluster_cids(
     relevant_cids,
     cid_to_vector,
     target_clusters
 ):
-    # use k-means clustering to group relevant cids into target_clusters clusters
-    cids = [cid for cid in relevant_cids]
-    vectors = [cid_to_vector[cid] for cid in cids]
-    kmeans = cluster.KMeans(n_clusters=target_clusters)
-    kmeans.fit(vectors)
-    cluster_assignments = kmeans.predict(vectors)
     clustered_cids = {}
-    for i, cid in enumerate(cids):
-        cluster_assignment = cluster_assignments[i]
-        if cluster_assignment not in clustered_cids:
-            clustered_cids[cluster_assignment] = []
-        clustered_cids[cluster_assignment].append(cid)
+    if len(relevant_cids) > 0:
+        # use k-means clustering to group relevant cids into target_clusters clusters
+        cids = [cid for cid in relevant_cids]
+        vectors = [cid_to_vector[cid] for cid in cids]
+        kmeans = cluster.KMeans(n_clusters=target_clusters)
+        kmeans.fit(vectors)
+        cluster_assignments = kmeans.predict(vectors)
+        
+        for i, cid in enumerate(cids):
+            cluster_assignment = cluster_assignments[i]
+            if cluster_assignment not in clustered_cids:
+                clustered_cids[cluster_assignment] = []
+            clustered_cids[cluster_assignment].append(cid)
     return clustered_cids
