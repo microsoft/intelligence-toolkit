@@ -77,7 +77,7 @@ stages:
   #             script: poetry run poe test
       - job: buildAndPush
         displayName: BuildAndPushContainer
-        dependsOn: validate
+        # dependsOn: validate
         condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['SHOULD_DEPLOY'], 'true')))
         pool:
           vmImage: ubuntu-latest
