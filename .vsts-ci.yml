@@ -87,7 +87,7 @@ stages:
               docker build . -t intelligence-toolkit:$(TAG)
             displayName: 'Build docker'
           - script: |
-              docker tag intelligence-toolkit:$(TAG) $(CONTAINER_REGISTRY)/intelligence-toolkit:$(TAG)
+              docker tag intelligence-toolkit:$(TAG) ***/intelligence-toolkit:$(TAG)
               docker save -o $(Build.ArtifactStagingDirectory)/intelligence-toolkit.tar intelligence-toolkit:$(TAG)
             displayName: 'Save Docker image as tar file'
           - task: Docker@2
