@@ -4,7 +4,6 @@
 import streamlit as st
 
 import app.components.app_mode as am
-import app.components.app_terminator as at
 import app.components.app_user as au
 from app.javascript.styles import add_styles
 
@@ -13,10 +12,6 @@ def load_multipage_app(sv=None):
     # Load user if logged in
     user = au.AppUser()
     user.view_get_info()
-
-    # Terminate app (if needed for .exe)
-    terminator = at.AppTerminator()
-    terminator.terminate_app_btn()
 
     app_mode = am.AppMode()
     app_mode.config()

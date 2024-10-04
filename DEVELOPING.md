@@ -4,8 +4,6 @@
 
 - Python 3.11 ([Download](https://www.python.org/downloads/))
 - poetry ([Download](https://python-poetry.org/docs/#installing-with-the-official-installer))
-- For package security reasons, if desired use pip with caution if poetry doesn't work out for you:
-    - [pip](./PIP.md)
 - wkhtmltopdf (used to generate PDF reports)
 
     - Windows: ([Download](https://wkhtmltopdf.org/downloads.html))
@@ -68,34 +66,39 @@ OPENAI_API_KEY=<OPENAI_API_KEY>
 
 `poetry run poe run_streamlit`
 
-
 ### Running with docker
 
 Download and install docker: https://www.docker.com/products/docker-desktop/
 
-Then, in the root folder, run:
+Then, via shell, in the root folder, run:
 
 `docker build . -t intelligence-toolkit`
 
-After building, run the docker container with:
+After building, run the docker container:
 
-`docker run -d -p 8501:8501 intelligence-toolkit`
+
+- via shell:
+
+    `docker run  -d -p 8501:8501 intelligence-toolkit --name intelligence-toolkit`
+
+- via Docker GUI:
+
 
 Open [localhost:8501](http://localhost:8501)
 
-## Building a Windows executable
+#### Do you want to share it? No need to build again.
 
-**Note: can only build on Windows**
+Run
 
-We use [Pynsist](https://pynsist.readthedocs.io/en/latest/) together with [NSIS (Nullsoft Scriptable Install System)](https://nsis.sourceforge.io/) to build an executable for Windows. This packages the whole project and its dependencies (including Python) into an .exe, which when installed will run the Intelligence Toolkit on the user's localhost.
+`docker save --output="intelligence_toolkit.tar" intelligence-toolkit`
 
-To build the .exe locally, you need to install NSIS by [downloading it here](https://nsis.sourceforge.io/Main_Page).
+then share the .tar file as you'd like.
 
-Next, run `.\installer_script.ps1` in the root of the app to perform the following steps:
-- download wkhtmltox from the source (needed to generate PDF reports). 
-- build an .exe into build\nsis.
+In the target environment, in the same folder as the .tar file, run:
 
-Once finished building, you can install the application by running the .exe and open the shortcut to launch intelligence-toolkit at http://localhost:8503 in your web browser.
+`docker load --input intelligence_toolkit.tar`
+
+Once done, use the same command as above to run it.
 
 ## Deploying with Azure
 
