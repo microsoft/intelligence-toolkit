@@ -83,13 +83,9 @@ stages:
         pool:
           vmImage: ubuntu-latest
         steps:
-          - task: Docker@2
-            inputs:
-              containerRegistry: '$(CONTAINER_REGISTRY)'
-              repository: 'intelligence-toolkit'
-              command: 'build'
-              Dockerfile: './Dockerfile'
-              tags: '$(TAG)'
           - script: |
-              docker save -o $(Build.ArtifactStagingDirectory)/intelligence-toolkit.tar ***/intelligence-toolkit:$(TAG)
+              docker build . -t intelligence-toolkit:$(TAG)
+            displayName: 'Build docker'
+          - script: |
+              docker save -o $(Build.ArtifactStagingDirectory)/intelligence-toolkit.tar intelligence-toolkit:$(TAG)
             displayName: 'Save Docker image as tar file'
