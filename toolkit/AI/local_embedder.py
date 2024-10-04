@@ -22,7 +22,7 @@ class LocalEmbedder(BaseEmbedder):
         db_name: str = "embeddings",
         db_path=CACHE_PATH,
         max_tokens=DEFAULT_LLM_MAX_TOKENS,
-        concurrent_coroutines: int | None = DEFAULT_CONCURRENT_COROUTINES,
+        concurrent_coroutines: int | None = DEFAULT_CONCURRENT_COROUTINES + 100,
         model: str | None = DEFAULT_LOCAL_EMBEDDING_MODEL,
     ):
         super().__init__(db_name, db_path, max_tokens, concurrent_coroutines)
