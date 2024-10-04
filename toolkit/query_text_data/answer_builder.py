@@ -71,29 +71,7 @@ def generate_answer(
         answer_callback(answer_stream)
     return selected_chunks, references
 
-def generate_intermediate_answer(
-        ai_configuration,
-        answer_format,
-        processing_queue,
-        answer_batch_size,
-        answer_stream,
-        answer_callback
-    ):
-    selected_chunks = processing_queue[:answer_batch_size]
-    for s in selected_chunks:
-        processing_queue.remove(s)
-    answer_messages = utils.prepare_messages(
-        prompts.chunk_summarization_prompt, 
-        {'chunks': selected_chunks, 'answer_object': answer_object}
-    )
-    answer_response = utils.generate_text(ai_configuration, answer_messages, response_format=answer_format)
-    update_answer_object(answer_object, loads(answer_response))
-    answer_text = '\n\n'.join([x['content'] for x in answer_object['content_items']])
-    references = extract_chunk_references(answer_text)
-    answer_stream.append(convert_answer_object_to_text(answer_object))
-    if answer_callback is not None:
-        answer_callback(answer_stream)
-    return selected_chunks, references
+
 
 def generate_answers(
         ai_configuration,
@@ -130,39 +108,6 @@ def generate_answers(
         all_selected_chunks.extend(selected_chunks)
         remaining_chunks = list(set(process_chunks) - set(all_selected_chunks))
 
-def generate_intermediate_answers(
-        ai_configuration,
-        answer_format,
-        process_chunks,
-        answer_batch_size,
-        answer_stream,
-        answer_callback,
-        answer_history,
-        progress_callback
-    ):
-    all_selected_chunks = []
-    remaining_chunks = list(set(process_chunks) - set(all_selected_chunks))
-    while len(remaining_chunks) > 0:
-        selected_chunks, references = generate_intermediate_answer(
-            ai_configuration,
-            answer_object,
-            answer_format,
-            remaining_chunks,
-            answer_batch_size,
-            answer_stream,
-            answer_callback
-        )
-        selected_metadata = set()
-        for c in selected_chunks:
-            c_json = loads(c)
-            selected_metadata.add(f'{c_json["title"]} ({c_json["chunk_id"]})')
-
-        used_references = [r for r in references if r in selected_metadata]
-        answer_history.append((len(used_references), len(selected_chunks)))
-        if progress_callback is not None:
-            progress_callback(helper_functions.get_answer_progress(answer_history))
-        all_selected_chunks.extend(selected_chunks)
-        remaining_chunks = list(set(process_chunks) - set(all_selected_chunks))
 
 async def answer_question(
     ai_configuration,
@@ -202,8 +147,8 @@ async def answer_question(
     content_structure = loads(utils.generate_text(ai_configuration, content_item_messages, response_format=answer_schema.content_integration_format))
 
     report = build_report_markdown(question, content_items_dict, content_structure)
-
-    return report
+    references = extract_chunk_references(report)
+    return report, references
 
 def build_report_markdown(question, content_items_dict, content_structure):
     report = f'# {content_structure["report_title"]}\n\n*In response to: {question}*\n\n## Executive summary\n\n{content_structure["report_summary"]}\n\n'

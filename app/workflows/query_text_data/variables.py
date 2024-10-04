@@ -30,7 +30,7 @@ class SessionVariables:
         self.previous_cid = SessionVariable({}, prefix)
         self.next_cid = SessionVariable({}, prefix)
         self.relevant_cids = SessionVariable([], prefix)
-        self.partial_answers = SessionVariable([], prefix)
+        self.extended_answer = SessionVariable("", prefix)
         self.last_question = SessionVariable("", prefix)
         self.final_report = SessionVariable("", prefix)
         self.period_to_cids = SessionVariable({}, prefix)
@@ -42,6 +42,7 @@ class SessionVariables:
         self.cid_to_summary = SessionVariable({}, prefix)
         self.analysis_window_size = SessionVariable("NONE", prefix)
         self.hierarchical_clusters = SessionVariable(None, prefix)
+        self.references = SessionVariable([], prefix)
 
         self.adjacent_chunk_steps = SessionVariable(1, prefix)
         self.community_relevance_tests = SessionVariable(10, prefix)

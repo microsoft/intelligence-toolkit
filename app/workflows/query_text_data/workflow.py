@@ -132,7 +132,7 @@ async def create(sv: SessionVariables, workflow=None):
             "Query Text Data workflow:",
             "Prepare data",
             "Explore concept graph",
-            "Generate AI extended answers",
+            "Generate AI extended answer",
             "Generate AI answer reports",
             "View example outputs"
         ]
@@ -350,7 +350,7 @@ async def create(sv: SessionVariables, workflow=None):
             )
         with c2:
             regenerate = st.button(
-                "Ask",
+                "Search",
                 key="search_answers",
                 use_container_width=True,
             )
@@ -360,127 +360,115 @@ async def create(sv: SessionVariables, workflow=None):
         with c1:
             chunk_placeholder = st.empty()
             chunk_progress_placeholder = st.empty()
-            answer_progress_placeholder = st.empty()
+            answer_summary_placeholder = st.empty()
+            if sv.last_question.value != "" and regenerate:
+                def on_chunk_progress(message):
+                    chunk_progress_placeholder.markdown(message, unsafe_allow_html=True)
+
+                def on_chunk_relevant(message):
+                    chunk_placeholder.dataframe(
+                        pd.DataFrame(
+                            columns=["Relevant text chunks (double click to expand)"],
+                            data=message,
+                        ),
+                        hide_index=True,
+                        height=400,
+                        use_container_width=True,
+                    )
+
+                sv.relevant_cids.value = []
+                sv.extended_answer.value = ""
+                sv.chunk_progress.value = ""
+                sv.answer_progress.value = ""
+                (
+                    sv.relevant_cids.value,
+                    sv.chunk_progress.value,
+                ) = await relevance_assessor.detect_relevant_chunks(
+                    ai_configuration=ai_configuration,
+                    question=sv.last_question.value,
+                    cid_to_text=sv.cid_to_explained_text.value,
+                    cid_to_concepts=sv.cid_to_concepts.value,
+                    cid_to_vector=sv.cid_to_vector.value,
+                    hierarchical_communities=sv.hierarchical_communities.value,
+                    community_to_label=sv.community_to_label.value,
+                    previous_cid=sv.previous_cid.value,
+                    next_cid=sv.next_cid.value,
+                    embedder=functions.embedder(local_embedding),
+                    embedding_cache=sv_home.save_cache.value,
+                    select_logit_bias=5,
+                    adjacent_search_steps=sv.adjacent_chunk_steps.value,
+                    community_ranking_chunks=sv.relevance_test_batch_size.value,
+                    relevance_test_budget=sv.relevance_test_budget.value,
+                    community_relevance_tests=sv.relevance_test_batch_size.value,
+                    relevance_test_batch_size=sv.relevance_test_batch_size.value,
+                    irrelevant_community_restart=sv.irrelevant_community_restart.value,
+                    chunk_progress_callback=on_chunk_progress,
+                    chunk_callback=on_chunk_relevant,
+                )
+                st.rerun()
+            chunk_progress_placeholder.markdown(sv.chunk_progress.value, unsafe_allow_html=True)
+
+            chunk_placeholder.dataframe(
+                pd.DataFrame(
+                    columns=["Relevant text chunks (double click to expand)"],
+                    data=[sv.cid_to_text.value[x] for x in sv.relevant_cids.value],
+                ),
+                hide_index=True,
+                height=400,
+                use_container_width=True,
+            )
         with c2:
-            answer_placeholder = st.empty()
-            if len(sv.partial_answers.value) > 0 and len(sv.partial_answers.value[-1]) > 0:
+            ca, cb = st.columns([1, 1])
+            with ca:
+                gen_answer = st.button(
+                    "Generate AI extended answer",
+                    key="generate_answer",
+                    disabled=len(sv.relevant_cids.value) == 0,
+                )
+            with cb:
                 st.download_button(
                     "Download extended answer as MD",
-                    data=sv.partial_answers.value[-1],
+                    data=sv.extended_answer.value,
                     file_name="extended_answer.md",
                     mime="text/markdown",
-                    key="qa_extended_download_button",
+                    key="extended_answer_download_button",   
+                    disabled=sv.extended_answer.value == "", 
                 )
 
-        def on_chunk_progress(message):
-            chunk_progress_placeholder.markdown(message, unsafe_allow_html=True)
-
-        def on_answer_progress(message):
-            answer_progress_placeholder.markdown(message, unsafe_allow_html=True)
-
-        def on_chunk_relevant(message):
-            chunk_placeholder.dataframe(
-                pd.DataFrame(
-                    columns=["Relevant text chunks (double click to expand)"],
-                    data=message,
-                ),
-                hide_index=True,
-                height=400,
-                use_container_width=True,
-            )
-
-        def on_answer(message):
-            answer_placeholder.markdown(message[-1], unsafe_allow_html=True)
-
-        chunk_progress_placeholder.markdown(sv.chunk_progress.value, unsafe_allow_html=True)
-        answer_progress_placeholder.markdown(sv.answer_progress.value, unsafe_allow_html=True)
-        chunk_placeholder.dataframe(
-            pd.DataFrame(
-                columns=["Relevant text chunks (double click to expand)"],
-                data=[sv.cid_to_text.value[x] for x in sv.relevant_cids.value],
-            ),
-            hide_index=True,
-            height=300,
-            use_container_width=True,
-        )
-        answer_text = (
-            sv.partial_answers.value[-1] if len(sv.partial_answers.value) > 0 else ""
-        )
-        answer_placeholder.markdown(answer_text, unsafe_allow_html=True)
-
-        if sv.last_question.value != "" and regenerate:
-            sv.relevant_cids.value = []
-            sv.partial_answers.value = []
-            sv.chunk_progress.value = ""
-            sv.answer_progress.value = ""
-            chunk_progress_placeholder.markdown(sv.chunk_progress.value, unsafe_allow_html=True)
-            answer_progress_placeholder.markdown(sv.answer_progress.value, unsafe_allow_html=True)
-            chunk_placeholder.dataframe(
-                pd.DataFrame(
-                    columns=["Relevant text chunks (double click to expand)"],
-                    data=[sv.cid_to_text[x] for x in sv.relevant_cids.value],
-                ),
-                hide_index=True,
-                height=400,
-                use_container_width=True,
-            )
-            answer_text = (
-                sv.partial_answers.value[-1] if len(sv.partial_answers.value) > 0 else ""
-            )
-            answer_placeholder.markdown(answer_text, unsafe_allow_html=True)
-
-            (
-                sv.relevant_cids.value,
-                sv.chunk_progress.value,
-            ) = await relevance_assessor.detect_relevant_chunks(
-                ai_configuration=ai_configuration,
-                question=sv.last_question.value,
-                cid_to_text=sv.cid_to_explained_text.value,
-                cid_to_concepts=sv.cid_to_concepts.value,
-                cid_to_vector=sv.cid_to_vector.value,
-                hierarchical_communities=sv.hierarchical_communities.value,
-                community_to_label=sv.community_to_label.value,
-                previous_cid=sv.previous_cid.value,
-                next_cid=sv.next_cid.value,
-                embedder=functions.embedder(local_embedding),
-                embedding_cache=sv_home.save_cache.value,
-                select_logit_bias=5,
-                adjacent_search_steps=sv.adjacent_chunk_steps.value,
-                community_ranking_chunks=sv.relevance_test_batch_size.value,
-                relevance_test_budget=sv.relevance_test_budget.value,
-                community_relevance_tests=sv.relevance_test_batch_size.value,
-                relevance_test_batch_size=sv.relevance_test_batch_size.value,
-                irrelevant_community_restart=sv.irrelevant_community_restart.value,
-                chunk_progress_callback=on_chunk_progress,
-                chunk_callback=on_chunk_relevant,
-            )
-
-            # (
-            #     sv.partial_answers.value,
-            #     sv.answer_progress.value,
-            # ) = answer_builder.answer_question(
-            #     ai_configuration=ai_configuration,
-            #     question=sv.last_question.value,
-            #     relevant_cids=sv.relevant_cids.value,
-            #     cid_to_text=sv.cid_to_explained_text.value,
-            #     answer_batch_size=sv.answer_update_batch_size.value,
-            #     answer_progress_callback=on_answer_progress,
-            #     answer_callback=on_answer,
-            # )
-        if st.button("Generate intermediate answers"):
-            intermediate_answers = await answer_builder.answer_question(
-                ai_configuration=ai_configuration,
-                question=sv.last_question.value,
-                relevant_cids=sv.relevant_cids.value,
-                cid_to_text=sv.cid_to_explained_text.value,
-                cid_to_vector=sv.cid_to_vector.value,
-                answer_batch_size=sv.answer_update_batch_size.value,
-            )
-            st.write(intermediate_answers)
+            answer_placeholder = st.empty()
+            if gen_answer:
+                with st.spinner("Generating extended answer..."):
+                    sv.extended_answer.value, sv.references.value = await answer_builder.answer_question(
+                        ai_configuration=ai_configuration,
+                        question=sv.last_question.value,
+                        relevant_cids=sv.relevant_cids.value,
+                        cid_to_text=sv.cid_to_explained_text.value,
+                        cid_to_vector=sv.cid_to_vector.value,
+                        answer_batch_size=sv.answer_update_batch_size.value,
+                    )
+            answer_placeholder.markdown(sv.extended_answer.value, unsafe_allow_html=True)
+            answer_summary_placeholder.markdown(f'**Chunks referenced/relevant: {len(sv.references.value)}/{len(sv.relevant_cids.value)}**', unsafe_allow_html=True)
+            
             
 
+
+
+
+        # chunk_progress_placeholder.markdown(sv.chunk_progress.value, unsafe_allow_html=True)
+        # chunk_placeholder.dataframe(
+        #     pd.DataFrame(
+        #         columns=["Relevant text chunks (double click to expand)"],
+        #         data=[sv.cid_to_text.value[x] for x in sv.relevant_cids.value],
+        #     ),
+        #     hide_index=True,
+        #     height=300,
+        #     use_container_width=True,
+        # )
+        # answer_placeholder.markdown(sv.extended_answer.value, unsafe_allow_html=True)
+
+
     with report_tab:
-        if sv.partial_answers.value == []:
+        if len(sv.extended_answer.value) == 0:
             st.warning("Search for answers to continue.")
         else:
             c1, c2 = st.columns([2, 3])
@@ -488,7 +476,7 @@ async def create(sv: SessionVariables, workflow=None):
             with c1:
                 variables = {
                     "question": sv.last_question.value,
-                    "answers": sv.partial_answers.value,
+                    "answer": sv.extended_answer.value,
                 }
                 generate, messages, reset = ui_components.generative_ai_component(
                     sv.system_prompt, variables
