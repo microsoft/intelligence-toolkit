@@ -14,5 +14,5 @@ RUN rm -rf .git .streamlit/app_secrets.toml .vscode/ .github/ .gitignore
 RUN poetry install --only main
 
 # Run application
-EXPOSE 8501
-ENTRYPOINT ["poetry", "run", "poe", "run_streamlit"]
+EXPOSE 80
+ENTRYPOINT ["poetry", "run", "poe", "run_streamlit" "--server.port=80"]
