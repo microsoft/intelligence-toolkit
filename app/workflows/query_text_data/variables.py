@@ -47,9 +47,9 @@ class SessionVariables:
         self.adjacent_chunk_steps = SessionVariable(1, prefix)
         self.community_relevance_tests = SessionVariable(10, prefix)
         self.relevance_test_batch_size = SessionVariable(5, prefix)
-        self.relevance_test_budget = SessionVariable(100, prefix)
+        self.relevance_test_budget = SessionVariable(50, prefix)
         self.answer_update_batch_size = SessionVariable(10, prefix)
-        self.irrelevant_community_restart = SessionVariable(3, prefix)
+        self.irrelevant_community_restart = SessionVariable(5, prefix)
 
         self.report_validation_messages = SessionVariable("", prefix)
         self.report_validation = SessionVariable({}, prefix)

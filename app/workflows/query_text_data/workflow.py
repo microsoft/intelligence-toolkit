@@ -445,28 +445,14 @@ async def create(sv: SessionVariables, workflow=None):
                         cid_to_text=sv.cid_to_explained_text.value,
                         cid_to_vector=sv.cid_to_vector.value,
                         answer_batch_size=sv.answer_update_batch_size.value,
+                        embedder=functions.embedder(local_embedding),
+                        embedding_cache=sv_home.save_cache.value,
+                        select_logit_bias=5,
+                        claim_requery=True,
                     )
             answer_placeholder.markdown(sv.extended_answer.value, unsafe_allow_html=True)
             answer_summary_placeholder.markdown(f'**Chunks referenced/relevant: {len(sv.references.value)}/{len(sv.relevant_cids.value)}**', unsafe_allow_html=True)
             
-            
-
-
-
-
-        # chunk_progress_placeholder.markdown(sv.chunk_progress.value, unsafe_allow_html=True)
-        # chunk_placeholder.dataframe(
-        #     pd.DataFrame(
-        #         columns=["Relevant text chunks (double click to expand)"],
-        #         data=[sv.cid_to_text.value[x] for x in sv.relevant_cids.value],
-        #     ),
-        #     hide_index=True,
-        #     height=300,
-        #     use_container_width=True,
-        # )
-        # answer_placeholder.markdown(sv.extended_answer.value, unsafe_allow_html=True)
-
-
     with report_tab:
         if len(sv.extended_answer.value) == 0:
             st.warning("Search for answers to continue.")

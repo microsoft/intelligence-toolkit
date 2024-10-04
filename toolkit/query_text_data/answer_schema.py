@@ -215,3 +215,44 @@ content_integration_format = {
         }
     }
 }
+
+
+claim_requery_format = {
+    "type": "json_schema",
+    "json_schema": {
+        "name": "requeried_claims",
+        "strict": True,
+        "schema": {
+            "type": "object",
+            "properties": {
+                "claim_analysis": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "claim_statement_index": {
+                                "type": "number"
+                            },
+                            "supporting_source_indicies": {
+                                "type": "array",
+                                "items": {
+                                    "type": "number",
+                                }
+                            },
+                            "contradicting_source_indicies": {
+                                "type": "array",
+                                "items": {
+                                    "type": "number",
+                                }
+                            }
+                        },
+                        "required": ["claim_statement_index", "supporting_source_indicies", "contradicting_source_indicies"],
+                        "additionalProperties": False,
+                    }
+                },
+            },
+            "required": ["claim_analysis"],
+            "additionalProperties": False,
+        }
+    }
+}

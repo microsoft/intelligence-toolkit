@@ -98,8 +98,6 @@ async def detect_relevant_chunks(
     chunk_callback=None,
 ):
     test_history = []
-
-    all_units = []
     all_units = sorted([(cid, vector) for cid, vector in (cid_to_vector.items())], key=lambda x: x[0])
 
 
