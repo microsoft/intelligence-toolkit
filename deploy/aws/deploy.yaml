@@ -56,7 +56,7 @@ Parameters:
   Cpu:
     Description: "CPU of Fargate Task. Make sure you put valid Memory and CPU pair, refer: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ecs-taskdefinition.html#cfn-ecs-taskdefinition-cpu:~:text=requires%3A%20Replacement-,Cpu,-The%20number%20of"
     Type: Number
-    Default: 512
+    Default: 2048
     AllowedValues:
       - 256
       - 512
@@ -67,7 +67,7 @@ Parameters:
   Memory:
     Description: "Memory of Fargate Task.  Make sure you put valid Memory and CPU pair, refer: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ecs-taskdefinition.html#cfn-ecs-taskdefinition-cpu:~:text=requires%3A%20Replacement-,Cpu,-The%20number%20of"
     Type: Number
-    Default: 1024
+    Default: 4096
     AllowedValues:
       - 512
       - 1024
@@ -84,7 +84,7 @@ Parameters:
   Task:
     Description: Desired Docker task count
     Type: Number
-    Default: 2
+    Default: 5
   
   Min:
     Description: Minimum containers for Autoscaling. Should be less than or equal to DesiredTaskCount
@@ -94,12 +94,12 @@ Parameters:
   Max:
     Description: Maximum containers for Autoscaling. Should be greater than or equal to DesiredTaskCount
     Type: Number
-    Default: 2
+    Default: 5
   
   AutoScalingTargetValue:
     Description: CPU Utilization Target
     Type: Number
-    Default: 80
+    Default: 70
     
   StreamlitPublicSubnetA:
       Description: Task private subnet A

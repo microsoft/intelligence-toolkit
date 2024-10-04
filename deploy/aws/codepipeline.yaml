@@ -31,7 +31,7 @@ Parameters:
   Cpu:
     Description: "CPU of Fargate Task. Make sure you put valid Memory and CPU pair, refer: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ecs-taskdefinition.html#cfn-ecs-taskdefinition-cpu:~:text=requires%3A%20Replacement-,Cpu,-The%20number%20of"
     Type: Number
-    Default: 512
+    Default: 2048
     AllowedValues:
       - 256
       - 512
@@ -42,7 +42,7 @@ Parameters:
   Memory:
     Description: "Memory of Fargate Task.  Make sure you put valid Memory and CPU pair, refer: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ecs-taskdefinition.html#cfn-ecs-taskdefinition-cpu:~:text=requires%3A%20Replacement-,Cpu,-The%20number%20of"
     Type: Number
-    Default: 1024
+    Default: 4096
     AllowedValues:
       - 512
       - 1024
