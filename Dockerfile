@@ -11,8 +11,10 @@ ENV PATH="/root/.local/bin:$PATH"
 
 COPY . .
 RUN rm -rf .git .streamlit/app_secrets.toml .vscode/ .github/ .gitignore
-RUN poetry install --only main
+# RUN poetry install --only main
 
+
+RUN echo "hello world works!"
 # Run application
-EXPOSE 80
-ENTRYPOINT ["poetry", "run", "poe", "run_streamlit" "--server.port=80"]
+# EXPOSE 80
+# ENTRYPOINT ["poetry", "run", "poe", "run_streamlit" "--server.port=80"]
