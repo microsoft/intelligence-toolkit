@@ -130,8 +130,7 @@ Resources:
     DependsOn: StreamlitBuildCustomResource
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub https://ws-assets-prod-iad-r-iad-ed304a55c2ca1aee.s3.us-east-1.amazonaws.com/0a9f7588-a2c4-4484-b051-6658ce32605c/streamlit-deploy/development/infrastructure.yaml
-  
+      TemplateURL: !Sub https://s3.amazonaws.com/${StreamlitCodeS3Bucket}/deploy/aws/infrastructure.yaml
 
   ####################
   ##### Logging #####
@@ -924,7 +923,7 @@ Resources:
               RoleArn: 
                 !GetAtt StreamlitCloudformationExecutionRole.Arn
               StackName: !Join ['', [!Sub '${AWS::StackName}', 'deploy']]
-              TemplatePath: source-output-artifacts::deploy.yaml
+              TemplatePath: source-output-artifacts::deploy/aws/deploy.yaml
             RunOrder: 1
         - Name: InvalidateCache
           Actions:
