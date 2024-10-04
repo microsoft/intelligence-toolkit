@@ -46,59 +46,59 @@ stages:
     dependsOn: []
     condition: 
     jobs:
-      # - job: validate
-      #   displayName: Install and tests
-      #   pool:
-      #     vmImage: ubuntu-latest
-      #   steps:
-      #     - task: UsePythonVersion@0
-      #       inputs:
-      #         versionSpec: "3.11"
-      #       displayName: "Use Python 3.11"
-      #     - task: Bash@3
-      #       displayName: Install poetry
-      #       inputs:
-      #         workingDirectory: ./
-      #         targetType: "inline"
-      #         script: |
-      #           curl -sSL https://install.python-poetry.org | python -
-      #           export PATH=$PATH:$HOME/.poetry/bin
-      #     - task: Bash@3
-      #       displayName: Install packages
-      #       inputs:
-      #         workingDirectory: ./
-      #         targetType: "inline"
-      #         script: poetry install
-      #     - task: Bash@3
-      #       displayName: Run Tests
-      #       inputs:
-      #         workingDirectory: ./
-      #         targetType: "inline"
-      #         script: poetry run poe test
+      - job: validate
+        displayName: Install and tests
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: "3.11"
+            displayName: "Use Python 3.11"
+          - task: Bash@3
+            displayName: Install poetry
+            inputs:
+              workingDirectory: ./
+              targetType: "inline"
+              script: |
+                curl -sSL https://install.python-poetry.org | python -
+                export PATH=$PATH:$HOME/.poetry/bin
+          - task: Bash@3
+            displayName: Install packages
+            inputs:
+              workingDirectory: ./
+              targetType: "inline"
+              script: poetry install
+          - task: Bash@3
+            displayName: Run Tests
+            inputs:
+              workingDirectory: ./
+              targetType: "inline"
+              script: poetry run poe test
       
       - job: buildAndPush
         displayName: BuildAndPushContainer
-        # dependsOn: validate
+        dependsOn: validate
         condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['SHOULD_DEPLOY'], 'true')))
         pool:
           vmImage: ubuntu-latest
         steps:
+          - task: Docker@2
+            displayName: 'Push Docker image'
+            inputs:
+              command: 'buildAndPush'
+              containerRegistry: '$(CONTAINER_REGISTRY)'
+              repository: 'intelligence-toolkit'
+              Dockerfile: '**/Dockerfile'
+              tags: '$(TAG)'
           - script: |
               docker build . -t intelligence-toolkit:$(TAG)
             displayName: 'Build docker'
           - script: |
-              docker tag intelligence-toolkit:$(TAG) ***/intelligence-toolkit:$(TAG)
               docker save -o $(Build.ArtifactStagingDirectory)/intelligence-toolkit.tar intelligence-toolkit:$(TAG)
             displayName: 'Save Docker image as tar file'
-          - task: Docker@2
-            displayName: 'Push Docker image'
-            inputs:
-              command: 'push'
-              containerRegistry: '$(CONTAINER_REGISTRY)'
-              repository: '$(CONTAINER_REGISTRY)/intelligence-toolkit'
-              tags: '$(TAG)'
-          - task: PublishBuildArtifacts@1
-            inputs:
-              PathtoPublish: '$(Build.ArtifactStagingDirectory)/intelligence-toolkit.tar'
-              ArtifactName: 'intelligence-toolkit'
-              publishLocation: 'Container'
+          # - task: PublishBuildArtifacts@1
+          #   inputs:
+          #     PathtoPublish: '$(Build.ArtifactStagingDirectory)/intelligence-toolkit.tar'
+          #     ArtifactName: 'intelligence-toolkit'
+          #     publishLocation: 'Container'
