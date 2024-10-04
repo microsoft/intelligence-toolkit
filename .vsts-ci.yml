@@ -94,3 +94,10 @@ stages:
               PathtoPublish: '$(Build.ArtifactStagingDirectory)/intelligence-toolkit.tar'
               ArtifactName: 'intelligence-toolkit'
               publishLocation: 'Container'
+          - task: Docker@2
+            displayName: 'Push Docker image'
+            inputs:
+              command: 'push'
+              containerRegistry: '$(CONTAINER_REGISTRY)'
+              repository: 'intelligence-toolkit'
+              tags: '$(TAG)'
