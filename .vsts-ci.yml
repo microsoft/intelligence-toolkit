@@ -95,7 +95,7 @@ stages:
             inputs:
               command: 'push'
               containerRegistry: '$(CONTAINER_REGISTRY)'
-              repository: 'intelligence-toolkit'
+              repository: '$(CONTAINER_REGISTRY)/intelligence-toolkit'
               tags: '$(TAG)'
           - task: PublishBuildArtifacts@1
             inputs:
