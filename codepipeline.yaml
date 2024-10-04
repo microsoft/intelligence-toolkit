@@ -130,7 +130,7 @@ Resources:
     DependsOn: StreamlitBuildCustomResource
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub https://github.com/dayesouza/intelligence-toolkit/blob/main/infrastructure.yaml
+      TemplateURL: !Sub https://raw.githubusercontent.com/dayesouza/intelligence-toolkit/refs/heads/main/infrastructure.yaml
   
 
   ####################
