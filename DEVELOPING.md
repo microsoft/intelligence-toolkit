@@ -116,6 +116,8 @@ Wait for step 1 to be set as complete before starting step 2. The whole process 
 
 Once step 2 it's complete, in the output tab, you'll see the deployed URL.
 
+**Note: This code doesn't have auth, so this URL will be open to the internet.**
+
 ## Deploying with Azure
 
 In [this tutorial](https://dev.to/keneojiteli/deploy-a-docker-app-to-app-services-on-azure-5d3h), you can learn how to create the necessary services in azure.
