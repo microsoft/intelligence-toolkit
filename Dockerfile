@@ -5,6 +5,7 @@ FROM  mcr.microsoft.com/oryx/python:3.11
 RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg && \
     apt update -y && \
     apt install wkhtmltopdf -y && \
+    apt-get install wkhtmltopdf -y && \
     curl -sSL https://install.python-poetry.org | python -
         
 ENV PATH="/root/.local/bin:$PATH"

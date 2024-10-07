@@ -76,15 +76,14 @@ Then, via shell, in the root folder, run:
 
 After building, run the docker container:
 
-
 - via shell:
 
-    `docker run  -d -p 8501:8501 intelligence-toolkit --name intelligence-toolkit`
+    `docker run  -d -p 80:80 intelligence-toolkit --name intelligence-toolkit`
 
 - via Docker GUI:
 
 
-Open [localhost:8501](http://localhost:8501)
+Open [localhost:80](http://localhost:80)
 
 #### Do you want to share it? No need to build again.
 
@@ -99,6 +98,23 @@ In the target environment, in the same folder as the .tar file, run:
 `docker load --input intelligence_toolkit.tar`
 
 Once done, use the same command as above to run it.
+
+## Deploying with AWS
+Wait for step 1 to be set as complete before starting step 2. The whole process will take up to 20 minutes.
+
+1. Launch the infrastructure deploy:
+
+    - Give it a sugestive name since you'll be using it in the next step.
+
+    [![launch-stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=itk-infra-stack&templateURL=https://s3.us-east-1.amazonaws.com/cf-templates-19n482mly1fba-us-east-1/2024-10-07T124926.165Z3xc-infrastructure.yaml)
+
+2. Launch the code deploy
+    - In VPC Configuration, you should select the resources created by the previous step: <u>VPCId, PublicSubnetAId, PublicSubnetBId, PrivateSubnetAId, PrivateSubnetBId</u>
+
+    [![launch-stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=itk-code-stack&templateURL=https://s3.us-east-1.amazonaws.com/cf-templates-19n482mly1fba-us-east-1/2024-10-07T125858.730Zlsu-2-development.yaml)
+
+
+Once step 2 it's complete, in the output tab, you'll see the deployed URL.
 
 ## Deploying with Azure
 
