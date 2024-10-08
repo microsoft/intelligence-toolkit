@@ -17,10 +17,6 @@ Ensure that your describe these connections using narrative text rather than rep
 
 The same entity may also appear multiple times under similar names. Use reasoning to determine whether two entities are likely to be the same and what impact this should make on flag exposure assessment.
 
-Goal:
-- Evaluate the likelihood that different entity nodes are in fact the same real-world entity.
-- If there is a selected entity and there are flags in the network, evaluate the flag exposure for the selected entity.
-
 ATTENTION: You must ALWAYS generate a report based on information.
 
 === TASK ===
@@ -56,6 +52,10 @@ if there is a selected entity, or else:
 """
 
 user_prompt = """\
+Goal:
+- Evaluate the likelihood that different entity nodes are in fact the same real-world entity.
+- If there is a selected entity and there are flags in the network, evaluate the flag exposure for the selected entity.
+
 The report should be structured in markdown and use plain English accessible to non-native speakers and non-technical audiences.
 """
 

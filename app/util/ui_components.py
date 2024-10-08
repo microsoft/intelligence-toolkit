@@ -343,6 +343,8 @@ def prepare_input_df(
         st.session_state[f"{workflow}_selected_trim_percent"] = 0.0
     if f"{workflow}_selected_compound_cols" not in st.session_state:
         st.session_state[f"{workflow}_selected_compound_cols"] = []
+    if f"{workflow}_rename_map" not in st.session_state:
+        st.session_state[f"{workflow}_rename_map"] = {}
     if (
         f"{workflow}_intermediate_dfs" not in st.session_state
         or len(st.session_state[f"{workflow}_intermediate_dfs"]) == 0
@@ -667,17 +669,16 @@ def prepare_input_df(
                     value=col,
                     help="Rename the attribute to a more descriptive name.",
                 )
-                if new_name not in processed_df.columns:
-                    processed_df.rename(columns={col: new_name}, inplace=True)
+                if col not in st.session_state[f"{workflow}_rename_map"].keys() or st.session_state[f"{workflow}_rename_map"][col] != new_name:
+                    print(f'renaming {col} to {new_name}')
+                    st.session_state[f"{workflow}_rename_map"][col] = new_name
                     renamed = True
             if renamed:
-                if "renaming_cycle" in st.session_state:
-                    del st.session_state["renaming_cycle"]
-                else:
-                    reload = True
-                    st.session_state["renaming_cycle"] = True
+                reload = True
 
     processed_df_var.value = processed_df
+    for col, rename in st.session_state[f"{workflow}_rename_map"].items():
+        processed_df_var.value.rename(columns={col: rename}, inplace=True)
     if reload and len(input_df) > 0 and len(processed_df) > 0:
         st.rerun()
 

@@ -124,6 +124,7 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                     )
                 with b2:
                     if st.button("Anonymize data"):
+                        print("Anonymizing data...")
                         sv.anonymize_epsilon.value = epsilon
                         df = sv.anonymize_sensitive_df.value
                         with st.spinner("Anonymizing data..."):
