@@ -42,7 +42,7 @@ All tutorial data and examples used in Intelligence Toolkit were created for thi
 
 #### How was Intelligence Toolkit evaluated?
 
-The Intelligence Toolkit was designed, refined, and evaluated in the context of the [Tech Against Trafficking (TAT)](https://techagainsttrafficking.org/) accelerator program with [Issara Institute](https://www.issarainstitute.org/) and [Polaris](https://polarisproject.org/) (2023-2024). It includes and builds on prior accelerator outputs developed with [Unseen](https://www.unseenuk.org/) (2021-2022) and [IOM](https://www.iom.int/)/[CTDC](https://www.ctdatacollaborative.org/) (2019-2020).
+The Intelligence Toolkit was designed, refined, and evaluated in the context of the [Tech Against Trafficking (TAT)](https://techagainsttrafficking.org/) accelerator program with [Issara Institute](https://www.issarainstitute.org/) and [Polaris](https://polarisproject.org/) (2023-2024). It includes and builds on prior accelerator outputs developed with [Unseen](https://www.unseenuk.org/) (2021-2022) and [IOM](https://www.iom.int/)/[CTDC](https://www.ctdatacollaborative.org/) (2019-2020). See this [launch blog](https://www.microsoft.com/en-us/research/blog/empowering-ngos-with-generative-ai-in-the-fight-against-human-trafficking/) for more information.
 
 Additionally, a comprehensive system evaluation was performed from the standpoint of Responsible Artificial Intelligence (RAI). This evaluation was carried out utilizing the GPT-4 model. It is important to note that the choice of model plays a significant role in the evaluation process. Consequently, employing a model different from GPT-4 may yield varying results, as each model possesses unique characteristics and processing methodologies that can influence the outcome of the evaluation. Please refer to this [Overview of Responsible AI practices](https://learn.microsoft.com/en-us/legal/cognitive-services/openai/overview) for more information.
 
@@ -99,18 +99,18 @@ Intelligence Toolkit can be used with either OpenAI or Azure OpenAI as the gener
 The [`Generate Mock Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_mock_data/README.md) and [`Extract Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/extract_record_data/README.md) workflows additionally use OpenAI's Structured Outputs API, which requires a gpt-4o model as follows:
 
 - `gpt-4o-mini`
-- `gpt-4o-2024-08-06` before 2 October 2024, or `gpt-4o` afterwards
+- `gpt-4o`
 
 You can access the `Settings` page on the left sidebar when running the application:
 
-- For OpenAI, you will need an active OpenAI account ([create here](https://platform.openai.com/login)) and API key ([create here](https://platform.openai.com/account/api-keys)). 
+- For OpenAI, you will need an active OpenAI account ([create here](https://platform.openai.com/login)) and API key ([create here](https://platform.openai.com/account/api-keys)).
 
 - For Azure OpenAI, you will need an active Azure account ([create here](https://portal.azure.com/)), endpoint, key and version for the AI Service ([create here](https://portal.azure.com/#view/Microsoft_Azure_ProjectOxford/CognitiveServicesHub/~/OpenAI)).
 
 
 #### Selecting the right workflow for the data and task
 
-Use the diagram to identify an appropriate workflow, from the left sidebar while running the application.
+Use the diagram to identify an appropriate workflow, which can be opened from the left sidebar while running the application.
 
 ```mermaid
 %%{init: {
