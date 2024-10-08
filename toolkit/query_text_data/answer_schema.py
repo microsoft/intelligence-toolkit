@@ -230,6 +230,9 @@ claim_requery_format = {
                     "items": {
                         "type": "object",
                         "properties": {
+                            "claim_context_index": {
+                                "type": "number"
+                            },
                             "claim_statement_index": {
                                 "type": "number"
                             },
@@ -246,7 +249,7 @@ claim_requery_format = {
                                 }
                             }
                         },
-                        "required": ["claim_statement_index", "supporting_source_indicies", "contradicting_source_indicies"],
+                        "required": ["claim_context_index", "claim_statement_index", "supporting_source_indicies", "contradicting_source_indicies"],
                         "additionalProperties": False,
                     }
                 },

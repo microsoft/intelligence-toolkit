@@ -52,8 +52,10 @@ async def answer_question(
                     claim.pop('contradicting_sources')
             return cd
         cleaned_claims = [clean(c) for c in json_extracted_claims]
-        for claims in cleaned_claims:
-            requery_claim(ai_configuration, claims, cid_to_text, cid_to_vector, embedder, embedding_cache, 5)
+        
+        for claim_sets in cleaned_claims:
+            for claim_set in claim_sets['claim_analysis']:
+                requery_claim(ai_configuration, claim_set, cid_to_text, cid_to_vector, embedder, embedding_cache, 5)
 
         batched_summarization_messages = [utils.prepare_messages(prompts.claim_summarization_prompt, {'analysis': claims, 'data': clustered_texts[i], 'question': question}) 
                             for i, claims in enumerate(extracted_claims)]
@@ -111,6 +113,7 @@ def cluster_cids(
     return clustered_cids
 
 def requery_claim(ai_configuration, claim_context, cid_to_text, cid_to_vector, embedder, embedding_cache, batch_size):
+    print(f'Requerying claims: {dumps(claim_context, ensure_ascii=False, indent=2)}')
     claims = dumps(claim_context, ensure_ascii=False, indent=2)
     claim_embedding = np.array(
         embedder.embed_store_one(
@@ -130,12 +133,23 @@ def requery_claim(ai_configuration, claim_context, cid_to_text, cid_to_vector, e
     batched_cids = [[cid for cid, dist in cosine_distances[i:i + batch_size]] for i in range(0, len(cosine_distances), batch_size)]
     for cid_batch in batched_cids:
         chunks = dumps({i: cid_to_text[cid] for i, cid in enumerate(cid_batch)}, ensure_ascii=False, indent=2)
-        
         messages = utils.prepare_messages(prompts.claim_requery_prompt, {'claims': claims, 'chunks': chunks})
         response = loads(utils.generate_text(ai_configuration, messages, response_format=answer_schema.claim_requery_format))
+        relevant_cids = set()
+        chunk_titles = []
+        for cid in cid_batch:
+            text_json = loads(cid_to_text[cid])
+            chunk_titles.append(f"{text_json['title']} ({text_json['chunk_id']})")
         for claim_analysis in response['claim_analysis']:
+            claim_context_index = claim_analysis['claim_context_index']
             claim_statement_index = claim_analysis['claim_statement_index']
             supporting_sources = claim_analysis['supporting_source_indicies']
             contradicting_sources = claim_analysis['contradicting_source_indicies']
-        print(response)
-        break
+            supporting_source_labels = [chunk_titles[i] for i in supporting_sources]
+            contradicting_source_labels = [chunk_titles[i] for i in contradicting_sources]
+            claim_context['claim_analysis'][claim_context_index]['claims'][claim_statement_index]['supporting_sources'] = supporting_source_labels
+            claim_context['claim_analysis'][claim_context_index]['claims'][claim_statement_index]['contradicting_sources'] = contradicting_source_labels
+            relevant_cids.update(supporting_sources)
+            relevant_cids.update(contradicting_sources)
+        if len(relevant_cids) == 0:
+            break
