@@ -618,7 +618,6 @@ Resources:
                 - 'codebuild.amazonaws.com'
             Action:
               - 'sts:AssumeRole'
-              - 'ecs:UpdateService'
       ManagedPolicyArns:
         - !Ref LogsPolicy
       Policies:
@@ -629,6 +628,7 @@ Resources:
               - Effect: 'Allow'
                 Action:
                   - 'ecr:GetAuthorizationToken'
+                  - 'ecs:UpdateService'
                 Resource:
                   - '*'
               - Effect: 'Allow'
