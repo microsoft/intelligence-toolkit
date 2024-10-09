@@ -1,1 +1,3 @@
-Parameters: {}
+template-file-path: ./1-infrastructure.yaml
+
+parameters: {}
