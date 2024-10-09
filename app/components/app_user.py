@@ -1,12 +1,15 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 #
+import os
+
 import streamlit as st
+from streamlit_cognito_auth import CognitoAuthenticator
+
 from app.components.cognito_auth import AWSCognitoAuth
 from app.javascript.scripts import get_auth_user
 from app.util.enums import Mode
 from app.util.session_variables import SessionVariables
-
 
 aws_auth = AWSCognitoAuth()
 
@@ -38,19 +41,27 @@ class AppUser:
         st.stop()
 
     def login(self):
-        if aws_auth.is_cognito_configured():
-            # try:
-            authenticated = aws_auth.authenticator.login()
+        if ("POOL_ID" in os.environ and "APP_CLIENT_ID" in os.environ and "APP_CLIENT_SECRET" in os.environ):
+            authenticated = False
+            try:
+                cognito_authenticator = CognitoAuthenticator(
+                    pool_id=os.environ["POOL_ID"],
+                    app_client_id=os.environ["APP_CLIENT_ID"],
+                    app_client_secret=os.environ["APP_CLIENT_SECRET"],
+                    use_cookies=False
+                )
+                authenticated = cognito_authenticator.login()
+            except Exception as e:
+                print(e)
+                # self._view_error_info(e)
+
             if not authenticated:
                 self._view_error_info("Not authenticated")
             else:
-                username = aws_auth.authenticator.get_username()
+                username = cognito_authenticator.get_username()
                 self._set_user(username)
                 with st.sidebar:
-                    st.button("Logout", "logout_btn", on_click=aws_auth.authenticator.logout)
-            # except Exception as e:
-            #     print(e)
-            #     self._view_error_info(e)
+                    st.button("Logout", "logout_btn", on_click=cognito_authenticator.logout)
         return
         if self.sv.mode.value != Mode.CLOUD.value:
             return
