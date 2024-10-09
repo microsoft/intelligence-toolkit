@@ -6,12 +6,9 @@ import os
 import streamlit as st
 from streamlit_cognito_auth import CognitoAuthenticator
 
-from app.components.cognito_auth import AWSCognitoAuth
 from app.javascript.scripts import get_auth_user
 from app.util.enums import Mode
 from app.util.session_variables import SessionVariables
-
-aws_auth = AWSCognitoAuth()
 
 
 class AppUser:
@@ -41,14 +38,18 @@ class AppUser:
         st.stop()
 
     def login(self):
-        if ("POOL_ID" in os.environ and "APP_CLIENT_ID" in os.environ and "APP_CLIENT_SECRET" in os.environ):
+        if (
+            "COGNITO_POOL_ID" in os.environ
+            and "COGNITO_APP_CLIENT_ID" in os.environ
+            and "COGNITO_APP_CLIENT_SECRET" in os.environ
+        ):
             authenticated = False
             try:
                 cognito_authenticator = CognitoAuthenticator(
-                    pool_id=os.environ["POOL_ID"],
-                    app_client_id=os.environ["APP_CLIENT_ID"],
-                    app_client_secret=os.environ["APP_CLIENT_SECRET"],
-                    use_cookies=False
+                    pool_id=os.environ["COGNITO_POOL_ID"],
+                    app_client_id=os.environ["COGNITO_APP_CLIENT_ID"],
+                    app_client_secret=os.environ["COGNITO_APP_CLIENT_SECRET"],
+                    use_cookies=False,
                 )
                 authenticated = cognito_authenticator.login()
             except Exception as e:
@@ -61,7 +62,9 @@ class AppUser:
                 username = cognito_authenticator.get_username()
                 self._set_user(username)
                 with st.sidebar:
-                    st.button("Logout", "logout_btn", on_click=cognito_authenticator.logout)
+                    st.button(
+                        "Logout", "logout_btn", on_click=cognito_authenticator.logout
+                    )
         return
         if self.sv.mode.value != Mode.CLOUD.value:
             return

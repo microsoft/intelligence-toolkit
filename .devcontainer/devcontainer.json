@@ -6,5 +6,15 @@
 	"build": {
 		"dockerfile": "devcontainer.Dockerfile",
 		"context": ".."
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-python.python",
+				"ms-azuretools.vscode-docker",
+				"redhat.vscode-yaml",
+				"charliermarsh.ruff"
+			]
+		}
 	}
 }
