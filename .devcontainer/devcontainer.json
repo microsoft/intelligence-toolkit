@@ -16,5 +16,6 @@
 				"charliermarsh.ruff"
 			]
 		}
-	}
+	},
+	"postAttachCommand": "poetry install"
 }

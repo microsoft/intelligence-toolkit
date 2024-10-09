@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # https://eng.ms/docs/more/containers-secure-supply-chain/approved-images
-FROM  mcr.microsoft.com/oryx/python:3.11 as base
+FROM  mcr.microsoft.com/oryx/python:3.11 AS base
 
 RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg && \
     apt update -y && \
@@ -15,7 +15,7 @@ RUN echo "LC_ALL=en_US.UTF-8" >> /etc/environment && \
 
 ENV PATH="/root/.local/bin:$PATH"
 
-FROM base as streamlit
+FROM base AS streamlit
 
 COPY . .
 RUN rm -rf .git .streamlit/app_secrets.toml .vscode/ .github/ .gitignore
