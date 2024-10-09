@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: CloudFormation template deploys a containerized Streamlit app for Architectrue to CloudFormation project. 
+Description: CloudFormation template deploys a containerized Streamlit app for Architectrue to CloudFormation project.
   This templates provisions the following resources
     - ECS cluster, task definition, service to run Streamlit containers
     - CodeBuild project to build Streamlit Docker image and push to ECR repo
@@ -38,7 +38,7 @@ Metadata:
       - PrivateSubnetBId
 
 Parameters:
-  PublicSubnetAId: 
+  PublicSubnetAId:
     Type: AWS::EC2::Subnet::Id
     Description: Public Subnet A Id
 
@@ -53,7 +53,7 @@ Parameters:
   PrivateSubnetBId:
     Type: AWS::EC2::Subnet::Id
     Description: Private Subnet B Id
-  
+
   VPCId:
     Type: AWS::EC2::VPC::Id
     Description: VPC Id
@@ -61,8 +61,8 @@ Parameters:
   GitURL:
     Type: String
     Description: Initial repository for web application
-    Default: https://github.com/microsoft/intelligence-toolkit.git
-  
+    Default: https://github.com/scrt-dev/intelligence-toolkit.git
+
   Cpu:
     Description: "CPU of Fargate Task. Make sure you put valid Memory and CPU pair, refer: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ecs-taskdefinition.html#cfn-ecs-taskdefinition-cpu:~:text=requires%3A%20Replacement-,Cpu,-The%20number%20of"
     Type: Number
@@ -73,7 +73,7 @@ Parameters:
       - 1024
       - 2048
       - 4096
-  
+
   Memory:
     Description: "Memory of Fargate Task.  Make sure you put valid Memory and CPU pair, refer: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ecs-taskdefinition.html#cfn-ecs-taskdefinition-cpu:~:text=requires%3A%20Replacement-,Cpu,-The%20number%20of"
     Type: Number
@@ -95,22 +95,22 @@ Parameters:
     Description: Desired Docker task count
     Type: Number
     Default: 2
-  
+
   Min:
     Description: Minimum containers for Autoscaling. Should be less than or equal to DesiredTaskCount
     Type: Number
     Default: 2
-  
+
   Max:
     Description: Maximum containers for Autoscaling. Should be greater than or equal to DesiredTaskCount
     Type: Number
     Default: 5
-  
+
   TargetCpu:
     Description: CPU Utilization Target
     Type: Number
     Default: 80
-  
+
   ContainerPort:
     Description: Port for Docker host and container
     Type: Number
@@ -133,10 +133,36 @@ Mappings:
 
 Resources:
 
+
+  ####################
+  ##### Cognito #####
+  ##################
+
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub "${AWS::StackName}-user-pool"
+      AutoVerifiedAttributes:
+        - email
+
+  CognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub "${AWS::StackName}-user-pool-client"
+      UserPoolId: !Ref CognitoUserPool
+      GenerateSecret: true
+
+  CognitoUserPoolClientSecret:
+    Type: Custom::CognitoUserPoolClientSecret
+    Properties:
+      ServiceToken: !GetAtt CognitoUserPoolClient.Arn
+      UserPoolId: !Ref CognitoUserPool
+      ClientId: !Ref CognitoUserPoolClient
+
   ####################
   ##### Logging #####
   ##################
-  
+
   LogsPolicy:
     Type: "AWS::IAM::ManagedPolicy"
     Properties:
@@ -151,7 +177,7 @@ Resources:
               - 'logs:PutRetentionPolicy'
             Resource: '*'
 
-  LoggingBucket: 
+  LoggingBucket:
     Type: "AWS::S3::Bucket"
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
@@ -185,21 +211,21 @@ Resources:
             Effect: Allow
             Principal:
               Service: logging.s3.amazonaws.com
-            Resource: 
+            Resource:
               - !Sub arn:aws:s3:::${LoggingBucket}/*
           - Action:
               - 's3:PutObject'
             Effect: Allow
             Principal:
-              AWS: !Sub 
+              AWS: !Sub
                     - arn:aws:iam::${ElbAccount}:root
                     - {ElbAccount: !FindInMap [ELBRegionMap, !Ref 'AWS::Region', ELBAccountId]}
-            Resource: 
+            Resource:
               - !Sub arn:aws:s3:::${LoggingBucket}/alb/logs/AWSLogs/${AWS::AccountId}/*
           - Action:
               - 's3:*'
             Effect: Deny
-            Resource: 
+            Resource:
               - !Sub arn:aws:s3:::${LoggingBucket}/*
               - !Sub arn:aws:s3:::${LoggingBucket}
             Principal: "*"
@@ -222,9 +248,9 @@ Resources:
     Type: AWS::ECR::Repository
     Properties:
       EmptyOnDelete: true
-      ImageScanningConfiguration: 
+      ImageScanningConfiguration:
         ScanOnPush: true
-  
+
   ############################
   ##### Security Groups #####
   ##########################
@@ -342,7 +368,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 7
-  
+
   StreamlitTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
@@ -352,14 +378,21 @@ Resources:
       RequiresCompatibilities:
         - 'FARGATE'
       RuntimePlatform:
-        OperatingSystemFamily: LINUX   
+        OperatingSystemFamily: LINUX
       TaskRoleArn: !GetAtt StreamlitECSTaskRole.Arn
       ExecutionRoleArn: !GetAtt StreamlitExecutionRole.Arn
-      ContainerDefinitions: 
+      ContainerDefinitions:
         - Name: !Join ['-', ['ContainerDefinition', !Sub "${AWS::StackName}"]]
+          Environment:
+            - Name: POOL_ID
+              Value: !Ref CognitoUserPool
+            - Name: APP_CLIENT_ID
+              Value: !Ref CognitoUserPoolClient
+            - Name: APP_CLIENT_SECRET
+              Value: !GetAtt CognitoUserPoolClientSecret.SecretString
           LogConfiguration:
             LogDriver: "awslogs"
-            Options: 
+            Options:
               awslogs-group: !Ref StreamlitLogGroup
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: "ecs"
@@ -372,7 +405,7 @@ Resources:
               Protocol: "tcp"
 
   StreamlitECSService:
-    DependsOn: 
+    DependsOn:
       - StreamlitApplicationLoadBalancer
       - StreamlitALBListenerRule
     Type: AWS::ECS::Service
@@ -382,7 +415,7 @@ Resources:
       DesiredCount: !Ref Task
       HealthCheckGracePeriodSeconds: 120
       LaunchType: FARGATE
-      NetworkConfiguration: 
+      NetworkConfiguration:
         AwsvpcConfiguration:
           Subnets:
             - !Ref PrivateSubnetAId
@@ -393,11 +426,11 @@ Resources:
         - ContainerName: !Join ['-', ['ContainerDefinition', !Sub "${AWS::StackName}"]]
           ContainerPort: !Ref ContainerPort
           TargetGroupArn: !Ref StreamlitContainerTargetGroup
- 
+
   ########################
   ##### AutoScaling #####
   ######################
-  
+
   StreamlitAutoScalingRole:
     Type: AWS::IAM::Role
     Properties:
@@ -409,7 +442,7 @@ Resources:
             Action: 'sts:AssumeRole'
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceAutoscaleRole'
-  
+
   StreamlitAutoScalingTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
@@ -420,7 +453,7 @@ Resources:
       ServiceNamespace: ecs
       # "The Amazon Resource Name (ARN) of an AWS Identity and Access Management (IAM) role that allows Application Auto Scaling to modify your scalable target."
       RoleARN: !GetAtt StreamlitAutoScalingRole.Arn
-  
+
   StreamlitAutoScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Properties:
@@ -453,7 +486,7 @@ Resources:
           Value: lb_cookie
 
   StreamlitApplicationLoadBalancer:
-    DependsOn: 
+    DependsOn:
       - LoggingBucketPolicy
     Type: "AWS::ElasticLoadBalancingV2::LoadBalancer"
     Properties:
@@ -468,10 +501,10 @@ Resources:
           Value: true
       Scheme: internet-facing
       Type: application
-      Subnets: 
+      Subnets:
         - !Ref PublicSubnetAId
         - !Ref PublicSubnetBId
-      SecurityGroups: 
+      SecurityGroups:
         - !Ref StreamlitALBSecurityGroup
       IpAddressType: ipv4
 
@@ -481,24 +514,24 @@ Resources:
       LoadBalancerArn: !Ref StreamlitApplicationLoadBalancer
       Port: !Ref ContainerPort
       Protocol: HTTP
-      DefaultActions: 
+      DefaultActions:
         - FixedResponseConfig:
             ContentType: text/plain
             MessageBody: Access denied
             StatusCode: 403
           Type: fixed-response
-  
+
   StreamlitALBListenerRule:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
-    Properties: 
-      Actions: 
+    Properties:
+      Actions:
         - Type: forward
           TargetGroupArn: !Ref StreamlitContainerTargetGroup
-      Conditions: 
+      Conditions:
         - Field: http-header
           HttpHeaderConfig:
             HttpHeaderName: X-Custom-Header
-            Values: 
+            Values:
               - !Join ['-', [!Sub "${AWS::StackName}", !Sub "${AWS::AccountId}"]]
       ListenerArn: !Ref StreamlitHTTPListener
       Priority: 1
@@ -506,12 +539,12 @@ Resources:
   #########################
   ##### Distribution #####
   #######################
-  
+
   Distribution:
     Type: "AWS::CloudFront::Distribution"
     Properties:
-      DistributionConfig: 
-        Origins: 
+      DistributionConfig:
+        Origins:
           - ConnectionAttempts: 3
             ConnectionTimeout: 10
             DomainName: !GetAtt StreamlitApplicationLoadBalancer.DNSName
@@ -522,7 +555,7 @@ Resources:
             CustomOriginConfig:
               HTTPPort: !Ref ContainerPort
               OriginProtocolPolicy: 'http-only'
-        DefaultCacheBehavior: 
+        DefaultCacheBehavior:
           ForwardedValues:
             Cookies:
               Forward: whitelist
@@ -531,7 +564,7 @@ Resources:
             QueryStringCacheKeys: [code]
           Compress: true
           ViewerProtocolPolicy: 'https-only'
-          AllowedMethods: 
+          AllowedMethods:
             - "HEAD"
             - "DELETE"
             - "POST"
@@ -539,17 +572,17 @@ Resources:
             - "OPTIONS"
             - "PUT"
             - "PATCH"
-          CachedMethods: 
+          CachedMethods:
             - "HEAD"
             - "GET"
           CachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6"
           OriginRequestPolicyId: "216adef6-5c7f-47e4-b989-5492eafa07d3"
           TargetOriginId: !Ref StreamlitApplicationLoadBalancer
         PriceClass: "PriceClass_All"
-        Enabled: true                  
+        Enabled: true
         HttpVersion: "http2"
         IPV6Enabled: true
-        Logging: 
+        Logging:
           Bucket: !Sub '${LoggingBucket}.s3.amazonaws.com'
           IncludeCookies: true
           Prefix: !Sub distribution-${AWS::StackName}-logs/
@@ -559,7 +592,7 @@ Resources:
       Tags:
         - Key: CloudfrontStreamlitApp
           Value: !Sub ${AWS::StackName}-Cloudfront
-  
+
   #############################
   ##### Docker CodeBuild #####
   ###########################
@@ -611,14 +644,14 @@ Resources:
       Source:
         Type: GITHUB
         Location: !Ref GitURL
-        BuildSpec: 
+        BuildSpec:
           !Sub
             - |
               version: 0.2
               phases:
                 pre_build:
                   commands:
-                    - pip3 install awscli 
+                    - pip3 install awscli
                     - aws ecr get-login-password --region ${AWS::Region} | docker login --username AWS --password-stdin ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com
                 build:
                   commands:
@@ -629,7 +662,7 @@ Resources:
                   commands:
                     - echo Build completed on `date`
                     - docker push ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${StreamlitImageRepo}:latest
-            - { 
+            - {
                 StreamlitImageRepo: !Ref StreamlitImageRepo
               }
       Environment:
@@ -640,12 +673,12 @@ Resources:
       TimeoutInMinutes: 10
       Artifacts:
         Type: NO_ARTIFACTS
-  
+
   StreamlitCodeBuildLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 7
-  
+
   ###################################
   ##### Start Docker CodeBuild #####
   #################################
@@ -702,7 +735,7 @@ Resources:
                     request_type = event['RequestType']
                     if request_type == 'Create':
                       status = 'STARTING'
-                      
+
                       build_id = codebuild.start_build(projectName=event['ResourceProperties']['PROJECT'])['build']['id']
                       while status not in ['SUCCEEDED', 'FAILED', 'STOPPED', 'FAULT', 'TIMED_OUT']:
                         status = codebuild.batch_get_builds(ids=[build_id])['builds'][0]['buildStatus']
@@ -776,7 +809,7 @@ Resources:
               iam_client = boto3.client('iam')
 
               def handler(event, context):
-                  
+
                   try:
                     request_type = event['RequestType']
                     print(request_type)
@@ -793,7 +826,7 @@ Resources:
                           ecs_role_exists = False
                         else:
                           ecs_role_exists = True
-                      
+
                       try:
                         iam_client.get_role(RoleName=desired_ecs_scaling_role_name)
                         ecs_scaling_role_exists = True
@@ -802,25 +835,25 @@ Resources:
                           ecs_scaling_role_exists = False
                         else:
                           ecs_scaling_role_exists = True
-                      
+
                       print(f"ECS service role exist? {ecs_role_exists}")
                       if not ecs_role_exists:
                         iam_client.create_service_linked_role(AWSServiceName="ecs.amazonaws.com")
-                      
+
                       print(f"ECS scaling service role exist? {ecs_scaling_role_exists}")
                       if not ecs_scaling_role_exists:
                         iam_client.create_service_linked_role(AWSServiceName="ecs.application-autoscaling.amazonaws.com")
-                        
+
                   except Exception as ex:
                     print(ex)
                     cfnresponse.send(event, context, cfnresponse.FAILED, {})
                   else:
                     cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
-  
+
   StreamlitECSRoleCustomResource:
     Type: Custom::ECSRole
     Properties:
-      ServiceToken: !GetAtt StreamlitECSRoleCustomResourceFunction.Arn 
+      ServiceToken: !GetAtt StreamlitECSRoleCustomResourceFunction.Arn
 
 Outputs:
   CloudfrontURL:

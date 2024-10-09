@@ -83,7 +83,7 @@ fix = "ruff  --preview check --fix ."
 fix_unsafe = "ruff check --preview --fix --unsafe-fixes ."
 test = "pytest ${ARGS}"
 
-run_streamlit = "python -m streamlit run app/Home.py ${ARGS}"  
+run_streamlit = "python -m streamlit run app/Home.py ${ARGS}"
 
 [[tool.poe.tasks.format]]
 sequence = ['_sort_imports', '_format_code']
@@ -169,7 +169,7 @@ ignore = [
     "C901",    # needs refactoring to remove cyclomatic complexity
     "S311",    # random alert for use with cryptography. NA
     # Initial run, disabled for too much noise
-    "T201", 
+    "T201",
     "S404",
     "S603",
     "N806",
