@@ -743,7 +743,7 @@ Resources:
                 def handler(event, context):
                   try:
                     request_type = event['RequestType']
-                    if request_type == 'Create':
+                    if request_type in ['Create', 'Update']:
                       status = 'STARTING'
 
                       build_id = codebuild.start_build(projectName=event['ResourceProperties']['PROJECT'])['build']['id']
