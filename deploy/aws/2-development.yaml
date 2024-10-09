@@ -766,6 +766,7 @@ Resources:
     Properties:
       ServiceToken: !GetAtt StreamlitBuildCustomResourceFunction.Arn
       PROJECT: !Ref StreamlitCodeBuild
+      ForceUpdateContainer: 'change-to-force-update-1'
 
   ################################
   ##### ECS Custom Resource #####
