@@ -9,8 +9,6 @@ import os.path
 import streamlit as st
 import util.mermaid as mermaid
 from components.app_loader import load_multipage_app
-from components.cognito_auth import add_cognito_auth
-
 
 filename = inspect.getframeinfo(inspect.currentframe()).filename
 path = os.path.dirname(os.path.abspath(filename))
@@ -41,7 +39,6 @@ def main():
         page_icon=f"{path}myapp.ico",
         page_title="Intelligence Toolkit | Home",
     )
-    add_cognito_auth()
     load_multipage_app()
     transparency_faq, mermaid_text = get_readme_and_mermaid()
 

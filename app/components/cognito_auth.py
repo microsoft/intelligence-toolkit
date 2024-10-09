@@ -3,30 +3,29 @@ import streamlit as st
 
 from streamlit_cognito_auth import CognitoAuthenticator
 
-def add_cognito_auth():
-    if "POOL_ID" in os.environ and "APP_CLIENT_ID" in os.environ and "APP_CLIENT_SECRET" in os.environ:
+class AWSCognitoAuth:
+    is_logged_in = False
+    authenticator = None
 
-        pool_id = os.environ["POOL_ID"]
-        app_client_id = os.environ["APP_CLIENT_ID"]
-        app_client_secret = os.environ["APP_CLIENT_SECRET"]
+    @staticmethod
+    def is_cognito_configured():
+        return "POOL_ID" in os.environ and "APP_CLIENT_ID" in os.environ and "APP_CLIENT_SECRET" in os.environ
 
-        authenticator = CognitoAuthenticator(
-            pool_id=pool_id,
-            app_client_id=app_client_id,
-            app_client_secret=app_client_secret,
-            use_cookies=False
-        )
+    def __init__(self):
+        if self.is_cognito_configured():
 
-        is_logged_in = authenticator.login()
-        if not is_logged_in:
-            st.stop()
+            pool_id = os.environ["POOL_ID"]
+            app_client_id = os.environ["APP_CLIENT_ID"]
+            app_client_secret = os.environ["APP_CLIENT_SECRET"]
 
+            self.authenticator = CognitoAuthenticator(
+                pool_id=pool_id,
+                app_client_id=app_client_id,
+                app_client_secret=app_client_secret,
+                use_cookies=False
+            )
 
-        def logout():
+    def logout(self):
+        if self.is_cognito_configured():
             print("Logout")
-            authenticator.logout()
-
-
-        with st.sidebar:
-            st.text(f"Welcome,\n{authenticator.get_username()}")
-            st.button("Logout", "logout_btn", on_click=logout)
+            self.authenticator.logout()
