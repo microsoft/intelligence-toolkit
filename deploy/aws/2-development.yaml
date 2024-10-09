@@ -41,22 +41,27 @@ Parameters:
   PublicSubnetAId:
     Type: AWS::EC2::Subnet::Id
     Description: Public Subnet A Id
+    Default: ''
 
   PublicSubnetBId:
     Type: AWS::EC2::Subnet::Id
     Description: Public Subnet B Id
+    Default: ''
 
   PrivateSubnetAId:
     Type: AWS::EC2::Subnet::Id
     Description: Private Subnet A Id
+    Default: ''
 
   PrivateSubnetBId:
     Type: AWS::EC2::Subnet::Id
     Description: Private Subnet B Id
+    Default: ''
 
   VPCId:
     Type: AWS::EC2::VPC::Id
     Description: VPC Id
+    Default: ''
 
   GitURL:
     Type: String
@@ -130,6 +135,13 @@ Mappings:
       ELBAccountId: '127311923021'
     'us-west-2':
       ELBAccountId: '797873946194'
+
+Conditions:
+  PublicSubnetAIdExists: !Not [ !Equals [!Ref PublicSubnetAId, '']]
+  PublicSubnetBIdExists: !Not [ !Equals [!Ref PublicSubnetBId, '']]
+  PrivateSubnetAIdExists: !Not [ !Equals [!Ref PrivateSubnetAId, '']]
+  PrivateSubnetBIdExists: !Not [ !Equals [!Ref PrivateSubnetBId, '']]
+  VPCIdExists: !Not [ !Equals [!Ref VPCId, '']]
 
 Resources:
 
@@ -259,7 +271,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: !Sub Allow ${ContainerPort} port from Cloudfront
-      VpcId: !Ref VPCId
+      VpcId: !If [VPCIdExists, !Ref VPCId, !ImportValue 'Basic-VPC']
       Tags:
         - Key: Name
           Value: !Sub "StreamlitALBSecurityGroup${AWS::StackName}"
@@ -291,7 +303,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow container traffic from ALB
-      VpcId: !Ref VPCId
+      VpcId: !If [VPCIdExists, !Ref VPCId, !ImportValue 'Basic-VPC']
       Tags:
         - Key: Name
           Value: !Sub "StreamlitContainerSecurityGroup${AWS::StackName}"
@@ -418,8 +430,8 @@ Resources:
       NetworkConfiguration:
         AwsvpcConfiguration:
           Subnets:
-            - !Ref PrivateSubnetAId
-            - !Ref PrivateSubnetBId
+            - !If [PrivateSubnetAIdExists, !Ref PrivateSubnetAId, !ImportValue 'Basic-PrivateSubnetA']
+            - !If [PrivateSubnetBIdExists, !Ref PrivateSubnetBId, !ImportValue 'Basic-PrivateSubnetB']
           SecurityGroups:
             - !Ref StreamlitContainerSecurityGroup
       LoadBalancers:
@@ -478,7 +490,7 @@ Resources:
       Port: !Ref ContainerPort
       Protocol: "HTTP"
       TargetType: ip
-      VpcId: !Ref VPCId
+      VpcId: !If [VPCIdExists, !Ref VPCId, !ImportValue 'Basic-VPC']
       TargetGroupAttributes:
         - Key: stickiness.enabled
           Value: true
@@ -502,8 +514,8 @@ Resources:
       Scheme: internet-facing
       Type: application
       Subnets:
-        - !Ref PublicSubnetAId
-        - !Ref PublicSubnetBId
+        - !If [PublicSubnetAIdExists, !Ref PublicSubnetAId, !ImportValue 'Basic-PublicSubnetA']
+        - !If [PublicSubnetBIdExists, !Ref PublicSubnetBId, !ImportValue 'Basic-PublicSubnetB']
       SecurityGroups:
         - !Ref StreamlitALBSecurityGroup
       IpAddressType: ipv4
