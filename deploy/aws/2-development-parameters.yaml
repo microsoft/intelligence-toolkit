@@ -1,3 +1,7 @@
 template-file-path: ./deploy/aws/2-development.yaml
 
 parameters: {}
+
+tags:
+  app: intelligence-toolkit
+  stack: streamlit

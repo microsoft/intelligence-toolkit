@@ -1,3 +1,7 @@
 template-file-path: ./deploy/aws/1-infrastructure.yaml
 
 parameters: {}
+
+tags:
+  app: intelligence-toolkit
+  stack: infrastructure
