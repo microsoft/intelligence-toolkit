@@ -44,10 +44,12 @@ class AppUser:
                 if not authenticated:
                     self._view_error_info("Not authenticated")
                 else:
-                    self._set_user(aws_auth.authenticator.get_username())
+                    username = aws_auth.authenticator.get_username()
+                    self._set_user(username)
                     with st.sidebar:
                         st.button("Logout", "logout_btn", on_click=aws_auth.authenticator.logout)
             except Exception as e:
+                print(e)
                 self._view_error_info(e)
         return
         if self.sv.mode.value != Mode.CLOUD.value:

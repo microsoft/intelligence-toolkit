@@ -10,6 +10,7 @@ from app.util.session_variable import SessionVariable
 class SessionVariables:
     def __init__(self, prefix=""):
         self.username = sv.SessionVariable("")
+        self.auth_reset_password_session = sv.SessionVariable("")
         self.generation_model = sv.SessionVariable("gpt-4-turbo")
         self.embedding_model = sv.SessionVariable("text-embedding-ada-002")
         self.max_embedding_size = sv.SessionVariable(500)
