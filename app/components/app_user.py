@@ -39,18 +39,18 @@ class AppUser:
 
     def login(self):
         if aws_auth.is_cognito_configured():
-            try:
-                authenticated = aws_auth.authenticator.login()
-                if not authenticated:
-                    self._view_error_info("Not authenticated")
-                else:
-                    username = aws_auth.authenticator.get_username()
-                    self._set_user(username)
-                    with st.sidebar:
-                        st.button("Logout", "logout_btn", on_click=aws_auth.authenticator.logout)
-            except Exception as e:
-                print(e)
-                self._view_error_info(e)
+            # try:
+            authenticated = aws_auth.authenticator.login()
+            if not authenticated:
+                self._view_error_info("Not authenticated")
+            else:
+                username = aws_auth.authenticator.get_username()
+                self._set_user(username)
+                with st.sidebar:
+                    st.button("Logout", "logout_btn", on_click=aws_auth.authenticator.logout)
+            # except Exception as e:
+            #     print(e)
+            #     self._view_error_info(e)
         return
         if self.sv.mode.value != Mode.CLOUD.value:
             return
