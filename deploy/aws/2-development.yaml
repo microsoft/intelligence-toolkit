@@ -164,13 +164,6 @@ Resources:
       UserPoolId: !Ref CognitoUserPool
       GenerateSecret: true
 
-  CognitoUserPoolClientSecret:
-    Type: Custom::CognitoUserPoolClientSecret
-    Properties:
-      ServiceToken: !GetAtt CognitoUserPoolClient.Arn
-      UserPoolId: !Ref CognitoUserPool
-      ClientId: !Ref CognitoUserPoolClient
-
   ####################
   ##### Logging #####
   ##################
@@ -401,7 +394,7 @@ Resources:
             - Name: APP_CLIENT_ID
               Value: !Ref CognitoUserPoolClient
             - Name: APP_CLIENT_SECRET
-              Value: !GetAtt CognitoUserPoolClientSecret.SecretString
+              Value: !GetAtt CognitoUserPoolClient.ClientSecret
           LogConfiguration:
             LogDriver: "awslogs"
             Options:
