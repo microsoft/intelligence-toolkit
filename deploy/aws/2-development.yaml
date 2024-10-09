@@ -631,6 +631,7 @@ Resources:
                 Resource:
                   - !GetAtt StreamlitImageRepo.Arn
 
+
   StreamlitCodeBuild:
     Type: AWS::CodeBuild::Project
     Properties:
