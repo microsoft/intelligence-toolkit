@@ -41,27 +41,27 @@ Parameters:
   PublicSubnetAId:
     Type: AWS::EC2::Subnet::Id
     Description: Public Subnet A Id
-    Default: ''
+    Default: 'subnet-11111111111111111'
 
   PublicSubnetBId:
     Type: AWS::EC2::Subnet::Id
     Description: Public Subnet B Id
-    Default: ''
+    Default: 'subnet-22222222222222222'
 
   PrivateSubnetAId:
     Type: AWS::EC2::Subnet::Id
     Description: Private Subnet A Id
-    Default: ''
+    Default: 'subnet-33333333333333333'
 
   PrivateSubnetBId:
     Type: AWS::EC2::Subnet::Id
     Description: Private Subnet B Id
-    Default: ''
+    Default: 'subnet-44444444444444444'
 
   VPCId:
     Type: AWS::EC2::VPC::Id
     Description: VPC Id
-    Default: ''
+    Default: 'vpc-55555555555555555'
 
   GitURL:
     Type: String
@@ -137,11 +137,11 @@ Mappings:
       ELBAccountId: '797873946194'
 
 Conditions:
-  PublicSubnetAIdExists: !Not [ !Equals [!Ref PublicSubnetAId, '']]
-  PublicSubnetBIdExists: !Not [ !Equals [!Ref PublicSubnetBId, '']]
-  PrivateSubnetAIdExists: !Not [ !Equals [!Ref PrivateSubnetAId, '']]
-  PrivateSubnetBIdExists: !Not [ !Equals [!Ref PrivateSubnetBId, '']]
-  VPCIdExists: !Not [ !Equals [!Ref VPCId, '']]
+  PublicSubnetAIdExists: !Not [ !Equals [!Ref PublicSubnetAId, 'subnet-11111111111111111']]
+  PublicSubnetBIdExists: !Not [ !Equals [!Ref PublicSubnetBId, 'subnet-22222222222222222']]
+  PrivateSubnetAIdExists: !Not [ !Equals [!Ref PrivateSubnetAId, 'subnet-33333333333333333']]
+  PrivateSubnetBIdExists: !Not [ !Equals [!Ref PrivateSubnetBId, 'subnet-44444444444444444']]
+  VPCIdExists: !Not [ !Equals [!Ref VPCId, 'vpc-55555555555555555']]
 
 Resources:
 
