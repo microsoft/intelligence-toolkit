@@ -28,40 +28,40 @@ Metadata:
       - Cpu
       - Memory
       - ContainerPort
-    - Label:
-        default: 'VPC Configurations'
-      Parameters:
-      - VPCId
-      - PublicSubnetAId
-      - PublicSubnetBId
-      - PrivateSubnetAId
-      - PrivateSubnetBId
+    # - Label:
+    #     default: 'VPC Configurations'
+    #   Parameters:
+    #   - VPCId
+    #   - PublicSubnetAId
+    #   - PublicSubnetBId
+    #   - PrivateSubnetAId
+    #   - PrivateSubnetBId
 
 Parameters:
-  PublicSubnetAId:
-    Type: AWS::EC2::Subnet::Id
-    Description: Public Subnet A Id
-    Default: 'subnet-11111111111111111'
+  # PublicSubnetAId:
+  #   Type: AWS::EC2::Subnet::Id
+  #   Description: Public Subnet A Id
+  #   Default: 'subnet-11111111111111111'
 
-  PublicSubnetBId:
-    Type: AWS::EC2::Subnet::Id
-    Description: Public Subnet B Id
-    Default: 'subnet-22222222222222222'
+  # PublicSubnetBId:
+  #   Type: AWS::EC2::Subnet::Id
+  #   Description: Public Subnet B Id
+  #   Default: 'subnet-22222222222222222'
 
-  PrivateSubnetAId:
-    Type: AWS::EC2::Subnet::Id
-    Description: Private Subnet A Id
-    Default: 'subnet-33333333333333333'
+  # PrivateSubnetAId:
+  #   Type: AWS::EC2::Subnet::Id
+  #   Description: Private Subnet A Id
+  #   Default: 'subnet-33333333333333333'
 
-  PrivateSubnetBId:
-    Type: AWS::EC2::Subnet::Id
-    Description: Private Subnet B Id
-    Default: 'subnet-44444444444444444'
+  # PrivateSubnetBId:
+  #   Type: AWS::EC2::Subnet::Id
+  #   Description: Private Subnet B Id
+  #   Default: 'subnet-44444444444444444'
 
-  VPCId:
-    Type: AWS::EC2::VPC::Id
-    Description: VPC Id
-    Default: 'vpc-55555555555555555'
+  # VPCId:
+  #   Type: AWS::EC2::VPC::Id
+  #   Description: VPC Id
+  #   Default: 'vpc-55555555555555555'
 
   GitURL:
     Type: String
@@ -136,12 +136,12 @@ Mappings:
     'us-west-2':
       ELBAccountId: '797873946194'
 
-Conditions:
-  PublicSubnetAIdExists: !Not [ !Equals [!Ref PublicSubnetAId, 'subnet-11111111111111111']]
-  PublicSubnetBIdExists: !Not [ !Equals [!Ref PublicSubnetBId, 'subnet-22222222222222222']]
-  PrivateSubnetAIdExists: !Not [ !Equals [!Ref PrivateSubnetAId, 'subnet-33333333333333333']]
-  PrivateSubnetBIdExists: !Not [ !Equals [!Ref PrivateSubnetBId, 'subnet-44444444444444444']]
-  VPCIdExists: !Not [ !Equals [!Ref VPCId, 'vpc-55555555555555555']]
+# Conditions:
+#   PublicSubnetAIdExists: !Not [ !Equals [!Ref PublicSubnetAId, 'subnet-11111111111111111']]
+#   PublicSubnetBIdExists: !Not [ !Equals [!Ref PublicSubnetBId, 'subnet-22222222222222222']]
+#   PrivateSubnetAIdExists: !Not [ !Equals [!Ref PrivateSubnetAId, 'subnet-33333333333333333']]
+#   PrivateSubnetBIdExists: !Not [ !Equals [!Ref PrivateSubnetBId, 'subnet-44444444444444444']]
+#   VPCIdExists: !Not [ !Equals [!Ref VPCId, 'vpc-55555555555555555']]
 
 Resources:
 
@@ -271,7 +271,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: !Sub Allow ${ContainerPort} port from Cloudfront
-      VpcId: !If [VPCIdExists, !Ref VPCId, !ImportValue 'Basic-VPC']
+      VpcId: !ImportValue 'Basic-VPC' # !If [VPCIdExists, !Ref VPCId, !ImportValue 'Basic-VPC']
       Tags:
         - Key: Name
           Value: !Sub "StreamlitALBSecurityGroup${AWS::StackName}"
@@ -303,7 +303,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow container traffic from ALB
-      VpcId: !If [VPCIdExists, !Ref VPCId, !ImportValue 'Basic-VPC']
+      VpcId: !ImportValue 'Basic-VPC' # !If [VPCIdExists, !Ref VPCId, !ImportValue 'Basic-VPC']
       Tags:
         - Key: Name
           Value: !Sub "StreamlitContainerSecurityGroup${AWS::StackName}"
@@ -430,8 +430,10 @@ Resources:
       NetworkConfiguration:
         AwsvpcConfiguration:
           Subnets:
-            - !If [PrivateSubnetAIdExists, !Ref PrivateSubnetAId, !ImportValue 'Basic-PrivateSubnetA']
-            - !If [PrivateSubnetBIdExists, !Ref PrivateSubnetBId, !ImportValue 'Basic-PrivateSubnetB']
+            - !ImportValue 'Basic-PrivateSubnetA'
+            - !ImportValue 'Basic-PrivateSubnetB'
+            # - !If [PrivateSubnetAIdExists, !Ref PrivateSubnetAId, !ImportValue 'Basic-PrivateSubnetA']
+            # - !If [PrivateSubnetBIdExists, !Ref PrivateSubnetBId, !ImportValue 'Basic-PrivateSubnetB']
           SecurityGroups:
             - !Ref StreamlitContainerSecurityGroup
       LoadBalancers:
@@ -490,7 +492,7 @@ Resources:
       Port: !Ref ContainerPort
       Protocol: "HTTP"
       TargetType: ip
-      VpcId: !If [VPCIdExists, !Ref VPCId, !ImportValue 'Basic-VPC']
+      VpcId: !ImportValue 'Basic-VPC' # !If [VPCIdExists, !Ref VPCId, !ImportValue 'Basic-VPC']
       TargetGroupAttributes:
         - Key: stickiness.enabled
           Value: true
@@ -514,8 +516,10 @@ Resources:
       Scheme: internet-facing
       Type: application
       Subnets:
-        - !If [PublicSubnetAIdExists, !Ref PublicSubnetAId, !ImportValue 'Basic-PublicSubnetA']
-        - !If [PublicSubnetBIdExists, !Ref PublicSubnetBId, !ImportValue 'Basic-PublicSubnetB']
+        - !ImportValue 'Basic-PublicSubnetA'
+        - !ImportValue 'Basic-PublicSubnetB'
+        # - !If [PublicSubnetAIdExists, !Ref PublicSubnetAId, !ImportValue 'Basic-PublicSubnetA']
+        # - !If [PublicSubnetBIdExists, !Ref PublicSubnetBId, !ImportValue 'Basic-PublicSubnetB']
       SecurityGroups:
         - !Ref StreamlitALBSecurityGroup
       IpAddressType: ipv4
