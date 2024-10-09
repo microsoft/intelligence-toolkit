@@ -672,6 +672,9 @@ Resources:
                   commands:
                     - echo Build completed on `date`
                     - docker push ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${StreamlitImageRepo}:latest
+                    - echo Build completed on `date`
+                    - docker push ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${StreamlitImageRepo}:latest
+                    - aws ecs update-service --cluster ${StreamlitCluster} --service ${StreamlitECSService} --force-new-deployment
             - {
                 StreamlitImageRepo: !Ref StreamlitImageRepo
               }
@@ -730,7 +733,7 @@ Resources:
     Properties:
       Handler: index.handler
       Role: !GetAtt StreamlitBuildCustomResourceRole.Arn
-      Timeout: 300
+      Timeout: 600
       Runtime: python3.12
       Code:
         ZipFile: !Sub |
