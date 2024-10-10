@@ -1,7 +1,7 @@
 template-file-path: ./deploy/aws/2-development.yaml
 
 parameters:
-  ForceUpdateContainer: change-ending-to-force-update-1
+  ForceUpdateContainer: change-ending-to-force-update-2
 
 tags:
   app: intelligence-toolkit

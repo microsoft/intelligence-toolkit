@@ -49,7 +49,7 @@ class AppUser:
                     pool_id=os.environ["COGNITO_POOL_ID"],
                     app_client_id=os.environ["COGNITO_APP_CLIENT_ID"],
                     app_client_secret=os.environ["COGNITO_APP_CLIENT_SECRET"],
-                    use_cookies=False,
+                    use_cookies=True,
                 )
                 authenticated = cognito_authenticator.login()
             except Exception as e:
