@@ -52,27 +52,10 @@ def get_test_progress(test_history):
             rounds.append(f"{current_search}: {current_relevant}/{current_tested}")
         else:
             rounds.append(f"<span style='color: red'>{current_search}: {current_relevant}/{current_tested}</span>")
-    response = f"**Chunks relevant/tested: {total_relevant}/{total_tested}**"
+    response = f"**Relevant chunks / tested chunks: {total_relevant}/{total_tested}**"
     if len(rounds) > 0:
         response += " (" + "; ".join(rounds) + ")"
-    print(test_history[-3:])
-    print(response)
     return response
-
-
-def get_answer_progress(answer_history):
-    if len(answer_history) == 0:
-        return ""
-    sum_used = sum([x[0] for x in answer_history])
-    sum_provided = sum([x[1] for x in answer_history])
-    progress = f"**Chunks referenced/relevant: {sum_used}/{sum_provided}**"
-    if len(answer_history) > 0:
-        progress += " ("
-        for ix, (used_chunks, provided_chunks) in enumerate(answer_history):
-            progress += f"answer {ix+1}: {used_chunks}/{provided_chunks}, "
-        progress = progress[:-2] + ")"
-    return progress
-
 
 def test_history_elements(test_history, previous_cid, next_cid, adjacent_search_steps):
     relevant_list = [x[1] for x in test_history if x[2] == "Yes"]
