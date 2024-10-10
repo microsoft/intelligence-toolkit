@@ -43,12 +43,16 @@ class SessionVariables:
         self.analysis_window_size = SessionVariable("NONE", prefix)
         self.hierarchical_clusters = SessionVariable(None, prefix)
         self.references = SessionVariable([], prefix)
+        self.referenced_chunks = SessionVariable([], prefix)
+        self.target_chunks_per_cluster = SessionVariable(5, prefix)
+        self.claim_search_depth = SessionVariable(10, prefix)
+        self.search_type = SessionVariable("Extracted claims", prefix)
+        self.net_new_sources = SessionVariable(0, prefix)
 
         self.adjacent_chunk_steps = SessionVariable(1, prefix)
         self.community_relevance_tests = SessionVariable(10, prefix)
         self.relevance_test_batch_size = SessionVariable(5, prefix)
-        self.relevance_test_budget = SessionVariable(50, prefix)
-        self.answer_update_batch_size = SessionVariable(10, prefix)
+        self.relevance_test_budget = SessionVariable(100, prefix)
         self.irrelevant_community_restart = SessionVariable(5, prefix)
 
         self.report_validation_messages = SessionVariable("", prefix)

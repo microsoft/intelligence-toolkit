@@ -80,7 +80,7 @@ You are a helpful assistant tasked with creating a JSON object that summarizes c
 
 The output object should summarize all claims from input text chunks as follows:
 
-- "content_title": a title for a specific content item spanning related claims
+- "content_title": a title for a specific content item spanning related claims, in the form of a derived claim statement
 - "content_summary": a paragraph, starting with "**Source evidence**:", describing each of the individual claims and the balance of evidence supporting or contradicting them
 - "content_commentary": a paragraph, starting with "**AI commentary**:", suggesting inferences, implications, or conclusions that could be drawn from the source evidence
 
@@ -104,12 +104,12 @@ You are a helpful assistant tasked with creating a JSON object that organizes co
 
 The output object should summarize all claims from input text chunks as follows:
 
-- "report_title": a title for the final report that reflects the overall theme of the content and the user question it answers
+- "report_title": a title for the final report that reflects the overall theme of the content and the user question it answers, in the form of a derived claim statement
 - "report_summary": an introductory paragraph describes the themes and content items in the report, without offering additional interpretation beyond the content items
 - "theme_order": the order in which to present the themes in the final report
-- "theme_title": a title for a specific theme spanning related content items
+- "theme_title": a title for a specific theme spanning related content items, in the form of a derived claim statement
 - "theme_summary": an introductory paragraph that links the content items in the theme to the user question, without additional intepretation
-- "content_id_order": the order in which to present the content items within the theme, specified by content item id
+- "content_id_order": the order in which to present the content items within the theme, specified by content item id. If content items make the same overall point, include only the more comprehensive content item
 - "theme_commentary": a concluding paragraph that summarizes the content items in the theme and their relevance to the user question, with additional interpretation
 - "report_commentary": a concluding paragraph that summarizes the themes and their relevance to the user question, with additional interpretation
 
@@ -129,19 +129,18 @@ Output JSON object:
 """
 
 claim_requery_prompt = """\
-You are a helpful assistant tasked with creating a JSON object that analyzes input text chunks for their support or contradiction of a list of claims.
+You are a helpful assistant tasked with creating a JSON object that analyzes input text chunks for their support or contradiction of given claim.
 
 The output object should summarize all claims from input text chunks as follows:
 
-- "claim_statement_index": the index of the claim statement in the list of claims (starting at 0)
 - "supporting_source_indicies": the indices of the input text chunks that support the claim (starting at 0)
 - "contradicting_source_indicies": the indices of the input text chunks that contradict the claim (starting at 0)
 
 --TASK--
 
-Claims JSON:
+Claim:
 
-{claims}
+{claim}
 
 Input text chunks JSON:
 

@@ -302,7 +302,7 @@ async def create(sv: SessionVariables, workflow=None):
                     st.dataframe(selected_cids_df, hide_index=True, height=650, use_container_width=True)
     with search_tab:
         with st.expander("Options", expanded=False):
-            c1, c2, c3, c4, c5 = st.columns([1, 1, 1, 1, 1])
+            c1, c2, c3, c4, c5, c6, c7 = st.columns(7)
             with c1:
                 st.number_input(
                     "Relevance test budget",
@@ -337,11 +337,26 @@ async def create(sv: SessionVariables, workflow=None):
                 )
             with c5:
                 st.number_input(
-                    "Relevant chunks/answer update",
-                    value=sv.answer_update_batch_size.value,
-                    key=sv.answer_update_batch_size.key,
+                    "Target chunks per cluster",
+                    value=sv.target_chunks_per_cluster.value,
+                    key=sv.target_chunks_per_cluster.key,
                     min_value=0,
-                    help="Determines how many relevant chunks at a time are incorporated into the extended answer in progress. Higher values may require fewer updates, but may miss more details from the chunks provided."
+                    help="The average number of text chunks to target per cluster, which determines the text chunks that will be evaluated together and in parallel to other clusters. Larger values will generally result in more related text chunks being evaluated in parallel, but may also result in information loss from unprocessed content."
+                )
+            with c6:
+                st.radio(
+                    label="Evidence type",
+                    options=["Extracted claims", "Source text"],
+                    key=sv.search_type.key,
+                    help="If the evidence type is set to 'Source text', the system will generate an answer directly from the text chunks. If the search type is set to 'Extracted claims', the system will extract claims from the text chunks and generate an answer based on the extracted claims in addition to the source text.",
+                )
+            with c7:
+                st.number_input(
+                    "Claim search depth",
+                    value=sv.claim_search_depth.value,
+                    key=sv.claim_search_depth.key,
+                    min_value=0,
+                    help="If the evidence type is set to 'Extracted claims', this parameter sets the number of most-similar text chunks to analyze for each extracted claim, looking for both supporting and contradicting evidence."
                 )
         c1, c2 = st.columns([6, 1])
         with c1:
@@ -362,6 +377,7 @@ async def create(sv: SessionVariables, workflow=None):
             chunk_progress_placeholder = st.empty()
             answer_summary_placeholder = st.empty()
             if sv.last_question.value != "" and regenerate:
+
                 def on_chunk_progress(message):
                     chunk_progress_placeholder.markdown(message, unsafe_allow_html=True)
 
@@ -380,6 +396,11 @@ async def create(sv: SessionVariables, workflow=None):
                 sv.extended_answer.value = ""
                 sv.chunk_progress.value = ""
                 sv.answer_progress.value = ""
+                sv.extended_answer.value = ""
+                answer_placeholder.markdown("")
+                sv.references.value = []
+                sv.referenced_chunks.value = []
+                sv.net_new_sources.value = 0
                 (
                     sv.relevant_cids.value,
                     sv.chunk_progress.value,
@@ -437,22 +458,28 @@ async def create(sv: SessionVariables, workflow=None):
 
             answer_placeholder = st.empty()
             if gen_answer:
+                sv.extended_answer.value = ""
+                answer_placeholder.markdown("")
+                sv.references.value = []
+                sv.referenced_chunks.value = []
+                sv.net_new_sources.value = 0
+
                 with st.spinner("Generating extended answer..."):
-                    sv.extended_answer.value, sv.references.value = await answer_builder.answer_question(
+                    sv.extended_answer.value, sv.references.value, sv.referenced_chunks.value, sv.net_new_sources.value = await answer_builder.answer_question(
                         ai_configuration=ai_configuration,
                         question=sv.last_question.value,
                         relevant_cids=sv.relevant_cids.value,
                         cid_to_text=sv.cid_to_explained_text.value,
                         cid_to_vector=sv.cid_to_vector.value,
-                        answer_batch_size=sv.answer_update_batch_size.value,
+                        target_chunks_per_cluster=sv.target_chunks_per_cluster.value,
                         embedder=functions.embedder(local_embedding),
                         embedding_cache=sv_home.save_cache.value,
-                        select_logit_bias=5,
-                        claim_requery=True,
+                        extract_claims=sv.search_type.value == "Extracted claims",
+                        search_depth=sv.claim_search_depth.value,
                     )
             answer_placeholder.markdown(sv.extended_answer.value, unsafe_allow_html=True)
-            answer_summary_placeholder.markdown(f'**Chunks referenced/relevant: {len(sv.references.value)}/{len(sv.relevant_cids.value)}**', unsafe_allow_html=True)
-            
+            if len(sv.extended_answer.value) > 0:
+                answer_summary_placeholder.markdown(f'**Additional chunks relevant to extracted claims: {sv.net_new_sources.value}**\n\n**Chunks referenced in answer / total relevant chunks: {len(sv.references.value)}/{len(sv.relevant_cids.value)+sv.net_new_sources.value}**', unsafe_allow_html=True)
     with report_tab:
         if len(sv.extended_answer.value) == 0:
             st.warning("Search for answers to continue.")

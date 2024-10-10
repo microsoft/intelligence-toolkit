@@ -198,11 +198,20 @@ content_integration_format = {
                                     "type": "number"
                                 }
                             },
+                            "merge_content_ids": {
+                                "type": "array",
+                                "items": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "number"
+                                    }
+                                }
+                            },
                             "theme_commentary": {
                                 "type": "string"
                             }
                         },
-                        "required": ["theme_title", "theme_summary", "content_id_order", "theme_commentary"],
+                        "required": ["theme_title", "theme_summary", "content_id_order", "merge_content_ids", "theme_commentary"],
                         "additionalProperties": False,
                     }
                 },
@@ -225,36 +234,21 @@ claim_requery_format = {
         "schema": {
             "type": "object",
             "properties": {
-                "claim_analysis": {
+
+                "supporting_source_indicies": {
                     "type": "array",
                     "items": {
-                        "type": "object",
-                        "properties": {
-                            "claim_context_index": {
-                                "type": "number"
-                            },
-                            "claim_statement_index": {
-                                "type": "number"
-                            },
-                            "supporting_source_indicies": {
-                                "type": "array",
-                                "items": {
-                                    "type": "number",
-                                }
-                            },
-                            "contradicting_source_indicies": {
-                                "type": "array",
-                                "items": {
-                                    "type": "number",
-                                }
-                            }
-                        },
-                        "required": ["claim_context_index", "claim_statement_index", "supporting_source_indicies", "contradicting_source_indicies"],
-                        "additionalProperties": False,
+                        "type": "number",
                     }
                 },
+                "contradicting_source_indicies": {
+                    "type": "array",
+                    "items": {
+                        "type": "number",
+                    }
+                }
             },
-            "required": ["claim_analysis"],
+            "required": ["supporting_source_indicies", "contradicting_source_indicies"],
             "additionalProperties": False,
         }
     }
