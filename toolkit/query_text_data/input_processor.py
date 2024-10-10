@@ -153,15 +153,18 @@ def process_chunks(
         for period, count in period_counts.items():
             period_concept_graphs[period].add_edge(edge[0], edge[1], weight=count)
 
-    (
-        hierarchical_communities,
-        community_to_label
-    ) = graph_builder.prepare_concept_graphs(
-        period_concept_graphs,
-        max_cluster_size=max_cluster_size,
-        min_edge_weight=2,
-        min_node_degree=1
-    )
+    hierarchical_communities = {}
+    community_to_label = {}
+    if len(period_concept_graphs['ALL'].nodes()) > 0:
+        (
+            hierarchical_communities,
+            community_to_label
+        ) = graph_builder.prepare_concept_graphs(
+            period_concept_graphs,
+            max_cluster_size=max_cluster_size,
+            min_edge_weight=2,
+            min_node_degree=1
+        )
     return (
         cid_to_text,
         text_to_cid,

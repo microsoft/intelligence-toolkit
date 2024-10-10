@@ -30,6 +30,8 @@ Once the target numbers of near duplicates and close relaitions have been genera
 
 Do not include the seed record in the output object.
 
+It should be possible to reconstruct the input record from the generated text, but the text should not simply list the values of the input record. Ensure that all values are embedded in a narrative that is plausible and coherent. Values may be aggregated, but they must ALL be present individually in the generated text.
+
 The content of the generated records and fields should follow the guidance below, if provided.
 
 --Generation guidance--
@@ -47,9 +49,6 @@ The content of the generated records and fields should follow the guidance below
 --Record Targets--
 
 {record_targets}
-
-
-It should be possible to reconstruct the input record from the generated text, but the text should not simply list the values of the input record. Ensure that all values are embedded in a narrative that is plausible and coherent. Values may be aggregated, but they must ALL be present individually in the generated text.
 """
 
 text_generation_prompt = """
