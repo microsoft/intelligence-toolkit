@@ -60,5 +60,5 @@ app/wkhtmltox/*.exe
 
 examples/**/*.csv
 
-# DotEnv files
-.env
+# dotenv files in root
+/.env*

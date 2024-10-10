@@ -13,7 +13,8 @@
 				"ms-python.python",
 				"ms-azuretools.vscode-docker",
 				"redhat.vscode-yaml",
-				"charliermarsh.ruff"
+				"charliermarsh.ruff",
+				"github.vscode-github-actions"
 			]
 		}
 	},

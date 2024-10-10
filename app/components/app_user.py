@@ -54,7 +54,7 @@ class AppUser:
                 authenticated = cognito_authenticator.login()
             except Exception as e:
                 print(e)
-                # self._view_error_info(e)
+                self._view_error_info(e)
 
             if not authenticated:
                 self._view_error_info("Not authenticated")

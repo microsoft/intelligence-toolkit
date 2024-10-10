@@ -33,5 +33,3 @@ jobs:
 
       - name: Tests
         run: poetry run poe test
-
-
