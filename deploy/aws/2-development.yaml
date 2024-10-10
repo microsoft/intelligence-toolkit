@@ -650,9 +650,13 @@ Resources:
               - Effect: 'Allow'
                 Action:
                   - 'ecr:GetAuthorizationToken'
-                  - 'ecs:UpdateService'
                 Resource:
                   - '*'
+              - Effect: 'Allow'
+                Action:
+                  - 'ecs:UpdateService'
+                Resource:
+                  - !Ref StreamlitECSService
               - Effect: 'Allow'
                 Action:
                   - 'ecr:UploadLayerPart'
