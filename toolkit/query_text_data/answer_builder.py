@@ -1,143 +1,226 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import re
-from json import loads
+from json import loads, dumps
+import numpy as np
+import asyncio
+import string
+from tqdm.asyncio import tqdm_asyncio
+from collections import defaultdict
 
 import toolkit.AI.utils as utils
 import toolkit.query_text_data.helper_functions as helper_functions
 import toolkit.query_text_data.answer_schema as answer_schema
 import toolkit.query_text_data.prompts as prompts
-
+import sklearn.cluster as cluster
+import scipy.spatial
 
 def extract_chunk_references(text):
-    source_spans = re.finditer(r'\[source: (.+)\]', text, re.MULTILINE)
+    source_spans = list(re.finditer(r'\[source: ([^\]]+)\]', text, re.MULTILINE))
     references = set()
     for source_span in source_spans:
-        parts = [x.strip() for x in source_span.group(1).split(',')]
+        parts = source_span.group(1).split(', ')
         references.update(parts)
-    return references
+    ref_list = sorted(references)
+    return ref_list
 
-def convert_answer_object_to_text(answer_object):
-    response = f'# {answer_object["title"]}\n\n'
-    response += f'*In response to: {answer_object["question"]}*\n\n'
-    response += f'## Introduction\n\n{answer_object["introduction"]}\n\n## Analysis\n\n'
-    for item in answer_object['content_items']:
-        response += f'### {item["title"]}\n\n{item["content"]}\n\n'
-    response += f'## Conclusion\n\n{answer_object["conclusion"]}\n\n'
-    return response
+def link_chunk_references(text, references):
+    for ix, reference in enumerate(references):
+        text = text.replace(reference, f"[{ix+1}](#source-{ix+1})")
+    return text
 
-def update_answer_object(answer_object, answer_update):
-    new_and_updated_ids = set([x['id'] for x in answer_update['content_items']])
-    answer_object['title'] = answer_update['title']
-    answer_object['introduction'] = answer_update['introduction']
-    answer_object['content_id_sequence'] = answer_update['content_id_sequence']
-    updated_content_items = []
-    for item_id in answer_object['content_id_sequence']:
-        if item_id in new_and_updated_ids:
-            for item in answer_update['content_items']:
-                if item['id'] == item_id:
-                    updated_content_items.append(item)
-                    break
-        else:
-            for item in answer_object['content_items']:
-                if item['id'] == item_id:
-                    updated_content_items.append(item)
-                    break
-    answer_object['content_items'] = updated_content_items
-    answer_object['conclusion'] = answer_update['conclusion']
-
-def generate_answer(
-        ai_configuration,
-        answer_object,
-        answer_format,
-        processing_queue,
-        answer_batch_size,
-        answer_stream,
-        answer_callback
-    ):
-    selected_chunks = processing_queue[:answer_batch_size]
-    for s in selected_chunks:
-        processing_queue.remove(s)
-    answer_messages = utils.prepare_messages(
-        prompts.chunk_summarization_prompt, 
-        {'chunks': selected_chunks, 'answer_object': answer_object}
-    )
-    answer_response = utils.generate_text(ai_configuration, answer_messages, response_format=answer_format)
-    update_answer_object(answer_object, loads(answer_response))
-    answer_text = '\n\n'.join([x['content'] for x in answer_object['content_items']])
-    references = extract_chunk_references(answer_text)
-    answer_stream.append(convert_answer_object_to_text(answer_object))
-    if answer_callback is not None:
-        answer_callback(answer_stream)
-    return selected_chunks, references
-
-def generate_answers(
-        ai_configuration,
-        answer_object,
-        answer_format,
-        process_chunks,
-        answer_batch_size,
-        answer_stream,
-        answer_callback,
-        answer_history,
-        progress_callback
-    ):
-    all_selected_chunks = []
-    remaining_chunks = list(set(process_chunks) - set(all_selected_chunks))
-    while len(remaining_chunks) > 0:
-        selected_chunks, references = generate_answer(
-            ai_configuration,
-            answer_object,
-            answer_format,
-            remaining_chunks,
-            answer_batch_size,
-            answer_stream,
-            answer_callback
-        )
-        selected_metadata = set()
-        for c in selected_chunks:
-            c_json = loads(c)
-            selected_metadata.add(f'{c_json["title"]} ({c_json["chunk_id"]})')
-
-        used_references = [r for r in references if r in selected_metadata]
-        answer_history.append((len(used_references), len(selected_chunks)))
-        if progress_callback is not None:
-            progress_callback(helper_functions.get_answer_progress(answer_history))
-        all_selected_chunks.extend(selected_chunks)
-        remaining_chunks = list(set(process_chunks) - set(all_selected_chunks))
-
-def answer_question(
+async def answer_question(
     ai_configuration,
     question,
     relevant_cids,
     cid_to_text,
-    answer_batch_size,
-    answer_progress_callback=None,
-    answer_callback=None,
+    cid_to_vector,
+    target_chunks_per_cluster,
+    embedder,
+    embedding_cache,
+    extract_claims,
+    search_depth
 ):
-    answer_format = answer_schema.answer_format
-    answer_object = {
-        "question": question,
-        "title": "",
-        "introduction": "",
-        "content_id_sequence": [],
-        "content_items": [],
-        "conclusion": ""
-    }
-    answer_stream = []
-    answer_history = []
-    relevant_texts = [cid_to_text[cid] for cid in relevant_cids]
-    generate_answers(
-        ai_configuration=ai_configuration,
-        answer_object=answer_object,
-        answer_format=answer_format,
-        process_chunks=relevant_texts,
-        answer_batch_size=answer_batch_size,
-        answer_stream=answer_stream,
-        answer_callback=answer_callback,
-        answer_history=answer_history,
-        progress_callback=answer_progress_callback,
+    target_clusters = len(relevant_cids) // target_chunks_per_cluster
+    if len(relevant_cids) / target_chunks_per_cluster > target_clusters:
+        target_clusters += 1
+    clustered_cids = cluster_cids(relevant_cids, cid_to_vector, target_clusters)
+    clustered_texts = [[cid_to_text[cid] for cid in cids] for cids in clustered_cids.values()]
+    source_to_text = {f"{text['title']} ({text['chunk_id']})": text for text in [loads(text) for text in cid_to_text.values()]}
+    source_to_supported_claims = defaultdict(set)
+    source_to_contradicted_claims = defaultdict(set)
+    net_new_sources = 0
+    if extract_claims:
+        batched_extraction_messages = [utils.prepare_messages(prompts.claim_extraction_prompt, {'chunks': texts, 'question': question}) 
+                            for texts in clustered_texts]
+
+        extracted_claims = await utils.map_generate_text(
+            ai_configuration, batched_extraction_messages, response_format=answer_schema.claim_extraction_format
+        )
+        json_extracted_claims = [loads(claims) for claims in extracted_claims]
+        tasks = []
+        claim_context_to_claim_supporting_sources = defaultdict(lambda: defaultdict(set))
+        claim_context_to_claim_contradicting_sources = defaultdict(lambda: defaultdict(set))
+        for claim_sets in json_extracted_claims:
+            for claim_set in claim_sets['claim_analysis']:
+                claim_context = claim_set['claim_context']
+                for claim in claim_set['claims']:
+                    claim_statement = claim['claim_statement']
+                    supporting_sources = set()
+                    for ss in claim['supporting_sources']:
+                        tt = ss['text_title']
+                        for sc in ss['chunk_ids']:
+                            supporting_sources.add(f"{tt} ({sc})")
+                    contradicting_sources = set()
+                    for cs in claim['contradicting_sources']:
+                        tt = cs['text_title']
+                        for sc in cs['chunk_ids']:
+                            contradicting_sources.add(f"{tt} ({sc})")
+                    claim_context_to_claim_supporting_sources[claim_context][claim_statement] = supporting_sources
+                    claim_context_to_claim_contradicting_sources[claim_context][claim_statement] = contradicting_sources
+                    tasks.append(asyncio.create_task(requery_claim(ai_configuration, claim_context, claim_statement, cid_to_text, cid_to_vector, embedder, embedding_cache, search_depth)))
+        results_list = await tqdm_asyncio.gather(*tasks)
+        for claim_context, claim_statement, supporting_sources, contradicting_sources in results_list:
+            claim_context_to_claim_supporting_sources[claim_context][claim_statement].update(supporting_sources)
+            claim_context_to_claim_contradicting_sources[claim_context][claim_statement].update(contradicting_sources)
+        
+        for claim_context, claims_to_support in claim_context_to_claim_supporting_sources.items():
+            for claim_statement, supporting_sources in claims_to_support.items():
+                for source in supporting_sources:
+                    source_to_supported_claims[source].add((claim_context, claim_statement))
+        
+        for claim_context, claims_to_contradict in claim_context_to_claim_contradicting_sources.items():
+            for claim_statement, contradicting_sources in claims_to_contradict.items():
+                for source in contradicting_sources:
+                    source_to_contradicted_claims[source].add((claim_context, claim_statement))
+
+        all_sources = set(source_to_supported_claims.keys()).union(set(source_to_contradicted_claims.keys()))
+        net_new_sources = len(all_sources) - len(relevant_cids)
+
+        claim_summaries = []
+        
+        for claim_context, claims_to_support in claim_context_to_claim_supporting_sources.items():
+            for claim_statement, supporting_sources in claims_to_support.items():
+                contradicting_sources = claim_context_to_claim_contradicting_sources[claim_context][claim_statement]
+                claim_summaries.append(
+                    {
+                        'claim_context': claim_context,
+                        'claims': [
+                            {
+                                'claim_statement': claim_statement,
+                                'claim_attribution': '',
+                                'supporting_sources': sorted(supporting_sources),
+                                'contradicting_sources': sorted(contradicting_sources)
+                            }
+                        ],
+                        'sources': {
+                            source: text for source, text in source_to_text.items() if source in supporting_sources.union(contradicting_sources)
+                        }
+                    }
+                )
+        batched_summarization_messages = [utils.prepare_messages(prompts.claim_summarization_prompt, {'analysis': dumps(claims, ensure_ascii=False, indent=2), 'data': '', 'question': question}) 
+                            for i, claims in enumerate(claim_summaries)]
+    else:
+        batched_summarization_messages = [utils.prepare_messages(prompts.claim_summarization_prompt, {'analysis': [], 'data': clustered_texts[i], 'question': question}) 
+                            for i in range(len(clustered_texts))]
+        
+    summarized_claims = await utils.map_generate_text(
+        ai_configuration, batched_summarization_messages, response_format=answer_schema.claim_summarization_format
     )
-    return (
-        answer_stream,
-        helper_functions.get_answer_progress(answer_history)
+    content_items_list = []
+    for content_items in summarized_claims:
+        json_content_items = loads(content_items)
+        for item in json_content_items['content_items']:
+            content_items_list.append(item)
+    content_items_dict = {i: v for i, v in enumerate(content_items_list)}
+    content_items_context = dumps(content_items_dict, indent=2, ensure_ascii=False)
+    content_item_messages = utils.prepare_messages(prompts.content_integration_prompt, {'content': content_items_context, 'question': question})
+    content_structure = loads(utils.generate_text(ai_configuration, content_item_messages, response_format=answer_schema.content_integration_format))
+
+    report, references, matched_chunks = build_report_markdown(question, content_items_dict, content_structure, cid_to_text, source_to_supported_claims, source_to_contradicted_claims)
+    return report, references, matched_chunks, net_new_sources
+
+def build_report_markdown(question, content_items_dict, content_structure, cid_to_text, source_to_supported_claims, source_to_contradicted_claims):
+    text_jsons = [loads(text) for text in cid_to_text.values()]
+    matched_chunks = {f"{text['title']} ({text['chunk_id']})" : text for text in text_jsons}
+    home_link = '#' + content_structure["report_title"].lower().translate(str.maketrans('', '', string.punctuation))
+    home_link = home_link.replace(' ', '-')
+    report = f'# {content_structure["report_title"]}\n\n*In response to: {question}*\n\n## Executive summary\n\n{content_structure["report_summary"]}\n\n'
+    for theme in content_structure['theme_order']:
+        report += f'## Theme: {theme["theme_title"]}\n\n{theme["theme_summary"]}\n\n'
+        for item_id in theme['content_id_order']:
+            item = content_items_dict[item_id]
+            report += f'### {item["content_title"]}\n\n{item["content_summary"]}\n\n{item["content_commentary"]}\n\n'
+        report += f'### AI theme commentary\n\n{theme["theme_commentary"]}\n\n'
+    report += f'## AI report commentary\n\n{content_structure["report_commentary"]}\n\n'
+    references = extract_chunk_references(report)
+    report = link_chunk_references(report, references)
+    report += f'### Sources\n\n'
+    for ix, source_label in enumerate(references):
+        if source_label in matched_chunks:
+            supports_claims = source_to_supported_claims[source_label]
+            contradicts_claims = source_to_contradicted_claims[source_label]
+            supports_claims_str = '- ' + '\n- '.join([claim_statement for claim_context, claim_statement in supports_claims])
+            contradicts_claims_str = '- ' + '\n- '.join([claim_statement for claim_context, claim_statement in contradicts_claims])
+            report += f'#### Source {ix+1}\n\n<details>\n\n##### Text chunk: {source_label}\n\n{matched_chunks[source_label]["text_chunk"]}\n\n'
+            if len(supports_claims) > 0:
+                report += f'##### Supports claims\n\n{supports_claims_str}\n\n'
+            if len(contradicts_claims) > 0:
+                report += f'##### Contradicts claims\n\n{contradicts_claims_str}\n\n'
+            report += f'</details>\n\n[Back to top]({home_link})\n\n'
+        else:
+            print(f'No match for {source_label}')
+        
+    return report, references, matched_chunks
+
+def cluster_cids(
+    relevant_cids,
+    cid_to_vector,
+    target_clusters
+):
+    clustered_cids = {}
+    if len(relevant_cids) > 0:
+        # use k-means clustering to group relevant cids into target_clusters clusters
+        cids = [cid for cid in relevant_cids]
+        vectors = [cid_to_vector[cid] for cid in cids]
+        kmeans = cluster.KMeans(n_clusters=target_clusters)
+        kmeans.fit(vectors)
+        cluster_assignments = kmeans.predict(vectors)
+        
+        for i, cid in enumerate(cids):
+            cluster_assignment = cluster_assignments[i]
+            if cluster_assignment not in clustered_cids:
+                clustered_cids[cluster_assignment] = []
+            clustered_cids[cluster_assignment].append(cid)
+    return clustered_cids
+
+async def requery_claim(ai_configuration, claim_context, claim_statement, cid_to_text, cid_to_vector, embedder, embedding_cache, search_depth):
+    contextualized_claim = f"{claim_statement} (context: {claim_context})"
+    claim_embedding = np.array(
+        embedder.embed_store_one(
+            contextualized_claim, embedding_cache
+        )
     )
+    all_units = sorted([(cid, vector) for cid, vector in (cid_to_vector.items())], key=lambda x: x[0])
+    cosine_distances = sorted(
+        [
+            (cid, scipy.spatial.distance.cosine(claim_embedding, vector))
+            for (cid, vector) in all_units
+        ],
+        key=lambda x: x[1],
+        reverse=False,
+    )
+    # batch cids into batches of size batch_size
+    cids = [cid for cid, dist in cosine_distances[:search_depth]]
+    chunks = dumps({i: cid_to_text[cid] for i, cid in enumerate(cids)}, ensure_ascii=False, indent=2)
+    messages = utils.prepare_messages(prompts.claim_requery_prompt, {'claim': contextualized_claim, 'chunks': chunks})
+    response = loads(utils.generate_text(ai_configuration, messages, response_format=answer_schema.claim_requery_format))
+    chunk_titles = []
+    for cid in cids:
+        text_json = loads(cid_to_text[cid])
+        chunk_titles.append(f"{text_json['title']} ({text_json['chunk_id']})")
+
+    supporting_sources = response['supporting_source_indicies']
+    contradicting_sources = response['contradicting_source_indicies']
+    supporting_source_labels = [chunk_titles[i] for i in supporting_sources]
+    contradicting_source_labels = [chunk_titles[i] for i in contradicting_sources]
+    return claim_context, claim_statement, supporting_source_labels, contradicting_source_labels

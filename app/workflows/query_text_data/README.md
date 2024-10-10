@@ -63,7 +63,7 @@ Select a concept node in the graph to view a list of matching text chunks on the
 
 ### Generating AI extended answers
 
-Navigate to the `Generate AI extended answers` tab to query the data index (i.e., text embeddings plus concept graph) in a way that generates a long-form text answer.
+Navigate to the `Generate AI extended answer` tab to query the data index (i.e., text embeddings plus concept graph) in a way that generates a long-form text answer.
 
 Click on `Options` to expand the available controls, which are as follows:
 
@@ -73,7 +73,7 @@ Click on `Options` to expand the available controls, which are as follows:
 - `Test relevant neighbours`. If a text chunk is relevant to the query, then adjacent text chunks in the original document may be able to add additional context to the relevant points. The value of this parameter determines how many chunks before and after each relevant text chunk will be evaluated at the end of the process (or `Relevance test budget`) if they are yet to be tested.
 - `Relevant chunks/answer update`. Determines how many relevant chunks at a time are incorporated into the extended answer in progress. Higher values may require fewer updates, but may miss more details from the chunks provided.
 
-Enter a query in the `Question` field and press `Ask` to begin the process of answer generation.
+Enter a query in the `Question` field and press `Search` to begin the process of searching for relevant text chunks.
 
 For example, try `What are the main political events discussed?`.
 
