@@ -1,6 +1,10 @@
 template-file-path: ./deploy/aws/2-development.yaml
 
 parameters:
+  Cpu: 4096
+  Memory: 16384
+  GitUrl: https://github.com/scrt-dev/intelligence-toolkit.git
+  GitRef: main
   ForceUpdateContainer: change-ending-to-force-update-3
 
 tags:

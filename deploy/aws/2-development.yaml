@@ -71,7 +71,12 @@ Parameters:
   GitURL:
     Type: String
     Description: Initial repository for web application
-    Default: https://github.com/scrt-dev/intelligence-toolkit.git
+    Default: https://github.com/microsoft/intelligence-toolkit.git
+
+  GitRef:
+    Type: String
+    Description: Initial branch for web application
+    Default: main
 
   Cpu:
     Description: "CPU of Fargate Task. Make sure you put valid Memory and CPU pair, refer: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ecs-taskdefinition.html#cfn-ecs-taskdefinition-cpu:~:text=requires%3A%20Replacement-,Cpu,-The%20number%20of"
@@ -678,6 +683,7 @@ Resources:
           - LOCAL_SOURCE_CACHE
           - LOCAL_DOCKER_LAYER_CACHE
         Type: LOCAL
+      SourceVersion: !Ref GitRef
       Source:
         Type: GITHUB
         Location: !Ref GitURL
