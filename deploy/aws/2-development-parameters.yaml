@@ -5,7 +5,7 @@ parameters:
   Memory: 16384
   GitURL: https://github.com/scrt-dev/intelligence-toolkit.git
   GitRef: main
-  ForceUpdateContainer: change-ending-to-force-update-3
+  ForceUpdateContainer: change-ending-to-force-update-4
 
 tags:
   app: intelligence-toolkit
