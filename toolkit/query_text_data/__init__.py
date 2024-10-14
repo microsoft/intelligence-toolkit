@@ -3,7 +3,8 @@
 #
 
 import os
-
+from toolkit.query_text_data.api import QueryTextData
+from toolkit.query_text_data.classes import ProcessedChunks, ChunkSearchConfig, AnswerConfig, AnswerObject
 
 def get_readme() -> str:
     file_path = os.path.join(os.path.dirname(__file__), "README.md")

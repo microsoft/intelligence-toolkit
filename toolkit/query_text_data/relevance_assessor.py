@@ -24,7 +24,6 @@ async def assess_relevance(
     progress_callback,
     chunk_callback,
 ):
-    print(f'Assessing relevance for {search_label} with {len(search_cids)} chunks')
     batched_cids = [search_cids[i:i+relevance_test_batch_size]
                       for i in range(0, len(search_cids), relevance_test_batch_size)]
     batched_texts = [[cid_to_text[cid] for cid in batch] for batch in batched_cids]
@@ -47,7 +46,6 @@ async def assess_relevance(
             progress_callback,
             chunk_callback
         )
-        print(f'Batch {mx+1} of {len(batched_messages)}: {num_relevant} relevant chunks')
         is_relevant = num_relevant > 0
         if not is_relevant: # No relevant chunks found in this batch; terminate early
             break
@@ -78,22 +76,11 @@ def process_relevance_responses(
 async def detect_relevant_chunks(
     ai_configuration,
     question,
-    cid_to_text,
-    cid_to_concepts,
+    processed_chunks,
     cid_to_vector,
-    hierarchical_communities,
-    community_to_label,
-    previous_cid,
-    next_cid,
     embedder,
     embedding_cache,
-    select_logit_bias,
-    adjacent_search_steps,
-    community_ranking_chunks,
-    relevance_test_budget,
-    community_relevance_tests,
-    relevance_test_batch_size,
-    irrelevant_community_restart,
+    chunk_search_config,
     chunk_progress_callback=None,
     chunk_callback=None,
 ):
@@ -103,6 +90,7 @@ async def detect_relevant_chunks(
 
     yes_id = tiktoken.get_encoding('o200k_base').encode('Yes')[0]
     no_id = tiktoken.get_encoding('o200k_base').encode('No')[0]
+    select_logit_bias = 5
     logit_bias = {yes_id: select_logit_bias, no_id: select_logit_bias}
 
     if chunk_progress_callback is not None:
@@ -113,8 +101,12 @@ async def detect_relevant_chunks(
             question, embedding_cache
         )
     )
-    relevant, seen, adjacent = helper_functions.test_history_elements(test_history, previous_cid, next_cid, adjacent_search_steps)
-
+    relevant, seen, adjacent = helper_functions.test_history_elements(
+        test_history,
+        processed_chunks.previous_cid,
+        processed_chunks.next_cid,
+        chunk_search_config.adjacent_test_steps
+    )
     cosine_distances = sorted(
         [
             (cid, scipy.spatial.distance.cosine(aq_embedding, vector))
@@ -124,23 +116,21 @@ async def detect_relevant_chunks(
         reverse=False,
     )
     semantic_search_cids = [x[0] for x in cosine_distances]
-    print(f'Semantic search cids: {semantic_search_cids[:100]}')
-
+    print(f'Top semantic search cids: {semantic_search_cids[:100]}')
     level_to_community_sequence = {}
-
-    max_level = max([hc.level for hc in hierarchical_communities])
+    max_level = max([hc.level for hc in processed_chunks.hierarchical_communities])
     concept_to_level_to_community = defaultdict(dict)
     level_to_community_to_candidate_cids = defaultdict(lambda: defaultdict(set))
     level_to_community_to_cids = defaultdict(lambda: defaultdict(list))
     level_to_cid_to_communities = defaultdict(lambda: defaultdict(set))
     community_to_parent = {}
-    for hc in hierarchical_communities:
-        concept_to_level_to_community[hc.node][hc.level] = community_to_label[hc.cluster]
+    for hc in processed_chunks.hierarchical_communities:
+        concept_to_level_to_community[hc.node][hc.level] = processed_chunks.community_to_label[hc.cluster]
         if hc.parent_cluster is not None:
-            community_to_parent[community_to_label[hc.cluster]] = community_to_label[hc.parent_cluster]
+            community_to_parent[processed_chunks.community_to_label[hc.cluster]] = processed_chunks.community_to_label[hc.parent_cluster]
     cid_to_level_to_communities = defaultdict(lambda: defaultdict(set))
     for level in range(0, max_level+1):
-        for cid, concepts in cid_to_concepts.items():
+        for cid, concepts in processed_chunks.cid_to_concepts.items():
             for concept in concepts:
                 if concept in concept_to_level_to_community.keys():
                     if level in concept_to_level_to_community[concept].keys():
@@ -160,7 +150,7 @@ async def detect_relevant_chunks(
         community_mean_rank = []
         
         for community, cids in level_to_community_to_candidate_cids[level].items():
-            mean_rank = np.mean(sorted([semantic_search_cids.index(c) for c in cids])[:community_ranking_chunks])
+            mean_rank = np.mean(sorted([semantic_search_cids.index(c) for c in cids])[:chunk_search_config.community_ranking_chunks])
             community_mean_rank.append((community, mean_rank))
         community_sequence = [x[0] for x in sorted(community_mean_rank, key=lambda x: x[1])]
         print(f'Level {level} community sequence: {community_sequence}')
@@ -190,7 +180,7 @@ async def detect_relevant_chunks(
     eliminated_communities = set()
     current_level = -1
 
-    while len(test_history) + len(adjacent) < relevance_test_budget:
+    while len(test_history) + len(adjacent) < chunk_search_config.relevance_test_budget:
         print(f'New level {current_level} loop after {len(test_history)} tests')
         relevant_this_loop = False
 
@@ -208,20 +198,25 @@ async def detect_relevant_chunks(
         print(f'Community sequence: {community_sequence}')
         community_to_cids = level_to_community_to_cids[current_level]
         for community in community_sequence:
-            relevant, seen, adjacent = helper_functions.test_history_elements(test_history, previous_cid, next_cid, adjacent_search_steps)
-            unseen_cids = [c for c in community_to_cids[community] if c not in seen][:community_relevance_tests]
+            relevant, seen, adjacent = helper_functions.test_history_elements(
+                test_history,
+                processed_chunks.previous_cid,
+                processed_chunks.next_cid,
+                chunk_search_config.adjacent_test_steps
+            )
+            unseen_cids = [c for c in community_to_cids[community] if c not in seen][:chunk_search_config.community_relevance_tests]
             if len(unseen_cids) > 0:
                 print(f'Assessing relevance for community {community} with chunks {unseen_cids}')
                 is_relevant = await assess_relevance(
                     ai_configuration=ai_configuration,
                     search_label=f"topic {community}",
                     search_cids=unseen_cids,
-                    cid_to_text=cid_to_text,
+                    cid_to_text=processed_chunks.cid_to_text,
                     question=question,
                     logit_bias=logit_bias,
-                    relevance_test_budget=relevance_test_budget,
+                    relevance_test_budget=chunk_search_config.relevance_test_budget,
                     num_adjacent=len(adjacent),
-                    relevance_test_batch_size=relevance_test_batch_size,
+                    relevance_test_batch_size=chunk_search_config.relevance_test_batch_size,
                     test_history=test_history,
                     progress_callback=chunk_progress_callback,
                     chunk_callback=chunk_callback,
@@ -231,7 +226,7 @@ async def detect_relevant_chunks(
                 if current_level > -1 and not is_relevant: # don't stop after failure at the root level
                     eliminated_communities.add(community)
                     successive_irrelevant += 1
-                    if successive_irrelevant == irrelevant_community_restart:
+                    if successive_irrelevant == chunk_search_config.irrelevant_community_restart:
                         successive_irrelevant = 0
                         print(f'{successive_irrelevant} successive irrelevant communities; restarting')
                         break
@@ -246,23 +241,33 @@ async def detect_relevant_chunks(
         else:
             print('Reached final level')
 
-    relevant, seen, adjacent = helper_functions.test_history_elements(test_history, previous_cid, next_cid, adjacent_search_steps)
+    relevant, seen, adjacent = helper_functions.test_history_elements(
+        test_history,
+        processed_chunks.previous_cid,
+        processed_chunks.next_cid,
+        chunk_search_config.adjacent_test_steps
+    )
 
     await assess_relevance(
         ai_configuration=ai_configuration,
         search_label="neighbours",
         search_cids=adjacent,
-        cid_to_text=cid_to_text,
+        cid_to_text=processed_chunks.cid_to_text,
         question=question,
         logit_bias=logit_bias,
-        relevance_test_budget=relevance_test_budget,
+        relevance_test_budget=chunk_search_config.relevance_test_budget,
         num_adjacent=len(adjacent),
-        relevance_test_batch_size=relevance_test_batch_size,
+        relevance_test_batch_size=chunk_search_config.relevance_test_batch_size,
         test_history=test_history,
         progress_callback=chunk_progress_callback,
         chunk_callback=chunk_callback,
     )
-    relevant, seen, adjacent = helper_functions.test_history_elements(test_history, previous_cid, next_cid, adjacent_search_steps)
+    relevant, seen, adjacent = helper_functions.test_history_elements(
+        test_history,
+        processed_chunks.previous_cid,
+        processed_chunks.next_cid,
+        chunk_search_config.adjacent_test_steps
+    )
     relevant.sort()
 
     return relevant, helper_functions.get_test_progress(test_history)

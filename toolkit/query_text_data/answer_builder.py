@@ -13,6 +13,8 @@ import toolkit.query_text_data.answer_schema as answer_schema
 import toolkit.query_text_data.prompts as prompts
 import sklearn.cluster as cluster
 import scipy.spatial
+from sklearn.neighbors import NearestNeighbors
+from toolkit.query_text_data.classes import AnswerObject
 
 def extract_chunk_references(text):
     source_spans = list(re.finditer(r'\[source: ([^\]]+)\]', text, re.MULTILINE))
@@ -31,40 +33,72 @@ def link_chunk_references(text, references):
 async def answer_question(
     ai_configuration,
     question,
+    processed_chunks,
     relevant_cids,
-    cid_to_text,
     cid_to_vector,
-    target_chunks_per_cluster,
     embedder,
     embedding_cache,
-    extract_claims,
-    search_depth
+    answer_config,
 ):
-    target_clusters = len(relevant_cids) // target_chunks_per_cluster
-    if len(relevant_cids) / target_chunks_per_cluster > target_clusters:
+    target_clusters = len(relevant_cids) // answer_config.target_chunks_per_cluster
+    if len(relevant_cids) / answer_config.target_chunks_per_cluster > target_clusters:
         target_clusters += 1
-    clustered_cids = cluster_cids(relevant_cids, cid_to_vector, target_clusters)
-    clustered_texts = [[cid_to_text[cid] for cid in cids] for cids in clustered_cids.values()]
-    source_to_text = {f"{text['title']} ({text['chunk_id']})": text for text in [loads(text) for text in cid_to_text.values()]}
+    clustered_cids = cluster_cids(
+        relevant_cids,
+        cid_to_vector,
+        target_clusters
+    )
+    clustered_texts = [[processed_chunks.cid_to_text[cid] for cid in cids] for cids in clustered_cids.values()]
+    source_to_text = {f"{text['title']} ({text['chunk_id']})": text for text in [loads(text) for text in processed_chunks.cid_to_text.values()]}
     source_to_supported_claims = defaultdict(set)
     source_to_contradicted_claims = defaultdict(set)
     net_new_sources = 0
-    if extract_claims:
+    if answer_config.extract_claims:
         batched_extraction_messages = [utils.prepare_messages(prompts.claim_extraction_prompt, {'chunks': texts, 'question': question}) 
                             for texts in clustered_texts]
 
         extracted_claims = await utils.map_generate_text(
             ai_configuration, batched_extraction_messages, response_format=answer_schema.claim_extraction_format
         )
-        json_extracted_claims = [loads(claims) for claims in extracted_claims]
+        json_extracted_claims = []
+        for claim in extracted_claims:
+            try:
+                json_claim = loads(claim)
+                json_extracted_claims.append(json_claim)
+            except Exception as e:
+                print(f'Error loading claim as JSON: {claim}')
         tasks = []
         claim_context_to_claim_supporting_sources = defaultdict(lambda: defaultdict(set))
         claim_context_to_claim_contradicting_sources = defaultdict(lambda: defaultdict(set))
+
+        claims_to_embed = {}
+
         for claim_sets in json_extracted_claims:
             for claim_set in claim_sets['claim_analysis']:
                 claim_context = claim_set['claim_context']
                 for claim in claim_set['claims']:
                     claim_statement = claim['claim_statement']
+                    claims_to_embed[len(claims_to_embed)] = f"{claim_statement} (context: {claim_context})"
+
+        print(f'Claims to embed: {claims_to_embed}')
+        print(f'Distinct claims: {len(set(claims_to_embed.values()))}')
+
+        cix_to_vector = await helper_functions.embed_queries(
+            claims_to_embed,
+            embedder,
+            cache_data=embedding_cache
+        )
+        print(f'Cix to vector: {cix_to_vector.keys()}')
+        claim_to_vector = {claims_to_embed[cix]: vector for cix, vector in cix_to_vector.items()}
+        units = sorted([(cid, vector) for cid, vector in (cid_to_vector.items())], key=lambda x: x[0])
+        neighbours = NearestNeighbors(n_neighbors=answer_config.claim_search_depth, metric='cosine').fit([vector for cid, vector in units])
+        cix = 0
+        for claim_sets in json_extracted_claims:
+            for claim_set in claim_sets['claim_analysis']:
+                claim_context = claim_set['claim_context']
+                for claim in claim_set['claims']:
+                    claim_statement = claim['claim_statement']
+                    claim_key = f"{claim_statement} (context: {claim_context})"
                     supporting_sources = set()
                     for ss in claim['supporting_sources']:
                         tt = ss['text_title']
@@ -77,7 +111,20 @@ async def answer_question(
                             contradicting_sources.add(f"{tt} ({sc})")
                     claim_context_to_claim_supporting_sources[claim_context][claim_statement] = supporting_sources
                     claim_context_to_claim_contradicting_sources[claim_context][claim_statement] = contradicting_sources
-                    tasks.append(asyncio.create_task(requery_claim(ai_configuration, claim_context, claim_statement, cid_to_text, cid_to_vector, embedder, embedding_cache, search_depth)))
+                    if claim_key in claim_to_vector:
+                        tasks.append(asyncio.create_task(requery_claim(
+                            ai_configuration,
+                            question,
+                            units,
+                            neighbours,
+                            claim_to_vector[claim_key],
+                            claim_context,
+                            claim_statement,
+                            processed_chunks.cid_to_text
+                        )))
+                    else:
+                        print(f'No vector for claim: {claim_key}')
+        print(f'Running {len(tasks)} requery tasks')
         results_list = await tqdm_asyncio.gather(*tasks)
         for claim_context, claim_statement, supporting_sources, contradicting_sources in results_list:
             claim_context_to_claim_supporting_sources[claim_context][claim_statement].update(supporting_sources)
@@ -136,8 +183,20 @@ async def answer_question(
     content_item_messages = utils.prepare_messages(prompts.content_integration_prompt, {'content': content_items_context, 'question': question})
     content_structure = loads(utils.generate_text(ai_configuration, content_item_messages, response_format=answer_schema.content_integration_format))
 
-    report, references, matched_chunks = build_report_markdown(question, content_items_dict, content_structure, cid_to_text, source_to_supported_claims, source_to_contradicted_claims)
-    return report, references, matched_chunks, net_new_sources
+    report, references, matched_chunks = build_report_markdown(
+        question,
+        content_items_dict,
+        content_structure,
+        processed_chunks.cid_to_text,
+        source_to_supported_claims,
+        source_to_contradicted_claims    
+    )
+    return AnswerObject(
+        extended_answer=report,
+        references=references,
+        referenced_chunks=matched_chunks,
+        net_new_sources=net_new_sources
+    )
 
 def build_report_markdown(question, content_items_dict, content_structure, cid_to_text, source_to_supported_claims, source_to_contradicted_claims):
     text_jsons = [loads(text) for text in cid_to_text.values()]
@@ -159,8 +218,8 @@ def build_report_markdown(question, content_items_dict, content_structure, cid_t
         if source_label in matched_chunks:
             supports_claims = source_to_supported_claims[source_label]
             contradicts_claims = source_to_contradicted_claims[source_label]
-            supports_claims_str = '- ' + '\n- '.join([claim_statement for claim_context, claim_statement in supports_claims])
-            contradicts_claims_str = '- ' + '\n- '.join([claim_statement for claim_context, claim_statement in contradicts_claims])
+            supports_claims_str = '- ' + '\n- '.join([claim_statement for _, claim_statement in supports_claims])
+            contradicts_claims_str = '- ' + '\n- '.join([claim_statement for _, claim_statement in contradicts_claims])
             report += f'#### Source {ix+1}\n\n<details>\n\n##### Text chunk: {source_label}\n\n{matched_chunks[source_label]["text_chunk"]}\n\n'
             if len(supports_claims) > 0:
                 report += f'##### Supports claims\n\n{supports_claims_str}\n\n'
@@ -193,34 +252,32 @@ def cluster_cids(
             clustered_cids[cluster_assignment].append(cid)
     return clustered_cids
 
-async def requery_claim(ai_configuration, claim_context, claim_statement, cid_to_text, cid_to_vector, embedder, embedding_cache, search_depth):
+async def requery_claim(ai_configuration, question, units, neighbours, claim_embedding, claim_context, claim_statement, cid_to_text):
     contextualized_claim = f"{claim_statement} (context: {claim_context})"
-    claim_embedding = np.array(
-        embedder.embed_store_one(
-            contextualized_claim, embedding_cache
-        )
-    )
-    all_units = sorted([(cid, vector) for cid, vector in (cid_to_vector.items())], key=lambda x: x[0])
-    cosine_distances = sorted(
-        [
-            (cid, scipy.spatial.distance.cosine(claim_embedding, vector))
-            for (cid, vector) in all_units
-        ],
-        key=lambda x: x[1],
-        reverse=False,
-    )
+    # Find the nearest neighbors of the claim embedding
+    indices = neighbours.kneighbors([claim_embedding], return_distance=False)
+    cids = [units[i][0] for i in indices[0]]
+    # cosine_distances = sorted(
+    #     [
+    #         (cid, scipy.spatial.distance.cosine(claim_embedding, vector))
+    #         for (cid, vector) in all_units
+    #     ],
+    #     key=lambda x: x[1],
+    #     reverse=False,
+    # )
     # batch cids into batches of size batch_size
-    cids = [cid for cid, dist in cosine_distances[:search_depth]]
+    # cids = [cid for cid, dist in cosine_distances[:search_depth]]
     chunks = dumps({i: cid_to_text[cid] for i, cid in enumerate(cids)}, ensure_ascii=False, indent=2)
-    messages = utils.prepare_messages(prompts.claim_requery_prompt, {'claim': contextualized_claim, 'chunks': chunks})
-    response = loads(utils.generate_text(ai_configuration, messages, response_format=answer_schema.claim_requery_format))
+    messages = utils.prepare_messages(prompts.claim_requery_prompt, {'question': question, 'claim': contextualized_claim, 'chunks': chunks})
+    response = await utils.generate_text_async(ai_configuration, messages, response_format=answer_schema.claim_requery_format)
     chunk_titles = []
     for cid in cids:
         text_json = loads(cid_to_text[cid])
         chunk_titles.append(f"{text_json['title']} ({text_json['chunk_id']})")
 
-    supporting_sources = response['supporting_source_indicies']
-    contradicting_sources = response['contradicting_source_indicies']
+    response_json = loads(response)
+    supporting_sources = response_json['supporting_source_indicies']
+    contradicting_sources = response_json['contradicting_source_indicies']
     supporting_source_labels = [chunk_titles[i] for i in supporting_sources]
     contradicting_source_labels = [chunk_titles[i] for i in contradicting_sources]
     return claim_context, claim_statement, supporting_source_labels, contradicting_source_labels

@@ -85,3 +85,23 @@ async def embed_texts(
             continue
         cid_to_vector[details["cid"]] = item["vector"]
     return cid_to_vector
+
+async def embed_queries(
+    qid_to_text, text_embedder: BaseEmbedder, cache_data=True, callbacks=[]
+) -> dict:
+    qid_to_vector = {}
+    data: list[VectorData] = []
+
+    for qid, text in qid_to_text.items():
+        data.append(
+            {"hash": hash_text(text), "text": text, "additional_details": {"qid": qid}}
+        )
+
+    embedded_data = await text_embedder.embed_store_many(data, callbacks, cache_data)
+    for item in embedded_data:
+        details = json.loads(item["additional_details"])
+        if len(details.keys()) == 0:
+            print(f"No details for {item}")
+            continue
+        qid_to_vector[details["qid"]] = item["vector"]
+    return qid_to_vector

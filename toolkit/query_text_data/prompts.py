@@ -56,17 +56,21 @@ Extended answer:
 """
 
 claim_extraction_prompt = """\
-You are a helpful assistant tasked with creating a JSON object that extracts claims from a collection of input text chunks.
+You are a helpful assistant tasked with creating a JSON object that extracts relevant claims from a collection of input text chunks.
 
-The output object should extract all claims from input text chunks as follows:
+Given a question, the output object should extract claims from the input text chunks as follows:
 
 - "claim_context": an overall description of the context in which claims are made
-- "claim_statement": a statement-based formatting of a claim, which may appear across multiple text chunks
+- "claim_statement": a statement-based formatting of a claim that is relevant to the user question
 - "claim_attribution": any named source or author of a claim, beyond the title of the text 
 - "text_title": the title of the text from which the chunk was exracted
 - "chunk_id": the id of the chunk within the text
 
 --TASK--
+
+Question for which claims are being extracted:
+
+{question}
 
 Input text chunks JSON:
 

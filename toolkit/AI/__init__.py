@@ -3,6 +3,8 @@
 #
 
 from .types import OpenAIClientTypes
+from toolkit.AI.openai_configuration import OpenAIConfiguration
+from toolkit.AI.openai_embedder import OpenAIEmbedder
 
 __all__ = [
     "OpenAIClientTypes",

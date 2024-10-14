@@ -11,10 +11,35 @@ import pdfplumber
 
 import toolkit.query_text_data.graph_builder as graph_builder
 from toolkit.AI.text_splitter import TextSplitter
+from toolkit.query_text_data.classes import ProcessedChunks
 
 PeriodOption = Enum("Period", "NONE DAY WEEK MONTH QUARTER YEAR")
 
-def process_file_bytes(input_file_bytes, analysis_window_size: PeriodOption, callbacks=[]):
+def concert_titled_texts_to_chunks(titled_texts):
+    text_to_chunks = defaultdict(list)
+    splitter = TextSplitter()
+    for title, text in enumerate(titled_texts.items()):
+        text_chunks = splitter.split(text)
+        for index, text in enumerate(text_chunks):
+            chunk = {"title": title, "text_chunk": text, "chunk_id": index + 1}
+            text_chunks[index] = dumps(chunk, indent=2, ensure_ascii=False)
+            text_to_chunks[title] = text_chunks
+    return text_to_chunks
+
+def convert_df_to_chunks(df, label):
+    splitter = TextSplitter()
+    text_to_chunks = defaultdict(list)
+    for ix, row in df.iterrows():
+        cols = df.columns.values
+        doc_text = "; ".join([f"{col}: {str(row[col])}" for col in cols])
+        text_chunks = splitter.split(doc_text)
+        for index, text in enumerate(text_chunks):
+            this_label = f"{label}_{ix + 1}"
+            chunk = {"title": this_label, "text_chunk": text, "chunk_id": index + 1}
+            text_to_chunks[this_label].append(dumps(chunk, indent=2, ensure_ascii=False))
+    return text_to_chunks
+
+def convert_file_bytes_to_chunks(input_file_bytes, analysis_window_size: PeriodOption, callbacks=[]):
     text_to_chunks = defaultdict(list)
     splitter = TextSplitter()
     for fx, file_name in enumerate(input_file_bytes.keys()):
@@ -24,14 +49,7 @@ def process_file_bytes(input_file_bytes, analysis_window_size: PeriodOption, cal
 
         if file_name.endswith(".csv"):
             df = pd.read_csv(io.BytesIO(bytes))
-            for ix, row in df.iterrows():
-                cols = df.columns.values
-                doc_text = "; ".join([f"{col}: {str(row[col])}" for col in cols])
-                text_chunks = splitter.split(doc_text)
-                for index, text in enumerate(text_chunks):
-                    label = f"{file_name}_{ix + 1}"
-                    chunk = {"title": label, "text_chunk": text, "chunk_id": index + 1}
-                    text_to_chunks[label].append(dumps(chunk, indent=2, ensure_ascii=False))
+            text_to_chunks = convert_df_to_chunks(df, file_name)
         else:
             if file_name.endswith(".pdf"):
                 page_texts = []
@@ -96,7 +114,11 @@ def process_json_texts(file_to_text_jsons, period: PeriodOption):
     return file_to_chunks
 
 def process_chunks(
-    file_to_chunks, max_cluster_size, callbacks=[]
+    file_to_chunks,
+    max_cluster_size,
+    min_edge_weight,
+    min_node_degree,
+    callbacks=[]
 ):
     period_concept_graphs = defaultdict(nx.Graph)
     period_concept_graphs["ALL"] = nx.Graph()
@@ -162,20 +184,20 @@ def process_chunks(
         ) = graph_builder.prepare_concept_graphs(
             period_concept_graphs,
             max_cluster_size=max_cluster_size,
-            min_edge_weight=2,
-            min_node_degree=1
+            min_edge_weight=min_edge_weight,
+            min_node_degree=min_node_degree,
         )
-    return (
-        cid_to_text,
-        text_to_cid,
-        period_concept_graphs,
-        hierarchical_communities,
-        community_to_label,
-        concept_to_cids,
-        cid_to_concepts,
-        previous_chunk,
-        next_chunk,
-        period_to_cids,
-        node_period_counts,
-        edge_period_counts,
+    return ProcessedChunks(
+        cid_to_text=cid_to_text,
+        text_to_cid=text_to_cid,
+        period_concept_graphs=period_concept_graphs,
+        hierarchical_communities=hierarchical_communities,
+        community_to_label=community_to_label,
+        concept_to_cids=concept_to_cids,
+        cid_to_concepts=cid_to_concepts,
+        previous_cid=previous_chunk,
+        next_cid=next_chunk,
+        period_to_cids=period_to_cids,
+        node_period_counts=node_period_counts,
+        edge_period_counts=edge_period_counts,
     )

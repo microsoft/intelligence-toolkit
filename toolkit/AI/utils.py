@@ -24,6 +24,10 @@ def generate_text(ai_configuration, messages, **kwargs):
         messages, stream=False, **kwargs
     )
 
+async def generate_text_async(ai_configuration, messages, **kwargs):
+    return await OpenAIClient(ai_configuration).generate_chat_async(
+        messages, **kwargs
+    )
 
 async def map_generate_text(
     ai_configuration,
