@@ -242,7 +242,7 @@ async def create(sv: SessionVariables, workflow=None):
             with c6:
                 st.radio(
                     label="Evidence type",
-                    options=["Extracted claims", "Source text"],
+                    options=["Source text", "Extracted claims"],
                     key=sv.search_type.key,
                     help="If the evidence type is set to 'Source text', the system will generate an answer directly from the text chunks. If the search type is set to 'Extracted claims', the system will extract claims from the text chunks and generate an answer based on the extracted claims in addition to the source text.",
                 )
