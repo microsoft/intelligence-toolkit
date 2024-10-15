@@ -22,7 +22,7 @@ class SessionVariables:
         self.final_report = SessionVariable("", prefix)
         self.target_chunks_per_cluster = SessionVariable(5, prefix)
         self.claim_search_depth = SessionVariable(10, prefix)
-        self.search_type = SessionVariable("Extracted claims", prefix)
+        self.search_type = SessionVariable("Source text", prefix)
         self.net_new_sources = SessionVariable(0, prefix)
         self.adjacent_test_steps = SessionVariable(1, prefix)
         self.community_relevance_tests = SessionVariable(10, prefix)
