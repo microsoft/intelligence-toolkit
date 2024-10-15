@@ -5,6 +5,7 @@ from toolkit.AI.base_embedder import BaseEmbedder
 from toolkit.AI.classes import VectorData
 from toolkit.AI.utils import hash_text
 
+
 def get_adjacent_chunks(source, previous_chunk_dict, next_chunk_dict, steps):
     prev_chunks = []
     current_chunk = source
@@ -99,9 +100,26 @@ async def embed_queries(
 
     embedded_data = await text_embedder.embed_store_many(data, callbacks, cache_data)
     for item in embedded_data:
-        details = json.loads(item["additional_details"])
-        if len(details.keys()) == 0:
-            print(f"No details for {item}")
+        # find item in data
+        data_item = next((x for x in data if x["hash"] == item["hash"]), None)
+
+        if data_item is None:
+            print(f"No matching data item for {item}")
             continue
-        qid_to_vector[details["qid"]] = item["vector"]
+
+        details = json.loads(item["additional_details"])
+        additional_details = data_item["additional_details"]
+
+        if isinstance(additional_details, str):
+            additional_details = json.loads(additional_details)
+
+        qid = additional_details.get("qid")
+        if qid is None:
+            print(f"No qid found in additional details for {item}")
+            continue
+
+        if details.get("qid") != qid:
+            details = {"qid": qid}
+
+        qid_to_vector[qid] = item["vector"]
     return qid_to_vector
