@@ -1,11 +1,14 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 #
+from collections import defaultdict
+
 import streamlit as st
 from seaborn import color_palette
-from collections import defaultdict
 from streamlit_agraph import Config, Edge, Node, agraph
+
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
+
 
 def create_progress_callback(template: str):
     pb = st.progress(0, "Preparing...")
@@ -82,6 +85,7 @@ def get_concept_graph(
         hierarchical=False,
         key=key,
         linkLength=100,
+        timestep=0.1,
     )
     with placeholder:
         return_value = agraph(nodes=nodes, edges=edges, config=config)
