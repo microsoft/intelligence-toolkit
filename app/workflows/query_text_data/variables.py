@@ -6,6 +6,7 @@ import streamlit as st
 import toolkit.query_text_data.prompts as prompts
 from app.util.session_variable import SessionVariable
 from toolkit.query_text_data.input_processor import PeriodOption
+from toolkit.query_text_data import QueryTextData
 
 
 class SessionVariables:
@@ -16,7 +17,7 @@ class SessionVariables:
         self.create_session(prefix)
 
     def create_session(self, prefix):
-        self.workflow_object = SessionVariable(None, prefix)
+        self.workflow_object = SessionVariable(QueryTextData(), prefix)
         self.answer_local_embedding_enabled = SessionVariable(False, prefix)
         self.question = SessionVariable("", prefix)
         self.final_report = SessionVariable("", prefix)

@@ -27,6 +27,7 @@ def concert_titled_texts_to_chunks(titled_texts):
     return text_to_chunks
 
 def convert_df_to_chunks(df, label):
+    label = label.replace('(', '').replace(')', '').replace(' ', '_')
     splitter = TextSplitter()
     text_to_chunks = defaultdict(list)
     for ix, row in df.iterrows():
@@ -43,9 +44,11 @@ def convert_file_bytes_to_chunks(input_file_bytes, analysis_window_size: PeriodO
     text_to_chunks = defaultdict(list)
     splitter = TextSplitter()
     for fx, file_name in enumerate(input_file_bytes.keys()):
+        old_file_name = file_name
+        file_name = file_name.replace('(', '').replace(')', '').replace(' ', '_')
         for cb in callbacks:
             cb.on_batch_change(fx + 1, len(input_file_bytes.keys()))
-        bytes = input_file_bytes[file_name]
+        bytes = input_file_bytes[old_file_name]
 
         if file_name.endswith(".csv"):
             df = pd.read_csv(io.BytesIO(bytes))

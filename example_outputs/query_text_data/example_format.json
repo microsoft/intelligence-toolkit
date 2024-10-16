@@ -1,15 +1,20 @@
 {
-    "example_order" : ["texts", "extended_answer", "condensed_answer"],
+    "example_order" : ["texts", "extended_answer_from_text", "extended_answer_from_claims", "condensed_answer"],
     "example_metadata" : {
         "texts": {
             "type": "csv",
             "heading": "Input texts",
             "description": "Input texts to be queried"
         },
-        "extended_answer": {
+        "extended_answer_from_text": {
             "type": "md",
-            "heading": "Extended answer",
-            "description": "An extended answer to a user query generated using multiple generative AI calls, each of which integrates batches of relevant text chunks into the answer in progress"
+            "heading": "Extended answer from relevant text chunks",
+            "description": "An extended answer to a user query generated using multiple generative AI calls, first to detect relevant text chunks and then to generate an answer"
+        },
+        "extended_answer_from_claims": {
+            "type": "md",
+            "heading": "Extended answer from requerying extracted claims",
+            "description": "An extended answer to a user query generated using multiple generative AI calls, first to detect relevant text chunks, then to extract relevant claims, then to query again for each claim, and finally to generate an answer from both the claims and the original text chunks"
         },
         "condensed_answer": {
             "type": "md",

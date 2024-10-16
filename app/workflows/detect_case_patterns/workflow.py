@@ -72,7 +72,6 @@ def create(sv: ap_variables.SessionVariables, workflow):
                 sv.detect_case_patterns_last_file_name,
                 sv.detect_case_patterns_input_df,
                 sv.detect_case_patterns_final_df,
-                sv.detect_case_patterns_upload_key.value,
                 key="case_patterns_uploader",
                 height=500,
             )

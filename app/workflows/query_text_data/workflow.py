@@ -40,8 +40,6 @@ def get_intro():
 
 async def create(sv: SessionVariables, workflow=None):
     sv_home = SessionVariables("home")
-    if sv.workflow_object.value == None:
-        sv.workflow_object.value = QueryTextData()
     qtd = sv.workflow_object.value
     qtd.set_ai_config(ai_configuration, sv_home.save_cache.value)
     intro_tab, uploader_tab, graph_tab, search_tab, report_tab, examples_tab = st.tabs(
@@ -342,6 +340,7 @@ async def create(sv: SessionVariables, workflow=None):
                             claim_search_depth=sv.claim_search_depth.value
                         )
                     )
+                    st.rerun()
             if qtd.stage.value == QueryTextDataStage.QUESTION_ANSWERED.value:
                 answer_placeholder.markdown(qtd.answer_object.extended_answer, unsafe_allow_html=True)
                 answer_summary_placeholder.markdown(f'**Additional chunks relevant to extracted claims: {qtd.answer_object.net_new_sources}**\n\n**Chunks referenced in answer / total relevant chunks: {len(qtd.answer_object.references)}/{len(qtd.relevant_cids)+qtd.answer_object.net_new_sources}**', unsafe_allow_html=True)

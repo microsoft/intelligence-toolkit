@@ -46,7 +46,6 @@ async def create(sv: variables.SessionVariables, workflow: None):
                         "Upload CSV file(s)",
                         sv.uploaded_synthesis_files,
                         "synthesis_uploader",
-                        "synthesis_uploader",
                         sv.synthesis_max_rows_to_process,
                     )
                     if selected_df is not None:

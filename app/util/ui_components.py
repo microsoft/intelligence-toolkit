@@ -183,13 +183,12 @@ def single_csv_uploader(
     last_uploaded_file_name_var,
     input_df_var,
     processed_df_var,
-    uploader_key,
     key,
     show_rows=10000,
     height=250,
 ):
     file = st.file_uploader(
-        upload_label, type=["csv"], accept_multiple_files=False, key=uploader_key
+        upload_label, type=["csv"], accept_multiple_files=False, key=key+'_file_uploader'
     )
     if f"{key}_encoding" not in st.session_state:
         st.session_state[f"{key}_encoding"] = file_encoding_default
@@ -248,7 +247,6 @@ def single_csv_uploader(
 def multi_csv_uploader(
     upload_label,
     uploaded_files_var,
-    uploader_key,
     key,
     max_rows_var=0,
     show_rows=1000,
@@ -258,7 +256,7 @@ def multi_csv_uploader(
         st.session_state[f"{key}_encoding"] = file_encoding_default
 
     files = st.file_uploader(
-        upload_label, type=["csv"], accept_multiple_files=True, key=uploader_key
+        upload_label, type=["csv"], accept_multiple_files=True, key=key+'_file_uploader'
     )
     file_names = [file.name for file in files] if files is not None else []
     uploaded_files_var.value = [v for v in uploaded_files_var.value if v in file_names]
@@ -670,7 +668,7 @@ def prepare_input_df(
                     help="Rename the attribute to a more descriptive name.",
                 )
                 if col not in st.session_state[f"{workflow}_rename_map"].keys() or st.session_state[f"{workflow}_rename_map"][col] != new_name:
-                    print(f'renaming {col} to {new_name}')
+                    # print(f'renaming {col} to {new_name}')
                     st.session_state[f"{workflow}_rename_map"][col] = new_name
                     renamed = True
             if renamed:
