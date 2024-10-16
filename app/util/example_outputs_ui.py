@@ -21,7 +21,9 @@ def create_example_outputs_ui(container, workflow):
         example_json = loads(open(f"{workflow_home}/example_format.json", "r").read())
         order = example_json["example_order"]
         metadata = example_json["example_metadata"]
-        selected_data = st.selectbox("Select example", mock_data_folders)
+        selected_data = st.selectbox(
+            "Select example", mock_data_folders, disabled=len(mock_data_folders) <= 1
+        )
         if selected_data != None:
             headings = [metadata[x]["heading"] for x in order]
             tabs = st.tabs(headings)
