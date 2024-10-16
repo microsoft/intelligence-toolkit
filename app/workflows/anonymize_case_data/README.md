@@ -93,7 +93,7 @@ Under `Quantize datetime attributes`, select the `quarter` attribute and `Half` 
 
 #### Quantize numeric attributes
 
-Under `Quantize numeric attributes`, select `age`, set `Target bins` to `5`, and leave `Trim percent` at `0.00`. After pressing `Quantize selected columns`, the `Prepared data` view of the loaded data will show `age` now encoded into five age ranges represented as (exclusive mininum value-inclusive maximum value]:
+Under `Quantize numeric attributes`, select `age`, leave `Target bins` to `5`, and leave `Trim percent` at `0.00`. After pressing `Quantize selected columns`, the `Prepared data` view of the loaded data will show `age` now encoded into five age ranges represented as (exclusive mininum value-inclusive maximum value]:
 
 - `(0-20]`
 - `(20-40]`
@@ -121,8 +121,6 @@ The checkbox `Suppress boolean False / binary 0` is also selected by default. Th
 Rename `age` to `age_range` and `quarter` to `period`.
 
 #### Evaluating synthesizability
-
-Pressing `Generate final dataset` applies all the specified transformations to the input dataset, with the result available for viewing and download under the `Final` tab of the data table panel.
 
 The `Synthesizability summary` gives an initial indication of how easy it will be to generate high-accurary synthetic data given the number of attribute combinations in the final sensitive dataset. The smaller each of these numbers, the better:
 
@@ -175,7 +173,7 @@ Move to the `Query and visualize data` tab to start exploring the anonymous data
 
 Any record counts shown will use the corresponding protected counts from the aggregate data if these counts exist, since they will always be the most accurate, otherwise the synthetic data will be dynamically filtered to derive the desired count.
 
-Before any filters are applied, the interface will use the `record_count` value from thr aggregate data as the estimate of sensitive records overall.
+Before any filters are applied, the interface will use the `record_count` value from the aggregate data as the estimate of sensitive records overall.
 
 Try adding one or more attribute values to the query to observe the estimated count change. Notice that:
 
@@ -192,7 +190,7 @@ This chart groups values by attribute and shows these groups in descending count
 
 The chart can be configured in multiple ways:
 
-- Set `Subject label` to `Customer` to indicate what kind of individul is being counted
+- Set `Subject label` to `Customer` to indicate what kind of individual is being counted
 - Set `Types of  top attributes to show` to filter to a particular attribute, e.g., `product_code`
 - Set `Number of top attribute values to show` to `5` to show only the top five attribute values
 
