@@ -2,6 +2,7 @@
 import json
 import math
 import os
+import random
 import re
 import sys
 from collections import defaultdict
@@ -186,8 +187,13 @@ def single_csv_uploader(
     show_rows=10000,
     height=250,
 ):
+    if f"{workflow}_uploader_index" not in st.session_state:
+        st.session_state[f"{workflow}_uploader_index"] = str(random.randint(0, 100))
     file = st.file_uploader(
-        upload_label, type=["csv"], accept_multiple_files=False, key=key+'_file_uploader'
+        upload_label,
+        type=["csv"],
+        accept_multiple_files=False,
+        key=key + "_file_uploader_" + st.session_state[f"{workflow}_uploader_index"],
     )
     if f"{key}_encoding" not in st.session_state:
         st.session_state[f"{key}_encoding"] = file_encoding_default
@@ -254,8 +260,13 @@ def multi_csv_uploader(
     if f"{key}_encoding" not in st.session_state:
         st.session_state[f"{key}_encoding"] = file_encoding_default
 
+    if f"{key}_uploader_index" not in st.session_state:
+        st.session_state[f"{key}_uploader_index"] = str(random.randint(0, 100))
     files = st.file_uploader(
-        upload_label, type=["csv"], accept_multiple_files=True, key=key+'_file_uploader'
+        upload_label,
+        type=["csv"],
+        accept_multiple_files=True,
+        key=key + "_file_uploader_" + st.session_state[f"{key}_uploader_index"],
     )
     file_names = [file.name for file in files] if files is not None else []
     uploaded_files_var.value = [v for v in uploaded_files_var.value if v in file_names]

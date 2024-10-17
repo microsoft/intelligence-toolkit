@@ -154,7 +154,7 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
             selected_file, selected_df, changed = ui_components.multi_csv_uploader(
                 "Upload CSV file(s)",
                 sv.uploaded_synthesis_files,
-                "synthesis_uploader",
+                workflow + "_uploader",
                 sv.synthesis_max_rows_to_process,
             )
             if changed:

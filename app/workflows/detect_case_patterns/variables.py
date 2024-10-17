@@ -52,9 +52,6 @@ class SessionVariables:
             pd.DataFrame(), prefix
         )
         self.detect_case_patterns_table_index = SessionVariable(0, prefix)
-        self.detect_case_patterns_upload_key = SessionVariable(
-            random.randint(1, 100), prefix
-        )
         self.detect_case_patterns_time_series_df = SessionVariable(
             pd.DataFrame(), prefix
         )

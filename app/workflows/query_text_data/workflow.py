@@ -2,10 +2,11 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 import os
+import random
+import string
 
 import pandas as pd
 import streamlit as st
-import string
 
 import app.util.embedder as embedder
 import app.util.example_outputs_ui as example_outputs_ui
@@ -58,6 +59,9 @@ async def create(sv: SessionVariables, workflow=None):
             "View example outputs"
         ]
     )
+
+    if f"{workflow}_uploader_index" not in st.session_state:
+        st.session_state[f"{workflow}_uploader_index"] = str(random.randint(0, 100))
     with intro_tab:
         st.markdown(get_intro(), unsafe_allow_html=True)
     with uploader_tab:
@@ -66,7 +70,7 @@ async def create(sv: SessionVariables, workflow=None):
             "Upload PDF text files",
             type=["pdf", "txt", "json", "csv"],
             accept_multiple_files=True,
-            key="qtd_uploader",
+            key="qtd_uploader_" + st.session_state[f"{workflow}_uploader_index"],
         )
         # window_size = st.selectbox(
         #     "Analysis time window",

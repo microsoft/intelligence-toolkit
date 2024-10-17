@@ -61,7 +61,7 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
             selected_file, selected_df, changed = ui_components.multi_csv_uploader(
                 "Upload multiple CSVs",
                 sv.matching_uploaded_files,
-                "matching_uploader",
+                workflow + "uploader",
                 sv.matching_max_rows_to_process,
             )
         with model_col:

@@ -72,7 +72,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
             _, selected_df, changed = ui_components.multi_csv_uploader(
                 "Upload multiple CSVs",
                 sv.network_uploaded_files,
-                "network_uploader",
+                workflow + "_uploader",
                 sv.network_max_rows_to_process,
             )
         with model_col:
