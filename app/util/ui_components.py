@@ -16,7 +16,6 @@ from app.util.df_functions import get_current_time, quantize_datetime, quantize_
 from app.util.download_pdf import add_download_pdf
 from app.util.enums import Mode
 from app.util.openai_wrapper import UIOpenAIConfiguration
-from app.util.openai_wrapper import UIOpenAIConfiguration
 from toolkit.AI.classes import LLMCallback
 from toolkit.AI.client import OpenAIClient
 from toolkit.AI.defaults import DEFAULT_MAX_INPUT_TOKENS
@@ -746,3 +745,10 @@ def build_validation_ui(
                     file_name=f"{file_name}_{get_current_time()}_messages.json",
                     mime="text/json",
                 )
+
+def check_ai_configuration():
+    ai_configuration = UIOpenAIConfiguration().get_configuration()
+    if ai_configuration.api_key == "":
+        st.warning("Please set your OpenAI API key in the Settings page.")
+    if ai_configuration.model == "":
+        st.warning("Please set your OpenAI model in the Settings page.")
