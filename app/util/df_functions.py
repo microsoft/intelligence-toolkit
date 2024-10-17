@@ -78,7 +78,7 @@ def quantize_datetime(input_df, col, bin_size):
             except:
                 elements = extract_elements(x)
                 if 'year' in elements:
-                    return elements['year']
+                    return str(elements['year'])
                 else:
                     return ""
         func = convert
@@ -91,7 +91,7 @@ def quantize_datetime(input_df, col, bin_size):
             except:
                 elements = extract_elements(x)
                 if 'year' in elements and 'half' in elements:
-                    return elements['year'] + '-' + elements['half']
+                    return str(elements['year']) + '-' + str(elements['half'])
                 else:
                     return ""
         func = convert
@@ -112,7 +112,7 @@ def quantize_datetime(input_df, col, bin_size):
             except:
                 elements = extract_elements(x)
                 if 'year' in elements and 'quarter' in elements:
-                    return elements['year'] + '-' + elements['quarter']
+                    return str(elements['year']) + '-' + str(elements['quarter'])
                 else:
                     return ""
         func = convert
@@ -125,7 +125,8 @@ def quantize_datetime(input_df, col, bin_size):
             except:
                 elements = extract_elements(x)
                 if 'year' in elements and 'month' in elements:
-                    return elements['year'] + '-' + elements['month']
+                    # pad with 0s if needed
+                    return str(elements['year']) + '-' + str(elements['month']).zfill(2)
                 else:
                     return ""
         func = convert

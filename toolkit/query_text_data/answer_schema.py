@@ -175,6 +175,12 @@ content_integration_format = {
         "schema": {
             "type": "object",
             "properties": {
+                "question": {
+                    "type": "string"
+                },
+                "answer": {
+                    "type": "string"
+                },
                 "report_title": {
                     "type": "string"
                 },
@@ -219,7 +225,7 @@ content_integration_format = {
                     "type": "string"
                 }
             },
-            "required": ["report_title", "report_summary", "theme_order", "report_commentary"],
+            "required": ["question", "answer", "report_title", "report_summary", "theme_order", "report_commentary"],
             "additionalProperties": False,
         }
     }

@@ -6,21 +6,16 @@ import os
 from collections import defaultdict
 from json import dumps, loads
 
-import numpy as np
-import pandas as pd
 import plotly.io as pio
 import streamlit as st
-from pacsynth import (AccuracyMode, Dataset,
-                      DpAggregateSeededParametersBuilder,
-                      DpAggregateSeededSynthesizer, FabricationMode)
 
-import app.util.df_functions as df_functions
-import app.util.ui_components as ui_components
-import app.workflows.anonymize_case_data.classes as classes
-import app.workflows.anonymize_case_data.config as config
-import app.workflows.anonymize_case_data.functions as functions
-import app.workflows.anonymize_case_data.variables as ds_variables
 import app.util.example_outputs_ui as example_outputs_ui
+import app.util.ui_components as ui_components
+import app.workflows.anonymize_case_data.config as config
+import app.workflows.anonymize_case_data.variables as ds_variables
+import toolkit.anonymize_case_data.queries as queries
+import toolkit.anonymize_case_data.visuals as visuals
+from toolkit.anonymize_case_data import AnonymizeCaseData, color_schemes
 
 
 def get_intro():
@@ -40,6 +35,7 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
         ]
     )
     df = None
+    acd: AnonymizeCaseData = sv.workflow_object.value
     with intro_tab:
         st.markdown(get_intro())
     with prepare_tab:
@@ -51,7 +47,6 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                 sv.anonymize_last_sensitive_file_name,
                 sv.anonymize_raw_sensitive_df,
                 sv.anonymize_sensitive_df,
-                uploader_key=sv.anonymize_upload_key.value,
                 key="sensitive_data_uploader",
                 height=400,
             )
@@ -63,47 +58,36 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
             )
 
             if len(sv.anonymize_sensitive_df.value) > 0:
-                distinct_counts = []
-                wdf = sv.anonymize_sensitive_df.value
-                att_cols = list(wdf.columns)
-                num_cols = len(att_cols)
-                for col in wdf.columns.to_numpy():
-                    distinct_values = [x for x in wdf[col].astype(str).unique() if x not in ["", "nan"]]
-                    distinct_counts.append(len(distinct_values))
-                distinct_counts.sort()
-                overall_att_count = sum(distinct_counts)
-                possible_combinations = math.prod(distinct_counts)
-                possible_combinations_per_row = round(possible_combinations / len(wdf), 1)
-                mean_vals_per_record = sum([len([y for y in x if str(y) not in ['nan', '']]) for x in wdf.to_numpy()]) / wdf.shape[0]
-                max_combinations_per_record = 2**mean_vals_per_record
-                excess_combinations_ratio = possible_combinations_per_row / max_combinations_per_record
+                
+                syn_stats = acd.analyze_synthesizability(sv.anonymize_sensitive_df.value)
+
                 st.markdown("### Synthesizability summary")
                 st.markdown(
-                    f"Number of selected columns: **{num_cols}**",
+                    f"Number of selected columns: **{syn_stats.num_cols}**",
                     help="This is the number of columns you selected for processing. The more columns you select, the harder it will be to synthesize data.",
                 )
                 st.markdown(
-                    f"Number of distinct attribute values: **{overall_att_count}**",
+                    f"Number of distinct attribute values: **{syn_stats.overall_att_count}**",
                     help="This is the total number of distinct attribute values across all selected columns. The more distinct values, the harder it will be to synthesize data.",
                 )
                 st.markdown(
-                    f"Theoretical attribute combinations: **{possible_combinations}**",
+                    f"Theoretical attribute combinations: **{syn_stats.possible_combinations}**",
                     help="This is the total number of possible attribute combinations across all selected columns. The higher this number, the harder it will be to synthesize data.",
                 )
                 st.markdown(
-                    f"Theoretical combinations per record: **{possible_combinations_per_row}**",
+                    f"Theoretical combinations per record: **{syn_stats.possible_combinations_per_row}**",
                     help="This is the mean number of possible attribute combinations per sensitive case record. The higher this number, the harder it will be to synthesize data.",
                 )
                 st.markdown(
-                    f"Typical values per record: **{round(mean_vals_per_record, 1)}**",
+                    f"Typical values per record: **{round(syn_stats.mean_vals_per_record, 1)}**",
                     help="This is the mean number of actual attribute values per sensitive case record. The higher this number, the harder it will be to synthesize data.",
                 )
                 st.markdown(
-                    f"Typical combinations per record: **{round(max_combinations_per_record, 1)}**",
+                    f"Typical combinations per record: **{round(syn_stats.max_combinations_per_record, 1)}**",
                     help="This is the number of attribute combinations in a record with the typical number of values.",
                 )
                 st.markdown(
-                    f"Excess combinations ratio: **{round(excess_combinations_ratio, 1)}**",
+                    f"Excess combinations ratio: **{round(syn_stats.excess_combinations_ratio, 1)}**",
                     help="This is the ratio of theoretical combinations per record to the typical combinations per record. The higher this number, the harder it will be to synthesize data. **Rule of thumb**: Aim for a ratio of **5** or lower.",
                 )
 
@@ -115,7 +99,7 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
             with c1:
                 st.markdown("#### Anonymize data")
                 b1, b2 = st.columns([1, 1])
-                reporting_length = 4  # fixed
+
                 with b1:
                     epsilon = st.number_input(
                         "Epsilon",
@@ -128,114 +112,32 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                         sv.anonymize_epsilon.value = epsilon
                         df = sv.anonymize_sensitive_df.value
                         with st.spinner("Anonymizing data..."):
-                            df = (
-                                df_functions.fix_null_ints(df)
+                            acd.anonymize_case_data(
+                                df=df,
+                                epsilon=epsilon,
                             )
-                            sensitive_dataset = Dataset.from_data_frame(df)
-
-                            params = (
-                                DpAggregateSeededParametersBuilder()
-                                .reporting_length(reporting_length)
-                                .epsilon(epsilon)
-                                .percentile_percentage(99)
-                                .percentile_epsilon_proportion(0.01)
-                                .accuracy_mode(
-                                    AccuracyMode.prioritize_long_combinations()
-                                )
-                                .number_of_records_epsilon_proportion(0.005)
-                                .fabrication_mode(FabricationMode.balanced())
-                                .empty_value("")
-                                .weight_selection_percentile(95)
-                                .use_synthetic_counts(True)
-                                .aggregate_counts_scale_factor(1.0)
-                                .build()
-                            )
-
-                            synth = DpAggregateSeededSynthesizer(params)
-
-                            synth.fit(sensitive_dataset)
-                            protected_number_of_records = (
-                                synth.get_dp_number_of_records()
-                            )
-                            delta = 1.0 / (
-                                math.log(protected_number_of_records)
-                                * protected_number_of_records
-                            )
-                            sv.anonymize_delta.value = f"{delta:.2e}"
-                            synthetic_raw_data = synth.sample()
-                            synthetic_dataset = Dataset(synthetic_raw_data)
-                            synthetic_df = Dataset.raw_data_to_data_frame(
-                                synthetic_raw_data
-                            )
-                            sv.anonymize_synthetic_df.value = synthetic_df
-
-                            sensitive_aggregates = sensitive_dataset.get_aggregates(
-                                reporting_length, ";"
-                            )
-
-                            # export the differentially private aggregates (internal to the synthesizer)
-                            dp_aggregates = synth.get_dp_aggregates(";")
-
-                            # generate aggregates from the synthetic data
-                            synthetic_aggregates = synthetic_dataset.get_aggregates(
-                                reporting_length, ";"
-                            )
-
-                            sensitive_aggregates_parsed = {
-                                tuple(agg.split(";")): count
-                                for (agg, count) in sensitive_aggregates.items()
-                            }
-                            dp_aggregates_parsed = {
-                                tuple(agg.split(";")): count
-                                for (agg, count) in dp_aggregates.items()
-                            }
-                            synthetic_aggregates_parsed = {
-                                tuple(agg.split(";")): count
-                                for (agg, count) in synthetic_aggregates.items()
-                            }
-
-                            agg_df = pd.DataFrame(
-                                data=dp_aggregates.items(),
-                                columns=["selections", "protected_count"],
-                            )
-                            agg_df.loc[len(agg_df)] = [
-                                "record_count",
-                                protected_number_of_records,
-                            ]
-                            agg_df = agg_df.sort_values(
-                                by=["protected_count"], ascending=False
-                            )
-                            protected_number_of_records = (
-                                synth.get_dp_number_of_records()
-                            )
-
-                            sv.anonymize_aggregate_df.value = agg_df
-
-                            sv.anonymize_sen_agg_rep.value = classes.ErrorReport(
-                                sensitive_aggregates_parsed, dp_aggregates_parsed
-                            ).gen()
-                            sv.anonymize_sen_syn_rep.value = classes.ErrorReport(
-                                sensitive_aggregates_parsed, synthetic_aggregates_parsed
-                            ).gen()
+                            sv.anonymize_synthetic_df.value = acd.synthetic_df
+                            sv.anonymize_aggregate_df.value = acd.aggregate_df
+                            sv.anonymize_delta.value = f"{acd.delta:.2e}"
 
                 st.markdown(
                     "#### Analyze data",
                     help="Tables show three evaluation metrics for each **Length** of attribute combination up to 4, plus an **Overall** average.\n\n- **Count +/- Error** is the average number of records for the combination length +/- the average absolute error in the number of records.\n- **Suppressed %** is the percentage of the total attribute counts that were suppressed, i.e., present in the Sensitive data but not the Aggregate/Synthetic data.\n- **Fabricated %** is the percentage of the total attribute counts that were fabricated, i.e., present in the Aggregate/Synthetic data but not the Sensitive data.\n\nPercentages are calculated with respect to attribute counts in the Sensitive data.\n\n**Rule of thumb**: For the Synthetic data, aim to keep the Overall Error below the Overall Count, Suppressed % below 10%, and Fabricated % below 1%.",
                 )
 
-                if len(sv.anonymize_sen_agg_rep.value) > 0:
+                if len(acd.aggregate_error_report) > 0:
                     st.markdown(
                         f"Differential privacy parameters: **Epsilon = {sv.anonymize_epsilon.value}**, **Delta = {sv.anonymize_delta.value}**"
                     )
                     st.markdown("###### Aggregate data quality")
                     st.dataframe(
-                        sv.anonymize_sen_agg_rep.value,
+                        acd.aggregate_error_report,
                         hide_index=True,
                         use_container_width=False,
                     )
                     st.markdown("###### Synthetic data quality")
                     st.dataframe(
-                        sv.anonymize_sen_syn_rep.value,
+                        acd.synthetic_error_report,
                         hide_index=True,
                         use_container_width=False,
                     )
@@ -289,7 +191,6 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                 sv.anonymize_last_synthetic_file_name,
                 sv.anonymize_synthetic_df,
                 None,
-                uploader_key=sv.anonymize_synthetic_upload_key.value,
                 key="synthetic_data_uploader",
             )
             ui_components.single_csv_uploader(
@@ -298,7 +199,6 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                 sv.anonymize_last_aggregate_file_name,
                 sv.anonymize_aggregate_df,
                 None,
-                uploader_key=sv.anonymize_aggregate_upload_key.value,
                 key="aggregate_data_uploader",
             )
             if (
@@ -308,7 +208,7 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                 st.rerun()
         else:
             container = st.container(border=True)
-            scheme_options = sorted(config.color_schemes.keys())
+            scheme_options = sorted(color_schemes.keys())
             chart_type_options = ["Top attributes", "Time series", "Flow (alluvial)"]
 
             if f"{workflow}_query_selections" not in st.session_state:
@@ -341,18 +241,10 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
             c1, c2 = st.columns([1, 2])
             val_separator = ":"
             att_separator = ";"
-            data_schema = defaultdict(list)
-            data_schema_text = ""
+            data_schema = acd.get_data_schema()
             with c1:
                 st.markdown("##### Constuct query")
                 if len(sdf) > 0:
-                    for att in sdf.columns.to_numpy():
-                        vals = [str(x) for x in sdf[att].unique() if len(str(x)) > 0]
-                        for val in vals:
-                            data_schema[att].append(val)
-                            data_schema_text += f"- {att} = {val}\n"
-                        data_schema_text += "\n"
-                        data_schema[att].sort()
                     count_holder = st.empty()
 
                     filters = st.multiselect(
@@ -395,7 +287,7 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                     perc = f"{best_est / agg_records:.1%}"
                     count_text = f"There are an estimated **{agg_records}** sensitive records overall."
                     if len(selection) > 0:
-                        count_text = f"There are an estimated **{best_est}** sensitive records (**{perc}**) matching the query:\n\n{functions.print_selections(selection)}"
+                        count_text = f"There are an estimated **{best_est}** sensitive records (**{perc}**) matching the query:\n\n{visuals.print_selections(selection)}"
 
                     count_holder.markdown(count_text)
                     st.markdown("##### Configure charts")
@@ -424,7 +316,7 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                         )
 
                     chart = None
-                    export_df = None
+                    chart_df = None
                     chart_type = st.selectbox(
                         "Chart type",
                         options=chart_type_options,
@@ -463,26 +355,18 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                             show_attributes
                         )
                         chart_individual_configuration["num_values"] = num_values
-                        export_df = functions.compute_top_attributes_query(
-                            selection,
-                            sdf,
-                            adf,
-                            att_separator,
-                            val_separator,
-                            data_schema,
-                            show_attributes,
-                            num_values,
+
+                        chart, chart_df = acd.get_bar_chart_fig(
+                            selection=selection,
+                            show_attributes=show_attributes,
+                            unit=unit,
+                            width=chart_width,
+                            height=chart_height,
+                            scheme=color_schemes[scheme],
+                            num_values=num_values,
+                            att_separator=config.att_separator,
+                            val_separator=config.val_separator,
                         )
-                        if len(export_df) > 0:
-                            chart = functions.get_bar_chart(
-                                selection,
-                                show_attributes,
-                                unit,
-                                export_df,
-                                chart_width,
-                                chart_height,
-                                scheme,
-                            )
                     elif chart_type == "Time series":
                         if chart_type != st.session_state[f"{workflow}_chart_type"]:
                             st.session_state[
@@ -515,26 +399,18 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                         )
 
                         if time_attribute != "" and len(series_attributes) > 0:
-                            export_df = functions.compute_time_series_query(
-                                selection,
-                                sv.anonymize_synthetic_df.value,
-                                adf,
-                                att_separator,
-                                val_separator,
-                                data_schema,
-                                time_attribute,
-                                series_attributes,
+                            chart, chart_df = acd.get_line_chart_fig(
+                                selection=selection,
+                                series_attributes=series_attributes,
+                                unit=unit,
+                                time_attribute=time_attribute,
+                                width=chart_width,
+                                height=chart_height,
+                                scheme=color_schemes[scheme],
+                                att_separator=config.att_separator,
+                                val_separator=config.val_separator,
                             )
-                            chart = functions.get_line_chart(
-                                selection,
-                                series_attributes,
-                                unit,
-                                export_df,
-                                time_attribute,
-                                chart_width,
-                                chart_height,
-                                scheme,
-                            )
+
                     elif chart_type == "Flow (alluvial)":
                         if chart_type != st.session_state[f"{workflow}_chart_type"]:
                             st.session_state[
@@ -585,37 +461,20 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
 
                         if source_attribute != "" and target_attribute != "":
                             # export_df = compute_flow_query(selection, sv.anonymize_synthetic_df.value, adf, att_separator, val_separator, data_schema, source_attribute, target_attribute, highlight_attribute)
-                            att_count = 2 if highlight_attribute == "" else 3
-                            att_count += len(filters)
-                            if att_count <= 4:
-                                export_df = functions.compute_aggregate_graph(
-                                    adf,
-                                    filters,
-                                    source_attribute,
-                                    target_attribute,
-                                    highlight_attribute,
-                                )
-                            else:
-                                export_df = functions.compute_anonym_graph(
-                                    sdf,
-                                    filters,
-                                    source_attribute,
-                                    target_attribute,
-                                    highlight_attribute,
-                                )
-                            chart = functions.flow_chart(
-                                export_df,
-                                selection,
-                                source_attribute,
-                                target_attribute,
-                                highlight_attribute,
-                                chart_width,
-                                chart_height,
-                                unit,
-                                scheme,
+                            chart, chart_df = acd.get_flow_chart_fig(
+                                selection=selection,
+                                source_attribute=source_attribute,
+                                target_attribute=target_attribute,
+                                highlight_attribute=highlight_attribute,
+                                unit=unit,
+                                scheme=color_schemes[scheme],
+                                width=chart_width,
+                                height=chart_height,
+                                att_separator=config.att_separator,
+                                val_separator=config.val_separator
                             )
 
-                    if export_df is not None and chart is not None:
+                    if chart_df is not None and chart is not None:
                         clear_btn = st.button("Clear configuration")
                         if clear_btn:
                             st.session_state[f"{workflow}_query_selections"] = []
@@ -639,7 +498,7 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                         with s1:
                             st.download_button(
                                 "Data CSV",
-                                data=export_df.to_csv(index=False),
+                                data=chart_df.to_csv(index=False),
                                 file_name="data.csv",
                                 mime="text/csv",
                                 use_container_width=True,

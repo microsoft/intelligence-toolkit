@@ -80,15 +80,12 @@ async def answer_question(
                     claim_statement = claim['claim_statement']
                     claims_to_embed[len(claims_to_embed)] = f"{claim_statement} (context: {claim_context})"
 
-        print(f'Claims to embed: {claims_to_embed}')
-        print(f'Distinct claims: {len(set(claims_to_embed.values()))}')
-
         cix_to_vector = await helper_functions.embed_queries(
             claims_to_embed,
             embedder,
             cache_data=embedding_cache
         )
-        print(f'Cix to vector: {cix_to_vector.keys()}')
+
         claim_to_vector = {claims_to_embed[cix]: vector for cix, vector in cix_to_vector.items()}
         units = sorted([(cid, vector) for cid, vector in (cid_to_vector.items())], key=lambda x: x[0])
         neighbours = NearestNeighbors(n_neighbors=answer_config.claim_search_depth, metric='cosine').fit([vector for cid, vector in units])
@@ -201,19 +198,20 @@ async def answer_question(
 def build_report_markdown(question, content_items_dict, content_structure, cid_to_text, source_to_supported_claims, source_to_contradicted_claims):
     text_jsons = [loads(text) for text in cid_to_text.values()]
     matched_chunks = {f"{text['title']} ({text['chunk_id']})" : text for text in text_jsons}
-    home_link = '#' + content_structure["report_title"].lower().translate(str.maketrans('', '', string.punctuation))
-    home_link = home_link.replace(' ', '-')
-    report = f'# {content_structure["report_title"]}\n\n*In response to: {question}*\n\n## Executive summary\n\n{content_structure["report_summary"]}\n\n'
+    home_link = '#'+content_structure["report_title"].replace(' ', '-').lower()
+    report = f'# Report\n\n## Question\n\n*{question}*\n\n## Answer\n\n{content_structure["answer"]}\n\n## Analysis\n\n### {content_structure["report_title"]}\n\n{content_structure["report_summary"]}\n\n'
     for theme in content_structure['theme_order']:
-        report += f'## Theme: {theme["theme_title"]}\n\n{theme["theme_summary"]}\n\n'
+        report += f'#### Theme: {theme["theme_title"]}\n\n{theme["theme_summary"]}\n\n'
         for item_id in theme['content_id_order']:
             item = content_items_dict[item_id]
-            report += f'### {item["content_title"]}\n\n{item["content_summary"]}\n\n{item["content_commentary"]}\n\n'
-        report += f'### AI theme commentary\n\n{theme["theme_commentary"]}\n\n'
-    report += f'## AI report commentary\n\n{content_structure["report_commentary"]}\n\n'
+            report += f'##### {item["content_title"]}\n\n{item["content_summary"]}\n\n{item["content_commentary"]}\n\n'
+        report += f'##### AI theme commentary\n\n{theme["theme_commentary"]}\n\n'
+    report += f'#### AI report commentary\n\n{content_structure["report_commentary"]}\n\n'
     references = extract_chunk_references(report)
+    print(report)
+    print(references)
     report = link_chunk_references(report, references)
-    report += f'### Sources\n\n'
+    report += f'## Sources\n\n'
     for ix, source_label in enumerate(references):
         if source_label in matched_chunks:
             supports_claims = source_to_supported_claims[source_label]

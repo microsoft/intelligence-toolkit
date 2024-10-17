@@ -2,6 +2,7 @@
 import json
 import math
 import os
+import random
 import re
 import sys
 from collections import defaultdict
@@ -15,7 +16,6 @@ import toolkit.AI.utils as utils
 from app.util.df_functions import get_current_time, quantize_datetime, quantize_numeric
 from app.util.download_pdf import add_download_pdf
 from app.util.enums import Mode
-from app.util.openai_wrapper import UIOpenAIConfiguration
 from app.util.openai_wrapper import UIOpenAIConfiguration
 from toolkit.AI.classes import LLMCallback
 from toolkit.AI.client import OpenAIClient
@@ -183,13 +183,17 @@ def single_csv_uploader(
     last_uploaded_file_name_var,
     input_df_var,
     processed_df_var,
-    uploader_key,
     key,
     show_rows=10000,
     height=250,
 ):
+    if f"{workflow}_uploader_index" not in st.session_state:
+        st.session_state[f"{workflow}_uploader_index"] = str(random.randint(0, 100))
     file = st.file_uploader(
-        upload_label, type=["csv"], accept_multiple_files=False, key=uploader_key
+        upload_label,
+        type=["csv"],
+        accept_multiple_files=False,
+        key=key + "_file_uploader_" + st.session_state[f"{workflow}_uploader_index"],
     )
     if f"{key}_encoding" not in st.session_state:
         st.session_state[f"{key}_encoding"] = file_encoding_default
@@ -248,7 +252,6 @@ def single_csv_uploader(
 def multi_csv_uploader(
     upload_label,
     uploaded_files_var,
-    uploader_key,
     key,
     max_rows_var=0,
     show_rows=1000,
@@ -257,8 +260,13 @@ def multi_csv_uploader(
     if f"{key}_encoding" not in st.session_state:
         st.session_state[f"{key}_encoding"] = file_encoding_default
 
+    if f"{key}_uploader_index" not in st.session_state:
+        st.session_state[f"{key}_uploader_index"] = str(random.randint(0, 100))
     files = st.file_uploader(
-        upload_label, type=["csv"], accept_multiple_files=True, key=uploader_key
+        upload_label,
+        type=["csv"],
+        accept_multiple_files=True,
+        key=key + "_file_uploader_" + st.session_state[f"{key}_uploader_index"],
     )
     file_names = [file.name for file in files] if files is not None else []
     uploaded_files_var.value = [v for v in uploaded_files_var.value if v in file_names]
@@ -670,7 +678,7 @@ def prepare_input_df(
                     help="Rename the attribute to a more descriptive name.",
                 )
                 if col not in st.session_state[f"{workflow}_rename_map"].keys() or st.session_state[f"{workflow}_rename_map"][col] != new_name:
-                    print(f'renaming {col} to {new_name}')
+                    # print(f'renaming {col} to {new_name}')
                     st.session_state[f"{workflow}_rename_map"][col] = new_name
                     renamed = True
             if renamed:
@@ -748,3 +756,10 @@ def build_validation_ui(
                     file_name=f"{file_name}_{get_current_time()}_messages.json",
                     mime="text/json",
                 )
+
+def check_ai_configuration():
+    ai_configuration = UIOpenAIConfiguration().get_configuration()
+    if ai_configuration.api_key == "":
+        st.warning("Please set your OpenAI API key in the Settings page.")
+    if ai_configuration.model == "":
+        st.warning("Please set your OpenAI model in the Settings page.")

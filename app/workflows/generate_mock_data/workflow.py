@@ -4,13 +4,13 @@ from json import dumps, loads
 import pandas as pd
 import streamlit as st
 
+import app.util.example_outputs_ui as example_outputs_ui
+import app.util.schema_ui as schema_ui
+import app.util.ui_components as ui_components
 import app.workflows.generate_mock_data.variables as bds_variables
 import toolkit.generate_mock_data.data_generator as data_generator
 import toolkit.generate_mock_data.text_generator as text_generator
-import app.util.schema_ui as schema_ui
 from app.util.openai_wrapper import UIOpenAIConfiguration
-import app.util.ui_components as ui_components
-import app.util.example_outputs_ui as example_outputs_ui
 
 ai_configuration = UIOpenAIConfiguration().get_configuration()
 
@@ -21,6 +21,8 @@ def get_intro():
 
 
 async def create(sv: bds_variables.SessionVariables, workflow: None):
+    ui_components.check_ai_configuration()
+
     intro_tab, schema_tab, record_generator_tab, text_generator_tab, mock_tab = st.tabs(['Generate Mock Data workflow:', 'Prepare data schema', 'Generate mock records', 'Generate mock texts', 'View example outputs'])
     with intro_tab:
         st.markdown(get_intro())
@@ -152,8 +154,7 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
             selected_file, selected_df, changed = ui_components.multi_csv_uploader(
                 "Upload CSV file(s)",
                 sv.uploaded_synthesis_files,
-                "synthesis_uploader",
-                "synthesis_uploader",
+                workflow + "_uploader",
                 sv.synthesis_max_rows_to_process,
             )
             if changed:

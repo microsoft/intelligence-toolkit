@@ -51,6 +51,7 @@ def get_intro():
 
 async def create(sv: rn_variables.SessionVariables, workflow=None):
     sv_home = SessionVariables("home")
+    ui_components.check_ai_configuration()
 
     intro_tab, uploader_tab, process_tab, view_tab, report_tab, examples_tab = st.tabs(
         [
@@ -71,8 +72,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
             _, selected_df, changed = ui_components.multi_csv_uploader(
                 "Upload multiple CSVs",
                 sv.network_uploaded_files,
-                sv.network_upload_key.value,
-                "network_uploader",
+                workflow + "_uploader",
                 sv.network_max_rows_to_process,
             )
         with model_col:

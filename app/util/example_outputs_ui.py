@@ -96,8 +96,8 @@ def create_example_outputs_ui(container, workflow):
                                 st.write(js)
                             elif this_type == "md":
                                 mime = "text/markdown"
-                                md = open(data_file, "r").read()
-                                st.markdown(md)
+                                md = open(data_file, "r", errors="ignore").read()
+                                st.markdown(md, unsafe_allow_html=True)
                             
                             st.download_button(
                                 label=f"Download {filename}",

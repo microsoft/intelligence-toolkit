@@ -4,13 +4,12 @@ from json import dumps, loads
 import pandas as pd
 import streamlit as st
 
-import app.workflows.extract_record_data.variables as variables
-import toolkit.extract_record_data.prompts as prompts
-import toolkit.extract_record_data.data_extractor as data_extractor
-import app.util.schema_ui as schema_ui
-from app.util.openai_wrapper import UIOpenAIConfiguration
-import app.util.ui_components as ui_components
 import app.util.example_outputs_ui as example_outputs_ui
+import app.util.schema_ui as schema_ui
+import app.util.ui_components as ui_components
+import app.workflows.extract_record_data.variables as variables
+import toolkit.extract_record_data.data_extractor as data_extractor
+from app.util.openai_wrapper import UIOpenAIConfiguration
 
 ai_configuration = UIOpenAIConfiguration().get_configuration()
 
@@ -21,6 +20,8 @@ def get_intro():
 
 
 async def create(sv: variables.SessionVariables, workflow: None):
+    ui_components.check_ai_configuration()
+
     intro_tab, schema_tab, generator_tab, mock_tab = st.tabs(['Extract Record Data workflow:', 'Prepare data schema', 'Extract structured records', 'View example outputs'])
     with intro_tab:
         st.markdown(get_intro())
@@ -45,8 +46,7 @@ async def create(sv: variables.SessionVariables, workflow: None):
                     _, selected_df, changed = ui_components.multi_csv_uploader(
                         "Upload CSV file(s)",
                         sv.uploaded_synthesis_files,
-                        "synthesis_uploader",
-                        "synthesis_uploader",
+                        workflow + "uploader",
                         sv.synthesis_max_rows_to_process,
                     )
                     if selected_df is not None:

@@ -6,16 +6,20 @@ import os
 import polars as pl
 import streamlit as st
 
-import app.workflows.compare_case_groups.variables as gn_variables
 import app.util.example_outputs_ui as example_outputs_ui
+import app.workflows.compare_case_groups.variables as gn_variables
 from app.util import ui_components
 from toolkit.compare_case_groups import prompts
-from toolkit.compare_case_groups.build_dataframes import (build_attribute_df,
-                                                          build_grouped_df,
-                                                          build_ranked_df,
-                                                          filter_df)
-from toolkit.compare_case_groups.temporal_process import (build_temporal_data,
-                                                          create_window_df)
+from toolkit.compare_case_groups.build_dataframes import (
+    build_attribute_df,
+    build_grouped_df,
+    build_ranked_df,
+    filter_df,
+)
+from toolkit.compare_case_groups.temporal_process import (
+    build_temporal_data,
+    create_window_df,
+)
 from toolkit.helpers.df_functions import fix_null_ints
 
 
@@ -26,6 +30,8 @@ def get_intro() -> str:
 
 
 def create(sv: gn_variables.SessionVariables, workflow=None):
+    ui_components.check_ai_configuration()
+
     intro_tab, prepare_tab, summarize_tab, generate_tab, examples_tab = st.tabs(
         [
             "Compare case groups workflow:",
@@ -47,7 +53,6 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                 sv.case_groups_last_file_name,
                 sv.case_groups_input_df,
                 sv.case_groups_final_df,
-                uploader_key=sv.case_groups_upload_key.value,
                 key="group_comparison_uploader",
                 height=400,
             )

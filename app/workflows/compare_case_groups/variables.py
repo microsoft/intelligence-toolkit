@@ -33,7 +33,6 @@ class SessionVariables:
         self.case_groups_report_validation = SessionVariable({}, prefix)
         self.case_groups_system_prompt = SessionVariable(prompts.list_prompts, prefix)
         self.case_groups_subject_identifier = SessionVariable("", prefix)
-        self.case_groups_upload_key = SessionVariable(random.randint(1, 100), prefix)
 
     def reset_workflow(self):
         for key in st.session_state:

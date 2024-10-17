@@ -41,6 +41,7 @@ def get_intro():
     
 async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
     sv_home = home_vars.SessionVariables("home")
+    ui_components.check_ai_configuration()
 
     intro_tab, uploader_tab, process_tab, evaluate_tab, examples_tab = st.tabs(
         [
@@ -60,8 +61,7 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
             selected_file, selected_df, changed = ui_components.multi_csv_uploader(
                 "Upload multiple CSVs",
                 sv.matching_uploaded_files,
-                sv.matching_upload_key.value,
-                "matching_uploader",
+                workflow + "uploader",
                 sv.matching_max_rows_to_process,
             )
         with model_col:
