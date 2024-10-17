@@ -17,8 +17,8 @@ from st_aggrid import (
     GridUpdateMode,
 )
 
-import app.workflows.detect_case_patterns.variables as ap_variables
 import app.util.example_outputs_ui as example_outputs_ui
+import app.workflows.detect_case_patterns.variables as ap_variables
 from app.util import ui_components
 from toolkit.AI.classes import LLMCallback
 from toolkit.detect_case_patterns import prompts
@@ -50,6 +50,8 @@ def get_intro():
 
 
 def create(sv: ap_variables.SessionVariables, workflow):
+    ui_components.check_ai_configuration()
+
     intro_tab, uploader_tab, detect_tab, explain_tab, examples_tab = st.tabs(
         [
             "Detect Case Patterns workflow:",

@@ -51,6 +51,7 @@ def get_intro():
 
 async def create(sv: rn_variables.SessionVariables, workflow=None):
     sv_home = SessionVariables("home")
+    ui_components.check_ai_configuration()
 
     intro_tab, uploader_tab, process_tab, view_tab, report_tab, examples_tab = st.tabs(
         [

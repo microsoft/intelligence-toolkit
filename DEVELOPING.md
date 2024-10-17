@@ -21,7 +21,7 @@
 
 #### Default values: 
 ```
-OPENAI_API_MODEL="gpt-4o-2024-08-06"
+OPENAI_API_MODEL="gpt-4o"
 OPENAI_TYPE="OpenAI"
 AZURE_AUTH_TYPE="Azure Key" # if OPENAI_TYPE==Azure OpenAI
 DEFAULT_EMBEDDING_MODEL = "text-embedding-ada-002"

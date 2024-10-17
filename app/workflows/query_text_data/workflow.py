@@ -7,15 +7,10 @@ import pandas as pd
 import streamlit as st
 import string
 
-
+import app.util.embedder as embedder
 import app.util.example_outputs_ui as example_outputs_ui
 import app.workflows.query_text_data.functions as functions
-import app.util.embedder as embedder
-from toolkit.query_text_data.classes import ProcessedChunks, ChunkSearchConfig, AnswerConfig, AnswerObject
-from toolkit.query_text_data.input_processor import PeriodOption
-from toolkit.query_text_data.api import QueryTextData, QueryTextDataStage
 import toolkit.query_text_data.prompts as prompts
-
 from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
 from app.util.openai_wrapper import UIOpenAIConfiguration
@@ -25,6 +20,14 @@ from toolkit.graph.graph_fusion_encoder_embedding import (
     create_concept_to_community_hierarchy,
     generate_graph_fusion_encoder_embedding,
 )
+from toolkit.query_text_data.api import QueryTextData, QueryTextDataStage
+from toolkit.query_text_data.classes import (
+    AnswerConfig,
+    AnswerObject,
+    ChunkSearchConfig,
+    ProcessedChunks,
+)
+from toolkit.query_text_data.input_processor import PeriodOption
 from toolkit.query_text_data.pattern_detector import (
     combine_chunk_text_and_explantion,
     detect_converging_pairs,
@@ -41,6 +44,8 @@ def get_intro():
 
 async def create(sv: SessionVariables, workflow=None):
     sv_home = SessionVariables("home")
+    ui_components.check_ai_configuration()
+
     qtd = sv.workflow_object.value
     qtd.set_ai_config(ai_configuration, sv_home.save_cache.value)
     intro_tab, uploader_tab, graph_tab, search_tab, report_tab, examples_tab = st.tabs(
