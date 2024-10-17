@@ -108,7 +108,9 @@ You are a helpful assistant tasked with creating a JSON object that organizes co
 
 The output object should summarize all claims from input text chunks as follows:
 
-- "report_title": a title for the final report that reflects the overall theme of the content and the user question it answers, in the form of a derived claim statement
+- "question": the user question/prompt that the report answers
+- "answer": a standalone and detailed answer to the user question, derived from the content items and formatted according to the user question/prompt. Quote directly from source text where appropriate, and provide a source reference for each quote
+- "report_title": a title for the final report that reflects the overall theme of the content and the user question it answers, in the form of a derived claim statement. Should not contain punctuation or special characters beyond spaces and hyphens
 - "report_summary": an introductory paragraph describes the themes and content items in the report, without offering additional interpretation beyond the content items
 - "theme_order": the order in which to present the themes in the final report
 - "theme_title": a title for a specific theme spanning related content items, in the form of a derived claim statement

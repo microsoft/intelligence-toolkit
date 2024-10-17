@@ -5,6 +5,7 @@ import os
 
 import pandas as pd
 import streamlit as st
+import string
 
 
 import app.util.example_outputs_ui as example_outputs_ui
@@ -145,6 +146,7 @@ async def create(sv: SessionVariables, workflow=None):
             chunk_pb.empty()
             file_pb.empty()
             embed_pb.empty()
+            st.rerun()
 
         if qtd.stage.value >= QueryTextDataStage.CHUNKS_PROCESSED.value:
             num_files = len(qtd.label_to_chunks.keys())
@@ -159,8 +161,9 @@ async def create(sv: SessionVariables, workflow=None):
             message = message.replace("**1** periods", "**1** period")
             st.success(message)
     with graph_tab:
-        if qtd.stage.value >= QueryTextDataStage.CHUNKS_PROCESSED.value:
-
+        if qtd.stage.value < QueryTextDataStage.CHUNKS_PROCESSED.value:
+            st.warning("Process files to continue.")
+        else:
             G = qtd.processed_chunks.period_concept_graphs["ALL"]
             c1, c2 = st.columns([5, 2])
             selection = None
@@ -195,155 +198,158 @@ async def create(sv: SessionVariables, workflow=None):
                     st.markdown(f"**Selected concept: {selection}**")
                     st.dataframe(selected_cids_df, hide_index=True, height=650, use_container_width=True)
     with search_tab:
-        with st.expander("Options", expanded=False):
-            c1, c2, c3, c4, c5, c6, c7 = st.columns(7)
+        if qtd.stage.value < QueryTextDataStage.CHUNKS_EMBEDDED.value:
+            st.warning(f"Process files to continue.")
+        else:
+            with st.expander("Options", expanded=False):
+                c1, c2, c3, c4, c5, c6, c7 = st.columns(7)
+                with c1:
+                    st.number_input(
+                        "Relevance test budget",
+                        value=sv.relevance_test_budget.value,
+                        key=sv.relevance_test_budget.key,
+                        min_value=0,
+                        help="The query method works by asking an LLM to evaluate the relevance of potentially-relevant text chunks, returning a single token, yes/no judgement. This parameter allows the user to cap the number of relvance tests that may be performed prior to generating an answer using all relevant chunks. Larger budgets will generally give better answers for a greater cost."
+                    )
+                with c2:
+                    st.number_input(
+                        "Tests/topic/round",
+                        value=sv.relevance_test_batch_size.value,
+                        key=sv.relevance_test_batch_size.key,
+                        min_value=0,
+                        help="How many relevant tests to perform for each topic in each round. Larger values reduce the likelihood of prematurely discarding topics whose relevant chunks may not be at the top of the similarity-based ranking, but may result in smaller values of `Relevance test budget` being spread across fewer topics and thus not capturing the full breadth of the data."
+                    )
+                with c3:
+                    st.number_input(
+                        "Restart on irrelevant topics",
+                        value=sv.irrelevant_community_restart.value,
+                        key=sv.irrelevant_community_restart.key,
+                        min_value=0,
+                        help="When this number of topics in a row fail to return any relevant chunks in their `Tests/topic/round`, return to the start of the topic ranking and continue testing `Tests/topic/round` text chunks from each topic with (a) relevance in the previous round and (b) previously untested text chunks. Higher values can avoid prematurely discarding topics that are relevant but whose relevant chunks are not at the top of the similarity-based ranking, but may result in a larger number of irrelevant topics being tested multiple times."
+                    )
+                with c4:
+                    st.number_input(
+                        "Test relevant neighbours",
+                        value=sv.adjacent_test_steps.value,
+                        key=sv.adjacent_test_steps.key,
+                        min_value=0,
+                        help="If a text chunk is relevant to the query, then adjacent text chunks in the original document may be able to add additional context to the relevant points. The value of this parameter determines how many chunks before and after each relevant text chunk will be evaluated at the end of the process (or `Relevance test budget`) if they are yet to be tested."
+                    )
+                with c5:
+                    st.number_input(
+                        "Target chunks per cluster",
+                        value=sv.target_chunks_per_cluster.value,
+                        key=sv.target_chunks_per_cluster.key,
+                        min_value=0,
+                        help="The average number of text chunks to target per cluster, which determines the text chunks that will be evaluated together and in parallel to other clusters. Larger values will generally result in more related text chunks being evaluated in parallel, but may also result in information loss from unprocessed content."
+                    )
+                with c6:
+                    st.radio(
+                        label="Evidence type",
+                        options=["Source text", "Extracted claims"],
+                        key=sv.search_type.key,
+                        help="If the evidence type is set to 'Source text', the system will generate an answer directly from the text chunks. If the search type is set to 'Extracted claims', the system will extract claims from the text chunks and generate an answer based on the extracted claims in addition to the source text.",
+                    )
+                with c7:
+                    st.number_input(
+                        "Claim search depth",
+                        value=sv.claim_search_depth.value,
+                        key=sv.claim_search_depth.key,
+                        min_value=0,
+                        help="If the evidence type is set to 'Extracted claims', this parameter sets the number of most-similar text chunks to analyze for each extracted claim, looking for both supporting and contradicting evidence."
+                    )
+            c1, c2 = st.columns([6, 1])
             with c1:
-                st.number_input(
-                    "Relevance test budget",
-                    value=sv.relevance_test_budget.value,
-                    key=sv.relevance_test_budget.key,
-                    min_value=0,
-                    help="The query method works by asking an LLM to evaluate the relevance of potentially-relevant text chunks, returning a single token, yes/no judgement. This parameter allows the user to cap the number of relvance tests that may be performed prior to generating an answer using all relevant chunks. Larger budgets will generally give better answers for a greater cost."
+                st.text_input(
+                    "Question", value=sv.question.value, key=sv.question.key
                 )
             with c2:
-                st.number_input(
-                    "Tests/topic/round",
-                    value=sv.relevance_test_batch_size.value,
-                    key=sv.relevance_test_batch_size.key,
-                    min_value=0,
-                    help="How many relevant tests to perform for each topic in each round. Larger values reduce the likelihood of prematurely discarding topics whose relevant chunks may not be at the top of the similarity-based ranking, but may result in smaller values of `Relevance test budget` being spread across fewer topics and thus not capturing the full breadth of the data."
+                regenerate = st.button(
+                    "Search",
+                    key="search_answers",
+                    use_container_width=True,
                 )
-            with c3:
-                st.number_input(
-                    "Restart on irrelevant topics",
-                    value=sv.irrelevant_community_restart.value,
-                    key=sv.irrelevant_community_restart.key,
-                    min_value=0,
-                    help="When this number of topics in a row fail to return any relevant chunks in their `Tests/topic/round`, return to the start of the topic ranking and continue testing `Tests/topic/round` text chunks from each topic with (a) relevance in the previous round and (b) previously untested text chunks. Higher values can avoid prematurely discarding topics that are relevant but whose relevant chunks are not at the top of the similarity-based ranking, but may result in a larger number of irrelevant topics being tested multiple times."
-                )
-            with c4:
-                st.number_input(
-                    "Test relevant neighbours",
-                    value=sv.adjacent_test_steps.value,
-                    key=sv.adjacent_test_steps.key,
-                    min_value=0,
-                    help="If a text chunk is relevant to the query, then adjacent text chunks in the original document may be able to add additional context to the relevant points. The value of this parameter determines how many chunks before and after each relevant text chunk will be evaluated at the end of the process (or `Relevance test budget`) if they are yet to be tested."
-                )
-            with c5:
-                st.number_input(
-                    "Target chunks per cluster",
-                    value=sv.target_chunks_per_cluster.value,
-                    key=sv.target_chunks_per_cluster.key,
-                    min_value=0,
-                    help="The average number of text chunks to target per cluster, which determines the text chunks that will be evaluated together and in parallel to other clusters. Larger values will generally result in more related text chunks being evaluated in parallel, but may also result in information loss from unprocessed content."
-                )
-            with c6:
-                st.radio(
-                    label="Evidence type",
-                    options=["Source text", "Extracted claims"],
-                    key=sv.search_type.key,
-                    help="If the evidence type is set to 'Source text', the system will generate an answer directly from the text chunks. If the search type is set to 'Extracted claims', the system will extract claims from the text chunks and generate an answer based on the extracted claims in addition to the source text.",
-                )
-            with c7:
-                st.number_input(
-                    "Claim search depth",
-                    value=sv.claim_search_depth.value,
-                    key=sv.claim_search_depth.key,
-                    min_value=0,
-                    help="If the evidence type is set to 'Extracted claims', this parameter sets the number of most-similar text chunks to analyze for each extracted claim, looking for both supporting and contradicting evidence."
-                )
-        c1, c2 = st.columns([6, 1])
-        with c1:
-            st.text_input(
-                "Question", value=sv.question.value, key=sv.question.key
-            )
-        with c2:
-            regenerate = st.button(
-                "Search",
-                key="search_answers",
-                use_container_width=True,
-            )
 
-        c1, c2 = st.columns([1, 1])
+            c1, c2 = st.columns([1, 1])
 
-        with c1:
-            chunk_placeholder = st.empty()
-            chunk_placeholder.dataframe(
-                pd.DataFrame(
-                    columns=["Relevant text chunks (double click to expand)"],
-                    data=[qtd.processed_chunks.cid_to_text[x] for x in qtd.relevant_cids] if qtd.relevant_cids != None else [],
-                ),
-                hide_index=True,
-                height=400,
-                use_container_width=True,
-            )
-            chunk_progress_placeholder = st.empty()
-            answer_summary_placeholder = st.empty()
-            if sv.question.value != "" and regenerate:
-
-                def on_chunk_progress(message):
-                    chunk_progress_placeholder.markdown(message, unsafe_allow_html=True)
-
-                def on_chunk_relevant(message):
-                    chunk_placeholder.dataframe(
-                        pd.DataFrame(
-                            columns=["Relevant text chunks (double click to expand)"],
-                            data=message,
-                        ),
-                        hide_index=True,
-                        height=400,
-                        use_container_width=True,
-                    )
-                await qtd.detect_relevant_text_chunks(
-                    question=sv.question.value,
-                    chunk_search_config=ChunkSearchConfig(
-                        relevance_test_budget=sv.relevance_test_budget.value,
-                        relevance_test_batch_size=sv.relevance_test_batch_size.value,
-                        community_ranking_chunks=sv.relevance_test_batch_size.value,
-                        irrelevant_community_restart=sv.irrelevant_community_restart.value,
-                        adjacent_test_steps=sv.adjacent_test_steps.value,
-                        community_relevance_tests=sv.relevance_test_batch_size.value,
+            with c1:
+                chunk_placeholder = st.empty()
+                chunk_placeholder.dataframe(
+                    pd.DataFrame(
+                        columns=["Relevant text chunks (double click to expand)"],
+                        data=[qtd.processed_chunks.cid_to_text[x] for x in qtd.relevant_cids] if qtd.relevant_cids != None else [],
                     ),
-                    chunk_progress_callback=on_chunk_progress,
-                    chunk_callback=on_chunk_relevant,
+                    hide_index=True,
+                    height=400,
+                    use_container_width=True,
                 )
-                st.rerun()
-            if qtd.search_summary is not None:
-                chunk_progress_placeholder.markdown(qtd.search_summary, unsafe_allow_html=True)
-            
-        with c2:
-            ca, cb = st.columns([1, 1])
-            with ca:
-                gen_answer = st.button(
-                    "Generate AI extended answer",
-                    key="generate_answer",
-                    disabled=qtd.stage.value < QueryTextDataStage.CHUNKS_MINED.value,
-                )
-            with cb:
-                if qtd.stage.value >= QueryTextDataStage.CHUNKS_MINED.value:
-                    st.download_button(
-                        "Download extended answer as MD",
-                        data=qtd.answer_object.extended_answer if qtd.answer_object is not None else "",
-                        file_name="extended_answer.md",
-                        mime="text/markdown",
-                        key="extended_answer_download_button",
-                        disabled=qtd.stage.value < QueryTextDataStage.QUESTION_ANSWERED.value,
-                    )
+                chunk_progress_placeholder = st.empty()
+                answer_summary_placeholder = st.empty()
+                if sv.question.value != "" and regenerate:
 
-            answer_placeholder = st.empty()
-            if gen_answer:
-                with st.spinner("Generating extended answer..."):
-                    await qtd.answer_question_with_relevant_chunks(
-                        answer_config=AnswerConfig(
-                            target_chunks_per_cluster=sv.target_chunks_per_cluster.value,
-                            extract_claims=sv.search_type.value == "Extracted claims",
-                            claim_search_depth=sv.claim_search_depth.value
+                    def on_chunk_progress(message):
+                        chunk_progress_placeholder.markdown(message, unsafe_allow_html=True)
+
+                    def on_chunk_relevant(message):
+                        chunk_placeholder.dataframe(
+                            pd.DataFrame(
+                                columns=["Relevant text chunks (double click to expand)"],
+                                data=message,
+                            ),
+                            hide_index=True,
+                            height=400,
+                            use_container_width=True,
                         )
+                    await qtd.detect_relevant_text_chunks(
+                        question=sv.question.value,
+                        chunk_search_config=ChunkSearchConfig(
+                            relevance_test_budget=sv.relevance_test_budget.value,
+                            relevance_test_batch_size=sv.relevance_test_batch_size.value,
+                            community_ranking_chunks=sv.relevance_test_batch_size.value,
+                            irrelevant_community_restart=sv.irrelevant_community_restart.value,
+                            adjacent_test_steps=sv.adjacent_test_steps.value,
+                            community_relevance_tests=sv.relevance_test_batch_size.value,
+                        ),
+                        chunk_progress_callback=on_chunk_progress,
+                        chunk_callback=on_chunk_relevant,
                     )
                     st.rerun()
-            if qtd.stage.value == QueryTextDataStage.QUESTION_ANSWERED.value:
-                answer_placeholder.markdown(qtd.answer_object.extended_answer, unsafe_allow_html=True)
-                answer_summary_placeholder.markdown(f'**Additional chunks relevant to extracted claims: {qtd.answer_object.net_new_sources}**\n\n**Chunks referenced in answer / total relevant chunks: {len(qtd.answer_object.references)}/{len(qtd.relevant_cids)+qtd.answer_object.net_new_sources}**', unsafe_allow_html=True)
+                if qtd.search_summary is not None:
+                    chunk_progress_placeholder.markdown(qtd.search_summary, unsafe_allow_html=True)
+                
+            with c2:
+                ca, cb = st.columns([1, 1])
+                with ca:
+                    gen_answer = st.button(
+                        "Generate AI extended answer",
+                        key="generate_answer",
+                        disabled=qtd.stage.value < QueryTextDataStage.CHUNKS_MINED.value,
+                    )
+                with cb:
+                    if qtd.stage.value >= QueryTextDataStage.CHUNKS_MINED.value:
+                        st.download_button(
+                            "Download extended answer as MD",
+                            data=qtd.answer_object.extended_answer if qtd.answer_object is not None else "",
+                            file_name=f"{sv.question.value.strip(string.punctuation).replace(' ', '_')}.md",
+                            mime="text/markdown",
+                            key="extended_answer_download_button",
+                            disabled=qtd.stage.value < QueryTextDataStage.QUESTION_ANSWERED.value,
+                        )
+
+                answer_placeholder = st.empty()
+                if gen_answer:
+                    with st.spinner("Generating extended answer..."):
+                        await qtd.answer_question_with_relevant_chunks(
+                            answer_config=AnswerConfig(
+                                target_chunks_per_cluster=sv.target_chunks_per_cluster.value,
+                                extract_claims=sv.search_type.value == "Extracted claims",
+                                claim_search_depth=sv.claim_search_depth.value
+                            )
+                        )
+                        st.rerun()
+                if qtd.stage.value == QueryTextDataStage.QUESTION_ANSWERED.value:
+                    answer_placeholder.markdown(qtd.answer_object.extended_answer, unsafe_allow_html=True)
+                    answer_summary_placeholder.markdown(f'**Additional chunks relevant to extracted claims: {qtd.answer_object.net_new_sources}**\n\n**Chunks referenced in answer / total relevant chunks: {len(qtd.answer_object.references)}/{len(qtd.relevant_cids)+qtd.answer_object.net_new_sources}**', unsafe_allow_html=True)
     with report_tab:
         if qtd.stage.value < QueryTextDataStage.QUESTION_ANSWERED.value:
             st.warning("Generate an extended answer to continue.")

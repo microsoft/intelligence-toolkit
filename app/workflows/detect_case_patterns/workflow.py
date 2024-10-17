@@ -117,7 +117,7 @@ def create(sv: ap_variables.SessionVariables, workflow):
 
     with detect_tab:
         if not ready or len(sv.detect_case_patterns_final_df.value) == 0:
-            st.warning("Generate a graph model to continue.")
+            st.warning("Generate an attribute model to continue.")
         else:
             b1, b2, b3, b4, _ = st.columns([1, 1, 1, 1, 2])
             with b1:

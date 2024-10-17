@@ -198,18 +198,20 @@ async def answer_question(
 def build_report_markdown(question, content_items_dict, content_structure, cid_to_text, source_to_supported_claims, source_to_contradicted_claims):
     text_jsons = [loads(text) for text in cid_to_text.values()]
     matched_chunks = {f"{text['title']} ({text['chunk_id']})" : text for text in text_jsons}
-    home_link = '#report'
-    report = f'# Report\n\n## {content_structure["report_title"]}\n\n*In response to: {question}*\n\n## Executive summary\n\n{content_structure["report_summary"]}\n\n'
+    home_link = '#'+content_structure["report_title"].replace(' ', '-').lower()
+    report = f'# Report\n\n## Question\n\n*{question}*\n\n## Answer\n\n{content_structure["answer"]}\n\n## Analysis\n\n### {content_structure["report_title"]}\n\n{content_structure["report_summary"]}\n\n'
     for theme in content_structure['theme_order']:
-        report += f'## Theme: {theme["theme_title"]}\n\n{theme["theme_summary"]}\n\n'
+        report += f'#### Theme: {theme["theme_title"]}\n\n{theme["theme_summary"]}\n\n'
         for item_id in theme['content_id_order']:
             item = content_items_dict[item_id]
-            report += f'### {item["content_title"]}\n\n{item["content_summary"]}\n\n{item["content_commentary"]}\n\n'
-        report += f'### AI theme commentary\n\n{theme["theme_commentary"]}\n\n'
-    report += f'## AI report commentary\n\n{content_structure["report_commentary"]}\n\n'
+            report += f'##### {item["content_title"]}\n\n{item["content_summary"]}\n\n{item["content_commentary"]}\n\n'
+        report += f'##### AI theme commentary\n\n{theme["theme_commentary"]}\n\n'
+    report += f'#### AI report commentary\n\n{content_structure["report_commentary"]}\n\n'
     references = extract_chunk_references(report)
+    print(report)
+    print(references)
     report = link_chunk_references(report, references)
-    report += f'### Sources\n\n'
+    report += f'## Sources\n\n'
     for ix, source_label in enumerate(references):
         if source_label in matched_chunks:
             supports_claims = source_to_supported_claims[source_label]
