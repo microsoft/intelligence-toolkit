@@ -8,6 +8,7 @@ import os
 import pandas as pd
 import polars as pl
 import streamlit as st
+from app.util.download_pdf import add_download_pdf
 import workflows.detect_entity_networks.functions as functions
 import workflows.detect_entity_networks.variables as rn_variables
 import app.util.example_outputs_ui as example_outputs_ui
@@ -65,7 +66,13 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
     )
     selected_df = None
     with intro_tab:
-        st.markdown(get_intro())
+        file_content = get_intro()
+        st.markdown(file_content)
+        add_download_pdf(
+            f"{workflow}_introduction_tutorial.pdf",
+            file_content,
+            ":floppy_disk: Download as PDF",
+        )
     with uploader_tab:
         uploader_col, model_col = st.columns([3, 2])
         with uploader_col:

@@ -9,6 +9,7 @@ import streamlit as st
 import app.util.example_outputs_ui as example_outputs_ui
 import app.workflows.compare_case_groups.variables as gn_variables
 from app.util import ui_components
+from app.util.download_pdf import add_download_pdf
 from toolkit.compare_case_groups import prompts
 from toolkit.compare_case_groups.build_dataframes import (
     build_attribute_df,
@@ -43,7 +44,13 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
     )
 
     with intro_tab:
-        st.markdown(get_intro())
+        file_content = get_intro()
+        st.markdown(file_content)
+        add_download_pdf(
+            f"{workflow}_introduction_tutorial.pdf",
+            file_content,
+            ":floppy_disk: Download as PDF",
+        )
     with prepare_tab:
         uploader_col, model_col = st.columns([1, 1])
         with uploader_col:

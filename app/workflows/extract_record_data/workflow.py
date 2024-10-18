@@ -9,6 +9,7 @@ import app.util.schema_ui as schema_ui
 import app.util.ui_components as ui_components
 import app.workflows.extract_record_data.variables as variables
 import toolkit.extract_record_data.data_extractor as data_extractor
+from app.util.download_pdf import add_download_pdf
 from app.util.openai_wrapper import UIOpenAIConfiguration
 
 ai_configuration = UIOpenAIConfiguration().get_configuration()
@@ -24,7 +25,13 @@ async def create(sv: variables.SessionVariables, workflow: None):
 
     intro_tab, schema_tab, generator_tab, mock_tab = st.tabs(['Extract Record Data workflow:', 'Prepare data schema', 'Extract structured records', 'View example outputs'])
     with intro_tab:
-        st.markdown(get_intro())
+        file_content = get_intro()
+        st.markdown(file_content)
+        add_download_pdf(
+            f"{workflow}_introduction_tutorial.pdf",
+            file_content,
+            ":floppy_disk: Download as PDF",
+        )
     with schema_tab:
         sv.loaded_schema_filename.value = schema_ui.build_schema_ui(
             sv.schema.value, sv.loaded_schema_filename.value)
