@@ -97,7 +97,6 @@ class CompareCaseGroups:
         attributes_df = build_attribute_df(self.filtered_df, groups, aggregates)
 
         temporal_df = pl.DataFrame()
-        temporal_atts = []
         if temporal is not None and temporal != "":
             window_df = create_window_df(groups, temporal, aggregates, self.filtered_df)
 
@@ -107,14 +106,14 @@ class CompareCaseGroups:
                 window_df, groups, temporal_atts, temporal
             )
 
-            ranked_df = build_ranked_df(
-                temporal_df,
-                grouped_df,
-                attributes_df,
-                temporal,
-                groups,
-            )
-            self._select_columns_ranked_df(ranked_df)
+        ranked_df = build_ranked_df(
+            temporal_df,
+            grouped_df,
+            attributes_df,
+            temporal,
+            groups,
+        )
+        self._select_columns_ranked_df(ranked_df)
 
     def _format_list(self, items, bold=True, escape_colon=False) -> str:
         formatted_items = []
