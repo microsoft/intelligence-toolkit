@@ -54,7 +54,13 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
     )
     selected_df = None
     with intro_tab:
-        st.markdown(get_intro())
+        file_content = get_intro()
+        st.markdown(file_content)
+        add_download_pdf(
+            f"{workflow}_introduction_tutorial.pdf",
+            file_content,
+            ":floppy_disk: Download as PDF",
+        )
     with uploader_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:

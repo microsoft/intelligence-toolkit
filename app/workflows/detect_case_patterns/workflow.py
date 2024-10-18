@@ -20,6 +20,7 @@ from st_aggrid import (
 import app.util.example_outputs_ui as example_outputs_ui
 import app.workflows.detect_case_patterns.variables as ap_variables
 from app.util import ui_components
+from app.util.download_pdf import add_download_pdf
 from toolkit.AI.classes import LLMCallback
 from toolkit.detect_case_patterns import prompts
 from toolkit.detect_case_patterns.config import (
@@ -64,7 +65,13 @@ def create(sv: ap_variables.SessionVariables, workflow):
     selected_pattern = ""
     graph_df = None
     with intro_tab:
-        st.markdown(get_intro())
+        file_content = get_intro()
+        st.markdown(file_content)
+        add_download_pdf(
+            f"{workflow}_introduction_tutorial.pdf",
+            file_content,
+            ":floppy_disk: Download as PDF",
+        )
     with uploader_tab:
         uploader_col, model_col = st.columns([2, 1])
         with uploader_col:
@@ -245,6 +252,11 @@ def create(sv: ap_variables.SessionVariables, workflow):
                 gridoptions = gb.build()
                 gridoptions["columnDefs"][0]["minWidth"] = 100
                 gridoptions["columnDefs"][1]["minWidth"] = 400
+
+                st.warning(
+                    "Select column headers to rank patterns by that attribute. Use quickfilter or column filters to narrow down the list of patterns. Select a pattern to continue."
+                )
+
                 response = AgGrid(
                     show_df,
                     key=f"report_grid_{sv.detect_case_patterns_table_index.value}",
@@ -308,9 +320,7 @@ def create(sv: ap_variables.SessionVariables, workflow):
                                     height=220, width=600)
                     )
                     st.altair_chart(count_ct, use_container_width=True)                       
-                    st.warning(
-                        "Select column headers to rank patterns by that attribute. Use quickfilter or column filters to narrow down the list of patterns. Select a pattern to continue."
-                    )
+
             elif sv.detect_case_patterns_table_index.value > 0:
                 st.info("No patterns detected.")
     with explain_tab:

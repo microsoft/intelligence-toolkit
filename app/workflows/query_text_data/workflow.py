@@ -63,7 +63,13 @@ async def create(sv: SessionVariables, workflow=None):
     if f"{workflow}_uploader_index" not in st.session_state:
         st.session_state[f"{workflow}_uploader_index"] = str(random.randint(0, 100))
     with intro_tab:
-        st.markdown(get_intro(), unsafe_allow_html=True)
+        file_content = get_intro()
+        st.markdown(file_content, unsafe_allow_html=True)
+        add_download_pdf(
+            f"{workflow}_introduction_tutorial.pdf",
+            file_content,
+            ":floppy_disk: Download as PDF",
+        )
     with uploader_tab:
         st.markdown("##### Upload data for processing")
         files = st.file_uploader(

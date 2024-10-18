@@ -10,6 +10,7 @@ import app.util.ui_components as ui_components
 import app.workflows.generate_mock_data.variables as bds_variables
 import toolkit.generate_mock_data.data_generator as data_generator
 import toolkit.generate_mock_data.text_generator as text_generator
+from app.util.download_pdf import add_download_pdf
 from app.util.openai_wrapper import UIOpenAIConfiguration
 
 ai_configuration = UIOpenAIConfiguration().get_configuration()
@@ -25,7 +26,13 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
 
     intro_tab, schema_tab, record_generator_tab, text_generator_tab, mock_tab = st.tabs(['Generate Mock Data workflow:', 'Prepare data schema', 'Generate mock records', 'Generate mock texts', 'View example outputs'])
     with intro_tab:
-        st.markdown(get_intro())
+        file_content = get_intro()
+        st.markdown(file_content)
+        add_download_pdf(
+            f"{workflow}_introduction_tutorial.pdf",
+            file_content,
+            ":floppy_disk: Download as PDF",
+        )
     with schema_tab:
         sv.loaded_filename.value = schema_ui.build_schema_ui(sv.schema.value, sv.loaded_filename.value)
     with record_generator_tab:
