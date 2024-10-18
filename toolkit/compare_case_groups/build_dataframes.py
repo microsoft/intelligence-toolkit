@@ -133,12 +133,14 @@ def build_attribute_df(
     )
 
 
-def filter_df(main_df, filters: list[str]):
+def filter_df(main_df, filters: list[str]) -> pd.DataFrame:
     filtered_df = main_df.copy()
+    print(len(filters))
 
     if len(filters) == 0:
         return filtered_df
-        # filter to only those rows that match the filters
+
+    # filter to only those rows that match the filters
     for f in filters:
         col, val = f.split(":")
         filtered_df = filtered_df[filtered_df[col] == val]

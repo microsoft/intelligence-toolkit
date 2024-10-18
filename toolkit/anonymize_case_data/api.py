@@ -1,19 +1,26 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 
-from pacsynth import (AccuracyMode, Dataset,
-                      DpAggregateSeededParametersBuilder,
-                      DpAggregateSeededSynthesizer, FabricationMode)
+import math
+
+import pandas as pd
+import plotly.graph_objects as go
+from pacsynth import (
+    AccuracyMode,
+    Dataset,
+    DpAggregateSeededParametersBuilder,
+    DpAggregateSeededSynthesizer,
+    FabricationMode,
+)
 
 import app.util.df_functions as df_functions
 import toolkit.anonymize_case_data.queries as queries
 import toolkit.anonymize_case_data.visuals as visuals
 from toolkit.anonymize_case_data.error_report import ErrorReport
-from toolkit.anonymize_case_data.synthesizability_statistics import SynthesizabilityStatistics
-import pandas as pd
-import math
-import plotly.express as px
-import plotly.graph_objects as go
+from toolkit.anonymize_case_data.synthesizability_statistics import (
+    SynthesizabilityStatistics,
+)
+
 
 class AnonymizeCaseData:
     def __init__(self):

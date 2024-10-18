@@ -3,24 +3,13 @@
 #
 import os
 
-import polars as pl
 import streamlit as st
 
 import app.util.example_outputs_ui as example_outputs_ui
 import app.workflows.compare_case_groups.variables as gn_variables
 from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
-from toolkit.compare_case_groups import prompts
-from toolkit.compare_case_groups.build_dataframes import (
-    build_attribute_df,
-    build_grouped_df,
-    build_ranked_df,
-    filter_df,
-)
-from toolkit.compare_case_groups.temporal_process import (
-    build_temporal_data,
-    create_window_df,
-)
+from toolkit.compare_case_groups import CompareCaseGroups, prompts
 from toolkit.helpers.df_functions import fix_null_ints
 
 
@@ -42,6 +31,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
             "View example outputs"
         ]
     )
+    ccg: CompareCaseGroups = CompareCaseGroups()
 
     with intro_tab:
         file_content = get_intro()
@@ -134,116 +124,15 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                     sv.case_groups_aggregates.value = aggregates
                     sv.case_groups_temporal.value = temporal
 
-                    for group in sv.case_groups_groups.value:
-                        sv.case_groups_final_df.value = sv.case_groups_final_df.value[
-                            sv.case_groups_final_df.value[group] != ""
-                        ]
-
-                    sv.case_groups_model_df.value = sv.case_groups_final_df.value.copy(
-                        deep=True
-                    )
-
-                    sv.case_groups_model_df.value = (
-                        sv.case_groups_model_df.value.replace("", None)
-                    )
-                    initial_row_count = len(sv.case_groups_model_df.value)
-
-                    filtered_df = (
-                        filter_df(sv.case_groups_model_df.value, filters)
-                        if len(filters) > 0
-                        else sv.case_groups_model_df.value
-                    )
-
-                    grouped_df = build_grouped_df(filtered_df, groups)
-
-                    attributes_df = build_attribute_df(
-                        pl.from_pandas(filtered_df), groups, aggregates
-                    )
-
-                    temporal_df = pl.DataFrame()
-                    temporal_atts = []
-                    # create Window df
-                    if temporal is not None and temporal != "":
-                        window_df = create_window_df(
-                            groups, temporal, aggregates, pl.from_pandas(filtered_df)
-                        )
-
-                        temporal_atts = sorted(
-                            sv.case_groups_model_df.value[temporal].astype(str).unique()
-                        )
-
-                        temporal_df = build_temporal_data(
-                            window_df, groups, temporal_atts, temporal
-                        )
-                    # Create overall df
-                    ranked_df = build_ranked_df(
-                        temporal_df,
-                        pl.from_pandas(grouped_df),
-                        attributes_df,
-                        temporal or "",
+                    ccg.create_data_summary(
+                        sv.case_groups_final_df.value,
+                        filters,
                         groups,
+                        aggregates,
+                        temporal,
                     )
-                    ranked_df = ranked_df.to_pandas()
-
-                    sv.case_groups_model_df.value = (
-                        ranked_df[
-                            [
-                                *[g.lower() for g in groups],
-                                "group_count",
-                                "group_rank",
-                                "attribute_value",
-                                "attribute_count",
-                                "attribute_rank",
-                                f"{temporal}_window",
-                                f"{temporal}_window_count",
-                                f"{temporal}_window_rank",
-                                f"{temporal}_window_delta",
-                            ]
-                        ]
-                        if temporal != ""
-                        else ranked_df[
-                            [
-                                *[g.lower() for g in groups],
-                                "group_count",
-                                "group_rank",
-                                "attribute_value",
-                                "attribute_count",
-                                "attribute_rank",
-                            ]
-                        ]
-                    )
-                    groups_text = (
-                        "[" + ", ".join(["**" + g + "**" for g in groups]) + "]"
-                    )
-                    filters_text = (
-                        "["
-                        + ", ".join(
-                            ["**" + f.replace(":", "\\:") + "**" for f in filters]
-                        )
-                        + "]"
-                    )
-
-                    filtered_row_count = len(filtered_df)
-                    dataset_proportion = int(
-                        round(
-                            100 * filtered_row_count / initial_row_count
-                            if initial_row_count > 0
-                            else 0,
-                            0,
-                        )
-                    )
-                    description = "This table shows:"
-                    description += (
-                        f"\n- A summary of **{len(filtered_df)}** data records matching {filters_text}, representing **{dataset_proportion}%** of the overall dataset with values for all grouping attributes"
-                        if len(filters) > 0
-                        else f"\n- A summary of all **{initial_row_count}** data records with values for all grouping attributes"
-                    )
-                    description += f"\n- The **group_count** of records for all {groups_text} groups, and corresponding **group_rank**"
-                    description += f"\n- The **attribute_count** of each **attribute_value** for all {groups_text} groups, and corresponding **attribute_rank**"
-                    if temporal != "":
-                        description += f"\n- The **{temporal}_window_count** of each **attribute_value** for each **{temporal}_window** for all {groups_text} groups, and corresponding **{temporal}_window_rank**"
-                        description += f"\n- The **{temporal}_window_delta**, or change in the **attribute_value_count** for successive **{temporal}_window** values, within each {groups_text} group"
-                    sv.case_groups_description.value = description
+                    sv.case_groups_description.value = ccg.get_summary_description()
+                    sv.case_groups_model_df.value = ccg.model_df
                     st.rerun()
                 if len(sv.case_groups_model_df.value) > 0:
                     st.dataframe(
