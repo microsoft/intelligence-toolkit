@@ -1,11 +1,17 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project.
+
 import toolkit.query_text_data.input_processor as input_processor
 import toolkit.query_text_data.helper_functions as helper_functions
 import toolkit.query_text_data.relevance_assessor as relevance_assessor
 import toolkit.query_text_data.graph_builder as graph_builder
 import toolkit.query_text_data.answer_builder as answer_builder
+import toolkit.query_text_data.prompts as prompts
 from toolkit.query_text_data.classes import ProcessedChunks, ChunkSearchConfig, AnswerConfig, AnswerObject
 from toolkit.AI.base_embedder import BaseEmbedder
 from toolkit.AI.openai_configuration import OpenAIConfiguration
+from toolkit.AI.client import OpenAIClient
+import toolkit.AI.utils as utils
 import networkx as nx
 import pandas as pd
 from enum import Enum
@@ -98,7 +104,7 @@ class QueryTextData:
     def process_data_from_files(
             self,
             input_file_bytes: bytes,
-            analysis_window_size: input_processor.PeriodOption,
+            analysis_window_size: input_processor.PeriodOption=input_processor.PeriodOption.NONE,
             callbacks: list=[]
         ) -> dict[str, list[str]]:
         """
@@ -243,5 +249,30 @@ class QueryTextData:
         )
         return self.level_to_label_to_network
     
+    def condense_answer(
+        self,
+        ai_instructions=prompts.user_prompt,
+        callbacks=[]
+    ) -> str:
+        """
+        Condense the answer.
+
+        Args:
+            ai_instructions: The AI instructions
+            callbacks: The list of callbacks
+        """
+        variables = {
+            "question": self.question,
+            "answer": self.answer_object.extended_answer,
+        }
+        messages = utils.generate_messages(
+            ai_instructions,
+            prompts.list_prompts['report_prompt'],
+            variables,
+            prompts.list_prompts['safety_prompt']
+        )
+        self.condensed_answer = OpenAIClient(self.ai_configuration).generate_chat(messages, callbacks=callbacks)
+        return self.condensed_answer
+
     def __repr__(self):
         return f"QueryTextData()"

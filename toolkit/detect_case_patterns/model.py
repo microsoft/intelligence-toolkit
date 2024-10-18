@@ -16,57 +16,6 @@ from .graph_functions import convert_edge_df_to_graph, create_edge_df_from_atts
 from .prompts import report_prompt, user_prompt
 from .record_counter import RecordCounter
 
-# def prepare_data(data_df):
-#     melted = data_df.melt(
-#         id_vars=["Subject ID"], var_name="Attribute", value_name="Value"
-#     att_to_subject_to_vals = defaultdict(lambda: defaultdict(set))
-#     for _i, row in melted.iterrows():
-#         att_to_subject_to_vals[row["Attribute"]][row["Subject ID"]].add(row["Value"])
-
-#     # define expanded atts as all attributes with more than one value for a given subject
-#     expanded_atts = []
-#     for att, subject_to_vals in att_to_subject_to_vals.items():
-#         max_count = max(len(vals) for vals in subject_to_vals.values())
-#         if max_count > 1:
-#             expanded_atts.append(att)
-#     if len(expanded_atts) > 0:
-#         new_rows = []
-#         for _, row in melted.iterrows():
-#             if row["Attribute"] in expanded_atts:
-#                 if str(row["Value"]) not in ["", "<NA>"]:
-#                     new_rows.append(
-#                         [
-#                             row["Subject ID"],
-#                             row["Attribute"] + "_" + str(row["Value"]),
-#                             "1",
-#                         ]
-#                     )
-#             else:
-#                 new_rows.append(
-#                     [
-#                         row["Subject ID"],
-#                         row["Attribute"],
-#                         str(row["Value"]),
-#                     ]
-#                 )
-#         melted = pd.DataFrame(new_rows, columns=["Subject ID", "Attribute", "Value"])
-#         # convert back to wide format
-#         wdf = melted.pivot(
-#             index="Subject ID", columns="Attribute", values="Value"
-#         ).reset_index()
-#         # wdf = wdf.drop(columns=['Subject ID'])
-
-#         output_df_var = wdf
-#     else:
-#         wdf = data_df.copy()
-
-#     output_df_var = wdf
-#     output_df_var.replace({"<NA>": np.nan}, inplace=True)
-#     output_df_var.replace({"nan": ""}, inplace=True)
-#     output_df_var.replace({"1.0": "1"}, inplace=True)
-#     return output_df_var
-
-
 def generate_graph_model(df, period_col, type_val_sep):
     att_cols = [
         col for col in df.columns.to_numpy() if col not in ["Subject ID", period_col]
@@ -107,12 +56,14 @@ def compute_attribute_counts(df, pattern, period_col, period, type_val_sep):
     # fdf = fdf[["Subject ID", period_col, *relevant_columns]]
 
     for att in atts:
-        if att == "Subject ID" or type_val_sep not in att:
+        if type_val_sep not in att:
             continue
         attribute, value = att.split(type_val_sep)
         fdf = fdf[fdf[attribute] == value]
 
+
     # Melt with pre-filtered columns
+    fdf['Subject ID'] = range(len(fdf))
     melted = pd.melt(
         fdf,
         id_vars=["Subject ID"],
@@ -171,15 +122,11 @@ def detect_patterns(
 ) -> tuple[pd.DataFrame, int, int]:
     sorted_nodes = sorted(node_to_period_to_pos.keys())
     record_counter = RecordCounter(dynamic_df)
-
-
     used_periods = sorted(dynamic_df["Period"].unique())
-
     # # for each period, find all pairs of nodes close
     close_node_df, all_pairs, close_pairs = create_close_node_rows(
         used_periods, node_to_period_to_pos, sorted_nodes, min_pattern_count, record_counter, type_val_sep
     )
-
     period_to_patterns = create_period_to_patterns(
         used_periods,
         close_node_df,

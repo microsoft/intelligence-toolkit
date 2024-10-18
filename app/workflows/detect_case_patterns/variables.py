@@ -7,6 +7,7 @@ import pandas as pd
 import streamlit as st
 
 import toolkit.detect_case_patterns.prompts as prompts
+from toolkit.detect_case_patterns import DetectCasePatterns
 from app.util.session_variable import SessionVariable
 
 
@@ -18,8 +19,12 @@ class SessionVariables:
         self.create_session(prefix)
 
     def create_session(self, prefix):
+        self.workflow_object = SessionVariable(DetectCasePatterns(), prefix)
         self.detect_case_patterns_input_df = SessionVariable(pd.DataFrame(), prefix)
         self.detect_case_patterns_last_file_name = SessionVariable("", prefix)
+
+
+        
         self.detect_case_patterns_dynamic_df = SessionVariable(pd.DataFrame(), prefix)
         self.detect_case_patterns_min_pattern_count = SessionVariable(100, prefix)
         self.detect_case_patterns_max_pattern_length = SessionVariable(5, prefix)
