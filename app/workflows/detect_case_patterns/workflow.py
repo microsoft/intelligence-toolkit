@@ -22,26 +22,7 @@ import app.workflows.detect_case_patterns.variables as ap_variables
 from app.util import ui_components
 from toolkit.AI.classes import LLMCallback
 from toolkit.detect_case_patterns import prompts
-from toolkit.detect_case_patterns.config import (
-    correlation,
-    diaga,
-    laplacian,
-    min_edge_weight,
-    missing_edge_prop,
-    type_val_sep,
-)
-from toolkit.detect_case_patterns.model import (
-    compute_attribute_counts,
-    create_time_series_df,
-    detect_patterns,
-    generate_graph_model,
-    prepare_graph,
-)
-from toolkit.detect_case_patterns.record_counter import RecordCounter
-from toolkit.graph.graph_fusion_encoder_embedding import (
-    generate_graph_fusion_encoder_embedding,
-)
-
+import toolkit.detect_case_patterns.config as config
 
 def get_intro():
     file_path = os.path.join(os.path.dirname(__file__), "README.md")
@@ -51,6 +32,8 @@ def get_intro():
 
 def create(sv: ap_variables.SessionVariables, workflow):
     ui_components.check_ai_configuration()
+
+    dcp = sv.workflow_object.value
 
     intro_tab, uploader_tab, detect_tab, explain_tab, examples_tab = st.tabs(
         [
@@ -83,7 +66,6 @@ def create(sv: ap_variables.SessionVariables, workflow):
                 sv.detect_case_patterns_input_df,
                 sv.detect_case_patterns_final_df
             )
-            sv.detect_case_patterns_final_df.value['Subject ID'] = range(len(sv.detect_case_patterns_final_df.value))
             options = [""] + [
                 c
                 for c in sv.detect_case_patterns_final_df.value.columns.to_numpy()
@@ -110,11 +92,16 @@ def create(sv: ap_variables.SessionVariables, workflow):
                 with st.spinner("Adding links to model..."):
                     time_col = sv.detect_case_patterns_time_col.value
                     graph_df = sv.detect_case_patterns_final_df.value.copy(deep=True)
-                    pdf = generate_graph_model(graph_df, time_col, type_val_sep)
-                sv.detect_case_patterns_dynamic_df.value = pdf
-            if ready and len(sv.detect_case_patterns_dynamic_df.value) > 0:
+                    dcp.generate_graph_model(
+                        graph_df,
+                        time_col,
+                        config.type_val_sep,
+                        config.min_edge_weight,
+                        config.missing_edge_prop
+                    )
+            if ready and len(dcp.dynamic_graph_df) > 0:
                 st.success(
-                    f'Attribute model has **{len(sv.detect_case_patterns_dynamic_df.value)}** links spanning **{len(sv.detect_case_patterns_dynamic_df.value["Subject ID"].unique())}** cases, **{len(sv.detect_case_patterns_dynamic_df.value["Full Attribute"].unique())}** attributes, and **{len(sv.detect_case_patterns_dynamic_df.value["Period"].unique())}** periods.'
+                    f'Attribute model has **{len(dcp.dynamic_graph_df)}** links spanning **{len(dcp.dynamic_graph_df["Subject ID"].unique())}** cases, **{len(dcp.dynamic_graph_df["Full Attribute"].unique())}** attributes, and **{len(dcp.dynamic_graph_df["Period"].unique())}** periods.'
                 )
 
     with detect_tab:
@@ -153,85 +140,38 @@ def create(sv: ap_variables.SessionVariables, workflow):
 
                     with st.spinner("Processing..."):
                         sv.detect_case_patterns_table_index.value += 1
-                        progress_bar.progress(20, text="Preparing graph...")
-
-                        sv.detect_case_patterns_df.value, period_to_graph = (
-                            prepare_graph(
-                                sv.detect_case_patterns_dynamic_df.value,
-                                min_edge_weight,
-                                missing_edge_prop,
-                            )
+                        progress_bar.progress(25, text="Embedding graph...")
+                        dcp.generate_embedding_model()
+                        progress_bar.progress(50, text="Detecting data patterns...")
+                        dcp.detect_patterns(
+                            min_pattern_count=sv.detect_case_patterns_min_pattern_count.value,
+                            max_pattern_length=sv.detect_case_patterns_max_pattern_length.value
                         )
-                        node_to_label_str = dict(
-                            sv.detect_case_patterns_dynamic_df.value[
-                                ["Full Attribute", "Attribute Type"]
-                            ].values
-                        )
-                        # convert string labels to int labels
-                        sorted_labels = sorted(set(node_to_label_str.values()))
-                        label_to_code = {v: i for i, v in enumerate(sorted_labels)}
-                        node_to_label = {
-                            k: {0: label_to_code[v]} for k, v in node_to_label_str.items()
-                        }
-                        progress_bar.progress(40, text="Generating embedding...")
-                        (sv.detect_case_patterns_node_to_period_to_pos.value, _) = (
-                            generate_graph_fusion_encoder_embedding(
-                                period_to_graph,
-                                node_to_label,
-                                correlation,
-                                diaga,
-                                laplacian,
-                                max_level=0
-                            )
-                        )
-
-                        sv.detect_case_patterns_record_counter.value = RecordCounter(
-                            sv.detect_case_patterns_dynamic_df.value
-                        )
-                        progress_bar.progress(60, text="Detecting data patterns...")
-                        (
-                            sv.detect_case_patterns_pattern_df.value,
-                            sv.detect_case_patterns_close_pairs.value,
-                            sv.detect_case_patterns_all_pairs.value,
-                        ) = detect_patterns(
-                            sv.detect_case_patterns_node_to_period_to_pos.value,
-                            sv.detect_case_patterns_dynamic_df.value,
-                            type_val_sep,
-                            sv.detect_case_patterns_min_pattern_count.value,
-                            sv.detect_case_patterns_max_pattern_length.value,
-                        )
-                        progress_bar.progress(80, text="Creating time series...")
-
-                        tdf = create_time_series_df(
-                            sv.detect_case_patterns_dynamic_df.value,
-                            sv.detect_case_patterns_pattern_df.value,
-                        )
+                        progress_bar.progress(75, text="Creating time series...")
+                        dcp.create_time_series_df()
                         progress_bar.progress(99, text="Finalizing...")
-                        sv.detect_case_patterns_time_series_df.value = tdf
                         progress_bar.empty()
                         st.rerun()
             with b4:
                 st.download_button(
                     "Download patterns",
-                    data=sv.detect_case_patterns_pattern_df.value.to_csv(index=False),
+                    data=dcp.patterns_df.to_csv(index=False),
                     file_name="detect_case_patterns.csv",
                     mime="text/csv",
-                    disabled=len(sv.detect_case_patterns_pattern_df.value) == 0,
+                    disabled=len(dcp.patterns_df) == 0,
                 )
-            if len(sv.detect_case_patterns_pattern_df.value) > 0:
+            if len(dcp.patterns_df) > 0:
                 period_count = len(
-                    sv.detect_case_patterns_pattern_df.value["period"].unique()
+                    dcp.patterns_df["period"].unique()
                 )
-                pattern_count = len(sv.detect_case_patterns_pattern_df.value)
+                pattern_count = len(dcp.patterns_df)
                 unique_count = len(
-                    sv.detect_case_patterns_pattern_df.value["pattern"].unique()
+                    dcp.patterns_df["pattern"].unique()
                 )
                 st.success(
-                    f"Over **{period_count}** periods, detected **{pattern_count}** attribute patterns (**{unique_count}** unique) from **{sv.detect_case_patterns_close_pairs.value}**/**{sv.detect_case_patterns_all_pairs.value}** converging attribute pairs (**{round(sv.detect_case_patterns_close_pairs.value / sv.detect_case_patterns_all_pairs.value * 100, 2) if sv.detect_case_patterns_all_pairs.value > 0 else 0}%**). Patterns ranked by ```overall_score = normalize(length * ln(count) * z_score * detections)```."
+                    f"Over **{period_count}** periods, detected **{pattern_count}** attribute patterns (**{unique_count}** unique) from **{dcp.close_pairs}**/**{dcp.all_pairs}** converging attribute pairs (**{round(dcp.close_pairs / dcp.all_pairs * 100, 2) if dcp.all_pairs > 0 else 0}%**). Patterns ranked by ```overall_score = normalize(length * ln(count) * z_score * detections)```."
                 )
-                show_df = sv.detect_case_patterns_pattern_df.value
-
-                gb = GridOptionsBuilder.from_dataframe(show_df)
+                gb = GridOptionsBuilder.from_dataframe(dcp.patterns_df)
                 gb.configure_default_column(
                     flex=1,
                     wrapText=True,
@@ -246,7 +186,7 @@ def create(sv: ap_variables.SessionVariables, workflow):
                 gridoptions["columnDefs"][0]["minWidth"] = 100
                 gridoptions["columnDefs"][1]["minWidth"] = 400
                 response = AgGrid(
-                    show_df,
+                    dcp.patterns_df,
                     key=f"report_grid_{sv.detect_case_patterns_table_index.value}",
                     height=380,
                     gridOptions=gridoptions,
@@ -287,25 +227,18 @@ def create(sv: ap_variables.SessionVariables, workflow):
                         sv.detect_case_patterns_report.value = ""
                         sv.detect_case_patterns_report_validation.value = {}
 
-                        tdf = sv.detect_case_patterns_time_series_df.value
+                        tdf = dcp.time_series_df
                         tdf = tdf[tdf["pattern"] == selected_pattern]
                         sv.detect_case_patterns_selected_pattern_df.value = tdf
                         sv.detect_case_patterns_selected_pattern_att_counts.value = (
-                            compute_attribute_counts(
-                                sv.detect_case_patterns_final_df.value,
+                            dcp.compute_attribute_counts(
                                 selected_pattern,
                                 time_col,
-                                selected_pattern_period,
-                                type_val_sep,
                             )
                         )
-                    title = 'Pattern: ' + selected_pattern + ' (' + selected_pattern_period + ')'
-                    count_ct = (
-                        alt.Chart(sv.detect_case_patterns_selected_pattern_df.value)
-                        .mark_line()
-                        .encode(x="period:O", y="count:Q", color=alt.ColorValue("blue"))
-                        .properties(title=title,
-                                    height=220, width=600)
+                    count_ct = dcp.create_time_series_chart(
+                        selected_pattern,
+                        selected_pattern_period
                     )
                     st.altair_chart(count_ct, use_container_width=True)                       
                     st.warning(
@@ -345,13 +278,9 @@ def create(sv: ap_variables.SessionVariables, workflow):
             with c2:
                 st.markdown("##### Selected attribute pattern")
                 if sv.detect_case_patterns_selected_pattern.value != "":
-                    tdf = sv.detect_case_patterns_selected_pattern_df.value
-                    title = 'Pattern: ' + selected_pattern + ' (' + selected_pattern_period + ')'
-                    count_ct = (
-                        alt.Chart(tdf)
-                        .mark_line()
-                        .encode(x="period:O", y="count:Q", color=alt.ColorValue("blue"))
-                        .properties(title=title, height=220, width=600)
+                    count_ct = dcp.create_time_series_chart(
+                        sv.detect_case_patterns_selected_pattern.value,
+                        sv.detect_case_patterns_selected_pattern_period.value
                     )
                     st.altair_chart(count_ct, use_container_width=True)
                 report_placeholder = st.empty()
