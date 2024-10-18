@@ -17,22 +17,12 @@ from app.util.download_pdf import add_download_pdf
 from app.util.openai_wrapper import UIOpenAIConfiguration
 from app.util.session_variables import SessionVariables
 from toolkit.AI.defaults import CHUNK_SIZE
-from toolkit.graph.graph_fusion_encoder_embedding import (
-    create_concept_to_community_hierarchy,
-    generate_graph_fusion_encoder_embedding,
-)
 from toolkit.query_text_data.api import QueryTextData, QueryTextDataStage
 from toolkit.query_text_data.classes import (
     AnswerConfig,
     AnswerObject,
     ChunkSearchConfig,
     ProcessedChunks,
-)
-from toolkit.query_text_data.input_processor import PeriodOption
-from toolkit.query_text_data.pattern_detector import (
-    combine_chunk_text_and_explantion,
-    detect_converging_pairs,
-    explain_chunk_significance,
 )
 
 sv_home = SessionVariables("home")
@@ -101,7 +91,6 @@ async def create(sv: SessionVariables, workflow=None):
             )
             qtd.process_data_from_files(
                 input_file_bytes={file.name: file.getvalue() for file in files},
-                analysis_window_size=PeriodOption.NONE,
                 callbacks=[file_callback],
             )
 
@@ -110,50 +99,6 @@ async def create(sv: SessionVariables, workflow=None):
             )
             qtd.process_text_chunks(callbacks=[chunk_callback])
             
-            # if window_period != PeriodOption.NONE:
-            #     gfee_pb, gfee_callback = create_progress_callback(
-            #         "Embedded {} of {} concept nodes..."
-            #     )
-            #     concept_to_community_hierarchy, max_cluster_per_level, max_level = create_concept_to_community_hierarchy(
-            #         sv.hierarchical_communities.value)
-            #     sv.node_to_period_to_pos.value, sv.node_to_period_to_shift.value = (
-            #         generate_graph_fusion_encoder_embedding(
-            #             period_to_graph=sv.period_concept_graphs.value,
-            #             node_to_label=concept_to_community_hierarchy,
-            #             correlation=True,
-            #             diaga=True,
-            #             laplacian=True,
-            #             callbacks=[gfee_callback],
-            #         )
-            #     )
-            #     period_pb, period_callback = create_progress_callback(
-            #         "Analyzed {} of {} periods..."
-            #     )
-            #     sv.cid_to_converging_pairs.value = detect_converging_pairs(
-            #         sv.period_to_cids.value,
-            #         sv.cid_to_concepts.value,
-            #         sv.node_to_period_to_pos.value,
-            #         callbacks=[period_callback],
-            #     )
-            #     explain_pb, explain_callback = create_progress_callback(
-            #         "Explained patterns in {} of {} periods..."
-            #     )
-            #     sv.cid_to_summary.value = explain_chunk_significance(
-            #         sv.period_to_cids.value,
-            #         sv.cid_to_converging_pairs.value,
-            #         sv.node_period_counts.value,
-            #         sv.edge_period_counts.value,
-            #         callbacks=[explain_callback],
-            #     )
-            #     sv.cid_to_explained_text.value = combine_chunk_text_and_explantion(
-            #         sv.cid_to_text.value, sv.cid_to_summary.value
-            #     )
-            #     gfee_pb.empty()
-            #     period_pb.empty()
-            #     explain_pb.empty()
-            # else:
-            #     sv.cid_to_explained_text.value = sv.cid_to_text.value
-
             embed_pb, embed_callback = functions.create_progress_callback(
                 "Embedded {} of {} text chunks..."
             )

@@ -80,7 +80,6 @@ def create_period_to_patterns(
         ].values.tolist()
         period_to_patterns[period] = [([], 0)]
         period_pairs = [tuple(sorted([a, b])) for a, b, c in period_pair_counts]
-        print(f"Period {period}")
         for pattern, _ in period_to_patterns[period]:
             for a, b in period_pairs:
                 a_in_pattern = a in pattern

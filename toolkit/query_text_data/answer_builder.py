@@ -1,4 +1,6 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project.
+
 import re
 from json import loads, dumps
 import numpy as np
@@ -208,8 +210,6 @@ def build_report_markdown(question, content_items_dict, content_structure, cid_t
         report += f'##### AI theme commentary\n\n{theme["theme_commentary"]}\n\n'
     report += f'#### AI report commentary\n\n{content_structure["report_commentary"]}\n\n'
     references = extract_chunk_references(report)
-    print(report)
-    print(references)
     report = link_chunk_references(report, references)
     report += f'## Sources\n\n'
     for ix, source_label in enumerate(references):

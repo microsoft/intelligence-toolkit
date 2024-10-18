@@ -1,4 +1,6 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project.
+
 import io
 from collections import defaultdict
 from datetime import datetime
@@ -40,7 +42,7 @@ def convert_df_to_chunks(df, label):
             text_to_chunks[this_label].append(dumps(chunk, indent=2, ensure_ascii=False))
     return text_to_chunks
 
-def convert_file_bytes_to_chunks(input_file_bytes, analysis_window_size: PeriodOption, callbacks=[]):
+def convert_file_bytes_to_chunks(input_file_bytes, analysis_window_size: PeriodOption=PeriodOption.NONE, callbacks=[]):
     text_to_chunks = defaultdict(list)
     splitter = TextSplitter()
     for fx, file_name in enumerate(input_file_bytes.keys()):
