@@ -9,6 +9,7 @@ import pytest
 
 from toolkit.compare_case_groups.build_dataframes import (
     build_attribute_df,
+    build_grouped_df,
     build_ranked_df,
     filter_df,
 )
@@ -123,8 +124,8 @@ class TestBuildRankedGroups:
 
 class TestFilterDf:
     @pytest.fixture()
-    def dataset(self) -> pd.DataFrame:
-        return pd.DataFrame(
+    def dataset(self) -> pl.DataFrame:
+        return pl.DataFrame(
             {
                 "Group": ["A", "A", "B", "B", "C"],
                 "attribute_value": ["X", "B", "BCD", "ABC", "X"],
@@ -139,14 +140,14 @@ class TestFilterDf:
 
     def test_filter_single(self, dataset) -> None:
         result = filter_df(dataset, ["Group:A"])
-        expected = dataset[dataset["Group"] == "A"]
+        expected = dataset.filter(pl.col("Group") == "A")
         assert result.equals(expected)
 
     def test_filter_multiple(self, dataset) -> None:
         result = filter_df(dataset, ["Group:A", "attribute_value:X"])
-        expected = dataset[
-            (dataset["Group"] == "A") & (dataset["attribute_value"] == "X")
-        ]
+        expected = dataset.filter(
+            (pl.col("Group") == "A") & (pl.col("attribute_value") == "X")
+        )
         assert result.equals(expected)
 
     def test_filter_multiple_attr_inexistent(self, dataset) -> None:
@@ -351,7 +352,6 @@ class TestBuildAttributeDf:
         )
 
     def test_build_attribute_df(self, expected_dataset_1) -> None:
-        # Test Case 1: Basic functionality
         df1 = pl.DataFrame(
             {
                 "Group": ["A", "A", "B", "B"],
@@ -383,3 +383,85 @@ class TestBuildAttributeDf:
         ).sort(by=["Group", "Group2", "attribute_value"])
 
         assert result_df3.equals(expected_dataset_3)
+
+class TestBuildGroupedDf:
+    @pytest.fixture()
+    def main_dataset(self) -> pl.DataFrame:
+        return pl.DataFrame(
+            {
+                "city": [
+                    "Westview",
+                    "Westview",
+                    "Westview",
+                    "Westview",
+                    "Eastview",
+                    "Southtview",
+                    "Northview",
+                    "Gotham",
+                    "Anycity",
+                    "Simcity",
+                    "Anycity",
+                ],
+                "country": [
+                    "ANY",
+                    "ANY",
+                    "ANY",
+                    "ANY",
+                    "ANY",
+                    "ANY",
+                    "NEW",
+                    "OLD",
+                    "ANY",
+                    "KEY",
+                    "ANY",
+                ],
+            }
+        )
+
+    def test_build_grouped_df(self, main_dataset):
+        result = build_grouped_df(main_dataset, ["city"])
+        expected_data = {
+            "city": [
+                "Anycity",
+                "Eastview",
+                "Gotham",
+                "Northview",
+                "Simcity",
+                "Southtview",
+                "Westview",
+            ],
+            "group_count": [2, 1, 1, 1, 1, 1, 4],
+            "group_rank": [2, 7, 7, 7, 7, 7, 1],
+        }
+        expected_df = pl.DataFrame(expected_data)
+        assert result.equals(expected_df)
+
+    def test_build_grouped_ints(self, main_dataset) -> None:
+        invalid_groups = ["city", 123]
+
+        with pytest.raises(ValueError, match="All elements in groups must be strings"):
+            build_grouped_df(main_dataset, invalid_groups)
+
+    def test_build_grouped_df_missing(self, main_dataset):
+        main_dataset = main_dataset.filter(pl.col("city") != "Gotham")
+        result = build_grouped_df(main_dataset, ["city"])
+        expected_data = {
+            "city": [
+                "Anycity",
+                "Eastview",
+                "Northview",
+                "Simcity",
+                "Southtview",
+                "Westview",
+            ],
+            "group_count": [2, 1, 1, 1, 1, 4],
+            "group_rank": [2, 6, 6, 6, 6, 1],
+        }
+        expected_df = pl.DataFrame(expected_data)
+        expected_df = expected_df.with_columns(
+            [
+                pl.col("group_count").cast(pl.UInt32),
+                pl.col("group_rank").cast(pl.UInt32),
+            ]
+        )
+        assert result.equals(expected_df)

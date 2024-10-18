@@ -3,6 +3,7 @@
 #
 import os
 
+import polars as pl
 import streamlit as st
 
 import app.util.example_outputs_ui as example_outputs_ui
@@ -125,14 +126,14 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                     sv.case_groups_temporal.value = temporal
 
                     ccg.create_data_summary(
-                        sv.case_groups_final_df.value,
+                        pl.from_pandas(sv.case_groups_final_df.value),
                         filters,
                         groups,
                         aggregates,
                         temporal,
                     )
                     sv.case_groups_description.value = ccg.get_summary_description()
-                    sv.case_groups_model_df.value = ccg.model_df
+                    sv.case_groups_model_df.value = ccg.model_df.to_pandas()
                     st.rerun()
                 if len(sv.case_groups_model_df.value) > 0:
                     st.dataframe(
