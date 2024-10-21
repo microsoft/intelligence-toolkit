@@ -49,7 +49,7 @@ class CompareCaseGroups(IntelligenceWorkflow):
             "group_count",
             "group_rank",
             "attribute_value",
-            "attrubite_count",
+            "attribute_count",
             "attribute_rank",
         ]
 
