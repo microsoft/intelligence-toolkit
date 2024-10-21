@@ -56,7 +56,14 @@ class CompareCaseGroups(IntelligenceWorkflow):
         columns.extend(default_columns)
 
         if self.temporal:
-            columns.extend([f"{self.temporal}_window", ...])
+            columns.extend(
+                [
+                    f"{self.temporal}_window",
+                    f"{self.temporal}_window_count",
+                    f"{self.temporal}_window_rank",
+                    f"{self.temporal}_window_delta",
+                ]
+            )
 
         self.model_df = ranked_df.select(columns)
 
