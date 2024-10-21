@@ -226,7 +226,7 @@ def build_report_markdown(question, content_items_dict, content_structure, cid_t
             supports_claims_str = '- ' + '\n- '.join([claim_statement for _, claim_statement in supports_claims])
             contradicts_claims_str = '- ' + '\n- '.join([claim_statement for _, claim_statement in contradicts_claims])
             chunk = loads(cid_to_text[cid])
-            report += f'#### Source {cid}\n\n<details>\n\n##### Text chunk: {chunk["title"]}: {chunk["chunk_id"]}\n\n{chunk["text_chunk"]}\n\n'
+            report += f'#### Source {cid}\n\n<details>\n\n##### Text chunk: {chunk["title"]} ({chunk["chunk_id"]})\n\n{chunk["text_chunk"]}\n\n'
             if len(supports_claims) > 0:
                 report += f'##### Supports claims\n\n{supports_claims_str}\n\n'
             if len(contradicts_claims) > 0:
