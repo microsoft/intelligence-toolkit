@@ -2,7 +2,6 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 
-import pandas as pd
 import polars as pl
 
 
@@ -22,7 +21,7 @@ def build_ranked_df(
         attribute_df, on=[*groups, "attribute_value"], how="left", suffix="_r"
     )
 
-    odf = odf.sort(by=groups, descending=False)
+    odf = odf.sort(by=groups)
 
     if temporal != "":
         odf = odf.with_columns(
@@ -38,59 +37,45 @@ def build_ranked_df(
     )
 
 
-def build_grouped_df(main_dataset, groups) -> pd.DataFrame:
-    index_df = main_dataset.copy(deep=True)
-    index_df['record_id'] = [str(x) for x in index_df.index]
-    gdf = index_df.melt(
+def build_grouped_df(main_dataset: pl.DataFrame, groups: list[str]) -> pl.DataFrame:
+    """
+    This function takes a main dataset and a list of grouping columns, then processes
+    and returns a DataFrame with the counts of each group and their ranks.
+
+    Parameters:
+    main_dataset (pl.DataFrame): The main dataset to process.
+    groups (list of str): The list of column names to group by.
+
+    Returns:
+    pl.DataFrame: A DataFrame with group counts and ranks.
+    """
+    # Ensure groups is a list of strings
+    if not all(isinstance(group, str) for group in groups):
+        error_text = "All elements in groups must be strings"
+        raise ValueError(error_text)
+
+    main_dataset = main_dataset.with_columns(
+        pl.arange(0, main_dataset.height).cast(pl.Utf8).alias("record_id")
+    )
+
+    gdf = main_dataset.melt(
         id_vars=groups,
-        value_vars=['record_id'],
-        var_name="Attribute",
+        value_vars=["record_id"],
+        variable_name="Attribute",
         value_name="Value",
     )
 
-    gdf["attribute_value"] = gdf["Attribute"] + ":" + gdf["Value"]
-    gdf = gdf.groupby(groups).size().reset_index(name="group_count")
-    # Add group ranks
-    gdf["group_rank"] = gdf["group_count"].rank(
-        ascending=False, method="max", na_option="bottom"
-    )
-    return gdf
-
-
-def build_attribute_df_pd(filtered_df, groups, aggregates=""):
-    ndf = filtered_df.melt(
-        id_vars=groups,
-        value_vars=aggregates,
-        var_name="Attribute",
-        value_name="Value",
-    )
-    ndf.dropna(subset=["Value"], inplace=True)
-    ndf["attribute_value"] = ndf.apply(
-        lambda x: str(x["Attribute"]) + ":" + str(x["Value"]), axis=1
+    gdf = gdf.with_columns(
+        (pl.col("Attribute") + ":" + pl.col("Value")).alias("attribute_value")
     )
 
-    attributes_df = (
-        ndf.groupby([*groups, "attribute_value"])
-        .size()
-        .reset_index(name="attribute_count")
+    gdf = gdf.group_by(groups).agg(pl.len().alias("group_count"))
+
+    gdf = gdf.with_columns(
+        pl.col("group_count").rank(method="max", descending=True).alias("group_rank")
     )
-    # Ensure all groups have entries for all attribute_value
-    grouped = attributes_df.groupby(groups)
-    for name, group in grouped:
-        for att_val in attributes_df["attribute_value"].unique():
-            # count rows with this group and attribute_value
-            row_count = len(group[group["attribute_value"] == att_val])
-            if row_count == 0:
-                attributes_df.loc[len(attributes_df)] = [*name, att_val, 0]
 
-    for att_val in attributes_df["attribute_value"].unique():
-        attributes_df.loc[
-            attributes_df["attribute_value"] == att_val, "attribute_rank"
-        ] = attributes_df[attributes_df["attribute_value"] == att_val][
-            "attribute_count"
-        ].rank(ascending=False, method="max", na_option="bottom")
-    return attributes_df
-
+    return gdf.sort(by=groups)
 
 def build_attribute_df(
     filtered_df: pl.DataFrame, groups: list[str], aggregates: str = ""
@@ -133,14 +118,9 @@ def build_attribute_df(
     )
 
 
-def filter_df(main_df, filters: list[str]):
-    filtered_df = main_df.copy()
-
-    if len(filters) == 0:
-        return filtered_df
-        # filter to only those rows that match the filters
+def filter_df(main_df: pl.DataFrame, filters: list[str]) -> pl.DataFrame:
     for f in filters:
         col, val = f.split(":")
-        filtered_df = filtered_df[filtered_df[col] == val]
+        main_df = main_df.filter(pl.col(col) == val)
 
-    return filtered_df
+    return main_df

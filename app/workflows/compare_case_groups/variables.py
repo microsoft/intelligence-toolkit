@@ -1,11 +1,11 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-import random
 
 import pandas as pd
 import streamlit as st
 
 import toolkit.compare_case_groups.prompts as prompts
 from app.util.session_variable import SessionVariable
+from toolkit.compare_case_groups.api import CompareCaseGroups
 
 
 class SessionVariables:
@@ -16,6 +16,8 @@ class SessionVariables:
         self.create_session(prefix)
 
     def create_session(self, prefix):
+        self.workflow_object = SessionVariable(CompareCaseGroups(), prefix)
+
         self.case_groups_input_df = SessionVariable(pd.DataFrame(), prefix)
         self.case_groups_binned_df = SessionVariable(pd.DataFrame(), prefix)
         self.case_groups_final_df = SessionVariable(pd.DataFrame(), prefix)
