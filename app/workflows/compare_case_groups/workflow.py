@@ -180,7 +180,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                         value=sv.case_groups_top_groups.value,
                     )
                 fdf = sv.case_groups_model_df.value.copy(deep=True)
-                report_data, filter_description = ccg.select_report_data(
+                report_data, filter_description = ccg.get_report_data(
                     selected_groups if len(selected_groups) > 0 else None,
                     top_group_ranks if top_group_ranks > 0 else None,
                 )

@@ -161,7 +161,7 @@ class CompareCaseGroups(IntelligenceWorkflow):
 
         return "\n".join(description_lines)
 
-    def select_report_data(
+    def get_report_data(
         self, selected_groups=None, top_group_ranks=None
     ) -> tuple[pl.DataFrame, str]:
         filter_description = ""
@@ -177,7 +177,7 @@ class CompareCaseGroups(IntelligenceWorkflow):
             )
         return selected_df, filter_description
 
-    def group_report(
+    def generate_group_report(
         self,
         report_data: pl.DataFrame,
         filter_description=str,
