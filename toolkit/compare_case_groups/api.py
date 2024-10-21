@@ -6,6 +6,9 @@
 import pandas as pd
 import polars as pl
 
+from toolkit.AI import utils
+from toolkit.AI.client import OpenAIClient
+from toolkit.compare_case_groups import prompts
 from toolkit.compare_case_groups.build_dataframes import (
     build_attribute_df,
     build_grouped_df,
@@ -16,9 +19,10 @@ from toolkit.compare_case_groups.temporal_process import (
     build_temporal_data,
     create_window_df,
 )
+from toolkit.helpers import IntelligenceWorkflow
 
 
-class CompareCaseGroups:
+class CompareCaseGroups(IntelligenceWorkflow):
     model_df = pl.DataFrame()
     filtered_df = pl.DataFrame()
     final_df = pl.DataFrame()
@@ -97,7 +101,7 @@ class CompareCaseGroups:
         attributes_df = build_attribute_df(self.filtered_df, groups, aggregates)
 
         temporal_df = pl.DataFrame()
-        if temporal is not None and temporal != "":
+        if temporal:
             window_df = create_window_df(groups, temporal, aggregates, self.filtered_df)
 
             temporal_atts = sorted(self.model_df[temporal].cast(pl.Utf8).unique())
@@ -156,3 +160,42 @@ class CompareCaseGroups:
             )
 
         return "\n".join(description_lines)
+
+    def select_report_data(
+        self, selected_groups=None, top_group_ranks=None
+    ) -> tuple[pl.DataFrame, str]:
+        filter_description = ""
+        selected_df = self.model_df
+
+        if selected_groups:
+            selected_df = selected_df.filter(pl.col(self.groups).is_in(selected_groups))
+            filter_description = f'Filtered to the following groups only: {", ".join([str(s) for s in selected_groups])}'
+        elif top_group_ranks:
+            selected_df = selected_df.filter(pl.col("group_rank") <= top_group_ranks)
+            filter_description = (
+                f"Filtered to the top {top_group_ranks} groups by record count"
+            )
+        return selected_df, filter_description
+
+    def group_report(
+        self,
+        report_data: pl.DataFrame,
+        filter_description=str,
+        ai_instructions=prompts.user_prompt,
+        callbacks=[],
+    ):
+        variables = {
+            "description": self.get_summary_description(),
+            "dataset": report_data.write_csv(),
+            "filters": filter_description,
+        }
+
+        messages = utils.generate_messages(
+            ai_instructions,
+            prompts.list_prompts["report_prompt"],
+            variables,
+            prompts.list_prompts["safety_prompt"],
+        )
+        return OpenAIClient(self.ai_configuration).generate_chat(
+            messages, callbacks=callbacks
+        )

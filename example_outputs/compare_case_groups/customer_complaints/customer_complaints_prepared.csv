@@ -1075,9 +1075,9 @@ Valleytown,(20-30],False,True,False,False,True,B,2025-H1
 Foresthill,(30-40],False,False,True,True,False,C,2025-H1
 Clifftown,(40-50],True,False,False,False,True,D,2025-H2
 Bayview,(40-50],False,True,False,True,False,E,2025-H2
-Summerville,(30-40],False,False,True,False,True,F,
-Greenville,(30-40],True,False,False,True,False,G,
-,(30-40],False,True,False,False,True,H,
+Summerville,(30-40],False,False,True,False,True,F,2026-H1
+Greenville,(30-40],True,False,False,True,False,G,2026-H2
+,(30-40],False,True,False,False,True,H,2026-H3
 Rivertown,(30-40],True,False,True,False,False,F,2023-H2
 Rivertown,(30-40],False,True,True,True,False,F,2023-H2
 Rivertown,(20-30],True,False,False,True,True,F,2023-H1

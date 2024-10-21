@@ -1,15 +1,18 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 
-import toolkit.detect_case_patterns.model as model
-import toolkit.graph.graph_fusion_encoder_embedding as gfee
-import toolkit.AI.utils as utils
-from toolkit.AI.client import OpenAIClient
-import toolkit.detect_case_patterns.prompts as prompts
-import pandas as pd
 import altair as alt
+import pandas as pd
 
-class DetectCasePatterns:
+import toolkit.AI.utils as utils
+import toolkit.detect_case_patterns.model as model
+import toolkit.detect_case_patterns.prompts as prompts
+import toolkit.graph.graph_fusion_encoder_embedding as gfee
+from toolkit.AI.client import OpenAIClient
+from toolkit.helpers import IntelligenceWorkflow
+
+
+class DetectCasePatterns(IntelligenceWorkflow):
     def __init__(self):
         self.dynamic_graph_df = pd.DataFrame()
         self.detect_patterns_df = pd.DataFrame()
@@ -18,9 +21,6 @@ class DetectCasePatterns:
         self.node_to_label = {}
         self.period_col = ""
         self.type_val_sep = ":"
-
-    def set_ai_configuration(self, ai_configuration):
-        self.ai_configuration = ai_configuration
 
     def generate_graph_model(
         self,

@@ -119,10 +119,6 @@ def build_attribute_df(
 
 
 def filter_df(main_df: pl.DataFrame, filters: list[str]) -> pl.DataFrame:
-    if len(filters) == 0:
-        return main_df
-
-    # Filter to only those rows that match the filters
     for f in filters:
         col, val = f.split(":")
         main_df = main_df.filter(pl.col(col) == val)

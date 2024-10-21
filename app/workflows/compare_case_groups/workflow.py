@@ -180,27 +180,21 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                         value=sv.case_groups_top_groups.value,
                     )
                 fdf = sv.case_groups_model_df.value.copy(deep=True)
-                filter_description = ""
-                if len(selected_groups) > 0:
-                    fdf = fdf[
-                        fdf.set_index(sv.case_groups_groups.value).index.isin(
-                            selected_groups
-                        )
-                    ]
-                    filter_description = f'Filtered to the following groups only: {", ".join([str(s) for s in selected_groups])}'
-                elif top_group_ranks:
-                    fdf = fdf[fdf["group_rank"] <= top_group_ranks]
-                    filter_description = (
-                        f"Filtered to the top {top_group_ranks} groups by record count"
-                    )
-                num_rows = len(fdf)
+                report_data, filter_description = ccg.select_report_data(
+                    selected_groups if len(selected_groups) > 0 else None,
+                    top_group_ranks if top_group_ranks > 0 else None,
+                )
+                num_rows = len(report_data)
                 st.markdown(f"##### Filtered data summary to report on ({num_rows} rows)")
                 st.dataframe(fdf, hide_index=True, use_container_width=True, height=280)
                 variables = {
                     "description": sv.case_groups_description.value,
-                    "dataset": fdf.to_csv(index=False, encoding="utf-8-sig"),
+                    "dataset": report_data.to_pandas().to_csv(
+                        index=False, encoding="utf-8-sig"
+                    ),
                     "filters": filter_description,
                 }
+
                 generate, messages, reset = ui_components.generative_ai_component(
                     sv.case_groups_system_prompt, variables
                 )
