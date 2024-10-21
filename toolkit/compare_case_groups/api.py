@@ -43,6 +43,34 @@ class CompareCaseGroups(IntelligenceWorkflow):
             0,
         )
 
+    def get_filter_options(self, input_df: pl.DataFrame) -> list[str]:
+        sorted_atts = []
+        sorted_cols = sorted(input_df.columns)
+        for col in sorted_cols:
+            unique_sorted_values = (
+                input_df.with_columns(pl.col(col).cast(pl.Utf8))  # Cast to string
+                .select(pl.col(col).unique())  # Get unique values
+                .to_series()  # Convert to Series
+                .sort()  # Sort the unique values
+            )
+            vals = [
+                f"{col}:{x}"
+                for x in unique_sorted_values
+                if x
+                not in [
+                    "",
+                    "<NA>",
+                    "nan",
+                    "NaN",
+                    "None",
+                    "none",
+                    "NULL",
+                    "null",
+                ]
+            ]
+            sorted_atts.extend(vals)
+        return sorted_atts
+
     def _select_columns_ranked_df(self, ranked_df: pl.DataFrame) -> None:
         columns = [g.lower() for g in self.groups]
         default_columns = [

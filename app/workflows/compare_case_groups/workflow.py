@@ -68,28 +68,7 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
             c1, c2 = st.columns([1, 2])
             with c1:
                 st.markdown("##### Define summary model")
-                sorted_atts = []
                 sorted_cols = sorted(sv.case_groups_final_df.value.columns)
-
-                for col in sorted_cols:
-                    vals = [
-                        f"{col}:{x}"
-                        for x in sorted(
-                            sv.case_groups_final_df.value[col].astype(str).unique()
-                        )
-                        if x
-                        not in [
-                            "",
-                            "<NA>",
-                            "nan",
-                            "NaN",
-                            "None",
-                            "none",
-                            "NULL",
-                            "null",
-                        ]
-                    ]
-                    sorted_atts.extend(vals)
 
                 groups = st.multiselect(
                     "Compare groups of records with different combinations of these attributes:",
@@ -109,7 +88,9 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                 )
                 filters = st.multiselect(
                     "After filtering to records matching these values (optional):",
-                    sorted_atts,
+                    ccg.get_filter_options(
+                        pl.from_pandas(sv.case_groups_final_df.value)
+                    ),
                     default=sv.case_groups_filters.value,
                 )
 
