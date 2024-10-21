@@ -44,30 +44,19 @@ class CompareCaseGroups(IntelligenceWorkflow):
         )
 
     def _select_columns_ranked_df(self, ranked_df: pl.DataFrame) -> None:
-        lower_groups = [g.lower() for g in self.groups]
+        columns = [g.lower() for g in self.groups]
+        default_columns = [
+            "group_count",
+            "group_rank",
+            "attribute_value",
+            "attrubite_count",
+            "attribute_rank",
+        ]
 
-        if self.temporal != "":
-            columns = [
-                *lower_groups,
-                "group_count",
-                "group_rank",
-                "attribute_value",
-                "attribute_count",
-                "attribute_rank",
-                f"{self.temporal}_window",
-                f"{self.temporal}_window_count",
-                f"{self.temporal}_window_rank",
-                f"{self.temporal}_window_delta",
-            ]
-        else:
-            columns = [
-                *lower_groups,
-                "group_count",
-                "group_rank",
-                "attribute_value",
-                "attribute_count",
-                "attribute_rank",
-            ]
+        columns.extend(default_columns)
+
+        if self.temporal:
+            columns.extend([f"{self.temporal}_window", ...])
 
         self.model_df = ranked_df.select(columns)
 
