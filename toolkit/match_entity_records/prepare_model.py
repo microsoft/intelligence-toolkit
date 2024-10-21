@@ -5,7 +5,7 @@ from collections import defaultdict
 
 import polars as pl
 
-from toolkit.match_entity_records.config import AttributeToMatch
+from .config import AttributeToMatch
 
 
 def format_dataset(

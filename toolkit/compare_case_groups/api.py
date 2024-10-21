@@ -3,7 +3,6 @@
 #
 
 
-import pandas as pd
 import polars as pl
 
 from toolkit.AI import utils
@@ -97,7 +96,7 @@ class CompareCaseGroups(IntelligenceWorkflow):
 
     def create_data_summary(
         self,
-        final_df: pd.DataFrame,
+        final_df: pl.DataFrame,
         filters: list[str],
         groups: list[str],
         aggregates: list[str],

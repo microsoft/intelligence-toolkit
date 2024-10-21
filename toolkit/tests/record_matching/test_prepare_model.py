@@ -5,7 +5,7 @@
 import polars as pl
 import pytest
 
-from toolkit.match_entity_records.prepare_model import (
+from toolkit.match_entity_records import (
     build_attribute_options,
     format_dataset,
 )

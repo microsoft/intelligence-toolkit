@@ -4,6 +4,7 @@
 
 
 class IntelligenceWorkflow:
+    # Base class for all AI workflows
     def __init__(self, ai_configuration=None):
         self.ai_configuration = ai_configuration
 

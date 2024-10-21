@@ -17,21 +17,13 @@ import toolkit.match_entity_records.prompts as prompts
 from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
+from toolkit.match_entity_records import MatchEntityRecords
 from toolkit.match_entity_records.config import AttributeToMatch
-from toolkit.match_entity_records.detect import (
-    build_attributes_dataframe,
-    build_matches,
-    build_matches_dataset,
-    build_near_map,
-    build_nearest_neighbors,
-    build_sentence_pair_scores,
-    convert_to_sentences,
-)
-from toolkit.match_entity_records.prepare_model import (
-    build_attribute_list,
-    build_attribute_options,
-    format_dataset,
-)
+from toolkit.match_entity_records.prepare_model import build_attribute_list
+
+# from toolkit.match_entity_records.prepare_model import (
+#     build_attribute_list,
+# )
 
 
 def get_intro():
@@ -42,6 +34,7 @@ def get_intro():
 async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
     sv_home = home_vars.SessionVariables("home")
     ui_components.check_ai_configuration()
+    mer = MatchEntityRecords()
 
     intro_tab, uploader_tab, process_tab, evaluate_tab, examples_tab = st.tabs(
         [
@@ -76,8 +69,8 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                 st.warning("Upload and select a file to continue")
             else:
                 selected_df = pl.from_pandas(selected_df).lazy()
-                cols = ["", *selected_df.columns]
-                entity_col = ""
+                cols = selected_df.columns
+                entity_id_col = ""
                 ready = False
                 dataset = st.text_input(
                     "Dataset name",
@@ -90,12 +83,14 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                     cols,
                     help="The column containing the name of the entity to be matched. This column is required.",
                 )
-                entity_col = st.selectbox(
+                entity_id_col = st.selectbox(
                     "Entity ID column (optional)",
                     cols,
                     help="The column containing the unique identifier of the entity to be matched. If left blank, a unique ID will be generated for each entity based on the row number.",
                 )
-                filtered_cols = [c for c in cols if c not in [entity_col, name_col, ""]]
+                filtered_cols = [
+                    c for c in cols if c not in [entity_id_col, name_col, ""]
+                ]
                 att_cols = st.multiselect(
                     "Entity attribute columns",
                     filtered_cols,
@@ -114,19 +109,21 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                         disabled=not ready,
                         use_container_width=True,
                     ):
-                        sv.matching_dfs.value[dataset] = format_dataset(
+                        dataset_added = mer.add_df_to_model(
                             selected_df.collect(),
-                            att_cols,
                             name_col,
-                            entity_col,
-                            sv.matching_max_rows_to_process.value,
+                            att_cols,
+                            dataset,
+                            entity_id_col,
                         )
+                        sv.matching_dfs.value[dataset] = dataset_added
                 with b2:
                     if st.button(
                         "Reset data model",
                         disabled=len(sv.matching_dfs.value) == 0,
                         use_container_width=True,
                     ):
+                        mer.clear_model_dfs()
                         sv.matching_dfs.value = {}
                         sv.matching_merged_df.value = pl.DataFrame()
                         st.rerun()
@@ -143,7 +140,7 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
             c1, c2 = st.columns([1, 1])
             with c1:
                 st.markdown("##### Configure text embedding model")
-                attr_options = build_attribute_options(sv.matching_dfs.value)
+                attr_options = mer.attribute_options
                 sv.matching_mapped_atts.value = []
 
                 num_atts = 0
@@ -208,7 +205,6 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                     _, changed, attsa = att_ui(num_atts, any_empty, changed, attsa)
                 if changed:
                     st.rerun()
-                attributes_list = build_attribute_list(attsa)
 
                 local_embedding = st.toggle(
                     "Use local embeddings",
@@ -264,19 +260,10 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                         sv.matching_last_sentence_pair_embedding_threshold.value = (
                             sv.matching_sentence_pair_embedding_threshold.value
                         )
-                        sv.matching_merged_df.value = build_attributes_dataframe(
-                            sv.matching_dfs.value, attributes_list
-                        )
-                        sv.matching_merged_df.value = (
-                            sv.matching_merged_df.value.with_columns(
-                                (pl.col("Entity ID").cast(pl.Utf8))
-                                + "::"
-                                + pl.col("Dataset").alias("Unique ID")
-                            )
-                        )  ###??
-                        all_sentences_data = convert_to_sentences(
-                            sv.matching_merged_df.value
-                        )
+
+                        sv.matching_merged_df.value = mer.build_model_df()
+                        all_sentences_data = mer.sentences_vector_data
+
                         pb = st.progress(0, "Embedding text batches...")
 
                         def on_embedding_batch_change(current, total):
@@ -304,51 +291,24 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                             )
                             for f in all_sentences
                         ]
+                        mer.embeddings = all_embeddings
 
                         pb.empty()
-
-                        distances, indices = build_nearest_neighbors(all_embeddings)
-                        near_map = build_near_map(
-                            distances,
-                            indices,
-                            all_sentences,
+                        mer.attributes_list = build_attribute_list(attsa)
+                        sv.matching_matches_df.value = mer.detect_record_groups(
                             sv.matching_sentence_pair_embedding_threshold.value,
-                        )
-
-                        sv.matching_sentence_pair_scores.value = (
-                            build_sentence_pair_scores(
-                                near_map, sv.matching_merged_df.value
-                            )
-                        )
-
-                        merged_df = sv.matching_merged_df.value
-                        entity_to_group, matches, pair_to_match = build_matches(
-                            sv.matching_sentence_pair_scores.value,
-                            merged_df,
                             sv.matching_sentence_pair_jaccard_threshold.value,
                         )
 
-
-                        sv.matching_matches_df.value = pl.DataFrame(
-                            list(matches),
-                            schema=["Group ID", *sv.matching_merged_df.value.columns],
-                        ).sort(
-                            by=["Group ID", "Entity name", "Dataset"], descending=False
-                        )
-  
-
-                        sv.matching_matches_df.value = build_matches_dataset(
-                            sv.matching_matches_df.value, pair_to_match, entity_to_group
-                        )
                         st.rerun()
                 if len(sv.matching_matches_df.value) > 0:
                     st.markdown(
                         f"Identified **{len(sv.matching_matches_df.value['Group ID'].unique())}** record groups."
                     )
             with c2:
-                data = sv.matching_matches_df.value
                 st.markdown("##### Record groups")
                 if len(sv.matching_matches_df.value) > 0:
+                    data = sv.matching_matches_df.value
                     st.dataframe(
                         data, height=700, use_container_width=True, hide_index=True
                     )
