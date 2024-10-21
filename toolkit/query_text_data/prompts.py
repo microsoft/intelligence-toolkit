@@ -63,10 +63,10 @@ You are a helpful assistant tasked with creating a JSON object that extracts rel
 Given a question, the output object should extract claims from the input text chunks as follows:
 
 - "claim_context": an overall description of the context in which claims are made
-- "claim_statement": a statement-based formatting of a claim that is relevant to the user question
+- "claim_statement": a statement-based formatting of a claim that is relevant to the user question and includes relevant contextual information (e.g., time and place)
 - "claim_attribution": any named source or author of a claim, beyond the title of the text 
-- "text_title": the title of the text from which the chunk was exracted
-- "chunk_id": the id of the chunk within the text
+- "supporting_sources": a list of source IDs that support the claim
+- "contradicting_sources": a list of source IDs that contradict the claim
 
 --TASK--
 
@@ -74,7 +74,7 @@ Question for which claims are being extracted:
 
 {question}
 
-Input text chunks JSON:
+Input text chunks JSON, in the form "<source_id>: <text_chunk>":
 
 {chunks}
 
@@ -84,19 +84,19 @@ Output JSON object:
 claim_summarization_prompt = """\
 You are a helpful assistant tasked with creating a JSON object that summarizes claims relevant to a given user question.
 
+When presenting source evidence, support each sentence with a source reference to the file and text chunk: "[source: <source_id>, <source_id>].
+
 The output object should summarize all claims from input text chunks as follows:
 
 - "content_title": a title for a specific content item spanning related claims, in the form of a derived claim statement
 - "content_summary": a paragraph, starting with "**Source evidence**:", describing each of the individual claims and the balance of evidence supporting or contradicting them
 - "content_commentary": a paragraph, starting with "**AI commentary**:", suggesting inferences, implications, or conclusions that could be drawn from the source evidence
 
-When presenting source evidence, support each sentence with a source reference to the file and text chunk: "[source: <file> (<chunk_id>), <file> (<chunk_id>)]. Always use the full name of the file - do not abbreviate - and enter the full filename before each chunk id, even if the same file contains multiple relevant chunks.
-
 --TASK--
 
-Input text chunks:
+Input text chunks JSON, in the form "<source_id>: <text_chunk>":
 
-{data}
+{chunks}
 
 Input claim analysis JSON:
 
@@ -121,7 +121,7 @@ The output object should summarize all claims from input text chunks as follows:
 - "theme_commentary": a concluding paragraph that summarizes the content items in the theme and their relevance to the user question, with additional interpretation
 - "report_commentary": a concluding paragraph that summarizes the themes and their relevance to the user question, with additional interpretation
 
-When presenting evidence, support each sentence with a source reference to the file and text chunk: "[source: <file> (<chunk_id>), <file> (<chunk_id>)]. Always use the full name of the file - do not abbreviate - and enter the full filename before each chunk id, even if the same file contains multiple relevant chunks.
+When presenting evidence, support each sentence with one or more source references: "[source: <source_id>, <source_id>].
 
 --TASK--
 
@@ -141,8 +141,8 @@ You are a helpful assistant tasked with creating a JSON object that analyzes inp
 
 The output object should summarize all claims from input text chunks as follows:
 
-- "supporting_source_indicies": the indices of the input text chunks that support the claim (starting at 0)
-- "contradicting_source_indicies": the indices of the input text chunks that contradict the claim (starting at 0)
+- "supporting_source": the IDs of the input text chunks that support the claim
+- "contradicting_sources": the IDs of the input text chunks that contradict the claim
 
 --TASK--
 
@@ -150,7 +150,7 @@ Claim:
 
 {claim}
 
-Input text chunks JSON:
+Input text chunks JSON, in the form "<source_id>: <text_chunk>":
 
 {chunks}
 

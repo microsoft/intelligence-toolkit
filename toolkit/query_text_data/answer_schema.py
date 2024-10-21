@@ -81,39 +81,13 @@ claim_extraction_format = {
                                         "supporting_sources": {
                                             "type": "array",
                                             "items": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "text_title": {
-                                                        "type": "string"
-                                                    },
-                                                    "chunk_ids": {
-                                                        "type": "array",
-                                                        "items": {
-                                                            "type": "number"
-                                                        }
-                                                    }
-                                                },
-                                                "required": ["text_title", "chunk_ids"],
-                                                "additionalProperties": False,
+                                                "type": "number"
                                             }
                                         },
                                         "contradicting_sources": {
                                             "type": "array",
                                             "items": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "text_title": {
-                                                        "type": "string"
-                                                    },
-                                                    "chunk_ids": {
-                                                        "type": "array",
-                                                        "items": {
-                                                            "type": "number"
-                                                        }
-                                                    }
-                                                },
-                                                "required": ["text_title", "chunk_ids"],
-                                                "additionalProperties": False,
+                                                "type": "number"
                                             }
                                         }
                                     },
@@ -241,20 +215,20 @@ claim_requery_format = {
             "type": "object",
             "properties": {
 
-                "supporting_source_indicies": {
+                "supporting_sources": {
                     "type": "array",
                     "items": {
                         "type": "number",
                     }
                 },
-                "contradicting_source_indicies": {
+                "contradicting_sources": {
                     "type": "array",
                     "items": {
                         "type": "number",
                     }
                 }
             },
-            "required": ["supporting_source_indicies", "contradicting_source_indicies"],
+            "required": ["supporting_sources", "contradicting_sources"],
             "additionalProperties": False,
         }
     }

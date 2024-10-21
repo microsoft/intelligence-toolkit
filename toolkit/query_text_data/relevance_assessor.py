@@ -229,8 +229,8 @@ async def detect_relevant_chunks(
                     eliminated_communities.add(community)
                     successive_irrelevant += 1
                     if successive_irrelevant == chunk_search_config.irrelevant_community_restart:
-                        successive_irrelevant = 0
                         print(f'{successive_irrelevant} successive irrelevant communities; restarting')
+                        successive_irrelevant = 0
                         break
                 else:
                     successive_irrelevant = 0
