@@ -116,7 +116,7 @@ The report highlights the interconnectedness of global and domestic political ev
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_16 (1)
+##### Text chunk: news_articles_texts.csv_16: 1
 
 mock_text: **India Engages in Strategic Talks with IMF for Economic Growth**
 
@@ -140,7 +140,7 @@ Stay tuned for further updates as India and the IMF refine their strategies to i
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_32 (1)
+##### Text chunk: news_articles_texts.csv_32: 1
 
 mock_text: **Vienna Summit Focuses on Trade Agreements: A Key Step in International Diplomacy**
 
@@ -164,7 +164,7 @@ The outcomes of the Vienna Summit are expected to influence policy decisions and
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_39 (1)
+##### Text chunk: news_articles_texts.csv_39: 1
 
 mock_text: **Capital City Hosts Policy Debate on Education Reform**
 
@@ -190,7 +190,7 @@ This gathering in Capital City marks a pivotal moment in the ongoing conversatio
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_51 (1)
+##### Text chunk: news_articles_texts.csv_51: 1
 
 mock_text: **Global Climate Forum Convenes in Sydney to Tackle Climate Change**
 
@@ -212,7 +212,7 @@ As the world watches closely, the outcomes of the Global Climate Forum in Sydney
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_57 (1)
+##### Text chunk: news_articles_texts.csv_57: 1
 
 mock_text: **UN Conference on Human Rights Begins in Cairo**
 
@@ -236,7 +236,7 @@ As the conference unfolds, the global community looks to Cairo with anticipation
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_61 (1)
+##### Text chunk: news_articles_texts.csv_61: 1
 
 mock_text: **Governor Lee Responds to Senator Ng's Candidacy**
 
@@ -260,7 +260,7 @@ As the gubernatorial race heats up, voters in Capitol City can expect a lively c
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_63 (1)
+##### Text chunk: news_articles_texts.csv_63: 1
 
 mock_text: **Upcoming Debate Between Ng and Lee Announced**
 
@@ -282,7 +282,7 @@ Stay tuned for further details on the exact date and location, which will be rel
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_65 (1)
+##### Text chunk: news_articles_texts.csv_65: 1
 
 mock_text: **Peace Talks to Resume in Geneva with International Focus**
 
@@ -304,7 +304,7 @@ As the world watches, the hope is that this round of talks will lead to meaningf
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_88 (1)
+##### Text chunk: news_articles_texts.csv_88: 1
 
 mock_text: **Senator Jane Smith Announces Re-Election Campaign in Washington D.C.**
 
@@ -326,7 +326,7 @@ Her re-election campaign sets the stage for what promises to be a pivotal race, 
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_100 (1)
+##### Text chunk: news_articles_texts.csv_100: 1
 
 mock_text: **Congresswoman Lisa Brown Proposes New Environmental Legislation in Houston**
 
@@ -352,7 +352,7 @@ The legislation is set to be a defining moment in Houston's environmental policy
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_115 (1)
+##### Text chunk: news_articles_texts.csv_115: 1
 
 mock_text: **Minister Thomas King Unveils Ambitious Policy Reforms at Government Building**
 
@@ -378,7 +378,7 @@ This landmark announcement marks a pivotal moment in the administration's policy
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_127 (1)
+##### Text chunk: news_articles_texts.csv_127: 1
 
 mock_text: **Democratic Primaries Heat Up: A Closer Look at the Intensifying Race**
 
@@ -400,7 +400,7 @@ With just a few months left until the primaries, the spotlight remains on the ca
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_145 (1)
+##### Text chunk: news_articles_texts.csv_145: 1
 
 mock_text: **Global Leaders Convene for Climate Summit in Beijing**
 
@@ -424,7 +424,7 @@ As the summit progresses, the world watches with anticipation, hopeful for decis
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_173 (1)
+##### Text chunk: news_articles_texts.csv_173: 1
 
 mock_text: **Governor Carter Enacts Landmark Legislation at State Capitol**
 
@@ -448,7 +448,7 @@ As the news of the signing spreads, residents and stakeholders are keenly awaiti
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_184 (1)
+##### Text chunk: news_articles_texts.csv_184: 1
 
 mock_text: **United Nations and Economists Unite to Tackle Global Economic Challenges**
 
@@ -472,7 +472,7 @@ The outcomes of the Global Economic Forum will likely influence discussions in u
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_199 (1)
+##### Text chunk: news_articles_texts.csv_199: 1
 
 mock_text: **Governor Harris Proposes Ambitious Policy Reforms at State Capitol**
 
@@ -498,7 +498,7 @@ The proposed reforms are expected to be discussed in further detail in the comin
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_203 (1)
+##### Text chunk: news_articles_texts.csv_203: 1
 
 mock_text: **Roundtable on Economic Policies Held in Delhi: Key Discussions with Global Financial Institutions**
 
@@ -522,7 +522,7 @@ This event is a testament to India's commitment to engaging with the global comm
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_207 (1)
+##### Text chunk: news_articles_texts.csv_207: 1
 
 mock_text: **Governor Emma Li Announces Re-election Campaign with Focus on Education and Healthcare**
 
@@ -548,7 +548,7 @@ With the election just months away, Governor Li's announcement marks the beginni
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_227 (1)
+##### Text chunk: news_articles_texts.csv_227: 1
 
 mock_text: **Senator Mark Johnson Announces Re-election Bid at Capitol Hill Event**
 
@@ -572,7 +572,7 @@ As the fall elections approach, Senator Johnson's campaign is expected to gain m
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_274 (1)
+##### Text chunk: news_articles_texts.csv_274: 1
 
 mock_text: **Governor Susan Lee Unveils Ambitious Sustainability Policies for California**
 
@@ -600,7 +600,7 @@ As the policies roll out, the nation will be watching closely to see how these a
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_379 (1)
+##### Text chunk: news_articles_texts.csv_379: 1
 
 mock_text: **Minister Julia Bennett Unveils Bold Policy Reforms Addressing Economic Disparities**
 
@@ -624,7 +624,7 @@ The coming weeks will be critical as these policy reforms are debated and refine
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_437 (1)
+##### Text chunk: news_articles_texts.csv_437: 1
 
 mock_text: **Senator Emily Rivera Proposes New Environmental Bill on Senate Floor**
 
@@ -650,7 +650,7 @@ The coming weeks will be crucial as the bill undergoes scrutiny and possible ame
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_441 (1)
+##### Text chunk: news_articles_texts.csv_441: 1
 
 mock_text: **President John Smith Urges Global Unity at United Nations Climate Summit**
 
@@ -672,7 +672,7 @@ As the summit continues, the eyes of the world remain fixed on New York City, wh
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_443 (1)
+##### Text chunk: news_articles_texts.csv_443: 1
 
 mock_text: **Bilateral Meetings at Climate Summit: Key Diplomats Convene at the United Nations Headquarters**
 
@@ -696,7 +696,7 @@ As the summit progresses, the world watches closely, hopeful that such diplomati
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_461 (1)
+##### Text chunk: news_articles_texts.csv_461: 1
 
 mock_text: **Governor Li Kicks Off Campaign Tour in Albany**
 
@@ -722,7 +722,7 @@ As Governor Emma Li embarks on this pivotal campaign tour, all eyes will be on h
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_465 (1)
+##### Text chunk: news_articles_texts.csv_465: 1
 
 mock_text: **UN Climate Summit Highlights Urgent Global Actions**
 

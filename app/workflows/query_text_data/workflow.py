@@ -3,7 +3,7 @@
 #
 import os
 import random
-import string
+import re
 
 import pandas as pd
 import streamlit as st
@@ -34,6 +34,9 @@ def get_intro():
         return file.read()
 
 async def create(sv: SessionVariables, workflow=None):
+    if "search_answers" not in st.session_state.keys():
+        st.session_state["search_answers"] = False
+
     sv_home = SessionVariables("home")
     ui_components.check_ai_configuration()
 
@@ -224,88 +227,115 @@ async def create(sv: SessionVariables, workflow=None):
                             min_value=0,
                             help="If the evidence type is set to 'Extracted claims', this parameter sets the number of most-similar text chunks to analyze for each extracted claim, looking for both supporting and contradicting evidence."
                         )
-            c1, c2 = st.columns([6, 1])
-            with c1:
-                st.text_input(
-                    "Question", value=sv.question.value, key=sv.question.key
-                )
-            with c2:
-                regenerate = st.button(
-                    "Search",
-                    key="search_answers",
-                    use_container_width=True,
-                )
+            query_panel = st.container()
+            main_panel = st.container()
 
-            c1, c2 = st.columns([1, 1])
-
-            with c1:
-                chunk_placeholder = st.empty()
-                chunk_placeholder.dataframe(
-                    pd.DataFrame(
-                        columns=["Relevant text chunks (double click to expand)"],
-                        data=[qtd.processed_chunks.cid_to_text[x] for x in qtd.relevant_cids] if qtd.relevant_cids != None else [],
-                    ),
-                    hide_index=True,
-                    height=400,
-                    use_container_width=True,
-                )
-                chunk_progress_placeholder = st.empty()
-                answer_summary_placeholder = st.empty()
-                if sv.question.value != "" and regenerate:
-
-                    def on_chunk_progress(message):
-                        chunk_progress_placeholder.markdown(message, unsafe_allow_html=True)
-
-                    def on_chunk_relevant(message):
-                        chunk_placeholder.dataframe(
-                            pd.DataFrame(
-                                columns=["Relevant text chunks (double click to expand)"],
-                                data=message,
-                            ),
-                            hide_index=True,
-                            height=400,
-                            use_container_width=True,
-                        )
-                    await qtd.detect_relevant_text_chunks(
-                        question=sv.question.value,
-                        chunk_search_config=ChunkSearchConfig(
-                            relevance_test_budget=sv.relevance_test_budget.value,
-                            relevance_test_batch_size=sv.relevance_test_batch_size.value,
-                            community_ranking_chunks=sv.relevance_test_batch_size.value,
-                            irrelevant_community_restart=sv.irrelevant_community_restart.value,
-                            adjacent_test_steps=sv.adjacent_test_steps.value,
-                            community_relevance_tests=sv.relevance_test_batch_size.value,
-                        ),
-                        chunk_progress_callback=on_chunk_progress,
-                        chunk_callback=on_chunk_relevant,
-                    )
-                    st.rerun()
-                if qtd.search_summary is not None:
-                    chunk_progress_placeholder.markdown(qtd.search_summary, unsafe_allow_html=True)
+            with query_panel:
+                query_placeholder = st.empty()
+            with main_panel:
+                anchored_query_placeholder = st.empty()
+                c1, c2 = st.columns([1, 1])
                 
-            with c2:
-                ca, cb = st.columns([1, 1])
-                with ca:
-                    gen_answer = st.button(
-                        "Generate AI extended answer",
-                        key="generate_answer",
-                        disabled=qtd.stage.value < QueryTextDataStage.CHUNKS_MINED.value,
+                with c1:
+                    chunk_placeholder = st.empty()
+                    chunk_placeholder.dataframe(
+                        pd.DataFrame(
+                            columns=["Relevant text chunks (double click to expand)"],
+                            data=[qtd.processed_chunks.cid_to_text[x] for x in qtd.relevant_cids] if qtd.relevant_cids != None else [],
+                        ),
+                        hide_index=True,
+                        height=400,
+                        use_container_width=True,
                     )
-                with cb:
-                    if qtd.stage.value >= QueryTextDataStage.CHUNKS_MINED.value:
-                        st.download_button(
-                            "Download extended answer as MD",
-                            data=qtd.answer_object.extended_answer if qtd.answer_object is not None else "",
-                            file_name=f"{sv.question.value.strip(string.punctuation).replace(' ', '_')}.md",
-                            mime="text/markdown",
-                            key="extended_answer_download_button",
-                            disabled=qtd.stage.value < QueryTextDataStage.QUESTION_ANSWERED.value,
-                        )
+                    chunk_progress_placeholder = st.empty()
+                    answer_summary_placeholder = st.empty()
+                    def empty_answer_placeholders():
+                        qtd.prepare_for_new_answer()
+                        answer_placeholder.markdown("")
+                        answer_summary_placeholder.markdown("")
 
-                answer_placeholder = st.empty()
-                if gen_answer:
+                    if qtd.search_summary is not None:
+                        chunk_progress_placeholder.markdown(qtd.search_summary, unsafe_allow_html=True)
+                if sv.anchored_query.value != "":    
+                    anchored_query_placeholder.markdown(f"**Expanded query:** {sv.anchored_query.value}")
+                with c2:
+                    if qtd.stage.value >= QueryTextDataStage.CHUNKS_MINED.value:
+                        ca, cb = st.columns([1, 1])
+                        with ca:
+                            gen_answer = st.button(
+                                "Regenerate AI extended answer",
+                                key="generate_answer",
+                                disabled=qtd.stage.value < QueryTextDataStage.QUESTION_ANSWERED.value,
+                                on_click=lambda: empty_answer_placeholders(),
+                            )
+                        with cb:
+                            
+                            st.download_button(
+                                "Download extended answer as MD",
+                                data=qtd.answer_object.extended_answer if qtd.answer_object is not None else "",
+                                file_name=re.sub(r'[^\w\s]','',sv.query.value).replace(' ', '_')+".md",
+                                mime="text/markdown",
+                                key="extended_answer_download_button",
+                                disabled=qtd.stage.value < QueryTextDataStage.QUESTION_ANSWERED.value,
+                            )
+                    answer_spinner = st.empty()
+                    answer_placeholder = st.empty()
+
+                    if qtd.stage.value == QueryTextDataStage.QUESTION_ANSWERED.value:
+                        answer_placeholder.markdown(qtd.answer_object.extended_answer, unsafe_allow_html=True)
+                        answer_summary_placeholder.markdown(f'**Additional chunks relevant to extracted claims: {qtd.answer_object.net_new_sources}**\n\n**Chunks referenced in answer / total relevant chunks: {len(qtd.answer_object.references)}/{len(qtd.relevant_cids)+qtd.answer_object.net_new_sources}**', unsafe_allow_html=True)
+            def do_search():
+                st.session_state["search_answers"] = True
+                sv.query.value = st.session_state[sv.query.key]
+                qtd.prepare_for_new_query()
+                sv.chunk_progress.value = ""
+                sv.answer_progress.value = ""
+                answer_placeholder.markdown("")
+                main_panel.empty()
+            query_placeholder.text_input(
+                "Query",
+                key=sv.query.key,
+                on_change=lambda: do_search()
+            )
+            if sv.query.value != "" and st.session_state["search_answers"]:
+                st.session_state["search_answers"] = False
+                sv.anchored_query.value = await qtd.anchor_query_to_concepts(
+                    query=sv.query.value,
+                    top_concepts=500,
+                )
+                anchored_query_placeholder.markdown(f"**Expanded query:** {sv.anchored_query.value}")
+                def on_chunk_progress(message):
+                    chunk_progress_placeholder.markdown(message, unsafe_allow_html=True)
+
+                def on_chunk_relevant(message):
+                    chunk_placeholder.dataframe(
+                        pd.DataFrame(
+                            columns=["Relevant text chunks (double click to expand)"],
+                            data=message,
+                        ),
+                        hide_index=True,
+                        height=400,
+                        use_container_width=True,
+                    )
+                await qtd.detect_relevant_text_chunks(
+                    query=sv.query.value,
+                    expanded_query=sv.anchored_query.value,
+                    chunk_search_config=ChunkSearchConfig(
+                        relevance_test_budget=sv.relevance_test_budget.value,
+                        relevance_test_batch_size=sv.relevance_test_batch_size.value,
+                        community_ranking_chunks=sv.relevance_test_batch_size.value,
+                        irrelevant_community_restart=sv.irrelevant_community_restart.value,
+                        adjacent_test_steps=sv.adjacent_test_steps.value,
+                        community_relevance_tests=sv.relevance_test_batch_size.value,
+                    ),
+                    chunk_progress_callback=on_chunk_progress,
+                    chunk_callback=on_chunk_relevant,
+                )
+                st.rerun()
+            if gen_answer or qtd.stage.value == QueryTextDataStage.CHUNKS_MINED.value:
+                with answer_spinner:
                     with st.spinner("Generating extended answer..."):
-                        await qtd.answer_question_with_relevant_chunks(
+                        await qtd.answer_query_with_relevant_chunks(
                             answer_config=AnswerConfig(
                                 target_chunks_per_cluster=sv.target_chunks_per_cluster.value,
                                 extract_claims=sv.search_type.value == "Extracted claims",
@@ -313,9 +343,6 @@ async def create(sv: SessionVariables, workflow=None):
                             )
                         )
                         st.rerun()
-                if qtd.stage.value == QueryTextDataStage.QUESTION_ANSWERED.value:
-                    answer_placeholder.markdown(qtd.answer_object.extended_answer, unsafe_allow_html=True)
-                    answer_summary_placeholder.markdown(f'**Additional chunks relevant to extracted claims: {qtd.answer_object.net_new_sources}**\n\n**Chunks referenced in answer / total relevant chunks: {len(qtd.answer_object.references)}/{len(qtd.relevant_cids)+qtd.answer_object.net_new_sources}**', unsafe_allow_html=True)
     with report_tab:
         if qtd.stage.value < QueryTextDataStage.QUESTION_ANSWERED.value:
             st.warning("Generate an extended answer to continue.")
@@ -324,7 +351,7 @@ async def create(sv: SessionVariables, workflow=None):
 
             with c1:
                 variables = {
-                    "question": qtd.question,
+                    "query": qtd.query,
                     "answer": qtd.answer_object.extended_answer,
                 }
                 generate, messages, reset = ui_components.generative_ai_component(
@@ -354,7 +381,7 @@ async def create(sv: SessionVariables, workflow=None):
                 else:
                     if sv.final_report.value == "":
                         gen_placeholder.warning(
-                            "Press the Generate button to create an AI report for the current question."
+                            "Press the Generate button to create an AI report for the current query."
                         )
                 report_placeholder.markdown(sv.final_report.value, unsafe_allow_html=True)
 

@@ -16,18 +16,24 @@ import sklearn.cluster as cluster
 from sklearn.neighbors import NearestNeighbors
 from toolkit.query_text_data.classes import AnswerObject
 
+def _split_on_multiple_delimiters(string, delimiters):
+    # Create a regular expression pattern with the delimiters
+    pattern = '|'.join(map(re.escape, delimiters))
+    # Split the string using the pattern
+    return re.split(pattern, string)
+
 def extract_and_link_chunk_references(text, link=True):
     source_spans = list(re.finditer(r'\[source: ([^\]]+)\]', text, re.MULTILINE))
     references = set()
     for source_span in source_spans:
         old_span = source_span.group(0)
-        parts = [x.strip() for x in source_span.group(1).split(',')]
+        new_span = "[source: "
+        # split on , or ; and remove whitespace
+        parts = [x.strip() for x in _split_on_multiple_delimiters(source_span.group(1), [",", ";"])]
         matched_parts = [x for x in parts if re.match(r'^\d+$', x)]
         references.update(matched_parts)
         if link:
-            new_span = source_span.group(0)
-            for part in matched_parts:
-                new_span = new_span.replace(part, f"[{part}](#source-{part})")
+            new_span += ", ".join([f"[{part}](#source-{part})" for part in matched_parts]) + "]"
             text = text.replace(old_span, new_span)
     references = [int(cid) for cid in references if cid.isdigit()]
     references = sorted(references)
@@ -40,9 +46,10 @@ def create_cid_to_label(processed_chunks):
         cid_to_label[cid] = f"{chunk['title']} ({chunk['chunk_id']})"
     return cid_to_label
 
-async def answer_question(
+async def answer_query(
     ai_configuration,
-    question,
+    query,
+    expanded_query,
     processed_chunks,
     relevant_cids,
     cid_to_vector,
@@ -64,7 +71,7 @@ async def answer_question(
     source_to_contradicted_claims = defaultdict(set)
     net_new_sources = 0
     if answer_config.extract_claims:
-        batched_extraction_messages = [utils.prepare_messages(prompts.claim_extraction_prompt, {'chunks': texts, 'question': question}) 
+        batched_extraction_messages = [utils.prepare_messages(prompts.claim_extraction_prompt, {'chunks': texts, 'query': expanded_query}) 
                             for texts in clustered_texts]
 
         extracted_claims = await utils.map_generate_text(
@@ -111,7 +118,7 @@ async def answer_question(
                     if claim_key in claim_to_vector:
                         tasks.append(asyncio.create_task(requery_claim(
                             ai_configuration,
-                            question,
+                            expanded_query,
                             units,
                             neighbours,
                             claim_to_vector[claim_key],
@@ -170,10 +177,10 @@ async def answer_question(
                 relevant_cids.update(ss.union(cs))
             relevant_cids = sorted(relevant_cids)
             return [f"{cid}: {processed_chunks.cid_to_text[cid]}" for cid in relevant_cids]
-        batched_summarization_messages = [utils.prepare_messages(prompts.claim_summarization_prompt, {'analysis': dumps(claims, ensure_ascii=False, indent=2), 'chunks': extract_relevant_chunks(claims), 'question': question}) 
+        batched_summarization_messages = [utils.prepare_messages(prompts.claim_summarization_prompt, {'analysis': dumps(claims, ensure_ascii=False, indent=2), 'chunks': extract_relevant_chunks(claims), 'query': expanded_query}) 
                             for i, claims in enumerate(claim_summaries)]
     else:
-        batched_summarization_messages = [utils.prepare_messages(prompts.claim_summarization_prompt, {'analysis': [], 'chunks': clustered_texts[i], 'question': question}) 
+        batched_summarization_messages = [utils.prepare_messages(prompts.claim_summarization_prompt, {'analysis': [], 'chunks': clustered_texts[i], 'query': expanded_query}) 
                             for i in range(len(clustered_texts))]
         
     summarized_claims = await utils.map_generate_text(
@@ -186,11 +193,12 @@ async def answer_question(
             content_items_list.append(item)
     content_items_dict = {i: v for i, v in enumerate(content_items_list)}
     content_items_context = dumps(content_items_dict, indent=2, ensure_ascii=False)
-    content_item_messages = utils.prepare_messages(prompts.content_integration_prompt, {'content': content_items_context, 'question': question})
+    content_item_messages = utils.prepare_messages(prompts.content_integration_prompt, {'content': content_items_context, 'query': query})
     content_structure = loads(utils.generate_text(ai_configuration, content_item_messages, response_format=answer_schema.content_integration_format))
 
     report, references, matched_chunks = build_report_markdown(
-        question,
+        query,
+        expanded_query,
         content_items_dict,
         content_structure,
         processed_chunks.cid_to_text,
@@ -204,11 +212,11 @@ async def answer_question(
         net_new_sources=net_new_sources
     )
 
-def build_report_markdown(question, content_items_dict, content_structure, cid_to_text, source_to_supported_claims, source_to_contradicted_claims):
+def build_report_markdown(query, expanded_query, content_items_dict, content_structure, cid_to_text, source_to_supported_claims, source_to_contradicted_claims):
     text_jsons = [loads(text) for text in cid_to_text.values()]
     matched_chunks = {f"{text['title']} ({text['chunk_id']})" : text for text in text_jsons}
     home_link = '#'+content_structure["report_title"].replace(' ', '-').lower()
-    report = f'# Report\n\n## Question\n\n*{question}*\n\n## Answer\n\n{content_structure["answer"]}\n\n## Analysis\n\n### {content_structure["report_title"]}\n\n{content_structure["report_summary"]}\n\n'
+    report = f'# Report\n\n## Query\n\n*{query}*\n\n## Expanded Query\n\n*{expanded_query}*\n\n## Answer\n\n{content_structure["answer"]}\n\n## Analysis\n\n### {content_structure["report_title"]}\n\n{content_structure["report_summary"]}\n\n'
     for theme in content_structure['theme_order']:
         report += f'#### Theme: {theme["theme_title"]}\n\n{theme["theme_summary"]}\n\n'
         for item_id in theme['content_id_order']:
@@ -258,7 +266,7 @@ def cluster_cids(
             clustered_cids[cluster_assignment].append(cid)
     return clustered_cids
 
-async def requery_claim(ai_configuration, question, units, neighbours, claim_embedding, claim_context, claim_statement, cid_to_text, cid_to_label):
+async def requery_claim(ai_configuration, query, units, neighbours, claim_embedding, claim_context, claim_statement, cid_to_text, cid_to_label):
     contextualized_claim = f"{claim_statement} (context: {claim_context})"
     # Find the nearest neighbors of the claim embedding
     indices = neighbours.kneighbors([claim_embedding], return_distance=False)
@@ -274,7 +282,7 @@ async def requery_claim(ai_configuration, question, units, neighbours, claim_emb
     # batch cids into batches of size batch_size
     # cids = [cid for cid, dist in cosine_distances[:search_depth]]
     chunks = dumps({cid: cid_to_text[cid] for i, cid in enumerate(cids)}, ensure_ascii=False, indent=2)
-    messages = utils.prepare_messages(prompts.claim_requery_prompt, {'question': question, 'claim': contextualized_claim, 'chunks': chunks})
+    messages = utils.prepare_messages(prompts.claim_requery_prompt, {'query': query, 'claim': contextualized_claim, 'chunks': chunks})
     response = await utils.generate_text_async(ai_configuration, messages, response_format=answer_schema.claim_requery_format)
 
     response_json = loads(response)

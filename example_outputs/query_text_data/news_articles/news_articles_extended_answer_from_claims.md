@@ -140,7 +140,7 @@ The report highlights the interconnected nature of global political events and t
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_16 (1)
+##### Text chunk: news_articles_texts.csv_16: 1
 
 mock_text: **India Engages in Strategic Talks with IMF for Economic Growth**
 
@@ -168,7 +168,7 @@ Stay tuned for further updates as India and the IMF refine their strategies to i
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_25 (1)
+##### Text chunk: news_articles_texts.csv_25: 1
 
 mock_text: **Diplomatic Talks Continue in Geneva: A Step Towards Global Peace**
 
@@ -201,7 +201,7 @@ As the sessions continue in the coming days, the international community remains
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_51 (1)
+##### Text chunk: news_articles_texts.csv_51: 1
 
 mock_text: **Global Climate Forum Convenes in Sydney to Tackle Climate Change**
 
@@ -227,7 +227,7 @@ As the world watches closely, the outcomes of the Global Climate Forum in Sydney
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_65 (1)
+##### Text chunk: news_articles_texts.csv_65: 1
 
 mock_text: **Peace Talks to Resume in Geneva with International Focus**
 
@@ -254,7 +254,7 @@ As the world watches, the hope is that this round of talks will lead to meaningf
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_85 (1)
+##### Text chunk: news_articles_texts.csv_85: 1
 
 mock_text: **UN Climate Summit Convenes in Geneva**
 
@@ -280,7 +280,7 @@ The world watches closely as the outcomes of this summit could significantly inf
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_139 (1)
+##### Text chunk: news_articles_texts.csv_139: 1
 
 mock_text: **Canadian Parliament Engages in Heated Debates Over Policy Reform**
 
@@ -308,7 +308,7 @@ As the debates continue, the eyes of the nation remain fixed on Ottawa, where th
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_145 (1)
+##### Text chunk: news_articles_texts.csv_145: 1
 
 mock_text: **Global Leaders Convene for Climate Summit in Beijing**
 
@@ -336,7 +336,7 @@ As the summit progresses, the world watches with anticipation, hopeful for decis
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_193 (1)
+##### Text chunk: news_articles_texts.csv_193: 1
 
 mock_text: **Ambassador Kim Discusses International Relations at UN**
 
@@ -364,7 +364,7 @@ As the world faces an ever-evolving set of challenges, Ambassador Rachel Kim's c
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_201 (1)
+##### Text chunk: news_articles_texts.csv_201: 1
 
 mock_text: **IMF and India Further Economic Strategy Talks in Mumbai**
 
@@ -392,7 +392,7 @@ The ongoing dialogue in Mumbai is expected to continue over the next few days, w
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_202 (1)
+##### Text chunk: news_articles_texts.csv_202: 1
 
 mock_text: **Title: IMF Engages with Indian Leaders on Economic Growth**
 
@@ -420,7 +420,7 @@ Further meetings are anticipated in the coming months to refine the proposed pol
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_203 (1)
+##### Text chunk: news_articles_texts.csv_203: 1
 
 mock_text: **Roundtable on Economic Policies Held in Delhi: Key Discussions with Global Financial Institutions**
 
@@ -449,7 +449,7 @@ This event is a testament to India's commitment to engaging with the global comm
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_204 (1)
+##### Text chunk: news_articles_texts.csv_204: 1
 
 mock_text: **Title: India Prepares New Financial Agreements with IMF**
 
@@ -475,7 +475,7 @@ This partnership between India and the IMF underscores the importance of interna
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_207 (1)
+##### Text chunk: news_articles_texts.csv_207: 1
 
 mock_text: **Governor Emma Li Announces Re-election Campaign with Focus on Education and Healthcare**
 
@@ -506,7 +506,7 @@ With the election just months away, Governor Li's announcement marks the beginni
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_210 (1)
+##### Text chunk: news_articles_texts.csv_210: 1
 
 mock_text: ### President Zhou Calls for Global Unity in Climate Fight at United Nations
 
@@ -534,7 +534,7 @@ This speech marks another step in China's ongoing efforts to position itself as 
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_225 (1)
+##### Text chunk: news_articles_texts.csv_225: 1
 
 mock_text: **Global Summit on Climate Change Convenes at United Nations Headquarters**
 
@@ -563,7 +563,7 @@ As the world watches, the outcomes of this summit could very well shape the futu
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_245 (1)
+##### Text chunk: news_articles_texts.csv_245: 1
 
 mock_text: **Global Summit Tackles Climate Change: A Step Forward in International Cooperation**
 
@@ -593,7 +593,7 @@ This gathering marks a significant chapter in international politics, illustrati
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_280 (1)
+##### Text chunk: news_articles_texts.csv_280: 1
 
 mock_text: **Diplomatic Talks in Geneva: A Path Forward**
 
@@ -622,7 +622,7 @@ The international community now looks forward to seeing the results of these dis
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_285 (1)
+##### Text chunk: news_articles_texts.csv_285: 1
 
 mock_text: **World Leaders Convene in Geneva for Critical United Nations Climate Summit**
 
@@ -649,7 +649,7 @@ As the summit progresses, the eyes of the world remain fixed on Geneva, hopeful 
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_305 (1)
+##### Text chunk: news_articles_texts.csv_305: 1
 
 mock_text: **New Initiatives Announced at UN Conference in Geneva**
 
@@ -677,7 +677,7 @@ This development highlights the ongoing commitment of the international communit
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_315 (1)
+##### Text chunk: news_articles_texts.csv_315: 1
 
 mock_text: **Climate Summit in Sydney Addresses Global Challenges**
 
@@ -708,7 +708,7 @@ The Climate Summit in Sydney marks a significant milestone in the global effort 
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_365 (1)
+##### Text chunk: news_articles_texts.csv_365: 1
 
 mock_text: **International Summit on Climate Change Concludes in Geneva**
 
@@ -734,7 +734,7 @@ As the summit concluded, delegates expressed optimism about the commitments made
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_379 (1)
+##### Text chunk: news_articles_texts.csv_379: 1
 
 mock_text: **Minister Julia Bennett Unveils Bold Policy Reforms Addressing Economic Disparities**
 
@@ -762,7 +762,7 @@ The coming weeks will be critical as these policy reforms are debated and refine
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_410 (1)
+##### Text chunk: news_articles_texts.csv_410: 1
 
 mock_text: **Climate Change Summit: Urgent Calls for Action in London**
 
@@ -790,7 +790,7 @@ As the world watches, the outcomes of this summit will likely shape the trajecto
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_441 (1)
+##### Text chunk: news_articles_texts.csv_441: 1
 
 mock_text: **President John Smith Urges Global Unity at United Nations Climate Summit**
 
@@ -816,7 +816,7 @@ As the summit continues, the eyes of the world remain fixed on New York City, wh
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_461 (1)
+##### Text chunk: news_articles_texts.csv_461: 1
 
 mock_text: **Governor Li Kicks Off Campaign Tour in Albany**
 
@@ -847,7 +847,7 @@ As Governor Emma Li embarks on this pivotal campaign tour, all eyes will be on h
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_462 (1)
+##### Text chunk: news_articles_texts.csv_462: 1
 
 mock_text: **Governor Li Outlines Education Reforms in Buffalo Speech**
 
@@ -880,7 +880,7 @@ The speech concluded with a call to action, urging community members to engage i
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_463 (1)
+##### Text chunk: news_articles_texts.csv_463: 1
 
 mock_text: **Healthcare at the Forefront: Governor Li's Rochester Visit**
 
@@ -913,7 +913,7 @@ As the political landscape continues to evolve, Governor Li's emphasis on health
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_465 (1)
+##### Text chunk: news_articles_texts.csv_465: 1
 
 mock_text: **UN Climate Summit Highlights Urgent Global Actions**
 
@@ -939,7 +939,7 @@ As the summit progresses, the eyes of the world remain fixed on Geneva, hopeful 
 
 <details>
 
-##### Text chunk: news_articles_texts.csv_485 (1)
+##### Text chunk: news_articles_texts.csv_485: 1
 
 mock_text: **International Summit on Climate Action Begins in Geneva**
 

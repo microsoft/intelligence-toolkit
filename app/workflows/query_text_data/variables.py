@@ -19,7 +19,8 @@ class SessionVariables:
     def create_session(self, prefix):
         self.workflow_object = SessionVariable(QueryTextData(), prefix)
         self.answer_local_embedding_enabled = SessionVariable(False, prefix)
-        self.question = SessionVariable("", prefix)
+        self.query = SessionVariable("", prefix)
+        self.anchored_query = SessionVariable("", prefix)
         self.final_report = SessionVariable("", prefix)
         self.target_chunks_per_cluster = SessionVariable(5, prefix)
         self.claim_search_depth = SessionVariable(10, prefix)
