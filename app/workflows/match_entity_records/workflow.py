@@ -5,7 +5,6 @@ import io
 import os
 
 import numpy as np
-import pandas as pd
 import polars as pl
 import streamlit as st
 
@@ -17,13 +16,11 @@ import toolkit.match_entity_records.prompts as prompts
 from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
-from toolkit.match_entity_records import MatchEntityRecords
-from toolkit.match_entity_records.config import AttributeToMatch
-from toolkit.match_entity_records.prepare_model import build_attribute_list
-
-# from toolkit.match_entity_records.prepare_model import (
-#     build_attribute_list,
-# )
+from toolkit.match_entity_records import (
+    AttributeToMatch,
+    MatchEntityRecords,
+    RecordsModel,
+)
 
 
 def get_intro():
@@ -35,6 +32,7 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
     sv_home = home_vars.SessionVariables("home")
     ui_components.check_ai_configuration()
     mer = MatchEntityRecords()
+    print("rerun")
 
     intro_tab, uploader_tab, process_tab, evaluate_tab, examples_tab = st.tabs(
         [
@@ -109,13 +107,14 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                         disabled=not ready,
                         use_container_width=True,
                     ):
-                        dataset_added = mer.add_df_to_model(
-                            selected_df.collect(),
-                            name_col,
-                            att_cols,
-                            dataset,
-                            entity_id_col,
+                        model = RecordsModel(
+                            dataframe=selected_df.collect(),
+                            name_column=name_col,
+                            columns=att_cols,
+                            dataframe_name=dataset,
+                            id_column=entity_id_col,
                         )
+                        dataset_added = mer.add_df_to_model(model)
                         sv.matching_dfs.value[dataset] = dataset_added
                 with b2:
                     if st.button(
@@ -132,6 +131,8 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                     st.success(
                         f"Data model has **{len(sv.matching_dfs.value)}** datasets with **{recs}** total records."
                     )
+                    if not mer.model_dfs:
+                        mer.model_dfs = sv.matching_dfs.value
 
     with process_tab:
         if len(sv.matching_dfs.value) == 0:
@@ -260,8 +261,7 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                         sv.matching_last_sentence_pair_embedding_threshold.value = (
                             sv.matching_sentence_pair_embedding_threshold.value
                         )
-
-                        sv.matching_merged_df.value = mer.build_model_df()
+                        sv.matching_merged_df.value = mer.build_model_df(attsa)
                         all_sentences_data = mer.sentences_vector_data
 
                         pb = st.progress(0, "Embedding text batches...")
@@ -292,9 +292,9 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                             for f in all_sentences
                         ]
                         mer.embeddings = all_embeddings
+                        mer.all_sentences = all_sentences
 
                         pb.empty()
-                        mer.attributes_list = build_attribute_list(attsa)
                         sv.matching_matches_df.value = mer.detect_record_groups(
                             sv.matching_sentence_pair_embedding_threshold.value,
                             sv.matching_sentence_pair_jaccard_threshold.value,
@@ -410,16 +410,5 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                         "Download AI match report",
                     )
 
-                report = (
-                    pd.DataFrame(sv.matching_evaluations.value).to_json()
-                    if type(sv.matching_evaluations.value) == pl.DataFrame
-                    else sv.matching_evaluations.value
-                )
-                # ui_components.build_validation_ui(
-                #     sv.matching_report_validation.value,
-                #     sv.matching_report_validation_messages.value,
-                #     report,
-                #     workflow,
-                # )
     with examples_tab:
         example_outputs_ui.create_example_outputs_ui(examples_tab, workflow)

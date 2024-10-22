@@ -5,7 +5,12 @@
 import os
 
 from .api import MatchEntityRecords
-from .prepare_model import build_attribute_options, format_dataset
+from .classes import AttributeToMatch, RecordsModel
+from .prepare_model import (
+    build_attribute_options,
+    build_attributes_list,
+    format_model_df,
+)
 
 
 def get_readme() -> str:
@@ -15,8 +20,11 @@ def get_readme() -> str:
 
 
 __all__ = [
+    "AttributeToMatch",
     "MatchEntityRecords",
-    "get_readme",
-    "format_dataset",
+    "RecordsModel",
     "build_attribute_options",
+    "build_attributes_list",
+    "format_model_df",
+    "get_readme",
 ]
