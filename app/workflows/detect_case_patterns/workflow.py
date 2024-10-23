@@ -22,7 +22,7 @@ import app.workflows.detect_case_patterns.variables as ap_variables
 import toolkit.detect_case_patterns.config as config
 from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
-from toolkit.AI import LLMCallback
+from toolkit.AI.classes import LLMCallback
 from toolkit.detect_case_patterns import prompts
 
 

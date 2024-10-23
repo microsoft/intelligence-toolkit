@@ -9,13 +9,13 @@ from typing import ClassVar
 import numpy as np
 import polars as pl
 
-from toolkit.AI import LLMCallback, utils
+import toolkit.AI.utils as utils
+from toolkit.AI.classes import LLMCallback
 from toolkit.AI.client import OpenAIClient
-from toolkit.helpers import IntelligenceWorkflow
+from toolkit.helpers.classes import IntelligenceWorkflow
 from toolkit.match_entity_records import prompts
-
-from .classes import AttributeToMatch, RecordsModel
-from .detect import (
+from toolkit.match_entity_records.classes import AttributeToMatch, RecordsModel
+from toolkit.match_entity_records.detect import (
     build_attributes_dataframe,
     build_matches,
     build_matches_dataset,
@@ -24,7 +24,7 @@ from .detect import (
     build_sentence_pair_scores,
     convert_to_sentences,
 )
-from .prepare_model import (
+from toolkit.match_entity_records.prepare_model import (
     build_attribute_options,
     build_attributes_list,
     format_model_df,
@@ -111,7 +111,7 @@ class MatchEntityRecords(IntelligenceWorkflow):
         )
         return self.matches_df
 
-    def evaluate_groups(
+    async def evaluate_groups(
         self,
         ai_instructions=prompts.list_prompts,
         callbacks: list[LLMCallback] | None = None,
@@ -123,19 +123,21 @@ class MatchEntityRecords(IntelligenceWorkflow):
                 "Name similarity",
             ]
         ).to_pandas()
+        data = data.head(500)
 
         batch_messages = utils.generate_batch_messages(
             ai_instructions, batch_name="data", batch_value=data
         )
-        response = ""
-        for messages in batch_messages:
-            response += OpenAIClient(self.ai_configuration).generate_chat(
-                messages, callbacks=callbacks or []
-            )
+        prefix = "```\nGroup ID,Relatedness,Explanation\n"
 
-        # response to pl
-        self.evaluations_df = pl.read_csv(io.StringIO(response))
-        return response
+        for messages in batch_messages:
+            response = await OpenAIClient(self.ai_configuration).generate_chat_async(
+                messages, stream=True
+            )
+            prefix = prefix + response + "\n"
+        result = prefix.replace("```\n", "").strip()
+        self.evaluations_df = pl.read_csv(io.StringIO(result))
+        return result
 
     def clear_model_dfs(self) -> None:
         self.model_dfs = {}

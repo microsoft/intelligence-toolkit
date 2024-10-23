@@ -5,7 +5,7 @@
 import os
 
 from .api import MatchEntityRecords
-from .classes import AttributeToMatch, RecordsModel
+from .classes import RecordsModel
 from .prepare_model import (
     build_attribute_options,
     build_attributes_list,
@@ -20,7 +20,6 @@ def get_readme() -> str:
 
 
 __all__ = [
-    "AttributeToMatch",
     "MatchEntityRecords",
     "RecordsModel",
     "build_attribute_options",

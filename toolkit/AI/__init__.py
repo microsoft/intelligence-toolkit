@@ -2,11 +2,10 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 
-from .classes import LLMCallback, VectorData
+from .classes import VectorData
 from .types import OpenAIClientTypes
 
 __all__ = [
     "OpenAIClientTypes",
-    "LLMCallback",
     "VectorData",
 ]

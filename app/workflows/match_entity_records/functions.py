@@ -3,13 +3,13 @@
 #
 import streamlit as st
 
+import toolkit.match_entity_records.config as config
 from app.util.constants import LOCAL_EMBEDDING_MODEL_KEY
 from app.util.openai_wrapper import UIOpenAIConfiguration
 from app.util.secrets_handler import SecretsHandler
 from toolkit.AI.base_embedder import BaseEmbedder
 from toolkit.AI.local_embedder import LocalEmbedder
 from toolkit.AI.openai_embedder import OpenAIEmbedder
-from toolkit.match_entity_records import config
 
 
 def embedder(local_embedding: bool | None = False) -> BaseEmbedder:

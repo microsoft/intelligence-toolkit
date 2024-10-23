@@ -5,7 +5,7 @@
 
 import polars as pl
 
-from toolkit.AI import utils
+import toolkit.AI.utils as utils
 from toolkit.AI.client import OpenAIClient
 from toolkit.compare_case_groups import prompts
 from toolkit.compare_case_groups.build_dataframes import (
@@ -18,7 +18,7 @@ from toolkit.compare_case_groups.temporal_process import (
     build_temporal_data,
     create_window_df,
 )
-from toolkit.helpers import IntelligenceWorkflow
+from toolkit.helpers.classes import IntelligenceWorkflow
 
 
 class CompareCaseGroups(IntelligenceWorkflow):

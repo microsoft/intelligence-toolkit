@@ -8,6 +8,9 @@ from toolkit.AI.openai_embedder import OpenAIEmbedder
 
 
 class IntelligenceWorkflow:
+    embedder = None
+    cache_embeddings = True
+
     # Base class for all AI workflows
     def __init__(self, ai_configuration: OpenAIConfiguration | None = None) -> None:
         self.ai_configuration = ai_configuration

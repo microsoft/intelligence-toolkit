@@ -20,7 +20,7 @@ from toolkit.anonymize_case_data.error_report import ErrorReport
 from toolkit.anonymize_case_data.synthesizability_statistics import (
     SynthesizabilityStatistics,
 )
-from toolkit.helpers import IntelligenceWorkflow
+from toolkit.helpers.classes import IntelligenceWorkflow
 
 
 class AnonymizeCaseData(IntelligenceWorkflow):

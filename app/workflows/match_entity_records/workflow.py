@@ -16,9 +16,9 @@ import toolkit.match_entity_records.prompts as prompts
 from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
-from toolkit.match_entity_records import (
+from toolkit.match_entity_records.api import MatchEntityRecords
+from toolkit.match_entity_records.classes import (
     AttributeToMatch,
-    MatchEntityRecords,
     RecordsModel,
 )
 
@@ -218,7 +218,7 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                         "Matching record distance (max)",
                         min_value=0.001,
                         max_value=1.0,
-                        step=0.001,
+                        step=0.01,
                         format="%f",
                         value=sv.matching_sentence_pair_embedding_threshold.value,
                         help="The maximum cosine distance between two records in the embedding space for them to be considered a match. Lower values will result in fewer closer matches overall.",
@@ -375,11 +375,11 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
 
             if len(sv.matching_evaluations.value) > 0:
                 try:
-                    csv = pl.read_csv(io.StringIO(sv.matching_evaluations.value))
-                    value = csv.drop_nulls()
-                    jdf = sv.matching_matches_df.value.join(
-                        value, on="Group ID", how="inner"
+                    mer.evaluations_df = pl.read_csv(
+                        io.StringIO(sv.matching_evaluations.value)
                     )
+                    value = mer.evaluations_df.drop_nulls()
+
                     st.dataframe(
                         value.to_pandas(),
                         height=700,
@@ -390,14 +390,14 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                     with c1:
                         st.download_button(
                             "Download AI match reports",
-                            data=csv.write_csv(),
+                            data=value.write_csv(),
                             file_name="record_group_match_reports.csv",
                             mime="text/csv",
                         )
                     with c2:
                         st.download_button(
                             "Download integrated results",
-                            data=jdf.write_csv(),
+                            data=mer.integrated_results.write_csv(),
                             file_name="integrated_record_match_results.csv",
                             mime="text/csv",
                         )

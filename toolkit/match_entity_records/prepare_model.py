@@ -5,7 +5,7 @@ from collections import defaultdict
 
 import polars as pl
 
-from .classes import AttributeToMatch, RecordsModel
+from toolkit.match_entity_records.classes import AttributeToMatch, RecordsModel
 
 
 def format_model_df(
