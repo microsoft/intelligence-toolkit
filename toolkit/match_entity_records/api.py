@@ -3,12 +3,13 @@
 #
 
 
+import io
 from typing import ClassVar
 
 import numpy as np
 import polars as pl
 
-from toolkit.AI import LLMCallback, LocalEmbedder, OpenAIEmbedder, utils
+from toolkit.AI import LLMCallback, utils
 from toolkit.AI.client import OpenAIClient
 from toolkit.helpers import IntelligenceWorkflow
 from toolkit.match_entity_records import prompts
@@ -33,13 +34,21 @@ from .prepare_model import (
 class MatchEntityRecords(IntelligenceWorkflow):
     model_dfs: ClassVar[dict] = {}
     max_rows_to_process = 0
+    evaluations_df = pl.DataFrame()
+    matches_df = pl.DataFrame()
 
+    @property
     def total_records(self) -> int:
         return sum(df.shape[0] for df in self.model_dfs.values())
 
     @property
     def attribute_options(self) -> str:
         return build_attribute_options(self.model_dfs)
+
+    @property
+    def integrated_results(self) -> pl.DataFrame:
+        value = self.evaluations_df.drop_nulls()
+        return self.matches_df.join(value, on="Group ID", how="inner")
 
     def add_df_to_model(self, model: RecordsModel) -> pl.DataFrame:
         if not model.dataframe_name:
@@ -63,14 +72,9 @@ class MatchEntityRecords(IntelligenceWorkflow):
         self.sentences_vector_data = convert_to_sentences(self.model_df)
         return self.model_df
 
-    async def embed_sentences(
-        self, local_embedding: bool = False, store_embeddings: bool = True
-    ) -> None:
-        embedder = OpenAIEmbedder(self.ai_configuration)
-        if local_embedding:
-            embedder = LocalEmbedder()
-        sentences_data = await embedder.embed_store_many(
-            self.sentences_vector_data, cache_data=store_embeddings
+    async def embed_sentences(self) -> None:
+        sentences_data = await self.embedder.embed_store_many(
+            self.sentences_vector_data, cache_data=self.cache_embeddings
         )
         self.all_sentences = [x["text"] for x in self.sentences_vector_data]
         self.embeddings = [
@@ -102,7 +106,10 @@ class MatchEntityRecords(IntelligenceWorkflow):
             schema=["Group ID", *self.model_df.columns],
         ).sort(by=["Group ID", "Entity name", "Dataset"], descending=False)
 
-        return build_matches_dataset(matches_df, pair_to_match, entity_to_group)
+        self.matches_df = build_matches_dataset(
+            matches_df, pair_to_match, entity_to_group
+        )
+        return self.matches_df
 
     def evaluate_groups(
         self,
@@ -125,6 +132,9 @@ class MatchEntityRecords(IntelligenceWorkflow):
             response += OpenAIClient(self.ai_configuration).generate_chat(
                 messages, callbacks=callbacks or []
             )
+
+        # response to pl
+        self.evaluations_df = pl.read_csv(io.StringIO(response))
         return response
 
     def clear_model_dfs(self) -> None:
