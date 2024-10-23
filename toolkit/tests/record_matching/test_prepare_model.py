@@ -6,12 +6,13 @@ import polars as pl
 import pytest
 
 from toolkit.match_entity_records import (
+    RecordsModel,
     build_attribute_options,
-    format_dataset,
+    format_model_df,
 )
 
 
-class TestFormatDataset:
+class TestFormatModelDf:
     @pytest.fixture()
     def selected_df(self) -> pl.DataFrame:
         return pl.DataFrame(
@@ -24,17 +25,20 @@ class TestFormatDataset:
             }
         )
 
-    def test_empty(self) -> None:
-        df_empty = pl.DataFrame()
-        result = format_dataset(df_empty, [], "")
+    def test_empty_df(self) -> None:
+        model = RecordsModel(dataframe=pl.DataFrame(), name_column="", columns=[])
+        result = format_model_df(model)
         assert result.is_empty()
 
     def test_add_with_id(self, selected_df) -> None:
-        id = "ID1"
-        name = "Name"
-        entity_attribute_columns = ["Attribute1"]
+        model = RecordsModel(
+            dataframe=selected_df,
+            id_column="ID1",
+            name_column="Name",
+            columns=["Attribute1"],
+        )
 
-        result = format_dataset(selected_df, entity_attribute_columns, name, id)
+        result = format_model_df(model)
 
         assert "Entity ID" in result.columns
         assert "Entity name" in result.columns
@@ -42,9 +46,12 @@ class TestFormatDataset:
         assert len(result.columns) == 3
 
     def test_add_no_id(self, selected_df) -> None:
-        name = "Name"
-        entity_attribute_columns = ["Attribute1"]
-        result = format_dataset(selected_df, entity_attribute_columns, name)
+        model = RecordsModel(
+            dataframe=selected_df,
+            name_column="Name",
+            columns=["Attribute1"],
+        )
+        result = format_model_df(model)
 
         assert "Attribute1" in result.columns
         assert "Entity ID" in result.columns
@@ -53,9 +60,12 @@ class TestFormatDataset:
         assert len(result.columns) == 3
 
     def test_add_attributes_ordered(self, selected_df) -> None:
-        name = "Name"
-        entity_attribute_columns = ["Attribute3", "Attribute1"]
-        result = format_dataset(selected_df, entity_attribute_columns, name)
+        model = RecordsModel(
+            dataframe=selected_df,
+            name_column="Name",
+            columns=["Attribute3", "Attribute1"],
+        )
+        result = format_model_df(model)
 
         assert "Attribute1" in result.columns
         assert "Entity ID" in result.columns
@@ -69,29 +79,36 @@ class TestFormatDataset:
         ]
 
     def test_add_attributes_empty(self, selected_df) -> None:
-        name = "Name"
-        entity_attribute_columns = []
-        result = format_dataset(selected_df, entity_attribute_columns, name)
+        model = RecordsModel(
+            dataframe=selected_df,
+            name_column="Name",
+            columns=[],
+        )
+        result = format_model_df(model)
 
         assert "Entity ID" in result.columns
         assert "Entity name" in result.columns
 
         assert len(result.columns) == 2
 
-    def test_add_attributes_no_max_rows(self, selected_df) -> None:
-        name = "Name"
-        entity_attribute_columns = []
-        result = format_dataset(selected_df, entity_attribute_columns, name)
+    def test_add_attributes_no_columns(self, selected_df) -> None:
+        model = RecordsModel(
+            dataframe=selected_df,
+            name_column="Name",
+            columns=[],
+        )
+        result = format_model_df(model)
 
         assert result.height == 3
 
     def test_add_attributes_max_rows(self, selected_df) -> None:
-        name = "Name"
-        entity_attribute_columns = []
-        max_rows = 2
-        result = format_dataset(
-            selected_df, entity_attribute_columns, name, max_rows=max_rows
+        model = RecordsModel(
+            dataframe=selected_df,
+            name_column="Name",
+            columns=[],
         )
+        max_rows = 2
+        result = format_model_df(model, max_rows=max_rows)
 
         assert result.height == 2
 

@@ -22,7 +22,7 @@ def format_model_df(
     if model.dataframe.is_empty():
         return pl.DataFrame()
 
-    if model.id_column == "":
+    if not model.id_column:
         selected_df = model.dataframe.with_row_index(name="Entity ID")
     else:
         selected_df = model.dataframe.rename({model.id_column: "Entity ID"})
