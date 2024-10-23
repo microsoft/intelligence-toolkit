@@ -8,8 +8,7 @@ import app.util.example_outputs_ui as example_outputs_ui
 import app.util.schema_ui as schema_ui
 import app.util.ui_components as ui_components
 import app.workflows.generate_mock_data.variables as bds_variables
-import toolkit.generate_mock_data.data_generator as data_generator
-import toolkit.generate_mock_data.text_generator as text_generator
+from toolkit.generate_mock_data import GenerateMockData
 from app.util.download_pdf import add_download_pdf
 from app.util.openai_wrapper import UIOpenAIConfiguration
 
@@ -23,7 +22,8 @@ def get_intro():
 
 async def create(sv: bds_variables.SessionVariables, workflow: None):
     ui_components.check_ai_configuration()
-
+    gmd: GenerateMockData = sv.workflow_object.value
+    gmd.set_ai_configuration(ai_configuration)
     intro_tab, schema_tab, record_generator_tab, text_generator_tab, mock_tab = st.tabs(['Generate Mock Data workflow:', 'Prepare data schema', 'Generate mock records', 'Generate mock texts', 'View example outputs'])
     with intro_tab:
         file_content = get_intro()
@@ -35,49 +35,29 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
         )
     with schema_tab:
         sv.loaded_filename.value = schema_ui.build_schema_ui(sv.schema.value, sv.loaded_filename.value)
+        gmd.set_schema(sv.schema.value)
+        sv.record_arrays.value = [".".join(x) for x in gmd.record_arrays]
     with record_generator_tab:
         if len(sv.schema.value['properties']) == 0:
             st.warning("Prepare data schema to continue.")
         else:
             st.markdown("##### Data generation controls")
-            c1, c2, c3, c4, c5, c6 = st.columns(6)
+            c1, c2, c3, c4 = st.columns(4)
             with c1:
-                array_field_arrays = data_generator.extract_array_fields(sv.schema.value)
-                sv.record_arrays.value = ['.'.join(a) for a in array_field_arrays]
-                st.selectbox("Primary record array", sv.record_arrays.value, key=sv.primary_record_array.key,
-                             help="In the presence of multiple arrays, select the one that represents the primary record type whose records should be counted towards the `Total records to generate` target")
-            with c2:
                 st.number_input("Records per batch", min_value=1, value=sv.records_per_batch.value, key=sv.records_per_batch.key,
                                 help="How many records to generate in a single LLM call")
-            with c3:
-
-                def on_change_batches_num() -> None:
-                    sv.num_records_overall.value = (
-                        sv.records_per_batch.value * sv.parallel_batches.value
-                    )
-
-                st.number_input(
-                    "Parallel batches",
-                    min_value=0,
-                    step=1,
-                    value=sv.parallel_batches.value,
-                    on_change=on_change_batches_num,
-                    key=sv.parallel_batches.key,
-                    help="In a single iteration, how many batches to generate via parallel LLM calls",
-                )
-            with c4:
+            with c2:
                 st.number_input(
                     "Total records to generate",
-                    min_value=sv.records_per_batch.value * sv.parallel_batches.value,
-                    step=sv.records_per_batch.value * sv.parallel_batches.value,
+                    min_value=sv.records_per_batch.value,
                     value=sv.num_records_overall.value,
                     key=sv.num_records_overall.key,
                     help="How many records to generate. Must be a multiple of `Records per batch` x `Parallel batches`",
                 )
-            with c5:
+            with c3:
                 st.number_input("Duplicate records per batch", min_value=0, value=sv.duplicate_records_per_batch.value, key=sv.duplicate_records_per_batch.key,
                                 help="Within each batch, how many records should be near-duplicates of a seed record randomly selected from existing records")
-            with c6:
+            with c4:
                 st.number_input("Related records per batch", min_value=0, value=sv.related_records_per_batch.value, key=sv.related_records_per_batch.key,
                                 help="Within each batch, how many records should appear closely related to (but not the same as) a seed record randomly selected from existing records")
             st.text_area("AI data generation guidance", key=sv.generation_guidance.key, value=sv.generation_guidance.value,
@@ -110,21 +90,18 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                     for placeholder in df_placeholders:
                         placeholder.empty()
 
-                    sv.final_object.value, sv.generated_objects.value, sv.generated_dfs.value = await data_generator.generate_data(
-                        ai_configuration=ai_configuration,
+                    await gmd.generate_data(
                         generation_guidance=sv.generation_guidance.value,
-                        primary_record_array=sv.primary_record_array.value,
-                        record_arrays=sv.record_arrays.value,
                         num_records_overall=sv.num_records_overall.value,
                         records_per_batch=sv.records_per_batch.value,
-                        parallel_batches=sv.parallel_batches.value,
                         duplicate_records_per_batch=sv.duplicate_records_per_batch.value,
                         related_records_per_batch=sv.related_records_per_batch.value,
-                        data_schema=sv.schema.value,
                         temperature=sv.record_synthesis_temperature.value,
                         df_update_callback=on_dfs_update,
                         callback_batch=None
                     )
+                    sv.final_object.value = gmd.json_object
+                    sv.generated_dfs.value = gmd.array_dfs
 
                 for ix, record_array in enumerate(sv.record_arrays.value):
                         with df_placeholders[ix]:
@@ -167,7 +144,7 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
             if changed:
                 if selected_df is not None:
                     sv.input_texts.value = []
-                    for ix, row in selected_df.iterrows():
+                    for _, row in selected_df.iterrows():
                         sv.input_texts.value.append(row.to_json())
                 sv.generated_texts.value = []
             st.text_area("AI text generation guidance", key=sv.text_generation_guidance.key, value=sv.text_generation_guidance.value,
@@ -195,18 +172,15 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                 sv.generated_texts.value = pd.DataFrame()
                 df_placeholder.empty()
 
-                (
-                    sv.generated_texts.value,
-                    sv.generated_text_df.value
-                ) = await text_generator.generate_text_data(
-                    ai_configuration=ai_configuration,
-                    input_texts=sv.input_texts.value,
+                await gmd.generate_text_data(
+                    df=selected_df,
                     generation_guidance=sv.text_generation_guidance.value,
                     temperature=sv.text_synthesis_temperature.value,
-                    df_update_callback=on_dfs_update,
-                    parallel_threads=10,
-                    callback_batch=None
+                    df_update_callback=on_dfs_update
                 )
+                sv.generated_texts.value = gmd.text_list
+                sv.generated_text_df.value = gmd.text_df
+
 
             if sv.generated_text_df.value is not None and selected_file is not None:
                 with df_placeholder:

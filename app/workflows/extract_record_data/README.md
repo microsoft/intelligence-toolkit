@@ -8,12 +8,13 @@ Select the `View example outputs` tab (in app) or navigate to [example_outputs/e
 
 1. [**Input**] An instance or collection of unstructured text and (optionally) an existing JSON file containing the JSON schema with which to generate output records.
 2. [**Process**] The user edits the uploaded JSON schema or creates one interactively.
-3. [**AI Calls**] The system uses generative AI to extract a JSON object from the text following the JSON schema.
+3. [**AI Calls**] The system uses generative AI to extract a JSON object from each text following the JSON schema.
 4. [**Output**] A dataset of structured records following the JSON schema and (optionally) a newly-defined JSON schema.
 
 ## Input requirements
 
 - The input schema, if provided, should be a JSON file conforming to the [JSON schema standard](https://json-schema.org/) and following the restrictions of the [OpenAI Structured Outputs API](https://platform.openai.com/docs/guides/structured-outputs/supported-schemas).
+- The unstructured text is sent to the AI API for record extraction (either OpenAI or Azure OpenAI). Such data use must comply with all applicable laws, regulations, and policies, including those pertaining to privacy and security.
 
 ## Use with other workflows
 
@@ -41,7 +42,6 @@ In the top left, you have the option to upload an existing JSON schema. This is 
 The initial JSON schema contains some boilerplate metadata fields representing best practices for schema design. The metadata fields are as follows:
 
 - `$schema`: Indicates the version of the json-schema standard that the current schema follows. Leave this field as it is.
-- `$id`: Provides a global ID for this schema anchored in a web domain, e.g., that of your organization. You may wish to edit this if you expect your schema to be widely used, but it can be left as it is for use inside Intelligence Toolkit.
 - `title`: A short title indicating the kind of data that the schema represents.
 - `description`: A longer description of the kind of data that the schema represents.
 

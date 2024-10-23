@@ -14,19 +14,21 @@ from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 async def generate_data(
     ai_configuration,
     generation_guidance,
-    primary_record_array,
-    record_arrays,
     data_schema,
     num_records_overall,
     records_per_batch,
-    parallel_batches,
     duplicate_records_per_batch,
     related_records_per_batch,
     temperature,
     df_update_callback,
     callback_batch,
+    parallel_batches=0
 ):
+    if parallel_batches == 0:
+        parallel_batches = num_records_overall // records_per_batch
     num_iterations = num_records_overall // (records_per_batch * parallel_batches)
+    record_arrays = extract_array_fields(data_schema)
+    primary_record_array = record_arrays[0]
     generated_objects = []
     first_object = generate_unseeded_data(
                         ai_configuration=ai_configuration,
@@ -41,7 +43,9 @@ async def generate_data(
     dfs = {}
     for i in range(num_iterations):
         if i == 0:
-            sample_records = sample_from_record_array(first_object_json, primary_record_array, records_per_batch)
+            sample_records = sample_from_record_array(
+                first_object_json, primary_record_array, records_per_batch
+            )
         else:
             sample_records = sample_from_record_array(
                 current_object_json, primary_record_array, parallel_batches
@@ -67,10 +71,10 @@ async def generate_data(
         
         for record_array in record_arrays:
             df = extract_df(current_object_json, record_array)
-            dfs[record_array] = df
+            dfs[".".join(record_array)] = df
         if df_update_callback is not None:
             df_update_callback(dfs)
-    return current_object_json, generated_objects, dfs
+    return current_object_json, dfs
 
 def generate_unseeded_data(
         ai_configuration,
@@ -159,7 +163,7 @@ def extract_df(json_data, record_path):
     # Extracts a DataFrame from a JSON object
     return pd.json_normalize(
         data=json_data,
-        record_path=record_path.split('.')
+        record_path=record_path
     )
 
 def merge_json_objects(json_obj1, json_obj2):
@@ -214,5 +218,5 @@ def extract_array_fields(schema):
     return array_fields
 
 def sample_from_record_array(current_object, record_array, k):
-    records = schema_builder.get_subobject(current_object, record_array.split("."))
+    records = schema_builder.get_subobject(current_object, record_array)
     return random.sample(records, k) if len(records) > k else records
