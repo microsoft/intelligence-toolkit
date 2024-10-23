@@ -7,14 +7,13 @@ from typing import Any
 
 from sentence_transformers import SentenceTransformer
 
-from toolkit.helpers.constants import CACHE_PATH
-
-from .base_embedder import BaseEmbedder
-from .defaults import (
+from toolkit.AI.base_embedder import BaseEmbedder
+from toolkit.AI.defaults import (
     DEFAULT_CONCURRENT_COROUTINES,
     DEFAULT_LLM_MAX_TOKENS,
     DEFAULT_LOCAL_EMBEDDING_MODEL,
 )
+from toolkit.helpers.constants import CACHE_PATH
 
 
 class LocalEmbedder(BaseEmbedder):
