@@ -196,7 +196,9 @@ def merge_json_objects(json_obj1, json_obj2):
     return merged_object, conflicts
 
 
-def extract_array_fields(schema):
+def extract_array_fields(
+    schema: dict
+) -> list[list[str]]:
     # Extracts any array fields at any level of nesting, and returns a list of lists of field names navigating down the schema
     array_fields = []
 

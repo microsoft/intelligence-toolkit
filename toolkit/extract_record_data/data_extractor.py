@@ -29,17 +29,16 @@ async def extract_record_data(
     )
 
     for new_object in new_objects:
-        print(new_object)
         new_object_json = loads(new_object)
         generated_objects.append(new_object_json)
         current_object_json, conflicts = merge_json_objects(current_object_json, new_object_json)
     dfs = {}
     for record_array in record_arrays:
         df = extract_df(current_object_json, record_array)
-        dfs[record_array] = df
+        dfs[".".join(record_array)] = df
     if df_update_callback is not None:
         df_update_callback(dfs)
-    return current_object_json, generated_objects, dfs
+    return current_object_json, dfs
 
 
 async def _extract_data_parallel(
@@ -73,11 +72,10 @@ async def _extract_data_parallel(
     )
 
 def extract_df(json_data, record_path):
-    print(record_path)
     # Extracts a DataFrame from a JSON object
     return pd.json_normalize(
         data=json_data,
-        record_path=record_path.split('.')
+        record_path=record_path
     )
 
 def merge_json_objects(json_obj1, json_obj2):

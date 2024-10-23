@@ -4,15 +4,15 @@ import asyncio
 from tqdm.asyncio import tqdm_asyncio
 import toolkit.AI.utils as utils
 import toolkit.generate_mock_data.prompts as prompts
-from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
+from toolkit.AI.openai_configuration import OpenAIConfiguration
 
 
 async def generate_text_data(
-    ai_configuration,
-    generation_guidance,
-    input_texts,
-    temperature,
-    df_update_callback,
+    ai_configuration: OpenAIConfiguration,
+    input_texts: list[str],
+    generation_guidance: str="",
+    temperature: float=0.5,
+    df_update_callback=None,
 ):
     df = pd.DataFrame(columns=["mock_text"])
     tasks = []
