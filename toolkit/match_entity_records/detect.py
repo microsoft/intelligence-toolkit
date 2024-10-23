@@ -70,6 +70,7 @@ def build_near_map(
     max_record_distance: int | None = DEFAULT_MAX_RECORD_DISTANCE,
 ) -> defaultdict[Any, list]:
     near_map = defaultdict(list)
+
     for ix in range(len(all_sentences)):
         n = all_sentences[ix]
         near_is = indices[ix][1:]

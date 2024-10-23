@@ -3,10 +3,9 @@
 #
 
 
-import pandas as pd
 import polars as pl
 
-from toolkit.AI import utils
+import toolkit.AI.utils as utils
 from toolkit.AI.client import OpenAIClient
 from toolkit.compare_case_groups import prompts
 from toolkit.compare_case_groups.build_dataframes import (
@@ -19,7 +18,7 @@ from toolkit.compare_case_groups.temporal_process import (
     build_temporal_data,
     create_window_df,
 )
-from toolkit.helpers import IntelligenceWorkflow
+from toolkit.helpers.classes import IntelligenceWorkflow
 
 
 class CompareCaseGroups(IntelligenceWorkflow):
@@ -42,6 +41,34 @@ class CompareCaseGroups(IntelligenceWorkflow):
             else 0,
             0,
         )
+
+    def get_filter_options(self, input_df: pl.DataFrame) -> list[str]:
+        sorted_atts = []
+        sorted_cols = sorted(input_df.columns)
+        for col in sorted_cols:
+            unique_sorted_values = (
+                input_df.with_columns(pl.col(col).cast(pl.Utf8))  # Cast to string
+                .select(pl.col(col).unique())  # Get unique values
+                .to_series()  # Convert to Series
+                .sort()  # Sort the unique values
+            )
+            vals = [
+                f"{col}:{x}"
+                for x in unique_sorted_values
+                if x
+                not in [
+                    "",
+                    "<NA>",
+                    "nan",
+                    "NaN",
+                    "None",
+                    "none",
+                    "NULL",
+                    "null",
+                ]
+            ]
+            sorted_atts.extend(vals)
+        return sorted_atts
 
     def _select_columns_ranked_df(self, ranked_df: pl.DataFrame) -> None:
         columns = [g.lower() for g in self.groups]
@@ -69,7 +96,7 @@ class CompareCaseGroups(IntelligenceWorkflow):
 
     def create_data_summary(
         self,
-        final_df: pd.DataFrame,
+        final_df: pl.DataFrame,
         filters: list[str],
         groups: list[str],
         aggregates: list[str],

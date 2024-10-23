@@ -88,7 +88,9 @@ Navigate to the `Detect record groups` tab to continue.
 
 ### Configuring the text embedding model
 
-The interface on the left shows an empty selection box for `Attribute 1`. Within this field, the selectable values all have a suffix indicating their source dataset (here, `D1` or `D2`). Select `address::D1` and `street_address::D2` as the values for `Attribute 1`, and optionally enter either label (or a new label) for this attribute in the `Label (optional)` field. If no label is provided, the first value alphabetically will be used as the attribute label in the unified dataset.
+The interface on the left shows an empty selection box for `Attribute 1`. Within this field, the selectable values all have a suffix indicating their source dataset (here, `D1` or `D2`). 
+
+Select `address::D1` and `street_address::D2` as the values for `Attribute 1`, and optionally enter either label (or a new label) for this attribute in the `Label (optional)` field. If no label is provided, the first value alphabetically will be used as the attribute label in the unified dataset.
 
 Repeat this process to match the following pairs of attributes:
 
@@ -97,7 +99,6 @@ Repeat this process to match the following pairs of attributes:
 - `country::D1` and `country_address::D2`
 - `sector::D1` and `industry_sector::D2`
 - `owner::D1` and `company_owner::D2`
-- `city::D1` and `city_address::D2`
 - `email::D1` and `email_address::D2`
 - `phone::D1` and `phone_number::D2`
 

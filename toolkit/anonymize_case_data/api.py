@@ -20,10 +20,11 @@ from toolkit.anonymize_case_data.error_report import ErrorReport
 from toolkit.anonymize_case_data.synthesizability_statistics import (
     SynthesizabilityStatistics,
 )
+from toolkit.helpers.classes import IntelligenceWorkflow
 
 
-class AnonymizeCaseData:
-    def __init__(self):
+class AnonymizeCaseData(IntelligenceWorkflow):
+    def __init__(self) -> None:
         self.protected_number_of_records = 0
         self.delta = 0
         self.sensitive_df = pd.DataFrame()

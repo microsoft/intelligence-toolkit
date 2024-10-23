@@ -1,8 +1,11 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 
-import pandas as pd
 from collections import defaultdict
+from typing import Any
+
+import pandas as pd
+
 
 def get_data_schema(sdf) -> dict[list[str]]:
     data_schema = defaultdict(list)
@@ -21,8 +24,8 @@ def compute_aggregate_graph(
     target_attribute,
     highlight_attribute,
     att_separator=";",
-    val_separator=":"
-):
+    val_separator=":",
+) -> pd.DataFrame:
     edge_atts = {source_attribute, target_attribute}
     edges = []
     edge_counts = {}
@@ -89,8 +92,8 @@ def compute_synthetic_graph(
     target_attribute,
     highlight_attribute,
     att_separator=";",
-    val_separator=":"
-):
+    val_separator=":",
+) -> pd.DataFrame:
     edges = []
     att_groups = {}
     for f in filters:
@@ -132,14 +135,8 @@ def compute_synthetic_graph(
     return edges_df
 
 def compute_top_attributes_query(
-    query,
-    sdf,
-    adf,
-    show_attributes,
-    num_values,
-    att_separator=";",
-    val_separator=":"
-):
+    query, sdf, adf, show_attributes, num_values, att_separator=";", val_separator=":"
+) -> pd.DataFrame | Any:
     data_schema = get_data_schema(sdf)
     df = sdf.copy(deep=True)
     selection = []
@@ -222,14 +219,8 @@ def compute_top_attributes_query(
     return result_df[["Attribute", "Attribute Value", "Count", "Dataset"]]
 
 def compute_time_series_query(
-    query,
-    sdf,
-    adf,
-    time_attribute,
-    time_series,
-    att_separator=";",
-    val_separator=":"
-):
+    query, sdf, adf, time_attribute, time_series, att_separator=";", val_separator=":"
+) -> pd.DataFrame:
     tdfs = []
     times = [t for t in sorted(sdf[time_attribute].unique()) if len(str(t)) > 0]
     for time in times:

@@ -13,14 +13,16 @@ from tqdm.asyncio import tqdm_asyncio
 
 from toolkit.AI.base_batch_async import BaseBatchAsync
 from toolkit.AI.classes import VectorData
-from toolkit.AI.defaults import DEFAULT_LLM_MAX_TOKENS, EMBEDDING_BATCHES_NUMBER
+from toolkit.AI.defaults import (
+    DEFAULT_CONCURRENT_COROUTINES,
+    DEFAULT_LLM_MAX_TOKENS,
+    EMBEDDING_BATCHES_NUMBER,
+)
+from toolkit.AI.utils import get_token_count, hash_text
 from toolkit.AI.vector_store import VectorStore
 from toolkit.helpers.constants import CACHE_PATH
 from toolkit.helpers.decorators import retry_with_backoff
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
-
-from .defaults import DEFAULT_CONCURRENT_COROUTINES
-from .utils import get_token_count, hash_text
 
 logger = logging.getLogger(__name__)
 
@@ -55,11 +57,14 @@ class BaseEmbedder(ABC, BaseBatchAsync):
             if not data["hash"]:
                 text_hashed = hash_text(data["text"])
                 data["hash"] = text_hashed
-            tokens = get_token_count(data["text"])
-            if tokens > self.max_tokens:
-                text = data["text"][: self.max_tokens]
-                data["text"] = text
-                logger.info("Truncated text to max tokens")
+                try:
+                    tokens = get_token_count(data["text"])
+                    if tokens > self.max_tokens:
+                        text = data["text"][: self.max_tokens]
+                        data["text"] = text
+                        logger.info("Truncated text to max tokens")
+                except Exception:
+                    pass
             try:
                 embedding = await asyncio.wait_for(
                     self._generate_embedding_async(data["text"]), timeout=90
