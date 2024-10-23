@@ -3,7 +3,7 @@
 #
 import streamlit as st
 from app.util.session_variable import SessionVariable
-from toolkit.generate_mock_data.schema_builder import create_boilerplate_schema
+from toolkit.generate_mock_data import GenerateMockData, create_boilerplate_schema
 
 class SessionVariables:
     prefix = None
@@ -13,10 +13,10 @@ class SessionVariables:
         self.create_session(prefix)
 
     def create_session(self, prefix):
+        self.workflow_object = SessionVariable(GenerateMockData(), prefix)
         self.schema = SessionVariable(create_boilerplate_schema(), prefix)
         self.num_records_overall = SessionVariable(100, prefix)
         self.records_per_batch = SessionVariable(20, prefix)
-        self.parallel_batches = SessionVariable(5, prefix)
         self.duplicate_records_per_batch = SessionVariable(0, prefix)
         self.related_records_per_batch = SessionVariable(0, prefix)
         self.primary_record_array = SessionVariable('', prefix)
@@ -31,8 +31,8 @@ class SessionVariables:
         self.generated_text_df = SessionVariable(None, prefix)
         self.uploaded_synthesis_files = SessionVariable([], prefix)
         self.synthesis_max_rows_to_process = SessionVariable(0, prefix)
-        self.text_synthesis_temperature = SessionVariable(0.7, prefix)
-        self.record_synthesis_temperature = SessionVariable(0.7, prefix)
+        self.text_synthesis_temperature = SessionVariable(0.5, prefix)
+        self.record_synthesis_temperature = SessionVariable(0.5, prefix)
         self.input_texts = SessionVariable([], prefix)
         
     def reset_workflow(self):

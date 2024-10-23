@@ -36,7 +36,7 @@ def get_intro():
 async def create(sv: SessionVariables, workflow=None):
     if "search_answers" not in st.session_state.keys():
         st.session_state["search_answers"] = False
-
+    gen_answer = False
     sv_home = SessionVariables("home")
     ui_components.check_ai_configuration()
 

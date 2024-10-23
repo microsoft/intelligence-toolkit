@@ -2,8 +2,8 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 
 import os
-from .api import GenerateMockData
-from .schema_builder import create_boilerplate_schema
+from .api import ExtractRecordData
+from toolkit.generate_mock_data.schema_builder import create_boilerplate_schema
 
 def get_readme():
     file_path = os.path.join(os.path.dirname(__file__), "README.md")
@@ -11,6 +11,6 @@ def get_readme():
         return file.read()
     
 __all__ = [
-    "GenerateMockData",
+    "ExtractRecordData",
     "create_boilerplate_schema"
 ]

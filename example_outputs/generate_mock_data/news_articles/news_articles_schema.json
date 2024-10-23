@@ -1,6 +1,5 @@
 {
   "$schema": "http://json-schema.org/draft/2020-12/schema",
-  "$id": "https://yourdomain.com/example.schema.json",
   "title": "News Articles",
   "description": "A schema to generate mock news article metadata",
   "type": "object",

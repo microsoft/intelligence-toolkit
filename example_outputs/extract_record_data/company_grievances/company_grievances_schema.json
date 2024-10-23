@@ -1,6 +1,5 @@
 {
   "$schema": "http://json-schema.org/draft/2020-12/schema",
-  "$id": "https://yourdomain.com/example.schema.json",
   "title": "Company schema",
   "description": "A schema for mock company data generation",
   "type": "object",
