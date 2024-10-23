@@ -17,7 +17,7 @@ async def assess_relevance(
     search_label,
     search_cids,
     cid_to_text,
-    question,
+    query,
     logit_bias,
     relevance_test_budget,
     num_adjacent,
@@ -29,7 +29,7 @@ async def assess_relevance(
     batched_cids = [search_cids[i:i+relevance_test_batch_size]
                       for i in range(0, len(search_cids), relevance_test_batch_size)]
     batched_texts = [[cid_to_text[cid] for cid in batch] for batch in batched_cids]
-    batched_messages = [[utils.prepare_messages(prompts.chunk_relevance_prompt, {'chunk': chunk, 'question': question}) 
+    batched_messages = [[utils.prepare_messages(prompts.chunk_relevance_prompt, {'chunk': chunk, 'query': query}) 
                         for chunk in batch] for batch in batched_texts]
     is_relevant = False
     for mx, mapped_messages in enumerate(batched_messages):
@@ -77,7 +77,7 @@ def process_relevance_responses(
 
 async def detect_relevant_chunks(
     ai_configuration,
-    question,
+    query,
     processed_chunks,
     cid_to_vector,
     embedder,
@@ -100,7 +100,7 @@ async def detect_relevant_chunks(
         
     aq_embedding = np.array(
         embedder.embed_store_one(
-            question, embedding_cache
+            query, embedding_cache
         )
     )
     relevant, seen, adjacent = helper_functions.test_history_elements(
@@ -214,7 +214,7 @@ async def detect_relevant_chunks(
                     search_label=f"topic {community}",
                     search_cids=unseen_cids,
                     cid_to_text=processed_chunks.cid_to_text,
-                    question=question,
+                    query=query,
                     logit_bias=logit_bias,
                     relevance_test_budget=chunk_search_config.relevance_test_budget,
                     num_adjacent=len(adjacent),
@@ -229,8 +229,8 @@ async def detect_relevant_chunks(
                     eliminated_communities.add(community)
                     successive_irrelevant += 1
                     if successive_irrelevant == chunk_search_config.irrelevant_community_restart:
-                        successive_irrelevant = 0
                         print(f'{successive_irrelevant} successive irrelevant communities; restarting')
+                        successive_irrelevant = 0
                         break
                 else:
                     successive_irrelevant = 0
@@ -255,7 +255,7 @@ async def detect_relevant_chunks(
         search_label="neighbours",
         search_cids=adjacent,
         cid_to_text=processed_chunks.cid_to_text,
-        question=question,
+        query=query,
         logit_bias=logit_bias,
         relevance_test_budget=chunk_search_config.relevance_test_budget,
         num_adjacent=len(adjacent),

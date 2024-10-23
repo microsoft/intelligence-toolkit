@@ -92,7 +92,7 @@ class AnswerConfig:
         claim_search_depth: int,
     ) -> None:
         """
-        Represents the configuration used to answer a user question.
+        Represents the configuration used to answer a user query.
 
         Args:
             target_chunks_per_cluster (int): How many chunks to aim to analyze together in a single LLM call
@@ -115,10 +115,10 @@ class AnswerObject:
         net_new_sources: int,
     ) -> None:
         """
-        Represents the answer to a user question.
+        Represents the answer to a user query.
 
         Args:
-            extended_answer (str): The extended answer to the user question
+            extended_answer (str): The extended answer to the user query
             references (list[str]): A list of references used in the answer
             referenced_chunks (list[int]): A list of chunk IDs referenced in the answer
             net_new_sources (int): The number of new sources used in the answer

@@ -4,6 +4,7 @@
 import toolkit.query_text_data.input_processor as input_processor
 import toolkit.query_text_data.helper_functions as helper_functions
 import toolkit.query_text_data.relevance_assessor as relevance_assessor
+import toolkit.query_text_data.query_rewriter as query_rewriter
 import toolkit.query_text_data.graph_builder as graph_builder
 import toolkit.query_text_data.answer_builder as answer_builder
 import toolkit.query_text_data.prompts as prompts
@@ -26,7 +27,7 @@ class QueryTextDataStage(Enum):
         CHUNKS_PROCESSED: The chunks have been processed.
         CHUNKS_EMBEDDED: The chunks have been embedded.
         CHUNKS_MINED: The chunks have been mined.
-        QUESTION_ANSWERED: The question has been answered.
+        QUESTION_ANSWERED: The query has been answered.
     """
     INITIAL = 0
     CHUNKS_CREATED = 1
@@ -62,7 +63,8 @@ class QueryTextData:
         self.label_to_chunks = None
         self.processed_chunks = None
         self.cid_to_vector = None
-        self.question = None
+        self.query = None
+        self.expanded_query = None
         self.chunk_search_config = None
         self.relevant_cids = None
         self.search_summary = None
@@ -173,9 +175,26 @@ class QueryTextData:
         self.stage = QueryTextDataStage.CHUNKS_EMBEDDED
         return self.cid_to_vector
     
+    async def anchor_query_to_concepts(
+        self,
+        query: str,
+        top_concepts: int=100
+    ) -> str:
+        """
+        Anchor the query to the top concepts in the graph.
+        """
+        anchored_query = await query_rewriter.rewrite_query(
+            self.ai_configuration,
+            query,
+            self.processed_chunks.period_concept_graphs['ALL'],
+            top_concepts
+        )
+        return anchored_query
+
     async def detect_relevant_text_chunks(
         self,
-        question: str,
+        query: str,
+        expanded_query: str,
         chunk_search_config: ChunkSearchConfig,
         chunk_progress_callback=None,
         chunk_callback=None
@@ -184,7 +203,7 @@ class QueryTextData:
         Detect relevant text chunks.
 
         Args:
-            question (str): The question
+            query (str): The query
             chunk_search_config (ChunkSearchConfig): The chunk search configuration
             chunk_progress_callback: The chunk progress callback
             chunk_callback: The chunk callback
@@ -192,11 +211,12 @@ class QueryTextData:
         Returns:
             tuple[list[int], str]: The relevant chunk IDs and search summary
         """
-        self.question = question
+        self.query = query
+        self.expanded_query = expanded_query
         self.chunk_search_config = chunk_search_config
         self.relevant_cids, self.search_summary = await relevance_assessor.detect_relevant_chunks(
             ai_configuration=self.ai_configuration,
-            question=self.question,
+            query=self.query,
             processed_chunks=self.processed_chunks,
             cid_to_vector=self.cid_to_vector,
             embedder=self.text_embedder,
@@ -209,12 +229,12 @@ class QueryTextData:
         self.stage = QueryTextDataStage.CHUNKS_MINED
         return self.relevant_cids, self.search_summary
     
-    async def answer_question_with_relevant_chunks(
+    async def answer_query_with_relevant_chunks(
             self,
             answer_config: AnswerConfig
         ) -> AnswerObject:
         """
-        Answer a question with relevant chunks.
+        Answer a query with relevant chunks.
 
         Args:
             answer_config (AnswerConfig): The answer configuration
@@ -223,9 +243,10 @@ class QueryTextData:
             AnswerObject: The answer object
         """
         self.answer_config = answer_config
-        self.answer_object: AnswerObject = await answer_builder.answer_question(
+        self.answer_object: AnswerObject = await answer_builder.answer_query(
             self.ai_configuration,
-            self.question,
+            self.query,
+            self.expanded_query,
             self.processed_chunks,
             self.relevant_cids,
             self.cid_to_vector,
@@ -262,7 +283,7 @@ class QueryTextData:
             callbacks: The list of callbacks
         """
         variables = {
-            "question": self.question,
+            "query": self.query,
             "answer": self.answer_object.extended_answer,
         }
         messages = utils.generate_messages(
@@ -273,6 +294,28 @@ class QueryTextData:
         )
         self.condensed_answer = OpenAIClient(self.ai_configuration).generate_chat(messages, callbacks=callbacks)
         return self.condensed_answer
+
+    def prepare_for_new_query(self) -> None:
+        """
+        Prepare for a new query.
+        """
+        self.query = None
+        self.expanded_query = None
+        self.chunk_search_config = None
+        self.relevant_cids = None
+        self.search_summary = None
+        self.answer_config = None
+        self.answer_object = None
+        self.level_to_label_to_network = None
+        self.stage = QueryTextDataStage.CHUNKS_EMBEDDED
+
+    def prepare_for_new_answer(self) -> None:
+        """
+        Prepare for a new query.
+        """
+        self.answer_config = None
+        self.answer_object = None
+        self.stage = QueryTextDataStage.CHUNKS_MINED
 
     def __repr__(self):
         return f"QueryTextData()"

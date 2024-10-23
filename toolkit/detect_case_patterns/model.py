@@ -46,11 +46,11 @@ def generate_graph_model(df, period_col, type_val_sep):
 
 
 def compute_attribute_counts(df, pattern, period_col, period, type_val_sep):
+    print(f"Computing attribute counts for pattern: {pattern} with period: {period} for period column: {period_col}")
     atts = pattern.split(" & ")
     # Combine astype and replace operations
     fdf = df_functions.fix_null_ints(df)
     fdf = fdf[fdf[period_col] == period]
-
     # Pre-filter columns to avoid unnecessary processing
     relevant_columns = [c for c in fdf.columns if c not in ["Subject ID", period_col]]
     # fdf = fdf[["Subject ID", period_col, *relevant_columns]]
@@ -73,14 +73,15 @@ def compute_attribute_counts(df, pattern, period_col, period, type_val_sep):
     )
     melted = melted[melted["Value"] != ""]
     melted["AttributeValue"] = melted["Attribute"] + type_val_sep + melted["Value"]
-
+    print(melted)
     # Directly use nunique in groupby
-    return (
+    count_df = (
         melted.groupby("AttributeValue")["Subject ID"]
         .nunique()
         .reset_index(name="Count")
         .sort_values(by="Count", ascending=False)
     )
+    return count_df
 
 
 def create_time_series_df(model, pattern_df):

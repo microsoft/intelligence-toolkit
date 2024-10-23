@@ -6,7 +6,7 @@ answer_format = {
         "schema": {
             "type": "object",
             "properties": {
-                "question": {
+                "query": {
                     "type": "string"
                 },
                 "title": {
@@ -44,7 +44,7 @@ answer_format = {
                     "type": "string"
                 },
             },
-            "required": ["question", "title", "introduction", "content_id_sequence", "content_items", "conclusion"],
+            "required": ["query", "title", "introduction", "content_id_sequence", "content_items", "conclusion"],
             "additionalProperties": False,
         }
     }
@@ -81,39 +81,13 @@ claim_extraction_format = {
                                         "supporting_sources": {
                                             "type": "array",
                                             "items": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "text_title": {
-                                                        "type": "string"
-                                                    },
-                                                    "chunk_ids": {
-                                                        "type": "array",
-                                                        "items": {
-                                                            "type": "number"
-                                                        }
-                                                    }
-                                                },
-                                                "required": ["text_title", "chunk_ids"],
-                                                "additionalProperties": False,
+                                                "type": "number"
                                             }
                                         },
                                         "contradicting_sources": {
                                             "type": "array",
                                             "items": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "text_title": {
-                                                        "type": "string"
-                                                    },
-                                                    "chunk_ids": {
-                                                        "type": "array",
-                                                        "items": {
-                                                            "type": "number"
-                                                        }
-                                                    }
-                                                },
-                                                "required": ["text_title", "chunk_ids"],
-                                                "additionalProperties": False,
+                                                "type": "number"
                                             }
                                         }
                                     },
@@ -175,7 +149,7 @@ content_integration_format = {
         "schema": {
             "type": "object",
             "properties": {
-                "question": {
+                "query": {
                     "type": "string"
                 },
                 "answer": {
@@ -225,7 +199,7 @@ content_integration_format = {
                     "type": "string"
                 }
             },
-            "required": ["question", "answer", "report_title", "report_summary", "theme_order", "report_commentary"],
+            "required": ["query", "answer", "report_title", "report_summary", "theme_order", "report_commentary"],
             "additionalProperties": False,
         }
     }
@@ -241,20 +215,20 @@ claim_requery_format = {
             "type": "object",
             "properties": {
 
-                "supporting_source_indicies": {
+                "supporting_sources": {
                     "type": "array",
                     "items": {
                         "type": "number",
                     }
                 },
-                "contradicting_source_indicies": {
+                "contradicting_sources": {
                     "type": "array",
                     "items": {
                         "type": "number",
                     }
                 }
             },
-            "required": ["supporting_source_indicies", "contradicting_source_indicies"],
+            "required": ["supporting_sources", "contradicting_sources"],
             "additionalProperties": False,
         }
     }

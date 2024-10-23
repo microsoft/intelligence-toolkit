@@ -243,12 +243,7 @@ def create(sv: ap_variables.SessionVariables, workflow):
                         tdf = dcp.time_series_df
                         tdf = tdf[tdf["pattern"] == selected_pattern]
                         sv.detect_case_patterns_selected_pattern_df.value = tdf
-                        sv.detect_case_patterns_selected_pattern_att_counts.value = (
-                            dcp.compute_attribute_counts(
-                                selected_pattern,
-                                time_col,
-                            )
-                        )
+                        
                     count_ct = dcp.create_time_series_chart(
                         selected_pattern,
                         selected_pattern_period
@@ -267,6 +262,12 @@ def create(sv: ap_variables.SessionVariables, workflow):
         else:
             c1, c2 = st.columns([2, 3])
             with c1:
+                sv.detect_case_patterns_selected_pattern_att_counts.value = (
+                    dcp.compute_attribute_counts(
+                        selected_pattern,
+                        selected_pattern_period,
+                    )
+                )
                 variables = {
                     "pattern": sv.detect_case_patterns_selected_pattern.value,
                     "period": sv.detect_case_patterns_selected_pattern_period.value,
