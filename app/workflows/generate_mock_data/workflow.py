@@ -90,7 +90,7 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                     for placeholder in df_placeholders:
                         placeholder.empty()
 
-                    await gmd.generate_data(
+                    await gmd.generate_data_records(
                         generation_guidance=sv.generation_guidance.value,
                         num_records_overall=sv.num_records_overall.value,
                         records_per_batch=sv.records_per_batch.value,

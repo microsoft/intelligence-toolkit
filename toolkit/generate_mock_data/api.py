@@ -21,13 +21,13 @@ class GenerateMockData:
     ):
         self.ai_configuration = ai_configuration
 
-    async def generate_data(
+    async def generate_data_records(
         self,
-        generation_guidance,
         num_records_overall,
         records_per_batch,
         duplicate_records_per_batch,
         related_records_per_batch,
+        generation_guidance="",
         temperature=0.5,
         df_update_callback=None,
         callback_batch=None,
@@ -51,9 +51,9 @@ class GenerateMockData:
     async def generate_text_data(
         self,
         df,
-        generation_guidance,
-        temperature,
-        df_update_callback
+        generation_guidance="",
+        temperature=0.5,
+        df_update_callback=None
     ):
         input_texts = []
         for _, row in df.iterrows():

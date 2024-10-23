@@ -159,7 +159,6 @@ def select_random_records(num_records, category_to_count):
     return category_to_ids
 
 def extract_df(json_data, record_path):
-    print(record_path)
     # Extracts a DataFrame from a JSON object
     return pd.json_normalize(
         data=json_data,
