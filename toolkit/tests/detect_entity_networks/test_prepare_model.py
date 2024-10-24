@@ -8,10 +8,17 @@ from unittest.mock import patch
 import polars as pl
 import pytest
 
-from toolkit.detect_entity_networks.config import FlagAggregatorType
+from toolkit.detect_entity_networks.classes import FlagAggregatorType
 from toolkit.detect_entity_networks.prepare_model import (
-    build_flag_links, build_flags, build_groups, build_main_graph, clean_text,
-    format_data_columns, generate_attribute_links, transform_entity)
+    build_flag_links,
+    build_flags,
+    build_groups,
+    build_main_graph,
+    clean_text,
+    format_data_columns,
+    generate_attribute_links,
+    transform_entity,
+)
 
 
 class TestCleanText:
