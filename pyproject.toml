@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "intelligence-toolkit"
 version = "0.0.1"
-description = ""
+description = "Interactive workflows for generating AI intelligence reports from real-world data sources using GPT models"
 authors = [
     "Dayenne Souza <ddesouza@microsoft.com>",
     "Ha Trinh <trinhha@microsoft.com>",
@@ -9,14 +9,19 @@ authors = [
     ]
 readme = "README.md"
 license = "MIT"
-package-mode = false
+keywords = ["AI", "data analysis", "reports", "workflows"]  
+
+[project.urls]
+source = "https://github.com/microsoft/intelligence-toolkit"
+issues = "https://github.com/microsoft/intelligence-toolkit/issues"
+
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.13"
 altair = "4.2.2"
 networkx = "3.3"
 numpy = "1.26.4"
-openai = "1.12.0"
+openai = "^1.37.1"
 pac-synth = "0.0.8"
 pdfplumber = "0.11.2"
 plotly = "5.22.0"
