@@ -3,6 +3,7 @@
 #
 import streamlit as st
 from app.util.session_variable import SessionVariable
+from toolkit.extract_record_data import ExtractRecordData
 from toolkit.generate_mock_data.schema_builder import create_boilerplate_schema
 
 class SessionVariables:
@@ -13,6 +14,7 @@ class SessionVariables:
         self.create_session(prefix)
 
     def create_session(self, prefix):
+        self.workflow_object = SessionVariable(ExtractRecordData(), prefix)
         self.schema = SessionVariable(create_boilerplate_schema(), prefix)
         self.loaded_schema_filename = SessionVariable('', prefix)
         self.loaded_data_filename = SessionVariable('', prefix)

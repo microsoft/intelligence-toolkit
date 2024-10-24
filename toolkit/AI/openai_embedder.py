@@ -3,11 +3,10 @@
 #
 
 from toolkit.AI.base_embedder import BaseEmbedder
+from toolkit.AI.client import OpenAIClient
+from toolkit.AI.defaults import DEFAULT_CONCURRENT_COROUTINES
+from toolkit.AI.openai_configuration import OpenAIConfiguration
 from toolkit.helpers.constants import CACHE_PATH
-
-from .client import OpenAIClient
-from .defaults import DEFAULT_CONCURRENT_COROUTINES
-from .openai_configuration import OpenAIConfiguration
 
 
 class OpenAIEmbedder(BaseEmbedder):

@@ -1,11 +1,9 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import json
-import math
 import os
 import random
 import re
 import sys
-from collections import defaultdict
 from typing import Any
 
 import numpy as np

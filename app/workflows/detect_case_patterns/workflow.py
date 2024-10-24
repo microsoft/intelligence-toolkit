@@ -19,11 +19,12 @@ from st_aggrid import (
 
 import app.util.example_outputs_ui as example_outputs_ui
 import app.workflows.detect_case_patterns.variables as ap_variables
+import toolkit.detect_case_patterns.config as config
 from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
 from toolkit.AI.classes import LLMCallback
 from toolkit.detect_case_patterns import prompts
-import toolkit.detect_case_patterns.config as config
+
 
 def get_intro():
     file_path = os.path.join(os.path.dirname(__file__), "README.md")

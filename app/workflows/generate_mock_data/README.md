@@ -34,9 +34,9 @@ In the top left, you have the option to upload an existing JSON schema. This is 
 The initial JSON schema contains some boilerplate metadata fields representing best practices for schema design. The metadata fields are as follows:
 
 - `$schema`: Indicates the version of the json-schema standard that the current schema follows. Leave this field as it is.
-- `$id`: Provides a global ID for this schema anchored in a web domain, e.g., that of your organization. You may wish to edit this if you expect your schema to be widely used, but it can be left as it is for use inside Intelligence Toolkit.
 - `title`: A short title indicating the kind of data that the schema represents.
 - `description`: A longer description of the kind of data that the schema represents.
+- `records`: The collection of records represented by the schema.
 
 Try editing some of these metadata fields now, and see them reflected in the `Preview` of the `JSON schema` to the right. In particular, set the title field to `Customer Complaints`.
 
@@ -44,17 +44,9 @@ The schema in progress is validated after every change, with the message `Schema
 
 Try downloading an edited schema using the download button, uploading it via the `Upload schema` control, then continuing as below.
 
-### Creating the record collection
-
-Now select the `Sample object` tab, and notice how none of these fields are contained in the sample object itself. We can understand this by going back to the `JSON schema` tab and seeing that the schema is of type `object` and that the `properties` of the object are currently empty, indicated by the empty braces `{}`. Whatever we add to the `properties` of the top-level object in the schema gets added to the `Sample object` (and indeed to any objects that conform to the schema).
-
-Let's now add some fields to the object using the buttons under `Add top-level field` in the form to the left.
-
-To create a dataset of records rather than a single object, the schema needs to contain an object array field. Press the `obj[]` button to add an object array field at the top level (i.e., level 0). The new field will be given a generic name by default: `object_array_1`. Rename this to `complaint_records` and see on the right how this creates an array of objects whose properties you can define next.
-
-Note that all new fields have the `Required?` checkbox checked by default, placing all field names in the `required` field of the object. This is a requirement for the [OpenAI Structured Outputs API](https://platform.openai.com/docs/guides/structured-outputs/supported-schemas), which we'll later use to generate mock data that follows the schema. Similarly, all objects must also have `additionalProperties` set to `false`, so the `Additional?` checkbox is left unchecked by default.
-
 ### Defining record attributes
+
+Let's now specify the type of records represented by the schema by renaming `records` to `complaint_records` in the form to the left.
 
 Next, we need to add fields to the objects of `complaint_records` for each attribute of the records we want to create.
 
@@ -66,6 +58,8 @@ As further string fields within `complaint_records`, now add:
 - `age` as a numeric field using the `num` button
 - `email` as string field
 - `price_issue`, `quality_issue`, `service_issue`, `delivery_issue`, `description_issue` as boolean (`true`/`false`) fields using the `bool` button
+
+Note that all new fields have the `Required?` checkbox checked by default, placing all field names in the `required` field of the object. This is a requirement for the [OpenAI Structured Outputs API](https://platform.openai.com/docs/guides/structured-outputs/supported-schemas), which we'll later use to generate mock data that follows the schema. Similarly, all objects must also have `additionalProperties` set to `false`, so the `Additional?` checkbox is left unchecked by default.
 
 Next, we want to add a `product_code` string field, but limit the possible values of the field to a predefined list called an "enumeration". Do this by checking the `Enum?` checkbox and observing the default values `A`, `B`, and `C` added to the enumeration. These values can be edited, deleted, and expanded as desired. For this tutorial, simply add further enum values alphabetically from `D` to `H`.
 

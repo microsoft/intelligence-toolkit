@@ -1,62 +1,53 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import pandas as pd
-
+import asyncio
+from tqdm.asyncio import tqdm_asyncio
 import toolkit.AI.utils as utils
 import toolkit.generate_mock_data.prompts as prompts
-from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
+from toolkit.AI.openai_configuration import OpenAIConfiguration
 
 
 async def generate_text_data(
-    ai_configuration,
-    generation_guidance,
-    input_texts,
-    temperature,
-    parallel_threads,
-    df_update_callback,
-    callback_batch,
+    ai_configuration: OpenAIConfiguration,
+    input_texts: list[str],
+    generation_guidance: str="",
+    temperature: float=0.5,
+    df_update_callback=None,
 ):
-    generated_texts = []
-    
-    batched_texts = [input_texts[i:i + parallel_threads] for i in range(0, len(input_texts), parallel_threads)]
-
     df = pd.DataFrame(columns=["mock_text"])
-
-    for batch in batched_texts:
-        new_texts = await _generate_text_parallel(
+    tasks = []
+    for text in input_texts:
+        tasks.append(asyncio.create_task(_generate_text_async(
             ai_configuration=ai_configuration,
-            input_texts=batch,
+            input_text=text,
             generation_guidance=generation_guidance,
-            temperature=temperature,
-            callbacks=[callback_batch] if callback_batch is not None else None,
-        )
-        generated_texts.extend(new_texts)
-
-        df = pd.DataFrame(generated_texts, columns=["mock_text"])
-        if df_update_callback is not None:
-            df_update_callback(df)
+            temperature=temperature
+        )))
+    generated_texts = await tqdm_asyncio.gather(*tasks)
+    df = pd.DataFrame(generated_texts, columns=["mock_text"])
+    if df_update_callback is not None:
+        df_update_callback(df)
 
     return generated_texts, df
 
 
-async def _generate_text_parallel(
+async def _generate_text_async(
     ai_configuration,
-    input_texts,
+    input_text,
     generation_guidance,
-    temperature,
-    callbacks: list[ProgressBatchCallback] | None = None,
+    temperature
 ):
-    mapped_messages = [utils.prepare_messages(
+    messages = utils.prepare_messages(
         prompts.text_generation_prompt, 
         {
             'input_text': input_text,
             'generation_guidance': generation_guidance,
-        }) for input_text in input_texts
-    ]
+        }
+    )
 
-    return await utils.map_generate_text(
+    return await utils.generate_text_async(
         ai_configuration,
-        mapped_messages,
-        temperature=temperature,
-        callbacks=callbacks,
+        messages,
+        temperature=temperature
     )
 

@@ -153,7 +153,7 @@ def generate_form_from_json_schema(global_schema, default_schema, field_location
                 return
         else:
             if key != 'type':
-                new_value = st.text_input(f'`{key}` metadata', key=f'{key_with_prefix}_label', value=value)
+                new_value = st.text_input(f'{key}', key=f'{key_with_prefix}_label', value=value)
                 if new_value != value:
                     field_location[key] = new_value
                     st.rerun()

@@ -6,7 +6,8 @@ import logging
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from openai import AsyncAzureOpenAI, AsyncOpenAI, AzureOpenAI, OpenAI
 
-from .classes import LLMCallback
+from toolkit.AI.classes import LLMCallback
+
 from .defaults import API_BASE_REQUIRED_FOR_AZURE, DEFAULT_EMBEDDING_MODEL
 from .openai_configuration import OpenAIConfiguration
 

@@ -22,7 +22,8 @@ def get_intro():
 
 async def create(sv: variables.SessionVariables, workflow: None):
     ui_components.check_ai_configuration()
-
+    erd = sv.workflow_object.value
+    erd.set_ai_configuration(ai_configuration)
     intro_tab, schema_tab, generator_tab, mock_tab = st.tabs(['Extract Record Data workflow:', 'Prepare data schema', 'Extract structured records', 'View example outputs'])
     with intro_tab:
         file_content = get_intro()
@@ -35,8 +36,8 @@ async def create(sv: variables.SessionVariables, workflow: None):
     with schema_tab:
         sv.loaded_schema_filename.value = schema_ui.build_schema_ui(
             sv.schema.value, sv.loaded_schema_filename.value)
-        array_field_arrays = data_extractor.extract_array_fields(sv.schema.value)
-        sv.record_arrays.value = ['.'.join(a) for a in array_field_arrays]
+        erd.set_schema(sv.schema.value)
+        sv.record_arrays.value = [".".join(x) for x in erd.record_arrays]
     with generator_tab:
         d1, d2 = st.columns([1, 1])
         with d1:
@@ -92,19 +93,16 @@ async def create(sv: variables.SessionVariables, workflow: None):
                         for placeholder in df_placeholders:
                             placeholder.empty()
 
-                        (
-                            sv.final_object.value,
-                            sv.generated_objects.value,
-                            sv.generated_dfs.value
-                        ) = await data_extractor.extract_record_data(
-                            ai_configuration=ai_configuration,
+                        
+                            
+                        await erd.extract_record_data(
                             input_texts=input_texts,
                             generation_guidance=sv.generation_guidance.value,
-                            record_arrays=sv.record_arrays.value,
-                            data_schema=sv.schema.value,
                             df_update_callback=on_dfs_update,
                             callback_batch=None
                         )
+                        sv.final_object.value = erd.json_object,
+                        sv.generated_dfs.value = erd.array_dfs
 
                     for ix, record_array in enumerate(sv.record_arrays.value):
                             with df_placeholders[ix]:

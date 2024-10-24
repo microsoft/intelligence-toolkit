@@ -9,7 +9,7 @@ import toolkit.detect_case_patterns.model as model
 import toolkit.detect_case_patterns.prompts as prompts
 import toolkit.graph.graph_fusion_encoder_embedding as gfee
 from toolkit.AI.client import OpenAIClient
-from toolkit.helpers import IntelligenceWorkflow
+from toolkit.helpers.classes import IntelligenceWorkflow
 
 
 class DetectCasePatterns(IntelligenceWorkflow):

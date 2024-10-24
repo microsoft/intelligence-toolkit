@@ -5,7 +5,6 @@ import io
 import os
 
 import numpy as np
-import pandas as pd
 import polars as pl
 import streamlit as st
 
@@ -17,20 +16,10 @@ import toolkit.match_entity_records.prompts as prompts
 from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
-from toolkit.match_entity_records.config import AttributeToMatch
-from toolkit.match_entity_records.detect import (
-    build_attributes_dataframe,
-    build_matches,
-    build_matches_dataset,
-    build_near_map,
-    build_nearest_neighbors,
-    build_sentence_pair_scores,
-    convert_to_sentences,
-)
-from toolkit.match_entity_records.prepare_model import (
-    build_attribute_list,
-    build_attribute_options,
-    format_dataset,
+from toolkit.match_entity_records.api import MatchEntityRecords
+from toolkit.match_entity_records.classes import (
+    AttributeToMatch,
+    RecordsModel,
 )
 
 
@@ -42,6 +31,7 @@ def get_intro():
 async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
     sv_home = home_vars.SessionVariables("home")
     ui_components.check_ai_configuration()
+    mer = MatchEntityRecords()
 
     intro_tab, uploader_tab, process_tab, evaluate_tab, examples_tab = st.tabs(
         [
@@ -76,8 +66,8 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                 st.warning("Upload and select a file to continue")
             else:
                 selected_df = pl.from_pandas(selected_df).lazy()
-                cols = ["", *selected_df.columns]
-                entity_col = ""
+                cols = selected_df.columns
+                entity_id_col = ""
                 ready = False
                 dataset = st.text_input(
                     "Dataset name",
@@ -90,12 +80,14 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                     cols,
                     help="The column containing the name of the entity to be matched. This column is required.",
                 )
-                entity_col = st.selectbox(
+                entity_id_col = st.selectbox(
                     "Entity ID column (optional)",
                     cols,
                     help="The column containing the unique identifier of the entity to be matched. If left blank, a unique ID will be generated for each entity based on the row number.",
                 )
-                filtered_cols = [c for c in cols if c not in [entity_col, name_col, ""]]
+                filtered_cols = [
+                    c for c in cols if c not in [entity_id_col, name_col, ""]
+                ]
                 att_cols = st.multiselect(
                     "Entity attribute columns",
                     filtered_cols,
@@ -114,19 +106,22 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                         disabled=not ready,
                         use_container_width=True,
                     ):
-                        sv.matching_dfs.value[dataset] = format_dataset(
-                            selected_df.collect(),
-                            att_cols,
-                            name_col,
-                            entity_col,
-                            sv.matching_max_rows_to_process.value,
+                        model = RecordsModel(
+                            dataframe=selected_df.collect(),
+                            name_column=name_col,
+                            columns=att_cols,
+                            dataframe_name=dataset,
+                            id_column=entity_id_col,
                         )
+                        dataset_added = mer.add_df_to_model(model)
+                        sv.matching_dfs.value[dataset] = dataset_added
                 with b2:
                     if st.button(
                         "Reset data model",
                         disabled=len(sv.matching_dfs.value) == 0,
                         use_container_width=True,
                     ):
+                        mer.clear_model_dfs()
                         sv.matching_dfs.value = {}
                         sv.matching_merged_df.value = pl.DataFrame()
                         st.rerun()
@@ -135,6 +130,8 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                     st.success(
                         f"Data model has **{len(sv.matching_dfs.value)}** datasets with **{recs}** total records."
                     )
+                    if not mer.model_dfs:
+                        mer.model_dfs = sv.matching_dfs.value
 
     with process_tab:
         if len(sv.matching_dfs.value) == 0:
@@ -143,7 +140,7 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
             c1, c2 = st.columns([1, 1])
             with c1:
                 st.markdown("##### Configure text embedding model")
-                attr_options = build_attribute_options(sv.matching_dfs.value)
+                attr_options = mer.attribute_options
                 sv.matching_mapped_atts.value = []
 
                 num_atts = 0
@@ -208,7 +205,6 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                     _, changed, attsa = att_ui(num_atts, any_empty, changed, attsa)
                 if changed:
                     st.rerun()
-                attributes_list = build_attribute_list(attsa)
 
                 local_embedding = st.toggle(
                     "Use local embeddings",
@@ -222,7 +218,7 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                         "Matching record distance (max)",
                         min_value=0.001,
                         max_value=1.0,
-                        step=0.001,
+                        step=0.01,
                         format="%f",
                         value=sv.matching_sentence_pair_embedding_threshold.value,
                         help="The maximum cosine distance between two records in the embedding space for them to be considered a match. Lower values will result in fewer closer matches overall.",
@@ -264,19 +260,9 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                         sv.matching_last_sentence_pair_embedding_threshold.value = (
                             sv.matching_sentence_pair_embedding_threshold.value
                         )
-                        sv.matching_merged_df.value = build_attributes_dataframe(
-                            sv.matching_dfs.value, attributes_list
-                        )
-                        sv.matching_merged_df.value = (
-                            sv.matching_merged_df.value.with_columns(
-                                (pl.col("Entity ID").cast(pl.Utf8))
-                                + "::"
-                                + pl.col("Dataset").alias("Unique ID")
-                            )
-                        )  ###??
-                        all_sentences_data = convert_to_sentences(
-                            sv.matching_merged_df.value
-                        )
+                        sv.matching_merged_df.value = mer.build_model_df(attsa)
+                        all_sentences_data = mer.sentences_vector_data
+
                         pb = st.progress(0, "Embedding text batches...")
 
                         def on_embedding_batch_change(current, total):
@@ -304,51 +290,24 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                             )
                             for f in all_sentences
                         ]
+                        mer.embeddings = all_embeddings
+                        mer.all_sentences = all_sentences
 
                         pb.empty()
-
-                        distances, indices = build_nearest_neighbors(all_embeddings)
-                        near_map = build_near_map(
-                            distances,
-                            indices,
-                            all_sentences,
+                        sv.matching_matches_df.value = mer.detect_record_groups(
                             sv.matching_sentence_pair_embedding_threshold.value,
-                        )
-
-                        sv.matching_sentence_pair_scores.value = (
-                            build_sentence_pair_scores(
-                                near_map, sv.matching_merged_df.value
-                            )
-                        )
-
-                        merged_df = sv.matching_merged_df.value
-                        entity_to_group, matches, pair_to_match = build_matches(
-                            sv.matching_sentence_pair_scores.value,
-                            merged_df,
                             sv.matching_sentence_pair_jaccard_threshold.value,
                         )
 
-
-                        sv.matching_matches_df.value = pl.DataFrame(
-                            list(matches),
-                            schema=["Group ID", *sv.matching_merged_df.value.columns],
-                        ).sort(
-                            by=["Group ID", "Entity name", "Dataset"], descending=False
-                        )
-  
-
-                        sv.matching_matches_df.value = build_matches_dataset(
-                            sv.matching_matches_df.value, pair_to_match, entity_to_group
-                        )
                         st.rerun()
                 if len(sv.matching_matches_df.value) > 0:
                     st.markdown(
                         f"Identified **{len(sv.matching_matches_df.value['Group ID'].unique())}** record groups."
                     )
             with c2:
-                data = sv.matching_matches_df.value
                 st.markdown("##### Record groups")
                 if len(sv.matching_matches_df.value) > 0:
+                    data = sv.matching_matches_df.value
                     st.dataframe(
                         data, height=700, use_container_width=True, hide_index=True
                     )
@@ -416,11 +375,11 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
 
             if len(sv.matching_evaluations.value) > 0:
                 try:
-                    csv = pl.read_csv(io.StringIO(sv.matching_evaluations.value))
-                    value = csv.drop_nulls()
-                    jdf = sv.matching_matches_df.value.join(
-                        value, on="Group ID", how="inner"
+                    mer.evaluations_df = pl.read_csv(
+                        io.StringIO(sv.matching_evaluations.value)
                     )
+                    value = mer.evaluations_df.drop_nulls()
+
                     st.dataframe(
                         value.to_pandas(),
                         height=700,
@@ -431,14 +390,14 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                     with c1:
                         st.download_button(
                             "Download AI match reports",
-                            data=csv.write_csv(),
+                            data=value.write_csv(),
                             file_name="record_group_match_reports.csv",
                             mime="text/csv",
                         )
                     with c2:
                         st.download_button(
                             "Download integrated results",
-                            data=jdf.write_csv(),
+                            data=mer.integrated_results.write_csv(),
                             file_name="integrated_record_match_results.csv",
                             mime="text/csv",
                         )
@@ -450,16 +409,5 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                         "Download AI match report",
                     )
 
-                report = (
-                    pd.DataFrame(sv.matching_evaluations.value).to_json()
-                    if type(sv.matching_evaluations.value) == pl.DataFrame
-                    else sv.matching_evaluations.value
-                )
-                # ui_components.build_validation_ui(
-                #     sv.matching_report_validation.value,
-                #     sv.matching_report_validation_messages.value,
-                #     report,
-                #     workflow,
-                # )
     with examples_tab:
         example_outputs_ui.create_example_outputs_ui(examples_tab, workflow)

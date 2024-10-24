@@ -95,18 +95,28 @@ def get_required_list(json_obj, field_labels):
 
 def create_boilerplate_schema(
         schema_field="http://json-schema.org/draft/2020-12/schema",
-        id_field="https://yourdomain.com/example.schema.json",
         title_field="Example Schema",
         description_field="An example schema ready to be edited and populated with fields.",
     ):
     schema = {
         "$schema": schema_field,
-        "$id": id_field,
         "title": title_field,
         "description": description_field,
         "type": "object",
-        "properties": {},
-        "required": [],
+        "properties": {
+            "records": {
+                "type": "array",
+                "description": "An array of records",
+                "items": {
+                    "type": "object",
+                    "description": "A record",
+                    "properties": {},
+                    "required": [],
+                    "additionalProperties": False
+                }
+            }
+        },
+        "required": ["records"],
         "additionalProperties": False
     }
     return schema
