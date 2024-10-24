@@ -36,7 +36,7 @@ It supports a variety of interactive workflows, each designed to address a speci
 - **Text Intelligence Workflows**
   - [`Query Text Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/query_text_data/README.md) generates reports from a collection of text documents.
   - [`Extract Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/extract_record_data/README.md) generate schema-aligned JSON objects and CSV records from unstructured text.
-  - [`Generate Mock Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_mock_data/README.md) generates mock records and text from a JSON schema defined or uploaded by the user.
+  - [`Generate Mock Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_mock_data/README.md) generates mock records and texts from a JSON schema defined or uploaded by the user.
 
 All tutorial data and examples used in Intelligence Toolkit were created for this purpose using the [`Generate Mock Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_mock_data/README.md) workflow.
 

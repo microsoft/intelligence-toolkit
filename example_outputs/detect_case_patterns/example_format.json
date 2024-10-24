@@ -1,5 +1,5 @@
 {
-    "example_order" : ["input", "prepared", "case_patterns"],
+    "example_order" : ["input", "prepared", "case_pattern_table", "case_patterns"],
     "example_metadata" : {
         "input": {
             "type": "csv",
@@ -11,6 +11,11 @@
             "heading": "Prepared data",
             "description": "Data prepared for pattern detection by the user by removing  direct identifiers and reducing to a small number of columns, each containing a small number of categorical values"
         },
+        "case_pattern_table": {
+            "type": "csv",
+            "heading": "Detected patterns",
+            "description": "Patterns detected in the attributes of the prepared data, including the period of detection, the attribute values representing the pattern, and the number of cases that match the pattern"
+        },
         "case_patterns": {
             "type": "list",
             "item_order": ["chart", "report"],
@@ -18,8 +23,8 @@
                 "chart" : "png",
                 "report" : "md"
             },
-            "heading": "Detected patterns",
-            "description": "Patterns detected in the attributes of the prepared data, including the period of detection, the attribute values representing the pattern, and the number of cases that match the pattern"
+            "heading": "Pattern reports",
+            "description": "Example reports generated for detected patterns, including a chart showing the number of cases matching the pattern over time, and a markdown report describing the pattern"
         }
     }
 }

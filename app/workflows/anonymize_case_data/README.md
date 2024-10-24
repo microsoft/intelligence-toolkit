@@ -40,7 +40,7 @@ where \*_issue: *boolean* represents five different boolean attributes covering 
 
 ### De-identification vs anonymization
 
-To de-identify this dataset, we would need to remove the direct identifiers `name` and `email` as well as any indirect identifiers that may be identifying in combination with one another or with additional data sources. For example, the combination of `street`, `city`, and `age` may uniquely identify a person at an address, whereas `city` and `age` are unlikely to do so. We would therefore remove `street` from the de-identified dataset to create a de-identified dataset.
+To de-identify this dataset, we would need to remove the direct identifiers `name` and `email` as well as any indirect identifiers that may be identifying in combination with one another or with additional data sources. For example, the combination of `street`, `city`, and `age` may uniquely identify a person at an address, whereas `city` and `age` are unlikely to do so. We would therefore remove `street` when creating a de-identified dataset.
 
 However, just because a dataset is de-identified does not make it anonymous. For example, if you overheard a neighbour complaining about certain aspects of a product at a given point in time, then observed a single matching record for the associated city, age_range, issues, product code, and quarter, then you could reasonably assume to have re-identified your neighbour in the dataset using your background knowledge. This could allow you to learn new and potentially sensitive information about your neighbour from the additional attributes of their data record &ndash; a privacy threat known as *attribute inference*.
 
