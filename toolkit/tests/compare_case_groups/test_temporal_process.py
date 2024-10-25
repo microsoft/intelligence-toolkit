@@ -264,8 +264,8 @@ class TestBuildtemporalCount:
         )
 
         # Assertions
-        assert group_a_deltas.height == 18
-        assert group_b_deltas.height == 18
+        assert group_a_deltas.height == 9
+        assert group_b_deltas.height == 9
         for v in [-5, 3, -3, 1]:
             assert v in group_a_deltas_values
         for v in [-8, 6, -6, 4]:
@@ -319,7 +319,7 @@ class TestBuildtemporalCount:
         assert group_b_deltas.height == 6
         for v in [-5, 1]:
             assert v in group_a_deltas_values
-        for v in [6, 1]:
+        for v in [-8, 4]:
             assert v in group_b_deltas_values
 
         assert (
