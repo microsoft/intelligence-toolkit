@@ -96,7 +96,10 @@ async def answer_query(
                 for claim in claim_set['claims']:
                     claim_statement = claim['claim_statement']
                     claims_to_embed[len(claims_to_embed)] = f"{claim_statement} (context: {claim_context})"
-
+                    for source in claim['supporting_sources']:
+                        source_to_supported_claims[source].add((claim_context, claim_statement))
+                    for source in claim['contradicting_sources']:
+                        source_to_contradicted_claims[source].add((claim_context, claim_statement))
         cix_to_vector = await helper_functions.embed_queries(
             claims_to_embed,
             embedder,
@@ -113,8 +116,8 @@ async def answer_query(
                 for claim in claim_set['claims']:
                     claim_statement = claim['claim_statement']
                     claim_key = f"{claim_statement} (context: {claim_context})"
-                    claim_context_to_claim_supporting_sources[claim_context][claim_statement] = set(claim['supporting_sources'])
-                    claim_context_to_claim_contradicting_sources[claim_context][claim_statement] = set(claim['contradicting_sources'])
+                    claim_context_to_claim_supporting_sources[claim_context][claim_statement].update(claim['supporting_sources'])
+                    claim_context_to_claim_contradicting_sources[claim_context][claim_statement].update(claim['contradicting_sources'])
                     if claim_key in claim_to_vector:
                         tasks.append(asyncio.create_task(requery_claim(
                             ai_configuration,
@@ -134,12 +137,10 @@ async def answer_query(
         for claim_context, claim_statement, supporting_sources, contradicting_sources in results_list:
             claim_context_to_claim_supporting_sources[claim_context][claim_statement].update(supporting_sources)
             claim_context_to_claim_contradicting_sources[claim_context][claim_statement].update(contradicting_sources)
-        
         for claim_context, claims_to_support in claim_context_to_claim_supporting_sources.items():
             for claim_statement, supporting_sources in claims_to_support.items():
                 for source in supporting_sources:
                     source_to_supported_claims[source].add((claim_context, claim_statement))
-        
         for claim_context, claims_to_contradict in claim_context_to_claim_contradicting_sources.items():
             for claim_statement, contradicting_sources in claims_to_contradict.items():
                 for source in contradicting_sources:
@@ -147,6 +148,15 @@ async def answer_query(
 
         all_sources = set(source_to_supported_claims.keys()).union(set(source_to_contradicted_claims.keys()))
         net_new_sources = len(all_sources) - len(relevant_cids)
+
+        all_claims = set()
+        for claim_context, claims_to_support in claim_context_to_claim_supporting_sources.items():
+            for claim_statement in claims_to_support.keys():
+                all_claims.add((claim_context, claim_statement))
+        for claim_context, claims_to_contradict in claim_context_to_claim_contradicting_sources.items():
+            for claim_statement in claims_to_contradict.keys():
+                all_claims.add((claim_context, claim_statement))
+        print(f'Used {len(all_claims)} claims')
 
         claim_summaries = []
         
@@ -288,4 +298,5 @@ async def requery_claim(ai_configuration, query, units, neighbours, claim_embedd
     response_json = loads(response)
     supporting_sources = response_json['supporting_sources']
     contradicting_sources = response_json['contradicting_sources']
+    print(f'Claim: {contextualized_claim} has supporting sources: {supporting_sources} and contradicting sources: {contradicting_sources}')
     return claim_context, claim_statement, supporting_sources, contradicting_sources

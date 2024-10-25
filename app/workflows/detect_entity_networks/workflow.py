@@ -499,6 +499,11 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                     show_groups = st.checkbox(
                         "Show groups", value=sv.network_last_show_groups.value
                     )
+                    flag_paths = st.checkbox(
+                        "Show flag paths",
+                        value=sv.network_flag_paths.value,
+                        disabled=not show_entities
+                    )
                     graph_type = st.radio(
                         "Graph type", ["Full", "Simplified"], horizontal=False
                     )
@@ -645,7 +650,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                 else:
                     render_graph = network_entities_simplified_graph
 
-                if not show_entities:
+                if not show_entities or not flag_paths:
                     network_vis = st.container()
                 else:
                     network_pane, path_pane = st.columns([2, 1])
@@ -709,14 +714,14 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                         directed=default_config['directed'],
                         physics=default_config['physics'],
                         hierarchical=default_config['hierarchical'],
-                        width = 1200 if show_entities else 1400
+                        width = 1200 if show_entities and flag_paths else 1400
                     )
                     agraph(
                         nodes=nodes_agraph,
                         edges=edges_agraph,
                         config=config,
                     )
-                if show_entities:
+                if show_entities and flag_paths:
                     with path_pane:
                         st.markdown(sv.network_risk_exposure.value)
                 sv.network_merged_links_df.value = merged_links_df

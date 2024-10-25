@@ -18,8 +18,9 @@
         },
         "example": {
             "type": "list",
-            "item_order": ["report"],
+            "item_order": ["network", "report"],
             "item_types" : {
+                "network" : "png",
                 "report" : "md"
             },
             "heading": "Entity reports",
