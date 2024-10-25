@@ -28,6 +28,7 @@ class SessionVariables:
 
     def create_session(self, prefix):
         self.network_max_rows_to_process = SessionVariable(0, prefix)
+        self.network_flag_paths = SessionVariable(True, prefix)
         self.network_uploaded_files = SessionVariable([], prefix)
         self.network_selected_file_name = SessionVariable("", prefix)
         self.network_attribute_links = SessionVariable([], prefix)
