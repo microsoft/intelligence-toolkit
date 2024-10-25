@@ -264,11 +264,62 @@ class TestBuildtemporalCount:
         )
 
         # Assertions
-        assert group_a_deltas.height == 3
-        assert group_b_deltas.height == 3
-        for v in [-2, -2]:
+        assert group_a_deltas.height == 18
+        assert group_b_deltas.height == 18
+        for v in [-5, 3, -3, 1]:
             assert v in group_a_deltas_values
-        for v in [7, -2, -2]:
+        for v in [-8, 6, -6, 4]:
+            assert v in group_b_deltas_values
+
+        assert (
+            result.select(pl.col("temporal_window_delta").is_not_nan())
+            .to_series()
+            .all()
+        )
+
+        data = {
+            "Group": ["A", "A", "B", "B"],
+            "temporal": [1, 2, 1, 2],
+            "attribute_value": ["X:10", "X:20", "Y:30", "Y:40"],
+            "temporal_window_count": [5, 3, 8, 6],
+        }
+
+    def test_delta_calculation_temporal_zeroed(self) -> None:
+        data = {
+            "Group": ["A", "A", "A", "B", "B", "B"],
+            "temporal": [1, 2, 3, 1, 2, 3],
+            "attribute_value": ["X:10", "X:20", "X:30", "Y:40", "Y:50", "Y:60"],
+            "temporal_window_count": [5, 0, 1, 8, 0, 4],
+        }
+        sample_data = pl.DataFrame(data)
+        groups = ["Group"]
+        temporal = "temporal"
+        result = build_temporal_count(sample_data, groups, temporal)
+
+        group_a_deltas = result.filter(pl.col("Group") == "A").select(
+            "temporal_window_delta"
+        )
+        group_a_deltas_values = (
+            group_a_deltas.filter(pl.col("temporal_window_delta") != 0.0)
+            .to_series()
+            .to_list()
+        )
+
+        group_b_deltas = result.filter(pl.col("Group") == "B").select(
+            "temporal_window_delta"
+        )
+        group_b_deltas_values = (
+            group_b_deltas.filter(pl.col("temporal_window_delta") != 0.0)
+            .to_series()
+            .to_list()
+        )
+
+        # Assertions
+        assert group_a_deltas.height == 6
+        assert group_b_deltas.height == 6
+        for v in [-5, 1]:
+            assert v in group_a_deltas_values
+        for v in [6, 1]:
             assert v in group_b_deltas_values
 
         assert (
