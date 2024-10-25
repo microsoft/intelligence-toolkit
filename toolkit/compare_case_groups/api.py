@@ -42,6 +42,15 @@ class CompareCaseGroups(IntelligenceWorkflow):
             0,
         )
 
+    def get_report_groups_filter_options(self):
+        unique_groups_df = self.model_df.select(self.groups).unique()
+
+        unique_groups = unique_groups_df.to_dicts()
+
+        return sorted(
+            unique_groups, key=lambda x: tuple(x[group] for group in self.groups)
+        )
+
     def get_filter_options(self, input_df: pl.DataFrame) -> list[str]:
         sorted_atts = []
         sorted_cols = sorted(input_df.columns)
@@ -132,6 +141,9 @@ class CompareCaseGroups(IntelligenceWorkflow):
             temporal_df = build_temporal_data(
                 window_df, groups, temporal_atts, temporal
             )
+        else:
+            for group in groups:
+                attributes_df = attributes_df.filter(pl.col(group).is_not_null())
 
         ranked_df = build_ranked_df(
             temporal_df,
@@ -193,7 +205,15 @@ class CompareCaseGroups(IntelligenceWorkflow):
 
         filter_description = ""
         if selected_groups:
-            selected_df = selected_df.filter(pl.col(self.groups).is_in(selected_groups))
+            filter_expr = pl.lit(False)
+            for group in selected_groups:
+                group_expr = pl.lit(True)
+                for col, value in group.items():
+                    group_expr &= pl.col(col) == value
+                filter_expr |= group_expr
+
+            # Apply the filter to the DataFrame
+            selected_df = self.model_df.filter(filter_expr)
             filter_description = f'Filtered to the following groups only: {", ".join([str(s) for s in selected_groups])}'
         elif top_group_ranks:
             selected_df = selected_df.filter(pl.col("group_rank") <= top_group_ranks)

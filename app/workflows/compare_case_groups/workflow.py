@@ -141,16 +141,17 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
             c1, c2 = st.columns([1, 1])
             with c1:
                 st.markdown("##### Data summary filters")
-                groups = sorted(
-                    sv.case_groups_model_df.value.groupby(
-                        sv.case_groups_groups.value
-                    ).groups.keys()
-                )
                 b1, b2 = st.columns([1, 1])
+
+                ccg.model_df = pl.from_pandas(sv.case_groups_model_df.value)
+                ccg.groups = sv.case_groups_groups.value
                 with b1:
                     selected_groups = st.multiselect(
                         "Select specific groups to report on:",
-                        list(groups),
+                        ccg.get_report_groups_filter_options(),
+                        format_func=lambda group_dict: ui_components.format_report_group_options(
+                            group_dict, sv.case_groups_groups.value
+                        ),
                         default=sv.case_groups_selected_groups.value,
                     )
                 with b2:
@@ -162,8 +163,6 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                     )
                 fdf = sv.case_groups_model_df.value.copy(deep=True)
 
-                ccg.groups = sv.case_groups_groups.value
-                ccg.model_df = pl.from_pandas(sv.case_groups_model_df.value)
                 report_data, filter_description = ccg.get_report_data(
                     selected_groups if len(selected_groups) > 0 else None,
                     top_group_ranks if top_group_ranks > 0 else None,

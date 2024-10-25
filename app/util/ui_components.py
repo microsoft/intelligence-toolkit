@@ -761,3 +761,6 @@ def check_ai_configuration():
         st.warning("Please set your OpenAI API key in the Settings page.")
     if ai_configuration.model == "":
         st.warning("Please set your OpenAI model in the Settings page.")
+
+def format_report_group_options(group_dict, existing_groups) -> str:
+    return " & ".join([f"{key}: {group_dict[key]}" for key in existing_groups])
