@@ -36,12 +36,19 @@ def create_window_df(
     )
 
 # Calculate deltas in counts within each group and attribute value
-def calculate_window_delta(temporal_df: pl.DataFrame, temporal) -> pl.DataFrame:
+def calculate_window_delta(
+    groups: list[str], temporal_df: pl.DataFrame, temporal
+) -> pl.DataFrame:
     return temporal_df.with_columns(
-        (pl.col(f"{temporal}_window_count").diff().fill_null(0)).alias(
-            f"{temporal}_window_delta"
-        )
-    )
+        [
+            pl.col(f"{temporal}_window_count")
+            .diff()
+            .over([*groups, "attribute_value"])
+            .fill_null(0)
+            .alias(f"{temporal}_window_delta")
+        ]
+    ).sort([*groups, temporal, "attribute_value"])
+
 
 def build_temporal_count(
     ldf: pl.DataFrame, groups: list[str], temporal: str
@@ -67,7 +74,7 @@ def build_temporal_count(
                     # Append the new row to ldf
                     # ldf = ldf.vstack(new_row)
 
-    return calculate_window_delta(ldf, temporal)
+    return calculate_window_delta(groups, ldf, temporal)
 
 
 def build_temporal_data(

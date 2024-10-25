@@ -66,10 +66,103 @@ class TestCalculateWindowDelta:
         }
         sample_data = pl.DataFrame(data)
         temporal = "temporal"
+        groups = ["Group"]
 
-        result = calculate_window_delta(sample_data, temporal)
+        result = calculate_window_delta(groups, sample_data, temporal)
 
         assert all(result["temporal_window_delta"].is_not_nan())
+
+    def test_groups(self) -> None:
+        data = {
+            "Group": [
+                "Bayview",
+                "Bayview",
+                "Bayview",
+                "Bayview",
+                "Bakeview",
+                "Bayview",
+            ],
+            "temporal": [1, 1, 2, 3, 3, 4],
+            "attribute_value": ["X:15", "X:10", "X:10", "X:10", "X:9", "X:10"],
+            "temporal_window_count": [9, 5, 3, 8, 7, 6],
+        }
+        sample_data = pl.DataFrame(data)
+        temporal = "temporal"
+
+        expected = {
+            "Group": [
+                "Bakeview",
+                "Bayview",
+                "Bayview",
+                "Bayview",
+                "Bayview",
+                "Bayview",
+            ],
+            "temporal": [3, 1, 1, 2, 3, 4],
+            "attribute_value": [
+                "X:9",
+                "X:10",
+                "X:15",
+                "X:10",
+                "X:10",
+                "X:10",
+            ],
+            "temporal_window_count": [7, 5, 9, 3, 8, 6],
+            "temporal_window_delta": [0, 0, 0, -2, 5, -2],
+        }
+        sample_df = pl.DataFrame(expected)
+
+        groups = ["Group"]
+
+        result = calculate_window_delta(groups, sample_data, temporal)
+
+        assert result.equals(sample_df)
+
+    def test_multiple_groups_no_temporal(self) -> None:
+        data = {
+            "Group": [
+                "Bayview",
+                "Westview",
+                "Bayview",
+                "Bayview",
+                "Bakeview",
+                "Bayview",
+            ],
+            "temporal": [1, 2, 2, 3, 3, 4],
+            "attribute_value": ["X:10", "X:10", "X:10", "X:10", "X:9", "X:10"],
+            "temporal_window_count": [5, 2, 3, 8, 7, 6],
+        }
+        sample_data = pl.DataFrame(data)
+        temporal = "temporal"
+
+        expected = {
+            "Group": [
+                "Bakeview",
+                "Bayview",
+                "Bayview",
+                "Bayview",
+                "Bayview",
+                "Westview",
+            ],
+            "temporal": [3, 1, 2, 3, 4, 2],
+            "attribute_value": [
+                "X:9",
+                "X:10",
+                "X:10",
+                "X:10",
+                "X:10",
+                "X:10",
+            ],
+            "temporal_window_count": [7, 5, 3, 8, 6, 2],
+            "temporal_window_delta": [0, 0, -2, 5, -2, 0],
+        }
+        sample_df = pl.DataFrame(expected)
+
+        groups = ["Group"]
+
+        result = calculate_window_delta(groups, sample_data, temporal)
+
+        assert result.equals(sample_df)
 
     def test_missing_values(self):
         data = {
@@ -81,7 +174,9 @@ class TestCalculateWindowDelta:
         sample_data = pl.DataFrame(data)
         temporal = "temporal"
 
-        result = calculate_window_delta(sample_data, temporal)
+        groups = ["Group"]
+
+        result = calculate_window_delta(groups, sample_data, temporal)
 
         assert result["temporal_window_count"].is_nan().sum() == 0
         assert result.filter(pl.col("temporal_window_delta") == 0).height == 4
