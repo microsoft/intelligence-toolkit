@@ -185,11 +185,15 @@ class CompareCaseGroups(IntelligenceWorkflow):
         return "\n".join(description_lines)
 
     def get_report_data(
-        self, selected_groups=None, top_group_ranks=None
+        self,
+        selected_groups=None,
+        top_group_ranks=None,
+        selected_df: pl.DataFrame | None = None,
     ) -> tuple[pl.DataFrame, str]:
-        filter_description = ""
-        selected_df = self.model_df
+        if selected_df is None:
+            selected_df = self.model_df
 
+        filter_description = ""
         if selected_groups:
             selected_df = selected_df.filter(pl.col(self.groups).is_in(selected_groups))
             filter_description = f'Filtered to the following groups only: {", ".join([str(s) for s in selected_groups])}'
