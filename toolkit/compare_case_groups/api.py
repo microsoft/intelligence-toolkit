@@ -188,10 +188,8 @@ class CompareCaseGroups(IntelligenceWorkflow):
         self,
         selected_groups=None,
         top_group_ranks=None,
-        selected_df: pl.DataFrame | None = None,
     ) -> tuple[pl.DataFrame, str]:
-        if selected_df is None:
-            selected_df = self.model_df
+        selected_df = self.model_df
 
         filter_description = ""
         if selected_groups:

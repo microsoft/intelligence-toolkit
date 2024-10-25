@@ -161,10 +161,12 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                         value=sv.case_groups_top_groups.value,
                     )
                 fdf = sv.case_groups_model_df.value.copy(deep=True)
+
+                ccg.groups = sv.case_groups_groups.value
+                ccg.model_df = pl.from_pandas(sv.case_groups_model_df.value)
                 report_data, filter_description = ccg.get_report_data(
                     selected_groups if len(selected_groups) > 0 else None,
                     top_group_ranks if top_group_ranks > 0 else None,
-                    pl.from_pandas(fdf),
                 )
                 num_rows = len(report_data)
                 st.markdown(f"##### Filtered data summary to report on ({num_rows} rows)")
