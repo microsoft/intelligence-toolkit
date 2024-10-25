@@ -1,61 +1,108 @@
-# Group Comparison Report: Analysis by Product Code
+# Group Comparison Report
 
 ## Introduction
 
-This report provides an analysis of the dataset focusing on the attribute "product_code" across various cities. The dataset consists of 2769 records, and the analysis is based on the group count, rank, and period window changes for each product code within different city groups.
+This report provides a detailed comparison of data records filtered by specific groups based on city and product code. The focus is on three groups: 
+1. Brookside with product code F
+2. Brookside with product code G
+3. Baytown with product code F
 
-## Product Code Analysis
+The dataset includes information on various issues related to product delivery, description, price, quality, and service over different time periods.
 
-### Product Code A
+## Group Overview
 
-- **Brookfield**: Product code A appears in 2023-H1 and 2023-H2 with a count of 2 in each period. The rank remains consistent at 10 and 11, respectively, with a delta of 0 and -5.
-- **Emerald Town**: Product code A is present in 2021-H1 and 2021-H2 with a count of 5, maintaining a rank of 3 and 4, respectively, with a delta of 0.
-- **Hilltown**: Product code A is recorded in 2023-H1 and 2023-H2 with a count of 6 and 3, respectively. The rank changes from 9 to 8, with a delta of -3.
-- **Lakeside**: Product code A is consistently present from 2021-H1 to 2023-H2, with counts ranging from 1 to 29. The rank fluctuates, showing a significant delta of -19 in 2023-H2.
-- **Riverside**: Product code A is recorded from 2020-H2 to 2023-H2, with counts ranging from 1 to 31. The rank varies, with a notable delta of -14 in 2023-H2.
+### Brookside, Product Code F
 
-### Product Code B
+- **Group Count**: 23 records
+- **Group Rank**: 30
 
-- **Brookfield**: Product code B appears in 2023-H1 and 2023-H2 with a count of 1, maintaining a rank of 8 and 8, respectively, with a delta of 0.
-- **Lakeside**: Product code B is consistently present from 2020-H1 to 2023-H2, with counts ranging from 1 to 26. The rank remains stable, with a delta of -3 in 2023-H2.
-- **Rivertown**: Product code B is recorded from 2021-H1 to 2023-H2, with counts ranging from 3 to 34. The rank fluctuates, showing a delta of -1 in 2023-H2.
+#### Attribute Analysis
 
-### Product Code C
+- **Delivery Issue**: 
+  - False: 9 occurrences (Rank 63)
+  - True: 14 occurrences (Rank 10)
+  
+- **Description Issue**: 
+  - False: 14 occurrences (Rank 45)
+  - True: 9 occurrences (Rank 15)
+  
+- **Price Issue**: 
+  - False: 10 occurrences (Rank 49)
+  - True: 13 occurrences (Rank 13)
+  
+- **Quality Issue**: 
+  - False: 18 occurrences (Rank 23)
+  - True: 5 occurrences (Rank 50)
+  
+- **Service Issue**: 
+  - False: 21 occurrences (Rank 19)
+  - True: 2 occurrences (Rank 131)
 
-- **Brookfield**: Product code C appears in 2023-H2 with a count of 7, maintaining a rank of 6, with a delta of 6.
-- **Lakeside**: Product code C is consistently present from 2021-H1 to 2023-H2, with counts ranging from 1 to 27. The rank remains stable, with a delta of 1 in 2023-H2.
-- **Rivertown**: Product code C is recorded from 2021-H1 to 2023-H2, with counts ranging from 1 to 11. The rank fluctuates, showing a delta of -7 in 2023-H2.
+#### Period Window Analysis
 
-### Product Code D
+- The period window counts and ranks show fluctuations over time, with notable increases in 2023-H1 for delivery and description issues.
 
-- **Brookfield**: Product code D appears in 2023-H2 with a count of 1, maintaining a rank of 11, with a delta of -6.
-- **Lakeside**: Product code D is consistently present from 2020-H2 to 2023-H2, with counts ranging from 1 to 35. The rank remains stable, with a delta of 8 in 2023-H2.
-- **Rivertown**: Product code D is recorded from 2021-H1 to 2023-H2, with counts ranging from 1 to 4. The rank fluctuates, showing a delta of 1 in 2023-H2.
+### Brookside, Product Code G
 
-### Product Code E
+- **Group Count**: 16 records
+- **Group Rank**: 51
 
-- **Brookfield**: Product code E appears in 2023-H2 with a count of 2, maintaining a rank of 10, with a delta of 1.
-- **Lakeside**: Product code E is consistently present from 2020-H2 to 2023-H2, with counts ranging from 1 to 10. The rank remains stable, with a delta of -25 in 2023-H2.
-- **Rivertown**: Product code E is recorded from 2021-H2 to 2023-H2, with counts ranging from 1 to 7. The rank fluctuates, showing a delta of 1 in 2023-H2.
+#### Attribute Analysis
 
-### Product Code F
+- **Delivery Issue**: 
+  - False: 12 occurrences (Rank 46)
+  - True: 4 occurrences (Rank 63)
+  
+- **Description Issue**: 
+  - False: 15 occurrences (Rank 39)
+  - True: 1 occurrence (Rank 194)
+  
+- **Price Issue**: 
+  - False: 8 occurrences (Rank 70)
+  - True: 8 occurrences (Rank 28)
+  
+- **Quality Issue**: 
+  - False: 9 occurrences (Rank 66)
+  - True: 7 occurrences (Rank 34)
+  
+- **Service Issue**: 
+  - False: 13 occurrences (Rank 42)
+  - True: 3 occurrences (Rank 84)
 
-- **Brookfield**: Product code F appears in 2023-H1 and 2023-H2 with a count of 1, maintaining a rank of 13 and 7, respectively, with a delta of 0.
-- **Lakeside**: Product code F is consistently present from 2020-H2 to 2023-H2, with counts ranging from 1 to 14. The rank remains stable, with a delta of -8 in 2023-H2.
-- **Rivertown**: Product code F is recorded from 2022-H1 to 2023-H2, with counts ranging from 1 to 17. The rank fluctuates, showing a delta of 7 in 2023-H2.
+#### Period Window Analysis
 
-### Product Code G
+- Significant increases in period window counts for delivery and description issues in 2023-H1, followed by decreases in 2023-H2.
 
-- **Brookfield**: Product code G appears in 2023-H1 and 2023-H2 with a count of 1, maintaining a rank of 8 and 8, respectively, with a delta of -1.
-- **Lakeside**: Product code G is consistently present from 2020-H1 to 2023-H2, with counts ranging from 1 to 14. The rank remains stable, with a delta of 12 in 2023-H2.
-- **Rivertown**: Product code G is recorded from 2020-H1 to 2023-H2, with counts ranging from 1 to 18. The rank fluctuates, showing a delta of -4 in 2023-H2.
+### Baytown, Product Code F
 
-### Product Code H
+- **Group Count**: 3 records
+- **Group Rank**: 184
 
-- **Brookfield**: Product code H appears in 2023-H2 with a count of 3, maintaining a rank of 12, with a delta of 2.
-- **Lakeside**: Product code H is consistently present from 2020-H1 to 2023-H2, with counts ranging from 1 to 21. The rank remains stable, with a delta of 7 in 2023-H2.
-- **Rivertown**: Product code H is recorded from 2020-H1 to 2023-H2, with counts ranging from 1 to 16. The rank fluctuates, showing a delta of 5 in 2023-H2.
+#### Attribute Analysis
+
+- **Delivery Issue**: 
+  - False: 3 occurrences (Rank 149)
+  
+- **Description Issue**: 
+  - False: 2 occurrences (Rank 217)
+  - True: 1 occurrence (Rank 194)
+  
+- **Price Issue**: 
+  - False: 2 occurrences (Rank 207)
+  - True: 1 occurrence (Rank 224)
+  
+- **Quality Issue**: 
+  - False: 2 occurrences (Rank 196)
+  - True: 1 occurrence (Rank 234)
+  
+- **Service Issue**: 
+  - False: 2 occurrences (Rank 200)
+  - True: 1 occurrence (Rank 207)
+
+#### Period Window Analysis
+
+- The period window counts remain relatively stable with minor fluctuations, indicating consistent issue reporting over time.
 
 ## Conclusion
 
-The analysis of product codes across different cities reveals variations in counts, ranks, and period window changes. Some cities show consistent trends, while others exhibit fluctuations in product code presence over time. This report provides insights into the distribution and changes of product codes within the dataset.
+The analysis reveals distinct patterns in issue reporting across different groups and time periods. Brookside with product code F shows a higher frequency of service issues, while Brookside with product code G has a balanced distribution of price issues. Baytown with product code F maintains a consistent pattern with fewer records, indicating less variability in issue reporting. These insights can guide targeted interventions to address specific issues in each group.
