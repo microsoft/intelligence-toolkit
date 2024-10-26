@@ -24,7 +24,7 @@ from toolkit.helpers.classes import IntelligenceWorkflow
 class CompareCaseGroups(IntelligenceWorkflow):
     model_df = pl.DataFrame()
     filtered_df = pl.DataFrame()
-    final_df = pl.DataFrame()
+    prepared_df = pl.DataFrame()
 
     def __init__(self):
         self.filters = []
@@ -33,13 +33,22 @@ class CompareCaseGroups(IntelligenceWorkflow):
         self.temporal = ""
 
     def get_dataset_proportion(self) -> int:
-        initial_row_count = len(self.model_df)
+        initial_row_count = len(self.prepared_df)
         filtered_row_count = len(self.filtered_df)
         return round(
             100 * filtered_row_count / initial_row_count
             if initial_row_count > 0
             else 0,
             0,
+        )
+
+    def get_report_groups_filter_options(self):
+        unique_groups_df = self.model_df.select(self.groups).unique()
+
+        unique_groups = unique_groups_df.to_dicts()
+
+        return sorted(
+            unique_groups, key=lambda x: tuple(x[group] for group in self.groups)
         )
 
     def get_filter_options(self, input_df: pl.DataFrame) -> list[str]:
@@ -96,7 +105,7 @@ class CompareCaseGroups(IntelligenceWorkflow):
 
     def create_data_summary(
         self,
-        final_df: pl.DataFrame,
+        prepared_df: pl.DataFrame,
         filters: list[str],
         groups: list[str],
         aggregates: list[str],
@@ -106,14 +115,14 @@ class CompareCaseGroups(IntelligenceWorkflow):
         self.groups = groups
         self.aggregates = aggregates
         self.temporal = temporal
-        self.final_df = final_df
+        self.prepared_df = prepared_df
 
-        self.final_df = self.final_df.drop_nulls(subset=self.groups)
+        self.prepared_df = self.prepared_df.drop_nulls(subset=self.groups)
 
-        self.model_df = self.final_df.with_columns(
+        self.model_df = self.prepared_df.with_columns(
             [
                 pl.when(pl.col(col) == "").then(None).otherwise(pl.col(col)).alias(col)
-                for col in self.final_df.columns
+                for col in self.prepared_df.columns
             ]
         )
 
@@ -132,6 +141,9 @@ class CompareCaseGroups(IntelligenceWorkflow):
             temporal_df = build_temporal_data(
                 window_df, groups, temporal_atts, temporal
             )
+        else:
+            for group in groups:
+                attributes_df = attributes_df.filter(pl.col(group).is_not_null())
 
         ranked_df = build_ranked_df(
             temporal_df,
@@ -185,13 +197,23 @@ class CompareCaseGroups(IntelligenceWorkflow):
         return "\n".join(description_lines)
 
     def get_report_data(
-        self, selected_groups=None, top_group_ranks=None
+        self,
+        selected_groups=None,
+        top_group_ranks=None,
     ) -> tuple[pl.DataFrame, str]:
-        filter_description = ""
         selected_df = self.model_df
 
+        filter_description = ""
         if selected_groups:
-            selected_df = selected_df.filter(pl.col(self.groups).is_in(selected_groups))
+            filter_expr = pl.lit(False)
+            for group in selected_groups:
+                group_expr = pl.lit(True)
+                for col, value in group.items():
+                    group_expr &= pl.col(col) == value
+                filter_expr |= group_expr
+
+            # Apply the filter to the DataFrame
+            selected_df = self.model_df.filter(filter_expr)
             filter_description = f'Filtered to the following groups only: {", ".join([str(s) for s in selected_groups])}'
         elif top_group_ranks:
             selected_df = selected_df.filter(pl.col("group_rank") <= top_group_ranks)
