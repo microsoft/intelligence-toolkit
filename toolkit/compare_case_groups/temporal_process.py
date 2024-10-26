@@ -1,8 +1,6 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 #
-
-
 import polars as pl
 
 
@@ -36,38 +34,59 @@ def create_window_df(
     )
 
 # Calculate deltas in counts within each group and attribute value
-def calculate_window_delta(temporal_df: pl.DataFrame, temporal) -> pl.DataFrame:
-    return temporal_df.with_columns(
-        (pl.col(f"{temporal}_window_count").diff().fill_null(0)).alias(
-            f"{temporal}_window_delta"
-        )
+def calculate_window_delta(
+    groups: list[str], temporal_df: pl.DataFrame, temporal
+) -> pl.DataFrame:
+    return temporal_df.sort([*groups, temporal, "attribute_value"]).with_columns(
+        [
+            pl.col(f"{temporal}_window_count")
+            .diff()
+            .over([*groups, "attribute_value"])
+            .fill_null(0)
+            .alias(f"{temporal}_window_delta")
+        ]
     )
+
 
 def build_temporal_count(
     ldf: pl.DataFrame, groups: list[str], temporal: str
 ) -> pl.DataFrame:
     grouped_df = ldf.group_by(groups)
-    for name, group in grouped_df:
-        for att_val in ldf["attribute_value"].unique():
-            for time_val in ldf[temporal].unique():
+
+    unique_time_vals = ldf[temporal].unique()
+    unique_att_vals = ldf["attribute_value"].unique()
+
+    new_rows = []
+
+    # Iterate over unique temporal values
+    for time_val in unique_time_vals:
+        for name, group in grouped_df:
+            for att_val in unique_att_vals:
+                # Filter the group based on temporal and attribute value
                 filtered_df = group.filter(
                     (pl.col(temporal) == time_val)
-                    & (
-                        pl.col(f"{temporal}_window_count").cast(pl.String)
-                        == str(att_val)
-                    )
+                    & (pl.col("attribute_value") == att_val)
                 )
+                # Check if the filtered dataframe is empty
                 if filtered_df.height == 0:
-                    # Create a new row as a DataFrame
-                    new_row = pl.DataFrame(
-                        [[*name, time_val, att_val, 0]],  # type: ignore
-                        schema=ldf.schema,
-                    )
+                    # Append the new row to the list
+                    new_rows.append([*name, time_val, att_val, 0])
+    # Convert new rows to a DataFrame and append to the original DataFrame
+    if new_rows:
+        new_rows_df = pl.DataFrame(new_rows, schema=ldf.schema)
+        ldf = ldf.vstack(new_rows_df)
 
-                    # Append the new row to ldf
-                    # ldf = ldf.vstack(new_row)
+    # Remove attribute_values for groups where attribute_count are 0 for the window
+    aggregated_df = ldf.group_by([*groups, "attribute_value"]).agg(
+        [pl.col(f"{temporal}_window_count").sum().alias("total_window_count")]
+    )
+    zero_count_groups = aggregated_df.filter(pl.col("total_window_count") == 0)
 
-    return calculate_window_delta(ldf, temporal)
+    filtered_result = ldf.join(
+        zero_count_groups, on=[*groups, "attribute_value"], how="anti"
+    )
+
+    return calculate_window_delta(groups, filtered_result, temporal)
 
 
 def build_temporal_data(
@@ -77,6 +96,7 @@ def build_temporal_data(
     if ldf.shape[0] == 0:
         return ldf
     ldf = build_temporal_count(ldf, groups, temporal)
+
     if ldf.is_empty():
         return ldf
 

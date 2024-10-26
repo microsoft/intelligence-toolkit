@@ -8,12 +8,12 @@
         },
         "extended_answer_from_text": {
             "type": "md",
-            "heading": "Extended answer from relevant text chunks",
+            "heading": "Extended answer (relevant chunks only)",
             "description": "An extended answer to a user query generated using multiple generative AI calls, first to detect relevant text chunks and then to generate an answer"
         },
         "extended_answer_from_claims": {
             "type": "md",
-            "heading": "Extended answer from requerying extracted claims",
+            "heading": "Extended answer (with claim analysis)",
             "description": "An extended answer to a user query generated using multiple generative AI calls, first to detect relevant text chunks, then to extract relevant claims, then to query again for each claim, and finally to generate an answer from both the claims and the original text chunks"
         },
         "condensed_answer": {
