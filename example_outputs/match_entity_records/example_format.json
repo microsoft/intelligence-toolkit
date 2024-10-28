@@ -19,7 +19,7 @@
         "match_reports": {
             "type": "csv",
             "heading": "AI match reports",
-            "description": "AI-generated reports on each record group, including an overall relatedness score and rxplantion"
+            "description": "AI-generated reports on each record group, including an overall relatedness score and explanation"
         },
         "integrated_results": {
             "type": "csv",

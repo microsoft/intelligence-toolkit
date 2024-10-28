@@ -11,6 +11,7 @@ import pandas as pd
 import streamlit as st
 
 import toolkit.AI.utils as utils
+from app.util.constants import FILE_ENCODING_DEFAULT, FILE_ENCODING_OPTIONS
 from app.util.df_functions import get_current_time, quantize_datetime, quantize_numeric
 from app.util.download_pdf import add_download_pdf
 from app.util.enums import Mode
@@ -18,6 +19,7 @@ from app.util.openai_wrapper import UIOpenAIConfiguration
 from toolkit.AI.classes import LLMCallback
 from toolkit.AI.client import OpenAIClient
 from toolkit.AI.defaults import DEFAULT_MAX_INPUT_TOKENS
+from toolkit.helpers.texts import clean_for_column_name
 
 
 def return_token_count(text: str) -> int:
@@ -170,11 +172,6 @@ def generative_batch_ai_component(
         )
     return generate, batch_messages, reset_prompt
 
-
-file_options = ["unicode-escape", "utf-8", "utf-8-sig"]
-file_encoding_default = "unicode-escape"
-
-
 def single_csv_uploader(
     workflow,
     upload_label,
@@ -194,23 +191,29 @@ def single_csv_uploader(
         key=key + "_file_uploader_" + st.session_state[f"{workflow}_uploader_index"],
     )
     if f"{key}_encoding" not in st.session_state:
-        st.session_state[f"{key}_encoding"] = file_encoding_default
+        st.session_state[f"{key}_encoding"] = FILE_ENCODING_DEFAULT
 
-    with st.expander("File options"):
+    col1, col2 = st.columns([1, 2])
+    with col1:
         encoding = st.selectbox(
             "File encoding",
-            options=file_options,
+            disabled=file is None,
+            options=FILE_ENCODING_OPTIONS,
             key=f"{key}_encoding_sb",
-            index=file_options.index(st.session_state[f"{key}_encoding"]),
+            index=FILE_ENCODING_OPTIONS.index(st.session_state[f"{key}_encoding"]),
         )
+    with col2:
+        st.text("")
+        st.text("")
+        reload = st.button("Reload", key=f"{key}_reload", disabled=file is None)
 
-        reload = st.button("Reload", key=f"{key}_reload")
     if file is not None and (file.name != last_uploaded_file_name_var.value or reload):
         st.session_state[f"{key}_encoding"] = encoding
         last_uploaded_file_name_var.value = file.name
         df = pd.read_csv(
             file, encoding=encoding, encoding_errors="ignore", low_memory=False
         )
+        df.columns = [clean_for_column_name(col) for col in df.columns]
         input_df_var.value = df
         processed_df_var.value = pd.DataFrame()
         if f"{workflow}_intermediate_dfs" in st.session_state:
@@ -256,7 +259,7 @@ def multi_csv_uploader(
     height=250,
 ) -> tuple[str | Any | None, pd.DataFrame]:
     if f"{key}_encoding" not in st.session_state:
-        st.session_state[f"{key}_encoding"] = file_encoding_default
+        st.session_state[f"{key}_encoding"] = FILE_ENCODING_DEFAULT
 
     if f"{key}_uploader_index" not in st.session_state:
         st.session_state[f"{key}_uploader_index"] = str(random.randint(0, 100))
@@ -279,24 +282,28 @@ def multi_csv_uploader(
         key=f"{key}_file_select",
     )
     changed = selected_file != last_selected_file
-        
-    with st.expander("File options"):
+
+    col1, col2, col3 = st.columns([3, 3, 2])
+    with col1:
+        encoding = st.selectbox(
+            "File encoding",
+            disabled=len(files) == 0,
+            options=FILE_ENCODING_OPTIONS,
+            key=f"{key}_encoding_db",
+            index=FILE_ENCODING_OPTIONS.index(st.session_state[f"{key}_encoding"]),
+        )
+    with col2:
         st.number_input(
             "Maximum rows to process (0 = all)",
+            disabled=len(files) == 0,
             min_value=0,
             step=1000,
-            key=max_rows_var.key
+            key=max_rows_var.key,
         )
-        c1, c2 = st.columns([3, 1])
-        with c1:
-            encoding = st.selectbox(
-                "File encoding",
-                options=file_options,
-                key=f"{key}_encoding_db",
-                index=file_options.index(st.session_state[f"{key}_encoding"]),
-            )
-        with c2:
-            reload = st.button("Reload", key=f"{key}_reload")
+    with col3:
+        st.text("")
+        st.text("")
+        reload = st.button("Reload", key=f"{key}_reload", disabled=len(files) == 0)
 
     selected_df = pd.DataFrame()
     if selected_file not in [None, ""] or reload:
@@ -319,6 +326,9 @@ def multi_csv_uploader(
                         low_memory=False,
                     )
                 )
+                selected_df.columns = [
+                    clean_for_column_name(col) for col in selected_df.columns
+                ]
                 break
         st.dataframe(
             selected_df[:show_rows],
@@ -372,7 +382,10 @@ def prepare_input_df(
         for col in last_df.columns:
             # add to all subsequent dataframes if not present
             for df in df_sequence[df_sequence.index(df_name) + 1:]:
-                st.session_state[f"{workflow}_intermediate_dfs"][df][col] = last_df[col]
+                if df in st.session_state[f"{workflow}_intermediate_dfs"]:
+                    st.session_state[f"{workflow}_intermediate_dfs"][df][col] = last_df[
+                        col
+                    ]
         # for all subsequent dataframes, remove columns that are not in the current dataframe
         for df in df_sequence[df_sequence.index(df_name) + 1:]:
             if df in st.session_state[f"{workflow}_intermediate_dfs"]:
@@ -442,7 +455,9 @@ def prepare_input_df(
         # quantize numeric columns into bins
         selected_date_cols = st.multiselect(
             "Select datetime attribute to quantize",
-            default=st.session_state[f"{workflow}_selected_binned_cols"],
+            default=st.session_state[f"{workflow}_selected_binned_cols"]
+            if st.session_state[f"{workflow}_selected_binned_cols"] in input_df.columns
+            else [],
             options=selected_cols,
             help="Select the datetime columns you want to quantize. Quantizing datetime columns into bins makes it easier to synthesize data, but reduces the amount of information in the data. If you do not select any columns, no binning will be performed.",
         )
@@ -685,6 +700,7 @@ def prepare_input_df(
     processed_df_var.value = processed_df
     for col, rename in st.session_state[f"{workflow}_rename_map"].items():
         processed_df_var.value.rename(columns={col: rename}, inplace=True)
+        st.session_state[f"{workflow}_{rename}"] = st.session_state[f"{workflow}_{col}"]
     if reload and len(input_df) > 0 and len(processed_df) > 0:
         st.rerun()
 

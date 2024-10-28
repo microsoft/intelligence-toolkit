@@ -53,13 +53,13 @@ class OpenAIClient:
                     azure_endpoint=api_base,
                 )
             else:
-                self._client = AsyncAzureOpenAI(
+                self._client = AzureOpenAI(
                     api_version=self.configuration.api_version,
                     # Azure-Specifics
                     azure_endpoint=api_base,
                     api_key=self.configuration.api_key,
                 )
-                self._async_client = AzureOpenAI(
+                self._async_client = AsyncAzureOpenAI(
                     api_version=self.configuration.api_version,
                     # Azure-Specifics
                     azure_endpoint=api_base,

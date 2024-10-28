@@ -12,12 +12,13 @@ import polars as pl
 from toolkit.detect_entity_networks.classes import FlagAggregatorType
 from toolkit.detect_entity_networks.config import ENTITY_LABEL
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
+from toolkit.helpers.texts import clean_text_for_csv
 
 
 def clean_text(text: str | int) -> str:
     # remove punctuation but retain characters and digits in any language
     # compress whitespace to single space
-    cleaned_text = re.sub(r"[^\w\s&@\+]", "", str(text)).strip()
+    cleaned_text = clean_text_for_csv(text).strip()
     return re.sub(r"\s+", " ", cleaned_text)
 
 
