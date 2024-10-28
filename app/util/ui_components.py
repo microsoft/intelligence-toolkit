@@ -18,6 +18,7 @@ from app.util.openai_wrapper import UIOpenAIConfiguration
 from toolkit.AI.classes import LLMCallback
 from toolkit.AI.client import OpenAIClient
 from toolkit.AI.defaults import DEFAULT_MAX_INPUT_TOKENS
+from toolkit.helpers.texts import clean_for_column_name
 
 
 def return_token_count(text: str) -> int:
@@ -174,7 +175,6 @@ def generative_batch_ai_component(
 file_options = ["unicode-escape", "utf-8", "utf-8-sig"]
 file_encoding_default = "unicode-escape"
 
-
 def single_csv_uploader(
     workflow,
     upload_label,
@@ -211,6 +211,7 @@ def single_csv_uploader(
         df = pd.read_csv(
             file, encoding=encoding, encoding_errors="ignore", low_memory=False
         )
+        df.columns = [clean_for_column_name(col) for col in df.columns]
         input_df_var.value = df
         processed_df_var.value = pd.DataFrame()
         if f"{workflow}_intermediate_dfs" in st.session_state:
@@ -319,6 +320,9 @@ def multi_csv_uploader(
                         low_memory=False,
                     )
                 )
+                selected_df.columns = [
+                    clean_for_column_name(col) for col in selected_df.columns
+                ]
                 break
         st.dataframe(
             selected_df[:show_rows],
@@ -685,6 +689,7 @@ def prepare_input_df(
     processed_df_var.value = processed_df
     for col, rename in st.session_state[f"{workflow}_rename_map"].items():
         processed_df_var.value.rename(columns={col: rename}, inplace=True)
+        st.session_state[f"{workflow}_{rename}"] = st.session_state[f"{workflow}_{col}"]
     if reload and len(input_df) > 0 and len(processed_df) > 0:
         st.rerun()
 
