@@ -382,7 +382,10 @@ def prepare_input_df(
         for col in last_df.columns:
             # add to all subsequent dataframes if not present
             for df in df_sequence[df_sequence.index(df_name) + 1:]:
-                st.session_state[f"{workflow}_intermediate_dfs"][df][col] = last_df[col]
+                if df in st.session_state[f"{workflow}_intermediate_dfs"]:
+                    st.session_state[f"{workflow}_intermediate_dfs"][df][col] = last_df[
+                        col
+                    ]
         # for all subsequent dataframes, remove columns that are not in the current dataframe
         for df in df_sequence[df_sequence.index(df_name) + 1:]:
             if df in st.session_state[f"{workflow}_intermediate_dfs"]:
@@ -452,7 +455,9 @@ def prepare_input_df(
         # quantize numeric columns into bins
         selected_date_cols = st.multiselect(
             "Select datetime attribute to quantize",
-            default=st.session_state[f"{workflow}_selected_binned_cols"],
+            default=st.session_state[f"{workflow}_selected_binned_cols"]
+            if st.session_state[f"{workflow}_selected_binned_cols"] in input_df.columns
+            else [],
             options=selected_cols,
             help="Select the datetime columns you want to quantize. Quantizing datetime columns into bins makes it easier to synthesize data, but reduces the amount of information in the data. If you do not select any columns, no binning will be performed.",
         )
