@@ -453,11 +453,14 @@ def prepare_input_df(
     last_df, this_df = prepare_stage("datetime_bin")
     with st.expander("Quantize datetime attributes", expanded=False):
         # quantize numeric columns into bins
+        selected_columns = [
+            col
+            for col in st.session_state[f"{workflow}_selected_binned_cols"]
+            if col in input_df.columns
+        ]
         selected_date_cols = st.multiselect(
             "Select datetime attribute to quantize",
-            default=st.session_state[f"{workflow}_selected_binned_cols"]
-            if st.session_state[f"{workflow}_selected_binned_cols"] in input_df.columns
-            else [],
+            default=selected_columns,
             options=selected_cols,
             help="Select the datetime columns you want to quantize. Quantizing datetime columns into bins makes it easier to synthesize data, but reduces the amount of information in the data. If you do not select any columns, no binning will be performed.",
         )
