@@ -216,7 +216,7 @@ class QueryTextData:
         self.chunk_search_config = chunk_search_config
         self.relevant_cids, self.search_summary = await relevance_assessor.detect_relevant_chunks(
             ai_configuration=self.ai_configuration,
-            query=self.query,
+            query=self.expanded_query,
             processed_chunks=self.processed_chunks,
             cid_to_vector=self.cid_to_vector,
             embedder=self.text_embedder,

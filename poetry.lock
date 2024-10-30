@@ -2615,6 +2615,27 @@ files = [
 dill = ">=0.3.9"
 
 [[package]]
+name = "nbformat"
+version = "5.10.4"
+description = "The Jupyter Notebook format"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "nbformat-5.10.4-py3-none-any.whl", hash = "sha256:3b48d6c8fbca4b299bf3982ea7db1af21580e4fec269ad087b9e81588891200b"},
+    {file = "nbformat-5.10.4.tar.gz", hash = "sha256:322168b14f937a5d11362988ecac2a4952d3d8e3a2cbeb2319584631226d5b3a"},
+]
+
+[package.dependencies]
+fastjsonschema = ">=2.15"
+jsonschema = ">=2.6"
+jupyter-core = ">=4.12,<5.0.dev0 || >=5.1.dev0"
+traitlets = ">=5.1"
+
+[package.extras]
+docs = ["myst-parser", "pydata-sphinx-theme", "sphinx", "sphinxcontrib-github-alt", "sphinxcontrib-spelling"]
+test = ["pep440", "pre-commit", "pytest", "testpath"]
+
+[[package]]
 name = "nest-asyncio"
 version = "1.6.0"
 description = "Patch asyncio to allow nested event loops"
@@ -6025,4 +6046,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "684f0f1850143c7b84912a2eeee1715271f6dfedbeace8c1a8ba4fad2aca778c"
+content-hash = "8f64f6f998ff8eb8a1a93ca40637526c512703d2b6bcb6e8cced10847434c958"

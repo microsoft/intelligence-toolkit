@@ -92,8 +92,8 @@ class AnonymizeCaseData(IntelligenceWorkflow):
             aggregate_counts_scale_factor (float, optional): The scale factor to use for aggregate counts. Defaults to 1.0.
         """
         self.sensitive_df = df_functions.fix_null_ints(df)
-                            
-        sensitive_dataset = Dataset.from_data_frame(df)
+
+        sensitive_dataset = Dataset.from_data_frame(self.sensitive_df)
 
         params = (
             DpAggregateSeededParametersBuilder()
