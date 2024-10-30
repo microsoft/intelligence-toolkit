@@ -2,11 +2,11 @@
 
 ## Introduction
 
-This report provides a detailed analysis of the dataset filtered to the top 10 cities by record count. The dataset includes information on various issues and product codes across different time periods. The focus is on comparing the cities based on the frequency and ranking of these issues and product codes.
+This report provides a detailed comparison of the top 10 city groups based on record count from a dataset containing 2769 records. The dataset includes information on various issues and product codes across different time periods. The focus is on analyzing the trends and changes in these attributes over time for each city group.
 
-## Data Summary
+## Group Filters
 
-The dataset consists of 2769 records, with data available for all grouping attributes. The analysis is filtered to the top 10 cities by record count, which are:
+The dataset is filtered to include only the top 10 city groups by record count. These groups are:
 
 1. Lakeside (349 records)
 2. Springfield (265 records)
@@ -21,37 +21,76 @@ The dataset consists of 2769 records, with data available for all grouping attri
 
 ## Key Findings
 
-### Delivery Issues
+### Lakeside
 
-- **Lakeside** has the highest count of records with delivery issues marked as false (274 records, rank 1) and true (75 records, rank 3).
-- **Springfield** also shows a significant number of delivery issues marked as false (177 records, rank 2) and true (88 records, rank 2).
-- **Hilltop** has a notable count of delivery issues marked as true (104 records, rank 1).
+- **Record Count**: Lakeside has the highest record count with 349 records.
+- **Top Issues**: Quality and service issues are the most frequent, each with 123 occurrences (rank 1).
+- **Product Codes**: Product code C is the most common with 102 occurrences (rank 1).
+- **Trends**: There was a significant increase in price issues in 2023-H1 (31 occurrences, delta +27) and a subsequent decrease in 2024-H1 (0 occurrences, delta -48).
 
-### Description Issues
+### Springfield
 
-- **Lakeside** leads with the highest count of records with description issues marked as false (285 records, rank 1) and true (64 records, rank 2).
-- **Springfield** follows with a high count of description issues marked as false (229 records, rank 2).
+- **Record Count**: Springfield ranks second with 265 records.
+- **Top Issues**: Quality issues are the most frequent with 96 occurrences (rank 2).
+- **Product Codes**: Product code A is the most common with 98 occurrences (rank 1).
+- **Trends**: There was a notable increase in delivery issues in 2023-H1 (44 occurrences, delta +43) followed by a decrease in 2024-H1 (0 occurrences, delta -38).
 
-### Price Issues
+### Hilltop
 
-- **Lakeside** has the highest count of records with price issues marked as false (256 records, rank 1) and true (93 records, rank 2).
-- **Springfield** also shows a significant number of price issues marked as true (93 records, rank 2).
+- **Record Count**: Hilltop ranks third with 259 records.
+- **Top Issues**: Delivery issues are the most frequent with 104 occurrences (rank 1).
+- **Product Codes**: Product code D is the most common with 107 occurrences (rank 1).
+- **Trends**: There was a significant increase in service issues in 2023-H2 (55 occurrences, delta +39).
 
-### Product Codes
+### Rivertown
 
-- **Springfield** has the highest count of records for product code A (98 records, rank 1) and product code G (67 records, rank 1).
-- **Lakeside** has a high count for product code C (102 records, rank 1).
+- **Record Count**: Rivertown ranks fourth with 204 records.
+- **Top Issues**: Quality issues are the most frequent with 92 occurrences (rank 3).
+- **Product Codes**: Product code B is the most common with 79 occurrences (rank 1).
+- **Trends**: There was a substantial increase in price issues in 2023-H1 (39 occurrences, delta +35) followed by a decrease in 2023-H2 (17 occurrences, delta -22).
 
-### Quality and Service Issues
+### Riverside
 
-- **Lakeside** and **Springfield** both have high counts of records with quality issues marked as false (226 and 169 records, respectively, both rank 1) and true (123 and 96 records, respectively, both rank 1).
-- **Lakeside** also leads in service issues marked as false (226 records, rank 1) and true (123 records, rank 1).
+- **Record Count**: Riverside ranks fifth with 184 records.
+- **Top Issues**: Price issues are the most frequent with 76 occurrences (rank 3).
+- **Product Codes**: Product code A is the most common with 41 occurrences (rank 3).
+- **Trends**: There was a notable increase in description issues in 2023-H1 (39 occurrences, delta +37).
 
-### Period Window Changes
+### Seaside
 
-- **Brookside** shows a significant increase in delivery issues marked as true from 2023-H1 to 2023-H2 (18 to 11, delta -8).
-- **Riverside** experienced a notable increase in price issues marked as true from 2023-H1 to 2023-H2 (46 to 19, delta -27).
+- **Record Count**: Seaside ranks sixth with 127 records.
+- **Top Issues**: Service issues are the most frequent with 44 occurrences (rank 6).
+- **Product Codes**: Product code G is the most common with 25 occurrences (rank 5).
+- **Trends**: There was a significant increase in delivery issues in 2023-H1 (23 occurrences, delta +18).
+
+### Mountainview
+
+- **Record Count**: Mountainview ranks seventh with 119 records.
+- **Top Issues**: Delivery issues are the most frequent with 58 occurrences (rank 4).
+- **Product Codes**: Product code C is the most common with 54 occurrences (rank 2).
+- **Trends**: There was a substantial increase in description issues in 2023-H1 (32 occurrences, delta +28).
+
+### Brookside
+
+- **Record Count**: Brookside ranks eighth with 111 records.
+- **Top Issues**: Price issues are the most frequent with 45 occurrences (rank 6).
+- **Product Codes**: Product code F is the most common with 23 occurrences (rank 4).
+- **Trends**: There was a significant increase in price issues in 2023-H1 (27 occurrences, delta +27).
+
+### Greenfield
+
+- **Record Count**: Greenfield ranks ninth with 104 records.
+- **Top Issues**: Description issues are the most frequent with 38 occurrences (rank 5).
+- **Product Codes**: Product code E is the most common with 25 occurrences (rank 4).
+- **Trends**: There was a notable increase in description issues in 2023-H1 (20 occurrences, delta +19).
+
+### Meadowville
+
+- **Record Count**: Meadowville ranks tenth with 94 records.
+- **Top Issues**: Price issues are the most frequent with 30 occurrences (rank 11).
+- **Product Codes**: Product code E is the most common with 33 occurrences (rank 1).
+- **Trends**: There was a significant increase in delivery issues in 2023-H2 (17 occurrences, delta +11).
 
 ## Conclusion
 
-The analysis highlights that Lakeside consistently ranks highest in several categories, including delivery, description, and price issues, as well as product codes and quality/service issues. Springfield also shows high counts in similar categories. The period window changes indicate fluctuations in issue counts, with some cities experiencing significant increases or decreases over time. This report provides a comprehensive overview of the dataset, focusing on the top 10 cities by record count and their respective rankings and changes over time.
+The analysis reveals distinct patterns and trends in issues and product codes across the top 10 city groups. Lakeside and Springfield show the highest record counts, with quality and service issues being prevalent. Significant changes in issue occurrences are observed in various periods, indicating potential areas for further investigation and improvement.

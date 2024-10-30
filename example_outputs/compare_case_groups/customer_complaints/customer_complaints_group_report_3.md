@@ -2,48 +2,40 @@
 
 ## Introduction
 
-This report focuses on the dataset filtered specifically for the city of Lakeside. The dataset contains a total of 349 records for Lakeside, which is ranked first in terms of group count among the cities in the dataset. The analysis covers various attributes such as delivery issues, description issues, price issues, product codes, quality issues, and service issues over different time periods.
+This report focuses on the dataset filtered specifically for the city of Lakeside. The dataset contains a total of 349 records, all pertaining to various issues and product codes over different time periods. The analysis will cover the frequency and ranking of these issues and product codes, as well as changes over time.
 
-## Attribute Analysis
+## Data Summary
 
-### Delivery Issues
+The dataset includes records for the following attributes:
+- **Issues**: Delivery, Description, Price, Quality, and Service
+- **Product Codes**: A, B, C, D, E, F, G, H
 
-- **No Delivery Issues**: The majority of records (274) indicate no delivery issues, making it the top-ranked attribute in this category. Over the period from 2020-H1 to 2026-H2, the count fluctuated, with a significant increase in 2023-H2 (124) and a sharp decline in 2024-H1 (1).
-- **Delivery Issues Present**: There are 75 records with delivery issues, ranked third. The count remained relatively stable across periods, with a notable increase in 2023-H2 (40).
+Each record is associated with a specific time period, denoted as half-year intervals from 2020 to 2026.
 
-### Description Issues
+## Key Findings
 
-- **No Description Issues**: This attribute has the highest count (285) and is consistently ranked first. The count saw a substantial rise in 2023-H2 (131) but dropped significantly in 2024-H1 (1).
-- **Description Issues Present**: There are 64 records with description issues, ranked second. The count increased notably in 2023-H2 (33).
+### Attribute Counts and Ranks
 
-### Price Issues
+1. **Quality and Service Issues**: Both have the highest attribute count of 123, ranking 1st among issues (attribute rank: 1).
+2. **Price Issue**: This issue has an attribute count of 93, ranking 2nd (attribute rank: 2).
+3. **Delivery Issue**: With an attribute count of 75, it ranks 3rd (attribute rank: 3).
 
-- **No Price Issues**: With 256 records, this attribute is ranked first. The count increased significantly in 2023-H2 (116) but decreased sharply in 2024-H1 (2).
-- **Price Issues Present**: There are 93 records with price issues, ranked second. The count rose notably in 2023-H2 (48).
+### Product Code Analysis
 
-### Product Codes
+1. **Product Code C**: This code has the highest attribute count of 102, ranking 1st among product codes (attribute rank: 1).
+2. **Product Code B**: With an attribute count of 54, it ranks 2nd (attribute rank: 2).
+3. **Product Code D**: This code has an attribute count of 48, ranking 2nd (attribute rank: 2).
 
-- **Product Code C**: This is the most common product code with 102 records, ranked first. The count peaked in 2023-H2 (27).
-- **Product Code B**: With 54 records, this code is ranked second. The count increased significantly in 2023-H1 (24).
-- **Other Product Codes**: Codes A, D, E, F, G, and H have varying counts, with notable increases for Code D in 2023-H2 (35) and Code H in 2023-H2 (21).
+### Period Window Analysis
 
-### Quality Issues
+- **2023-H2**: Notable increases in issues and product codes were observed. For instance, the delivery issue count rose to 40 (period window delta: 22), and product code A increased to 29 (period window delta: 21).
+- **2024-H1**: A significant decline in counts across most attributes was noted. For example, the price issue count dropped to 0 (period window delta: -48), and product code A also fell to 0 (period window delta: -29).
 
-- **No Quality Issues**: This attribute has 226 records, ranked first. The count increased significantly in 2023-H2 (86).
-- **Quality Issues Present**: There are 123 records with quality issues, ranked first. The count rose notably in 2023-H2 (78).
+### Trends Over Time
 
-### Service Issues
-
-- **No Service Issues**: With 226 records, this attribute is ranked first. The count increased significantly in 2023-H2 (117).
-- **Service Issues Present**: There are 123 records with service issues, ranked first. The count rose notably in 2023-H2 (47).
-
-## Period Window Analysis
-
-The dataset covers multiple half-year periods from 2020-H1 to 2026-H2. Notable trends include:
-
-- **2023-H2**: This period saw significant increases across most attributes, particularly in delivery, description, and price issues, as well as product codes and service issues.
-- **2024-H1**: There was a sharp decline in counts across most attributes, indicating a potential change in data collection or reporting.
+- **Increasing Trends**: From 2023-H1 to 2023-H2, there was a marked increase in the counts of several issues and product codes. For example, the quality issue count increased to 78 (period window delta: 44).
+- **Decreasing Trends**: From 2023-H2 to 2024-H1, there was a sharp decline in most counts. The service issue count dropped to 0 (period window delta: -47).
 
 ## Conclusion
 
-The city of Lakeside shows varying trends in different attributes over time. The most significant changes occurred in 2023-H2, with increases in issues and product code counts. Conversely, 2024-H1 experienced a notable decline across most attributes. This report provides a comprehensive overview of the data trends for Lakeside, offering insights into potential areas of focus for further analysis or action.
+The dataset for Lakeside reveals significant fluctuations in issue and product code counts over the analyzed periods. Quality and service issues consistently rank highest, while product code C is the most frequent. The period from 2023-H1 to 2023-H2 saw substantial increases, followed by notable declines in 2024-H1. These trends highlight potential areas for further investigation and action to address the underlying causes of these changes.
