@@ -2,107 +2,71 @@
 
 ## Introduction
 
-This report provides a detailed comparison of data records filtered by specific groups based on city and product code. The focus is on three groups: 
-1. Brookside with product code F
-2. Brookside with product code G
-3. Baytown with product code F
+This report provides a detailed comparison of specific groups within a dataset filtered by city and product code. The focus is on the groups from the cities of Brookside and Baytown, specifically for product codes 'F' and 'G'. The analysis includes a summary of group counts, attribute counts, and period window changes over time.
 
-The dataset includes information on various issues related to product delivery, description, price, quality, and service over different time periods.
+## Group Filters
 
-## Group Overview
+The dataset has been filtered to include the following groups:
+- Brookside, Product Code F
+- Brookside, Product Code G
+- Baytown, Product Code F
 
-### Brookside, Product Code F
+## Data Summary
 
-- **Group Count**: 23 records
-- **Group Rank**: 30
+### Group Counts and Ranks
 
-#### Attribute Analysis
+- **Brookside, Product Code F**: This group has a total of 23 records, ranking 30th in group rank.
+- **Brookside, Product Code G**: This group has a total of 16 records, ranking 51st in group rank.
+- **Baytown, Product Code F**: This group has a total of 3 records, ranking 184th in group rank.
 
-- **Delivery Issue**: 
-  - False: 9 occurrences (Rank 63)
-  - True: 14 occurrences (Rank 10)
-  
-- **Description Issue**: 
-  - False: 14 occurrences (Rank 45)
-  - True: 9 occurrences (Rank 15)
-  
-- **Price Issue**: 
-  - False: 10 occurrences (Rank 49)
-  - True: 13 occurrences (Rank 13)
-  
-- **Quality Issue**: 
-  - False: 18 occurrences (Rank 23)
-  - True: 5 occurrences (Rank 50)
-  
-- **Service Issue**: 
-  - False: 21 occurrences (Rank 19)
-  - True: 2 occurrences (Rank 131)
+### Attribute Counts and Ranks
 
-#### Period Window Analysis
+For each group, various issues are tracked as attribute values, including delivery, description, price, quality, and service issues. Below are the counts and ranks for these attributes:
 
-- The period window counts and ranks show fluctuations over time, with notable increases in 2023-H1 for delivery and description issues.
+#### Brookside, Product Code F
+- **Delivery Issue**: 14 occurrences, ranked 10th.
+- **Description Issue**: 9 occurrences, ranked 15th.
+- **Price Issue**: 13 occurrences, ranked 13th.
+- **Quality Issue**: 5 occurrences, ranked 50th.
+- **Service Issue**: 2 occurrences, ranked 131st.
 
-### Brookside, Product Code G
+#### Brookside, Product Code G
+- **Delivery Issue**: 4 occurrences, ranked 63rd.
+- **Description Issue**: 1 occurrence, ranked 194th.
+- **Price Issue**: 8 occurrences, ranked 28th.
+- **Quality Issue**: 7 occurrences, ranked 34th.
+- **Service Issue**: 3 occurrences, ranked 84th.
 
-- **Group Count**: 16 records
-- **Group Rank**: 51
+#### Baytown, Product Code F
+- **Description Issue**: 1 occurrence, ranked 194th.
+- **Price Issue**: 1 occurrence, ranked 224th.
+- **Quality Issue**: 1 occurrence, ranked 234th.
+- **Service Issue**: 1 occurrence, ranked 207th.
 
-#### Attribute Analysis
+### Period Window Analysis
 
-- **Delivery Issue**: 
-  - False: 12 occurrences (Rank 46)
-  - True: 4 occurrences (Rank 63)
-  
-- **Description Issue**: 
-  - False: 15 occurrences (Rank 39)
-  - True: 1 occurrence (Rank 194)
-  
-- **Price Issue**: 
-  - False: 8 occurrences (Rank 70)
-  - True: 8 occurrences (Rank 28)
-  
-- **Quality Issue**: 
-  - False: 9 occurrences (Rank 66)
-  - True: 7 occurrences (Rank 34)
-  
-- **Service Issue**: 
-  - False: 13 occurrences (Rank 42)
-  - True: 3 occurrences (Rank 84)
+The period window analysis tracks changes in attribute counts over successive time periods.
 
-#### Period Window Analysis
+#### Brookside, Product Code F
+- Notable increase in delivery issues in 2023-H1 (11 increase).
+- Description issues increased by 4 in 2023-H1.
+- Price issues saw a significant increase of 9 in 2023-H1.
+- Quality issues increased by 4 in 2023-H1.
+- Service issues increased by 1 in 2023-H1.
 
-- Significant increases in period window counts for delivery and description issues in 2023-H1, followed by decreases in 2023-H2.
+#### Brookside, Product Code G
+- Delivery issues increased by 3 in 2023-H1.
+- Description issues increased by 1 in 2023-H1.
+- Price issues increased by 7 in 2023-H1.
+- Quality issues increased by 5 in 2023-H1.
+- Service issues increased by 2 in 2023-H1.
 
-### Baytown, Product Code F
-
-- **Group Count**: 3 records
-- **Group Rank**: 184
-
-#### Attribute Analysis
-
-- **Delivery Issue**: 
-  - False: 3 occurrences (Rank 149)
-  
-- **Description Issue**: 
-  - False: 2 occurrences (Rank 217)
-  - True: 1 occurrence (Rank 194)
-  
-- **Price Issue**: 
-  - False: 2 occurrences (Rank 207)
-  - True: 1 occurrence (Rank 224)
-  
-- **Quality Issue**: 
-  - False: 2 occurrences (Rank 196)
-  - True: 1 occurrence (Rank 234)
-  
-- **Service Issue**: 
-  - False: 2 occurrences (Rank 200)
-  - True: 1 occurrence (Rank 207)
-
-#### Period Window Analysis
-
-- The period window counts remain relatively stable with minor fluctuations, indicating consistent issue reporting over time.
+#### Baytown, Product Code F
+- Quality issues increased by 1 in 2020-H2.
+- Description issues increased by 1 in 2023-H1.
+- Price issues increased by 1 in 2023-H1.
+- Service issues increased by 1 in 2023-H2.
 
 ## Conclusion
 
-The analysis reveals distinct patterns in issue reporting across different groups and time periods. Brookside with product code F shows a higher frequency of service issues, while Brookside with product code G has a balanced distribution of price issues. Baytown with product code F maintains a consistent pattern with fewer records, indicating less variability in issue reporting. These insights can guide targeted interventions to address specific issues in each group.
+The analysis highlights significant differences in issue occurrences and trends over time between the groups. Brookside with Product Code F shows the highest number of issues, particularly in delivery and price, with notable increases in 2023-H1. Brookside with Product Code G also shows increases in 2023-H1, but with fewer occurrences overall. Baytown with Product Code F has consistently low occurrences across all periods, with minor fluctuations. This report provides insights into the performance and challenges faced by each group, which can be used for further investigation and decision-making.
