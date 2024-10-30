@@ -12,8 +12,9 @@ def fix_null_ints(in_df: pd.DataFrame) -> pd.DataFrame:
         if dt == "float64":
             df[col] = df[col].astype("Int64")
             df[col] = df[col].where(pd.notna(df[col]), pd.NA)
+            df[col] = df[col].astype(str).replace("<NA>", "")
 
-    return df.astype(str).replace("<NA>", "")
+    return df
 
 
 def get_current_time():
