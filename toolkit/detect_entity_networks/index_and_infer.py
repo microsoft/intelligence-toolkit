@@ -16,6 +16,7 @@ from toolkit.detect_entity_networks.config import (
     SIMILARITY_THRESHOLD_MAX,
     SIMILARITY_THRESHOLD_MIN,
 )
+from toolkit.detect_entity_networks.identify_networks import trim_nodeset
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
@@ -48,6 +49,8 @@ async def index_nodes(
         for text, text_type in text_types
     ]
 
+    if openai_configuration is None:
+        openai_configuration = OpenAIConfiguration()
     if functions_embedder is None:
         functions_embedder = OpenAIEmbedder(openai_configuration, config.cache_name)
     data_embeddings = await functions_embedder.embed_store_many(
