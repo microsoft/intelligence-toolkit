@@ -1,7 +1,8 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 import math
-import sys
 import re
+import sys
+
 import numpy as np
 import pandas as pd
 from dateutil import parser as dateparser
@@ -22,7 +23,7 @@ def fix_null_ints(in_df):
             isum = idf["int"].sum()
             if int(fsum) == int(isum):
                 df[col] = idf["int_s"]
-                df[col] = df[col].astype("Int64")
+                df[col] = df[col].astype(str)
                 df[col] = df[col].replace(-sys.maxsize, np.nan)
     return df
 
