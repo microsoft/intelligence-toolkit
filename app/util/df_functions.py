@@ -10,9 +10,12 @@ def fix_null_ints(in_df: pd.DataFrame) -> pd.DataFrame:
     df = in_df.copy()
     for col, dt in zip(df.columns, df.dtypes, strict=False):
         if dt == "float64":
-            df[col] = df[col].astype("Int64")
-            df[col] = df[col].where(pd.notna(df[col]), pd.NA)
-            df[col] = df[col].astype(str).replace("<NA>", "")
+            try:
+                df[col] = df[col].astype("Int64")
+                df[col] = df[col].where(pd.notna(df[col]), pd.NA)
+                df[col] = df[col].astype(str).replace("<NA>", "")
+            except Exception as e:
+                print(f"Error converting column {col} to Int64: {e}")
 
     return df
 

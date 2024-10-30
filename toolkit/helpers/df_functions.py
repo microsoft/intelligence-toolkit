@@ -30,3 +30,23 @@ def fix_null_ints(in_df: pd.DataFrame) -> pd.DataFrame:
 
 def get_current_time() -> str:
     return pd.Timestamp.now().strftime("%Y%m%d%H%M%S")
+
+def supress_boolean_binary(
+    input_df: pd.DataFrame, output_df: pd.DataFrame | None = None
+) -> pd.DataFrame:
+    if output_df is None:
+        output_df = input_df.copy()
+    for col in input_df.columns:
+        unique_values = [str(x) for x in input_df[col].unique()]
+        is_three_with_none = len(unique_values) == 3 and input_df[col].isna().any()
+        if len(unique_values) <= 2 or is_three_with_none:
+            if "0" in unique_values or "0.0" in unique_values:
+                output_df[col] = (
+                    input_df[col]
+                    .astype(str)
+                    .replace("0", np.nan)
+                    .replace("0.0", np.nan)
+                )
+            elif "False" in unique_values:
+                output_df[col] = input_df[col].astype(str).replace("False", np.nan)
+    return output_df
