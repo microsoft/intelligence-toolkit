@@ -2,6 +2,9 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 
+from collections import defaultdict
+from typing import Any
+
 import networkx as nx
 import polars as pl
 
@@ -34,6 +37,7 @@ from toolkit.detect_entity_networks.prepare_model import (
 )
 from toolkit.helpers.classes import IntelligenceWorkflow
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
+from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 
 class DetectEntityNetworks(IntelligenceWorkflow):
@@ -163,13 +167,19 @@ class DetectEntityNetworks(IntelligenceWorkflow):
             self.graph,
         )
 
-    async def infer_nodes(self, similarity_threshold: float) -> None:
+    def infer_nodes(
+        self,
+        similarity_threshold: float,
+        progress_callbacks: list[ProgressBatchCallback] | None = None,
+    ) -> defaultdict[Any, set]:
         self.inferred_links = infer_nodes(
             similarity_threshold,
             self.embedded_texts,
             self.nearest_text_indices,
             self.nearest_text_distances,
+            progress_callbacks,
         )
+        return self.inferred_links
 
     def clear_inferred_nodes(self) -> None:
         self.inferred_links = {}

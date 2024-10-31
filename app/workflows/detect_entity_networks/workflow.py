@@ -25,14 +25,9 @@ from toolkit.detect_entity_networks.config import (ENTITY_LABEL,
                                                    SIMILARITY_THRESHOLD_MIN)
 from toolkit.detect_entity_networks.explore_networks import (
     build_network_from_entities, get_entity_graph, simplify_entities_graph)
-from toolkit.detect_entity_networks.exposure_report import \
-    build_exposure_report
-from toolkit.detect_entity_networks.identify_networks import (
-    build_entity_records, build_networks, trim_nodeset)
+from toolkit.detect_entity_networks.exposure_report import build_exposure_report
 from toolkit.detect_entity_networks.index_and_infer import (
-    build_inferred_df,
     index_nodes,
-    infer_nodes,
 )
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
@@ -123,7 +118,6 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                     )
                 b1, b2 = st.columns([1, 1])
                 with b1:
-                    groups = set()
                     if st.button(
                         "Add links to model",
                         disabled=entity_col == ""
@@ -163,7 +157,8 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                                     entity_col,
                                     value_cols,
                                 )
-                            # sv.workflow_object.value = den
+                            sv.network_attributes_list.value = den.attributes_list
+                        # sv.workflow_object.value = den
                 with b2:
                     if st.button(
                         "Clear data model",
@@ -300,14 +295,10 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                 callback_infer.on_batch_change = on_inferring_batch_change
                 sv.network_similarity_threshold.value = network_similarity_threshold
 
-                sv.network_inferred_links.value = infer_nodes(
+                sv.network_inferred_links.value = den.infer_nodes(
                     network_similarity_threshold,
-                    sv.network_embedded_texts.value,
-                    sv.network_nearest_text_indices.value,
-                    sv.network_nearest_text_distances.value,
                     [callback_infer],
                 )
-                den.inferred_links = sv.network_inferred_links.value
                 pb.empty()
 
             inferred_links_count = len(sv.network_inferred_links.value)
@@ -471,19 +462,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                         sv.network_table_index.value += 1
                         st.rerun()
                     if show_groups:
-                        for group_links in sv.network_group_links.value:
-                            selected_df = pd.DataFrame(
-                                group_links, columns=["entity_id", "group", "value"]
-                            ).replace("nan", "")
-                            selected_df = selected_df[selected_df["value"] != ""]
-                            # Use group values as columns with values in them
-                            selected_df = selected_df.pivot_table(
-                                index="entity_id",
-                                columns="group",
-                                values="value",
-                                aggfunc="first",
-                            ).reset_index()
-                            show_df = show_df.merge(selected_df, on="entity_id", how="left")
+                        show_df = den.get_grouped_df().to_pandas()
                     last_df = show_df.copy()
                     if not show_entities:
                         last_df = (
