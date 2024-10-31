@@ -94,10 +94,14 @@ class BaseEmbedder(ABC, BaseBatchAsync):
         if len(existing_embedding) > 0:
             return existing_embedding.get("vector")[0]
 
-        tokens = get_token_count(text)
-        if tokens > self.max_tokens:
-            text = text[: self.max_tokens]
-            logger.info("Truncated text to max tokens")
+        # error when local
+        try:
+            tokens = get_token_count(text)
+            if tokens > self.max_tokens:
+                text = text[: self.max_tokens]
+                logger.info("Truncated text to max tokens")
+        except:
+            pass
 
         try:
             embedding = self._generate_embedding(text)
