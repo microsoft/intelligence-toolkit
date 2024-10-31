@@ -10,11 +10,15 @@ from toolkit.AI.metaprompts import do_not_harm
 from toolkit.AI.utils import generate_messages
 from toolkit.helpers import df_functions
 
-from .detection_functions import (create_close_node_rows, create_pattern_rows,
-                                  create_period_to_patterns)
+from .detection_functions import (
+    create_close_node_rows,
+    create_pattern_rows,
+    create_period_to_patterns,
+)
 from .graph_functions import convert_edge_df_to_graph, create_edge_df_from_atts
 from .prompts import report_prompt, user_prompt
 from .record_counter import RecordCounter
+
 
 def generate_graph_model(df, period_col, type_val_sep):
     att_cols = [
@@ -73,7 +77,6 @@ def compute_attribute_counts(df, pattern, period_col, period, type_val_sep):
     )
     melted = melted[melted["Value"] != ""]
     melted["AttributeValue"] = melted["Attribute"] + type_val_sep + melted["Value"]
-    print(melted)
     # Directly use nunique in groupby
     count_df = (
         melted.groupby("AttributeValue")["Subject ID"]

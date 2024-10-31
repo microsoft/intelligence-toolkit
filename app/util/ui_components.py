@@ -19,6 +19,7 @@ from app.util.openai_wrapper import UIOpenAIConfiguration
 from toolkit.AI.classes import LLMCallback
 from toolkit.AI.client import OpenAIClient
 from toolkit.AI.defaults import DEFAULT_MAX_INPUT_TOKENS
+from toolkit.helpers import df_functions
 from toolkit.helpers.texts import clean_for_column_name
 
 
@@ -654,14 +655,7 @@ def prepare_input_df(
 
         if not initialized or suppress_zeros:
             st.session_state[f"{workflow}_suppress_zeros"] = suppress_zeros
-            for col in last_df.columns:
-                unique_values = list([str(x) for x in last_df[col].unique()])
-                is_three_with_none = len(unique_values) == 3 and last_df[col].isna().any()
-                if len(unique_values) <= 2 or is_three_with_none:
-                    if "0" in unique_values or "0.0" in unique_values:
-                        this_df[col] = last_df[col].astype(str).replace("0", np.nan).replace("0.0", np.nan)
-                    elif 'False' in unique_values:
-                        this_df[col] = last_df[col].astype(str).replace('False', np.nan)
+            this_df = df_functions.supress_boolean_binary(last_df, this_df)
             df_updated("suppress_null")
         if not suppress_zeros:
             for col in this_df.columns:
