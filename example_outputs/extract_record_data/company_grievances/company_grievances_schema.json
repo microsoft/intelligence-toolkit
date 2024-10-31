@@ -9,7 +9,6 @@
       "description": "The dataset of companies",
       "items": {
         "type": "object",
-        "description": "An object list item",
         "properties": {
           "name": {
             "type": "string",
