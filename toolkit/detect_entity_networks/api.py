@@ -233,13 +233,14 @@ class DetectEntityNetworks(IntelligenceWorkflow):
             self.integrated_flags,
             self.inferred_links,
         )
+        return self.entity_records
 
-    def community_sizes(self) -> list[int]:
+    def get_community_sizes(self) -> list[int]:
         return [len(comm) for comm in self.community_nodes if len(comm) > 1]
 
     def get_records_summary(self) -> str:
         if len(self.community_nodes) > 0:
-            comm_sizes = self.community_sizes()
+            comm_sizes = self.get_community_sizes()
             max_comm_size = max(comm_sizes)
 
             return f"Networks identified: {len(self.community_nodes)} ({len(comm_sizes)} with multiple entities, maximum {max_comm_size})"

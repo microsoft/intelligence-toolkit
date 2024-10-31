@@ -197,12 +197,8 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
         index_col, part_col = st.columns([1, 1])
         with index_col:
             st.markdown("##### Match similar nodes (optional)")
-            fuzzy_options = sorted(
-                [
-                    ENTITY_LABEL,
-                    *list(sv.network_node_types.value),
-                ]
-            )
+            fuzzy_options = den.get_fuzzy_options()
+
             network_indexed_node_types = st.multiselect(
                 "Select node types to fuzzy match",
                 default=sv.network_indexed_node_types.value,
@@ -219,7 +215,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                 st.caption(f"Total of {total_embeddings} nodes to index")
             local_embedding = st.toggle(
                 "Use local embeddings",
-                sv.network_local_embedding_enabled.value,
+                sv.network_local_embedding_enabled.value,  # TODO: add option to api
                 help="Use local embeddings to index nodes. If disabled, the model will use OpenAI embeddings.",
             )
             index = st.button(
@@ -249,6 +245,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                     disabled=len(sv.network_inferred_links.value) == 0,
                 )
             if clear_inferring:
+                den.clear_inferred_links()
                 sv.network_inferred_links.value = []
                 st.rerun()
 
@@ -281,6 +278,10 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                     None,
                     sv_home.save_cache.value,
                 )
+                den.embedded_texts = sv.network_embedded_texts.value
+                den.nearest_text_distances = sv.network_nearest_text_distances.value
+                den.nearest_text_indices = sv.network_nearest_text_indices.value
+
                 pb.empty()
                 st.rerun()
 
@@ -306,6 +307,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                     sv.network_nearest_text_distances.value,
                     [callback_infer],
                 )
+                den.inferred_links = sv.network_inferred_links.value
                 pb.empty()
 
             inferred_links_count = len(sv.network_inferred_links.value)
@@ -315,7 +317,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                 )
             if inferred_links_count > 0:
                 st.markdown(f"*Number of links inferred*: {inferred_links_count}")
-                inferred_df = build_inferred_df(sv.network_inferred_links.value)
+                inferred_df = den.inferred_nodes_df()
                 st.dataframe(
                     inferred_df.to_pandas(), hide_index=True, use_container_width=True
                 )
@@ -344,6 +346,9 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                 sv.network_additional_trimmed_attributes.value = selected_rows[
                     "Attribute"
                 ].tolist()
+                den.additional_trimmed_attributes = (
+                    sv.network_additional_trimmed_attributes.value
+                )
 
             c1, c2, c3 = st.columns([1, 1, 1])
             with c1:
@@ -379,64 +384,41 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
 
                 with st.spinner("Identifying networks..."):
                     sv.network_table_index.value += 1
-                    (trimmed_degrees, trimmed_nodes) = trim_nodeset(
-                        sv.network_overall_graph.value,
+                    entity_records = den.identify(
+                        sv.network_max_network_entities.value,
                         sv.network_max_attribute_degree.value,
-                        sv.network_additional_trimmed_attributes.value,
+                        sv.network_supporting_attribute_types.value,
                     )
+                    # (trimmed_degrees, trimmed_nodes) = trim_nodeset(
+                    #     sv.network_overall_graph.value,
+                    #     sv.network_max_attribute_degree.value,
+                    #     sv.network_additional_trimmed_attributes.value,
+                    # )
 
                     sv.network_trimmed_attributes.value = (
-                        pd.DataFrame(
-                            trimmed_degrees,
-                            columns=["Attribute", "Linked Entities"],
-                        )
-                        .sort_values("Linked Entities", ascending=False)
-                        .reset_index(drop=True)
+                        den.trimmed_attributes.to_pandas()
                     )
 
-                    (
-                        sv.network_community_nodes.value,
-                        sv.network_entity_to_community_ix.value,
-                    ) = build_networks(
-                        sv.network_overall_graph.value,
-                        trimmed_nodes,
-                        sv.network_inferred_links.value,
-                        sv.network_supporting_attribute_types.value,
-                        sv.network_max_network_entities.value,
-                    )
+                    # (
+                    #     sv.network_community_nodes.value,
+                    #     sv.network_entity_to_community_ix.value,
+                    # ) = build_networks(
+                    #     sv.network_overall_graph.value,
+                    #     trimmed_nodes,
+                    #     sv.network_inferred_links.value,
+                    #     sv.network_supporting_attribute_types.value,
+                    #     sv.network_max_network_entities.value,
+                    # )
 
-                entity_records = build_entity_records(
-                    sv.network_community_nodes.value,
-                    sv.network_integrated_flags.value,
-                    sv.network_inferred_links.value,
-                )
-
-                sv.network_entity_df.value = pd.DataFrame(
-                    entity_records,
-                    columns=[
-                        "entity_id",
-                        "entity_flags",
-                        "network_id",
-                        "network_entities",
-                        "network_flags",
-                        "flagged",
-                        "flags/entity",
-                        "flagged/unflagged",
-                    ],
-                )
-                sv.network_entity_df.value = sv.network_entity_df.value.sort_values(
-                    by=["flagged/unflagged"], ascending=False
-                ).reset_index(drop=True)
+                sv.network_entity_df.value = den.get_entity_df().to_pandas()
                 sv.network_table_index.value += 1
+                sv.network_community_nodes.value = den.community_nodes
                 st.rerun()
+
             comm_count = len(sv.network_community_nodes.value)
 
             if comm_count > 0:
-                comm_sizes = [
-                    len(comm)
-                    for comm in sv.network_community_nodes.value
-                    if len(comm) > 1
-                ]
+                comm_sizes = den.get_community_sizes()
                 max_comm_size = max(comm_sizes)
                 trimmed_atts = len(sv.network_trimmed_attributes.value)
                 st.markdown(
