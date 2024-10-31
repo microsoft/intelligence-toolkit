@@ -149,8 +149,6 @@ def add_array_field(
         field_label = f"{item_type.value}_array"
     # if field_description == "":
     #     field_description = f"An array of {item_type.value}s"
-    if item_description == "":
-        item_description = f"A {item_type.value} list item" if item_type != ArrayFieldType.OBJECT else "An object list item"
     use_field_label = _get_unique_field_label(global_schema, field_label)
     if item_type == ArrayFieldType.OBJECT:
         field_location[use_field_label] = {

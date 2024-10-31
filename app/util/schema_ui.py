@@ -221,21 +221,26 @@ def create_string_ui(string_field, key_with_prefix, value):
             st.rerun()
 
 def create_enum_ui(field_location, key, key_with_prefix, value):
+    print(f'field_location: {field_location}')
+    print(f'key: {key}')
+    print(f'key_with_prefix: {key_with_prefix}')
+    print(f'value: {value}')
     # Create a text input and delete button in a single row for each enum value
     for i, enum_value in enumerate(value['enum']):
         c1, c2 = st.columns([4, 1])
         with c1:
             new_enum_value = st.text_input(f'Enum value {i}', key=f'{key_with_prefix}_enum_{i}', value=enum_value)
+   
             if new_enum_value != str(enum_value):
                 if value['type'] == 'string':
-                    field_location[key]['enum'][i] = new_enum_value
+                    value['enum'][i] = new_enum_value
                     st.rerun()
                 elif value['type'] == 'number':
                     if new_enum_value.isnumeric():
                         if '.' in new_enum_value:
-                            field_location[key]['enum'][i] = float(new_enum_value)
+                            value['enum'][i] = float(new_enum_value)
                         else:
-                            field_location[key]['enum'][i] = int(new_enum_value)
+                            value['enum'][i] = int(new_enum_value)
                         st.rerun()
                     else:
                         st.warning('Enum value must be a number')
@@ -244,15 +249,14 @@ def create_enum_ui(field_location, key, key_with_prefix, value):
             if st.button('Delete', key=f'{key_with_prefix}_enum_{i}_delete',
                          disabled=('enum' in field_location[key] and len(field_location[key]['enum'])==1)) or \
                             ('items' in field_location[key] and 'enum' in field_location[key]['items'] and len(field_location[key]['items']['enum'])==1):
-                print(field_location[key])
-                if 'items' in field_location[key]:
-                    field_location[key]['items']['enum'].pop(i)
+                if 'items' in value:
+                    value['items']['enum'].pop(i)
                 else:
-                    field_location[key]['enum'].pop(i)
+                    value['enum'].pop(i)
                 st.rerun()
     # Add a button to add a new enum value
     if st.button('Add enum value', key=f'{key_with_prefix}_add_enum'):
-        field_location[key]['enum'].append('')
+        value['enum'].append('')
         st.rerun()
 
 def edit_schema_ui(global_schema, nesting, field_location):
