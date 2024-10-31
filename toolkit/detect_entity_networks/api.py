@@ -8,7 +8,7 @@ import polars as pl
 from toolkit.AI import utils
 from toolkit.AI.client import OpenAIClient
 from toolkit.detect_entity_networks import prompts
-from toolkit.detect_entity_networks.classes import FlagAggregatorType
+from toolkit.detect_entity_networks.classes import FlagAggregatorType, SummaryData
 from toolkit.detect_entity_networks.config import (
     DEFAULT_MAX_ATTRIBUTE_DEGREE,
     ENTITY_LABEL,
@@ -44,7 +44,7 @@ class DetectEntityNetworks(IntelligenceWorkflow):
         self.flag_links = []
         self.group_links = []
         self.additional_trimmed_attributes = []
-        self.graph = None
+        self.graph = nx.Graph()
         self.integrated_flags = pl.DataFrame()
         self.node_types = set()
         self.inferred_links = {}
@@ -121,7 +121,7 @@ class DetectEntityNetworks(IntelligenceWorkflow):
 
         return self.group_links
 
-    def get_model_summary_data(self) -> str:
+    def get_model_summary_data(self) -> SummaryData:
         num_entities = 0
         num_attributes = 0
         num_flags = 0
@@ -130,7 +130,7 @@ class DetectEntityNetworks(IntelligenceWorkflow):
             for link in link_list:
                 groups.add(f"{link[1]}{ATTRIBUTE_VALUE_SEPARATOR}{link[2]}")
 
-        if self.graph is not None:
+        if len(self.graph.nodes) > 0:
             all_nodes = self.graph.nodes()
             entity_nodes = [node for node in all_nodes if node.startswith(ENTITY_LABEL)]
             self.attributes_list = [
@@ -141,18 +141,17 @@ class DetectEntityNetworks(IntelligenceWorkflow):
 
         if len(self.integrated_flags) > 0:
             num_flags = self.integrated_flags["count"].sum()
-
-        return {
-            "entities": num_entities,
-            "attributes": num_attributes,
-            "flags": num_flags,
-            "groups": len(groups),
-            "links": len(self.graph.edges()),
-        }
+        return SummaryData(
+            entities=num_entities,
+            attributes=num_attributes,
+            flags=num_flags,
+            groups=len(groups),
+            links=len(self.graph.edges()),
+        )
 
     def get_model_summary_value(self):
         summary = self.get_model_summary_data()
-        return f"Number of entities: {summary['entities']}, Number of attributes: {summary['attributes']}, Number of flags: {summary['flags']}, Number of groups: {summary['groups']}, Number of links: {summary['links']}"
+        return f"Number of entities: {summary.entities}, Number of attributes: {summary.attributes}, Number of flags: {summary.flags}, Number of groups: {summary.groups}, Number of links: {summary.links}"
 
     async def index_nodes(self, node_types: list[str]) -> None:
         (
@@ -173,6 +172,15 @@ class DetectEntityNetworks(IntelligenceWorkflow):
         )
 
     def clear_inferred_nodes(self) -> None:
+        self.inferred_links = {}
+
+    def clear_data_model(self) -> None:
+        self.attribute_links = []
+        self.flag_links = []
+        self.group_links = []
+        self.graph = nx.Graph()
+        self.integrated_flags = pl.DataFrame()
+        self.node_types = set()
         self.inferred_links = {}
 
     def inferred_nodes_df(self) -> pl.DataFrame:

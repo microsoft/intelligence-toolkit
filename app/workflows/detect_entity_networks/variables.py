@@ -51,7 +51,6 @@ class SessionVariables:
         self.network_node_types = SessionVariable(set(), prefix)
         self.network_indexed_node_types = SessionVariable([], prefix)
         self.network_integrated_flags = SessionVariable(pl.DataFrame(), prefix)
-        self.network_community_df = SessionVariable(pl.DataFrame(), prefix)
         self.network_supporting_attribute_types = SessionVariable([], prefix)
         self.network_entity_to_community_ix = SessionVariable({}, prefix)
         self.network_entity_df = SessionVariable(pd.DataFrame(), prefix)

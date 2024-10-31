@@ -171,40 +171,23 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                         or len(value_cols) == 0
                         or link_type == "",
                     ):
+                        den.clear_data_model()
                         sv.network_attribute_links.value = []
                         sv.network_flag_links.value = []
                         sv.network_group_links.value = []
                         sv.network_overall_graph.value = None
                         sv.network_entity_graph.value = None
-                        sv.network_community_df.value = pd.DataFrame()
                         sv.network_integrated_flags.value = pl.DataFrame()
 
-            num_entities = 0
-            num_attributes = 0
-            num_edges = 0
-            num_flags = 0
-            groups = set()
-            for link_list in sv.network_group_links.value:
-                for link in link_list:
-                    groups.add(f"{link[1]}{ATTRIBUTE_VALUE_SEPARATOR}{link[2]}")
-            if sv.network_overall_graph.value is not None:
-                all_nodes = sv.network_overall_graph.value.nodes()
-                entity_nodes = [
-                    node for node in all_nodes if node.startswith(ENTITY_LABEL)
-                ]
-                sv.network_attributes_list.value = [
-                    node for node in all_nodes if not node.startswith(ENTITY_LABEL)
-                ]
-                num_entities = len(entity_nodes)
-                num_attributes = len(all_nodes) - num_entities
-                num_edges = len(sv.network_overall_graph.value.edges())
-
-            if len(sv.network_integrated_flags.value) > 0:
-                num_flags = sv.network_integrated_flags.value["count"].sum()
-            if num_entities > 0:
+            summary_data = den.get_model_summary_data()
+            if (
+                summary_data.entities > 0
+                or summary_data.flags > 0
+                or summary_data.groups > 0
+            ):
                 st.markdown("##### Data model summary")
                 st.markdown(
-                    f"*Number of entities*: {num_entities}<br/>*Number of attributes*: {num_attributes}<br/>*Number of links*: {num_edges}<br/>*Number of flags*: {num_flags}<br/>*Number of groups*: {len(groups)}",
+                    f"*Number of entities*: {summary_data.entities}<br/>*Number of attributes*: {summary_data.attributes}<br/>*Number of links*: {summary_data.links}<br/>*Number of flags*: {summary_data.flags}<br/>*Number of groups*: {summary_data.groups}",
                     unsafe_allow_html=True,
                 )
             else:
