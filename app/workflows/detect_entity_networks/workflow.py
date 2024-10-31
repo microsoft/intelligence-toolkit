@@ -9,6 +9,7 @@ import pandas as pd
 import polars as pl
 import streamlit as st
 from app.util.download_pdf import add_download_pdf
+from toolkit.detect_entity_networks.classes import FlagAggregatorType
 import workflows.detect_entity_networks.functions as functions
 import workflows.detect_entity_networks.variables as rn_variables
 import app.util.example_outputs_ui as example_outputs_ui
@@ -28,17 +29,10 @@ from toolkit.detect_entity_networks.exposure_report import \
     build_exposure_report
 from toolkit.detect_entity_networks.identify_networks import (
     build_entity_records, build_networks, trim_nodeset)
-from toolkit.detect_entity_networks.index_and_infer import (build_inferred_df,
-                                                            index_and_infer,
-                                                            index_nodes,
-                                                            infer_nodes)
-from toolkit.detect_entity_networks.prepare_model import (
-    build_flag_links,
-    build_flags,
-    build_groups,
-    build_main_graph,
-    format_data_columns,
-    generate_attribute_links,
+from toolkit.detect_entity_networks.index_and_infer import (
+    build_inferred_df,
+    index_nodes,
+    infer_nodes,
 )
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
@@ -137,15 +131,10 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                         or link_type == "",
                     ):
                         with st.spinner("Adding links to model..."):
-                            selected_df = format_data_columns(
-                                pl.from_pandas(selected_df), value_cols, entity_col
-                            )
+                            selected_df = pl.from_pandas(selected_df)
                             if link_type == "Entity-Attribute":
-                                attribute_links = generate_attribute_links(
-                                    selected_df,
-                                    entity_col,
-                                    value_cols,
-                                    sv.network_attribute_links.value,
+                                attribute_links = den.add_attribute_links(
+                                    selected_df, entity_col, value_cols
                                 )
                                 sv.network_attribute_links.value = attribute_links
                                 node_types = set()
@@ -153,31 +142,28 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                                     node_types.add(attribute_link[0][1])
 
                                 sv.network_node_types.value = node_types
-                                sv.network_overall_graph.value = build_main_graph(
-                                    attribute_links
-                                )
-                            elif link_type == "Entity-Flag":
-                                flag_links = build_flag_links(
-                                    selected_df,
-                                    entity_col,
-                                    flag_agg,
-                                    value_cols,
-                                    sv.network_flag_links.value,
-                                )
-                                sv.network_flag_links.value = flag_links
+                                sv.network_overall_graph.value = den.graph
 
-                                (
-                                    sv.network_integrated_flags.value,
-                                    sv.network_max_entity_flags.value,
-                                    sv.network_mean_flagged_flags.value,
-                                ) = build_flags(sv.network_flag_links.value)
-                            elif link_type == "Entity-Group":
-                                sv.network_group_links.value = build_groups(
-                                    value_cols,
+                            elif link_type == "Entity-Flag":
+                                sv.network_flag_links.value = den.add_flag_links(
                                     selected_df,
                                     entity_col,
-                                    sv.network_group_links.value,
+                                    value_cols,
+                                    FlagAggregatorType(flag_agg),
                                 )
+                                sv.network_integrated_flags.value = den.integrated_flags
+                                sv.network_max_entity_flags.value = den.max_entity_flags
+                                sv.network_mean_flagged_flags.value = (
+                                    den.mean_flagged_flags
+                                )
+
+                            elif link_type == "Entity-Group":
+                                sv.network_group_links.value = den.add_group_links(
+                                    selected_df,
+                                    entity_col,
+                                    value_cols,
+                                )
+                            # sv.workflow_object.value = den
                 with b2:
                     if st.button(
                         "Clear data model",

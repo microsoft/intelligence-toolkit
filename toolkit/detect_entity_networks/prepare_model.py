@@ -28,7 +28,7 @@ def format_data_columns(
     values_df = values_df.with_columns(
         [
             pl.col(entity_id_column)
-            .map_elements(clean_text, return_dtype=pl.Utf8)
+            .map_elements(clean_text, return_dtype=pl.Utf8)  # NO ????????
             .alias(entity_id_column)
         ]
     )
@@ -159,6 +159,7 @@ def build_flags(
         }
     )
     flags = flags.group_by(["entity", "type", "flag"]).agg(pl.sum("count"))
+    print("flags", flags)
     flags = flags.with_columns(
         [flags["entity"].map_elements(transform_entity).alias("qualified_entity")]
     )

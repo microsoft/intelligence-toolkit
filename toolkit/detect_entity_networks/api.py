@@ -29,6 +29,7 @@ from toolkit.detect_entity_networks.prepare_model import (
     build_flags,
     build_groups,
     build_main_graph,
+    format_data_columns,
     generate_attribute_links,
 )
 from toolkit.helpers.classes import IntelligenceWorkflow
@@ -48,6 +49,11 @@ class DetectEntityNetworks(IntelligenceWorkflow):
         self.node_types = set()
         self.inferred_links = {}
 
+    def format_links_added(
+        self, values_df: pl.DataFrame, entity_id: int | str, columns: list[str]
+    ) -> pl.DataFrame:
+        return format_data_columns(values_df, columns, entity_id)
+
     def get_fuzzy_options(self) -> list[str]:
         return sorted(
             [
@@ -59,34 +65,35 @@ class DetectEntityNetworks(IntelligenceWorkflow):
     def get_attributes(self) -> pl.DataFrame:
         return pl.DataFrame(self.attributes_list, columns=["Attribute"])
 
-    def _build_graph(self) -> nx.Graph:
-        self.graph = build_main_graph(self.attribute_links)
-
     def remove_attributes(self, selected_rows: pl.DataFrame) -> list[str]:
         self.additional_trimmed_attributes = selected_rows["Attribute"].tolist()
 
     def add_attribute_links(
         self, data_df: pl.DataFrame, entity_id_column: str, columns_to_link: list[str]
-    ):
+    ) -> list:
+        data_df = self.format_links_added(data_df, entity_id_column, columns_to_link)
         links = generate_attribute_links(data_df, entity_id_column, columns_to_link)
         self.attribute_links.extend(links)
         for attribute_link in links:
             self.node_types.add(attribute_link[0][1])
-        self._build_graph()
-        return self.graph
+        self.graph = build_main_graph(self.attribute_links)
+
+        return self.attribute_links
 
     def add_flag_links(
         self,
         data_df: pl.DataFrame,
         entity_id_column: str,
-        flag_column: str,
+        flag_columns: list[str],
         flag_format: FlagAggregatorType,
-    ) -> None:
+    ) -> list:
+        data_df = self.format_links_added(data_df, entity_id_column, flag_columns)
+
         links = build_flag_links(
             data_df,
             entity_id_column,
             flag_format,
-            flag_column,
+            flag_columns,
         )
         self.flag_links.extend(links)
 
@@ -95,18 +102,24 @@ class DetectEntityNetworks(IntelligenceWorkflow):
             self.max_entity_flags,
             self.mean_flagged_flags,
         ) = build_flags(self.flag_links)
+        return self.flag_links
 
-    def add_groups(
+    def add_group_links(
         self,
         data_df: pl.DataFrame,
         entity_id_column: str,
-        value_cols: list[str],
-    ) -> None:
-        self.group_links = build_groups(
-            value_cols,
+        group_cols: list[str],
+    ) -> list:
+        data_df = self.format_links_added(data_df, entity_id_column, group_cols)
+
+        links = build_groups(
+            group_cols,
             data_df,
             entity_id_column,
         )
+        self.group_links.extend(links)
+
+        return self.group_links
 
     def get_model_summary_data(self) -> str:
         num_entities = 0
