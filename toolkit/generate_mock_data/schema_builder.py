@@ -109,7 +109,6 @@ def create_boilerplate_schema(
                 "description": "An array of records",
                 "items": {
                     "type": "object",
-                    "description": "A record",
                     "properties": {},
                     "required": [],
                     "additionalProperties": False
@@ -144,7 +143,6 @@ def add_array_field(
         field_location,
         field_label="",
         field_description="",
-        item_description="",
         item_type: ArrayFieldType=ArrayFieldType.STRING
     ):
     if field_label == "":
@@ -160,7 +158,6 @@ def add_array_field(
             "description": field_description,
             "items": {
                 "type": "object",
-                "description": item_description,
                 "properties": {},
                 "required": [],
                 "additionalProperties": False
