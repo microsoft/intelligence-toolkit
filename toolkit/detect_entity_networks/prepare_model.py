@@ -47,6 +47,7 @@ def generate_attribute_links(
     data_df: pl.DataFrame,
     entity_id_column: str,
     columns_to_link: list[str],
+    existing_links: list | None = None,
 ) -> list:
     """
     Generate attribute links for the given entity and columns.
@@ -60,7 +61,7 @@ def generate_attribute_links(
     Returns:
         list: A list of attribute links.
     """
-    attribute_links = []
+    attribute_links = existing_links or []
 
     for value_col in columns_to_link:
         data_df = data_df.with_columns([pl.lit(value_col).alias("attribute_col")])
@@ -106,8 +107,9 @@ def build_flag_links(
     entity_col: str,
     flag_agg: FlagAggregatorType,
     flag_columns: list[str],
+    existing_flag_links: list | None = None,
 ) -> list[Any]:
-    flag_links = []
+    flag_links = existing_flag_links or []
 
     if entity_col not in df_flag.columns:
         msg = f"Column {entity_col} not found in the DataFrame."
@@ -173,8 +175,9 @@ def build_groups(
     value_cols: list[str],
     df_groups: pl.DataFrame,
     entity_col: str,
+    existing_group_links: list | None = None,
 ) -> list[Any]:
-    group_links = []
+    group_links = existing_group_links or []
 
     if df_groups.is_empty():
         return group_links

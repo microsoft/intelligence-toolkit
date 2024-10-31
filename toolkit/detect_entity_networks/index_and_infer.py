@@ -16,7 +16,6 @@ from toolkit.detect_entity_networks.config import (
     SIMILARITY_THRESHOLD_MAX,
     SIMILARITY_THRESHOLD_MIN,
 )
-from toolkit.detect_entity_networks.identify_networks import trim_nodeset
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 

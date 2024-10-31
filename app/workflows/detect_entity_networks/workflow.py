@@ -412,8 +412,8 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                     sv.network_table_index.value += 1
                     (trimmed_degrees, trimmed_nodes) = trim_nodeset(
                         sv.network_overall_graph.value,
-                        sv.network_additional_trimmed_attributes.value,
                         sv.network_max_attribute_degree.value,
+                        sv.network_additional_trimmed_attributes.value,
                     )
 
                     sv.network_trimmed_attributes.value = (

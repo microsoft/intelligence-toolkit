@@ -37,7 +37,7 @@ class TestTrimNodeset:
         max_attribute_degree = 1
         additional_trimmed_attributes = set()
         (trimmed_degrees, trimmed_nodes) = trim_nodeset(
-            overall_graph, additional_trimmed_attributes, max_attribute_degree
+            overall_graph, max_attribute_degree, additional_trimmed_attributes
         )
 
         trimmed_nodes_expected = {
@@ -62,7 +62,9 @@ class TestTrimNodeset:
         max_attribute_degree = 1
         additional_trimmed_attributes = {"Entity2"}
         (trimmed_degrees, trimmed_nodes) = trim_nodeset(
-            overall_graph, additional_trimmed_attributes, max_attribute_degree
+            overall_graph,
+            max_attribute_degree,
+            additional_trimmed_attributes,
         )
 
         trimmed_nodes_expected = {
