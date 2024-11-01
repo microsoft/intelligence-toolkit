@@ -42,23 +42,39 @@ OPENAI_API_KEY=<OPENAI_API_KEY>
 ```
 
 ## Running code-only 
-- [Detect Case Patterns](./toolkit/detect_case_patterns/README.md)
 
-    - [Example](./examples/detect_case_patterns.ipynb): See an example of how to run the code with your data to obtain results without the need to run the UI.
+See the documentation and an example of how to run the code with your data to obtain results without the need to run the UI.
+- [Anonymize Case Data](./app/anonymize_case_data/README.md)
 
-- [Query Text Data](./toolkit/query_text_data/README.md)
+    - [Example](./example_notebooks/anonymize_case_data.ipynb)
 
-    - [Example](./examples/query_text_data.ipynb): See an example of how to run the code with your data to obtain results without the need to run the UI.
+- [Compare Case Groups](./app/compare_case_groups/README.md)
 
-- [Detect Entity Networks](./toolkit/detect_entity_networks/README.md)
+    - [Example](./example_notebooks/compare_case_groups.ipynb)
 
-    - [Example](./examples/detect_entity_networks/main.ipynb): See an example of how to run the code with your data to obtain results without the need to run the UI.
+- [Detect Case Patterns](./app/detect_case_patterns/README.md)
 
-:construction: Code-only workflows in progress: 
+    - [Example](./example_notebooks/detect_case_patterns.ipynb)
 
-- Anonymize Case Data
-- Compare Case Groups
-- Match Entity Records
+- [Detect Entity Networks](./app/detect_entity_networks/README.md)
+
+    - [Example](./example_notebooks/detect_entity_networks/main.ipynb)
+
+- [Extract Record Data](./app/extract_record_data/README.md)
+
+    - [Example](./example_notebooks/extract_record_data/main.ipynb)
+
+- [Generate Mock Data](./app/generate_mock_data/README.md)
+
+    - [Example](./example_notebooks/generate_mock_data/main.ipynb)
+
+- [Match Entity Records](./app/match_entity_records/README.md)
+
+    - [Example](./example_notebooks/match_entity_records/main.ipynb)
+    
+- [Query Text Data](./app/query_text_data/README.md)
+
+    - [Example](./example_notebooks/query_text_data.ipynb)
 
 ## Running the UI (Streamlit) 
 
