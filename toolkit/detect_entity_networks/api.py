@@ -183,7 +183,7 @@ class DetectEntityNetworks(IntelligenceWorkflow):
         )
         return self.inferred_links
 
-    def clear_inferred_nodes(self) -> None:
+    def clear_inferred_links(self) -> None:
         self.inferred_links = {}
 
     def clear_data_model(self) -> None:
