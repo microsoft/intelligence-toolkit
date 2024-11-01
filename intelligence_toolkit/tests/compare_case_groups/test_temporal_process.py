@@ -363,7 +363,7 @@ class TestBuildtemporalData:
         ldf = pl.DataFrame(data)
 
         mocker.patch(
-            "toolkit.compare_case_groups.temporal_process.build_temporal_count"
+            "intelligence_toolkit.compare_case_groups.temporal_process.build_temporal_count"
         ).return_value = expected_df_mock
         result = build_temporal_data(
             ldf, groups=["Group"], temporal_atts=["2023-01-01"], temporal="temporal"
@@ -387,7 +387,7 @@ class TestBuildtemporalData:
         ldf = pl.DataFrame(data)
 
         mocker.patch(
-            "toolkit.compare_case_groups.temporal_process.build_temporal_count"
+            "intelligence_toolkit.compare_case_groups.temporal_process.build_temporal_count"
         ).return_value = expected_df_mock
         result = build_temporal_data(
             ldf,
@@ -424,7 +424,7 @@ class TestBuildtemporalData:
             }
         )
         mocker.patch(
-            "toolkit.compare_case_groups.temporal_process.build_temporal_count"
+            "intelligence_toolkit.compare_case_groups.temporal_process.build_temporal_count"
         ).return_value = df_mock
         result = build_temporal_data(
             ldf,
@@ -452,7 +452,7 @@ class TestBuildtemporalData:
         ldf = pl.DataFrame(data)
 
         mocker.patch(
-            "toolkit.compare_case_groups.temporal_process.build_temporal_count"
+            "intelligence_toolkit.compare_case_groups.temporal_process.build_temporal_count"
         ).return_value = expected_df_mock
         result = build_temporal_data(
             ldf,
@@ -472,7 +472,7 @@ class TestBuildtemporalData:
         ldf = pl.DataFrame(data)
 
         mocker.patch(
-            "toolkit.compare_case_groups.temporal_process.build_temporal_count"
+            "intelligence_toolkit.compare_case_groups.temporal_process.build_temporal_count"
         ).return_value = expected_df_mock
         result = build_temporal_data(
             ldf,
@@ -492,7 +492,7 @@ class TestBuildtemporalData:
         ldf = pl.DataFrame(data)
 
         mocker.patch(
-            "toolkit.compare_case_groups.temporal_process.build_temporal_count"
+            "intelligence_toolkit.compare_case_groups.temporal_process.build_temporal_count"
         ).return_value = pl.DataFrame()
         result = build_temporal_data(
             ldf,

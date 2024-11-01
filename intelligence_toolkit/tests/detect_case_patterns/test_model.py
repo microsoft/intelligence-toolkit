@@ -28,7 +28,7 @@ def test_generate_graph_model_basic(mocker):
     test_df = pd.DataFrame(data)
 
     mocker.patch(
-        "toolkit.helpers.df_functions.fix_null_ints"
+        "intelligence_toolkit.helpers.df_functions.fix_null_ints"
     ).return_value = test_df.astype(str)
     result = generate_graph_model(test_df, "Period", type_val_sep)
 
@@ -60,7 +60,7 @@ def test_generate_graph_model_with_nans(mocker):
     test_df = pd.DataFrame(data)
 
     mocker.patch(
-        "toolkit.helpers.df_functions.fix_null_ints"
+        "intelligence_toolkit.helpers.df_functions.fix_null_ints"
     ).return_value = test_df.fillna("").astype(str)
     result = generate_graph_model(test_df, "Period", type_val_sep)
 
@@ -90,7 +90,7 @@ def test_generate_graph_model_column_rename(mocker):
     test_df = pd.DataFrame(data)
 
     mocker.patch(
-        "toolkit.helpers.df_functions.fix_null_ints"
+        "intelligence_toolkit.helpers.df_functions.fix_null_ints"
     ).return_value = test_df.astype(str)
     result = generate_graph_model(test_df, "Custom_Period", type_val_sep)
 
@@ -121,7 +121,9 @@ def test_compute_attribute_counts_basic(mocker):
 
     test_df = pd.DataFrame(data)
 
-    mocker.patch("toolkit.helpers.df_functions.fix_null_ints").return_value = test_df
+    mocker.patch(
+        "intelligence_toolkit.helpers.df_functions.fix_null_ints"
+    ).return_value = test_df
     result = compute_attribute_counts(
         test_df, f"Attribute1{type_val_sep}A", "Period", "P1", type_val_sep
     )
@@ -149,7 +151,9 @@ def test_compute_attribute_counts_with_multiple_patterns(mocker):
 
     test_df = pd.DataFrame(data)
 
-    mocker.patch("toolkit.helpers.df_functions.fix_null_ints").return_value = test_df
+    mocker.patch(
+        "intelligence_toolkit.helpers.df_functions.fix_null_ints"
+    ).return_value = test_df
     result = compute_attribute_counts(
         test_df, "Attribute1::A & Attribute2::X", "Period", "P1", type_val_sep
     )
@@ -173,7 +177,9 @@ def test_compute_attribute_counts_with_nans(mocker):
 
     test_df = pd.DataFrame(data).fillna("")
 
-    mocker.patch("toolkit.helpers.df_functions.fix_null_ints").return_value = test_df
+    mocker.patch(
+        "intelligence_toolkit.helpers.df_functions.fix_null_ints"
+    ).return_value = test_df
     result = compute_attribute_counts(
         test_df, "Attribute1::A", "Period", "P1", type_val_sep
     )
@@ -197,7 +203,9 @@ def test_compute_attribute_counts_invalid_pattern(mocker):
 
     test_df = pd.DataFrame(data)
 
-    mocker.patch("toolkit.helpers.df_functions.fix_null_ints").return_value = test_df
+    mocker.patch(
+        "intelligence_toolkit.helpers.df_functions.fix_null_ints"
+    ).return_value = test_df
     result = compute_attribute_counts(
         test_df, "InvalidPattern", "Period", "P1", type_val_sep
     )
@@ -213,7 +221,7 @@ def test_compute_attribute_counts_invalid_pattern(mocker):
 
 def test_prepare_graph(mocker):
     create_edge_df_from_atts_mock = mocker.patch(
-        "toolkit.detect_case_patterns.graph_functions.create_edge_df_from_atts"
+        "intelligence_toolkit.detect_case_patterns.graph_functions.create_edge_df_from_atts"
     )
     edge_df = pd.DataFrame(
         {

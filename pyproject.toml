@@ -182,7 +182,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"toolkit/tests/*" = ["S", "D", "ANN", "T201", "ASYNC", "ARG", "PTH", "TRY"]
+"intelligence_toolkit/tests/*" = ["S", "D", "ANN", "T201", "ASYNC", "ARG", "PTH", "TRY"]
 # "examples/*" = ["S", "D", "ANN", "T201", "PTH", "TRY", "PERF"]
 "*.ipynb" = ["S", "T201", "I001"]
 
@@ -197,7 +197,7 @@ convention = "numpy"
 
 # https://github.com/microsoft/pyright/blob/9f81564a4685ff5c55edd3959f9b39030f590b2f/docs/configuration.md#sample-pyprojecttoml-file
 [tool.pyright]
-include = ["app", "intelligence-toolkit", "example_notebooks"]
+include = ["app", "intelligence_toolkit", "example_notebooks"]
 typeCheckingMode = "off"
 
 

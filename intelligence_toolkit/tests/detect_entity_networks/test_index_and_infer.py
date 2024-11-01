@@ -6,7 +6,6 @@ from collections import defaultdict
 from unittest.mock import Mock, patch
 
 import networkx as nx
-import polars as pl
 import pytest
 
 from intelligence_toolkit.detect_entity_networks.config import (
@@ -53,7 +52,7 @@ class TestIndexNodes:
         ):
             await index_nodes([], overall_graph)
 
-    @patch("toolkit.detect_entity_networks.index_and_infer.OpenAIEmbedder")
+    @patch("intelligence_toolkit.detect_entity_networks.index_and_infer.OpenAIEmbedder")
     async def test_index_nodes_small_samples(self, mock_embedder, overall_graph_small):
         async def embed_store_many(*args) -> list[list[float]]:
             return [
@@ -72,7 +71,7 @@ class TestIndexNodes:
         ):
             await index_nodes(indexed_node_types, overall_graph_small)
 
-    @patch("toolkit.detect_entity_networks.index_and_infer.OpenAIEmbedder")
+    @patch("intelligence_toolkit.detect_entity_networks.index_and_infer.OpenAIEmbedder")
     async def test_index_nodes(self, mock_embedder, overall_graph):
         async def embed_store_many(*args) -> list[list[float]]:
             return [
@@ -340,8 +339,8 @@ class TestIndexAndInfer:
         with pytest.raises(ValueError, match="Graph is empty"):
             await index_and_infer(indexed_node_types, nx.Graph(), 0)
 
-    @patch("toolkit.detect_entity_networks.index_and_infer.index_nodes")
-    @patch("toolkit.detect_entity_networks.index_and_infer.infer_nodes")
+    @patch("intelligence_toolkit.detect_entity_networks.index_and_infer.index_nodes")
+    @patch("intelligence_toolkit.detect_entity_networks.index_and_infer.infer_nodes")
     async def test_index_and_infer(
         self, mock_infer_nodes, mock_index_nodes, overall_graph
     ) -> None:

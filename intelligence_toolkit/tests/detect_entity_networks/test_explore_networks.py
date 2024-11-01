@@ -286,7 +286,7 @@ class TestMergeNodes:
 class TestSimplifyEntitiesGraph:
     def test_simplify_condition_false(self, mocker, graph):
         mocker.patch(
-            "toolkit.detect_entity_networks.explore_networks._merge_nodes"
+            "intelligence_toolkit.detect_entity_networks.explore_networks._merge_nodes"
         ).return_value = graph
 
         aba = simplify_entities_graph(graph)
@@ -295,7 +295,7 @@ class TestSimplifyEntitiesGraph:
     def test_simplify_condition_true(self, mocker, graph):
         G = nx.Graph()
         mocker.patch(
-            "toolkit.detect_entity_networks.explore_networks._merge_nodes"
+            "intelligence_toolkit.detect_entity_networks.explore_networks._merge_nodes"
         ).return_value = G
 
         aba = simplify_entities_graph(graph)
