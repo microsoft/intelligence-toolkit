@@ -1,13 +1,11 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 #
-import random
-
 import pandas as pd
 import streamlit as st
 
 from app.util.session_variable import SessionVariable
-from intelligence_toolkit.anonymize_case_data import AnonymizeCaseData
+from intelligence_toolkit.anonymize_case_data.api import AnonymizeCaseData
 
 
 class SessionVariables:
