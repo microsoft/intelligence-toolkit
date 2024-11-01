@@ -18,6 +18,7 @@ from toolkit.detect_entity_networks.config import (
 )
 from toolkit.detect_entity_networks.explore_networks import (
     build_network_from_entities,
+    get_entity_graph,
     simplify_entities_graph,
 )
 from toolkit.detect_entity_networks.exposure_report import build_exposure_report
@@ -52,13 +53,14 @@ class DetectEntityNetworks(IntelligenceWorkflow):
         self.integrated_flags = pl.DataFrame()
         self.node_types = set()
         self.inferred_links = {}
+        self.exposure_report = ""
 
     def format_links_added(
         self, values_df: pl.DataFrame, entity_id: int | str, columns: list[str]
     ) -> pl.DataFrame:
         return format_data_columns(values_df, columns, entity_id)
 
-    def get_fuzzy_options(self) -> list[str]:
+    def get_entity_types(self) -> list[str]:
         return sorted(
             [
                 ENTITY_LABEL,
@@ -293,19 +295,20 @@ class DetectEntityNetworks(IntelligenceWorkflow):
         return show_df
 
     def get_exposure_report(
-        self, selected_entity: str, selected_network: int | None = None
+        self, selected_entity: str, selected_network: int
     ) -> pl.DataFrame:
         c_nodes = self.community_nodes[selected_network]
 
-        return build_exposure_report(
+        self.exposure_report = build_exposure_report(
             self.integrated_flags,
             selected_entity,
             c_nodes,
-            self.graph,
+            self.get_entities_graph(selected_network),
             self.inferred_links,
         )
+        return self.exposure_report
 
-    def _get_entities_graph(self, selected_network: int) -> nx.Graph:
+    def get_entities_graph(self, selected_network: int) -> nx.Graph:
         c_nodes = self.community_nodes[selected_network]
         return build_network_from_entities(
             self.graph,
@@ -316,16 +319,25 @@ class DetectEntityNetworks(IntelligenceWorkflow):
             c_nodes,
         )
 
+    def get_single_entity_graph(
+        self, entities_graph: nx.Graph, selected_entity: str
+    ) -> tuple[list, list]:
+        entity_name = f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}{selected_entity}"
+        return get_entity_graph(entities_graph, entity_name, self.get_entity_types())
+
     def get_merged_graph_df(self, selected_network: int) -> pl.DataFrame:
-        simplified_graph = simplify_entities_graph(
-            self._get_entities_graph(selected_network),
+        self.simplified_graph = simplify_entities_graph(
+            self.get_entities_graph(selected_network),
         )
         nodes = pl.DataFrame(
-            [(n, d["type"], d["flags"]) for n, d in simplified_graph.nodes(data=True)],
+            [
+                (n, d["type"], d["flags"])
+                for n, d in self.simplified_graph.nodes(data=True)
+            ],
             schema=["node", "type", "flags"],
         )
         links = pl.DataFrame(
-            list(simplified_graph.edges()),
+            list(self.simplified_graph.edges()),
             schema=["source", "target"],
         )
         links = links.with_columns(
@@ -348,7 +360,7 @@ class DetectEntityNetworks(IntelligenceWorkflow):
             "network_id": selected_network,
             "max_flags": self.max_entity_flags,
             "mean_flags": self.mean_flagged_flags,
-            "exposure": "",
+            "exposure": self.exposure_report,
             "network_nodes": nodes_merged.write_csv(),
             "network_edges": links_merged.write_csv(),
         }

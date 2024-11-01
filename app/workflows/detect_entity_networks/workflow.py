@@ -192,7 +192,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
         index_col, part_col = st.columns([1, 1])
         with index_col:
             st.markdown("##### Match similar nodes (optional)")
-            fuzzy_options = den.get_fuzzy_options()
+            fuzzy_options = den.get_entity_types()
 
             network_indexed_node_types = st.multiselect(
                 "Select node types to fuzzy match",
@@ -375,7 +375,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
 
                 with st.spinner("Identifying networks..."):
                     sv.network_table_index.value += 1
-                    entity_records = den.identify(
+                    den.identify(
                         sv.network_max_network_entities.value,
                         sv.network_max_attribute_degree.value,
                         sv.network_supporting_attribute_types.value,
@@ -527,26 +527,22 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
 
                 sv.network_selected_entity.value = selected_entity
                 sv.network_selected_community.value = selected_network
-                c_nodes = sv.network_community_nodes.value[selected_network]
-                trimmed_attr = {t[0] for t in sv.network_trimmed_attributes.value}
-                network_entities_graph = build_network_from_entities(
-                    sv.network_overall_graph.value,
-                    sv.network_entity_to_community_ix.value,
-                    sv.network_integrated_flags.value,
-                    trimmed_attr,
-                    sv.network_inferred_links.value,
-                    c_nodes,
-                )
+                # c_nodes = sv.network_community_nodes.value[selected_network]
+                network_entities_graph = den.get_entities_graph(selected_network)
+
+                # build_network_from_entities(
+                #     sv.network_overall_graph.value,
+                #     sv.network_entity_to_community_ix.value,
+                #     sv.network_integrated_flags.value,
+                #     trimmed_attr,
+                #     sv.network_inferred_links.value,
+                #     c_nodes,
+                # )
                 if selected_entity != "":
                     context = "Upload risk flags to see risk exposure report."
                     if len(sv.network_integrated_flags.value) > 0:
-                        
-                        context = build_exposure_report(
-                            sv.network_integrated_flags.value,
-                            selected_entity,
-                            c_nodes,
-                            network_entities_graph,
-                            sv.network_inferred_links.value,
+                        context = den.get_exposure_report(
+                            selected_entity, selected_network
                         )
                         sv.network_risk_exposure.value = context
                 else:
@@ -558,28 +554,15 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                 full_links_df["attribute"] = full_links_df["target"].apply(
                     lambda x: x.split(ATTRIBUTE_VALUE_SEPARATOR)[0]
                 )
-                network_entities_simplified_graph = simplify_entities_graph(
-                    network_entities_graph
-                )
-                merged_nodes_df = pd.DataFrame(
-                    [
-                        (n, d["type"], d["flags"])
-                        for n, d in network_entities_simplified_graph.nodes(data=True)
-                    ],
-                    columns=["node", "type", "flags"],
-                )
-                merged_links_df = pd.DataFrame(
-                    list(network_entities_simplified_graph.edges()),
-                    columns=["source", "target"],
-                )
-                merged_links_df["attribute"] = merged_links_df["target"].apply(
-                    lambda x: x.split(ATTRIBUTE_VALUE_SEPARATOR)[0]
-                )
+
+                nodes, links = den.get_merged_graph_df(selected_network)
+                sv.network_merged_nodes_df.value = nodes.to_pandas()
+                sv.network_merged_links_df.value = links.to_pandas()
 
                 if graph_type == "Full":
                     render_graph = network_entities_graph
                 else:
-                    render_graph = network_entities_simplified_graph
+                    render_graph = den.simplified_graph
 
                 if not show_entities or not flag_paths:
                     network_vis = st.container()
@@ -589,29 +572,13 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                         network_vis = st.container()
                    
                 with network_vis:
-                    entity_selected = (
-                        f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}{selected_entity}"
+                    nodes, edges = den.get_single_entity_graph(
+                        render_graph,
+                        selected_entity,
                     )
-                    attribute_types = [
-                        ENTITY_LABEL,
-                        *list(sv.network_node_types.value),
-                    ]
 
-                    if show_entities:
-                        nodes, edges = get_entity_graph(
-                            render_graph,
-                            entity_selected,
-                            attribute_types,
-                        )
-
-                        nodes_agraph = [Node(**node) for node in nodes]
-                        edges_agraph = [Edge(**edge) for edge in edges]
-                    else:
-                        nodes, edges = get_entity_graph(
-                            render_graph,
-                            entity_selected,
-                            attribute_types,
-                        )
+                    nodes_agraph = [Node(**node) for node in nodes]
+                    edges_agraph = [Edge(**edge) for edge in edges]
 
                     if selected_entity != "":
                         network_vis.markdown(
@@ -636,8 +603,6 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                         reload_data=True,
                         columns_auto_size_mode=ColumnsAutoSizeMode.FIT_ALL_COLUMNS_TO_VIEW,
                     )
-                    nodes_agraph = [Node(**node) for node in nodes]
-                    edges_agraph = [Edge(**edge) for edge in edges]
 
                     default_config = rn_variables.agraph_config
                     config = Config(
@@ -655,8 +620,6 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                 if show_entities and flag_paths:
                     with path_pane:
                         st.markdown(sv.network_risk_exposure.value)
-                sv.network_merged_links_df.value = merged_links_df
-                sv.network_merged_nodes_df.value = merged_nodes_df
             else:
                 st.warning(
                     "Select column headers to rank networks by that attribute. Use quickfilter or column filters to narrow down the list of networks. Select a network to continue."
