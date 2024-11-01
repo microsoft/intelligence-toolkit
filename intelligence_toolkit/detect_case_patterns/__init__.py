@@ -3,7 +3,6 @@
 #
 
 import os
-from intelligence_toolkit.detect_case_patterns.api import DetectCasePatterns
 
 
 def get_readme():

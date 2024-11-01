@@ -1,26 +1,28 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 
-import intelligence_toolkit.query_text_data.input_processor as input_processor
-import intelligence_toolkit.query_text_data.helper_functions as helper_functions
-import intelligence_toolkit.query_text_data.relevance_assessor as relevance_assessor
-import intelligence_toolkit.query_text_data.query_rewriter as query_rewriter
-import intelligence_toolkit.query_text_data.graph_builder as graph_builder
-import intelligence_toolkit.query_text_data.answer_builder as answer_builder
-import intelligence_toolkit.query_text_data.prompts as prompts
-from intelligence_toolkit.query_text_data.classes import (
-    ProcessedChunks,
-    ChunkSearchConfig,
-    AnswerConfig,
-    AnswerObject,
-)
-from intelligence_toolkit.AI.base_embedder import BaseEmbedder
-from intelligence_toolkit.AI.openai_configuration import OpenAIConfiguration
-from intelligence_toolkit.AI.client import OpenAIClient
-import intelligence_toolkit.AI.utils as utils
+from enum import Enum
+
 import networkx as nx
 import pandas as pd
-from enum import Enum
+
+import intelligence_toolkit.AI.utils as utils
+import intelligence_toolkit.query_text_data.answer_builder as answer_builder
+import intelligence_toolkit.query_text_data.graph_builder as graph_builder
+import intelligence_toolkit.query_text_data.helper_functions as helper_functions
+import intelligence_toolkit.query_text_data.input_processor as input_processor
+import intelligence_toolkit.query_text_data.prompts as prompts
+import intelligence_toolkit.query_text_data.query_rewriter as query_rewriter
+import intelligence_toolkit.query_text_data.relevance_assessor as relevance_assessor
+from intelligence_toolkit.AI.base_embedder import BaseEmbedder
+from intelligence_toolkit.AI.client import OpenAIClient
+from intelligence_toolkit.AI.openai_configuration import OpenAIConfiguration
+from intelligence_toolkit.query_text_data.classes import (
+    AnswerConfig,
+    AnswerObject,
+    ChunkSearchConfig,
+    ProcessedChunks,
+)
 
 
 class QueryTextDataStage(Enum):

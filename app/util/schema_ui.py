@@ -1,5 +1,9 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project.
+#
+from json import dumps, loads
+
 import streamlit as st
-from json import loads, dumps
 
 import intelligence_toolkit.generate_mock_data.schema_builder as schema_builder
 

@@ -5,8 +5,8 @@
 import polars as pl
 import pytest
 
-from intelligence_toolkit.match_entity_records import (
-    RecordsModel,
+from intelligence_toolkit.match_entity_records.classes import RecordsModel
+from intelligence_toolkit.match_entity_records.prepare_model import (
     build_attribute_options,
     format_model_df,
 )

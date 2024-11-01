@@ -1,12 +1,12 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-import random
+# Licensed under the MIT license. See LICENSE file in the project.
+#
 
 import streamlit as st
 
 import intelligence_toolkit.query_text_data.prompts as prompts
 from app.util.session_variable import SessionVariable
-from intelligence_toolkit.query_text_data.input_processor import PeriodOption
-from intelligence_toolkit.query_text_data import QueryTextData
+from intelligence_toolkit.query_text_data.api import QueryTextData
 
 
 class SessionVariables:

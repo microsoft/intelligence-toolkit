@@ -10,7 +10,7 @@ import app.util.example_outputs_ui as example_outputs_ui
 import app.workflows.compare_case_groups.variables as gn_variables
 from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
-from intelligence_toolkit.compare_case_groups import CompareCaseGroups, prompts
+from intelligence_toolkit.compare_case_groups.api import CompareCaseGroups, prompts
 from intelligence_toolkit.helpers.df_functions import fix_null_ints
 
 

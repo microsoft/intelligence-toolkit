@@ -17,12 +17,10 @@ from app.util.download_pdf import add_download_pdf
 from app.util.openai_wrapper import UIOpenAIConfiguration
 from app.util.session_variables import SessionVariables
 from intelligence_toolkit.AI.defaults import CHUNK_SIZE
-from intelligence_toolkit.query_text_data.api import QueryTextData, QueryTextDataStage
+from intelligence_toolkit.query_text_data.api import QueryTextDataStage
 from intelligence_toolkit.query_text_data.classes import (
     AnswerConfig,
-    AnswerObject,
     ChunkSearchConfig,
-    ProcessedChunks,
 )
 
 sv_home = SessionVariables("home")

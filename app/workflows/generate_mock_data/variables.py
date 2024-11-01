@@ -2,9 +2,10 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 import streamlit as st
+
 from app.util.session_variable import SessionVariable
-from intelligence_toolkit.generate_mock_data import (
-    GenerateMockData,
+from intelligence_toolkit.generate_mock_data.api import GenerateMockData
+from intelligence_toolkit.generate_mock_data.schema_builder import (
     create_boilerplate_schema,
 )
 

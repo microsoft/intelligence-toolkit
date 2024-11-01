@@ -3,13 +3,6 @@
 #
 
 import os
-from intelligence_toolkit.query_text_data.api import QueryTextData
-from intelligence_toolkit.query_text_data.classes import (
-    ProcessedChunks,
-    ChunkSearchConfig,
-    AnswerConfig,
-    AnswerObject,
-)
 
 
 def get_readme() -> str:
