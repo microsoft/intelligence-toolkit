@@ -158,7 +158,6 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                                     value_cols,
                                 )
                             sv.network_attributes_list.value = den.attributes_list
-                        # sv.workflow_object.value = den
                 with b2:
                     if st.button(
                         "Clear data model",
@@ -380,26 +379,10 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                         sv.network_max_attribute_degree.value,
                         sv.network_supporting_attribute_types.value,
                     )
-                    # (trimmed_degrees, trimmed_nodes) = trim_nodeset(
-                    #     sv.network_overall_graph.value,
-                    #     sv.network_max_attribute_degree.value,
-                    #     sv.network_additional_trimmed_attributes.value,
-                    # )
 
                     sv.network_trimmed_attributes.value = (
                         den.trimmed_attributes.to_pandas()
                     )
-
-                    # (
-                    #     sv.network_community_nodes.value,
-                    #     sv.network_entity_to_community_ix.value,
-                    # ) = build_networks(
-                    #     sv.network_overall_graph.value,
-                    #     trimmed_nodes,
-                    #     sv.network_inferred_links.value,
-                    #     sv.network_supporting_attribute_types.value,
-                    #     sv.network_max_network_entities.value,
-                    # )
 
                 sv.network_entity_df.value = den.get_entity_df().to_pandas()
                 sv.network_table_index.value += 1
@@ -527,17 +510,8 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
 
                 sv.network_selected_entity.value = selected_entity
                 sv.network_selected_community.value = selected_network
-                # c_nodes = sv.network_community_nodes.value[selected_network]
                 network_entities_graph = den.get_entities_graph(selected_network)
 
-                # build_network_from_entities(
-                #     sv.network_overall_graph.value,
-                #     sv.network_entity_to_community_ix.value,
-                #     sv.network_integrated_flags.value,
-                #     trimmed_attr,
-                #     sv.network_inferred_links.value,
-                #     c_nodes,
-                # )
                 if selected_entity != "":
                     context = "Upload risk flags to see risk exposure report."
                     if len(sv.network_integrated_flags.value) > 0:
@@ -570,7 +544,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                     network_pane, path_pane = st.columns([2, 1])
                     with network_pane:
                         network_vis = st.container()
-                   
+
                 with network_vis:
                     nodes, edges = den.get_single_entity_graph(
                         render_graph,
