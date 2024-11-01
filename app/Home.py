@@ -28,7 +28,9 @@ def get_readme_and_mermaid():
             os.path.join(path, "workflows", "README.md"),
             f'{"_".join(word.capitalize() for word in f.split("_"))}',
         )
-    parts = content.split("```mermaid")
+    parts = content.split("</div>")
+    parts = "# Intelligence Toolkit" + parts[1]
+    parts = parts.split("```mermaid")
     return parts[0], parts[1].split("## Diving Deeper")[0].replace("```", "")
 
 
