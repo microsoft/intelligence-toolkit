@@ -21,9 +21,9 @@ from util.openai_wrapper import (
 )
 from util.secrets_handler import SecretsHandler
 
-from toolkit.AI.defaults import DEFAULT_LOCAL_EMBEDDING_MODEL
-from toolkit.AI.vector_store import VectorStore
-from toolkit.helpers.constants import CACHE_PATH
+from intelligence_toolkit.AI.defaults import DEFAULT_LOCAL_EMBEDDING_MODEL
+from intelligence_toolkit.AI.vector_store import VectorStore
+from intelligence_toolkit.helpers.constants import CACHE_PATH
 
 openai_embedding_models = [
     "text-embedding-3-large",

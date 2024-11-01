@@ -6,8 +6,8 @@ import random
 import pandas as pd
 import streamlit as st
 
-import toolkit.detect_case_patterns.prompts as prompts
-from toolkit.detect_case_patterns import DetectCasePatterns
+import intelligence_toolkit.detect_case_patterns.prompts as prompts
+from intelligence_toolkit.detect_case_patterns import DetectCasePatterns
 from app.util.session_variable import SessionVariable
 
 

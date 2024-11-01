@@ -3,8 +3,11 @@
 #
 import streamlit as st
 from app.util.session_variable import SessionVariable
-from toolkit.extract_record_data import ExtractRecordData
-from toolkit.generate_mock_data.schema_builder import create_boilerplate_schema
+from intelligence_toolkit.extract_record_data import ExtractRecordData
+from intelligence_toolkit.generate_mock_data.schema_builder import (
+    create_boilerplate_schema,
+)
+
 
 class SessionVariables:
     prefix = None

@@ -6,9 +6,9 @@ import random
 import polars as pl
 import streamlit as st
 
-import toolkit.match_entity_records.prompts as prompts
+import intelligence_toolkit.match_entity_records.prompts as prompts
 from app.util.session_variable import SessionVariable
-from toolkit.match_entity_records.config import DEFAULT_MAX_RECORD_DISTANCE
+from intelligence_toolkit.match_entity_records.config import DEFAULT_MAX_RECORD_DISTANCE
 
 
 class SessionVariables:

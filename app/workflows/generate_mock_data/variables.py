@@ -3,7 +3,11 @@
 #
 import streamlit as st
 from app.util.session_variable import SessionVariable
-from toolkit.generate_mock_data import GenerateMockData, create_boilerplate_schema
+from intelligence_toolkit.generate_mock_data import (
+    GenerateMockData,
+    create_boilerplate_schema,
+)
+
 
 class SessionVariables:
     prefix = None

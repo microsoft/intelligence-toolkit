@@ -1,7 +1,8 @@
 import streamlit as st
 from json import loads, dumps
 
-import toolkit.generate_mock_data.schema_builder as schema_builder
+import intelligence_toolkit.generate_mock_data.schema_builder as schema_builder
+
 
 def build_schema_ui(global_schema, last_filename):
     form, preview = st.columns([1, 1])

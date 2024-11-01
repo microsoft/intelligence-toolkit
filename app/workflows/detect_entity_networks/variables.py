@@ -6,8 +6,8 @@ import polars as pl
 import streamlit as st
 from util.session_variable import SessionVariable
 
-from toolkit.detect_entity_networks import prompts
-from toolkit.detect_entity_networks.api import DetectEntityNetworks
+from intelligence_toolkit.detect_entity_networks import prompts
+from intelligence_toolkit.detect_entity_networks.api import DetectEntityNetworks
 
 agraph_config = {
     "height": 1400,

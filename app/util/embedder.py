@@ -1,10 +1,11 @@
 from app.util.constants import LOCAL_EMBEDDING_MODEL_KEY
 from app.util.openai_wrapper import UIOpenAIConfiguration
 from app.util.secrets_handler import SecretsHandler
-from toolkit.AI.base_embedder import BaseEmbedder
-from toolkit.AI.local_embedder import LocalEmbedder
-from toolkit.AI.openai_embedder import OpenAIEmbedder
-from toolkit.query_text_data import config
+from intelligence_toolkit.AI.base_embedder import BaseEmbedder
+from intelligence_toolkit.AI.local_embedder import LocalEmbedder
+from intelligence_toolkit.AI.openai_embedder import OpenAIEmbedder
+from intelligence_toolkit.query_text_data import config
+
 
 def create_embedder(local_embedding: bool | None = False) -> BaseEmbedder:
     try:

@@ -8,7 +8,7 @@ import app.util.example_outputs_ui as example_outputs_ui
 import app.util.schema_ui as schema_ui
 import app.util.ui_components as ui_components
 import app.workflows.generate_mock_data.variables as bds_variables
-from toolkit.generate_mock_data import GenerateMockData
+from intelligence_toolkit.generate_mock_data import GenerateMockData
 from app.util.download_pdf import add_download_pdf
 from app.util.openai_wrapper import UIOpenAIConfiguration
 

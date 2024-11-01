@@ -7,7 +7,7 @@ import streamlit as st
 from seaborn import color_palette
 from streamlit_agraph import Config, Edge, Node, agraph
 
-from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
+from intelligence_toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 
 def create_progress_callback(template: str):

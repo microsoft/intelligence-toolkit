@@ -10,9 +10,9 @@ import app.util.example_outputs_ui as example_outputs_ui
 import app.util.ui_components as ui_components
 import app.workflows.anonymize_case_data.config as config
 import app.workflows.anonymize_case_data.variables as ds_variables
-import toolkit.anonymize_case_data.visuals as visuals
+import intelligence_toolkit.anonymize_case_data.visuals as visuals
 from app.util.download_pdf import add_download_pdf
-from toolkit.anonymize_case_data import AnonymizeCaseData, color_schemes
+from intelligence_toolkit.anonymize_case_data import AnonymizeCaseData, color_schemes
 
 
 def get_intro():

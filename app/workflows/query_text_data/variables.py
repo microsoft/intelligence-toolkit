@@ -3,10 +3,10 @@ import random
 
 import streamlit as st
 
-import toolkit.query_text_data.prompts as prompts
+import intelligence_toolkit.query_text_data.prompts as prompts
 from app.util.session_variable import SessionVariable
-from toolkit.query_text_data.input_processor import PeriodOption
-from toolkit.query_text_data import QueryTextData
+from intelligence_toolkit.query_text_data.input_processor import PeriodOption
+from intelligence_toolkit.query_text_data import QueryTextData
 
 
 class SessionVariables:

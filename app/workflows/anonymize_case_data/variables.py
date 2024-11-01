@@ -7,7 +7,8 @@ import pandas as pd
 import streamlit as st
 
 from app.util.session_variable import SessionVariable
-from toolkit.anonymize_case_data import AnonymizeCaseData
+from intelligence_toolkit.anonymize_case_data import AnonymizeCaseData
+
 
 class SessionVariables:
     prefix = None
