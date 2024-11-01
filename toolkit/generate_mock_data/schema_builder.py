@@ -149,8 +149,6 @@ def add_array_field(
         field_label = f"{item_type.value}_array"
     # if field_description == "":
     #     field_description = f"An array of {item_type.value}s"
-    if item_description == "":
-        item_description = f"A {item_type.value} list item" if item_type != ArrayFieldType.OBJECT else "An object list item"
     use_field_label = _get_unique_field_label(global_schema, field_label)
     if item_type == ArrayFieldType.OBJECT:
         field_location[use_field_label] = {
@@ -320,9 +318,9 @@ def set_enum_field_status(schema, nesting, field_label, constrained):
         if constrained and 'enum' not in obj[field_label]:
             changed = True
             if typ == 'string':
-                obj[field_label]['enum'] = ["A", "B", "C"]
+                obj[field_label]['enum'] = [""]
             elif typ == 'number':
-                obj[field_label]['enum'] = [1, 2, 3]
+                obj[field_label]['enum'] = [0]
             elif typ == 'boolean':
                 obj[field_label]['enum'] = [True, False]
             else:
@@ -335,9 +333,9 @@ def set_enum_field_status(schema, nesting, field_label, constrained):
             changed = True
             item_typ = obj[field_label]['items']['type']
             if item_typ == 'string':
-                obj[field_label]['items']['enum'] = ["A", "B", "C"]
+                obj[field_label]['items']['enum'] = [""]
             elif item_typ == 'number':
-                obj[field_label]['items']['enum'] = [1, 2, 3]
+                obj[field_label]['items']['enum'] = [0]
             else:
                 changed = False
         elif not constrained and 'enum' in obj[field_label]['items']:
