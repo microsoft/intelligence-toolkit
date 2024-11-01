@@ -221,17 +221,12 @@ def create_string_ui(string_field, key_with_prefix, value):
             st.rerun()
 
 def create_enum_ui(field_location, key, key_with_prefix, value):
-    print(f'field_location: {field_location}')
-    print(f'key: {key}')
-    print(f'key_with_prefix: {key_with_prefix}')
-    print(f'value: {value}')
     # Create a text input and delete button in a single row for each enum value
     for i, enum_value in enumerate(value['enum']):
         c1, c2 = st.columns([4, 1])
         with c1:
             new_enum_value = st.text_input(f'Enum value {i}', key=f'{key_with_prefix}_enum_{i}', value=enum_value)
-   
-            if new_enum_value != str(enum_value):
+            if new_enum_value != str(enum_value):                
                 if value['type'] == 'string':
                     value['enum'][i] = new_enum_value
                     st.rerun()
@@ -247,17 +242,28 @@ def create_enum_ui(field_location, key, key_with_prefix, value):
                 
         with c2:
             if st.button('Delete', key=f'{key_with_prefix}_enum_{i}_delete',
-                         disabled=('enum' in field_location[key] and len(field_location[key]['enum'])==1)) or \
-                            ('items' in field_location[key] and 'enum' in field_location[key]['items'] and len(field_location[key]['items']['enum'])==1):
+                         disabled=(value['enum'][i]=="" or 'enum' in value and len(value['enum'])==1)) or \
+                            ('items' in value and 'enum' in value['items'] and len(value['items']['enum'])==1):
                 if 'items' in value:
                     value['items']['enum'].pop(i)
                 else:
                     value['enum'].pop(i)
                 st.rerun()
-    # Add a button to add a new enum value
-    if st.button('Add enum value', key=f'{key_with_prefix}_add_enum'):
-        value['enum'].append('')
-        st.rerun()
+    new_enum_value = st.text_input(f'New value', key=f'{key_with_prefix}_new_enum_{"_".join([str(x) for x in value["enum"]])}', value="")
+    print(new_enum_value)
+    if new_enum_value != "" and new_enum_value not in value['enum']:
+        if value['type'] == 'string':
+            value['enum'].append(new_enum_value)
+            st.rerun()
+        elif value['type'] == 'number':
+            if new_enum_value.isnumeric():
+                if '.' in new_enum_value:
+                    value['enum'].append(float(new_enum_value))
+                else:
+                    value['enum'].append(int(new_enum_value))
+                st.rerun()
+            else:
+                st.warning('Enum value must be a number')
 
 def edit_schema_ui(global_schema, nesting, field_location):
     key_with_prefix = '.'.join(nesting)

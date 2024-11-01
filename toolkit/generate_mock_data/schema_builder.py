@@ -318,9 +318,9 @@ def set_enum_field_status(schema, nesting, field_label, constrained):
         if constrained and 'enum' not in obj[field_label]:
             changed = True
             if typ == 'string':
-                obj[field_label]['enum'] = ["A", "B", "C"]
+                obj[field_label]['enum'] = [""]
             elif typ == 'number':
-                obj[field_label]['enum'] = [1, 2, 3]
+                obj[field_label]['enum'] = [0]
             elif typ == 'boolean':
                 obj[field_label]['enum'] = [True, False]
             else:
@@ -333,9 +333,9 @@ def set_enum_field_status(schema, nesting, field_label, constrained):
             changed = True
             item_typ = obj[field_label]['items']['type']
             if item_typ == 'string':
-                obj[field_label]['items']['enum'] = ["A", "B", "C"]
+                obj[field_label]['items']['enum'] = [""]
             elif item_typ == 'number':
-                obj[field_label]['items']['enum'] = [1, 2, 3]
+                obj[field_label]['items']['enum'] = [0]
             else:
                 changed = False
         elif not constrained and 'enum' in obj[field_label]['items']:
