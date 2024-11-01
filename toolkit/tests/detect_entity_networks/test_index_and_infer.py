@@ -14,7 +14,6 @@ from toolkit.detect_entity_networks.config import (
     SIMILARITY_THRESHOLD_MIN,
 )
 from toolkit.detect_entity_networks.index_and_infer import (
-    build_inferred_df,
     create_inferred_links,
     index_and_infer,
     index_nodes,
@@ -323,56 +322,6 @@ class TestCreateInferredLinks:
         created_links = create_inferred_links(inferred_links)
 
         assert created_links == []
-
-
-class TestBuildInferredDF:
-    def test_build_inferred_entity_df(self) -> None:
-        inferred_links = defaultdict(set)
-        inferred_links["ENTITY==ABCDE"].add("ENTITY==ABCDEF")
-        inferred_links["ENTITY==ABCDEFGR"].add("ENTITY==ABCDEFGRA")
-        inferred_links["ENTITY==PLUS ONE"].add("ENTITY==PLUS_ONE")
-
-        inferred_df = build_inferred_df(inferred_links)
-
-        expected_df = pl.DataFrame(
-            {
-                "text": ["ABCDE", "PLUS ONE", "ABCDEFGR"],
-                "similar": ["ABCDEF", "PLUS_ONE", "ABCDEFGRA"],
-            }
-        ).sort(["text", "similar"])
-
-        assert inferred_df.equals(expected_df)
-
-    def test_build_inferred_attribute_df(self) -> None:
-        inferred_links = defaultdict(set)
-        inferred_links["attr1==ABCDE"].add("attr1==ABCDEF")
-        inferred_links["attr1==PLUS ONE"].add("attr1==PLUS_ONE")
-        inferred_links["attr1==ABCDEF F"].add("attr1==ABCDEFF_FA")
-
-        inferred_df = build_inferred_df(inferred_links)
-
-        expected_df = pl.DataFrame(
-            {
-                "text": ["attr1==ABCDE", "attr1==ABCDEF F", "attr1==PLUS ONE"],
-                "similar": ["attr1==ABCDEF", "attr1==ABCDEFF_FA", "attr1==PLUS_ONE"],
-            }
-        ).sort(["text", "similar"])
-
-        assert inferred_df.equals(expected_df)
-
-    def test_build_inferred_df_empty(self) -> None:
-        inferred_links = defaultdict(set)
-        inferred_df = build_inferred_df(inferred_links)
-
-        expected_df = pl.DataFrame(
-            {
-                "text": [],
-                "similar": [],
-            }
-        )
-
-        assert inferred_df.equals(expected_df)
-
 
 class TestIndexAndInfer:
     @pytest.fixture()

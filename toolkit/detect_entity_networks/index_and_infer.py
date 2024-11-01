@@ -48,6 +48,8 @@ async def index_nodes(
         for text, text_type in text_types
     ]
 
+    if openai_configuration is None:
+        openai_configuration = OpenAIConfiguration()
     if functions_embedder is None:
         functions_embedder = OpenAIEmbedder(openai_configuration, config.cache_name)
     data_embeddings = await functions_embedder.embed_store_many(
@@ -118,25 +120,6 @@ def create_inferred_links(inferred_links: defaultdict[Any, set]) -> list[tuple]:
     return [
         (text, n) for text, near in inferred_links.items() for n in near if text < n
     ]
-
-
-def build_inferred_df(inferred_links_list: defaultdict[set]) -> pl.DataFrame:
-    link_list = [
-        (text, n)
-        for text, near in inferred_links_list.items()
-        for n in near
-        if text < n
-    ]
-    inferred_df = pl.DataFrame(link_list, schema=["text", "similar"])
-    inferred_df = inferred_df.with_columns(
-        [
-            pl.col("text").str.replace(ENTITY_LABEL + ATTRIBUTE_VALUE_SEPARATOR, ""),
-            pl.col("similar").str.replace(ENTITY_LABEL + ATTRIBUTE_VALUE_SEPARATOR, ""),
-        ]
-    )
-
-    return inferred_df.sort(["text", "similar"])
-
 
 async def index_and_infer(
     indexed_node_types: list[str],

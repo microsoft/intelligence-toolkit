@@ -9,7 +9,8 @@ from typing import Any
 import networkx as nx
 import polars as pl
 
-from toolkit.detect_entity_networks.config import ENTITY_LABEL, FlagAggregatorType
+from toolkit.detect_entity_networks.classes import FlagAggregatorType
+from toolkit.detect_entity_networks.config import ENTITY_LABEL
 from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 from toolkit.helpers.texts import clean_text_for_csv
 
@@ -130,10 +131,10 @@ def build_flag_links(
             .to_numpy()
             .tolist()
         )
-        if flag_agg == FlagAggregatorType.Instance.value:
+        if flag_agg == FlagAggregatorType.Instance:
             gdf = gdf.with_columns([pl.lit(1).alias("count_col")])
             flag_links.extend([[val[0], value_col, val[1], 1] for val in vals])
-        elif flag_agg == FlagAggregatorType.Count.value:
+        elif flag_agg == FlagAggregatorType.Count:
             flag_links.extend([[val[0], value_col, value_col, val[1]] for val in vals])
 
     return flag_links
@@ -158,6 +159,7 @@ def build_flags(
         }
     )
     flags = flags.group_by(["entity", "type", "flag"]).agg(pl.sum("count"))
+
     flags = flags.with_columns(
         [flags["entity"].map_elements(transform_entity).alias("qualified_entity")]
     )

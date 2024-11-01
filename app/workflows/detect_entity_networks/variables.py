@@ -4,10 +4,10 @@ from collections import defaultdict
 import pandas as pd
 import polars as pl
 import streamlit as st
-from streamlit_agraph import Config
 from util.session_variable import SessionVariable
 
 from toolkit.detect_entity_networks import prompts
+from toolkit.detect_entity_networks.api import DetectEntityNetworks
 
 agraph_config = {
     "height": 1400,
@@ -27,6 +27,7 @@ class SessionVariables:
         self.create_session(prefix)
 
     def create_session(self, prefix):
+        self.workflow_object = SessionVariable(DetectEntityNetworks(), prefix)
         self.network_max_rows_to_process = SessionVariable(0, prefix)
         self.network_flag_paths = SessionVariable(True, prefix)
         self.network_uploaded_files = SessionVariable([], prefix)
@@ -50,7 +51,6 @@ class SessionVariables:
         self.network_node_types = SessionVariable(set(), prefix)
         self.network_indexed_node_types = SessionVariable([], prefix)
         self.network_integrated_flags = SessionVariable(pl.DataFrame(), prefix)
-        self.network_community_df = SessionVariable(pl.DataFrame(), prefix)
         self.network_supporting_attribute_types = SessionVariable([], prefix)
         self.network_entity_to_community_ix = SessionVariable({}, prefix)
         self.network_entity_df = SessionVariable(pd.DataFrame(), prefix)

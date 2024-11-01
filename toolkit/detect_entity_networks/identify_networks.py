@@ -18,8 +18,8 @@ from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 # ruff: noqa
 def trim_nodeset(
     graph: nx.Graph,
+    max_attribute_degree: int,
     additional_trimmed_attributes: list[str] | None = None,
-    max_attribute_degree: int = DEFAULT_MAX_ATTRIBUTE_DEGREE,
 ) -> tuple[set, set[Any | str]]:
     if additional_trimmed_attributes is None:
         additional_trimmed_attributes = []
@@ -162,7 +162,7 @@ def get_subgraph(
 
 def get_community_nodes(
     entity_graph: nx.Graph,
-    max_network_entities: int = 20,
+    max_network_entities: int | None = 20,
 ) -> tuple[list, dict]:
     # get set of connected nodes list
     sorted_components = sorted(
@@ -196,7 +196,7 @@ def build_networks(
     trimmed_nodes: set,
     inferred_links: set | None = None,
     supporting_attribute_types: list[str] | None = None,
-    max_network_entities: int = 20,
+    max_network_entities: int | None = 20,
 ) -> tuple[list, dict]:
     P = project_entity_graph(
         main_graph, trimmed_nodes, inferred_links, supporting_attribute_types

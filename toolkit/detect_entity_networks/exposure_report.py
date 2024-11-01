@@ -131,6 +131,8 @@ def build_exposure_report(
     graph: nx.Graph,
     inferred_links: dict[set] | None = None,
 ) -> str:
+    if selected_entity == "":
+        return ""
     selected_data, all_paths, nodes = build_exposure_data(
         integrated_flags, c_nodes, selected_entity, graph, inferred_links
     )
