@@ -173,7 +173,7 @@ class TestBuildFlagLinks:
 
     def test_prepare_count(self, df_flag):
         entity_col = "Entity_N"
-        flag_agg = FlagAggregatorType.Count.value
+        flag_agg = FlagAggregatorType.Count
         flag_columns = ["flags_numb"]
 
         result = build_flag_links(df_flag, entity_col, flag_agg, flag_columns)
@@ -190,7 +190,7 @@ class TestBuildFlagLinks:
 
     def test_prepare_value_column_doesnt_exist(self, df_flag):
         entity_col = "Entity_N"
-        flag_agg = FlagAggregatorType.Count.value
+        flag_agg = FlagAggregatorType.Count
         flag_columns = ["flags_numb123"]
         msg = "Column flags_numb123 not found in the DataFrame."
         with pytest.raises(ValueError, match=msg):
@@ -198,7 +198,7 @@ class TestBuildFlagLinks:
 
     def test_prepare_entity_column_doesnt_exist(self, df_flag):
         entity_col = "Entity_N12"
-        flag_agg = FlagAggregatorType.Count.value
+        flag_agg = FlagAggregatorType.Count
         flag_columns = ["flags_numb"]
         msg = "Column Entity_N12 not found in the DataFrame."
         with pytest.raises(ValueError, match=msg):
@@ -206,7 +206,7 @@ class TestBuildFlagLinks:
 
     def test_prepare_count_existing(self, df_flag):
         entity_col = "Entity_N"
-        flag_agg = FlagAggregatorType.Count.value
+        flag_agg = FlagAggregatorType.Count
         flag_columns = ["flags_numb"]
 
         existing_flags = [["E", "flags_numb1", "flags_numb1", 2]]
@@ -227,7 +227,7 @@ class TestBuildFlagLinks:
 
     def test_prepare_instance(self, df_flag):
         entity_col = "Entity_N"
-        flag_agg = FlagAggregatorType.Instance.value
+        flag_agg = FlagAggregatorType.Instance
         flag_columns = ["flags_numb"]
 
         result = build_flag_links(df_flag, entity_col, flag_agg, flag_columns)
@@ -249,7 +249,7 @@ class TestBuildFlagLinks:
         )
 
         entity_col = "Entity_N"
-        flag_agg = FlagAggregatorType.Instance.value
+        flag_agg = FlagAggregatorType.Instance
         flag_columns = ["flags_numb"]
 
         result = build_flag_links(df_flag, entity_col, flag_agg, flag_columns)
