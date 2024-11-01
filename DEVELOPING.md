@@ -12,42 +12,11 @@
 
     - MacOS: `brew install homebrew/cask/wkhtmltopdf`
 
-## Running code-only 
 
-See the documentation and an example of how to run the code with your data to obtain results without the need to run the UI.
-- [Anonymize Case Data](./app/anonymize_case_data/README.md)
+## Running the app
 
-    - [Example](./example_notebooks/anonymize_case_data.ipynb)
 
-- [Compare Case Groups](./app/compare_case_groups/README.md)
-
-    - [Example](./example_notebooks/compare_case_groups.ipynb)
-
-- [Detect Case Patterns](./app/detect_case_patterns/README.md)
-
-    - [Example](./example_notebooks/detect_case_patterns.ipynb)
-
-- [Detect Entity Networks](./app/detect_entity_networks/README.md)
-
-    - [Example](./example_notebooks/detect_entity_networks/main.ipynb)
-
-- [Extract Record Data](./app/extract_record_data/README.md)
-
-    - [Example](./example_notebooks/extract_record_data/main.ipynb)
-
-- [Generate Mock Data](./app/generate_mock_data/README.md)
-
-    - [Example](./example_notebooks/generate_mock_data/main.ipynb)
-
-- [Match Entity Records](./app/match_entity_records/README.md)
-
-    - [Example](./example_notebooks/match_entity_records/main.ipynb)
-    
-- [Query Text Data](./app/query_text_data/README.md)
-
-    - [Example](./example_notebooks/query_text_data.ipynb)
-
-## Running the UI (Streamlit) 
+## GPT settings
 
 You can configure your OpenAI access when running the app via `Settings page`, or using environment variables.
 
@@ -72,6 +41,7 @@ OPENAI_API_KEY=<AZURE_OPENAI_API_KEY>
 #If Azure OpenAI using Managed Identity:
 AZURE_AUTH_TYPE="Managed Identity"
 ```
+
 ### Running locally
 
 Windows: Search and open the app `Windows Powershell` on Windows start menu
@@ -88,7 +58,47 @@ Use `cd `+ the path to the folder. For example:
 
 Run `poetry install` and wait for the packages installation.
 
+#### Run the app:
+
 Run `poetry run poe run_streamlit`, and it will automatically open the app in your default browser in `localhost:8081`
+
+#### Use the API
+
+You can also replicate the examples in your own environment running `pip install intelligence-toolkit`.
+
+See the documentation and an example of how to run the code with your data to obtain results without the need to run the UI.
+- [Anonymize Case Data](./app/workflows/anonymize_case_data/README.md)
+
+    - [Example](./example_notebooks/anonymize_case_data.ipynb)
+
+- [Compare Case Groups](./app/workflows/compare_case_groups/README.md)
+
+    - [Example](./example_notebooks/compare_case_groups.ipynb)
+
+- [Detect Case Patterns](./app/workflows/detect_case_patterns/README.md)
+
+    - [Example](./example_notebooks/detect_case_patterns.ipynb)
+
+- [Detect Entity Networks](./app/workflows/detect_entity_networks/README.md)
+
+    - [Example](./example_notebooks/detect_entity_networks.ipynb)
+
+- [Extract Record Data](./app/workflows/extract_record_data/README.md)
+
+    - [Example](./example_notebooks/extract_record_data.ipynb)
+
+- [Generate Mock Data](./app/workflows/generate_mock_data/README.md)
+
+    - [Example](./example_notebooks/generate_mock_data.ipynb)
+
+- [Match Entity Records](./app/workflows/match_entity_records/README.md)
+
+    - [Example](./example_notebooks/match_entity_records.ipynb)
+    
+- [Query Text Data](./app/workflows/query_text_data/README.md)
+
+    - [Example](./example_notebooks/query_text_data.ipynb)
+
 
 ### Running with docker
 

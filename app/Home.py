@@ -7,8 +7,9 @@ import os
 import os.path
 
 import streamlit as st
-import util.mermaid as mermaid
-from components.app_loader import load_multipage_app
+
+import app.util.mermaid as mermaid
+from app.components.app_loader import load_multipage_app
 
 filename = inspect.getframeinfo(inspect.currentframe()).filename
 path = os.path.dirname(os.path.abspath(filename))
