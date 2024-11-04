@@ -3,6 +3,7 @@
 *.yml text eol=lf
 *.html text eol=lf
 *.py text eol=lf
+*.ipynb linguist-language=Python
 *.toml text eol=lf
 .gitattributes text eol=lf
 .gitignore text eol=lf
