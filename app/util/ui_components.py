@@ -370,16 +370,15 @@ def prepare_input_df(
             'input': input_df_var.value.copy(deep=True)
         }
 
-    if "input" in st.session_state[f"{workflow}_intermediate_dfs"] and st.session_state[f"{workflow}_intermediate_dfs"]["input"].shape != input_df_var.value.shape:
-        del st.session_state[f"{workflow}_suppress_zeros"]
-
     reload = False
     df_sequence = ["input", "selected", "datetime_bin", "numeric_bin", "expanded", "suppress_count", "suppress_null"]
 
-    def df_updated(df_name):
+    def df_updated(df_name, reset):
         # ensure columns are propagated forward
+        index = df_sequence.index(df_name)
         input_df = st.session_state[f"{workflow}_intermediate_dfs"]["input"]
         last_df = st.session_state[f"{workflow}_intermediate_dfs"][df_name]
+        prior_df = st.session_state[f"{workflow}_intermediate_dfs"][df_sequence[index-1]] if index > 0 else input_df
         for col in last_df.columns:
             # add to all subsequent dataframes if not present
             for df in df_sequence[df_sequence.index(df_name) + 1:]:
@@ -387,22 +386,29 @@ def prepare_input_df(
                     st.session_state[f"{workflow}_intermediate_dfs"][df][col] = last_df[
                         col
                     ]
-        # for all subsequent dataframes, remove columns that are not in the current dataframe
-        for df in df_sequence[df_sequence.index(df_name) + 1:]:
-            if df in st.session_state[f"{workflow}_intermediate_dfs"]:
-                for col in st.session_state[f"{workflow}_intermediate_dfs"][df].columns:
-                    if col in input_df.columns and col not in last_df.columns:
-                        # Don't remove expanded columns
-                        # TODO: How to remove expanded columns when the original column is removed?
-                        st.session_state[f"{workflow}_intermediate_dfs"][df].drop(columns=[col], inplace=True)
+        if reset:
+            for df in df_sequence[index:]:
+                st.session_state[f"{workflow}_intermediate_dfs"][df] = prior_df.copy(deep=True)
+        else:
+            # for all subsequent dataframes, remove columns that are not in the current dataframe
+            for df in df_sequence[index+1:]:
+                if df in st.session_state[f"{workflow}_intermediate_dfs"]:
+                    for col in st.session_state[f"{workflow}_intermediate_dfs"][df].columns:
+                        if col in input_df.columns and col not in last_df.columns:
+                            st.session_state[f"{workflow}_intermediate_dfs"][df].drop(columns=[col], inplace=True)
 
     def prepare_stage(df_name):
-        last_df_name = df_sequence[df_sequence.index(df_name)-1]
-        last_df = st.session_state[f"{workflow}_intermediate_dfs"][last_df_name]
-        if df_name not in st.session_state[f"{workflow}_intermediate_dfs"]:
-            st.session_state[f"{workflow}_intermediate_dfs"][df_name] = last_df.copy(deep=True)
-        this_df = st.session_state[f"{workflow}_intermediate_dfs"][df_name]
-        return last_df, this_df
+        index = df_sequence.index(df_name)
+        if index > 0:
+            last_df_name = df_sequence[index-1]
+            last_df = st.session_state[f"{workflow}_intermediate_dfs"][last_df_name]
+            if df_name not in st.session_state[f"{workflow}_intermediate_dfs"]:
+                st.session_state[f"{workflow}_intermediate_dfs"][df_name] = last_df.copy(deep=True)
+            this_df = st.session_state[f"{workflow}_intermediate_dfs"][df_name]
+            return last_df, this_df
+        else:
+            input_df = st.session_state[f"{workflow}_intermediate_dfs"]["input"]
+            return input_df, input_df
 
     input_df = st.session_state[f"{workflow}_intermediate_dfs"]["input"]
 
@@ -447,7 +453,7 @@ def prepare_input_df(
                 "nan", ""
             )
         st.session_state[f"{workflow}_last_attributes"] = selected_cols
-        df_updated("selected")
+        df_updated("selected", False)
 
     # print(f'selected df: {st.session_state[f"{workflow}_intermediate_dfs"]["selected"]}')
 
@@ -475,21 +481,26 @@ def prepare_input_df(
             options=bin_size_options,
             help="Select the bin size for the datetime columns you want to quantize. Quantizing datetime columns into bins makes it easier to synthesize data, but reduces the amount of information in the data. If you do not select any columns, no binning will be performed.",
         )
-
-        if st.button("Quantize selected columns", key="quantize_date"):
-            reload = True
-            st.session_state[f"{workflow}_selected_binned_cols"] = selected_date_cols
-            st.session_state[f"{workflow}_selected_binned_size"] = bin_size
-
-            for col in selected_date_cols:
-                result = quantize_datetime(
-                    this_df, col, bin_size
-                )
-                this_df[col] = result
-                this_df[col].replace(
-                    "nan", ""
-                )
-            df_updated("datetime_bin")
+        c1, c2 = st.columns([1, 1])
+        with c1:
+            if st.button("Quantize selected columns", key="quantize_date"):
+                reload = True
+                st.session_state[f"{workflow}_selected_binned_cols"] = selected_date_cols
+                st.session_state[f"{workflow}_selected_binned_size"] = bin_size
+                print(this_df)
+                for col in selected_date_cols:
+                    result = quantize_datetime(
+                        this_df, col, bin_size
+                    )
+                    this_df[col] = result
+                    this_df[col].replace(
+                        "nan", ""
+                    )
+                df_updated("datetime_bin", False)
+        with c2:
+            if st.button("Reset", key="reset_date"):
+                reload = True
+                df_updated("datetime_bin", True)
 
     # print(f'datetime_bin_df: {st.session_state[f"{workflow}_intermediate_dfs"]["datetime_bin"]}')
 
@@ -516,19 +527,24 @@ def prepare_input_df(
             value=float(st.session_state[f"{workflow}_selected_trim_percent"]),
             help="Percent of values to trim from the top and bottom of each column before binning. This helps to reduce the impact of outliers on the binning process. For example, if trim percent is 0.05, the top and bottom 5% of values will be trimmed from each column before binning. If 0, no trimming will be performed.",
         )
+        c1, c2 = st.columns([1, 1])
+        with c1:
+            if st.button("Quantize selected columns", key="quantize_numeric"):
+                reload = True
+                if num_bins > 0:
+                    for col in selected_numeric_cols:
+                        qd = quantize_numeric(
+                            last_df, col, num_bins, trim_percent
+                        )
+                        this_df[col] = qd
 
-        if st.button("Quantize selected columns", key="quantize_numeric"):
-            reload = True
-            if num_bins > 0:
-                for col in selected_numeric_cols:
-                    qd = quantize_numeric(
-                        last_df, col, num_bins, trim_percent
-                    )
-                    this_df[col] = qd
-
-            st.session_state[f"{workflow}_selected_num_bins"] = num_bins
-            st.session_state[f"{workflow}_selected_trim_percent"] = trim_percent
-            df_updated("numeric_bin")
+                st.session_state[f"{workflow}_selected_num_bins"] = num_bins
+                st.session_state[f"{workflow}_selected_trim_percent"] = trim_percent
+                df_updated("numeric_bin", False)
+        with c2:
+            if st.button("Reset", key="reset_quantize"):
+                reload = True
+                df_updated("numeric_bin", True)
 
     # print(f'numeric bin df: {st.session_state[f"{workflow}_intermediate_dfs"]["numeric_bin"]}')
 
@@ -550,37 +566,68 @@ def prepare_input_df(
         col_delimiter = st.text_input(
             "Column delimiter",
             value="",
-            help="The character used to separate values in compound columns. If the delimiter is not present in a cell, the cell will be left unchanged.",
+            help="The character used to separate values in compound columns. If the delimiter is not present in a cell, the cell will be left unchanged. Any quotes around the entire list or individual values will be removed before processing, as will any enclosing square brackets.",
         )
+        prefix_type = st.radio(
+            "Expanded column prefix type",
+            options=["Source column", "Custom"],
+            index=0,
+            help="Select the type of prefix to add to each new column created from the compound column. If 'Source column' is selected, the prefix will be the name of the source column. If 'Custom' is selected, you can enter a custom prefix.",
+        )
+        if prefix_type == "Source column":
+            prefix = ""
+        else:
+            prefix = st.text_input(
+                "Custom prefix",
+                value="",
+                help="Prefix to add to each new column created from the compound column. If no prefix is provided, no prefix will be added.",
+            )
+        c1, c2 = st.columns([1, 1])
+        with c1:
+            if st.button("Expand selected columns", key="expand_compound"):
+                reload = True
+                to_add = (selected_compound_cols, col_delimiter)
+                if (
+                    col_delimiter != ""
+                    and to_add not in st.session_state[f"{workflow}_selected_compound_cols"]
+                ):
+                    st.session_state[f"{workflow}_selected_compound_cols"].append(to_add)
+                    for cols, delim in st.session_state[
+                        f"{workflow}_selected_compound_cols"
+                    ]:
+                        for col in cols:
+                            if prefix_type == "Source column":
+                                prefix = col
+                            def convert_to_list(x):
+                                print(x)
+                                if type(x) != str:
+                                    print('not a string')
+                                    return []
+                                if x[0] == "[" and x[-1] == "]":
+                                    x = x[1:-1]
+                                vals = [y.strip() for y in x.split(delim)]
+                                vals = [y[1:-1] if y[0] == '"' and y[-1] == '"' else y for y in vals if len(y) > 1]
+                                vals = [y[1:-1] if y[0] == '\'' and y[-1] == '\'' else y for y in vals if len(y) > 1]
+                                if prefix != "":
+                                    vals = [f"{prefix}{y}" for y in vals]
+                                return vals
+                            # add each value as a separate column with a 1 if the value is present in the compound column and None otherwise
+                            values = last_df[col].apply(convert_to_list)
+                            unique_values = {v for vals in values for v in vals}
+                            unique_values = [x for x in unique_values if x != ""]
+                            for val in unique_values:
+                                st.session_state[f"{workflow}_{val}"] = False
+                                this_df[val] = values.apply(
+                                    lambda x: "1" if val in x and val != "nan" else ""
+                                )
+                            if col in this_df.columns:
+                                this_df.drop(columns=[col], inplace=True)
+                df_updated("expanded", False)
+        with c2:
+            if st.button("Reset", key="reset_expand"):
+                reload = True
+                df_updated("expanded", True)
 
-        if st.button("Expand selected columns", key="expand_compound"):
-            reload = True
-            to_add = (selected_compound_cols, col_delimiter)
-            if (
-                col_delimiter != ""
-                and to_add not in st.session_state[f"{workflow}_selected_compound_cols"]
-            ):
-                st.session_state[f"{workflow}_selected_compound_cols"].append(to_add)
-                for cols, delim in st.session_state[
-                    f"{workflow}_selected_compound_cols"
-                ]:
-                    for col in cols:
-                        # add each value as a separate column with a 1 if the value is present in the compound column and None otherwise
-                        values = last_df.apply(
-                            lambda x: [y.strip() for y in x.split(delim)]
-                            if type(x) == str
-                            else []
-                        )
-                        unique_values = {v for vals in values for v in vals}
-                        unique_values = [x for x in unique_values if x != ""]
-                        for val in unique_values:
-                            st.session_state[f"{workflow}_{val}"] = False
-                            this_df[val] = values.apply(
-                                lambda x: "1" if val in x and val != "nan" else ""
-                            )
-                        this_df.drop(columns=[col], inplace=True)
-            df_updated("expanded")
-    
     # print(f'expanded df: {st.session_state[f"{workflow}_intermediate_dfs"]["expanded"]}')
 
     last_df, this_df = prepare_stage("suppress_count")
@@ -633,41 +680,34 @@ def prepare_input_df(
                         if str(x) in value_counts and value_counts[str(x)] < min_value
                         else str(x)
                     )
-            df_updated("suppress_count")
+            df_updated("suppress_count", False)
         # print(f'suppress count: {st.session_state[f"{workflow}_intermediate_dfs"]["suppress_count"]}')
 
-    
-        initialized = True
-        if f"{workflow}_suppress_zeros" not in st.session_state:
-            print('Not initialized')
-            st.session_state[f"{workflow}_suppress_zeros"] = len(this_df) > 0
-            initialized = False
-
+        last_suppress_zeros = st.session_state[f"{workflow}_last_suppress_zeros"]
         suppress_zeros = st.checkbox(
             "Suppress boolean False / binary 0",
             key=f"{workflow}_suppress_zeros_input",
-            value=st.session_state[f"{workflow}_suppress_zeros"] if initialized else True,
-            help="For boolean columns, maps the value False to None. For binary columns, maps the number 0 to None. This is useful when only the presence of an attribute is important, not the absence.",
+            value=True,
+            help="For boolean columns, maps the value False to None. For binary columns, maps the number 0 to None. This is useful when only the presence of an attribute is important, not the absence."
         )
-        
+        print(f'suppress zeros: {suppress_zeros}, last suppress zeros: {last_suppress_zeros}')
         last_df, this_df = prepare_stage("suppress_null")
+        if suppress_zeros or suppress_zeros != last_suppress_zeros:
+            print(f'Changed with suppress_zeros: {suppress_zeros} and last_suppress_zeros: {last_suppress_zeros}')
+            st.session_state[f"{workflow}_last_suppress_zeros"] = suppress_zeros
+            if suppress_zeros:
+                print('suppressing zeros')
+                this_df = df_functions.suppress_boolean_binary(last_df, this_df)
+            else:
+                print('leaving zeros')
+                this_df = last_df.copy(deep=True)
+            if suppress_zeros != last_suppress_zeros:
+                reload = True
 
-
-        if not initialized or suppress_zeros:
-            st.session_state[f"{workflow}_suppress_zeros"] = suppress_zeros
-            this_df = df_functions.supress_boolean_binary(last_df, this_df)
-            df_updated("suppress_null")
-        if not suppress_zeros:
-            for col in this_df.columns:
-                unique_values = this_df[col].unique()
-                is_three_with_none = (
-                    len(unique_values) == 3 and this_df[col].isna().any()
-                )
-                if len(unique_values) <= 2 or is_three_with_none:
-                    this_df[col] = last_df[col]
-            df_updated("suppress_null")
+            df_updated("suppress_null", False)
+            
+      
         # print(f'suppress null: {st.session_state[f"{workflow}_intermediate_dfs"]["suppress_null"]}')
-
 
 
 
