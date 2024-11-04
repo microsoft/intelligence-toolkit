@@ -487,7 +487,6 @@ def prepare_input_df(
                 reload = True
                 st.session_state[f"{workflow}_selected_binned_cols"] = selected_date_cols
                 st.session_state[f"{workflow}_selected_binned_size"] = bin_size
-                print(this_df)
                 for col in selected_date_cols:
                     result = quantize_datetime(
                         this_df, col, bin_size
@@ -599,9 +598,7 @@ def prepare_input_df(
                             if prefix_type == "Source column":
                                 prefix = col
                             def convert_to_list(x):
-                                print(x)
                                 if type(x) != str:
-                                    print('not a string')
                                     return []
                                 if x[0] == "[" and x[-1] == "]":
                                     x = x[1:-1]
@@ -659,14 +656,12 @@ def prepare_input_df(
                         else str(x)
                     )
                 elif last_df[col].dtype == "float64":
-                    print(f'col: {col} is float64')
                     this_df[col] = last_df[col].apply(
                         lambda x: np.nan
                         if str(x) in value_counts and value_counts[str(x)] < min_value
                         else x
                     )
                 elif last_df[col].dtype == "int64":
-                    print(f'col: {col} is int64')
                     this_df[col] = last_df[col].apply(
                         lambda x: -sys.maxsize
                         if str(x) in value_counts and value_counts[str(x)] < min_value
@@ -690,27 +685,20 @@ def prepare_input_df(
             value=True,
             help="For boolean columns, maps the value False to None. For binary columns, maps the number 0 to None. This is useful when only the presence of an attribute is important, not the absence."
         )
-        print(f'suppress zeros: {suppress_zeros}, last suppress zeros: {last_suppress_zeros}')
+
         last_df, this_df = prepare_stage("suppress_null")
         if suppress_zeros or suppress_zeros != last_suppress_zeros:
-            print(f'Changed with suppress_zeros: {suppress_zeros} and last_suppress_zeros: {last_suppress_zeros}')
             st.session_state[f"{workflow}_last_suppress_zeros"] = suppress_zeros
             if suppress_zeros:
-                print('suppressing zeros')
                 this_df = df_functions.suppress_boolean_binary(last_df, this_df)
             else:
-                print('leaving zeros')
                 this_df = last_df.copy(deep=True)
             if suppress_zeros != last_suppress_zeros:
                 reload = True
-
             df_updated("suppress_null", False)
             
-      
+    
         # print(f'suppress null: {st.session_state[f"{workflow}_intermediate_dfs"]["suppress_null"]}')
-
-
-
     processed_df = this_df.copy(deep=True)
     processed_df.replace({"<NA>": np.nan}, inplace=True)
     processed_df.replace({"nan": ""}, inplace=True)
