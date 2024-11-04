@@ -1,5 +1,17 @@
 # Intelligence Toolkit
 
+<div align="left">
+  <a href="https://pypi.org/project/intelligence-toolkit/">
+    <img alt="PyPI - Version" src="https://img.shields.io/pypi/v/intelligence-toolkit">
+  </a>
+  <a href="https://github.com/microsoft/intelligence-toolkit/issues">
+    <img alt="GitHub Issues" src="https://img.shields.io/github/issues/microsoft/intelligence-toolkit">
+  </a>
+  <a href="https://github.com/microsoft/intelligence-toolkit/LICENSE">
+    <img alt="GitHub Issues" src="https://img.shields.io/github/license/microsoft/intelligence-toolkit">
+  </a>
+</div>
+
 The Intelligence Toolkit is a suite of interactive workflows for creating AI intelligence reports from real-world data sources. It helps users to identify patterns, themes, relationships, and risks within complex datasets, with generative AI ([GPT models](https://platform.openai.com/docs/models/)) used to create reports on findings of interest.
 
 The project page can be found at [github.com/microsoft/intelligence-toolkit](https://github.com/microsoft/intelligence-toolkit/) or [aka.ms/itk](https://aka.ms/itk).
@@ -136,8 +148,23 @@ flowchart TD
 
 ## Diving Deeper
 
-- To learn about our contribution guidelines, see [CONTRIBUTING.md](./CONTRIBUTING.md).
+### NGOs
+
+Non-profit organizations can apply for an annual Azure credit grant of up to $3,500, which can be used to set up and run an instance of the intelligence-toolkit app for your organization.
+
+[Read more about eligibility and registration here](https://nonprofit.microsoft.com/en-us/getting-started)
+
+### Getting started
+
+- To start using the api, install it via pypi.
+
+      pip install intelligence-toolkit
+
+      # Find examples in the `example_notebooks` folder.
+
+
 - To start developing, see [DEVELOPING.md](./DEVELOPING.md).
+- To learn about our contribution guidelines, see [CONTRIBUTING.md](./CONTRIBUTING.md).
 - For license details, see [LICENSE.md](./LICENSE.md).
 
 If you have any questions or need further assistance, you can reach out to the project maintainers at [itkteam@microsoft.com](mailto:itkteam@microsoft.com).

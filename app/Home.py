@@ -7,8 +7,9 @@ import os
 import os.path
 
 import streamlit as st
-import util.mermaid as mermaid
-from components.app_loader import load_multipage_app
+
+import app.util.mermaid as mermaid
+from app.components.app_loader import load_multipage_app
 
 filename = inspect.getframeinfo(inspect.currentframe()).filename
 path = os.path.dirname(os.path.abspath(filename))
@@ -28,7 +29,9 @@ def get_readme_and_mermaid():
             os.path.join(path, "workflows", "README.md"),
             f'{"_".join(word.capitalize() for word in f.split("_"))}',
         )
-    parts = content.split("```mermaid")
+    parts = content.split("</div>")
+    parts = "# Intelligence Toolkit" + parts[1]
+    parts = parts.split("```mermaid")
     return parts[0], parts[1].split("## Diving Deeper")[0].replace("```", "")
 
 

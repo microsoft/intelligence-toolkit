@@ -5,7 +5,7 @@ import os
 
 import plotly.express as px
 
-from toolkit.helpers.constants import CACHE_PATH
+from intelligence_toolkit.helpers.constants import CACHE_PATH
 
 cache_dir = os.path.join(CACHE_PATH, "anonymize_case_data")
 outputs_dir = os.path.join(cache_dir, "outputs")

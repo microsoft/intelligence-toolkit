@@ -10,17 +10,17 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-import toolkit.AI.utils as utils
+import intelligence_toolkit.AI.utils as utils
 from app.util.constants import FILE_ENCODING_DEFAULT, FILE_ENCODING_OPTIONS
 from app.util.df_functions import get_current_time, quantize_datetime, quantize_numeric
 from app.util.download_pdf import add_download_pdf
 from app.util.enums import Mode
 from app.util.openai_wrapper import UIOpenAIConfiguration
-from toolkit.AI.classes import LLMCallback
-from toolkit.AI.client import OpenAIClient
-from toolkit.AI.defaults import DEFAULT_MAX_INPUT_TOKENS
-from toolkit.helpers import df_functions
-from toolkit.helpers.texts import clean_for_column_name
+from intelligence_toolkit.AI.classes import LLMCallback
+from intelligence_toolkit.AI.client import OpenAIClient
+from intelligence_toolkit.AI.defaults import DEFAULT_MAX_INPUT_TOKENS
+from intelligence_toolkit.helpers import df_functions
+from intelligence_toolkit.helpers.texts import clean_for_column_name
 
 
 def return_token_count(text: str) -> int:

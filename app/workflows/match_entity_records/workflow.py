@@ -12,12 +12,12 @@ import app.util.example_outputs_ui as example_outputs_ui
 import app.util.session_variables as home_vars
 import app.workflows.match_entity_records.functions as functions
 import app.workflows.match_entity_records.variables as rm_variables
-import toolkit.match_entity_records.prompts as prompts
+import intelligence_toolkit.match_entity_records.prompts as prompts
 from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
-from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
-from toolkit.match_entity_records.api import MatchEntityRecords
-from toolkit.match_entity_records.classes import (
+from intelligence_toolkit.helpers.progress_batch_callback import ProgressBatchCallback
+from intelligence_toolkit.match_entity_records.api import MatchEntityRecords
+from intelligence_toolkit.match_entity_records.classes import (
     AttributeToMatch,
     RecordsModel,
 )

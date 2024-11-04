@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "intelligence-toolkit"
-version = "0.0.1"
+version = "0.0.2"
 description = "Interactive workflows for generating AI intelligence reports from real-world data sources using GPT models"
 authors = [
     "Dayenne Souza <ddesouza@microsoft.com>",
     "Ha Trinh <trinhha@microsoft.com>",
     "Darren Edge <daedge@microsoft.com>"
     ]
-readme = "README.md"
+readme = "DEVELOPING.md"
 license = "MIT"
 keywords = ["AI", "data analysis", "reports", "workflows"]  
 
@@ -51,7 +51,7 @@ nest-asyncio = "^1.6.0"
 altair-viewer = "^0.4.0"
 poetry = "^1.8.3"
 poethepoet = "^0.27.0"
-torch = {version = "^2.4.1+cpu", source = "pytorch_cpu"}
+torch = {version = "^2.4.1", source = "pytorch_cpu"}
 sentence-transformers = "^3.1.1"
 graspologic = "^3.4.1"
 future = "^1.0.0"
@@ -68,6 +68,9 @@ pytest-asyncio = "^0.23.7"
 pytest-mock = "^3.14.0"
 faker = "^28.0.0"
 nbformat = "^5.10.4"
+setuptools = "^75.3.0"
+wheel = "^0.44.0"
+twine = "^5.1.1"
 
 
 [[tool.poetry.source]]
@@ -182,7 +185,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"toolkit/tests/*" = ["S", "D", "ANN", "T201", "ASYNC", "ARG", "PTH", "TRY"]
+"intelligence_toolkit/tests/*" = ["S", "D", "ANN", "T201", "ASYNC", "ARG", "PTH", "TRY"]
 # "examples/*" = ["S", "D", "ANN", "T201", "PTH", "TRY", "PERF"]
 "*.ipynb" = ["S", "T201", "I001"]
 
@@ -197,7 +200,7 @@ convention = "numpy"
 
 # https://github.com/microsoft/pyright/blob/9f81564a4685ff5c55edd3959f9b39030f590b2f/docs/configuration.md#sample-pyprojecttoml-file
 [tool.pyright]
-include = ["app", "toolkit", "examples"]
+include = ["app", "intelligence_toolkit", "example_notebooks"]
 typeCheckingMode = "off"
 
 

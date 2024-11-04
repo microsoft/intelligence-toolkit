@@ -8,7 +8,7 @@ import app.util.example_outputs_ui as example_outputs_ui
 import app.util.schema_ui as schema_ui
 import app.util.ui_components as ui_components
 import app.workflows.extract_record_data.variables as variables
-import toolkit.extract_record_data.data_extractor as data_extractor
+import intelligence_toolkit.extract_record_data.data_extractor as data_extractor
 from app.util.download_pdf import add_download_pdf
 from app.util.openai_wrapper import UIOpenAIConfiguration
 

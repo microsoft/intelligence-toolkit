@@ -1,14 +1,12 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 #
-import random
-
 import pandas as pd
 import streamlit as st
 
-import toolkit.detect_case_patterns.prompts as prompts
-from toolkit.detect_case_patterns import DetectCasePatterns
+import intelligence_toolkit.detect_case_patterns.prompts as prompts
 from app.util.session_variable import SessionVariable
+from intelligence_toolkit.detect_case_patterns.api import DetectCasePatterns
 
 
 class SessionVariables:

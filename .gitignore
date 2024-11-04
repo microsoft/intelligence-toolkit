@@ -40,9 +40,6 @@ cache
 data
 legacy
 
-# Exe installer builders
-build/*
-
 app/wkhtmltox/*.exe
 /wheels
 *reports
@@ -58,4 +55,4 @@ app/wkhtmltox/*.exe
 **/studio_tests/
 .venv
 
-examples/**/*.csv
+**/dist/*

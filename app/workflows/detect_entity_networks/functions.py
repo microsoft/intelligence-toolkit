@@ -4,12 +4,12 @@
 import streamlit as st
 from util.openai_wrapper import UIOpenAIConfiguration
 
-import toolkit.detect_entity_networks.config as config
+import intelligence_toolkit.detect_entity_networks.config as config
 from app.util.constants import LOCAL_EMBEDDING_MODEL_KEY
 from app.util.secrets_handler import SecretsHandler
-from toolkit.AI.base_embedder import BaseEmbedder
-from toolkit.AI.local_embedder import LocalEmbedder
-from toolkit.AI.openai_embedder import OpenAIEmbedder
+from intelligence_toolkit.AI.base_embedder import BaseEmbedder
+from intelligence_toolkit.AI.local_embedder import LocalEmbedder
+from intelligence_toolkit.AI.openai_embedder import OpenAIEmbedder
 
 
 def embedder(local_embedding: bool | None = True) -> BaseEmbedder:

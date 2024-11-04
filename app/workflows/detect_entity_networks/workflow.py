@@ -9,7 +9,7 @@ import pandas as pd
 import polars as pl
 import streamlit as st
 from app.util.download_pdf import add_download_pdf
-from toolkit.detect_entity_networks.classes import FlagAggregatorType
+from intelligence_toolkit.detect_entity_networks.classes import FlagAggregatorType
 import workflows.detect_entity_networks.functions as functions
 import workflows.detect_entity_networks.variables as rn_variables
 import app.util.example_outputs_ui as example_outputs_ui
@@ -19,18 +19,25 @@ from streamlit_agraph import Edge, Node, agraph, Config
 from util import ui_components
 from util.session_variables import SessionVariables
 
-from toolkit.detect_entity_networks import prompts
-from toolkit.detect_entity_networks.config import (ENTITY_LABEL,
-                                                   SIMILARITY_THRESHOLD_MAX,
-                                                   SIMILARITY_THRESHOLD_MIN)
-from toolkit.detect_entity_networks.explore_networks import (
-    build_network_from_entities, get_entity_graph, simplify_entities_graph)
-from toolkit.detect_entity_networks.exposure_report import build_exposure_report
-from toolkit.detect_entity_networks.index_and_infer import (
+from intelligence_toolkit.detect_entity_networks import prompts
+from intelligence_toolkit.detect_entity_networks.config import (
+    ENTITY_LABEL,
+    SIMILARITY_THRESHOLD_MAX,
+    SIMILARITY_THRESHOLD_MIN,
+)
+from intelligence_toolkit.detect_entity_networks.explore_networks import (
+    build_network_from_entities,
+    get_entity_graph,
+    simplify_entities_graph,
+)
+from intelligence_toolkit.detect_entity_networks.exposure_report import (
+    build_exposure_report,
+)
+from intelligence_toolkit.detect_entity_networks.index_and_infer import (
     index_nodes,
 )
-from toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
-from toolkit.helpers.progress_batch_callback import ProgressBatchCallback
+from intelligence_toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
+from intelligence_toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 
 def get_intro():

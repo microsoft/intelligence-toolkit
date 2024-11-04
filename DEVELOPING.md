@@ -13,64 +13,114 @@
     - MacOS: `brew install homebrew/cask/wkhtmltopdf`
 
 
-## Install Dependencies
+## Running the app
 
-`poetry install`
 
-### LLM API access
+## GPT settings
+
+You can configure your OpenAI access when running the app via `Settings page`, or using environment variables.
 
 #### Default values: 
 ```
 OPENAI_API_MODEL="gpt-4o"
-OPENAI_TYPE="OpenAI"
+OPENAI_TYPE="OpenAI" ## Other option available: Azure OpenAI
 AZURE_AUTH_TYPE="Azure Key" # if OPENAI_TYPE==Azure OpenAI
 DEFAULT_EMBEDDING_MODEL = "text-embedding-ada-002"
 ```
+
+### OpenAI
+OPENAI_API_KEY=<OPENAI_API_KEY>
 
 ### Azure OpenAI
 ```
 OPENAI_TYPE="Azure OpenAI"
 AZURE_OPENAI_VERSION=2023-12-01-preview
 AZURE_OPENAI_ENDPOINT="https://<ENDPOINT>.azure.com/"
-OPENAI_API_KEY=<OPENAI_API_KEY>
-AZURE_AUTH_TYPE="Managed Identity" # if not default Azure Key
+OPENAI_API_KEY=<AZURE_OPENAI_API_KEY>
+
+#If Azure OpenAI using Managed Identity:
+AZURE_AUTH_TYPE="Managed Identity"
 ```
 
-### OpenAI
-```
-OPENAI_API_KEY=<OPENAI_API_KEY>
-```
+### Running locally
 
-## Running code-only 
-- [Detect Case Patterns](./toolkit/detect_case_patterns/README.md)
+Windows: Search and open the app `Windows Powershell` on Windows start menu
 
-    - [Example](./examples/detect_case_patterns.ipynb): See an example of how to run the code with your data to obtain results without the need to run the UI.
+Linux and Mac: Open `Terminal`
 
-- [Query Text Data](./toolkit/query_text_data/README.md)
+For any OS:
 
-    - [Example](./examples/query_text_data.ipynb): See an example of how to run the code with your data to obtain results without the need to run the UI.
+Navigate to the folder where you cloned this repo. 
 
-- [Detect Entity Networks](./toolkit/detect_entity_networks/README.md)
+Use `cd `+ the path to the folder. For example:
 
-    - [Example](./examples/detect_entity_networks/main.ipynb): See an example of how to run the code with your data to obtain results without the need to run the UI.
+`cd C:\Users\user01\projects\intelligence-toolkit`
 
-:construction: Code-only workflows in progress: 
+Run `poetry install` and wait for the packages installation.
 
-- Anonymize Case Data
-- Compare Case Groups
-- Match Entity Records
+#### Run the app:
 
-## Running the UI (Streamlit) 
+Run `poetry run poe run_streamlit`, and it will automatically open the app in your default browser in `localhost:8081`
 
-### Running via shell
+#### Use the API
 
-`poetry run poe run_streamlit`
+You can also replicate the examples in your own environment running `pip install intelligence-toolkit`.
+
+See the documentation and an example of how to run the code with your data to obtain results without the need to run the UI.
+- [Anonymize Case Data](./app/workflows/anonymize_case_data/README.md)
+
+    - [Example](./example_notebooks/anonymize_case_data.ipynb)
+
+- [Compare Case Groups](./app/workflows/compare_case_groups/README.md)
+
+    - [Example](./example_notebooks/compare_case_groups.ipynb)
+
+- [Detect Case Patterns](./app/workflows/detect_case_patterns/README.md)
+
+    - [Example](./example_notebooks/detect_case_patterns.ipynb)
+
+- [Detect Entity Networks](./app/workflows/detect_entity_networks/README.md)
+
+    - [Example](./example_notebooks/detect_entity_networks.ipynb)
+
+- [Extract Record Data](./app/workflows/extract_record_data/README.md)
+
+    - [Example](./example_notebooks/extract_record_data.ipynb)
+
+- [Generate Mock Data](./app/workflows/generate_mock_data/README.md)
+
+    - [Example](./example_notebooks/generate_mock_data.ipynb)
+
+- [Match Entity Records](./app/workflows/match_entity_records/README.md)
+
+    - [Example](./example_notebooks/match_entity_records.ipynb)
+    
+- [Query Text Data](./app/workflows/query_text_data/README.md)
+
+    - [Example](./example_notebooks/query_text_data.ipynb)
+
 
 ### Running with docker
 
-Download and install docker: https://www.docker.com/products/docker-desktop/
+##### Recommended configuration:
 
-Then, via shell, in the root folder, run:
+- *Minimum disk space*: 10GB 
+- *Minimum memory*: 8GB
+
+Download, install and then open docker app: https://www.docker.com/products/docker-desktop/
+
+WThen, open a terminal:
+Windows: Search and open the app `Windows Powershell` on Windows start menu
+
+Linux and Mac: Open `Terminal`
+
+For any OS:
+
+Navigate to the folder where you cloned this repo. 
+
+Use `cd `+ the path to the folder. For example:
+
+`cd C:\Users\user01\projects\intelligence-toolkit`
 
 `docker build . -t intelligence-toolkit`
 
@@ -82,24 +132,20 @@ After building, run the docker container:
 
 - via Docker GUI:
 
-
 Open [localhost:80](http://localhost:80)
 
-#### Do you want to share it? No need to build again.
+## Deploying 
 
-Run
+#### Recommended configuration:
 
-`docker save --output="intelligence_toolkit.tar" intelligence-toolkit`
+- *Minimum disk space*: 10GB 
 
-then share the .tar file as you'd like.
+- *Minimum memory*: 8GB
+    - If too many users using at the same time, it might need to be higher.
 
-In the target environment, in the same folder as the .tar file, run:
 
-`docker load --input intelligence_toolkit.tar`
+### Using AWS
 
-Once done, use the same command as above to run it.
-
-## Deploying with AWS
 Wait for step 1 to be set as complete before starting step 2. The whole process will take up to 20 minutes.
 
 1. Launch the infrastructure deploy:
@@ -118,16 +164,16 @@ Once step 2 it's complete, in the output tab, you'll see the deployed URL.
 
 **Note: This code doesn't have auth, so this URL will be open to the internet.**
 
-## Deploying with Azure
+### Using Azure
 
 In [this tutorial](https://dev.to/keneojiteli/deploy-a-docker-app-to-app-services-on-azure-5d3h), you can learn how to create the necessary services in azure.
 
 From there, you can deploy it manually as described, or use [our YAML file](/.vsts-ci.yml) to automatically deploy to your environment. 
 
+
 # Lifecycle Scripts
 
 For Lifecycle scripts it utilizes [Poetry](https://python-poetry.org/docs#installation) and [poethepoet](https://pypi.org/project/poethepoet/) to manage build scripts.
-
 
 Available scripts are:
 

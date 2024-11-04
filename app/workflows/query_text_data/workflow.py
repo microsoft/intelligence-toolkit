@@ -11,18 +11,16 @@ import streamlit as st
 import app.util.embedder as embedder
 import app.util.example_outputs_ui as example_outputs_ui
 import app.workflows.query_text_data.functions as functions
-import toolkit.query_text_data.prompts as prompts
+import intelligence_toolkit.query_text_data.prompts as prompts
 from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
 from app.util.openai_wrapper import UIOpenAIConfiguration
 from app.util.session_variables import SessionVariables
-from toolkit.AI.defaults import CHUNK_SIZE
-from toolkit.query_text_data.api import QueryTextData, QueryTextDataStage
-from toolkit.query_text_data.classes import (
+from intelligence_toolkit.AI.defaults import CHUNK_SIZE
+from intelligence_toolkit.query_text_data.api import QueryTextDataStage
+from intelligence_toolkit.query_text_data.classes import (
     AnswerConfig,
-    AnswerObject,
     ChunkSearchConfig,
-    ProcessedChunks,
 )
 
 sv_home = SessionVariables("home")
