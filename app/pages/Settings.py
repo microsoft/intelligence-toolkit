@@ -175,11 +175,15 @@ def main():
                     time.sleep(0.3)
                     st.rerun()
 
-    if st.button("Test connection"):
+    test_btn = st.button(
+        "Test connection",
+    )
+    if test_btn:
         message = prepare_messages("Answer with OK only", {})
         try:
-            ui_components.generate_text(message)
-            st.success(f"Connection with {type_input} successful.")
+            with st.spinner("Sending ping..."):
+                ui_components.generate_text(message)
+                st.success(f"Connection with {type_input} successful.")
         except Exception as e:
             st.error(f"Error: {e}")
             return
