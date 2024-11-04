@@ -109,7 +109,7 @@ See the documentation and an example of how to run the code with your data to ob
 
 Download, install and then open docker app: https://www.docker.com/products/docker-desktop/
 
-WThen, open a terminal:
+Then, open a terminal:
 Windows: Search and open the app `Windows Powershell` on Windows start menu
 
 Linux and Mac: Open `Terminal`
@@ -122,15 +122,18 @@ Use `cd `+ the path to the folder. For example:
 
 `cd C:\Users\user01\projects\intelligence-toolkit`
 
+Pull the latest built image:
+` docker pull ghcr.io/microsoft/intelligence-toolkit:latest` 
+
+or build it with your own code:
+
 `docker build . -t intelligence-toolkit`
 
-After building, run the docker container:
+Once the pull/build ir fininshed, run the docker container:
 
 - via shell:
 
     `docker run  -d -p 80:80 intelligence-toolkit --name intelligence-toolkit`
-
-- via Docker GUI:
 
 Open [localhost:80](http://localhost:80)
 
