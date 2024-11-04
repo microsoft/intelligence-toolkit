@@ -2,10 +2,6 @@ name: Python CI
 on:
   push:
     branches: [ghcr]
-  pull_request:
-    paths:
-      - 'app/**'
-      - 'intelligence-toolkit/**'
 
 jobs:
   build:
@@ -14,12 +10,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Build and Publish Docker Container
-        uses: darthtrevino/github-container-registry-build-push@main
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
         with:
-          github-push-secret: ${{secrets.GITHUB_TOKEN}}
-          docker-image-name: intelligence-toolkit
-          docker-image-tag: latest
-          dockerfile-path: ./Dockerfile
-          build-context: ./
-          # build-only: ${{ github.ref != 'refs/heads/main' }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+        - name: Build the Docker image
+          run: |
+              docker build . -t ghcr.io/microsoft/intelligence-toolkit:latest
+              docker push ghcr.io/microsoft/intelligence-toolkit:latest
