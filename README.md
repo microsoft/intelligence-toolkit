@@ -162,6 +162,10 @@ Non-profit organizations can apply for an annual Azure credit grant of up to $3,
 
       # Find examples in the `example_notebooks` folder.
 
+- To pull the latest docker image with the app interface, pull it with docker.
+
+      docker pull ghcr.io/microsoft/intelligence-toolkit:latest
+
 
 - To start developing, see [DEVELOPING.md](./DEVELOPING.md).
 - To learn about our contribution guidelines, see [CONTRIBUTING.md](./CONTRIBUTING.md).
