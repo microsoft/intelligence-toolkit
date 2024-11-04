@@ -3,7 +3,7 @@ on:
   push:
     branches: [ghcr]
 permissions:
-   packages: write
+    packages: write
 
 jobs:
   build:
