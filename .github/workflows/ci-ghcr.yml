@@ -14,7 +14,6 @@ jobs:
         uses: darthtrevino/github-container-registry-build-push@main
         with:
           github-push-secret: ${{secrets.GITHUB_TOKEN}}
-          docker-image-name: intelligence-toolkit
-          docker-image-tag:  latest
+          docker-image-name: intelligence-toolkit:latest
           dockerfile-path: ./Dockerfile
           build-context: ./
