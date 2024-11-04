@@ -2,6 +2,8 @@ name: Python Github Container Registry Deploy
 on:
   push:
     branches: [ghcr]
+permissions:
+   packages: write
 
 jobs:
   build:
@@ -17,6 +19,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
+          username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push
