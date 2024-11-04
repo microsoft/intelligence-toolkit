@@ -21,7 +21,9 @@ from util.openai_wrapper import (
 )
 from util.secrets_handler import SecretsHandler
 
+from app.util import ui_components
 from intelligence_toolkit.AI.defaults import DEFAULT_LOCAL_EMBEDDING_MODEL
+from intelligence_toolkit.AI.utils import prepare_messages
 from intelligence_toolkit.AI.vector_store import VectorStore
 from intelligence_toolkit.helpers.constants import CACHE_PATH
 
@@ -139,12 +141,6 @@ def main():
 
             if secret and len(secret) > 0:
                 st.info("Your key is saved securely.")
-                clear_btn = st.button("Clear local key")
-
-                if clear_btn:
-                    secrets_handler.delete_secret(key)
-                    time.sleep(0.3)
-                    st.rerun()
 
             if secret_input and secret_input != secret:
                 secrets_handler.write_secret(key, secret_input)
@@ -166,6 +162,27 @@ def main():
                 if deployment_name != openai_config.model:
                     on_change(secrets_handler, openai_model_key, deployment_name)()
                     st.rerun()
+        with col2:
+            if secret and len(secret) > 0:
+                if type_input != "OpenAI":
+                    # streamlit alignment
+                    for _ in range(6):
+                        st.write("")
+                clear_btn = st.button("Clear local key")
+
+                if clear_btn:
+                    secrets_handler.delete_secret(key)
+                    time.sleep(0.3)
+                    st.rerun()
+
+    if st.button("Test connection"):
+        message = prepare_messages("Answer with OK only", {})
+        try:
+            ui_components.generate_text(message)
+            st.success(f"Connection with {type_input} successful.")
+        except Exception as e:
+            st.error(f"Error: {e}")
+            return
     st.divider()
 
     st.subheader("Embeddings")
