@@ -70,11 +70,17 @@ stages:
               targetType: "inline"
               script: poetry install
           - task: Bash@3
-            displayName: Run Tests
+            displayName: Run Unit Tests
             inputs:
               workingDirectory: ./
               targetType: "inline"
-              script: poetry run poe test
+              script: poetry run poe test_unit
+          - task: Bash@3
+            displayName: Run Smoke Tests
+            inputs:
+              workingDirectory: ./
+              targetType: "inline"
+              script: poetry run poe test_smoke
       
       - job: buildAndPush
         displayName: BuildAndPushContainer

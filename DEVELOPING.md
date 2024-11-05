@@ -121,29 +121,19 @@ Use `cd `+ the path to the folder. For example:
 
 `cd C:\Users\user01\projects\intelligence-toolkit`
 
-
-Build it with your own code:
+Build the container:
 
 `docker build . -t intelligence-toolkit`
 
-Or pull the latest built image:
+Once the build is finished, run the docker container:
 
-` docker pull ghcr.io/microsoft/intelligence-toolkit:latest` 
+- via terminal:
 
-
-Once the pull/build is fininshed, run the docker container:
-
-- via shell:
-
-    With `<container-name>` being `intelligence-toolkit` if you used docker build or `ghcr.io/microsoft/intelligence-toolkit:latest` if you used docker pull. 
-
-    `docker run -d --name intelligence-toolkit -p 80:80 <container-name>`
+    `docker run -d --name intelligence-toolkit -p 80:80 intelligence-toolkit`
 
 Open [localhost:80](http://localhost:80)
 
-## Deploying 
-See [instructions]('./DEPLOYING.md')
-
+  **Note that docker might sleep and you might need to start it again. Open Docker Desktop, in the left menu click on Container and press play on intelligence-toolkit.**
 
 # Lifecycle Scripts
 
@@ -151,7 +141,8 @@ For Lifecycle scripts it utilizes [Poetry](https://python-poetry.org/docs#instal
 
 Available scripts are:
 
-- `poetry run poe test` - This will execute unit tests.
+- `poetry run poe test_unit` - This will execute unit tests on api.
+- `poetry run poe test_smoke` - This will execute smoke tests on api.
 - `poetry run poe check` - This will perform a suite of static checks across the package, including:
   - formatting
   - documentation formatting
