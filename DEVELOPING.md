@@ -133,6 +133,8 @@ Once the build is finished, run the docker container:
 
 Open [localhost:80](http://localhost:80)
 
+  **Note that docker might sleep and you might need to start it again. Open Docker Desktop, in the left menu click on Container and press play on intelligence-toolkit.**
+
 # Lifecycle Scripts
 
 For Lifecycle scripts it utilizes [Poetry](https://python-poetry.org/docs#installation) and [poethepoet](https://pypi.org/project/poethepoet/) to manage build scripts.

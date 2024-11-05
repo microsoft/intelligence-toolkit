@@ -189,6 +189,8 @@ Non-profit organizations can apply for an annual Azure credit grant of $2,000, w
 
       `docker run -d --name intelligence-toolkit -p 80:80 ghcr.io/microsoft/intelligence-toolkit:latest`
 
+  **Note that docker might sleep and you might need to start it again. Open Docker Desktop, in the left menu click on Container and press play on intelligence-toolkit.**
+
   Open [localhost:80](http://localhost:80)
 
 
