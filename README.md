@@ -150,9 +150,9 @@ flowchart TD
 
 ### NGOs
 
-Non-profit organizations can apply for an annual Azure credit grant of up to $3,500, which can be used to set up and run an instance of the intelligence-toolkit app for your organization.
+Non-profit organizations can apply for an annual Azure credit grant of $2,000, which can be used to set up and run an instance of the intelligence-toolkit app for your organization.
 
-[Read more about eligibility and registration here](https://nonprofit.microsoft.com/en-us/getting-started)
+[Read more about eligibility and registration here](https://www.microsoft.com/en-us/nonprofits/azure)
 
 ### Getting started
 
@@ -164,7 +164,32 @@ Non-profit organizations can apply for an annual Azure credit grant of up to $3,
 
 - To pull the latest docker image with the app interface, pull it with docker.
 
-      docker pull ghcr.io/microsoft/intelligence-toolkit:latest
+  Download, install and then open docker app: https://www.docker.com/products/docker-desktop/
+
+  Then, open a terminal:
+  Windows: Search and open the app `Windows Powershell` on Windows start menu
+
+  Linux and Mac: Open `Terminal`
+
+  For any OS:
+
+  Navigate to the folder where you cloned this repo. 
+
+  Use `cd `+ the path to the folder. For example:
+
+  `cd C:\Users\user01\projects\intelligence-toolkit`
+
+  Build the container:
+
+  `docker build . -t intelligence-toolkit`
+
+  Once the build is finished, run the docker container:
+
+  - via terminal:
+
+      `docker run -d --name intelligence-toolkit -p 80:80 ghcr.io/microsoft/intelligence-toolkit:latest`
+
+  Open [localhost:80](http://localhost:80)
 
 
 - To start developing, see [DEVELOPING.md](./DEVELOPING.md).

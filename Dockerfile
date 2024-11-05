@@ -16,4 +16,4 @@ RUN poetry install --only main
 
 # Run application
 EXPOSE 80
-ENTRYPOINT ["poetry", "run", "poe", "run_streamlit", "--server.port=80"]
+ENTRYPOINT ["poetry", "run", "poe", "run_streamlit", "--server.port=80", "--server.address=0.0.0.0"]

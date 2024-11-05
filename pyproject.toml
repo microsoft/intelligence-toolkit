@@ -90,7 +90,8 @@ _pyright = "pyright"
 check_format = 'ruff format . --check --preview'
 fix = "ruff  --preview check --fix ."
 fix_unsafe = "ruff check --preview --fix --unsafe-fixes ."
-test = "pytest ${ARGS}"
+test_unit = "pytest ./intelligence_toolkit/tests/unit"
+test_smoke = "pytest ./intelligence_toolkit/tests/smoke"
 
 run_streamlit = "python -m streamlit run app/Home.py ${ARGS}"  
 
