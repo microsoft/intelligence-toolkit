@@ -28,7 +28,8 @@ def update_concept_graph_edges(node_to_period_counts, edge_to_period_counts, per
     nps = sorted(set(TextBlob(chunk).noun_phrases))
     filtered_nps = []
     for np in nps:
-        parts = np.split()
+         # split on space or newline
+        parts = re.split(r"[\s\n]+", np)
         if all([re.match(r"[a-zA-Z0-9\-]+", part) for part in parts]):
             filtered_nps.append(np)
     filtered_nps = sorted(filtered_nps)

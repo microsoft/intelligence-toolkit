@@ -19,7 +19,7 @@ Output record count: {total_records}
 seeded_data_generation_prompt = """
 You are a helpful assistant tasked with generating a JSON object following the JSON schema provided. You should generate mock data that is plausible but not linked to any real-world entities (e.g., person, organization). 
 
-The JSON object may contain multiple arrays representing collections of data records. For the purposes of this task, only consider the primary record array specified when counting records and generate any other auxiliary records as needed to complete and/or connect these primary records.
+The JSON object may contain multiple arrays representing collections of data records. For the purposes of this task, only consider the primary record array specified when counting records. Generate any other auxiliary record arrays as needed to complete and/or connect these primary records.
 
 The seed record provided should be used to generate certain numbers of records in the output object that are either near duplicates or close relations of the seed record, as follows:
 

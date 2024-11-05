@@ -22,10 +22,8 @@ async def generate_data(
     temperature,
     df_update_callback,
     callback_batch,
-    parallel_batches=0,
+    parallel_batches=5,
 ):
-    if parallel_batches == 0:
-        parallel_batches = num_records_overall // records_per_batch
     num_iterations = num_records_overall // (records_per_batch * parallel_batches)
     record_arrays = extract_array_fields(data_schema)
     primary_record_array = record_arrays[0]
@@ -65,6 +63,7 @@ async def generate_data(
         )
 
         for new_object in new_objects:
+            print(new_object)
             new_object_json = loads(new_object)
             generated_objects.append(new_object_json)
             current_object_json, conflicts = merge_json_objects(
@@ -74,6 +73,7 @@ async def generate_data(
         for record_array in record_arrays:
             df = extract_df(current_object_json, record_array)
             dfs[".".join(record_array)] = df
+
         if df_update_callback is not None:
             df_update_callback(dfs)
     return current_object_json, dfs

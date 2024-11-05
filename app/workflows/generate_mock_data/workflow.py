@@ -79,6 +79,7 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                         dl_placeholders.append(dl_placeholder)                
 
                 def on_dfs_update(path_to_df):
+                    print(path_to_df)
                     for ix, record_array in enumerate(sv.record_arrays.value):
                         with df_placeholders[ix]:
                             df = path_to_df[record_array]
