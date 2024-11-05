@@ -42,17 +42,17 @@ def main():
         page_icon=f"{path}myapp.ico",
         page_title="Intelligence Toolkit | Home",
     )
+
     load_multipage_app()
     transparency_faq, mermaid_text = get_readme_and_mermaid()
 
-    st.markdown(
-        transparency_faq
-    )
+    st.markdown(transparency_faq)
 
     mermaid.mermaid(
         code=mermaid_text,
         height=1000,
     )
+
 
 
 if __name__ == "__main__":

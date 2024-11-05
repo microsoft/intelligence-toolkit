@@ -15,7 +15,6 @@
 
 ## Running the app
 
-
 ## GPT settings
 
 You can configure your OpenAI access when running the app via `Settings page`, or using environment variables.
@@ -104,8 +103,8 @@ See the documentation and an example of how to run the code with your data to ob
 
 ##### Recommended configuration:
 
-- *Minimum disk space*: 10GB 
-- *Minimum memory*: 8GB
+- *Minimum disk space*: 8GB 
+- *Minimum memory*: 4GB
 
 Download, install and then open docker app: https://www.docker.com/products/docker-desktop/
 
@@ -122,56 +121,28 @@ Use `cd `+ the path to the folder. For example:
 
 `cd C:\Users\user01\projects\intelligence-toolkit`
 
-Pull the latest built image:
-` docker pull ghcr.io/microsoft/intelligence-toolkit:latest` 
 
-or build it with your own code:
+Build it with your own code:
 
 `docker build . -t intelligence-toolkit`
 
-Once the pull/build ir fininshed, run the docker container:
+Or pull the latest built image:
+
+` docker pull ghcr.io/microsoft/intelligence-toolkit:latest` 
+
+
+Once the pull/build is fininshed, run the docker container:
 
 - via shell:
 
-    `docker run  -d -p 80:80 intelligence-toolkit --name intelligence-toolkit`
+    With `<container-name>` being `intelligence-toolkit` if you used docker build or `ghcr.io/microsoft/intelligence-toolkit:latest` if you used docker pull. 
+
+    `docker run -d --name intelligence-toolkit -p 80:80 <container-name>`
 
 Open [localhost:80](http://localhost:80)
 
 ## Deploying 
-
-#### Recommended configuration:
-
-- *Minimum disk space*: 10GB 
-
-- *Minimum memory*: 8GB
-    - If too many users using at the same time, it might need to be higher.
-
-
-### Using AWS
-
-Wait for step 1 to be set as complete before starting step 2. The whole process will take up to 20 minutes.
-
-1. Launch the infrastructure deploy:
-
-    - Give it a sugestive name since you'll be using it in the next step.
-
-    [![launch-stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=itk-infra-stack&templateURL=https://s3.us-east-1.amazonaws.com/cf-templates-19n482mly1fba-us-east-1/2024-10-07T124926.165Z3xc-infrastructure.yaml)
-
-2. Launch the code deploy
-    - In VPC Configuration, you should select the resources created by the previous step: <u>VPCId, PublicSubnetAId, PublicSubnetBId, PrivateSubnetAId, PrivateSubnetBId</u>
-
-    [![launch-stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=itk-code-stack&templateURL=https://s3.us-east-1.amazonaws.com/cf-templates-19n482mly1fba-us-east-1/2024-10-07T125858.730Zlsu-2-development.yaml)
-
-
-Once step 2 it's complete, in the output tab, you'll see the deployed URL.
-
-**Note: This code doesn't have auth, so this URL will be open to the internet.**
-
-### Using Azure
-
-In [this tutorial](https://dev.to/keneojiteli/deploy-a-docker-app-to-app-services-on-azure-5d3h), you can learn how to create the necessary services in azure.
-
-From there, you can deploy it manually as described, or use [our YAML file](/.vsts-ci.yml) to automatically deploy to your environment. 
+See [instructions]('./DEPLOYING.md')
 
 
 # Lifecycle Scripts

@@ -12,7 +12,6 @@ RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor
 ENV PATH="/root/.local/bin:$PATH"
 
 COPY . .
-RUN rm -rf .streamlit/app_secrets.toml
 RUN poetry install --only main
 
 # Run application
