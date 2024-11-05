@@ -1,6 +1,3 @@
-# Deploying 
-See [instructions]('./DEPLOYING.md')
-
 # Developing 
 
 ## Requirements

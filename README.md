@@ -193,6 +193,7 @@ Non-profit organizations can apply for an annual Azure credit grant of $2,000, w
 
 
 - To start developing, see [DEVELOPING.md](./DEVELOPING.md).
+- To instructions on how to deploy, see [DEPLOYING.md](./DEPLOYING.md).
 - To learn about our contribution guidelines, see [CONTRIBUTING.md](./CONTRIBUTING.md).
 - For license details, see [LICENSE.md](./LICENSE.md).
 
