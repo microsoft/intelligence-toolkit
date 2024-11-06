@@ -54,6 +54,30 @@ It supports a variety of interactive workflows, each designed to address a speci
 
 All tutorial data and examples used in Intelligence Toolkit were created for this purpose using the [`Generate Mock Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_mock_data/README.md) workflow.
 
+### What workflow should I use?
+Use the diagram to identify an appropriate workflow, which can be opened from the left sidebar while running the application.
+
+```mermaid
+%%{init: {
+  "flowchart": {"htmlLabels": true}} }%%
+flowchart TD
+    NoData["<b>Input</b>: None"] --> |"<b>Generate Mock Data</b><br/>workflow"| MockData["AI-Generated Records"]
+    NoData["<b>Input</b>: None"] --> |"<b>Generate Mock Data</b><br/>workflow"| MockText["AI-Generated Texts"]
+    MockText["AI-Generated Texts"] -->  TextDocs["<b>Input:</b> Text Data"]
+    MockData["AI-Generated Records"] --> PersonalData["<b>Input</b>: Personal Case Records"]
+    MockData["AI-Generated Records"] --> CaseRecords["<b>Input</b>: Case Records"]
+    MockData["AI-Generated Records"] --> EntityData["<b>Input</b>: Entity Records"]
+    PersonalData["<b>Input</b>: Personal Case Records"] ----> |"<b>Anonymize Case Data</b><br/>workflow"| AnonData["Anonymous Case Records"]
+    CaseRecords["<b>Input</b>: Case Records"] ---> HasTime{"Time<br/>Attributes?"}
+    HasTime{"Time<br/>Attributes?"} --> |"<b>Detect Case Patterns</b><br/>workflow"| CasePatterns["AI Pattern Reports"]
+    CaseRecords["<b>Input</b>: Case Records"] ---> HasGroups{"Grouping<br/>Attributes?"}
+    HasGroups{"Grouping<br/>Attributes?"} --> |"<b>Compare Case Groups</b><br/>workflow"| MatchedEntities["AI Group Reports"]
+    EntityData["<b>Input</b>: Entity Records"] ---> HasInconsistencies{"Inconsistent<br/>Attributes?"} --> |"<b>Match Entity Records</b><br/>workflow"| RecordLinking["AI-Matched Records"]
+    EntityData["<b>Input</b>: Entity Records"] ---> HasIdentifiers{"Identifying<br/>Attributes?"} --> |"<b>Detect Entity Networks</b><br/>workflow"| NetworkAnalysis["AI Network Reports"]
+    TextDocs["<b>Input:</b> Text Data"] ---> NeedRecords{"Need<br/>Records?"} --> |"<b>Extract Record Data</b><br/>workflow"| ExtractedRecords["AI-Extracted Records"]
+    TextDocs["<b>Input:</b> Text Data"] ---> NeedAnswers{"Need<br/>Answers?"} --> |"<b>Query Text Data</b><br/>workflow"| AnswerReports["AI Answer Reports"]
+```
+
 ### How was Intelligence Toolkit evaluated?
 
 The Intelligence Toolkit was designed, refined, and evaluated in the context of the [Tech Against Trafficking (TAT)](https://techagainsttrafficking.org/) accelerator program with [Issara Institute](https://www.issarainstitute.org/) and [Polaris](https://polarisproject.org/) (2023-2024). It includes and builds on prior accelerator outputs developed with [Unseen](https://www.unseenuk.org/) (2021-2022) and [IOM](https://www.iom.int/)/[CTDC](https://www.ctdatacollaborative.org/) (2019-2020). See this [launch blog](https://www.microsoft.com/en-us/research/blog/empowering-ngos-with-generative-ai-in-the-fight-against-human-trafficking/) for more information.
@@ -106,50 +130,6 @@ All use of Intelligence Toolkit should be consistent with this documentation. In
 
 ## Getting Started
 
-### Setting up the AI model
-
-Intelligence Toolkit can be used with either OpenAI or Azure OpenAI as the generative AI API.
-
-The [`Generate Mock Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_mock_data/README.md) and [`Extract Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/extract_record_data/README.md) workflows additionally use OpenAI's Structured Outputs API, which requires a gpt-4o model as follows:
-
-- `gpt-4o-mini`
-- `gpt-4o`
-
-You can access the `Settings` page on the left sidebar when running the application:
-
-- For OpenAI, you will need an active OpenAI account ([create here](https://platform.openai.com/login)) and API key ([create here](https://platform.openai.com/account/api-keys)).
-
-- For Azure OpenAI, you will need an active Azure account ([create here](https://portal.azure.com/)), endpoint, key and version for the AI Service ([create here](https://portal.azure.com/#view/Microsoft_Azure_ProjectOxford/CognitiveServicesHub/~/OpenAI)).
-
-### Selecting the right workflow for the data and task
-
-Use the diagram to identify an appropriate workflow, which can be opened from the left sidebar while running the application.
-
-```mermaid
-%%{init: {
-  "flowchart": {"htmlLabels": true}} }%%
-flowchart TD
-    NoData["<b>Input</b>: None"] --> |"<b>Generate Mock Data</b><br/>workflow"| MockData["AI-Generated Records"]
-    NoData["<b>Input</b>: None"] --> |"<b>Generate Mock Data</b><br/>workflow"| MockText["AI-Generated Texts"]
-    MockText["AI-Generated Texts"] -->  TextDocs["<b>Input:</b> Text Data"]
-    MockData["AI-Generated Records"] --> PersonalData["<b>Input</b>: Personal Case Records"]
-    MockData["AI-Generated Records"] --> CaseRecords["<b>Input</b>: Case Records"]
-    MockData["AI-Generated Records"] --> EntityData["<b>Input</b>: Entity Records"]
-    PersonalData["<b>Input</b>: Personal Case Records"] ----> |"<b>Anonymize Case Data</b><br/>workflow"| AnonData["Anonymous Case Records"]
-    CaseRecords["<b>Input</b>: Case Records"] ---> HasTime{"Time<br/>Attributes?"}
-    HasTime{"Time<br/>Attributes?"} --> |"<b>Detect Case Patterns</b><br/>workflow"| CasePatterns["AI Pattern Reports"]
-    CaseRecords["<b>Input</b>: Case Records"] ---> HasGroups{"Grouping<br/>Attributes?"}
-    HasGroups{"Grouping<br/>Attributes?"} --> |"<b>Compare Case Groups</b><br/>workflow"| MatchedEntities["AI Group Reports"]
-    EntityData["<b>Input</b>: Entity Records"] ---> HasInconsistencies{"Inconsistent<br/>Attributes?"} --> |"<b>Match Entity Records</b><br/>workflow"| RecordLinking["AI-Matched Records"]
-    EntityData["<b>Input</b>: Entity Records"] ---> HasIdentifiers{"Identifying<br/>Attributes?"} --> |"<b>Detect Entity Networks</b><br/>workflow"| NetworkAnalysis["AI Network Reports"]
-    TextDocs["<b>Input:</b> Text Data"] ---> NeedRecords{"Need<br/>Records?"} --> |"<b>Extract Record Data</b><br/>workflow"| ExtractedRecords["AI-Extracted Records"]
-    TextDocs["<b>Input:</b> Text Data"] ---> NeedAnswers{"Need<br/>Answers?"} --> |"<b>Query Text Data</b><br/>workflow"| AnswerReports["AI Answer Reports"]
-```
-
-## Diving Deeper
-
-### Getting started
-
 You can start using the Intelligence Toolkit as either a web application (with a tool called Docker) or a Python package (via PyPI). Choose one of the options below based on your needs.
 
 **Option 1: Using Intelligence Toolkit as a Web Application (via Docker)**
@@ -190,6 +170,22 @@ Once the download is finished, run the Intelligence Toolkit application using Do
 Open [http://localhost:80](http://localhost:80) in your web browser to start using Intelligence Toolkit.
 
 **Note:** Docker Desktop App may enter sleep mode if inactive. In this case, open Docker Desktop, select Container in the left menu, then press play on intelligence-toolkit.
+
+**6. Setting up the AI model:**
+
+Intelligence Toolkit can be used with either OpenAI or Azure OpenAI as the generative AI API.
+
+The [`Generate Mock Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_mock_data/README.md) and [`Extract Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/extract_record_data/README.md) workflows additionally use OpenAI's Structured Outputs API, which requires a gpt-4o model as follows:
+
+- `gpt-4o-mini`
+- `gpt-4o`
+
+You can access the `Settings` page on the left sidebar when running the application:
+
+- For OpenAI, you will need an active OpenAI account ([create here](https://platform.openai.com/login)) and API key ([create here](https://platform.openai.com/account/api-keys)).
+
+- For Azure OpenAI, you will need an active Azure account ([create here](https://portal.azure.com/)), endpoint, key and version for the AI Service ([create here](https://portal.azure.com/#view/Microsoft_Azure_ProjectOxford/CognitiveServicesHub/~/OpenAI)).
+
 
 **Option 2: Using Intelligence Toolkit as a Python Package (via PyPI)**
 

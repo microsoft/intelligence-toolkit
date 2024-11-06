@@ -31,8 +31,26 @@ def get_readme_and_mermaid():
         )
     parts = content.split("</div>")
     parts = "# Intelligence Toolkit" + parts[1]
-    parts = parts.split("```mermaid")
-    return parts[0], parts[1].split("## Diving Deeper")[0].replace("```", "")
+    parts_text_original = parts.split("## Getting Started")[0]
+    parts = parts_text_original.split("```mermaid")
+    mermaid = (
+        parts[1]
+        .split("### How was Intelligence Toolkit evaluated?")[0]
+        .replace("```", "")
+    )
+
+    parts_text = parts_text_original.split("### What workflow should I use?")[0]
+    parts_text += parts_text_original.split(
+        "### How was Intelligence Toolkit evaluated?"
+    )[1]
+
+    openai_text = content.split("</div>")[1].split("**6. Setting up the AI model:**")[1]
+    parts_text += "## Getting Started"
+    parts_text += openai_text.split(
+        "**Option 2: Using Intelligence Toolkit as a Python Package (via PyPI)**"
+    )[0]
+
+    return parts_text, mermaid
 
 
 def main():
@@ -48,6 +66,7 @@ def main():
 
     st.markdown(transparency_faq)
 
+    st.markdown("### What workflow should I use?")
     mermaid.mermaid(
         code=mermaid_text,
         height=1000,
