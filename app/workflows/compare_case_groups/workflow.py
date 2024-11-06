@@ -70,28 +70,57 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                 st.markdown("##### Define summary model")
                 sorted_cols = sorted(sv.case_groups_final_df.value.columns)
 
+                default_groups_existing = [
+                    attr for attr in sv.case_groups_groups.value if attr in sorted_cols
+                ]
+                default_atts_existing = [
+                    attr
+                    for attr in sv.case_groups_aggregates.value
+                    if attr in sorted_cols
+                ]
+
+                case_group_options = ccg.get_filter_options(
+                    pl.from_pandas(sv.case_groups_final_df.value)
+                )
+                default_filters_existing = [
+                    attr
+                    for attr in sv.case_groups_filters.value
+                    if attr in case_group_options
+                ]
+
                 groups = st.multiselect(
                     "Compare groups of records with different combinations of these attributes:",
                     sorted_cols,
-                    default=sv.case_groups_groups.value,
+                    default=sv.case_groups_groups.value
+                    if (
+                        len(default_groups_existing) == len(sv.case_groups_groups.value)
+                    )
+                    else [],
                 )
                 aggregates = st.multiselect(
                     "Using counts of these attributes:",
                     sorted_cols,
-                    default=sv.case_groups_aggregates.value,
+                    default=sv.case_groups_aggregates.value
+                    if (len(default_atts_existing) == len(sv.case_groups_groups.value))
+                    else [],
                 )
                 temporal_options = ["", *sorted_cols]
                 temporal = st.selectbox(
                     "Across windows of this temporal/ordinal attribute (optional):",
                     temporal_options,
-                    index=temporal_options.index(sv.case_groups_temporal.value),
+                    index=temporal_options.index(sv.case_groups_temporal.value)
+                    if sv.case_groups_temporal.value in temporal_options
+                    else 0,
                 )
                 filters = st.multiselect(
                     "After filtering to records matching these values (optional):",
-                    ccg.get_filter_options(
-                        pl.from_pandas(sv.case_groups_final_df.value)
-                    ),
-                    default=sv.case_groups_filters.value,
+                    case_group_options,
+                    default=sv.case_groups_filters.value
+                    if (
+                        len(default_filters_existing)
+                        == len(sv.case_groups_filters.value)
+                    )
+                    else [],
                 )
 
                 create = st.button(
