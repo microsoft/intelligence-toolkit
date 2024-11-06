@@ -52,8 +52,8 @@ altair-viewer = "^0.4.0"
 poetry = "^1.8.3"
 poethepoet = "^0.27.0"
 torch = [
-    {version = "^2.5.1", source = "pytorch_cpu", markers = "platform_system != 'Darwin'"},
-    {version = "^2.5.1", markers = "platform_system == 'Darwin'"}
+    {version = "2.4.1", source = "pytorch_cpu", markers = "sys_platform != 'darwin'"},
+    {version = "2.5.1", markers = "sys_platform == 'darwin'"}
 ]
 sentence-transformers = "^3.1.1"
 graspologic = "^3.4.1"
@@ -79,6 +79,11 @@ twine = "^5.1.1"
 [[tool.poetry.source]]
 name = "pytorch_cpu"
 url = "https://download.pytorch.org/whl/cpu"
+priority = "explicit"
+
+[[tool.poetry.source]]
+name = "pytorch_gpu"
+url = "https://download.pytorch.org/whl"
 priority = "explicit"
 
 [build-system]

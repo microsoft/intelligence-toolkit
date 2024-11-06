@@ -5636,6 +5636,42 @@ files = [
 
 [[package]]
 name = "torch"
+version = "2.4.1+cpu"
+description = "Tensors and Dynamic neural networks in Python with strong GPU acceleration"
+optional = false
+python-versions = ">=3.8.0"
+files = [
+    {file = "torch-2.4.1+cpu-cp310-cp310-linux_x86_64.whl", hash = "sha256:833490a28ac156762ed6adaa7c695879564fa2fd0dc51bcf3fdb2c7b47dc55e6"},
+    {file = "torch-2.4.1+cpu-cp310-cp310-win_amd64.whl", hash = "sha256:1dd062d296fb78aa7cfab8690bf03704995a821b5ef69cfc807af5c0831b4202"},
+    {file = "torch-2.4.1+cpu-cp311-cp311-linux_x86_64.whl", hash = "sha256:2b03e20f37557d211d14e3fb3f71709325336402db132a1e0dd8b47392185baf"},
+    {file = "torch-2.4.1+cpu-cp311-cp311-win_amd64.whl", hash = "sha256:76a6fe7b10491b650c630bc9ae328df40f79a948296b41d3b087b29a8a63cbad"},
+    {file = "torch-2.4.1+cpu-cp312-cp312-linux_x86_64.whl", hash = "sha256:8800deef0026011d502c0c256cc4b67d002347f63c3a38cd8e45f1f445c61364"},
+    {file = "torch-2.4.1+cpu-cp312-cp312-win_amd64.whl", hash = "sha256:3a570e5c553415cdbddfe679207327b3a3806b21c6adea14fba77684d1619e97"},
+    {file = "torch-2.4.1+cpu-cp38-cp38-linux_x86_64.whl", hash = "sha256:0c0a7cc4f7c74ff024d5a5e21230a01289b65346b27a626f6c815d94b4b8c955"},
+    {file = "torch-2.4.1+cpu-cp38-cp38-win_amd64.whl", hash = "sha256:330e780f478707478f797fdc82c2a96e9b8c5f60b6f1f57bb6ad1dd5b1e7e97e"},
+    {file = "torch-2.4.1+cpu-cp39-cp39-linux_x86_64.whl", hash = "sha256:3c99506980a2fb4b634008ccb758f42dd82f93ae2830c1e41f64536e310bf562"},
+    {file = "torch-2.4.1+cpu-cp39-cp39-win_amd64.whl", hash = "sha256:c4f2c3c026e876d4dad7629170ec14fff48c076d6c2ae0e354ab3fdc09024f00"},
+]
+
+[package.dependencies]
+filelock = "*"
+fsspec = "*"
+jinja2 = "*"
+networkx = "*"
+sympy = "*"
+typing-extensions = ">=4.8.0"
+
+[package.extras]
+opt-einsum = ["opt-einsum (>=3.3)"]
+optree = ["optree (>=0.11.0)"]
+
+[package.source]
+type = "legacy"
+url = "https://download.pytorch.org/whl/cpu"
+reference = "pytorch_cpu"
+
+[[package]]
+name = "torch"
 version = "2.5.1"
 description = "Tensors and Dynamic neural networks in Python with strong GPU acceleration"
 optional = false
@@ -5672,42 +5708,6 @@ typing-extensions = ">=4.8.0"
 [package.extras]
 opt-einsum = ["opt-einsum (>=3.3)"]
 optree = ["optree (>=0.12.0)"]
-
-[[package]]
-name = "torch"
-version = "2.5.1+cpu"
-description = "Tensors and Dynamic neural networks in Python with strong GPU acceleration"
-optional = false
-python-versions = ">=3.8.0"
-files = [
-    {file = "torch-2.5.1+cpu-cp310-cp310-linux_x86_64.whl", hash = "sha256:7f91a2200e352745d70e22396bd501448e28350fbdbd8d8b1c83037e25451150"},
-    {file = "torch-2.5.1+cpu-cp310-cp310-win_amd64.whl", hash = "sha256:df93157482b672892d29134d3fae9d38ba3219702faedd79f407eb36774c56ce"},
-    {file = "torch-2.5.1+cpu-cp311-cp311-linux_x86_64.whl", hash = "sha256:07d7c9e069123d5af08b0cf0013d74f680b2d8be7d9e2cf561a52c90c55d9409"},
-    {file = "torch-2.5.1+cpu-cp311-cp311-win_amd64.whl", hash = "sha256:81531d4d5ca74163dc9574b87396531e546a60cceb6253303c7db6a21e867fdf"},
-    {file = "torch-2.5.1+cpu-cp312-cp312-linux_x86_64.whl", hash = "sha256:4856f9d6925121d13c2df07aa7580b767f449dfe71ae5acde9c27535d5da4840"},
-    {file = "torch-2.5.1+cpu-cp312-cp312-win_amd64.whl", hash = "sha256:a6b720410350765d3d77c01a5ce098a6c45af446284e45e87a98b8a16e7d564d"},
-    {file = "torch-2.5.1+cpu-cp313-cp313-linux_x86_64.whl", hash = "sha256:5dbbdf83caa90d0bcaa50e4933ca424889133b35226db79000877d4ec5d9ea37"},
-    {file = "torch-2.5.1+cpu-cp39-cp39-linux_x86_64.whl", hash = "sha256:a3ad26468abc5ee601aba49ff02f72387ae734b0900aa589b890c80d72b7b26b"},
-    {file = "torch-2.5.1+cpu-cp39-cp39-win_amd64.whl", hash = "sha256:2ebd0b6135dc60b96ce51349c92c9757b2b9634a6b90045dfab3eb4921a4d62f"},
-]
-
-[package.dependencies]
-filelock = "*"
-fsspec = "*"
-jinja2 = "*"
-networkx = "*"
-setuptools = {version = "*", markers = "python_version >= \"3.12\""}
-sympy = {version = "1.13.1", markers = "python_version >= \"3.9\""}
-typing-extensions = ">=4.8.0"
-
-[package.extras]
-opt-einsum = ["opt-einsum (>=3.3)"]
-optree = ["optree (>=0.12.0)"]
-
-[package.source]
-type = "legacy"
-url = "https://download.pytorch.org/whl/cpu"
-reference = "pytorch_cpu"
 
 [[package]]
 name = "tornado"
@@ -6221,4 +6221,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "b4d0d102a231c4f6fcf13efdacf53925da13224a24042cd3b9173301bffb4e4e"
+content-hash = "74571b86c60d90c5a0ead79a030359ee75fa495689bce7c35bd17ece101d5128"
