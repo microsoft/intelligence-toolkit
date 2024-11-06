@@ -20,3 +20,5 @@ coverage.xml
 .pytest_cache
 .ruff_cache
 .venv
+.streamlit/app_secrets.toml
+.streamlit/secrets.toml

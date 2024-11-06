@@ -2,6 +2,7 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 import streamlit as st
+
 from app.javascript.scripts import get_auth_user
 from app.util.enums import Mode
 from app.util.session_variables import SessionVariables
@@ -24,6 +25,9 @@ class AppUser:
         self.sv.username.value = username
 
     def view_get_info(self):
+        if st.session_state.get("username"):
+            self._set_user(st.session_state["username"])
+
         if self.sv.username.value:
             st.sidebar.write(f"Logged in as {self.sv.username.value}")
 

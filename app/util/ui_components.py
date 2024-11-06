@@ -225,7 +225,6 @@ def single_csv_uploader(
         options += ["Input data"]
     if processed_df_var is not None:
         options += ["Prepared data"]
-    # dfo = st.radio('Select data table', options=options, index=0, horizontal=True, key=f'{workflow}_{upload_label}_data_table_select')
     option_tabs = st.tabs(options)
     for ix, tab in enumerate(option_tabs):
         with tab:
