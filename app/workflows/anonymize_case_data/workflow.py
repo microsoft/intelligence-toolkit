@@ -65,35 +65,43 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                 
                 syn_stats = acd.analyze_synthesizability(sv.anonymize_sensitive_df.value)
 
-                st.markdown("### Synthesizability summary")
+                st.markdown("### Anonymizability summary")
                 st.markdown(
                     f"Number of selected columns: **{syn_stats.num_cols}**",
-                    help="This is the number of columns you selected for processing. The more columns you select, the harder it will be to synthesize data.",
+                    help="This is the number of columns you selected for processing. The more columns you select, the harder it will be to anonymize data.",
                 )
                 st.markdown(
                     f"Number of distinct attribute values: **{syn_stats.overall_att_count}**",
-                    help="This is the total number of distinct attribute values across all selected columns. The more distinct values, the harder it will be to synthesize data.",
+                    help="This is the total number of distinct attribute values across all selected columns. The more distinct values, the harder it will be to anonymize data.",
                 )
                 st.markdown(
                     f"Theoretical attribute combinations: **{syn_stats.possible_combinations}**",
-                    help="This is the total number of possible attribute combinations across all selected columns. The higher this number, the harder it will be to synthesize data.",
+                    help="This is the total number of possible attribute combinations across all selected columns. The higher this number, the harder it will be to anonymize data.",
                 )
                 st.markdown(
                     f"Theoretical combinations per record: **{syn_stats.possible_combinations_per_row}**",
-                    help="This is the mean number of possible attribute combinations per sensitive case record. The higher this number, the harder it will be to synthesize data.",
+                    help="This is the mean number of possible attribute combinations per sensitive case record. The higher this number, the harder it will be to anonymize data.",
                 )
                 st.markdown(
                     f"Typical values per record: **{round(syn_stats.mean_vals_per_record, 1)}**",
-                    help="This is the mean number of actual attribute values per sensitive case record. The higher this number, the harder it will be to synthesize data.",
+                    help="This is the mean number of actual attribute values per sensitive case record. The higher this number, the harder it will be to anonymize data.",
                 )
                 st.markdown(
                     f"Typical combinations per record: **{round(syn_stats.max_combinations_per_record, 1)}**",
                     help="This is the number of attribute combinations in a record with the typical number of values.",
                 )
                 st.markdown(
-                    f"Excess combinations ratio: **{round(syn_stats.excess_combinations_ratio, 1)}**",
-                    help="This is the ratio of theoretical combinations per record to the typical combinations per record. The higher this number, the harder it will be to synthesize data. **Rule of thumb**: Aim for a ratio of **5** or lower.",
+                    f"**Excess combinations ratio: {round(syn_stats.excess_combinations_ratio, 1)}**",
+                    help="This is the ratio of theoretical combinations per record to the typical combinations per record. The higher this number, the harder it will be to anonymize data. **Rule of thumb**: Aim for a ratio of **5** or lower.",
                 )
+                if syn_stats.excess_combinations_ratio <= 5:
+                    st.success(
+                        "This dataset is likely to be anonymizable. You can proceed to anonymize the data."
+                    )
+                else:
+                    st.warning(
+                        "This dataset may be difficult to anonymize. You may need to reduce the number of columns or attribute values to proceed."
+                    )
 
     with generate_tab:
         if len(sv.anonymize_sensitive_df.value) == 0:
@@ -112,7 +120,7 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                     )
                 with b2:
                     if st.button("Anonymize data"):
-                        print("Anonymizing data...")
+                        sv.anonymize_epsilon.value = epsilon
                         df = sv.anonymize_sensitive_df.value
                         with st.spinner("Anonymizing data..."):
                             acd.anonymize_case_data(
@@ -122,7 +130,10 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                             sv.anonymize_synthetic_df.value = acd.synthetic_df
                             sv.anonymize_aggregate_df.value = acd.aggregate_df
                             sv.anonymize_delta.value = f"{acd.delta:.2e}"
-
+                if epsilon > 12:
+                    st.warning(
+                        "Epsilon is above the recommended threshold of 12"
+                    )
                 st.markdown(
                     "#### Analyze data",
                     help="Tables show three evaluation metrics for each **Length** of attribute combination up to 4, plus an **Overall** average.\n\n- **Count +/- Error** is the average number of records for the combination length +/- the average absolute error in the number of records.\n- **Suppressed %** is the percentage of the total attribute counts that were suppressed, i.e., present in the Sensitive data but not the Aggregate/Synthetic data.\n- **Fabricated %** is the percentage of the total attribute counts that were fabricated, i.e., present in the Aggregate/Synthetic data but not the Sensitive data.\n\nPercentages are calculated with respect to attribute counts in the Sensitive data.\n\n**Rule of thumb**: For the Synthetic data, aim to keep the Overall Error below the Overall Count, Suppressed % below 10%, and Fabricated % below 1%.",
@@ -138,12 +149,24 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                         hide_index=True,
                         use_container_width=False,
                     )
+                    error_str = acd.aggregate_error_report[acd.aggregate_error_report["Length"] == "Overall"]["Count +/- Error"].values[0]
+                    mean_count, mean_error = error_str.split(" +/- ")
+                    if float(mean_error) <= float(mean_count):
+                        st.success("Error < Count on average: data quality is good")
+                    else:
+                        st.warning("Error > Count on average: simplify sensitive data to improve")
                     st.markdown("###### Synthetic data quality")
                     st.dataframe(
                         acd.synthetic_error_report,
                         hide_index=True,
                         use_container_width=False,
                     )
+                    error_str = acd.synthetic_error_report[acd.synthetic_error_report["Length"] == "Overall"]["Count +/- Error"].values[0]
+                    mean_count, mean_error = error_str.split(" +/- ")
+                    if float(mean_error) <= float(mean_count):
+                        st.success("Error < Count on average: data quality is good")
+                    else:
+                        st.warning("Error > Count on average: simplify sensitive data to improve")
                     st.warning(
                         "**Caution**: These tables should only be used to evaluate the quality of data for release. Sharing them compromises privacy."
                     )
