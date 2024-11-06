@@ -11,11 +11,11 @@ from typing import Any
 
 import tiktoken
 
+from intelligence_toolkit.AI.base_chat import BaseChat
+from intelligence_toolkit.AI.client import OpenAIClient
 from intelligence_toolkit.AI.defaults import DEFAULT_ENCODING, DEFAULT_REPORT_BATCH_SIZE
 from intelligence_toolkit.AI.validation_prompt import GROUNDEDNESS_PROMPT
 from intelligence_toolkit.helpers.progress_batch_callback import ProgressBatchCallback
-from intelligence_toolkit.AI.base_chat import BaseChat
-from intelligence_toolkit.AI.client import OpenAIClient
 
 log = logging.getLogger(__name__)
 
