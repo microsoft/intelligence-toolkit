@@ -81,10 +81,6 @@ name = "pytorch_cpu"
 url = "https://download.pytorch.org/whl/cpu"
 priority = "explicit"
 
-[[tool.poetry.source]]
-name = "pytorch_gpu"
-url = "https://download.pytorch.org/whl"
-priority = "explicit"
 
 [build-system]
 requires = ["poetry-core"]
