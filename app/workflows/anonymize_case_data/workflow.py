@@ -348,6 +348,8 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                         options=chart_type_options,
                         index=chart_type_options.index(
                             st.session_state[f"{workflow}_chart_type"]
+                            if f"{workflow}_chart_type" in st.session_state
+                            else chart_type_options[0]
                         ),
                     )
                     if chart_type == "Top attributes":
@@ -368,19 +370,49 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                             f"{workflow}_chart_individual_configuration"
                         ]
                         st.markdown("##### Configure top attributes chart")
+                        print(
+                            'chart_individual_configuration["show_attributes"]',
+                            chart_individual_configuration["show_attributes"],
+                        )
+                        default_attrs = st.session_state[
+                            f"{workflow}_chart_individual_configuration"
+                        ]["show_attributes"]
+                        # check if default attrs are in sdf.columns()
+                        default_attrs_existing = [
+                            attr
+                            for attr in default_attrs
+                            if attr in sdf.columns.to_numpy()
+                        ]
                         show_attributes = st.multiselect(
                             "Types of top attributes to show",
                             options=sdf.columns.to_numpy(),
-                            default=chart_individual_configuration["show_attributes"],
+                            default=(
+                                chart_individual_configuration["show_attributes"]
+                                if (len(default_attrs_existing) == len(default_attrs))
+                                else []
+                            ),
                         )
                         num_values = st.number_input(
                             "Number of top attribute values to show",
                             value=chart_individual_configuration["num_values"],
                         )
-                        chart_individual_configuration["show_attributes"] = (
+
+                        if (
                             show_attributes
-                        )
-                        chart_individual_configuration["num_values"] = num_values
+                            != st.session_state[
+                                f"{workflow}_chart_individual_configuration"
+                            ]["show_attributes"]
+                        ):
+                            st.session_state[
+                                f"{workflow}_chart_individual_configuration"
+                            ]["show_attributes"] = show_attributes
+                            st.rerun()
+
+                        if num_values != chart_individual_configuration["num_values"]:
+                            st.session_state[
+                                f"{workflow}_chart_individual_configuration"
+                            ]["num_values"] = num_values
+                            st.rerun()
 
                         chart, chart_df = acd.get_bar_chart_fig(
                             selection=selection,
@@ -411,18 +443,33 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                             options=time_options,
                             index=time_options.index(
                                 chart_individual_configuration["time_attribute"]
+                                if chart_individual_configuration["time_attribute"]
+                                in sdf.columns.to_numpy()
+                                else None,
                             ),
                         )
                         series_attributes = st.multiselect(
                             "Series attributes",
                             options=list(sdf.columns.to_numpy())
                         )
-                        chart_individual_configuration["time_attribute"] = (
+
+                        if (
                             time_attribute
-                        )
-                        chart_individual_configuration["series_attributes"] = (
-                            series_attributes
-                        )
+                            != chart_individual_configuration["time_attribute"]
+                        ):
+                            st.session_state[
+                                f"{workflow}_chart_individual_configuration"
+                            ]["time_attribute"] = time_attribute
+                            st.rerun()
+
+                        if (
+                            time_attribute
+                            != chart_individual_configuration["series_attributes"]
+                        ):
+                            st.session_state[
+                                f"{workflow}_chart_individual_configuration"
+                            ]["series_attributes"] = time_attribute
+                            st.rerun()
 
                         if time_attribute != "" and len(series_attributes) > 0:
                             chart, chart_df = acd.get_line_chart_fig(
@@ -459,6 +506,9 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                             options=attribute_type_options,
                             index=attribute_type_options.index(
                                 chart_individual_configuration["source_attribute"]
+                                if chart_individual_configuration["source_attribute"]
+                                in attribute_type_options
+                                else None,
                             ),
                         )
                         target_attribute = st.selectbox(
@@ -466,6 +516,9 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                             options=attribute_type_options,
                             index=attribute_type_options.index(
                                 chart_individual_configuration["target_attribute"]
+                                if chart_individual_configuration["target_attribute"]
+                                in attribute_type_options
+                                else None,
                             ),
                         )
                         highlight_attribute = st.selectbox(
@@ -473,17 +526,38 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                             options=highlight_options,
                             index=highlight_options.index(
                                 chart_individual_configuration["highlight_attribute"]
+                                if chart_individual_configuration["highlight_attribute"]
+                                in highlight_options
+                                else None,
                             ),
                         )
-                        chart_individual_configuration["source_attribute"] = (
+
+                        if (
                             source_attribute
-                        )
-                        chart_individual_configuration["target_attribute"] = (
+                            != chart_individual_configuration["source_attribute"]
+                        ):
+                            st.session_state[
+                                f"{workflow}_chart_individual_configuration"
+                            ]["source_attribute"] = source_attribute
+                            st.rerun()
+
+                        if (
                             target_attribute
-                        )
-                        chart_individual_configuration["highlight_attribute"] = (
+                            != chart_individual_configuration["target_attribute"]
+                        ):
+                            st.session_state[
+                                f"{workflow}_chart_individual_configuration"
+                            ]["target_attribute"] = target_attribute
+                            st.rerun()
+
+                        if (
                             highlight_attribute
-                        )
+                            != chart_individual_configuration["highlight_attribute"]
+                        ):
+                            st.session_state[
+                                f"{workflow}_chart_individual_configuration"
+                            ]["highlight_attribute"] = highlight_attribute
+                            st.rerun()
 
                         if source_attribute != "" and target_attribute != "":
                             # export_df = compute_flow_query(selection, sv.anonymize_synthetic_df.value, adf, att_separator, val_separator, data_schema, source_attribute, target_attribute, highlight_attribute)

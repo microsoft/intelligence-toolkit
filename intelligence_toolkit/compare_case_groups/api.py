@@ -80,7 +80,7 @@ class CompareCaseGroups(IntelligenceWorkflow):
         return sorted_atts
 
     def _select_columns_ranked_df(self, ranked_df: pl.DataFrame) -> None:
-        columns = [g.lower() for g in self.groups]
+        columns = self.groups
         default_columns = [
             "group_count",
             "group_rank",
@@ -100,7 +100,6 @@ class CompareCaseGroups(IntelligenceWorkflow):
                     f"{self.temporal}_window_delta",
                 ]
             )
-
         self.model_df = ranked_df.select(columns)
 
     def create_data_summary(
@@ -136,7 +135,9 @@ class CompareCaseGroups(IntelligenceWorkflow):
         if temporal:
             window_df = create_window_df(groups, temporal, aggregates, self.filtered_df)
 
-            temporal_atts = sorted(self.model_df[temporal].cast(pl.Utf8).unique())
+            temporal_atts = sorted(
+                self.model_df[temporal].cast(pl.Utf8).unique().drop_nulls()
+            )
 
             temporal_df = build_temporal_data(
                 window_df, groups, temporal_atts, temporal

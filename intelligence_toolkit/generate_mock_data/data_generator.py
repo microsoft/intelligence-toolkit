@@ -7,7 +7,6 @@ import pandas as pd
 import intelligence_toolkit.AI.utils as utils
 import intelligence_toolkit.generate_mock_data.prompts as prompts
 import intelligence_toolkit.generate_mock_data.schema_builder as schema_builder
-import intelligence_toolkit.AI.utils as utils
 from intelligence_toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 
@@ -64,7 +63,12 @@ async def generate_data(
 
         for new_object in new_objects:
             print(new_object)
-            new_object_json = loads(new_object)
+            try:
+                new_object_json = loads(new_object)
+            except Exception as e:
+                msg = f"AI did not return a valid JSON response. Please try again. {e}"
+                raise ValueError(msg) from e
+
             generated_objects.append(new_object_json)
             current_object_json, conflicts = merge_json_objects(
                 current_object_json, new_object_json
