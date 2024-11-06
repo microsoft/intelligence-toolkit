@@ -156,35 +156,37 @@ Non-profit organizations can apply for an annual Azure credit grant of $2,000, w
 
 ### Getting started
 
-- To start using the api, install it via pypi.
+#### Using Intelligence Toolkit as a web application
 
-      pip install intelligence-toolkit
+To use Intelligence Toolkit as a web application, you can download and run it using a tool called Docker.
 
-      # Find examples in the `example_notebooks` folder.
+- Download, install, and then open the Docker Desktop app: https://www.docker.com/products/docker-desktop/
 
-- To pull the latest docker image with the app interface, pull it with docker.
+- Open a terminal according to your OS:
 
-  Download, install and then open docker app: https://www.docker.com/products/docker-desktop/
+  - If you are using Windows, search for and open the app `Windows Powershell` in the Windows start menu
 
-  Then, open a terminal:
-  Windows: Search and open the app `Windows Powershell` on Windows start menu
+  - If you are using Linux or Mac, search for and open `Terminal`
 
-  Linux and Mac: Open `Terminal`
-
-  Pull the container:
+- Download a copy of the Intelligence Toolkit application from GitHub by pasting the following command into your terminal and pressing enter:
 
   `docker pull ghcr.io/microsoft/intelligence-toolkit:latest`
 
-  Once the download is finished, run the docker container:
+- Once the download is finished, run the Intelligence Toolkit application using Docker by pasting the following command into your terminal and pressing enter:
 
-  - via terminal:
+  `docker run -d --name intelligence-toolkit -p 80:80 ghcr.io/microsoft/intelligence-toolkit:latest`
 
-      `docker run -d --name intelligence-toolkit -p 80:80 ghcr.io/microsoft/intelligence-toolkit:latest`
-
-      Open [localhost:80](http://localhost:80)
+- In your web browser, open [localhost:80](http://localhost:80) to use Intelligence Toolkit
   
-  **Note that docker might sleep and you might need to start it again. Open Docker Desktop, in the left menu click on Container and press play on intelligence-toolkit.**
+**Note that Docker might sleep and need restarting. In this case, open Docker Desktop, select Container in the left menu, then press play on intelligence-toolkit.**
 
+#### Using Intelligence Toolkit as a Python package
+
+- To use Intelligence Toolkit as a Python package, install it via PyPI:
+
+      pip install intelligence-toolkit
+
+- Find examples in the `example_notebooks` folder of this repository.
 
 - To start developing, see [DEVELOPING.md](./DEVELOPING.md).
 - To instructions on how to deploy, see [DEPLOYING.md](./DEPLOYING.md).
