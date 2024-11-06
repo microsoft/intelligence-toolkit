@@ -120,9 +120,9 @@ The checkbox `Suppress boolean False / binary 0` is also selected by default. Th
 
 Rename `age` to `age_range` and `quarter` to `period`.
 
-#### Evaluating synthesizability
+#### Evaluating anonymizability
 
-The `Synthesizability summary` gives an initial indication of how easy it will be to generate high-accurary synthetic data given the number of attribute combinations in the final sensitive dataset. The smaller each of these numbers, the better:
+The `Anonymizability summary` gives an initial indication of how easy it will be to generate high-accurary anonymous data given the number of attribute combinations in the final sensitive dataset. The smaller each of these numbers, the better:
 
 - `Number of selected columns`: The number of columns after all data transformations
 - `Number of distinct attribute values`: The number of distinct attribute values across selected columns
@@ -132,7 +132,7 @@ The `Synthesizability summary` gives an initial indication of how easy it will b
 - `Typical combinations per record`: The number of possible combinations in the typical number of attribute values(2^typical_values)
 - `Excess combinations ratio`: Theoretical combinations per record / Typical combinations per record
 
-The last metric, `Excess combinations ratio`, is the main one to pay attention to in terms of synthesizability. As a rule of thumb, try to keep this ratio at or below `5`. The general idea here is that datasets should have sufficient records to support all possible combinations of attribute values, given the number of distinct attribute values in each column. Not all combinations will be present in most cases &ndash; data records tend to cluster around certain attribute patterns &ndash; so it is ok for this value to be greater than `1`. How far it can actually go and still yield high-accuracy synthetic data depends on how many of these possible attribute combinations are actually observed in the data.
+The last metric, `Excess combinations ratio`, is the main one to pay attention to in terms of anonymizability. As a rule of thumb, try to keep this ratio at or below `5`. The general idea here is that datasets should have sufficient records to support all possible combinations of attribute values, given the number of distinct attribute values in each column. Not all combinations will be present in most cases &ndash; data records tend to cluster around certain attribute patterns &ndash; so it is ok for this value to be greater than `1`. How far it can actually go and still yield high-accuracy anonymous data depends on how many of these possible attribute combinations are actually observed in the data.
 
 ### Generating anonymous data
 

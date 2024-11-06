@@ -2,7 +2,6 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 
 import math
-
 import pandas as pd
 import plotly.graph_objects as go
 from pacsynth import (
@@ -41,7 +40,9 @@ class AnonymizeCaseData(IntelligenceWorkflow):
             distinct_values = [
                 x for x in df[col].astype(str).unique() if x not in ["", "nan"]
             ]
-            distinct_counts.append(len(distinct_values))
+            num = len(distinct_values)
+            if num > 0:
+                distinct_counts.append(num)
         distinct_counts.sort()
         overall_att_count = sum(distinct_counts)
         possible_combinations = math.prod(distinct_counts)
