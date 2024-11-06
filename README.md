@@ -148,45 +148,58 @@ flowchart TD
 
 ## Diving Deeper
 
-### NGOs
-
-Non-profit organizations can apply for an annual Azure credit grant of $2,000, which can be used to set up and run an instance of the intelligence-toolkit app for your organization.
-
-[Read more about eligibility and registration here](https://www.microsoft.com/en-us/nonprofits/azure)
-
 ### Getting started
 
-#### Using Intelligence Toolkit as a web application
+You can start using the Intelligence Toolkit as either a web application (with a tool called Docker) or a Python package (via PyPI). Choose one of the options below based on your needs.
 
-To use Intelligence Toolkit as a web application, you can download and run it using a tool called Docker.
+**Option 1: Using Intelligence Toolkit as a Web Application (via Docker)**
 
-- Download, install, and then open the Docker Desktop app: https://www.docker.com/products/docker-desktop/
+To use the Intelligence Toolkit as a web application, you can download and run it using Docker.
 
-- Open a terminal according to your OS:
+**1. Install Docker:**
 
-  - If you are using Windows, search for and open the app `Windows Powershell` in the Windows start menu
+Download and install Docker Desktop from [docker.com](https://www.docker.com/products/docker-desktop/).
 
-  - If you are using Linux or Mac, search for and open `Terminal`
+Start the Docker Desktop app and make sure it’s running before proceeding.
 
-- Download a copy of the Intelligence Toolkit application from GitHub by pasting the following command into your terminal and pressing enter:
+**2. Open Terminal:**
+
+Open a terminal according to your OS:
+ 
+  - If you are using Windows, search for and open the app `Windows Powershell` in the Windows start menu.
+ 
+  - If you are using Linux or Mac, search for and open `Terminal`.
+
+**3. Pull the Docker Container:**
+
+Download a copy of the Intelligence Toolkit application from GitHub:
 
   `docker pull ghcr.io/microsoft/intelligence-toolkit:latest`
 
-- Once the download is finished, run the Intelligence Toolkit application using Docker by pasting the following command into your terminal and pressing enter:
+**Note:** The image is approximately 2GB, so the download may take some time depending on your internet speed.
+
+**4. Run the Docker Container:**
+
+Once the download is finished, run the Intelligence Toolkit application using Docker by pasting the following command into your terminal and pressing enter:
 
   `docker run -d --name intelligence-toolkit -p 80:80 ghcr.io/microsoft/intelligence-toolkit:latest`
+    
 
-- In your web browser, open [localhost:80](http://localhost:80) to use Intelligence Toolkit
-  
-**Note that Docker might sleep and need restarting. In this case, open Docker Desktop, select Container in the left menu, then press play on intelligence-toolkit.**
+**5. Access the Web Application:**
 
-#### Using Intelligence Toolkit as a Python package
+Open [http://localhost:80](http://localhost:80) in your web browser to start using Intelligence Toolkit.
 
-- To use Intelligence Toolkit as a Python package, install it via PyPI:
+**Note:** Docker Desktop App may enter sleep mode if inactive. In this case, open Docker Desktop, select Container in the left menu, then press play on intelligence-toolkit.
 
-      pip install intelligence-toolkit
+**Option 2: Using Intelligence Toolkit as a Python Package (via PyPI)**
 
-- Find examples in the `example_notebooks` folder of this repository.
+If you prefer to use Intelligence Toolkit as a Python package, install it directly from PyPI:
+    
+`pip install intelligence-toolkit`
+
+After installation, explore the examples in the example_notebooks folder to get started with various functionalities.
+
+<hr>
 
 - To start developing, see [DEVELOPING.md](./DEVELOPING.md).
 - To instructions on how to deploy, see [DEPLOYING.md](./DEPLOYING.md).
@@ -194,6 +207,14 @@ To use Intelligence Toolkit as a web application, you can download and run it us
 - For license details, see [LICENSE.md](./LICENSE.md).
 
 If you have any questions or need further assistance, you can reach out to the project maintainers at [itkteam@microsoft.com](mailto:itkteam@microsoft.com).
+
+<hr>
+
+### NGOs
+
+Non-profit organizations can apply for an annual Azure credit grant of $2,000, which can be used to set up and run an instance of the intelligence-toolkit app for your organization.
+
+[Read more about eligibility and registration here](https://www.microsoft.com/en-us/nonprofits/azure)
 
 ## Trademarks
 
