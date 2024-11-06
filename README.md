@@ -171,19 +171,11 @@ Non-profit organizations can apply for an annual Azure credit grant of $2,000, w
 
   Linux and Mac: Open `Terminal`
 
-  For any OS:
+  Pull the container:
 
-  Navigate to the folder where you cloned this repo. 
+  `docker pull ghcr.io/microsoft/intelligence-toolkit:latest`
 
-  Use `cd `+ the path to the folder. For example:
-
-  `cd C:\Users\user01\projects\intelligence-toolkit`
-
-  Build the container:
-
-  `docker build . -t intelligence-toolkit`
-
-  Once the build is finished, run the docker container:
+  Once the download is finished, run the docker container:
 
   - via terminal:
 
