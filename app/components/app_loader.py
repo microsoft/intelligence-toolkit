@@ -3,23 +3,22 @@
 #
 import os
 
+import components.app_mode as am
+import components.app_user as au
 import streamlit as st
+from components.app_auth import check_password, load_passwords
+from javascript.styles import add_styles
 from streamlit.source_util import (
     _on_pages_changed,
     get_pages,
 )
-
-import app.components.app_mode as am
-import app.components.app_user as au
-from app.components.app_auth import check_password, load_passwords
-from app.javascript.styles import add_styles
 
 
 def load_multipage_app(sv=None):
     if os.getenv("AUTH_ENABLED") == "TRUE":
         load_passwords()
         check_password()
-    if os.getenv("MODE") == "CLOUD":
+    if os.getenv("HIDE_SETTINGS") == "TRUE":
         current_pages = get_pages("Home.py")
 
         for key, value in current_pages.items():
