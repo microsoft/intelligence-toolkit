@@ -197,7 +197,7 @@ To effectively manage user access and configuration settings in your app's deplo
 
 - **Hiding the Settings Page**
 
-  Use `HIDE_SETTINGS: TRUE` to conceal the Settings page. This prevents users from altering configurations that could impact the experience for other users.
+  Use `HIDE_SETTINGS=TRUE` to conceal the Settings page. This prevents users from altering configurations that could impact the experience for other users.
 
 - **OpenAI API Key**
 
@@ -205,7 +205,7 @@ To effectively manage user access and configuration settings in your app's deplo
 
 - **Authentication**
 
-  Enable `AUTH_ENABLED: TRUE` to restrict app access to authorized users with credentials defined in a `.secrets.toml` file under the `.streamlit` directory:
+  Enable `AUTH_ENABLED=TRUE` to restrict app access to authorized users with credentials defined in a `.secrets.toml` file under the `.streamlit` directory:
 
   ```toml
   [passwords]
@@ -222,7 +222,7 @@ When deploying your app on Azure or AWS, you may need to configure user credenti
   Add credentials in the format `user=password`, separated by semicolons (`;`), to your web app's environment variables:
 
   ```plaintext
-  USER_CREDENTIALS="user1=pass1;user2=pass2"
+  USER_CREDENTIALS="user1=pwd1;user2=pwd2"
   ```
 
 This setup ensures secure handling of user authentication and sensitive configurations across different deployment platforms. By using these configurations, you can maintain control over user access and protect essential settings.
