@@ -337,7 +337,7 @@ def build_report_markdown(
     matched_chunks = {
         f"{text['title']} ({text['chunk_id']})": text for text in text_jsons
     }
-    home_link = "#" + content_structure["report_title"].replace(" ", "-").lower()
+    home_link = "#report"
     report = f'# Report\n\n## Query\n\n*{query}*\n\n## Expanded Query\n\n*{expanded_query}*\n\n## Answer\n\n{content_structure["answer"]}\n\n## Analysis\n\n### {content_structure["report_title"]}\n\n{content_structure["report_summary"]}\n\n'
     for theme in content_structure["theme_order"]:
         report += f'#### Theme: {theme["theme_title"]}\n\n{theme["theme_summary"]}\n\n'
@@ -378,8 +378,12 @@ def cluster_cids(relevant_cids, cid_to_vector, target_clusters):
     clustered_cids = {}
     if len(relevant_cids) > 0:
         # use k-means clustering to group relevant cids into target_clusters clusters
-        cids = [cid for cid in relevant_cids]
-        vectors = [cid_to_vector[cid] for cid in cids]
+        cids = []
+        vectors = []
+        for relevant_cid in relevant_cids:
+            if relevant_cid in cid_to_vector:
+                cids.append(relevant_cid)
+                vectors.append(cid_to_vector[relevant_cid])
         kmeans = cluster.KMeans(n_clusters=target_clusters)
         kmeans.fit(vectors)
         cluster_assignments = kmeans.predict(vectors)
