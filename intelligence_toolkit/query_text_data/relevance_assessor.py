@@ -174,8 +174,9 @@ async def detect_relevant_chunks(
         community_mean_rank = []
 
         for community, cids in level_to_community_to_candidate_cids[level].items():
+            filtered_cids = [c for c in cids if c in semantic_search_cids]
             mean_rank = np.mean(
-                sorted([semantic_search_cids.index(c) for c in cids])[
+                sorted([semantic_search_cids.index(c) for c in filtered_cids])[
                     : chunk_search_config.community_ranking_chunks
                 ]
             )
