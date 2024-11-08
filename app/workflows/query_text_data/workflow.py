@@ -80,7 +80,7 @@ async def create(sv: SessionVariables, workflow=None):
             )
         else:
             file_chunks = st.file_uploader(
-                "Upload processed files",
+                "Upload processed chunks",
                 type=["csv"],
                 key="chunk_uploader_" + st.session_state[f"{workflow}_uploader_index"],
             )
@@ -137,8 +137,8 @@ async def create(sv: SessionVariables, workflow=None):
 
         if qtd.label_to_chunks and upload_type == "Raw files":
             st.download_button(
-                label="Download processed data",
-                help="Download the processed data as a CSV file to reuse later.",
+                label="Download chunk data",
+                help="Export chunk data as CSV",
                 data=qtd.get_chunks_as_df().to_csv(),
                 file_name=f"processed_data_{len(qtd.label_to_chunks)}_query_text.csv",
                 mime="text/csv",
