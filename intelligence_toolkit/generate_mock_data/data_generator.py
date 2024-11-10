@@ -55,7 +55,7 @@ async def generate_data(
         required = remainder / records_per_batch
         if not required.is_integer():
             required += 1
-        batches = min(parallel_batches, required)
+        batches = min(parallel_batches, int(required))
         sample_records = sample_from_record_array(
             current_object_json, primary_record_array, batches
         )
