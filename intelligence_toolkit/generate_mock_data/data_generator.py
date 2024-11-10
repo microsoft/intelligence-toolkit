@@ -23,7 +23,6 @@ async def generate_data(
     callback_batch,
     parallel_batches=5,
 ):
-    num_iterations = num_records_overall // (records_per_batch * parallel_batches)
     record_arrays = extract_array_fields(data_schema)
     primary_record_array = record_arrays[0]
     generated_objects = []
@@ -31,22 +30,36 @@ async def generate_data(
         ai_configuration=ai_configuration,
         generation_guidance=generation_guidance,
         primary_record_array=primary_record_array,
-        total_records=parallel_batches,
+        total_records=records_per_batch,
         data_schema=data_schema,
         temperature=temperature,
     )
     first_object_json = loads(first_object)
-    current_object_json = {}
+    try:
+        first_object_json = loads(first_object)
+    except Exception as e:
+        msg = f"AI did not return a valid JSON response. Please try again. {e}"
+        raise ValueError(msg) from e
+    generated_objects.append(first_object_json)
+    current_object_json = first_object_json.copy()
     dfs = {}
-    for i in range(num_iterations):
-        if i == 0:
-            sample_records = sample_from_record_array(
-                first_object_json, primary_record_array, records_per_batch
-            )
-        else:
-            sample_records = sample_from_record_array(
-                current_object_json, primary_record_array, parallel_batches
-            )
+    for record_array in record_arrays:
+        df = extract_df(current_object_json, record_array)
+        dfs[".".join(record_array)] = df
+    if df_update_callback is not None:
+        df_update_callback(dfs)
+      
+    num_records = records_per_batch
+    while num_records < num_records_overall:
+        remainder = num_records_overall - num_records
+        required = remainder / records_per_batch
+        if not required.is_integer():
+            required += 1
+        batches = min(parallel_batches, required)
+        sample_records = sample_from_record_array(
+            current_object_json, primary_record_array, batches
+        )
+        num_records += records_per_batch * parallel_batches
         # Use each as seed for parallel gen
         new_objects = await generate_seeded_data(
             ai_configuration=ai_configuration,
@@ -62,7 +75,6 @@ async def generate_data(
         )
 
         for new_object in new_objects:
-            print(new_object)
             try:
                 new_object_json = loads(new_object)
             except Exception as e:

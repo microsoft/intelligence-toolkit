@@ -19,7 +19,6 @@ def build_schema_ui(global_schema, last_filename):
             jsn = loads(file.read())
             for k, v in jsn.items():
                 global_schema[k] = v
-            print(f'Loaded schema: {global_schema}')
         st.markdown('### Edit data schema')
         generate_form_from_json_schema(
             global_schema=global_schema,
@@ -255,7 +254,6 @@ def create_enum_ui(field_location, key, key_with_prefix, value):
                     value['enum'].pop(i)
                 st.rerun()
     new_enum_value = st.text_input(f'New value', key=f'{key_with_prefix}_new_enum_{"_".join([str(x) for x in value["enum"]])}', value="")
-    print(new_enum_value)
     if new_enum_value != "" and new_enum_value not in value['enum']:
         if value['type'] == 'string':
             value['enum'].append(new_enum_value)
