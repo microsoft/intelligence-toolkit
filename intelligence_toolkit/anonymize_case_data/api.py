@@ -317,12 +317,13 @@ class AnonymizeCaseData(IntelligenceWorkflow):
         att_separator: str = ";",
         val_separator: str = ":",
     ):
+        selection_keys = [x["attribute"] + val_separator + x["value"] for x in selection]
         att_count = 2 if highlight_attribute == "" else 3
         att_count += len(selection)
         if att_count <= 4:
             chart_df = queries.compute_aggregate_graph(
                 self.aggregate_df,
-                selection,
+                selection_keys,
                 source_attribute,
                 target_attribute,
                 highlight_attribute,
@@ -332,7 +333,7 @@ class AnonymizeCaseData(IntelligenceWorkflow):
         else:
             chart_df = queries.compute_synthetic_graph(
                 self.synthetic_df,
-                selection,
+                selection_keys,
                 source_attribute,
                 target_attribute,
                 highlight_attribute,

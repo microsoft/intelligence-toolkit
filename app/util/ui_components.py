@@ -382,9 +382,12 @@ def prepare_input_df(
             # add to all subsequent dataframes if not present
             for df in df_sequence[df_sequence.index(df_name) + 1:]:
                 if df in st.session_state[f"{workflow}_intermediate_dfs"]:
-                    st.session_state[f"{workflow}_intermediate_dfs"][df][col] = last_df[
-                        col
-                    ]
+                    if col in st.session_state[f"{workflow}_selected_compound_cols"]: # and df_name in ["expanded", "suppress_count", "suppress_null"]:
+                        pass
+                    else:
+                        st.session_state[f"{workflow}_intermediate_dfs"][df][col] = last_df[
+                            col
+                        ]
         if reset:
             for df in df_sequence[index:]:
                 st.session_state[f"{workflow}_intermediate_dfs"][df] = prior_df.copy(deep=True)
@@ -551,19 +554,20 @@ def prepare_input_df(
         options = [
             x for x in last_df.columns.to_numpy()
         ]
-        columns = [
-            x
-            for x in options
-            if x not in st.session_state[f"{workflow}_selected_compound_cols"]
-        ]
+        # columns = [
+        #     x
+        #     for x in options
+        #     if x not in st.session_state[f"{workflow}_selected_compound_cols"]
+        # ]
         selected_compound_cols = st.multiselect(
             "Select compound columns to expand",
-            columns,
+            options,
+            key=f"{workflow}_selected_compound_cols",
             help="Select the columns you want to expand into separate columns. If you do not select any columns, no expansion will be performed.",
         )
         col_delimiter = st.text_input(
             "Column delimiter",
-            value="",
+            value=",",
             help="The character used to separate values in compound columns. If the delimiter is not present in a cell, the cell will be left unchanged. Any quotes around the entire list or individual values will be removed before processing, as will any enclosing square brackets.",
         )
         prefix_type = st.radio(
@@ -589,35 +593,35 @@ def prepare_input_df(
                     col_delimiter != ""
                     and to_add not in st.session_state[f"{workflow}_selected_compound_cols"]
                 ):
-                    st.session_state[f"{workflow}_selected_compound_cols"].append(to_add)
-                    for cols, delim in st.session_state[
+                    # st.session_state[f"{workflow}_selected_compound_cols"].append(to_add)
+                    for col in st.session_state[
                         f"{workflow}_selected_compound_cols"
                     ]:
-                        for col in cols:
-                            if prefix_type == "Source column":
-                                prefix = col
-                            def convert_to_list(x):
-                                if type(x) != str:
-                                    return []
-                                if x[0] == "[" and x[-1] == "]":
-                                    x = x[1:-1]
-                                vals = [y.strip() for y in x.split(delim)]
-                                vals = [y[1:-1] if y[0] == '"' and y[-1] == '"' else y for y in vals if len(y) > 1]
-                                vals = [y[1:-1] if y[0] == '\'' and y[-1] == '\'' else y for y in vals if len(y) > 1]
-                                if prefix != "":
-                                    vals = [f"{prefix}{y}" for y in vals]
-                                return vals
-                            # add each value as a separate column with a 1 if the value is present in the compound column and None otherwise
-                            values = last_df[col].apply(convert_to_list)
-                            unique_values = {v for vals in values for v in vals}
-                            unique_values = [x for x in unique_values if x != ""]
-                            for val in unique_values:
-                                st.session_state[f"{workflow}_{val}"] = False
-                                this_df[val] = values.apply(
-                                    lambda x: "1" if val in x and val != "nan" else ""
-                                )
-                            if col in this_df.columns:
-                                this_df.drop(columns=[col], inplace=True)
+
+                        if prefix_type == "Source column":
+                            prefix = col
+                        def convert_to_list(x):
+                            if type(x) != str:
+                                return []
+                            if x[0] == "[" and x[-1] == "]":
+                                x = x[1:-1]
+                            vals = [y.strip() for y in x.split(col_delimiter)]
+                            vals = [y[1:-1] if y[0] == '"' and y[-1] == '"' else y for y in vals if len(y) > 1]
+                            vals = [y[1:-1] if y[0] == '\'' and y[-1] == '\'' else y for y in vals if len(y) > 1]
+                            if prefix != "":
+                                vals = [f"{prefix}{y}" for y in vals]
+                            return vals
+                        # add each value as a separate column with a 1 if the value is present in the compound column and None otherwise
+                        values = last_df[col].apply(convert_to_list)
+                        unique_values = {v for vals in values for v in vals}
+                        unique_values = [x for x in unique_values if x != ""]
+                        for val in unique_values:
+                            st.session_state[f"{workflow}_{val}"] = False
+                            this_df[val] = values.apply(
+                                lambda x: "1" if val in x and val != "nan" else ""
+                            )
+                        if col in this_df.columns:
+                            this_df.drop(columns=[col], inplace=True)
                 df_updated("expanded", False)
         with c2:
             if st.button("Reset", key="reset_expand"):
