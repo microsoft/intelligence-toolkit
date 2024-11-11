@@ -51,8 +51,8 @@ def load_passwords() -> None:
     if credentials_string:
         user_pairs = credentials_string.split(";")
         for pair in user_pairs:
-            if "=" in pair:
-                user, password = pair.split("=")
+            if ":" in pair:
+                user, password = pair.split(":")
                 credentials_dict[user] = password
 
         secrets_content = {"passwords": credentials_dict}

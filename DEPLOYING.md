@@ -220,10 +220,10 @@ When deploying your app on Azure or AWS, you may need to configure user credenti
 
 - **User Credentials Environment Variable**
 
-  Add credentials in the format `user=password`, separated by semicolons (`;`), to your web app's environment variables:
+  Add credentials in the format `user:password`, separated by semicolons (`;`), to your web app's environment variables:
 
   ```plaintext
-  USER_CREDENTIALS="user1=pwd1;user2=pwd2"
+  USER_CREDENTIALS="user1:pwd1;user2:pwd2"
   ```
 
 This setup ensures secure handling of user authentication and sensitive configurations across different deployment platforms. By using these configurations, you can maintain control over user access and protect essential settings.
