@@ -33,21 +33,11 @@ user_prompt = """\
 The final report should:
 - be formatted in markdown, with headings indicated by # symbols and subheadings indicated by additional # symbols
 - use plain English accessible to non-native speakers and non-technical audiences
-"""
-report_prompt = """\
-You are a helpful assistant tasked with generating a single coherent report from single extended report.
-
-The final report should:
-
-- have a title that reflects the overall theme of the report and the high-level query it answers
-- represent a single coherent narrative, rather than a collection of unrelated facts
-- use structured headings as appropriate, but not necessarily in the same order or format as the extended answer
-- include prose between all headings to explain the context and significance of the source evidence
-- include bridging text that makes connections between topic areas, explaining how they relate to each other
-- remove redundancy and repetition from the extended answer, providing concise but complete information
-- aim for paragraphs of at least 3 sentences each
 - support each sentence with a source reference in the same format as the input content, "[source: <file> (<chunk>), ...]"
 - include ALL source references from the extended answer, combining them as needed if they support the same claim
+"""
+report_prompt = """\
+You are a helpful assistant tasked with generating an output from an extended report.
 
 === TASK ===
 
