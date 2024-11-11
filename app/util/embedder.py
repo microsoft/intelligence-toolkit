@@ -2,12 +2,16 @@ from app.util.constants import LOCAL_EMBEDDING_MODEL_KEY
 from app.util.openai_wrapper import UIOpenAIConfiguration
 from app.util.secrets_handler import SecretsHandler
 from intelligence_toolkit.AI.base_embedder import BaseEmbedder
+from intelligence_toolkit.AI.defaults import DEFAULT_CONCURRENT_COROUTINES
 from intelligence_toolkit.AI.local_embedder import LocalEmbedder
 from intelligence_toolkit.AI.openai_embedder import OpenAIEmbedder
 from intelligence_toolkit.query_text_data import config
 
 
-def create_embedder(local_embedding: bool | None = False) -> BaseEmbedder:
+def create_embedder(
+    local_embedding: bool | None = False,
+    concurrent_coroutines: int = DEFAULT_CONCURRENT_COROUTINES,
+) -> BaseEmbedder:
     try:
         ai_configuration = UIOpenAIConfiguration().get_configuration()
         secrets_handler = SecretsHandler()
@@ -20,6 +24,7 @@ def create_embedder(local_embedding: bool | None = False) -> BaseEmbedder:
         return OpenAIEmbedder(
             configuration=ai_configuration,
             db_name=config.cache_name,
+            concurrent_coroutines=concurrent_coroutines,
         )
     except Exception as e:
         print(f"Error creating connection: {e}")
