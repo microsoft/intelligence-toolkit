@@ -62,8 +62,15 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                                 help="Within each batch, how many records should appear closely related to (but not the same as) a seed record randomly selected from existing records")
             st.text_area("AI data generation guidance", key=sv.generation_guidance.key, value=sv.generation_guidance.value,
                          help="Guidance to the generative AI model about how mock data should be generated (e.g., targeting a specific region, time period, industry, etc.)")
-            st.number_input("Temperature", min_value=0.0, max_value=2.0, value=sv.record_synthesis_temperature.value, step=0.1, key=sv.record_synthesis_temperature.key,
-                            help="Temperature is a number between 0 and 2 that affects the variation in AI outputs. Lower temperatures mean less variation, and AI outputs will be more accurate and deterministic. Higher temperatures will result in more diverse outputs.")
+            st.number_input(
+                "Temperature",
+                min_value=0.0,
+                max_value=1.0,
+                value=sv.record_synthesis_temperature.value,
+                step=0.1,
+                key=sv.record_synthesis_temperature.key,
+                help="Temperature is a number between 0 and 1 that affects the variation in AI outputs. Lower temperatures mean less variation, and AI outputs will be more accurate and deterministic. Higher temperatures will result in more diverse outputs.",
+            )
             generate = st.button('Generate mock records')
             df_placeholders = []
             dl_placeholders = []
@@ -149,8 +156,15 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                 sv.generated_texts.value = []
             st.text_area("AI text generation guidance", key=sv.text_generation_guidance.key, value=sv.text_generation_guidance.value,
                         help="Guidance to the generative AI model about how text should be generated from records")
-            st.number_input("Temperature", min_value=0.0, max_value=2.0, value=sv.text_synthesis_temperature.value, step=0.1, key=sv.text_synthesis_temperature.key,
-                            help="Temperature is a number between 0 and 2 that affects the variation in AI outputs. Lower temperatures mean less variation, and AI outputs will be more accurate and deterministic. Higher temperatures will result in more diverse outputs.")
+            st.number_input(
+                "Temperature",
+                min_value=0.0,
+                max_value=1.0,
+                value=sv.text_synthesis_temperature.value,
+                step=0.1,
+                key=sv.text_synthesis_temperature.key,
+                help="Temperature is a number between 0 and 1 that affects the variation in AI outputs. Lower temperatures mean less variation, and AI outputs will be more accurate and deterministic. Higher temperatures will result in more diverse outputs.",
+            )
             generate = st.button('Generate mock texts')
 
         with d2:

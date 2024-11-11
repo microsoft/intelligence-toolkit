@@ -198,7 +198,9 @@ def create(sv: gn_variables.SessionVariables, workflow=None):
                 )
                 num_rows = len(report_data)
                 st.markdown(f"##### Filtered data summary to report on ({num_rows} rows)")
-                st.dataframe(fdf, hide_index=True, use_container_width=True, height=280)
+                st.dataframe(
+                    report_data, hide_index=True, use_container_width=True, height=280
+                )
                 variables = {
                     "description": sv.case_groups_description.value,
                     "dataset": report_data.to_pandas().to_csv(

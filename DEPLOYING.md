@@ -44,12 +44,13 @@ For optimal performance, especially with high concurrent usage, a higher allocat
 
 If you're part of an NGO, you might be eligible for increased resources by applying [here](https://info.snowflake.com/streamlit-resource-increase-request.html). Eligible apps often serve educational institutions, are part of open-source projects, or provide societal benefits. For-profit companies are generally not eligible.
 
-## Optional requirement for Streamlit Cloud
+## Requirement for Streamlit Cloud
 
-- A forked GitHub repository:
-   - Fork the repository to create your own instance with custom modifications. Ensure you keep your repository updated with the main repository to incorporate new code.
-   - You need to have a [github account](https://github.com)
-   - Alternatively, you can use the main repository directly, which will automatically receive updates.
+  - A [github account](https://github.com)
+  - A Forked GitHub repository:
+  - Fork [github.com/intelligence-toolkit](https://github.com/microsoft/intelligence-toolkit)
+    - Ensure you keep your repository updated with the main repository to incorporate new code and bug fixes.
+
 
 ## Deployment Steps
 
@@ -58,8 +59,8 @@ If you're part of an NGO, you might be eligible for increased resources by apply
    - Click on `Create an app` in the top right corner.
    - Choose to deploy a public app from GitHub and configure it with the following:
 
-     - **Repository:** `{your_forked_one}` or `[microsoft/intelligence-toolkit](https://github.com/microsoft/intelligence-toolkit)`
-     - **Branch:** `master`
+     - **Repository:** `{your_forked_one}`
+     - **Branch:** `main`
      - **Main file path:** `app/Home.py`
      - **App URL (optional):** Customize the URL for accessing your app.
 

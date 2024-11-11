@@ -98,6 +98,6 @@ Under `AI text generation guidance`, enter any guidance to the generative AI mod
 
 Given the domain of the example, try `Generate output texts as transcripts of customer complaint calls`.
 
-`Temperature` is a number between 0 and 2 that affects the variation in AI outputs. Lower temperatures mean less variation, and AI outputs will be more accurate and deterministic. Higher temperatures will result in more diverse outputs.
+`Temperature` is a number between 0 and 1 that affects the variation in AI outputs. Lower temperatures mean less variation, and AI outputs will be more accurate and deterministic. Higher temperatures will result in more diverse outputs.
 
 Press `Generate mock texts` to see the mock texts for the given guidance and temperature generated on the right under `Generated texts`.
