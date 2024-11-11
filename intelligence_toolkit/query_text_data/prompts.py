@@ -133,6 +133,8 @@ The output object should summarize all claims from input text chunks as follows:
 
 When presenting evidence, support each sentence with one or more source references: "[source: <source_id>, <source_id>]". Include source IDs only - DO NOT include the chunk ID within the source ID.
 
+Each content item can only be used once, under the most appropriate theme. If a content item is relevant to multiple themes, choose the theme that best captures the main point of the content item.
+
 --TASK--
 
 Content items indexed by id:
