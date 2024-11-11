@@ -63,19 +63,28 @@ async def create(sv: SessionVariables, workflow=None):
         )
     with uploader_tab:
         st.markdown("##### Upload data for processing")
-        files = st.file_uploader(
-            "Upload PDF text files",
-            type=["pdf", "txt", "json", "csv"],
-            accept_multiple_files=True,
-            key="qtd_uploader_" + st.session_state[f"{workflow}_uploader_index"],
+
+        upload_type = st.radio(
+            "Upload type",
+            options=["Raw files", "Processed data"],
+            key=f"{workflow}_data_source",
         )
-        # window_size = st.selectbox(
-        #     "Analysis time window",
-        #     key=sv.analysis_window_size.key,
-        #     options=[str(x) for x in input_processor.PeriodOption._member_names_],
-        # )
-        # window_period = input_processor.PeriodOption[window_size]
-        # window_period = input_processor.PeriodOption.NONE
+        files = None
+        file_chunks = None
+        if upload_type == "Raw files":
+            files = st.file_uploader(
+                "Upload PDF text files",
+                type=["pdf", "txt", "json", "csv"],
+                accept_multiple_files=True,
+                key="qtd_uploader_" + st.session_state[f"{workflow}_uploader_index"],
+            )
+        else:
+            file_chunks = st.file_uploader(
+                "Upload processed chunks",
+                type=["csv"],
+                key="chunk_uploader_" + st.session_state[f"{workflow}_uploader_index"],
+            )
+
         local_embedding = st.toggle(
             "Use local embeddings",
             key=sv.answer_local_embedding_enabled.key,
@@ -84,28 +93,32 @@ async def create(sv: SessionVariables, workflow=None):
         )
         qtd.set_embedder(embedder.create_embedder(local_embedding))
 
-        if files is not None and st.button("Process files"):
+        if st.button("Process files") and (
+            files is not None or file_chunks is not None
+        ):
             qtd.reset_workflow()
-           
-            file_pb, file_callback = functions.create_progress_callback(
-                "Loaded {} of {} files..."
-            )
-            qtd.process_data_from_files(
-                input_file_bytes={file.name: file.getvalue() for file in files},
-                callbacks=[file_callback],
-            )
+            if upload_type == "Raw files":
+                file_pb, file_callback = functions.create_progress_callback(
+                    "Loaded {} of {} files..."
+                )
+                qtd.process_data_from_files(
+                    input_file_bytes={file.name: file.getvalue() for file in files},
+                    callbacks=[file_callback],
+                )
+                file_pb.empty()
+            else:
+                qtd.import_chunks_from_str(file_chunks)
 
             chunk_pb, chunk_callback = functions.create_progress_callback(
                 "Processed {} of {} chunks..."
             )
             qtd.process_text_chunks(callbacks=[chunk_callback])
-            
+
             embed_pb, embed_callback = functions.create_progress_callback(
                 "Embedded {} of {} text chunks..."
             )
             await qtd.embed_text_chunks(callbacks=[embed_callback])
             chunk_pb.empty()
-            file_pb.empty()
             embed_pb.empty()
             st.rerun()
 
@@ -121,6 +134,16 @@ async def create(sv: SessionVariables, workflow=None):
                 message += "."
             message = message.replace("**1** periods", "**1** period")
             st.success(message)
+
+        if qtd.label_to_chunks and upload_type == "Raw files":
+            st.download_button(
+                label="Download chunk data",
+                help="Export chunk data as CSV",
+                data=qtd.get_chunks_as_df().to_csv(),
+                file_name=f"processed_data_{len(qtd.label_to_chunks)}_query_text.csv",
+                mime="text/csv",
+            )
+
     with graph_tab:
         if qtd.stage.value < QueryTextDataStage.CHUNKS_PROCESSED.value:
             st.warning("Process files to continue.")

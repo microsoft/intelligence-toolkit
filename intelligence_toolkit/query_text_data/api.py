@@ -1,6 +1,6 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
-
+from collections import defaultdict
 from enum import Enum
 
 import networkx as nx
@@ -315,6 +315,28 @@ class QueryTextData:
         self.answer_config = None
         self.answer_object = None
         self.stage = QueryTextDataStage.CHUNKS_MINED
+
+    def get_chunks_as_df(self) -> pd.DataFrame:
+        flat_data = []
+        for key, json_list in self.label_to_chunks.items():
+            for json_str in json_list:
+                item_data = {
+                    "file_name": key,
+                    "text_to_label_str": json_str,
+                }
+                flat_data.append(item_data)
+
+        return pd.DataFrame(flat_data)
+
+    def import_chunks_from_str(self, data: str) -> None:
+        chunks_df = pd.read_csv(data)
+        data_imported = defaultdict(list)
+        for _, row in chunks_df.iterrows():
+            key = row["file_name"]
+            row_data = row["text_to_label_str"]
+            data_imported[key].append(row_data)
+
+        self.label_to_chunks = data_imported
 
     def __repr__(self):
         return f"QueryTextData()"
