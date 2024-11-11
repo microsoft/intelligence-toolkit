@@ -28,10 +28,10 @@ def update_concept_graph_edges(node_to_period_counts, edge_to_period_counts, per
     nps = sorted(set(TextBlob(chunk).noun_phrases))
     filtered_nps = []
     for np in nps:
-         # split on space or newline
-        parts = re.split(r"[\s\n]+", np)
-        if all([re.match(r"[a-zA-Z0-9\-]+", part) for part in parts]):
-            filtered_nps.append(np)
+         # split on space
+        parts = [p for p in re.split(r"[\s]+", np) if len(p) > 0]
+        if len(parts) > 1 and all([re.match(r"^[a-zA-Z0-9\-]+\n?$", part) for part in parts]):
+            filtered_nps.append(np.replace("\n", ""))
     filtered_nps = sorted(filtered_nps)
     for np in filtered_nps:
         concept_to_cids[np].append(cid)
@@ -87,7 +87,7 @@ def build_meta_graph(G, hierarchical_communities):
     return level_to_label_to_network
 
 
-def prepare_concept_graph(G, min_edge_weight, min_node_degree, std_trim=4):
+def prepare_concept_graph(G, min_edge_weight, min_node_degree, std_trim=3):
     degrees = [x[1] for x in G.degree()]
     mean_degree = np.mean(degrees)
     std_degree = np.std(degrees)

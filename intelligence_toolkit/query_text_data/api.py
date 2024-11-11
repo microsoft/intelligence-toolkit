@@ -133,7 +133,7 @@ class QueryTextData:
         self,
         max_cluster_size: int = 25,
         min_edge_weight: int = 2,
-        min_node_degree: int = 1,
+        min_node_degree: int = 2,
         callbacks=[],
     ) -> ProcessedChunks:
         """

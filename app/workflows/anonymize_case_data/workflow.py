@@ -291,6 +291,7 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                     selection.sort(
                         key=lambda x: x["attribute"] + val_separator + x["value"]
                     )
+                    
                     selection_key = att_separator.join(
                         [x["attribute"] + val_separator + x["value"] for x in selection]
                     )
@@ -441,12 +442,10 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                         time_attribute = st.selectbox(
                             "Time attribute",
                             options=time_options,
-                            index=time_options.index(
-                                chart_individual_configuration["time_attribute"]
+                            index=time_options.index(chart_individual_configuration["time_attribute"])
                                 if chart_individual_configuration["time_attribute"]
                                 in sdf.columns.to_numpy()
-                                else None,
-                            ),
+                                else 0
                         )
                         series_attributes = st.multiselect(
                             "Series attributes",
