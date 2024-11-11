@@ -63,7 +63,7 @@ def convert_file_bytes_to_chunks(
 
         if file_name.endswith(".csv"):
             df = pd.read_csv(io.BytesIO(bytes))
-            text_chunks = convert_df_to_chunks(df, file_name)
+            text_to_chunks = convert_df_to_chunks(df, file_name)
         else:
             if file_name.endswith(".pdf"):
                 page_texts = []
@@ -89,7 +89,7 @@ def convert_file_bytes_to_chunks(
                     }
                     text_chunks[index] = dumps(chunk, indent=2, ensure_ascii=False)
 
-        text_to_chunks[file_name] = text_chunks
+            text_to_chunks[file_name] = text_chunks
     return text_to_chunks
 
 
