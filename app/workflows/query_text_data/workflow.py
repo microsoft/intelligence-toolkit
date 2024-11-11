@@ -91,7 +91,7 @@ async def create(sv: SessionVariables, workflow=None):
             value=sv.answer_local_embedding_enabled.value,
             help="Use local embeddings to index nodes. If disabled, the model will use OpenAI embeddings.",
         )
-        qtd.set_embedder(embedder.create_embedder(local_embedding))
+        qtd.set_embedder(embedder.create_embedder(local_embedding, 20))
 
         if st.button("Process files") and (
             files is not None or file_chunks is not None
