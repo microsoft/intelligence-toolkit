@@ -269,6 +269,10 @@ def get_entity_graph(
     all_nodes = set(links_df["source"]).union(set(links_df["target"]))
     for node in all_nodes:
         node_names.add(node)
+        _, val = node.split(ATTRIBUTE_VALUE_SEPARATOR)
+        if val == "None":
+            continue
+
         size = 20 if node == selected else 12 if node.startswith(ENTITY_LABEL) else 8
         vadjust = -size - 10
 
