@@ -80,7 +80,7 @@ class CompareCaseGroups(IntelligenceWorkflow):
         return sorted_atts
 
     def _select_columns_ranked_df(self, ranked_df: pl.DataFrame) -> None:
-        columns = self.groups
+        columns = self.groups.copy()
         default_columns = [
             "group_count",
             "group_rank",
