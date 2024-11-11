@@ -292,7 +292,8 @@ def create(sv: ap_variables.SessionVariables, workflow):
                 if sv.detect_case_patterns_selected_pattern.value != "":
                     count_ct = dcp.create_time_series_chart(
                         sv.detect_case_patterns_selected_pattern.value,
-                        sv.detect_case_patterns_selected_pattern_period.value
+                        sv.detect_case_patterns_selected_pattern_period.value,
+                        True,
                     )
                     st.altair_chart(count_ct, use_container_width=True)
                 report_placeholder = st.empty()

@@ -98,11 +98,28 @@ class DetectCasePatterns(IntelligenceWorkflow):
         self,
         selected_pattern,
         selected_pattern_period,
+        resize_title=False,
     ):
         selected_pattern_df = self.time_series_df[
             (self.time_series_df["pattern"] == selected_pattern)
         ]
         title = "Pattern: " + selected_pattern + " (" + selected_pattern_period + ")"
+        if resize_title and len(title) > 100:
+            # Find the last occurrence of '&' within the first half of the title
+            split_index = title.rfind("&", 0, len(title) // 2)
+
+            # If '&' is found, break the title there; otherwise, split by length
+            if split_index != -1:
+                title = [
+                    title[: split_index + 1].strip(),
+                    title[split_index + 1 :].strip(),
+                ]
+            else:
+                title = [
+                    title[: len(title) // 2].strip(),
+                    title[len(title) // 2 :].strip(),
+                ]
+
         count_ct = (
             alt.Chart(selected_pattern_df)
             .mark_line()
