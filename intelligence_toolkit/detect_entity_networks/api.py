@@ -85,8 +85,15 @@ class DetectEntityNetworks(IntelligenceWorkflow):
     def add_attribute_links(
         self, data_df: pl.DataFrame, entity_id_column: str, columns_to_link: list[str]
     ) -> list:
-        data_df = self.format_links_added(data_df, entity_id_column, columns_to_link)
-        links = generate_attribute_links(data_df, entity_id_column, columns_to_link)
+        for column in columns_to_link:
+            data_df = data_df.filter(pl.col(column).is_not_null())
+
+        data_df_formatted = self.format_links_added(
+            data_df, entity_id_column, columns_to_link
+        )
+        links = generate_attribute_links(
+            data_df_formatted, entity_id_column, columns_to_link
+        )
         self.attribute_links.extend(links)
         for attribute_link in links:
             self.node_types.add(attribute_link[0][1])
