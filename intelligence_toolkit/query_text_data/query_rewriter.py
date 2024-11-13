@@ -2,6 +2,7 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 
 import networkx as nx
+
 import intelligence_toolkit.AI.utils as utils
 import intelligence_toolkit.query_text_data.prompts as prompts
 
@@ -20,12 +21,13 @@ async def rewrite_query(ai_configuration, query, concept_graph, top_concepts):
     Returns:
         str: The rewritten query.
     """
-    concepts = sorted(concept_graph.degree(), key=lambda x: x[1], reverse=True)[
-        :top_concepts
-    ]
+    concepts = sorted(concept_graph.degree(), key=lambda x: x[1], reverse=True)
+    if "dummynode" in concepts:
+        concepts.remove("dummynode")
+
+    concepts = concepts[:top_concepts]
     concepts_str = ", ".join([concept for concept, _ in concepts])
     messages = utils.prepare_messages(
         prompts.query_anchoring_prompt, {"query": query, "concepts": concepts_str}
     )
-    response = await utils.generate_text_async(ai_configuration, messages)
-    return response
+    return await utils.generate_text_async(ai_configuration, messages)
