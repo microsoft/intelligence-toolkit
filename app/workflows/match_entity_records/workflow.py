@@ -82,7 +82,7 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                 )
                 entity_id_col = st.selectbox(
                     "Entity ID column (optional)",
-                    cols,
+                    ["", *selected_df.columns],
                     help="The column containing the unique identifier of the entity to be matched. If left blank, a unique ID will be generated for each entity based on the row number.",
                 )
                 filtered_cols = [
@@ -319,95 +319,101 @@ async def create(sv: rm_variables.SessionVariable, workflow=None) -> None:
                     )
 
     with evaluate_tab:
-        b1, b2 = st.columns([2, 3])
-        with b1:
-            batch_size = 100
-            data = sv.matching_matches_df.value.drop(
-                [
-                    "Entity ID",
-                    "Dataset",
-                    "Name similarity",
-                ]
-            ).to_pandas()
-            generate, batch_messages, reset = (
-                ui_components.generative_batch_ai_component(
-                    sv.matching_system_prompt, {}, "data", data, batch_size
+        if (
+            sv.matching_matches_df.value is None
+            or len(sv.matching_matches_df.value) == 0
+        ):
+            st.warning("Detect record groups to continue.")
+        else:
+            b1, b2 = st.columns([2, 3])
+            with b1:
+                batch_size = 100
+                data = sv.matching_matches_df.value.drop(
+                    [
+                        "Entity ID",
+                        "Dataset",
+                        "Name similarity",
+                    ]
+                ).to_pandas()
+                generate, batch_messages, reset = (
+                    ui_components.generative_batch_ai_component(
+                        sv.matching_system_prompt, {}, "data", data, batch_size
+                    )
                 )
-            )
-            if reset:
-                sv.matching_system_prompt.value["user_prompt"] = prompts.user_prompt
-                st.rerun()
-        with b2:
-            st.markdown("##### AI evaluation of record groups")
-            prefix = "```\nGroup ID,Relatedness,Explanation\n"
-            placeholder = st.empty()
-            gen_placeholder = st.empty()
+                if reset:
+                    sv.matching_system_prompt.value["user_prompt"] = prompts.user_prompt
+                    st.rerun()
+            with b2:
+                st.markdown("##### AI evaluation of record groups")
+                prefix = "```\nGroup ID,Relatedness,Explanation\n"
+                placeholder = st.empty()
+                gen_placeholder = st.empty()
 
-            if generate:
-                for messages in batch_messages:
-                    callback = ui_components.create_markdown_callback(
-                        placeholder, prefix
-                    )
-                    response = ui_components.generate_text(messages, [callback])
-
-                    if len(response.strip()) > 0:
-                        prefix = prefix + response + "\n"
-                result = prefix.replace("```\n", "").strip()
-                sv.matching_evaluations.value = result
-                lines = result.split("\n")
-
-                if len(lines) > 30:
-                    lines = lines[:30]
-                    result = "\n".join(lines)
-
-                # validation, messages_to_llm = ui_components.validate_ai_report(
-                #     batch_messages[0], result
-                # )
-                # sv.matching_report_validation.value = validation
-                # sv.matching_report_validation_messages.value = messages_to_llm
-                st.rerun()
-            else:
-                if len(sv.matching_evaluations.value) == 0:
-                    gen_placeholder.warning(
-                        "Press the Generate button to create an AI report for the current record matches."
-                    )
-            placeholder.empty()
-
-            if len(sv.matching_evaluations.value) > 0:
-                try:
-                    mer.evaluations_df = pl.read_csv(
-                        io.StringIO(sv.matching_evaluations.value)
-                    )
-                    value = mer.evaluations_df.drop_nulls()
-
-                    st.dataframe(
-                        value.to_pandas(),
-                        height=700,
-                        use_container_width=True,
-                        hide_index=True,
-                    )
-                    c1, c2 = st.columns([1, 1])
-                    with c1:
-                        st.download_button(
-                            "Download AI match reports",
-                            data=value.write_csv(),
-                            file_name="record_group_match_reports.csv",
-                            mime="text/csv",
+                if generate:
+                    for messages in batch_messages:
+                        callback = ui_components.create_markdown_callback(
+                            placeholder, prefix
                         )
-                    with c2:
-                        st.download_button(
-                            "Download integrated results",
-                            data=mer.integrated_results.write_csv(),
-                            file_name="integrated_record_match_results.csv",
-                            mime="text/csv",
+                        response = ui_components.generate_text(messages, [callback])
+
+                        if len(response.strip()) > 0:
+                            prefix = prefix + response + "\n"
+                    result = prefix.replace("```\n", "").strip()
+                    sv.matching_evaluations.value = result
+                    lines = result.split("\n")
+
+                    if len(lines) > 30:
+                        lines = lines[:30]
+                        result = "\n".join(lines)
+
+                    # validation, messages_to_llm = ui_components.validate_ai_report(
+                    #     batch_messages[0], result
+                    # )
+                    # sv.matching_report_validation.value = validation
+                    # sv.matching_report_validation_messages.value = messages_to_llm
+                    st.rerun()
+                else:
+                    if len(sv.matching_evaluations.value) == 0:
+                        gen_placeholder.warning(
+                            "Press the Generate button to create an AI report for the current record matches."
                         )
-                except:
-                    st.markdown(sv.matching_evaluations.value)
-                    add_download_pdf(
-                        "record_groups_evaluated.pdf",
-                        sv.matching_evaluations.value,
-                        "Download AI match report",
-                    )
+                placeholder.empty()
+
+                if len(sv.matching_evaluations.value) > 0:
+                    try:
+                        mer.evaluations_df = pl.read_csv(
+                            io.StringIO(sv.matching_evaluations.value)
+                        )
+                        value = mer.evaluations_df.drop_nulls()
+
+                        st.dataframe(
+                            value.to_pandas(),
+                            height=700,
+                            use_container_width=True,
+                            hide_index=True,
+                        )
+                        c1, c2 = st.columns([1, 1])
+                        with c1:
+                            st.download_button(
+                                "Download AI match reports",
+                                data=value.write_csv(),
+                                file_name="record_group_match_reports.csv",
+                                mime="text/csv",
+                            )
+                        with c2:
+                            st.download_button(
+                                "Download integrated results",
+                                data=mer.integrated_results.write_csv(),
+                                file_name="integrated_record_match_results.csv",
+                                mime="text/csv",
+                            )
+                    except:
+                        st.markdown(sv.matching_evaluations.value)
+                        add_download_pdf(
+                            "record_groups_evaluated.pdf",
+                            sv.matching_evaluations.value,
+                            "Download AI match report",
+                        )
 
     with examples_tab:
         example_outputs_ui.create_example_outputs_ui(examples_tab, workflow)

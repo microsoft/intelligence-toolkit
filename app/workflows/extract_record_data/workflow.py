@@ -1,5 +1,5 @@
 import os
-from json import dumps, loads
+from json import dumps
 
 import pandas as pd
 import streamlit as st
@@ -8,7 +8,6 @@ import app.util.example_outputs_ui as example_outputs_ui
 import app.util.schema_ui as schema_ui
 import app.util.ui_components as ui_components
 import app.workflows.extract_record_data.variables as variables
-import intelligence_toolkit.extract_record_data.data_extractor as data_extractor
 from app.util.download_pdf import add_download_pdf
 from app.util.openai_wrapper import UIOpenAIConfiguration
 
@@ -21,7 +20,7 @@ def get_intro():
 
 
 async def create(sv: variables.SessionVariables, workflow: None):
-    ui_components.check_ai_configuration()
+    ui_components.check_ai_configuration(enforce_structured_output=True)
     erd = sv.workflow_object.value
     erd.set_ai_configuration(ai_configuration)
     intro_tab, schema_tab, generator_tab, mock_tab = st.tabs(['Extract Record Data workflow:', 'Prepare data schema', 'Extract structured records', 'View example outputs'])

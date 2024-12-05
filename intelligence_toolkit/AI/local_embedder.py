@@ -25,7 +25,7 @@ class LocalEmbedder(BaseEmbedder):
         concurrent_coroutines: int | None = DEFAULT_CONCURRENT_COROUTINES + 100,
         model: str | None = DEFAULT_LOCAL_EMBEDDING_MODEL,
     ):
-        super().__init__(db_name, db_path, max_tokens, concurrent_coroutines)
+        super().__init__(db_name, db_path, max_tokens, concurrent_coroutines, False)
         self.local_client = SentenceTransformer(model)
 
     def _generate_embedding(self, text: str | list[str]) -> list | Any:
