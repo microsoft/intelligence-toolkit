@@ -54,7 +54,7 @@ def dataframe_with_selections(df, selections, selection_col, label, key, height=
     return selected_rows.drop(label, axis=1)
 
 
-def report_download_ui(report_var, name):
+def report_download_ui(report_var, name) -> None:
     if type(report_var) == str:
         if len(report_var) == 0:
             return
@@ -89,15 +89,18 @@ def report_download_ui(report_var, name):
             )
 
 
-def generative_ai_component(system_prompt_var, variables):
+def generative_ai_component(
+    system_prompt_var, variables
+) -> tuple[bool, list[dict[str, str]], bool]:
     st.markdown("##### Generative AI instructions")
+
     with st.expander(
         "Edit AI system prompt used to generate output report", expanded=True
     ):
+        reset_prompt = st.button("Discard prompt text changes")
         instructions_text = st.text_area(
             "Prompt text", value=system_prompt_var.value["user_prompt"], height=200
         )
-        reset_prompt = st.button("Reset to default")
 
     st.warning(
         "AI outputs may contain errors. Please verify details independently."
@@ -122,21 +125,21 @@ def generative_ai_component(system_prompt_var, variables):
         if ratio <= 100:
             st.info(message)
         else:
-            st.warning(message)
+            st.error(message)
     return generate, messages, reset_prompt
 
 
 def generative_batch_ai_component(
     system_prompt_var, variables, batch_name, batch_val, batch_size
-):
+) -> tuple[bool, list, bool]:
     st.markdown("##### Generative AI instructions")
     with st.expander("Edit AI System Prompt", expanded=True):
+        reset_prompt = st.button("Discard prompt text changes")
         instructions_text = st.text_area(
             "Contents of System Prompt used to generate AI outputs.",
             value=system_prompt_var.value["user_prompt"],
             height=200,
         )
-        reset_prompt = st.button("Reset to default")
 
     st.warning(
         "AI outputs may contain errors. Please verify details independently."
@@ -182,7 +185,7 @@ def single_csv_uploader(
     key,
     show_rows=10000,
     height=250,
-):
+) -> None:
     if f"{workflow}_uploader_index" not in st.session_state:
         st.session_state[f"{workflow}_uploader_index"] = str(random.randint(0, 100))
     file = st.file_uploader(
@@ -799,12 +802,27 @@ def build_validation_ui(
                     mime="text/json",
                 )
 
-def check_ai_configuration():
+def check_ai_configuration(enforce_structured_output=False):
     ai_configuration = UIOpenAIConfiguration().get_configuration()
     if ai_configuration.api_key == "":
         st.warning("Please set your OpenAI API key in the Settings page.")
     if ai_configuration.model == "":
         st.warning("Please set your OpenAI model in the Settings page.")
+
+    list_enforce_structured_output = [
+        "gpt-4o",
+        "gpt-4o-2024-08-06",
+        "gpt-4o-mini",
+        "gpt-4o-mini-2024-07-18",
+    ]
+    if (
+        enforce_structured_output
+        and ai_configuration.model not in list_enforce_structured_output
+    ):
+        st.warning(
+            "Your current OpenAI model does not support this workflow. Please use the Settings page to use `gpt-4o` or `gpt-4o-mini` as OpenAI Deployment Name."
+        )
+
 
 def format_report_group_options(group_dict, existing_groups) -> str:
     return " & ".join([f"{key}: {group_dict[key]}" for key in existing_groups])

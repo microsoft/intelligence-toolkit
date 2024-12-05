@@ -17,11 +17,12 @@ class AppMode:
             self.sv = SessionVariables("home")
 
     def config(self):
-        cache = st.sidebar.toggle(
-            "Save embeddings",
-            value=self.sv.save_cache.value,
-            help="Enable caching of embeddings to speed up the application.",
-        )
-        if cache != self.sv.save_cache.value:
-            self.sv.save_cache.value = cache
-            st.rerun()
+        print("save embeddings not available")
+        # cache = st.sidebar.toggle(
+        #     "Save embeddings",
+        #     value=self.sv.save_cache.value,
+        #     help="Enable caching of embeddings to speed up the application.",
+        # )
+        # if cache != self.sv.save_cache.value:
+        #     self.sv.save_cache.value = cache
+        #     st.rerun()

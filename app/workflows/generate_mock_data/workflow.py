@@ -21,7 +21,7 @@ def get_intro():
 
 
 async def create(sv: bds_variables.SessionVariables, workflow: None):
-    ui_components.check_ai_configuration()
+    ui_components.check_ai_configuration(enforce_structured_output=True)
     gmd: GenerateMockData = sv.workflow_object.value
     gmd.set_ai_configuration(ai_configuration)
     intro_tab, schema_tab, record_generator_tab, text_generator_tab, mock_tab = st.tabs(['Generate Mock Data workflow:', 'Prepare data schema', 'Generate mock records', 'Generate mock texts', 'View example outputs'])

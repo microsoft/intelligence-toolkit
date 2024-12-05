@@ -1,6 +1,8 @@
 # Compare Case Groups
 
-The **Compare Case Groups** workflow generates intelligence reports by defining and comparing groups of case records.
+The [`Compare Case Groups`]((https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/compare_case_groups/README.md)) workflow generates intelligence reports by defining and comparing groups of case records.
+
+Select the `View example outputs` tab (in app) or navigate to [example_outputs/compare_case_groups](https://github.com/microsoft/intelligence-toolkit/tree/main/example_outputs/compare_case_groups) (on GitHub) for examples.
 
 ## How it works
 

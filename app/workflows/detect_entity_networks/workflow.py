@@ -316,7 +316,7 @@ async def create(sv: rn_variables.SessionVariables, workflow=None):
                 st.markdown(f"*Number of links inferred*: {inferred_links_count}")
                 inferred_df = den.inferred_nodes_df()
                 st.dataframe(
-                    inferred_df.to_pandas(), hide_index=True, use_container_width=True
+                    inferred_df.to_pandas(), hide_index=True, use_container_width=False
                 )
             else:
                 st.markdown(f"*No inferred links*")

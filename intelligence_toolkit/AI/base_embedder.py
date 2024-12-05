@@ -43,23 +43,24 @@ class BaseEmbedder(ABC, BaseBatchAsync):
         db_path=CACHE_PATH,
         max_tokens=DEFAULT_LLM_MAX_TOKENS,
         concurrent_coroutines=DEFAULT_CONCURRENT_COROUTINES,
+        check_token_count=True,
     ) -> None:
         self.vector_store = VectorStore(db_name, db_path, schema)
         self.max_tokens = max_tokens
         self.semaphore = asyncio.Semaphore(concurrent_coroutines)
+        self.check_token_count = check_token_count
 
     @retry_with_backoff()
     async def embed_one_async(
         self,
         data: VectorData,
         has_callback=False,
-        check_token_count=True,
     ) -> Any | list[float]:
         async with self.semaphore:
             if not data["hash"]:
                 text_hashed = hash_text(data["text"])
                 data["hash"] = text_hashed
-                if check_token_count:
+                if self.check_token_count:
                     try:
                         tokens = get_token_count(data["text"])
                         if tokens > self.max_tokens:
@@ -88,23 +89,26 @@ class BaseEmbedder(ABC, BaseBatchAsync):
     def embed_store_one(
         self, text: str, cache_data=True, additional_detail: Any = "{}"
     ) -> Any | list[float]:
+        cache_data = False  # disable for now
         text_hashed = hash_text(text)
-        existing_embedding = (
-            self.vector_store.search_by_column(text_hashed, "hash")
-            if cache_data
-            else []
-        )
-        if len(existing_embedding) > 0:
-            return existing_embedding.get("vector")[0]
+        if cache_data:
+            existing_embedding = (
+                self.vector_store.search_by_column(text_hashed, "hash")
+                if cache_data
+                else []
+            )
+            if len(existing_embedding) > 0:
+                return existing_embedding.get("vector")[0]
 
         # error when local
-        try:
-            tokens = get_token_count(text)
-            if tokens > self.max_tokens:
-                text = text[: self.max_tokens]
-                logger.info("Truncated text to max tokens")
-        except:
-            pass
+        if self.check_token_count:
+            try:
+                tokens = get_token_count(text)
+                if tokens > self.max_tokens:
+                    text = text[: self.max_tokens]
+                    logger.info("Truncated text to max tokens")
+            except:
+                pass
 
         try:
             embedding = self._generate_embedding(text)
@@ -127,6 +131,7 @@ class BaseEmbedder(ABC, BaseBatchAsync):
         callbacks: list[ProgressBatchCallback] | None = None,
         cache_data=True,
     ) -> np.ndarray[Any, np.dtype[Any]]:
+        cache_data = False  # disable for now
         self.total_tasks = len(data)
         final_embeddings = []
         loaded_texts = []
@@ -160,7 +165,7 @@ class BaseEmbedder(ABC, BaseBatchAsync):
             ]
             if len(new_items) > 0:
                 tasks = [
-                    asyncio.create_task(self.embed_one_async(item, callbacks, False))
+                    asyncio.create_task(self.embed_one_async(item, callbacks))
                     for item in new_items
                 ]
                 if callbacks:
