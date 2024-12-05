@@ -64,11 +64,7 @@ async def create(sv: SessionVariables, workflow=None):
     with uploader_tab:
         st.markdown("##### Upload data for processing")
 
-        upload_type = st.radio(
-            "Upload type",
-            options=["Raw files", "Processed data"],
-            key=f"{workflow}_data_source",
-        )
+        upload_type = "Raw files"
         files = None
         file_chunks = None
         if upload_type == "Raw files":
@@ -135,14 +131,14 @@ async def create(sv: SessionVariables, workflow=None):
             message = message.replace("**1** periods", "**1** period")
             st.success(message)
 
-        if qtd.label_to_chunks and upload_type == "Raw files":
-            st.download_button(
-                label="Download chunk data",
-                help="Export chunk data as CSV",
-                data=qtd.get_chunks_as_df().to_csv(),
-                file_name=f"processed_data_{len(qtd.label_to_chunks)}_query_text.csv",
-                mime="text/csv",
-            )
+        # if qtd.label_to_chunks and upload_type == "Raw files":
+        #     st.download_button(
+        #         label="Download chunk data",
+        #         help="Export chunk data as CSV",
+        #         data=qtd.get_chunks_as_df().to_csv(),
+        #         file_name=f"processed_data_{len(qtd.label_to_chunks)}_query_text.csv",
+        #         mime="text/csv",
+        #     )
 
     with graph_tab:
         if qtd.stage.value < QueryTextDataStage.CHUNKS_PROCESSED.value:

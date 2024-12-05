@@ -144,7 +144,7 @@ class BaseEmbedder(ABC, BaseBatchAsync):
                 hash_all_texts = [hash_text(item["text"]) for item in batch_data]
                 existing = self.vector_store.search_by_column(hash_all_texts, "hash")
 
-                if len(existing.get("vector")) > 0 and cache_data:
+                if len(existing.get("vector")) > 0:
                     existing_texts = existing.sort_values("text")
                     for item in existing_texts.to_numpy():
                         all_data.append(

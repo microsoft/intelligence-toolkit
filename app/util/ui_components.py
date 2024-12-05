@@ -804,7 +804,7 @@ def build_validation_ui(
 
 def check_ai_configuration(enforce_structured_output=False):
     ai_configuration = UIOpenAIConfiguration().get_configuration()
-    if ai_configuration.api_key == "":
+    if ai_configuration.api_key == "" and ai_configuration.api_type == "Open AI":
         st.warning("Please set your OpenAI API key in the Settings page.")
     if ai_configuration.model == "":
         st.warning("Please set your OpenAI model in the Settings page.")
