@@ -14,3 +14,8 @@ variable "redirect_uris" {
     type = list(string) 
     default = []
 }
+
+variable "enable_auth" {
+  type = bool
+  default = false
+}

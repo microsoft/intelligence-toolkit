@@ -23,7 +23,8 @@ resource "azurerm_service_plan" "az_asp" {
 
 module "auth" { 
   source = "./modules/auth" 
-
+  
+  enable_auth = var.enable_auth
   application_display_name = var.application_display_name 
   redirect_uris = ["https://${var.az_webapp_name}.azurewebsites.net/.auth/login/aad/callback"]
 }
@@ -47,20 +48,24 @@ resource "azurerm_linux_web_app" "az_webapp" {
     }
   }
 
-  auth_settings_v2 {
-    auth_enabled           = true
-    unauthenticated_action = "Return401"
-    require_authentication = true
-    require_https          = true
+  dynamic "auth_settings_v2" {
+    for_each = var.enable_auth ? [1] : []
 
-    active_directory_v2 {
-      client_id = module.auth.application_id
-      tenant_auth_endpoint       = "https://sts.windows.net/${var.tenant_id}/v2.0"
-      allowed_audiences          = ["api://example"]
-    }
+    content {
+      auth_enabled           = true
+      unauthenticated_action = "Return401"
+      require_authentication = true
+      require_https          = true
 
-    login {
-      token_store_enabled = true
+      active_directory_v2 {
+        client_id              = module.auth.application_id
+        tenant_auth_endpoint   = "https://sts.windows.net/${var.tenant_id}/v2.0"
+        allowed_audiences      = ["api://example"]
+      }
+
+      login {
+        token_store_enabled = true
+      }
     }
   }
 }

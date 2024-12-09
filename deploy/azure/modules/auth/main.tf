@@ -19,11 +19,8 @@ data "azuread_domains" "domains" {
 }
 
 # Create an application
-resource "azuread_application_registration" "app_registration" {
-  display_name = var.application_display_name
-}
-
-resource "azuread_application" "app_registration_config" {
+resource "azuread_application" "app_registration" {
+  count = var.enable_auth ? 1 : 0
   display_name = var.application_display_name
 
   web { 
@@ -33,10 +30,11 @@ resource "azuread_application" "app_registration_config" {
 
 # Create a service principal
 resource "azuread_service_principal" "app_service_principal" {
-  client_id = azuread_application_registration.app_registration.client_id
+  count = var.enable_auth ? 1 : 0
+  client_id = var.enable_auth ? azuread_application.app_registration[count.index].client_id : null
 }
 
 output "application_id" {
   description = "The Application ID of the Azure AD application"
-  value       = azuread_application_registration.app_registration.client_id
+  value       = var.enable_auth ? azuread_application.app_registration[0].client_id : null
 }
