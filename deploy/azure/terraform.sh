@@ -36,4 +36,4 @@ wget https://raw.githubusercontent.com/microsoft/intelligence-toolkit/refs/heads
 terraform init
 
 # Apply Terraform configuration
-terraform apply -auto-approve -var "location=$location" -var "webAppName=$webAppName" -var "az_rg_name=$resourceGroup" -var "subscription_id=$subscription" -var "tenant_id=$tenant" -var "enable_auth=$enable_auth"
+terraform apply -auto-approve -var "location=$location" -var "az_webapp_name=$webAppName" -var "az_rg_name=$resourceGroup" -var "subscription_id=$subscription" -var "tenant_id=$tenant" -var "enable_auth=$enable_auth"
