@@ -10,33 +10,33 @@ identity=$7
 
 az login --identity --username "$identity"
 
-# Check if Terraform is installed
-if ! command -v terraform &> /dev/null
-then
-    echo "Terraform not found. Installing..."
-    wget https://releases.hashicorp.com/terraform/1.10.1/terraform_1.10.1_linux_amd64.zip -O terraform.zip
-    unzip terraform.zip
-    mv terraform /usr/local/bin/
-    rm terraform.zip
-else
-    echo "Terraform is already installed."
-fi
+# # Check if Terraform is installed
+# if ! command -v terraform &> /dev/null
+# then
+#     echo "Terraform not found. Installing..."
+#     wget https://releases.hashicorp.com/terraform/1.10.1/terraform_1.10.1_linux_amd64.zip -O terraform.zip
+#     unzip terraform.zip
+#     mv terraform /usr/local/bin/
+#     rm terraform.zip
+# else
+#     echo "Terraform is already installed."
+# fi
 
-# Verify Terraform version
-terraform --version
+# # Verify Terraform version
+# terraform --version
 
-# Download Terraform configuration files
-echo "Downloading Terraform configuration files..."
-wget https://raw.githubusercontent.com/microsoft/intelligence-toolkit/refs/heads/terraform/deploy/azure/main.tf -O ./main.tf
-wget https://raw.githubusercontent.com/microsoft/intelligence-toolkit/refs/heads/terraform/deploy/azure/variables.tf -O ./variables.tf 
-#Create modules/auth folder
-# mkdir modules
-# mkdir modules/auth
-# wget https://raw.githubusercontent.com/microsoft/intelligence-toolkit/refs/heads/terraform/deploy/azure/modules/auth/main.tf -O ./modules/auth/main.tf
-# wget https://raw.githubusercontent.com/microsoft/intelligence-toolkit/refs/heads/terraform/deploy/azure/modules/auth/variables.tf -O ./modules/auth/variables.tf 
+# # Download Terraform configuration files
+# echo "Downloading Terraform configuration files..."
+# wget https://raw.githubusercontent.com/microsoft/intelligence-toolkit/refs/heads/terraform/deploy/azure/main.tf -O ./main.tf
+# wget https://raw.githubusercontent.com/microsoft/intelligence-toolkit/refs/heads/terraform/deploy/azure/variables.tf -O ./variables.tf 
+# #Create modules/auth folder
+# # mkdir modules
+# # mkdir modules/auth
+# # wget https://raw.githubusercontent.com/microsoft/intelligence-toolkit/refs/heads/terraform/deploy/azure/modules/auth/main.tf -O ./modules/auth/main.tf
+# # wget https://raw.githubusercontent.com/microsoft/intelligence-toolkit/refs/heads/terraform/deploy/azure/modules/auth/variables.tf -O ./modules/auth/variables.tf 
 
-# Initialize Terraform
-terraform init
+# # Initialize Terraform
+# terraform init
 
-# Apply Terraform configuration
-terraform apply -auto-approve -var "location=$location" -var "az_webapp_name=$webAppName" -var "az_rg_name=$resourceGroup" -var "subscription_id=$subscription" -var "tenant_id=$tenant"
+# # Apply Terraform configuration
+# terraform apply -auto-approve -var "location=$location" -var "az_webapp_name=$webAppName" -var "az_rg_name=$resourceGroup" -var "subscription_id=$subscription" -var "tenant_id=$tenant"
