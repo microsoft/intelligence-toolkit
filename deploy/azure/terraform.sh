@@ -5,6 +5,7 @@ webAppName=$2
 resourceGroup=$3
 subscription=$4
 tenant=$5
+enable_auth=$6
 
 # Check if Terraform is installed
 if ! command -v terraform &> /dev/null
@@ -35,4 +36,4 @@ wget https://raw.githubusercontent.com/microsoft/intelligence-toolkit/refs/heads
 terraform init
 
 # Apply Terraform configuration
-terraform apply -auto-approve -var "location=$location" -var "webAppName=$webAppName" -var "resourceGroup=$resourceGroup" -var "subscription=$subscription" -var "tenant=$tenant"
+terraform apply -auto-approve -var "location=$location" -var "webAppName=$webAppName" -var "az_rg_name=$resourceGroup" -var "subscription_id=$subscription" -var "tenant_id=$tenant" -var "enable_auth=$enable_auth"
