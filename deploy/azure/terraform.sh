@@ -1,5 +1,11 @@
 #!/bin/bash
 
+location=$1
+webAppName=$2
+resourceGroup=$3
+subscription=$4
+tenant=$5
+
 # Check if Terraform is installed
 if ! command -v terraform &> /dev/null
 then
@@ -27,12 +33,6 @@ wget https://raw.githubusercontent.com/microsoft/intelligence-toolkit/refs/heads
 
 # Initialize Terraform
 terraform init
-
-location=$1
-webAppName=$2
-resourceGroup=$3
-subscription=$4
-tenant=$5
 
 # Apply Terraform configuration
 terraform apply -auto-approve -var "location=$location" -var "webAppName=$webAppName" -var "resourceGroup=$resourceGroup" -var "subscription=$subscription" -var "tenant=$tenant"
