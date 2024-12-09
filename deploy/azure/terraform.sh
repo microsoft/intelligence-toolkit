@@ -19,6 +19,9 @@ terraform --version
 echo "Downloading Terraform configuration files..."
 wget https://raw.githubusercontent.com/microsoft/intelligence-toolkit/refs/heads/terraform/deploy/azure/main.tf -O ./main.tf
 wget https://raw.githubusercontent.com/microsoft/intelligence-toolkit/refs/heads/terraform/deploy/azure/variables.tf -O ./variables.tf 
+#Create modules/auth folder
+mkdir modules
+mkdir modules/auth
 wget https://raw.githubusercontent.com/microsoft/intelligence-toolkit/refs/heads/terraform/deploy/azure/modules/auth/main.tf -O ./modules/auth/main.tf
 wget https://raw.githubusercontent.com/microsoft/intelligence-toolkit/refs/heads/terraform/deploy/azure/modules/auth/variables.tf -O ./modules/auth/variables.tf 
 
