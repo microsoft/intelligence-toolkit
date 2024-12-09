@@ -11,7 +11,7 @@ enable_auth=$6
 if ! command -v terraform &> /dev/null
 then
     echo "Terraform not found. Installing..."
-    wget  https://releases.hashicorp.com/terraform/1.10.1/terraform_1.10.0_linux_amd64.zip -O terraform.zip
+    wget https://releases.hashicorp.com/terraform/1.10.1/terraform_1.10.1_linux_amd64.zip -O terraform.zip
     unzip terraform.zip
     mv terraform /usr/local/bin/
     rm terraform.zip
