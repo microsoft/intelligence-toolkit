@@ -25,8 +25,8 @@ module "auth" {
   source = "./modules/auth" 
   
   enable_auth = var.enable_auth
+  tenant_id = var.tenant_id
   application_display_name = "${var.az_webapp_name}-auth"
-  tenant_id = var.tenant_id 
   redirect_uris = ["https://${var.az_webapp_name}.azurewebsites.net/.auth/login/aad/callback"]
 }
 
