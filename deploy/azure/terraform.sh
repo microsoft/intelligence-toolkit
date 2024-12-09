@@ -8,7 +8,7 @@ tenant=$5
 enable_auth=$6
 identity=$7
 
-az login --identity --username "$identity"
+az account show
 
 # Check if Terraform is installed
 if ! command -v terraform &> /dev/null
