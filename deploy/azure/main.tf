@@ -10,7 +10,7 @@ resource "azurerm_resource_group" "az_rg" {
 
 resource "azurerm_service_plan" "az_asp" {
   os_type="Linux"
-  name                = var.az_asp_name
+  name                = concat(var.az_webapp_name, "-plan")
   location            = azurerm_resource_group.az_rg.location
   resource_group_name = azurerm_resource_group.az_rg.name
 
@@ -25,7 +25,8 @@ module "auth" {
   source = "./modules/auth" 
   
   enable_auth = var.enable_auth
-  application_display_name = var.application_display_name 
+  application_display_name = concat(var.az_webapp_name, "-auth")
+  tenant_id = var.tenant_id 
   redirect_uris = ["https://${var.az_webapp_name}.azurewebsites.net/.auth/login/aad/callback"]
 }
 
