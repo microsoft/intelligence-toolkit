@@ -56,7 +56,3 @@ app/wkhtmltox/*.exe
 .venv
 
 **/dist/*
-
-
-*.tfstate
-*.terraform**
