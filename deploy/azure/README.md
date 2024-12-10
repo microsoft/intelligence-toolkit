@@ -14,8 +14,8 @@ It is recommended that you use Entra ID for authentication.
 
 #### Creating an app registration for website authentication
 
-- Open your web browser and go to Azure portal, search in the top bar for `Microsoft Entra ID`
-- On the left panel click on `App registrations`
+- Open your web browser and go to [Microsoft Entra admin center](https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade)
+- On the left panel click on `Applications` then `App registrations`
 - Click on `+ New registration`.
     - **Give it an identifiable name**
     - **Supported account types**:
@@ -23,14 +23,14 @@ It is recommended that you use Entra ID for authentication.
 - **Redirect URI**:
     - Select `Web` as platform and in the URL insert the following URL, being `[webAppName]` the name you'll give to the app on the next steps: 
         - `https://[webAppName].azurewebsites.net/.auth/login/aad/callback`
-    - Click on Register
+    - Click on `Register`
     - Copy the value of `Application (client) ID` to be used when creating the app in the next steps.
 
 #### Deploy
 See details on pricing [here](https://azure.microsoft.com/en-us/pricing/details/app-service/linux/) (We default to `Premium v3 P0v3` Plan)
 
 1. **Go to Azure Marketplace**:
-    - Open your web browser and go to Azure portal, search in the top bar for `Marketplace`.
+    - Open your web browser and go to [Azure portal](https://portal.azure.com), search in the top bar for `Marketplace`.
     - If you're not logged in, you may need to log in to your Azure account. 
     - Use the search bar to find the `Intelligence Toolkit` application.
 
@@ -41,7 +41,7 @@ See details on pricing [here](https://azure.microsoft.com/en-us/pricing/details/
     - Click the "Create" button with Plan `Web App` selected to start the deployment process.
 
 4. **Configure Deployment Settings**:
-    - You will be redirected to the Azure portal to set up the deployment.
+    - You will be redirected to the [Azure portal](https://portal.azure.com) to set up the deployment.
     - Fill in the required information:
         - **Subscription**: Choose your Azure subscription.
         - **Resource Group**: Select an existing group or create a new one.

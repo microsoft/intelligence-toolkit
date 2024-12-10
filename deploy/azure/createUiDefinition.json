@@ -94,7 +94,7 @@
             "visible": "[equals(steps('AI Settings').aiType, 'azure')]"
           },
           {
-            "name": "aiKey",
+            "name": "openaiApiKey",
             "type": "Microsoft.Common.TextBox",
             "label": "Key",
             "defaultValue": "",
@@ -125,7 +125,7 @@
       "disableAuth": "[basics('disableAuth')]",
       "aiType": "[steps('AI Settings').aiType]",
       "aiManagedIdentity": "[steps('AI Settings').aiManagedIdentity]",
-      "aiKey": "[steps('AI Settings').aiKey]",
+      "openaiApiKey": "[steps('AI Settings').openaiApiKey]",
       "aiEndpoint": "[steps('AI Settings').aiEndpoint]"
     }
   }

@@ -87,7 +87,7 @@
       "name": "[parameters('webAppName')]",
       "type": "Microsoft.Web/sites",
       "location": "[parameters('location')]",
-      "tags": "[parameters('tags')]",
+      "tags": "[if(contains(parameters('tags').value, 'Microsoft.Web/sites'), parameters('tags').value['Microsoft.Web/sites'], json('null'))]",
       "dependsOn": [
         "[variables('hostingPlanName')]"
       ],
@@ -159,18 +159,17 @@
       "type": "Microsoft.Web/sites/config",
       "apiVersion": "2022-09-01",
       "name": "[concat(parameters('webAppName'), '/authsettingsV2')]",
-      "condition": "[not(parameters('disableAuth'))]",
       "dependsOn": [
         "[resourceId('Microsoft.Web/Sites', parameters('webAppName'))]"
       ],
       "properties": {
         "globalValidation": {
-          "requireAuthentication": true,
+          "requireAuthentication": "[equals(parameters('disableAuth'), 'false')]",
           "unauthenticatedClientAction": "RedirectToLoginPage"
         },
         "identityProviders": {
           "azureActiveDirectory": {
-            "enabled": true,
+            "enabled": "[equals(parameters('disableAuth'), 'false')]",
             "registration": {
               "clientId": "[parameters('clientId')]",
               "openIdIssuer": "[concat('https://login.microsoftonline.com/',subscription().tenantId,'/v2.0')]"
