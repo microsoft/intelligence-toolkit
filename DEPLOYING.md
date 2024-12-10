@@ -2,14 +2,11 @@
 
 Deploying your app effectively is crucial for making it accessible to users. We present three robust options that cater to different requirements and preferences, whether you're looking for simplicity, scalability, or specific infrastructure.
 
-- **Using Streamlit Cloud:** Ideal for those who prefer a straightforward and cost-effective deployment solution. Streamlit Cloud is perfect for quickly deploying Streamlit apps with minimal setup and no need for managing infrastructure.
-
 - **Using Azure:** A powerful option for those who are already integrated into the Microsoft ecosystem or need advanced cloud services. Azure offers robust performance, scalability, and a suite of tools that are beneficial for apps requiring Microsoft-specific integrations or high availability.
 
 - **Using AWS:** Known for its versatility and comprehensive cloud solutions, AWS is suitable for developers seeking a highly scalable and flexible deployment environment. It is apt for those with diverse app requirements and offers a range of services, from simple hosting to complex machine learning models.
 
 Each of these options has its own strengths, and your choice will depend on the specific needs and constraints of your project. The following sections provide detailed guides on deploying your app using each of these platforms.
-
 
 # Requirements for the app
 
@@ -17,71 +14,6 @@ To deploy your app, you will need:
 
 1. An active OpenAI account ([create here](https://platform.openai.com/login)).
 2. An OpenAI API key ([create here](https://platform.openai.com/account/api-keys)).
-
-# Streamlit Cloud
-This guide will walk you through deploying our app that uses [Streamlit](https://streamlit.io/), a Python package for building web apps. You can host your Streamlit apps for free with [Streamlit Community Cloud](https://streamlit.io/cloud).
-
-## Security:
-
-Streamlit prioritizes security by hosting data in secure cloud facilities and using encryption for data protection. Permission management follows GitHub rules, and regular vulnerability scans ensure the platform remains secure and up to date.
-
-[Read more](https://docs.streamlit.io/deploy/streamlit-community-cloud/get-started/trust-and-security)
-
-## Resource Limits
-
-While Streamlit Community Cloud is free to use, it has resource limits that apply to all users. Exceeding these limits may result in throttling or app nonfunctionality. As of February 2024, the approximate limits are:
-
-- **CPU:** 0.078 cores minimum, 2 cores maximum
-- **Memory:** 690MB minimum, 2.7GB maximum
-- **Storage:** No minimum, 50GB maximum
-
-For optimal performance, especially with high concurrent usage, a higher allocation of CPU and memory may be beneficial.
-
-[Read more](https://docs.streamlit.io/deploy/streamlit-community-cloud/manage-your-app#app-resources-and-limits)
-
-
-## Increased Resources for NGOs
-
-If you're part of an NGO, you might be eligible for increased resources by applying [here](https://info.snowflake.com/streamlit-resource-increase-request.html). Eligible apps often serve educational institutions, are part of open-source projects, or provide societal benefits. For-profit companies are generally not eligible.
-
-## Requirement for Streamlit Cloud
-
-  - A [github account](https://github.com)
-  - A Forked GitHub repository:
-  - Fork [github.com/intelligence-toolkit](https://github.com/microsoft/intelligence-toolkit)
-    - Ensure you keep your repository updated with the main repository to incorporate new code and bug fixes.
-
-
-## Deployment Steps
-
-1. **Streamlit Setup:**
-   - [Create or sign in to your Streamlit account](https://share.streamlit.io/signup).
-   - Click on `Create an app` in the top right corner.
-   - Choose to deploy a public app from GitHub and configure it with the following:
-
-     - **Repository:** `{your_forked_one}`
-     - **Branch:** `main`
-     - **Main file path:** `app/Home.py`
-     - **App URL (optional):** Customize the URL for accessing your app.
-
-2. **Advanced Settings:**
-   - Add the following secrets:
-     ```plaintext
-     OPENAI_API_KEY="your-key"
-     
-     HIDE_SETTINGS="TRUE" # Hides settings page to prevent changes affecting all users.
-
-     AUTH_ENABLED="TRUE" # Allows access only to authorized users.
-
-     [passwords]
-     "username" = "user_pwd"
-     "username2" = "user_pwd2"
-     ...
-     ```
-
-3. **Deploy:**
-   - After setting up, click deploy. The deployment process takes a few minutes, and your app will be ready for access.
-
 
 # Azure
 

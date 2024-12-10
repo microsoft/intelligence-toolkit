@@ -810,17 +810,17 @@ def check_ai_configuration(enforce_structured_output=False):
         st.warning("Please set your OpenAI model in the Settings page.")
 
     list_enforce_structured_output = [
-        "gpt-4o",
-        "gpt-4o-2024-08-06",
         "gpt-4o-mini",
         "gpt-4o-mini-2024-07-18",
+        "gpt-4o",
+        "gpt-4o-2024-08-06",
     ]
     if (
         enforce_structured_output
         and ai_configuration.model not in list_enforce_structured_output
     ):
         st.warning(
-            "Your current OpenAI model does not support this workflow. Please use the Settings page to use `gpt-4o` or `gpt-4o-mini` as OpenAI Deployment Name."
+            "Your current OpenAI model does not support this workflow. Please use the Settings page to use `gpt-4o-mini` or `gpt-4o` as OpenAI Deployment Name."
         )
 
 

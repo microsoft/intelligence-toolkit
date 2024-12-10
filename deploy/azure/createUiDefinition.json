@@ -1,0 +1,132 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
+  "handler": "Microsoft.Azure.CreateUIDef",
+  "version": "0.1.2-preview",
+  "parameters": {
+    "basics": [
+      {
+        "name": "webAppName",
+        "type": "Microsoft.Common.TextBox",
+        "label": "Web App Name",
+        "defaultValue": "",
+        "toolTip": "The App name, to be acessed",
+        "constraints": {
+          "required": true,
+          "regex": "^[a-zA-Z0-9-]{3,60}$",
+          "validationMessage": "Name must be between 3 and 60 characters long and contain only letters, numbers, and hyphens"
+        },
+        "visible": true
+      },
+      {
+        "name": "disableAuth",
+        "type": "Microsoft.Common.CheckBox",
+        "label": "Disable Authentication"
+      },
+      {
+        "name": "authClientId",
+        "type": "Microsoft.Common.TextBox",
+        "label": "App Registration client ID",
+        "defaultValue": "",
+        "toolTip": "The app registration client id. (check github repository readme on how to)",
+        "constraints": {
+          "required": "[equals(steps('basics').disableAuth, false)]",
+          "regex": "^[a-zA-Z0-9-]{36}$",
+          "validationMessage": "Must be a valid GUID"
+        },
+        "visible": "[equals(steps('basics').disableAuth, false)]"
+      }
+    ],
+    "config": {
+      "basics": {
+        "subscription": {
+          "constraints": {
+            "validations": [
+              {
+                "permission": "Microsoft.Resources/deployments/validate/action",
+                "message": "You don't have the right permissions to perform this action."
+              }
+            ]
+          }
+        },
+        "resourceGroup": {
+          "allowExisting": true
+        }
+      }
+    },
+    "steps": [
+      {
+        "name": "AI Settings",
+        "type": "Microsoft.Common.Section",
+        "label": "AI Settings",
+        "elements": [
+          {
+            "name": "aiType",
+            "type": "Microsoft.Common.OptionsGroup",
+            "label": "AI Type",
+            "defaultValue": "OpenAI",
+            "toolTip": "",
+            "constraints": {
+              "allowedValues": [
+                {
+                  "label": "OpenAI",
+                  "value": "openai"
+                },
+                {
+                  "label": "Azure OpenAI",
+                  "value": "azure"
+                }
+              ],
+              "required": true
+            },
+            "visible": true
+          },
+          {
+            "name": "aiManagedIdentity",
+            "type": "Microsoft.Common.CheckBox",
+            "label": "Use Managed Identity",
+            "visible": "[equals(steps('AI Settings').aiType, 'azure')]"
+          },
+          {
+            "name": "aiEndpoint",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Endpoint",
+            "defaultValue": "",
+            "visible": "[equals(steps('AI Settings').aiType, 'azure')]"
+          },
+          {
+            "name": "openaiApiKey",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Key",
+            "defaultValue": "",
+            "visible": "[or(equals(steps('AI Settings').aiManagedIdentity, false), equals(steps('AI Settings').aiType, 'openai'))]"
+          }
+        ]
+      },
+      {
+        "name": "tags",
+        "type": "Microsoft.Common.Section",
+        "label": "Tags",
+        "elements": [
+          {
+            "name": "tagsObj",
+            "type": "Microsoft.Common.TagsByResource",
+            "resources": [
+              "Microsoft.Web/sites"
+            ]
+          }
+        ]
+      }
+    ],
+    "outputs": {
+      "webAppName": "[basics('webAppName')]",
+      "location": "[location()]",
+      "tags": "[steps('tags').tagsObj]",
+      "clientId": "[basics('authClientId')]",
+      "disableAuth": "[basics('disableAuth')]",
+      "aiType": "[steps('AI Settings').aiType]",
+      "aiManagedIdentity": "[steps('AI Settings').aiManagedIdentity]",
+      "openaiApiKey": "[steps('AI Settings').openaiApiKey]",
+      "aiEndpoint": "[steps('AI Settings').aiEndpoint]"
+    }
+  }
+}
