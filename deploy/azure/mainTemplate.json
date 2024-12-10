@@ -66,7 +66,7 @@
     "ftpsState": "FtpsOnly",
     "linuxFxVersion": "sitecontainers",
     "siteContainerName": "main",
-    "redirectUrl": "[concat('https://', parameters('webAppName'), '.azurewebsites.net')]"
+    "redirectUrl": "[concat('https://', parameters('webAppName'), '.azurewebsites.net/.auth/login/aad')]"
   },
   "resources": [
     {
@@ -165,7 +165,13 @@
       "properties": {
         "globalValidation": {
           "requireAuthentication": "[equals(parameters('disableAuth'), 'false')]",
-          "unauthenticatedClientAction": "RedirectToLoginPage"
+          "unauthenticatedClientAction": "RedirectToLoginPage",
+          "redirectToProvider": "AzureActiveDirectory",
+          "login": {
+            "loginParameters": {
+              "redirectUrl": "[variables('redirectUrl')]"
+            }
+          }
         },
         "identityProviders": {
           "azureActiveDirectory": {
