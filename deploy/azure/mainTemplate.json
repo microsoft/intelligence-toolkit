@@ -87,7 +87,7 @@
       "name": "[parameters('webAppName')]",
       "type": "Microsoft.Web/sites",
       "location": "[parameters('location')]",
-      "tags": "[if(contains(parameters('tags').value, 'Microsoft.Web/sites'), parameters('tags').value['Microsoft.Web/sites'], json('null'))]",
+      "tags": "[if(contains(parameters('tags'), 'Microsoft.Web/sites'), parameters('tags')['Microsoft.Web/sites'], json('null'))]",
       "dependsOn": [
         "[variables('hostingPlanName')]"
       ],
