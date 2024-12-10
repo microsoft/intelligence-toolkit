@@ -27,6 +27,8 @@ It is recommended that you use Entra ID for authentication.
     - Copy the value of `Application (client) ID` to be used when creating the app in the next steps.
 
 #### Deploy
+See details on pricing [here](https://azure.microsoft.com/en-us/pricing/details/app-service/linux/) (We default to `Premium v3 P0v3` Plan)
+
 1. **Go to Azure Marketplace**:
     - Open your web browser and go to Azure portal, search in the top bar for `Marketplace`.
     - If you're not logged in, you may need to log in to your Azure account. 

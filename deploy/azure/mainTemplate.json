@@ -12,6 +12,10 @@
       "type": "string",
       "defaultValue": ""
     },
+    "disableAuth": {
+      "type": "bool",
+      "defaultValue": false
+    },
     "openaiApiKey": {
       "type": "string",
       "defaultValue": ""
@@ -38,11 +42,11 @@
     },
     "sku": {
       "type": "string",
-      "defaultValue": "Standard"
+      "defaultValue": "Premium v3"
     },
     "skuCode": {
       "type": "string",
-      "defaultValue": "S01"
+      "defaultValue": "P0V3"
     },
     "workerSize": {
       "type": "string",
@@ -155,6 +159,7 @@
       "type": "Microsoft.Web/sites/config",
       "apiVersion": "2022-09-01",
       "name": "[concat(parameters('webAppName'), '/authsettingsV2')]",
+      "condition": "[not(parameters('disableAuth'))]",
       "dependsOn": [
         "[resourceId('Microsoft.Web/Sites', parameters('webAppName'))]"
       ],
