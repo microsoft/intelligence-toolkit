@@ -32,18 +32,18 @@ See pricing details [here](https://openai.com/api/pricing/)
 ## Creating an Azure OpenAI Instance
 See pricing details [here](https://azure.microsoft.com/en-us/pricing/details/cognitive-services/openai-service/)
 
-1. Log in to the Azure portal.
+1. **Log in to the Azure portal**:
     - Go to the [Azure portal](https://portal.azure.com).
         - If you don't have an account, click on "Create one" and follow the steps to set up your account.
 
-2. Create the resource
+2. **Create the resource**:
     - Click on "Create a resource" and search for "Azure OpenAI".
     - Select "Azure OpenAI Service" and click "Create".
     - Fill in the required details (subscription, resource group, region, etc.).
     - Click next until the Review + submit step.
     - If validation passes, click create.
 
-3. Deploy the models
+3. **Deploy the models**:
     - Go to the resource page.
     - Click on `Go to Azure AI Foundry portal`
     - Click on `Deployments` on the left panel.
@@ -54,7 +54,7 @@ See pricing details [here](https://azure.microsoft.com/en-us/pricing/details/cog
         - Click on `Deploy model` and `Deploy base model`.
         - Choose `text-embedding-3-small` then `Confirm` and `Deploy`
 
-4. Get the Azure OpenAI key:
+4. **Get the Azure OpenAI key**:
     - In the resource page on Azure portal, go to "Keys and Endpoint" section.
     - Copy  one of the keys (KEY 1 or KEY 2) and Endpoint URL.
     - Use these to configure your access when deploying intelligence-toolkit app or using the `Settings` page.
