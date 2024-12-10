@@ -2,17 +2,18 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 #
+import importlib.metadata
 import inspect
 import os
 import os.path
 
+import requests
 import streamlit as st
 import util.mermaid as mermaid
 from components.app_loader import load_multipage_app
 
 filename = inspect.getframeinfo(inspect.currentframe()).filename
 path = os.path.dirname(os.path.abspath(filename))
-
 
 def get_readme_and_mermaid():
     file_path = os.path.join(path, "README.md")
@@ -59,6 +60,20 @@ def main():
         page_icon=f"{path}myapp.ico",
         page_title="Intelligence Toolkit | Home",
     )
+
+    version = importlib.metadata.version("intelligence-toolkit")
+    st.sidebar.markdown(f"Version: {version}")
+
+    url = "https://raw.githubusercontent.com/microsoft/intelligence-toolkit/refs/heads/main/pyproject.toml"
+    response = requests.get(url)
+    if response.status_code == 200:
+        lines = response.text.splitlines()
+        if len(lines) >= 3 and lines[2].startswith("version ="):
+            file_version = lines[2].split("=")[1].strip().strip('"')
+            if file_version > version:
+                st.sidebar.warning(
+                    f"There is a new version of Intelligence Toolkit available: {file_version}. Please update your installation."
+                )
 
     load_multipage_app()
     transparency_faq, mermaid_text = get_readme_and_mermaid()
