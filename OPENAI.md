@@ -49,7 +49,7 @@ See pricing details [here](https://azure.microsoft.com/en-us/pricing/details/cog
     - Click on `Deployments` on the left panel.
     - Create the AI model
         - Click on `Deploy model` and `Deploy base model`.
-        - Choose `gpt-4o` then `Confirm` and `Deploy`
+        - Choose `gpt-4o-mini` then `Confirm` and `Deploy`
     - Create the embedding model
         - Click on `Deploy model` and `Deploy base model`.
         - Choose `text-embedding-3-small` then `Confirm` and `Deploy`
