@@ -4,9 +4,9 @@ This guide will help you deploy your application using Azure Marketplace, even i
 ### Prerequisites
 Before you start, make sure you have the following:
 
-1. **Azure Subscription**: An active Azure subscription.
-1. **OpenAI or Azure OpenAI instance**: This will provide the AI capabilities required by the application. If you don't have one, you can find [instructions here](../../OPENAI.md)
-2. **Azure Account**: At minimum `Contributor` role assignment to deploy the resources in your Azure subscription.
+1. **Azure Account**: At minimum `Contributor` role assignment to deploy the resources in your Azure subscription.
+2. **Azure Subscription**: An active Azure subscription.
+3. **OpenAI or Azure OpenAI instance**: This will provide the AI capabilities required by the application. If you don't have one, you can find [instructions here](../../OPENAI.md)
 
 ### Steps to Deploy the App
 
@@ -19,9 +19,9 @@ It is recommended that you use Entra ID for authentication.
 - Click on `+ New registration`.
     - **Give it an identifiable name**
     - **Supported account types**:
-        - Accounts in this organizational directory only (Microsoft only - Single tenant) 
+        - Accounts in this organizational directory only ([Your Organization] only - Single tenant) 
 - **Redirect URI**:
-    - Select `Web` as platform and in the URL insert the following URL, being `[webAppName]` the name you'll give to the app on the next steps: 
+    - Select `Web` as platform and in the URL insert the following URL, with `[webAppName]` being the name you'll give to the app on the next steps: 
         - `https://[webAppName].azurewebsites.net/.auth/login/aad/callback`
     - Click on `Register`
     - Copy the value of `Application (client) ID` to be used when creating the app in the next steps.
@@ -46,18 +46,19 @@ See details on pricing [here](https://azure.microsoft.com/en-us/pricing/details/
         - **Subscription**: Choose your Azure subscription.
         - **Resource Group**: Select an existing group or create a new one.
         - **Region**: Choose the region where you want to deploy the app (the closer to y ou, the better).
-        - **Web App Name**: Enter a unique name for your web app.
+        - **Web app name**: Enter a unique name for your web app.
             - This will create the URl you'll access:
                 `webappname`.azurewebsites.net
-        - **Service Principal Type**:
-            - To create a new authentication app, leave as `Create New`
-            - Click change Selection to change its name or leave it as the default.
-        - **AI Settings**:
+        - **Disable authentication**:
+            - Having authentication enabled is **strongly** recommended. But if for any case you want to test the app making sure that no private data will be used and you're ok with the website being open to the internet to access, check this option.
+        - **App registration client ID**:
+            - In here you'll insert the `Application (client) ID` value you created earlier.
+        - **AI settings**:
             - This will configure how the app will access an AI instance.
-            - **AI Type**: 
+            - **AI type**: 
                 - OpenAI or Azure OpenAI
             - **Use Managed Identity**:
-                - Check this if type is Azure OpenAI and you don't have a key, but the user accessing the app have permission to it.
+                - Check this if type is Azure OpenAI and you don't have a key, but the user accessing the app has a role assigment in the Azure OpenAI resource.
             - **Endpoint**:
                 - If Azure OpenAI, insert the endpoint for it.
             - **Key**:

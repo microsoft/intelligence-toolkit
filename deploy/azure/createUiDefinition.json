@@ -7,7 +7,7 @@
       {
         "name": "webAppName",
         "type": "Microsoft.Common.TextBox",
-        "label": "Web App Name",
+        "label": "Web app name",
         "defaultValue": "",
         "toolTip": "The App name, to be acessed",
         "constraints": {
@@ -20,12 +20,12 @@
       {
         "name": "disableAuth",
         "type": "Microsoft.Common.CheckBox",
-        "label": "Disable Authentication"
+        "label": "Disable authentication"
       },
       {
         "name": "authClientId",
         "type": "Microsoft.Common.TextBox",
-        "label": "App Registration client ID",
+        "label": "App registration client ID",
         "defaultValue": "",
         "toolTip": "The app registration client id. (check github repository readme on how to)",
         "constraints": {
@@ -55,14 +55,14 @@
     },
     "steps": [
       {
-        "name": "AI Settings",
+        "name": "AISettings",
         "type": "Microsoft.Common.Section",
-        "label": "AI Settings",
+        "label": "AI settings",
         "elements": [
           {
             "name": "aiType",
             "type": "Microsoft.Common.OptionsGroup",
-            "label": "AI Type",
+            "label": "AI type",
             "defaultValue": "OpenAI",
             "toolTip": "",
             "constraints": {
@@ -84,21 +84,21 @@
             "name": "aiManagedIdentity",
             "type": "Microsoft.Common.CheckBox",
             "label": "Use Managed Identity",
-            "visible": "[equals(steps('AI Settings').aiType, 'azure')]"
+            "visible": "[equals(steps('AISettings').aiType, 'azure')]"
           },
           {
             "name": "aiEndpoint",
             "type": "Microsoft.Common.TextBox",
             "label": "Endpoint",
             "defaultValue": "",
-            "visible": "[equals(steps('AI Settings').aiType, 'azure')]"
+            "visible": "[equals(steps('AISettings').aiType, 'azure')]"
           },
           {
             "name": "openaiApiKey",
             "type": "Microsoft.Common.TextBox",
             "label": "Key",
             "defaultValue": "",
-            "visible": "[or(equals(steps('AI Settings').aiManagedIdentity, false), equals(steps('AI Settings').aiType, 'openai'))]"
+            "visible": "[or(equals(steps('AISettings').aiManagedIdentity, false), equals(steps('AISettings').aiType, 'openai'))]"
           }
         ]
       },
@@ -123,10 +123,10 @@
       "tags": "[steps('tags').tagsObj]",
       "clientId": "[basics('authClientId')]",
       "disableAuth": "[basics('disableAuth')]",
-      "aiType": "[steps('AI Settings').aiType]",
-      "aiManagedIdentity": "[steps('AI Settings').aiManagedIdentity]",
-      "openaiApiKey": "[steps('AI Settings').openaiApiKey]",
-      "aiEndpoint": "[steps('AI Settings').aiEndpoint]"
+      "aiType": "[steps('AISettings').aiType]",
+      "aiManagedIdentity": "[steps('AISettings').aiManagedIdentity]",
+      "openaiApiKey": "[steps('AISettings').openaiApiKey]",
+      "aiEndpoint": "[steps('AISettings').aiEndpoint]"
     }
   }
 }
