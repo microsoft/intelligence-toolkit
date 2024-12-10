@@ -24,10 +24,6 @@
       "type": "bool",
       "defaultValue": false
     },
-    "aiKey": {
-      "type": "string",
-      "defaultValue": ""
-    },
     "aiEndpoint": {
       "type": "string",
       "defaultValue": ""
@@ -66,7 +62,7 @@
     "ftpsState": "FtpsOnly",
     "linuxFxVersion": "sitecontainers",
     "siteContainerName": "main",
-    "redirectUrl": "[concat('https://', parameters('webAppName'), '.azurewebsites.net/.auth/login/aad/callback')]"
+    "redirectUrl": "[concat('https://', parameters('webAppName'), '.azurewebsites.net')]"
   },
   "resources": [
     {
@@ -165,11 +161,7 @@
       "properties": {
         "globalValidation": {
           "requireAuthentication": true,
-          "unauthenticatedClientAction": "RedirectToLoginPage",
-          "redirectUrl": "[variables('redirectUrl')]"
-        },
-        "login": {
-          "allowedExternalRedirectUrls": [ "[variables('redirectUrl')]" ]
+          "unauthenticatedClientAction": "RedirectToLoginPage"
         },
         "identityProviders": {
           "azureActiveDirectory": {

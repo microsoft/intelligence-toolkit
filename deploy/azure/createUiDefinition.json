@@ -18,16 +18,22 @@
         "visible": true
       },
       {
-        "name": "ServicePrincipal",
-        "type": "Microsoft.Common.ServicePrincipalSelector",
-        "defaultValue": {
-          "principalId": "<default guid>",
-          "name": "(New) ITK App Id"
+        "name": "disableAuth",
+        "type": "Microsoft.Common.CheckBox",
+        "label": "Disable Authentication"
+      },
+      {
+        "name": "authClientId",
+        "type": "Microsoft.Common.TextBox",
+        "label": "App Registration client ID",
+        "defaultValue": "",
+        "toolTip": "The app registration client id. (check github repository readme on how to)",
+        "constraints": {
+          "required": "[equals(steps('basics').disableAuth, false)]",
+          "regex": "^[a-zA-Z0-9-]{36}$",
+          "validationMessage": "Must be a valid GUID"
         },
-        "options": {
-          "hideCertificate": false
-        },
-        "visible": true
+        "visible": "[equals(steps('basics').disableAuth, false)]"
       }
     ],
     "config": {
@@ -92,7 +98,7 @@
             "type": "Microsoft.Common.TextBox",
             "label": "Key",
             "defaultValue": "",
-            "visible": "[equals(steps('AI Settings').aiManagedIdentity, false)]"
+            "visible": "[or(equals(steps('AI Settings').aiManagedIdentity, false), equals(steps('AI Settings').aiType, 'openai'))]"
           }
         ]
       },
@@ -115,7 +121,8 @@
       "webAppName": "[basics('webAppName')]",
       "location": "[location()]",
       "tags": "[steps('tags').tagsObj]",
-      "clientId": "[basics('ServicePrincipal').ServicePrincipal.principalId]",
+      "clientId": "[basics('authClientId')]",
+      "disableAuth": "[basics('disableAuth')]",
       "aiType": "[steps('AI Settings').aiType]",
       "aiManagedIdentity": "[steps('AI Settings').aiManagedIdentity]",
       "aiKey": "[steps('AI Settings').aiKey]",
