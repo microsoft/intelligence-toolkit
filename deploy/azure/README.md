@@ -9,6 +9,24 @@ Before you start, make sure you have the following:
 2. **Azure Account**: At minimum `Contributor` role assignment to deploy the resources in your Azure subscription.
 
 ### Steps to Deploy the App
+
+It is recommended that you use Entra ID for authentication.
+
+#### Creating an app registration for website authentication
+
+- Open your web browser and go to Azure portal, search in the top bar for `Microsoft Entra ID`
+- On the left panel click on `App registrations`
+- Click on `+ New registration`.
+    - **Give it an identifiable name**
+    - **Supported account types**:
+        - Accounts in this organizational directory only (Microsoft only - Single tenant) 
+- **Redirect URI**:
+    - Select `Web` as platform and in the URL insert the following URL, being `[webAppName]` the name you'll give to the app on the next steps: 
+        - `https://[webAppName].azurewebsites.net/.auth/login/aad/callback`
+    - Click on Register
+    - Copy the value of `Application (client) ID` to be used when creating the app in the next steps.
+
+#### Deploy
 1. **Go to Azure Marketplace**:
     - Open your web browser and go to Azure portal, search in the top bar for `Marketplace`.
     - If you're not logged in, you may need to log in to your Azure account. 
