@@ -59,6 +59,10 @@
     "numberOfWorkers": {
       "type": "string",
       "defaultValue": "1"
+    },
+    "openIdIssuerUrl": {
+      "type": "string",
+      "defaultValue": "https://login.microsoftonline.com/"
     }
   },
   "variables": {
@@ -125,7 +129,7 @@
           "alwaysOn": "[parameters('alwaysOn')]",
           "ftpsState": "[variables('ftpsState')]"
         },
-        "serverFarmId": "[concat('/subscriptions/', subscription().subscriptionId,'/resourcegroups/', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('hostingPlanName'))]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
         "clientAffinityEnabled": false,
         "httpsOnly": true,
         "publicNetworkAccess": "Enabled"
@@ -178,7 +182,7 @@
             "enabled": "[equals(parameters('disableAuth'), 'false')]",
             "registration": {
               "clientId": "[parameters('clientId')]",
-              "openIdIssuer": "[concat('https://login.microsoftonline.com/',subscription().tenantId,'/v2.0')]"
+              "openIdIssuer": "[concat(parameters('openIdIssuerUrl'),subscription().tenantId,'/v2.0')]"
             },
             "validation": {
               "allowedAudiences": [ "[parameters('clientId')]" ]
@@ -195,7 +199,6 @@
         "image": "ghcr.io/microsoft/intelligence-toolkit:latest",
         "targetPort": "80",
         "isMain": true,
-        "startUpCommand": "",
         "authType": "Anonymous"
       },
       "dependsOn": [

@@ -30,9 +30,8 @@ It is recommended that you use Entra ID for authentication.
 See details on pricing [here](https://azure.microsoft.com/en-us/pricing/details/app-service/linux/) (We default to `Premium v3 P0v3` Plan)
 
 1. **Go to Azure Marketplace**:
-    - Open your web browser and go to [Azure portal](https://portal.azure.com), search in the top bar for `Marketplace`.
-    - If you're not logged in, you may need to log in to your Azure account. 
-    - Use the search bar to find the `Intelligence Toolkit` application.
+
+    - In your browser, open [Intelligence Tooklit on Marketplace here](https://portal.azure.com/#create/msr-resilience.itk_app_servicewebapp)
 
 2. **Select the Application**:
     - Click on the application from the search results to open its details page.

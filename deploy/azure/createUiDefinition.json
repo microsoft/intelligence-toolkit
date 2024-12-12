@@ -9,7 +9,7 @@
         "type": "Microsoft.Common.TextBox",
         "label": "Web app name",
         "defaultValue": "",
-        "toolTip": "The App name, to be acessed",
+        "toolTip": "The App name, to be accessed",
         "constraints": {
           "required": true,
           "regex": "^[a-zA-Z0-9-]{3,60}$",
@@ -20,7 +20,8 @@
       {
         "name": "disableAuth",
         "type": "Microsoft.Common.CheckBox",
-        "label": "Disable authentication"
+        "label": "Disable authentication",
+        "toolTip": "Disable authentication for the app"
       },
       {
         "name": "authClientId",
@@ -64,7 +65,7 @@
             "type": "Microsoft.Common.OptionsGroup",
             "label": "AI type",
             "defaultValue": "OpenAI",
-            "toolTip": "",
+            "toolTip": "The AI service to use",
             "constraints": {
               "allowedValues": [
                 {
@@ -84,19 +85,32 @@
             "name": "aiManagedIdentity",
             "type": "Microsoft.Common.CheckBox",
             "label": "Use Managed Identity",
+            "toolTip": "Use Managed Identity to authenticate to Azure AI",
             "visible": "[equals(steps('AISettings').aiType, 'azure')]"
           },
           {
             "name": "aiEndpoint",
             "type": "Microsoft.Common.TextBox",
             "label": "Endpoint",
+            "toolTip": "The endpoint of the Azure AI service",
             "defaultValue": "",
+            "constraints": {
+              "required": "[equals(steps('AISettings').aiType, 'azure')]",
+              "regex": "^(https://)([a-zA-Z0-9-]+)(.openai.azure.com)$",
+              "validationMessage": "Must be a valid Azure AI endpoint"
+            },
             "visible": "[equals(steps('AISettings').aiType, 'azure')]"
           },
           {
             "name": "openaiApiKey",
             "type": "Microsoft.Common.TextBox",
+            "toolTip": "The OpenAI key",
             "label": "Key",
+            "constraints": {
+              "required": false,
+              "regex": "^[a-zA-Z0-9-]{36}$",
+              "validationMessage": "Must be a valid OpenAI key"
+            },
             "defaultValue": "",
             "visible": "[or(equals(steps('AISettings').aiManagedIdentity, false), equals(steps('AISettings').aiType, 'openai'))]"
           }
@@ -106,10 +120,12 @@
         "name": "tags",
         "type": "Microsoft.Common.Section",
         "label": "Tags",
+        "toolTip": "Tags to apply to the resources",
         "elements": [
           {
             "name": "tagsObj",
             "type": "Microsoft.Common.TagsByResource",
+            "toolTip": "Tags to apply to the resources",
             "resources": [
               "Microsoft.Web/sites"
             ]
