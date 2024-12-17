@@ -118,7 +118,7 @@
             },
             {
               "name": "AZURE_AUTH_TYPE",
-              "value": "[if(equals(parameters('aiManagedIdentity'), 'true'), 'Managed Identity', 'Azure Key')]"
+              "value": "[if(parameters('aiManagedIdentity'), 'Managed Identity', 'Azure Key')]"
             },
             {
               "name": "AZURE_OPENAI_ENDPOINT",
@@ -162,6 +162,7 @@
     {
       "type": "Microsoft.Web/sites/config",
       "apiVersion": "2022-09-01",
+      "condition": "[equals(parameters('disableAuth'), 'false')]",
       "name": "[concat(parameters('webAppName'), '/authsettingsV2')]",
       "dependsOn": [
         "[resourceId('Microsoft.Web/Sites', parameters('webAppName'))]"

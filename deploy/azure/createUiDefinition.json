@@ -70,11 +70,11 @@
               "allowedValues": [
                 {
                   "label": "OpenAI",
-                  "value": "openai"
+                  "value": "OpenAI"
                 },
                 {
                   "label": "Azure OpenAI",
-                  "value": "azure"
+                  "value": "Azure OpenAI"
                 }
               ],
               "required": true
@@ -86,7 +86,7 @@
             "type": "Microsoft.Common.CheckBox",
             "label": "Use Managed Identity",
             "toolTip": "Use Managed Identity to authenticate to Azure AI",
-            "visible": "[equals(steps('AISettings').aiType, 'azure')]"
+            "visible": "[equals(steps('AISettings').aiType, 'Azure OpenAI')]"
           },
           {
             "name": "aiEndpoint",
@@ -95,11 +95,11 @@
             "toolTip": "The endpoint of the Azure AI service",
             "defaultValue": "",
             "constraints": {
-              "required": "[equals(steps('AISettings').aiType, 'azure')]",
+              "required": "[equals(steps('AISettings').aiType, 'Azure OpenAI')]",
               "regex": "^(https://)([a-zA-Z0-9-]+)(.openai.azure.com)$",
               "validationMessage": "Must be a valid Azure AI endpoint"
             },
-            "visible": "[equals(steps('AISettings').aiType, 'azure')]"
+            "visible": "[equals(steps('AISettings').aiType, 'Azure OpenAI')]"
           },
           {
             "name": "openaiApiKey",
@@ -112,7 +112,7 @@
               "validationMessage": "Must be a valid OpenAI key"
             },
             "defaultValue": "",
-            "visible": "[or(equals(steps('AISettings').aiManagedIdentity, false), equals(steps('AISettings').aiType, 'openai'))]"
+            "visible": "[or(equals(steps('AISettings').aiManagedIdentity, false), equals(steps('AISettings').aiType, 'OpenAI'))]"
           }
         ]
       },
