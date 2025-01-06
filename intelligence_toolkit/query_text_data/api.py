@@ -93,9 +93,7 @@ class QueryTextData:
     def process_data_from_files(
         self,
         input_files: list[str],
-        combine_text_under_n_chars = 1500,
-        new_after_n_chars: int = 2000,
-        max_characters: int = 2500,
+        chunk_size: int = 1000,
         callbacks: list = [],
     ) -> dict[str, list[str]]:
         """
@@ -112,9 +110,7 @@ class QueryTextData:
         """
         self.label_to_chunks = document_processor.convert_files_to_chunks(
             input_files,
-            combine_text_under_n_chars=combine_text_under_n_chars,
-            new_after_n_chars=new_after_n_chars,
-            max_characters=max_characters,
+            chunk_size=chunk_size,
             callbacks=callbacks
         )
         self.stage = QueryTextDataStage.CHUNKS_CREATED

@@ -103,9 +103,7 @@ async def create(sv: SessionVariables, workflow=None):
                 input_files={file.name for file in files}
                 qtd.process_data_from_files(
                     input_files=input_files,
-                    combine_text_under_n_chars = 1500,
-                    new_after_n_chars = 2000,
-                    max_characters = 2500,
+                    chunk_size=CHUNK_SIZE,
                     callbacks=[file_callback],
                 )
                 for file in input_files:
