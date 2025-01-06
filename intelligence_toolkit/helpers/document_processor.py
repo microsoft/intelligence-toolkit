@@ -2,6 +2,8 @@
 from collections import defaultdict
 import pandas as pd
 from json import dumps, loads
+import pdfplumber
+import io
 
 def chunk(text):
     return [text]
@@ -47,7 +49,14 @@ def convert_files_to_chunks(
                 text = dumps(json_obj)
                 chunk_text(text)
         elif filename.endswith(".pdf"):
-            pass
+            page_texts = []
+            bytes = open(filepath, "rb").read()
+            pdf_reader = pdfplumber.open(io.BytesIO(bytes))
+            for px in range(len(pdf_reader.pages)):
+                page_text = pdf_reader.pages[px].extract_text()
+                page_texts.append(page_text)
+            text = " ".join(page_texts)
+            chunk_text(text)
         else:
             text = open(filepath).read()
             chunk_text(text)
