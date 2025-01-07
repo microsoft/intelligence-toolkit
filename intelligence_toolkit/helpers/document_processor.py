@@ -2,7 +2,7 @@
 from collections import defaultdict
 import pandas as pd
 from json import dumps, loads
-import pdfplumber
+from pypdf import PdfReader
 import io
 from intelligence_toolkit.AI.text_splitter import TextSplitter
 
@@ -44,11 +44,11 @@ def convert_files_to_chunks(
                 add_chunks(filename, text, chunk_size)
         elif filename.endswith(".pdf"):
             page_texts = []
-            bytes = open(filepath, "rb").read()
-            pdf_reader = pdfplumber.open(io.BytesIO(bytes))
-            for px in range(len(pdf_reader.pages)):
-                page_text = pdf_reader.pages[px].extract_text()
-                page_texts.append(page_text)
+            pdf_reader = PdfReader(filepath)
+            num_pages = pdf_reader.get_num_pages()
+            for px in range(num_pages):
+                page = pdf_reader.pages[px]
+                page_texts.append(page.extract_text())
             text = " ".join(page_texts)
             add_chunks(filename, text, chunk_size)
         else:
