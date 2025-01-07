@@ -130,9 +130,19 @@ All use of Intelligence Toolkit should be consistent with this documentation. In
 
 ## Getting Started
 
-You can start using the Intelligence Toolkit as either a web application (with a tool called Docker) or a Python package (via PyPI). Choose one of the options below based on your needs.
+You can start using the Intelligence Toolkit as either a web application (in Azure or locally with a tool called Docker) or a Python package (via PyPI). Choose one of the options below based on your needs.
 
-**Option 1: Using Intelligence Toolkit as a Web Application (via Docker)**
+**Option 1: Using Intelligence Toolkit in Azure**
+### NGOs
+
+Non-profit organizations can apply for an annual Azure credit grant of $2,000, which can be used to set up and run an instance of the intelligence-toolkit app for your organization.
+
+[Read more about eligibility and registration here](https://www.microsoft.com/en-us/nonprofits/azure)
+
+[See instructions](./deploy/azure/README.md) on how to.
+
+
+**Option 2: Using Intelligence Toolkit as a Web Application (via Docker)**
 
 To use the Intelligence Toolkit as a web application, you can download and run it using Docker.
 
@@ -187,7 +197,7 @@ You can access the `Settings` page on the left sidebar when running the applicat
 - For Azure OpenAI, you will need an active Azure account ([create here](https://portal.azure.com/)), endpoint, key and version for the AI Service ([create here](https://portal.azure.com/#view/Microsoft_Azure_ProjectOxford/CognitiveServicesHub/~/OpenAI)).
 
 
-**Option 2: Using Intelligence Toolkit as a Python Package (via PyPI)**
+**Option 3: Using Intelligence Toolkit as a Python Package (via PyPI)**
 
 If you prefer to use Intelligence Toolkit as a Python package, install it directly from PyPI:
     
@@ -205,12 +215,6 @@ After installation, explore the examples in the example_notebooks folder to get 
 If you have any questions or need further assistance, you can reach out to the project maintainers at [itkteam@microsoft.com](mailto:itkteam@microsoft.com).
 
 <hr>
-
-### NGOs
-
-Non-profit organizations can apply for an annual Azure credit grant of $2,000, which can be used to set up and run an instance of the intelligence-toolkit app for your organization.
-
-[Read more about eligibility and registration here](https://www.microsoft.com/en-us/nonprofits/azure)
 
 ## Trademarks
 
