@@ -114,7 +114,7 @@ def explain_chunk_significance(
     return cid_to_summary
 
 
-def combine_chunk_text_and_explantion(cid_to_text, cid_to_summary):
+def combine_chunk_text_and_explanation(cid_to_text, cid_to_summary):
     cid_to_explained_text = {}
     for cid, text in cid_to_text.items():
         summary = cid_to_summary[cid] if cid in cid_to_summary else ""

@@ -80,6 +80,7 @@ class OpenAIClient:
         messages: list[str],
         stream: bool = True,
         callbacks: list[LLMCallback] | None = None,
+        prefix: str = "",
         **kwargs,
     ):
         try:
@@ -108,7 +109,7 @@ class OpenAIClient:
                     if delta is not None:
                         full_response += delta
                         if callbacks:
-                            show = full_response
+                            show = prefix + full_response
                             if len(delta) > 0:
                                 show += "▌"
                             for callback in callbacks:

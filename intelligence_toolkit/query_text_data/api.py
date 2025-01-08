@@ -198,6 +198,7 @@ class QueryTextData:
         chunk_search_config: ChunkSearchConfig,
         chunk_progress_callback=None,
         chunk_callback=None,
+        commentary_callback=None,
     ) -> tuple[list[int], str]:
         """
         Detect relevant text chunks.
@@ -227,6 +228,7 @@ class QueryTextData:
             chunk_search_config=self.chunk_search_config,
             chunk_progress_callback=chunk_progress_callback,
             chunk_callback=chunk_callback,
+            commentary_callback=commentary_callback,
         )
         self.stage = QueryTextDataStage.CHUNKS_MINED
         return self.relevant_cids, self.search_summary

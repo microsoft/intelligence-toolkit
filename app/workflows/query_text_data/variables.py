@@ -36,6 +36,7 @@ class SessionVariables:
         self.system_prompt = SessionVariable(prompts.list_prompts, prefix)
         self.chunk_progress = SessionVariable("", prefix)
         self.answer_progress = SessionVariable("", prefix)
+        self.show_search_process = SessionVariable(False, prefix)
 
     def reset_workflow(self):
         for key in st.session_state:

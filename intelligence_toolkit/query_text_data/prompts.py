@@ -169,6 +169,78 @@ Input text chunks JSON, in the form "<source_id>: <text_chunk>":
 Output JSON object:
 """
 
+chunk_commentary_prompt = """\
+You are a helpful assistant providing a thematic analysis of an information stream with respect to a user query.
+
+---Task---
+
+Output a nested thematic structure that organizes low-level titles of events/insights into higher-level themes. Each theme should be a concise, high-level summary of the events/insights that fall under it.
+
+Themes should clearly related to the user query and the new information provided. Each theme should contain at least one point.
+
+Example:
+
+- **Theme 1**
+  - Point 1
+  - Point 2
+- **Theme 2**
+  - Point 3
+  - Point 4
+- **Theme 3**
+  - Point 5
+  - Point 6 
+
+---User query---
+
+{query}
+
+---New information---
+
+{information}
+
+---Existing thematic structure---
+
+{commentary}
+
+---New thematic structure---
+
+"""
+
+thematic_update_prompt = """\
+You are a helpful assistant tasked with creating a JSON object that updates a thematic organization of points relevant to a user query.
+
+The output object should capture new themes, points, and source references that should be added to or modify the existing thematic structure:
+
+- "updates": an array of objects, each representing an update to a point derived from the input text chunks
+- "point_id": the ID of the point to update, else the next available point ID if creating a new point
+- "point_title": the title of the point to update or create. If the existing point title is unchanged, the field should be left blank
+- "source_ids": an array of source IDs that support the point, to be added to the existing source IDs for the point
+- "theme_title": the title of a theme that organizes a set of related points.
+
+--Rules--
+
+- Each point MUST be sufficiently detailed to stand along without ambiguity
+- If a source relates to an existing point, the source ID MUST be assigned to the existing point ID, rather than creating a new point
+- If the addition of a source to a point warrants a change in point title, the point title MUST be updated
+- Aim for 3-7 themes overall, with an even distribution of points across themes
+- Points should be assigned to a single theme in a logical sequence that addresses the user query
+- Order themes in a logical sequence that addresses the user query
+
+--User query--
+
+{query}
+
+--Existing thematic structure--
+
+{structure}
+
+--New sources by source ID--
+
+{sources}
+
+--Output JSON object--
+
+"""
 
 list_prompts = {
     "report_prompt": report_prompt,
