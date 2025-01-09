@@ -261,6 +261,15 @@ async def create(sv: SessionVariables, workflow=None):
                         st.markdown("#### Live analysis")
                         analysis_placeholder = st.empty()
                         commentary_placeholder = st.empty()
+                        if qtd.stage.value >= QueryTextDataStage.CHUNKS_MINED.value:
+                            st.download_button(
+                                "Download live analysis as MD",
+                                data=sv.thematic_analysis.value + "\n" + sv.thematic_commentary.value,
+                                file_name=re.sub(r'[^\w\s]','',sv.query.value).replace(' ', '_')+"_analysis.md",
+                                mime="text/markdown",
+                                key="live_analysis_download_button",
+                                disabled=qtd.stage.value < QueryTextDataStage.QUESTION_ANSWERED.value,
+                            )
                     with c2:
                         
 
