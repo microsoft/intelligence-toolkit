@@ -1,25 +1,20 @@
 {
-    "example_order" : ["texts", "extended_answer_from_text", "extended_answer_from_claims", "condensed_answer"],
+    "example_order" : ["texts", "research_report", "answer_report"],
     "example_metadata" : {
         "texts": {
             "type": "csv",
             "heading": "Input texts",
             "description": "Input texts to be queried"
         },
-        "extended_answer_from_text": {
+        "research_report": {
             "type": "md",
-            "heading": "Extended answer (relevant chunks only)",
+            "heading": "Research report",
             "description": "An extended answer to a user query generated using multiple generative AI calls, first to detect relevant text chunks and then to generate an answer"
         },
-        "extended_answer_from_claims": {
+        "answer_report": {
             "type": "md",
-            "heading": "Extended answer (with claim analysis)",
-            "description": "An extended answer to a user query generated using multiple generative AI calls, first to detect relevant text chunks, then to extract relevant claims, then to query again for each claim, and finally to generate an answer from both the claims and the original text chunks"
-        },
-        "condensed_answer": {
-            "type": "md",
-            "heading": "Condensed answer",
-            "description": "A condensed answer to a user query using a single generative AI call to summarize the extended answer"
+            "heading": "Answer report",
+            "description": "A condensed answer to a user query using a single generative AI call to summarize the research report"
         }
     }
 }

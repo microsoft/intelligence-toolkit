@@ -84,28 +84,6 @@ class ChunkSearchConfig:
     def __repr__(self):
         return f"ChunkSearchConfig(adjacent_test_steps={self.adjacent_test_steps}, community_relevance_tests={self.community_relevance_tests}, relevance_test_batch_size={self.relevance_test_batch_size}, relevance_test_budget={self.relevance_test_budget}, irrelevant_community_restart={self.irrelevant_community_restart})"
     
-class AnswerConfig:
-    def __init__(
-        self,
-        target_chunks_per_cluster: int,
-        extract_claims: bool,
-        claim_search_depth: int,
-    ) -> None:
-        """
-        Represents the configuration used to answer a user query.
-
-        Args:
-            target_chunks_per_cluster (int): How many chunks to aim to analyze together in a single LLM call
-            extract_claims (bool): Whether to extract claims from relevant text chunks
-            claim_search_depth (int): If extracting claims, how many chunks to search for additional claim support
-        """
-        self.target_chunks_per_cluster = target_chunks_per_cluster
-        self.extract_claims = extract_claims
-        self.claim_search_depth = claim_search_depth
-
-    def __repr__(self):
-        return f"AnswerConfig(target_chunks_per_cluster={self.target_chunks_per_cluster}, extract_claims={self.extract_claims}, claim_search_depth={self.claim_search_depth})"
-    
 class AnswerObject:
     def __init__(
         self,

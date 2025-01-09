@@ -54,7 +54,9 @@ Extended answer:
 query_anchoring_prompt = """\
 You are a helpful assistant tasked with rewriting a user query in a way that better matches the concepts contained in the dataset.
 
-The output query should retain all the key phrases from the input query, but may expand on them with additional concepts and phrasing to better match relevant concepts in the dataset. Include as many relevant concepts as possible, especially as specific examples or general categories of concepts present in the user query. If no concepts are relevant, the output query should be the same as the input query.
+The output query should retain all the key phrases from the input query, but may expand on them with additional concepts and phrasing to better match relevant concepts in the dataset. Include only the most relevant concepts, especially as specific examples or general categories of concepts present in the user query. If no concepts are relevant, the output query should be the same as the input query. Keep the output query at 1-2 sentences.
+
+The output query should not be more specific than the input query. For example, if the input query is "What are the effects of climate change on the environment?" and "Arctic" is a provided concept, the output query should not be "What are the effects of climate change on the environment in the Arctic?", but could be "What are the effects of climate change on the environment, for example in the Arctic?".
 
 User query:
 
@@ -67,142 +69,74 @@ Data concepts:
 Output query:
 """
 
-claim_extraction_prompt = """\
-You are a helpful assistant tasked with creating a JSON object that extracts relevant claims from a collection of input text chunks.
-
-Given a query, the output object should extract claims from the input text chunks as follows:
-
-- "claim_context": an overall description of the context in which claims are made
-- "claim_statement": a statement-based formatting of a claim that is relevant to the user query and includes relevant contextual information (e.g., time and place)
-- "claim_attribution": any named source or author of a claim, beyond the title of the text 
-- "supporting_sources": a list of source IDs that support the claim
-- "contradicting_sources": a list of source IDs that contradict the claim
-
---TASK--
-
-Question for which claims are being extracted:
-
-{query}
-
-Input text chunks JSON, in the form "<source_id>: <text_chunk>":
-
-{chunks}
-
-Output JSON object:
-"""
-
-claim_summarization_prompt = """\
-You are a helpful assistant tasked with creating a JSON object that summarizes claims relevant to a given user query.
+theme_summarization_prompt = """\
+You are a helpful assistant tasked with creating a JSON object that summarizes a theme relevant to a given user query.
 
 When presenting source evidence, support each sentence with a source reference to the file and text chunk: "[source: <source_id>, <source_id>]". Include source IDs only - DO NOT include the chunk ID within the source ID.
 
-The output object should summarize all claims from input text chunks as follows:
+The output object should summarize the theme as follows:
 
-- "content_title": a title for a specific content item spanning related claims, in the form of a derived claim statement
-- "content_summary": a paragraph, starting with "**Source evidence**:", describing each of the individual claims and the balance of evidence supporting or contradicting them
-- "content_commentary": a paragraph, starting with "**AI commentary**:", suggesting inferences, implications, or conclusions that could be drawn from the source evidence
+- "theme_title": a title for the theme, in the form of a claim statement supported by the points to follow
+- "point_title": a title for a specific point within the theme, in the form of a claim statement
+- "point_evidence": a paragraph, starting with "**Source evidence**:", describing evidence from sources that support or contradict the point, without additional interpretation
+- "point_commentary": a paragraph, starting with "**AI commentary**:", suggesting inferences, implications, or conclusions that could be drawn from the source evidence
 
---TASK--
+--Query--
+
+{query}
+
+--Theme hint--
+
+{theme}
+
+--Source text chunks--
 
 Input text chunks JSON, in the form "<source_id>: <text_chunk>":
 
 {chunks}
 
-Input claim analysis JSON:
-
-{analysis}
-
 Output JSON object:
 """
 
-content_integration_prompt = """\
+theme_integration_prompt = """\
 You are a helpful assistant tasked with creating a JSON object that organizes content relevant to a given user query.
 
-The output object should summarize all claims from input text chunks as follows:
+The output object should integrate the theme summaries provided as input as follows:
 
-- "query": the user query/prompt that the report answers
-- "answer": a standalone and detailed answer to the user query, derived from the content items and formatted according to the user query/prompt. Quote directly from source text where appropriate, and provide a source reference for each quote
-- "report_title": a title for the final report that reflects the overall theme of the content and the user query it answers, in the form of a derived claim statement. Should not contain punctuation or special characters beyond spaces and hyphens
-- "report_summary": an introductory paragraph describes the themes and content items in the report, without offering additional interpretation beyond the content items
-- "theme_order": the order in which to present the themes in the final report
-- "theme_title": a title for a specific theme spanning related content items, in the form of a derived claim statement
-- "theme_summary": an introductory paragraph that links the content items in the theme to the user query, without additional intepretation
-- "content_id_order": the order in which to present the content items within the theme, specified by content item id. If content items make the same overall point, include only the more comprehensive content item
-- "theme_commentary": a concluding paragraph that summarizes the content items in the theme and their relevance to the user query, with additional interpretation
-- "report_commentary": a concluding paragraph that summarizes the themes and their relevance to the user query, with additional interpretation
+- "answer": a standalone and detailed answer to the user query, derived from the points and formatted according to the user query/prompt. Quote directly from source text where appropriate, and provide a source reference for each quote
+- "report_title": a title for the final report that reflects the overall theme of the content and the user query it answers, in the form of a claim statement. Should not contain punctuation or special characters beyond spaces and hyphens
+- "report_overview": an introductory paragraph that provides an overview of the report themes in a neutral way without offering interpretations or implications
+- "report_implications": a concluding paragraph that summarizes the implications of the themes and their specific points
 
 When presenting evidence, support each sentence with one or more source references: "[source: <source_id>, <source_id>]". Include source IDs only - DO NOT include the chunk ID within the source ID.
 
-Each content item can only be used once, under the most appropriate theme. If a content item is relevant to multiple themes, choose the theme that best captures the main point of the content item.
 
---TASK--
-
-Content items indexed by id:
+--Theme summaries--
 
 {content}
 
-User query:
+--User query--
 
 {query}
 
 Output JSON object:
 """
 
-claim_requery_prompt = """\
-You are a helpful assistant tasked with creating a JSON object that analyzes input text chunks for their support or contradiction of given claim.
+commentary_prompt = """\
+You are a helpful assistant tasked with providing commentary on a set of themes derived from source texts.
 
-The output object should summarize all claims from input text chunks as follows:
+When presenting evidence, support each sentence with one or more source references: "[source: <source_id>, <source_id>]". Include source IDs only - DO NOT include the chunk ID within the source ID.
 
-- "supporting_source": the IDs of the input text chunks that support the claim
-- "contradicting_sources": the IDs of the input text chunks that contradict the claim
 
---TASK--
-
-Claim:
-
-{claim}
-
-Input text chunks JSON, in the form "<source_id>: <text_chunk>":
-
-{chunks}
-
-Output JSON object:
-"""
-
-chunk_commentary_prompt = """\
-You are a helpful assistant providing a thematic analysis of an information stream with respect to a user query.
-
----Task---
-
-Output a nested thematic structure that organizes low-level titles of events/insights into higher-level themes. Each theme should be a concise, high-level summary of the events/insights that fall under it.
-
-Themes should clearly related to the user query and the new information provided. Each theme should contain at least one point.
-
-Example:
-
-- **Theme 1**
-  - Point 1
-  - Point 2
-- **Theme 2**
-  - Point 3
-  - Point 4
-- **Theme 3**
-  - Point 5
-  - Point 6 
-
----User query---
+--User query--
 
 {query}
 
----New information---
+--Themes--
 
-{information}
+{structure}
 
----Existing thematic structure---
-
-{commentary}
-
----New thematic structure---
+--Output commentary--
 
 """
 
@@ -219,11 +153,12 @@ The output object should capture new themes, points, and source references that 
 
 --Rules--
 
-- Each point MUST be sufficiently detailed to stand along without ambiguity
+- Each point MUST contain sufficient concrete details to capture the specific source information only, and not related information
 - If a source relates to an existing point, the source ID MUST be assigned to the existing point ID, rather than creating a new point
 - If the addition of a source to a point warrants a change in point title, the point title MUST be updated
 - Aim for 3-7 themes overall, with an even distribution of points across themes
 - Points should be assigned to a single theme in a logical sequence that addresses the user query
+- Themes should contain at least two points if possible
 - Order themes in a logical sequence that addresses the user query
 
 --User query--

@@ -7,21 +7,22 @@ from json import loads, dumps
 
 class Commentary:
 
-    def __init__(self, ai_configuration, query, callback):
+    def __init__(self, ai_configuration, query, analysis_callback, commentary_callback):
         self.ai_configuration = ai_configuration
         self.query = query
-        self.callback = callback
+        self.analysis_callback = analysis_callback
+        self.commentary_callback = commentary_callback
         self.structure = {
             "points": {},
             "point_sources": {},
             "themes": {},
         }
 
-    def update_commentary(self, chunks: dict[int, str]):
+    def update_analysis(self, chunks: dict[int, str]):
         messages = utils.prepare_messages(
             prompts.thematic_update_prompt, {"sources": "\n\n".join([f"{k}:\n\n{v}" for k, v in chunks.items()]), "query": self.query, "structure": dumps(self.structure, indent=2)}
         )
-        callbacks = [self.callback] if self.callback is not None else []
+        callbacks = [self.analysis_callback] if self.analysis_callback is not None else []
         updates = OpenAIClient(self.ai_configuration).generate_chat(
             messages,
             stream=False,
@@ -58,3 +59,29 @@ class Commentary:
                 source_list = ", ".join([str(x) for x in self.structure["point_sources"][point_id]])
                 output += f"  - {self.structure['points'][point_id]} (sources: {source_list})\n"
         return output
+    
+    def get_clustered_cids(self):
+        clustered_cids = {}
+        current_cluster = []
+        for theme_title, point_ids in self.structure["themes"].items():
+            current_cluster = []
+            for point_id in point_ids:
+                source_ids = self.structure["point_sources"][point_id]
+                for source_id in source_ids:
+                    if source_id not in current_cluster:
+                        current_cluster.append(source_id)
+            clustered_cids[theme_title] = current_cluster
+        return clustered_cids
+    
+    async def generate_commentary(self):
+        structure = self.format_structure()
+        messages = utils.prepare_messages(
+            prompts.commentary_prompt, {"query": self.query, "structure": structure}
+        )
+        callbacks = [self.commentary_callback] if self.commentary_callback is not None else []
+        commentary = OpenAIClient(self.ai_configuration).generate_chat(
+            messages,
+            stream=True,
+            callbacks=callbacks
+        )
+        return commentary

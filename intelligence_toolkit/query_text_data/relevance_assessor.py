@@ -80,22 +80,22 @@ def process_relevance_responses(
     chunk_callback,
     commentary,
 ):
-    num_relevant = 0
+    tested_relevant = []
     for r, c in zip(mapped_responses, search_cids):
         if c not in [x[1] for x in test_history]:
             test_history.append((search_label, c, r))
             if r == "Yes":
-                num_relevant += 1
+                tested_relevant.append(c)
     if progress_callback is not None:
         progress_callback(helper_functions.get_test_progress(test_history))
     relevant_list = [x[1] for x in test_history if x[2] == "Yes"]
     if chunk_callback is not None:
         chunk_callback([cid_to_text[cid] for cid in relevant_list])
     
-    if commentary is not None:
-        relevant_texts = {cid: cid_to_text[cid] for cid in relevant_list}
-        commentary.update_commentary(relevant_texts)
-    return num_relevant
+    if commentary is not None and len(tested_relevant) > 0:
+        relevant_texts = {cid: cid_to_text[cid] for cid in tested_relevant}
+        commentary.update_analysis(relevant_texts)
+    return len(tested_relevant)
 
 
 async def detect_relevant_chunks(
@@ -108,9 +108,10 @@ async def detect_relevant_chunks(
     chunk_search_config,
     chunk_progress_callback=None,
     chunk_callback=None,
+    analysis_callback=None,
     commentary_callback=None,
 ):
-    commentary = Commentary(ai_configuration, query, commentary_callback) if commentary_callback is not None else None
+    commentary = Commentary(ai_configuration, query, analysis_callback, commentary_callback) if analysis_callback is not None and commentary_callback is not None else None
     test_history = []
     all_units = sorted(
         [(cid, vector) for cid, vector in (cid_to_vector.items())], key=lambda x: x[0]
@@ -268,6 +269,8 @@ async def detect_relevant_chunks(
                     chunk_callback=chunk_callback,
                     commentary=commentary
                 )
+                if len(test_history) + len(adjacent) >= chunk_search_config.relevance_test_budget:
+                    break
                 relevant_this_loop |= is_relevant
                 # print(f"Community {community} relevant? {is_relevant}")
                 if (
@@ -328,4 +331,4 @@ async def detect_relevant_chunks(
     )
     relevant.sort()
 
-    return relevant, helper_functions.get_test_progress(test_history)
+    return relevant, helper_functions.get_test_progress(test_history), commentary

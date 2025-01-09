@@ -18,7 +18,6 @@ from intelligence_toolkit.AI.base_embedder import BaseEmbedder
 from intelligence_toolkit.AI.client import OpenAIClient
 from intelligence_toolkit.AI.openai_configuration import OpenAIConfiguration
 from intelligence_toolkit.query_text_data.classes import (
-    AnswerConfig,
     AnswerObject,
     ChunkSearchConfig,
     ProcessedChunks,
@@ -198,6 +197,7 @@ class QueryTextData:
         chunk_search_config: ChunkSearchConfig,
         chunk_progress_callback=None,
         chunk_callback=None,
+        analysis_callback=None,
         commentary_callback=None,
     ) -> tuple[list[int], str]:
         """
@@ -208,6 +208,8 @@ class QueryTextData:
             chunk_search_config (ChunkSearchConfig): The chunk search configuration
             chunk_progress_callback: The chunk progress callback
             chunk_callback: The chunk callback
+            analysis_callback: The analysis callback
+            commentary_callback: The commentary callback
 
         Returns:
             tuple[list[int], str]: The relevant chunk IDs and search summary
@@ -218,6 +220,7 @@ class QueryTextData:
         (
             self.relevant_cids,
             self.search_summary,
+            self.commentary
         ) = await relevance_assessor.detect_relevant_chunks(
             ai_configuration=self.ai_configuration,
             query=self.expanded_query,
@@ -228,34 +231,27 @@ class QueryTextData:
             chunk_search_config=self.chunk_search_config,
             chunk_progress_callback=chunk_progress_callback,
             chunk_callback=chunk_callback,
+            analysis_callback=analysis_callback,
             commentary_callback=commentary_callback,
         )
         self.stage = QueryTextDataStage.CHUNKS_MINED
         return self.relevant_cids, self.search_summary
 
     async def answer_query_with_relevant_chunks(
-        self, answer_config: AnswerConfig
+        self
     ) -> AnswerObject:
         """
         Answer a query with relevant chunks.
 
-        Args:
-            answer_config (AnswerConfig): The answer configuration
-
         Returns:
             AnswerObject: The answer object
         """
-        self.answer_config = answer_config
         self.answer_object: AnswerObject = await answer_builder.answer_query(
             self.ai_configuration,
             self.query,
             self.expanded_query,
             self.processed_chunks,
-            self.relevant_cids,
-            self.cid_to_vector,
-            self.text_embedder,
-            self.embedding_cache,
-            self.answer_config,
+            self.commentary.get_clustered_cids()
         )
         self.stage = QueryTextDataStage.QUESTION_ANSWERED
         return self.answer_object
@@ -339,6 +335,9 @@ class QueryTextData:
             data_imported[key].append(row_data)
 
         self.label_to_chunks = data_imported
+
+    async def generate_analysis_commentary(self) -> None:
+        return await self.commentary.generate_commentary()
 
     def __repr__(self):
         return f"QueryTextData()"
