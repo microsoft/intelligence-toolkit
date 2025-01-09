@@ -79,7 +79,7 @@ class Commentary:
             prompts.commentary_prompt, {"query": self.query, "structure": structure}
         )
         callbacks = [self.commentary_callback] if self.commentary_callback is not None else []
-        commentary = OpenAIClient(self.ai_configuration).generate_chat(
+        commentary = await OpenAIClient(self.ai_configuration).generate_chat_async(
             messages,
             stream=True,
             callbacks=callbacks

@@ -1,6 +1,7 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 #
+import asyncio
 import os
 import random
 import re
@@ -355,8 +356,11 @@ async def create(sv: SessionVariables, workflow=None):
                     if gen_answer or qtd.stage.value == QueryTextDataStage.CHUNKS_MINED.value:
                         with answer_spinner:
                             with st.spinner("Generating research report..."):
-                                await qtd.generate_analysis_commentary()
-                                await qtd.answer_query_with_relevant_chunks()
+                                await asyncio.gather(
+                                    qtd.answer_query_with_relevant_chunks(),
+                                    qtd.generate_analysis_commentary()
+                                    
+                                )
                                 st.rerun()
     with report_tab:
         if qtd.stage.value < QueryTextDataStage.QUESTION_ANSWERED.value:

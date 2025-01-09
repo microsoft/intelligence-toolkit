@@ -30,4 +30,4 @@ async def rewrite_query(ai_configuration, query, concept_graph, top_concepts):
     messages = utils.prepare_messages(
         prompts.query_anchoring_prompt, {"query": query, "concepts": concepts_str}
     )
-    return await utils.generate_text_async(ai_configuration, messages)
+    return await utils.generate_text_async(ai_configuration, messages, stream=False)
