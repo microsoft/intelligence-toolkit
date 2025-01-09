@@ -111,7 +111,7 @@ async def detect_relevant_chunks(
     analysis_callback=None,
     commentary_callback=None,
 ):
-    commentary = Commentary(ai_configuration, query, analysis_callback, commentary_callback) if analysis_callback is not None and commentary_callback is not None else None
+    commentary = Commentary(ai_configuration, query, processed_chunks.cid_to_text, analysis_callback, commentary_callback) if analysis_callback is not None and commentary_callback is not None else None
     test_history = []
     all_units = sorted(
         [(cid, vector) for cid, vector in (cid_to_vector.items())], key=lambda x: x[0]

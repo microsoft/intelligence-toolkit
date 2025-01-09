@@ -358,8 +358,7 @@ async def create(sv: SessionVariables, workflow=None):
                             with st.spinner("Generating research report..."):
                                 await asyncio.gather(
                                     qtd.answer_query_with_relevant_chunks(),
-                                    qtd.generate_analysis_commentary()
-                                    
+                                    qtd.generate_analysis_commentary()                      
                                 )
                                 st.rerun()
     with report_tab:

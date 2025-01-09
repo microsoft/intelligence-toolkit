@@ -125,8 +125,9 @@ Output JSON object:
 commentary_prompt = """\
 You are a helpful assistant tasked with providing commentary on a set of themes derived from source texts.
 
-When presenting evidence, support each sentence with one or more source references: "[source: <source_id>, <source_id>]". Include source IDs only - DO NOT include the chunk ID within the source ID.
+Provide commentary both on the overall thematic structure and specific examples drawn from the sample source texts.
 
+When presenting evidence, support each sentence with one or more source references: "[source: <source_id>, <source_id>]". Include source IDs only - DO NOT include the chunk ID within the source ID.
 
 --User query--
 
@@ -135,6 +136,10 @@ When presenting evidence, support each sentence with one or more source referenc
 --Themes--
 
 {structure}
+
+--Sample source texts--
+
+{chunks}
 
 --Output commentary--
 

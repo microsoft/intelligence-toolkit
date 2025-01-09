@@ -7,11 +7,12 @@ from json import loads, dumps
 
 class Commentary:
 
-    def __init__(self, ai_configuration, query, analysis_callback, commentary_callback):
+    def __init__(self, ai_configuration, query, cid_to_text, analysis_callback, commentary_callback):
         self.ai_configuration = ai_configuration
         self.query = query
         self.analysis_callback = analysis_callback
         self.commentary_callback = commentary_callback
+        self.cid_to_text = cid_to_text
         self.structure = {
             "points": {},
             "point_sources": {},
@@ -75,8 +76,12 @@ class Commentary:
     
     async def generate_commentary(self):
         structure = self.format_structure()
+        selected_cids = set()
+        for theme, cid_list in self.get_clustered_cids().items():
+            selected_cids.update(cid_list[:3])
+        indexed_chunks = "\n\n".join([f"{cid}:\n\n{self.cid_to_text[cid]}" for cid in selected_cids])
         messages = utils.prepare_messages(
-            prompts.commentary_prompt, {"query": self.query, "structure": structure}
+            prompts.commentary_prompt, {"query": self.query, "structure": structure, "chunks": indexed_chunks}
         )
         callbacks = [self.commentary_callback] if self.commentary_callback is not None else []
         commentary = await OpenAIClient(self.ai_configuration).generate_chat_async(
