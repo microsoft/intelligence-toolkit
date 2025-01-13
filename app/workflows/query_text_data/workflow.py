@@ -184,7 +184,7 @@ async def create(sv: SessionVariables, workflow=None):
             st.warning(f"Process files to continue.")
         else:
             with st.expander("Advanced Options", expanded=False):
-                c1, c2, c3, c4, c5 = st.columns(5)
+                c1, c2, c3, c4, c5, c6 = st.columns(6)
                 
                 with c1:
                     st.number_input(
@@ -219,6 +219,14 @@ async def create(sv: SessionVariables, workflow=None):
                         help="The average number of text chunks to target per cluster, which determines the text chunks that will be evaluated together and in parallel to other clusters. Larger values will generally result in more related text chunks being evaluated in parallel, but may also result in information loss from unprocessed content."
                     )
                 with c5:
+                    st.number_input(
+                        "Analysis update interval",
+                        value=sv.analysis_update_interval.value,
+                        key=sv.analysis_update_interval.key,
+                        min_value=0,
+                        help="The number of text chunks to process before updating the live analysis. Larger values will give faster final reports but also result in longer periods of time between updates. Set to 0 to disable live analysis updates."
+                    )
+                with c6:
                     st.checkbox(
                         "Show search process",
                         key=sv.show_search_process.key,
@@ -262,8 +270,7 @@ async def create(sv: SessionVariables, workflow=None):
                     c1, c2 = st.columns([1, 1])
                     with c1:
                         st.markdown("#### Live analysis")
-                        if qtd.stage.value < QueryTextDataStage.QUESTION_ANSWERED.value:
-                            analysis_pb = st.progress(0, f"0 of {sv.relevance_test_budget.value} chunks tested")
+                        analysis_pb = st.empty()
                         analysis_placeholder = st.empty()
                         commentary_placeholder = st.empty()
                         if qtd.stage.value >= QueryTextDataStage.CHUNKS_MINED.value:
@@ -303,9 +310,10 @@ async def create(sv: SessionVariables, workflow=None):
                         sv.answer_progress.value = ""
                         sv.thematic_analysis.value = ""
                         sv.thematic_commentary.value = ""
-                        
                         answer_placeholder.markdown("")
                         main_panel.empty()
+                        analysis_pb.progress(0, f"0 of {sv.relevance_test_budget.value} chunks tested")
+                        
                     search_button.button("Search", key="search_button", on_click=do_search, use_container_width=True)
                     query_placeholder.text_input(
                         "Query",
@@ -366,6 +374,7 @@ async def create(sv: SessionVariables, workflow=None):
                                 irrelevant_community_restart=sv.irrelevant_community_restart.value,
                                 adjacent_test_steps=sv.adjacent_test_steps.value,
                                 community_relevance_tests=sv.relevance_test_batch_size.value,
+                                analysis_update_interval=sv.analysis_update_interval.value,
                             ),
                             chunk_progress_callback=on_chunk_progress,
                             chunk_callback=on_chunk_relevant,

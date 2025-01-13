@@ -61,7 +61,8 @@ class ChunkSearchConfig:
         community_ranking_chunks: int,
         relevance_test_batch_size: int,
         relevance_test_budget: int,
-        irrelevant_community_restart: int
+        irrelevant_community_restart: int,
+        analysis_update_interval: int
     ) -> None:
         """
         Represents the configuration used to search for relevant text chunks.
@@ -73,6 +74,7 @@ class ChunkSearchConfig:
             relevance_test_batch_size (int): How many relevance tests to run in parallel at a time
             relevance_test_budget (int): How many relevance tests are permitted per query. Higher values may provide higher quality results at higher cost
             irrelevant_community_restart (int): When to restart testing communities in relevance order
+            analysis_update_interval (int): How many chunks to process before updating the commentary
         """
         self.adjacent_test_steps = adjacent_test_steps
         self.community_relevance_tests = community_relevance_tests
@@ -80,9 +82,10 @@ class ChunkSearchConfig:
         self.relevance_test_batch_size = relevance_test_batch_size
         self.relevance_test_budget = relevance_test_budget
         self.irrelevant_community_restart = irrelevant_community_restart
+        self.analysis_update_interval = analysis_update_interval
 
     def __repr__(self):
-        return f"ChunkSearchConfig(adjacent_test_steps={self.adjacent_test_steps}, community_relevance_tests={self.community_relevance_tests}, relevance_test_batch_size={self.relevance_test_batch_size}, relevance_test_budget={self.relevance_test_budget}, irrelevant_community_restart={self.irrelevant_community_restart})"
+        return f"ChunkSearchConfig(adjacent_test_steps={self.adjacent_test_steps}, community_relevance_tests={self.community_relevance_tests}, relevance_test_batch_size={self.relevance_test_batch_size}, relevance_test_budget={self.relevance_test_budget}, irrelevant_community_restart={self.irrelevant_community_restart}, analysis_update_interval={self.analysis_update_interval})"
     
 class AnswerObject:
     def __init__(

@@ -7,17 +7,30 @@ from json import loads, dumps
 
 class Commentary:
 
-    def __init__(self, ai_configuration, query, cid_to_text, analysis_callback, commentary_callback):
+    def __init__(self, ai_configuration, query, cid_to_text, update_interval, analysis_callback, commentary_callback):
         self.ai_configuration = ai_configuration
         self.query = query
         self.analysis_callback = analysis_callback
         self.commentary_callback = commentary_callback
         self.cid_to_text = cid_to_text
+        self.update_interval = update_interval
+        self.unprocessed_chunks = {}
         self.structure = {
             "points": {},
             "point_sources": {},
             "themes": {},
         }
+
+    def add_chunks(self, chunks: dict[int, str]):
+        self.unprocessed_chunks.update(chunks)
+        if len(self.unprocessed_chunks) >= self.update_interval:
+            self.update_analysis(self.unprocessed_chunks)
+            self.unprocessed_chunks = {}
+
+    def complete_analysis(self):
+        if len(self.unprocessed_chunks) > 0:
+            self.update_analysis(self.unprocessed_chunks)
+            self.unprocessed_chunks = {}
 
     def update_analysis(self, chunks: dict[int, str]):
         messages = utils.prepare_messages(

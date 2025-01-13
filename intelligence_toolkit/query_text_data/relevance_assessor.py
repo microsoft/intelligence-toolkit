@@ -94,7 +94,7 @@ def process_relevance_responses(
     
     if commentary is not None and len(tested_relevant) > 0:
         relevant_texts = {cid: cid_to_text[cid] for cid in tested_relevant}
-        commentary.update_analysis(relevant_texts)
+        commentary.add_chunks(relevant_texts)
     return len(tested_relevant)
 
 
@@ -111,7 +111,7 @@ async def detect_relevant_chunks(
     analysis_callback=None,
     commentary_callback=None,
 ):
-    commentary = Commentary(ai_configuration, query, processed_chunks.cid_to_text, analysis_callback, commentary_callback) if analysis_callback is not None and commentary_callback is not None else None
+    commentary = Commentary(ai_configuration, query, processed_chunks.cid_to_text, chunk_search_config.analysis_update_interval, analysis_callback, commentary_callback) if analysis_callback is not None and commentary_callback is not None else None
     test_history = []
     all_units = sorted(
         [(cid, vector) for cid, vector in (cid_to_vector.items())], key=lambda x: x[0]
@@ -330,5 +330,5 @@ async def detect_relevant_chunks(
         chunk_search_config.adjacent_test_steps,
     )
     relevant.sort()
-
+    commentary.complete_analysis()
     return relevant, helper_functions.get_test_progress(test_history), commentary

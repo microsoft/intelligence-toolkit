@@ -39,6 +39,7 @@ class SessionVariables:
         self.show_search_process = SessionVariable(False, prefix)
         self.thematic_analysis = SessionVariable("", prefix)
         self.thematic_commentary = SessionVariable("", prefix)
+        self.analysis_update_interval = SessionVariable(10, prefix)
 
     def reset_workflow(self):
         for key in st.session_state:
