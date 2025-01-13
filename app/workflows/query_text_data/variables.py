@@ -29,7 +29,7 @@ class SessionVariables:
         self.adjacent_test_steps = SessionVariable(1, prefix)
         self.community_relevance_tests = SessionVariable(10, prefix)
         self.relevance_test_batch_size = SessionVariable(5, prefix)
-        self.relevance_test_budget = SessionVariable(10, prefix)
+        self.relevance_test_budget = SessionVariable(20, prefix)
         self.irrelevant_community_restart = SessionVariable(5, prefix)
         self.report_validation_messages = SessionVariable("", prefix)
         self.report_validation = SessionVariable({}, prefix)
@@ -40,6 +40,8 @@ class SessionVariables:
         self.thematic_analysis = SessionVariable("", prefix)
         self.thematic_commentary = SessionVariable("", prefix)
         self.analysis_update_interval = SessionVariable(10, prefix)
+        self.do_live_analysis = SessionVariable(True, prefix)
+        self.do_live_commentary = SessionVariable(True, prefix)
 
     def reset_workflow(self):
         for key in st.session_state:

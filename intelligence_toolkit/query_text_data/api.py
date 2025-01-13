@@ -22,7 +22,7 @@ from intelligence_toolkit.query_text_data.classes import (
     ChunkSearchConfig,
     ProcessedChunks,
 )
-
+from intelligence_toolkit.query_text_data.commentary import Commentary
 
 class QueryTextDataStage(Enum):
     """
@@ -217,10 +217,17 @@ class QueryTextData:
         self.query = query
         self.expanded_query = expanded_query
         self.chunk_search_config = chunk_search_config
+        self.commentary = Commentary(
+            self.ai_configuration,
+            self.query,
+            self.processed_chunks.cid_to_text,
+            self.chunk_search_config.analysis_update_interval,
+            analysis_callback,
+            commentary_callback
+        )
         (
             self.relevant_cids,
             self.search_summary,
-            self.commentary
         ) = await relevance_assessor.detect_relevant_chunks(
             ai_configuration=self.ai_configuration,
             query=self.expanded_query,
@@ -231,27 +238,32 @@ class QueryTextData:
             chunk_search_config=self.chunk_search_config,
             chunk_progress_callback=chunk_progress_callback,
             chunk_callback=chunk_callback,
-            analysis_callback=analysis_callback,
-            commentary_callback=commentary_callback,
+            commentary=self.commentary,
         )
         self.stage = QueryTextDataStage.CHUNKS_MINED
         return self.relevant_cids, self.search_summary
 
     async def answer_query_with_relevant_chunks(
-        self
+        self,
+        target_chunks_per_cluster: int
     ) -> AnswerObject:
         """
         Answer a query with relevant chunks.
 
+        Args:
+            target_chunks_per_cluster (int): The target chunks per cluster
         Returns:
             AnswerObject: The answer object
         """
+        self.target_chunks_per_cluster = target_chunks_per_cluster
         self.answer_object: AnswerObject = await answer_builder.answer_query(
             self.ai_configuration,
             self.query,
             self.expanded_query,
             self.processed_chunks,
-            self.commentary.get_clustered_cids()
+            self.commentary.get_clustered_cids(),
+            self.cid_to_vector,
+            self.target_chunks_per_cluster
         )
         self.stage = QueryTextDataStage.QUESTION_ANSWERED
         return self.answer_object

@@ -23,12 +23,12 @@ class Commentary:
 
     def add_chunks(self, chunks: dict[int, str]):
         self.unprocessed_chunks.update(chunks)
-        if len(self.unprocessed_chunks) >= self.update_interval:
+        if self.update_interval > 0 and len(self.unprocessed_chunks) >= self.update_interval:
             self.update_analysis(self.unprocessed_chunks)
             self.unprocessed_chunks = {}
 
     def complete_analysis(self):
-        if len(self.unprocessed_chunks) > 0:
+        if self.update_interval > 0 and len(self.unprocessed_chunks) > 0:
             self.update_analysis(self.unprocessed_chunks)
             self.unprocessed_chunks = {}
 
@@ -75,17 +75,20 @@ class Commentary:
         return output
     
     def get_clustered_cids(self):
-        clustered_cids = {}
-        current_cluster = []
-        for theme_title, point_ids in self.structure["themes"].items():
+        if self.update_interval > 0:
+            clustered_cids = {}
             current_cluster = []
-            for point_id in point_ids:
-                source_ids = self.structure["point_sources"][point_id]
-                for source_id in source_ids:
-                    if source_id not in current_cluster:
-                        current_cluster.append(source_id)
-            clustered_cids[theme_title] = current_cluster
-        return clustered_cids
+            for theme_title, point_ids in self.structure["themes"].items():
+                current_cluster = []
+                for point_id in point_ids:
+                    source_ids = self.structure["point_sources"][point_id]
+                    for source_id in source_ids:
+                        if source_id not in current_cluster:
+                            current_cluster.append(source_id)
+                clustered_cids[theme_title] = current_cluster
+            return clustered_cids
+        else:
+            return {"All relevant chunks": list(self.unprocessed_chunks.keys())}
     
     async def generate_commentary(self):
         structure = self.format_structure()

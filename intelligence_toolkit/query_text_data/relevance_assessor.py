@@ -10,7 +10,6 @@ import tiktoken
 import intelligence_toolkit.AI.utils as utils
 import intelligence_toolkit.query_text_data.helper_functions as helper_functions
 import intelligence_toolkit.query_text_data.prompts as prompts
-from intelligence_toolkit.query_text_data.commentary import Commentary
 
 async def assess_relevance(
     ai_configuration,
@@ -108,10 +107,9 @@ async def detect_relevant_chunks(
     chunk_search_config,
     chunk_progress_callback=None,
     chunk_callback=None,
-    analysis_callback=None,
-    commentary_callback=None,
+    commentary=None
 ):
-    commentary = Commentary(ai_configuration, query, processed_chunks.cid_to_text, chunk_search_config.analysis_update_interval, analysis_callback, commentary_callback) if analysis_callback is not None and commentary_callback is not None else None
+    
     test_history = []
     all_units = sorted(
         [(cid, vector) for cid, vector in (cid_to_vector.items())], key=lambda x: x[0]
@@ -331,4 +329,4 @@ async def detect_relevant_chunks(
     )
     relevant.sort()
     commentary.complete_analysis()
-    return relevant, helper_functions.get_test_progress(test_history), commentary
+    return relevant, helper_functions.get_test_progress(test_history)

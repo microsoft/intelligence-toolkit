@@ -184,8 +184,8 @@ async def create(sv: SessionVariables, workflow=None):
             st.warning(f"Process files to continue.")
         else:
             with st.expander("Advanced Options", expanded=False):
-                c1, c2, c3, c4, c5, c6 = st.columns(6)
-                
+                st.markdown("##### Search options")
+                c1, c2, c3 = st.columns(3)
                 with c1:
                     st.number_input(
                         "Tests/topic/round",
@@ -210,7 +210,9 @@ async def create(sv: SessionVariables, workflow=None):
                         min_value=0,
                         help="If a text chunk is relevant to the query, then adjacent text chunks in the original document may be able to add additional context to the relevant points. The value of this parameter determines how many chunks before and after each relevant text chunk will be evaluated at the end of the process (or `Relevance test budget`) if they are yet to be tested."
                     )
-                with c4:
+                st.markdown("##### Answer options")
+                c1, c2, c3, c4, c5 = st.columns(5)
+                with c1:
                     st.number_input(
                         "Target chunks per cluster",
                         value=sv.target_chunks_per_cluster.value,
@@ -218,21 +220,36 @@ async def create(sv: SessionVariables, workflow=None):
                         min_value=0,
                         help="The average number of text chunks to target per cluster, which determines the text chunks that will be evaluated together and in parallel to other clusters. Larger values will generally result in more related text chunks being evaluated in parallel, but may also result in information loss from unprocessed content."
                     )
-                with c5:
-                    st.number_input(
-                        "Analysis update interval",
-                        value=sv.analysis_update_interval.value,
-                        key=sv.analysis_update_interval.key,
-                        min_value=0,
-                        help="The number of text chunks to process before updating the live analysis. Larger values will give faster final reports but also result in longer periods of time between updates. Set to 0 to disable live analysis updates."
-                    )
-                with c6:
+                with c2:
                     st.checkbox(
                         "Show search process",
                         key=sv.show_search_process.key,
                         value=sv.show_search_process.value,
                         help="Show the search process in the UI, including the progress of chunk relevance tests and the search for relevant chunks."
                     )
+                with c3:
+                    st.checkbox(
+                        "Live analysis",
+                        key=sv.do_live_analysis.key,
+                        value=sv.do_live_analysis.value,
+                        help="Enable live analysis of the text chunks as they are processed. This provides immediate feedback but slows down the overall process."
+                    )
+                with c4:
+                    st.number_input(
+                        "Analysis update interval",
+                        value=sv.analysis_update_interval.value,
+                        key=sv.analysis_update_interval.key,
+                        min_value=0,
+                        help="The number of text chunks to process before updating the live analysis. Larger values will give faster final reports but also result in longer periods of time between updates."
+                    )
+                with c5:
+                    st.checkbox(
+                        "Live commentary",
+                        key=sv.do_live_commentary.key,
+                        value=sv.do_live_commentary.value,
+                        help="Enable live commentary of analysis themes after text chunks are processed. This provides a preview of report content while the final report is being generated."
+                    )
+                    
             query_panel = st.container()
             main_panel = st.container()
 
@@ -245,6 +262,7 @@ async def create(sv: SessionVariables, workflow=None):
                 with c3:
                     search_button = st.empty()
                 anchored_query_placeholder = st.empty()
+                analysis_pb = st.empty()
             with main_panel:
                 if sv.show_search_process.value:
                     c1, c2 = st.columns([1, 2])
@@ -267,24 +285,24 @@ async def create(sv: SessionVariables, workflow=None):
                 if sv.anchored_query.value != "":    
                         anchored_query_placeholder.markdown(f"**Expanded query:** {sv.anchored_query.value}")
                 with c2:
-                    c1, c2 = st.columns([1, 1])
-                    with c1:
-                        st.markdown("#### Live analysis")
-                        analysis_pb = st.empty()
-                        analysis_placeholder = st.empty()
-                        commentary_placeholder = st.empty()
-                        if qtd.stage.value >= QueryTextDataStage.CHUNKS_MINED.value:
-                            st.download_button(
-                                "Download live analysis as MD",
-                                data=sv.thematic_analysis.value + "\n" + sv.thematic_commentary.value,
-                                file_name=re.sub(r'[^\w\s]','',sv.query.value).replace(' ', '_')+"_analysis.md",
-                                mime="text/markdown",
-                                key="live_analysis_download_button",
-                                disabled=qtd.stage.value < QueryTextDataStage.QUESTION_ANSWERED.value,
-                            )
+                    if sv.do_live_analysis.value or sv.do_live_commentary.value:
+                        c1, c2 = st.columns([1, 1])
+                        with c1:
+                            st.markdown("#### Live analysis")
+                            analysis_placeholder = st.empty()
+                            commentary_placeholder = st.empty()
+                            if qtd.stage.value >= QueryTextDataStage.CHUNKS_MINED.value:
+                                st.download_button(
+                                    "Download live analysis as MD",
+                                    data=sv.thematic_analysis.value + "\n" + sv.thematic_commentary.value,
+                                    file_name=re.sub(r'[^\w\s]','',sv.query.value).replace(' ', '_')+"_analysis.md",
+                                    mime="text/markdown",
+                                    key="live_analysis_download_button",
+                                    disabled=qtd.stage.value < QueryTextDataStage.QUESTION_ANSWERED.value,
+                                )
+                    else:
+                        c2 = st.container()
                     with c2:
-                        
-
                         st.markdown("#### Final report")
                         answer_spinner = st.empty()
                         answer_placeholder = st.empty()
@@ -297,8 +315,9 @@ async def create(sv: SessionVariables, workflow=None):
                                 key="research_report_download_button",
                                 disabled=qtd.stage.value < QueryTextDataStage.QUESTION_ANSWERED.value,
                             )
-                            analysis_placeholder.markdown(sv.thematic_analysis.value, unsafe_allow_html=True)
-                            commentary_placeholder.markdown(sv.thematic_commentary.value, unsafe_allow_html=True)
+                            if sv.do_live_analysis.value or sv.do_live_commentary.value:
+                                analysis_placeholder.markdown(sv.thematic_analysis.value, unsafe_allow_html=True)
+                                commentary_placeholder.markdown(sv.thematic_commentary.value, unsafe_allow_html=True)
                         if qtd.stage.value == QueryTextDataStage.QUESTION_ANSWERED.value:
                             answer_placeholder.markdown(qtd.answer_object.extended_answer, unsafe_allow_html=True)
 
@@ -311,8 +330,10 @@ async def create(sv: SessionVariables, workflow=None):
                         sv.thematic_analysis.value = ""
                         sv.thematic_commentary.value = ""
                         answer_placeholder.markdown("")
+                        if sv.do_live_analysis.value or sv.do_live_commentary.value:
+                            analysis_placeholder.markdown("")
+                            commentary_placeholder.markdown("")
                         main_panel.empty()
-                        analysis_pb.progress(0, f"0 of {sv.relevance_test_budget.value} chunks tested")
                         
                     search_button.button("Search", key="search_button", on_click=do_search, use_container_width=True)
                     query_placeholder.text_input(
@@ -374,7 +395,7 @@ async def create(sv: SessionVariables, workflow=None):
                                 irrelevant_community_restart=sv.irrelevant_community_restart.value,
                                 adjacent_test_steps=sv.adjacent_test_steps.value,
                                 community_relevance_tests=sv.relevance_test_batch_size.value,
-                                analysis_update_interval=sv.analysis_update_interval.value,
+                                analysis_update_interval=sv.analysis_update_interval.value if sv.do_live_analysis.value else 0,
                             ),
                             chunk_progress_callback=on_chunk_progress,
                             chunk_callback=on_chunk_relevant,
@@ -386,10 +407,13 @@ async def create(sv: SessionVariables, workflow=None):
                         analysis_pb.empty()
                         with answer_spinner:
                             with st.spinner("Generating research report..."):
-                                await asyncio.gather(
-                                    qtd.answer_query_with_relevant_chunks(),
-                                    qtd.generate_analysis_commentary()                      
-                                )
+                                if sv.do_live_commentary.value:
+                                    await asyncio.gather(
+                                        qtd.answer_query_with_relevant_chunks(sv.target_chunks_per_cluster.value),
+                                        qtd.generate_analysis_commentary()                      
+                                    )
+                                else:
+                                    await qtd.answer_query_with_relevant_chunks(sv.target_chunks_per_cluster.value)
                                 st.rerun()
     with report_tab:
         if qtd.stage.value < QueryTextDataStage.QUESTION_ANSWERED.value:
