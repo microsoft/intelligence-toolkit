@@ -19,6 +19,7 @@ from app.util.openai_wrapper import UIOpenAIConfiguration
 from app.util.session_variables import SessionVariables
 from intelligence_toolkit.AI.defaults import CHUNK_SIZE
 from intelligence_toolkit.query_text_data.api import QueryTextDataStage
+from intelligence_toolkit.query_text_data import helper_functions
 from intelligence_toolkit.query_text_data.classes import (
     ChunkSearchConfig,
 )
@@ -228,11 +229,13 @@ async def create(sv: SessionVariables, workflow=None):
             main_panel = st.container()
 
             with query_panel:
-                c1, c2 = st.columns([5, 1])
+                c1, c2, c3 = st.columns([10, 2, 1])
                 with c1:
                     query_placeholder = st.empty()
                 with c2:
                     budget_placeholder = st.empty()
+                with c3:
+                    search_button = st.empty()
                 anchored_query_placeholder = st.empty()
             with main_panel:
                 if sv.show_search_process.value:
@@ -259,6 +262,8 @@ async def create(sv: SessionVariables, workflow=None):
                     c1, c2 = st.columns([1, 1])
                     with c1:
                         st.markdown("#### Live analysis")
+                        if qtd.stage.value < QueryTextDataStage.QUESTION_ANSWERED.value:
+                            analysis_pb = st.progress(0, f"0 of {sv.relevance_test_budget.value} chunks tested")
                         analysis_placeholder = st.empty()
                         commentary_placeholder = st.empty()
                         if qtd.stage.value >= QueryTextDataStage.CHUNKS_MINED.value:
@@ -296,12 +301,15 @@ async def create(sv: SessionVariables, workflow=None):
                         qtd.prepare_for_new_query()
                         sv.chunk_progress.value = ""
                         sv.answer_progress.value = ""
+                        sv.thematic_analysis.value = ""
+                        sv.thematic_commentary.value = ""
+                        
                         answer_placeholder.markdown("")
                         main_panel.empty()
+                    search_button.button("Search", key="search_button", on_click=do_search, use_container_width=True)
                     query_placeholder.text_input(
                         "Query",
-                        key=sv.query.key,
-                        on_change=lambda: do_search()
+                        key=sv.query.key
                     )
                     budget_placeholder.number_input(
                         "Relevance test budget",
@@ -319,8 +327,11 @@ async def create(sv: SessionVariables, workflow=None):
                         anchored_query_placeholder.markdown(f"**Expanded query:** {sv.anchored_query.value}")
                         def on_chunk_progress(message):
                             if sv.show_search_process.value:
-                                chunk_progress_placeholder.markdown(message, unsafe_allow_html=True)
-
+                                status = helper_functions.get_test_progress(message)
+                                chunk_progress_placeholder.markdown(status, unsafe_allow_html=True)
+                            if qtd.stage.value < QueryTextDataStage.QUESTION_ANSWERED.value:
+                                analysis_pb.progress(len(message) / sv.relevance_test_budget.value, f"{len(message)} of {sv.relevance_test_budget.value} chunks tested")
+    
                         def on_chunk_relevant(message):
                             if sv.show_search_process.value:
                                 chunk_placeholder.dataframe(
@@ -363,6 +374,7 @@ async def create(sv: SessionVariables, workflow=None):
                         )
                         st.rerun()
                     if gen_answer or qtd.stage.value == QueryTextDataStage.CHUNKS_MINED.value:
+                        analysis_pb.empty()
                         with answer_spinner:
                             with st.spinner("Generating research report..."):
                                 await asyncio.gather(

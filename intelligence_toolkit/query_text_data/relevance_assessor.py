@@ -87,7 +87,7 @@ def process_relevance_responses(
             if r == "Yes":
                 tested_relevant.append(c)
     if progress_callback is not None:
-        progress_callback(helper_functions.get_test_progress(test_history))
+        progress_callback(test_history)
     relevant_list = [x[1] for x in test_history if x[2] == "Yes"]
     if chunk_callback is not None:
         chunk_callback([cid_to_text[cid] for cid in relevant_list])
@@ -123,7 +123,7 @@ async def detect_relevant_chunks(
     logit_bias = {yes_id: select_logit_bias, no_id: select_logit_bias}
 
     if chunk_progress_callback is not None:
-        chunk_progress_callback(helper_functions.get_test_progress(test_history))
+        chunk_progress_callback(test_history)
 
     aq_embedding = np.array(embedder.embed_store_one(query, embedding_cache))
     relevant, seen, adjacent = helper_functions.test_history_elements(

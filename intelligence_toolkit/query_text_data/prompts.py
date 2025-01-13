@@ -152,7 +152,7 @@ The output object should capture new themes, points, and source references that 
 
 - "updates": an array of objects, each representing an update to a point derived from the input text chunks
 - "point_id": the ID of the point to update, else the next available point ID if creating a new point
-- "point_title": the title of the point to update or create. If the existing point title is unchanged, the field should be left blank
+- "point_title": the title of the point to update or create, expressed as a full and detailed sentence. If the existing point title is unchanged, the field should be left blank
 - "source_ids": an array of source IDs that support the point, to be added to the existing source IDs for the point
 - "theme_title": the title of a theme that organizes a set of related points.
 
