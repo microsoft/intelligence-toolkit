@@ -13,9 +13,9 @@ Select the `View example outputs` tab (in app) or navigate to [example_outputs/q
 5. [**Embedding Calls**] Text chunks are embedded into a multi-dimensional semantic space, with similar ideas close to one another.
 6. [**Process**] The user's question is embedded into the same space, and the text chunks ranked by similarity.
 7. [**Process**] The ranking of text chunks is used to determine a ranking of topics, which span the entire dataset.
-8. [**AI Calls**] The system uses generative AI to evaluate the relevance of the top-ranked text chunks from each community in turn, until either a relevance test budget is reached, there are no more communities yielding relevant chunks, or there are no more chunks to test.
-9. [**AI Calls**] The system uses generative AI to build an answer report progressively from batches of relevant text chunks.
-10. [**Output**] AI answer report MD/PDF file(s) including a concise answer to the user's question and the extended answer report.
+8. [**AI Calls**] The system uses generative AI to evaluate the relevance of the top-ranked text chunks from each community in turn, until either a relevance test budget is reached or there are no more communities yielding relevant chunks.
+9. [**AI Calls**] The system uses generative AI to build a research report progressively from batches of relevant text chunks.
+10. [**Output**] AI answer report MD/PDF file(s) including a concise answer to the user's question and the extended research report.
 
 ## Input requirements
 
@@ -37,7 +37,7 @@ This file contains one news article per row, stored in the single column `mock_t
 
 Press `Process files` to prepare the data for analysis. After successfully processing the data, you will see a status message like the following:
 
-`Chunked 500 files into 501 chunks of up to 500 tokens. Extracted concept graph with 1327 concepts and 3593 cooccurrences.`
+`Chunked 500 files into 501 chunks of up to 500 tokens. Extracted concept graph with XXX concepts and XXX cooccurrences.`
 
 ### Query method
 

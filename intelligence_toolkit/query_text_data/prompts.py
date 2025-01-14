@@ -165,6 +165,7 @@ The output object should capture new themes, points, and source references that 
 - Points should be assigned to a single theme in a logical sequence that addresses the user query
 - Themes should contain at least two points if possible
 - Order themes in a logical sequence that addresses the user query
+- Output themes need not be the same as input themes and should be regenerated as needed to maintain 3-7 themes overall
 
 --User query--
 

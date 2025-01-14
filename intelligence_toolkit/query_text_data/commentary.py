@@ -70,8 +70,9 @@ class Commentary:
         for theme_title, point_ids in self.structure["themes"].items():
             output += f"- **{theme_title}**\n"
             for point_id in point_ids:
-                source_list = ", ".join([str(x) for x in self.structure["point_sources"][point_id]])
-                output += f"  - {self.structure['points'][point_id]} (sources: {source_list})\n"
+                if point_id in self.structure["point_sources"]:
+                    source_list = ", ".join([str(x) for x in self.structure["point_sources"][point_id]])
+                    output += f"  - {self.structure['points'][point_id]} (sources: {source_list})\n"
         return output
     
     def get_clustered_cids(self):

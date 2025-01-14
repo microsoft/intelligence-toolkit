@@ -62,7 +62,7 @@ class ChunkSearchConfig:
         relevance_test_batch_size: int,
         relevance_test_budget: int,
         irrelevant_community_restart: int,
-        analysis_update_interval: int
+        analysis_update_interval = 0: int
     ) -> None:
         """
         Represents the configuration used to search for relevant text chunks.
@@ -74,7 +74,7 @@ class ChunkSearchConfig:
             relevance_test_batch_size (int): How many relevance tests to run in parallel at a time
             relevance_test_budget (int): How many relevance tests are permitted per query. Higher values may provide higher quality results at higher cost
             irrelevant_community_restart (int): When to restart testing communities in relevance order
-            analysis_update_interval (int): How many chunks to process before updating the commentary
+            analysis_update_interval (int): How many chunks to process before updating the analysis. Use 0 to skip analysis updates
         """
         self.adjacent_test_steps = adjacent_test_steps
         self.community_relevance_tests = community_relevance_tests
