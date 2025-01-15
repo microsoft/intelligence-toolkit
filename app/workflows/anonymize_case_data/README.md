@@ -142,6 +142,8 @@ The only user input required for synthesis is the `Epsilon` value, set to `12.00
 
 We recommend using the lowest `Epsilon` value that results in synthetic data with sufficient accurary to support downstream analysis. Start with the default value, and reduce it in small increments at a time. If the accuracy values with an `Epsilon` value of `12.00` are themselves too low, go back to the `Prepare sensitive data` tab and continue refining the sensitive dataset in ways that reduce the `Excess combinations ratio`.
 
+Optionally, you can set the desired `Fabrication mode` for the anonymization process and compare the data quality metrics from the various settings.
+
 After pressing `Anonymize data`, you will see two differential privacy parameters: the `Epsilon` value you set, and a `Delta` value that is generated based on the data (and indicates the very small thereoretical chance that the `Epsilon` privacy guarantee does not hold). It is important to publish both values alongside any DP dataset for correct interpretation of the privacy protection provided.
 
 Once generated, you will see the `Aggregate data` and `Synthetic data` appear on the right hand side:

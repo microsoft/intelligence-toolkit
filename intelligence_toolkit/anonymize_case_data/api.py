@@ -4,6 +4,7 @@
 import math
 import pandas as pd
 import plotly.graph_objects as go
+from enum import Enum
 from pacsynth import (
     AccuracyMode,
     Dataset,
@@ -22,7 +23,14 @@ from intelligence_toolkit.anonymize_case_data.synthesizability_statistics import
 from intelligence_toolkit.helpers.classes import IntelligenceWorkflow
 
 
+
 class AnonymizeCaseData(IntelligenceWorkflow):
+    class FabricationStrategy(Enum):
+        BALANCED = FabricationMode.balanced()
+        PROGRESSIVE = FabricationMode.progressive()
+        MINIMIZED = FabricationMode.minimize()
+        UNCONTROLLED = FabricationMode.uncontrolled()
+
     def __init__(self) -> None:
         self.protected_number_of_records = 0
         self.delta = 0
@@ -80,7 +88,7 @@ class AnonymizeCaseData(IntelligenceWorkflow):
         number_of_records_epsilon_proportion: float = 0.005,
         weight_selection_percentile: float = 95,
         accuracy_mode: AccuracyMode = AccuracyMode.prioritize_long_combinations(),
-        fabrication_mode: FabricationMode = FabricationMode.balanced(),
+        fabrication_mode: FabricationStrategy = FabricationStrategy.BALANCED,
         empty_value: str = "",
         use_synthetic_counts: bool = True,
         aggregate_counts_scale_factor: float = 1.0,
@@ -116,7 +124,7 @@ class AnonymizeCaseData(IntelligenceWorkflow):
             .percentile_epsilon_proportion(percentile_epsilon_proportion)
             .accuracy_mode(accuracy_mode)
             .number_of_records_epsilon_proportion(number_of_records_epsilon_proportion)
-            .fabrication_mode(fabrication_mode)
+            .fabrication_mode(fabrication_mode.value)
             .empty_value(empty_value)
             .weight_selection_percentile(weight_selection_percentile)
             .use_synthetic_counts(use_synthetic_counts)
