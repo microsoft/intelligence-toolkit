@@ -62,7 +62,7 @@ class ChunkSearchConfig:
         relevance_test_batch_size: int,
         relevance_test_budget: int,
         irrelevant_community_restart: int,
-        analysis_update_interval = 0: int
+        analysis_update_interval: int = 0
     ) -> None:
         """
         Represents the configuration used to search for relevant text chunks.
