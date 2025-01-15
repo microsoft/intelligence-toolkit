@@ -3,7 +3,7 @@
 ## Requirements
 
 - Python 3.11 ([Download](https://www.python.org/downloads/))
-- poetry ([Download](https://python-poetry.org/docs/#installing-with-the-official-installer))
+- poetry < 2.0.0 ([Download](https://python-poetry.org/docs/#installing-with-the-official-installer))
 - wkhtmltopdf (used to generate PDF reports)
 
     - Windows: ([Download](https://wkhtmltopdf.org/downloads.html))
