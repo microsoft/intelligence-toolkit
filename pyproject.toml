@@ -23,7 +23,6 @@ networkx = "3.3"
 numpy = "1.26.4"
 openai = "^1.37.1"
 pac-synth = "0.0.8"
-pdfplumber = "0.11.2"
 plotly = "5.22.0"
 plotly-express = "0.4.1"
 polars = "0.20.10"
@@ -58,6 +57,7 @@ torch = [
 sentence-transformers = "^3.1.1"
 graspologic = "^3.4.1"
 future = "^1.0.0"
+pypdf = "^5.1.0"
 
 [tool.poetry.group.dev.dependencies]
 coverage = "^7.6.0"

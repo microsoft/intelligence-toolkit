@@ -14,6 +14,7 @@ import intelligence_toolkit.query_text_data.input_processor as input_processor
 import intelligence_toolkit.query_text_data.prompts as prompts
 import intelligence_toolkit.query_text_data.query_rewriter as query_rewriter
 import intelligence_toolkit.query_text_data.relevance_assessor as relevance_assessor
+import intelligence_toolkit.helpers.document_processor as document_processor
 from intelligence_toolkit.AI.base_embedder import BaseEmbedder
 from intelligence_toolkit.AI.client import OpenAIClient
 from intelligence_toolkit.AI.openai_configuration import OpenAIConfiguration
@@ -88,42 +89,28 @@ class QueryTextData:
         """
         self.text_embedder = text_embedder
 
-    def process_data_from_df(
-        self, df: pd.DataFrame, label: str
-    ) -> dict[str, list[str]]:
-        """
-        Process data from a DataFrame.
-
-        Args:
-            df (pd.DataFrame): The DataFrame
-            label (str): The label (e.g., filename) used as the prefix for the chunk names
-
-        Returns:
-            dict[str, list[str]]: The label to chunks mapping
-        """
-        self.label_to_chunks = input_processor.convert_df_to_chunks(df, label)
-        self.stage = QueryTextDataStage.CHUNKS_CREATED
-        return self.label_to_chunks
-
     def process_data_from_files(
         self,
-        input_file_bytes: bytes,
-        analysis_window_size: input_processor.PeriodOption = input_processor.PeriodOption.NONE,
+        input_files: list[str],
+        chunk_size: int = 1000,
         callbacks: list = [],
     ) -> dict[str, list[str]]:
         """
         Process data from files.
 
         Args:
-            input_file_bytes (bytes): The input file bytes
-            analysis_window_size (input_processor.PeriodOption): The analysis window size
+            input_files (str): The list of input files
+            new_after_n_chars (int): The minimum partition size (characters)
+            max_characters (int): The maximum partition size (characters)
             callbacks (list): The list of callbacks
 
         Returns:
             dict[str, list[str]]: The label to chunks mapping
         """
-        self.label_to_chunks = input_processor.convert_file_bytes_to_chunks(
-            input_file_bytes, analysis_window_size, callbacks
+        self.label_to_chunks = document_processor.convert_files_to_chunks(
+            input_files,
+            chunk_size=chunk_size,
+            callbacks=callbacks
         )
         self.stage = QueryTextDataStage.CHUNKS_CREATED
         return self.label_to_chunks

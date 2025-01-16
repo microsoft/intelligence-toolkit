@@ -99,10 +99,17 @@ async def create(sv: SessionVariables, workflow=None):
                 file_pb, file_callback = functions.create_progress_callback(
                     "Loaded {} of {} files..."
                 )
+                for file in files:
+                    with open(file.name, "wb") as f:
+                        f.write(file.getbuffer())
+                input_files={file.name for file in files}
                 qtd.process_data_from_files(
-                    input_file_bytes={file.name: file.getvalue() for file in files},
+                    input_files=input_files,
+                    chunk_size=CHUNK_SIZE,
                     callbacks=[file_callback],
                 )
+                for file in input_files:
+                    os.remove(file)
                 file_pb.empty()
             else:
                 qtd.import_chunks_from_str(file_chunks)

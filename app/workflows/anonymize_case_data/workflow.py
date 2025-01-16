@@ -110,7 +110,7 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
             c1, c2, c3 = st.columns([1, 1, 1])
             with c1:
                 st.markdown("#### Anonymize data")
-                b1, b2 = st.columns([1, 1])
+                b1, b2, b3 = st.columns([1, 1, 1])
 
                 with b1:
                     epsilon = st.number_input(
@@ -119,13 +119,26 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                         help="The privacy budget, under differential privacy, to use when synthesizing the aggregate dataset.\n\nLower values of epsilon correspond to greater privacy protection but lower data quality.\n\nThe delta parameter is set automatically as 1/(protected_records*ln(protected_records)), where protected_records is the count of sensitive records protected using 0.5% of the privacy budget.\n\n**Rule of thumb**: Aim to keep epsilon at **12** or below.",
                     )
                 with b2:
+                    fab_mode = st.selectbox(
+                        "Fabrication mode",
+                        options=["Balanced", "Progressive", "Minimized", "Uncontrolled"],
+                        help="Options for controlling the fabrication of attribute combinations in the anonymized data. Experiment with different settings and compare the resulting data quality."
+                    )
+                with b3:
                     if st.button("Anonymize data"):
                         sv.anonymize_epsilon.value = epsilon
                         df = sv.anonymize_sensitive_df.value
                         with st.spinner("Anonymizing data..."):
+                            fab_option = AnonymizeCaseData.FabricationStrategy.BALANCED if fab_mode == "Balanced" \
+                                else AnonymizeCaseData.FabricationStrategy.PROGRESSIVE if fab_mode == "Progressive" \
+                                else AnonymizeCaseData.FabricationStrategy.MINIMIZED if fab_mode == "Minimized" \
+                                else AnonymizeCaseData.FabricationStrategy.UNCONTROLLED
+                                
+
                             acd.anonymize_case_data(
                                 df=df,
                                 epsilon=epsilon,
+                                fabrication_mode=fab_option
                             )
                             sv.anonymize_synthetic_df.value = acd.synthetic_df
                             sv.anonymize_aggregate_df.value = acd.aggregate_df

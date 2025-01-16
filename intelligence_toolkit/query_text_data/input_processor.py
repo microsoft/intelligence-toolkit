@@ -8,9 +8,6 @@ from enum import Enum
 from json import dumps, loads
 
 import networkx as nx
-import pandas as pd
-import pdfplumber
-
 import intelligence_toolkit.query_text_data.graph_builder as graph_builder
 from intelligence_toolkit.AI.text_splitter import TextSplitter
 from intelligence_toolkit.query_text_data.classes import ProcessedChunks
@@ -28,70 +25,6 @@ def concert_titled_texts_to_chunks(titled_texts):
             text_chunks[index] = dumps(chunk, indent=2, ensure_ascii=False)
             text_to_chunks[title] = text_chunks
     return text_to_chunks
-
-
-def convert_df_to_chunks(df, label):
-    label = label.replace("(", "").replace(")", "").replace(" ", "_")
-    splitter = TextSplitter()
-    text_to_chunks = defaultdict(list)
-    for ix, row in df.iterrows():
-        cols = df.columns.values
-        doc_text = "; ".join([f"{col}: {str(row[col])}" for col in cols])
-        text_chunks = splitter.split(doc_text)
-        for index, text in enumerate(text_chunks):
-            this_label = f"{label}_{ix + 1}"
-            chunk = {"title": this_label, "text_chunk": text, "chunk_id": index + 1}
-            text_to_chunks[this_label].append(
-                dumps(chunk, indent=2, ensure_ascii=False)
-            )
-    return text_to_chunks
-
-
-def convert_file_bytes_to_chunks(
-    input_file_bytes,
-    analysis_window_size: PeriodOption = PeriodOption.NONE,
-    callbacks=[],
-):
-    text_to_chunks = defaultdict(list)
-    splitter = TextSplitter()
-    for fx, file_name in enumerate(input_file_bytes.keys()):
-        old_file_name = file_name
-        file_name = file_name.replace("(", "").replace(")", "").replace(" ", "_")
-        for cb in callbacks:
-            cb.on_batch_change(fx + 1, len(input_file_bytes.keys()))
-        bytes = input_file_bytes[old_file_name]
-
-        if file_name.endswith(".csv"):
-            df = pd.read_csv(io.BytesIO(bytes))
-            text_to_chunks = convert_df_to_chunks(df, file_name)
-        else:
-            if file_name.endswith(".pdf"):
-                page_texts = []
-                pdf_reader = pdfplumber.open(io.BytesIO(bytes))
-                for px in range(len(pdf_reader.pages)):
-                    page_text = pdf_reader.pages[px].extract_text()
-                    page_texts.append(page_text)
-                doc_text = " ".join(page_texts)
-            elif file_name.endswith(".json"):
-                text_chunks = process_json_text(
-                    loads(bytes.decode("utf-8")), analysis_window_size
-                )
-            else:
-                doc_text = bytes.decode("utf-8")
-
-            if not file_name.endswith(".json"):
-                text_chunks = splitter.split(doc_text)
-                for index, text in enumerate(text_chunks):
-                    chunk = {
-                        "title": file_name,
-                        "text_chunk": text,
-                        "chunk_id": index + 1,
-                    }
-                    text_chunks[index] = dumps(chunk, indent=2, ensure_ascii=False)
-
-            text_to_chunks[file_name] = text_chunks
-    return text_to_chunks
-
 
 def process_json_text(text_json, period: PeriodOption):
     def convert_to_year_quarter(datetm):
