@@ -1,167 +1,100 @@
-answer_format = {
+theme_integration_format = {
     "type": "json_schema",
     "json_schema": {
-        "name": "answer_object",
+        "name": "final_report",
         "strict": True,
         "schema": {
             "type": "object",
             "properties": {
-                "query": {
+                "report_title": {
                     "type": "string"
                 },
-                "title": {
+                "report_overview": {
                     "type": "string"
                 },
-                "introduction": {
-                    "type": "string"
-                },
-                "content_id_sequence": {
-                    "type": "array",
-                    "items": {
-                        "type": "number"
-                    }
-                },
-                "content_items": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "id": {
-                                "type": "number"
-                            },
-                            "title": {
-                                "type": "string"
-                            },
-                            "content": {
-                                "type": "string"
-                            }
-                        },
-                        "required": ["id", "title", "content"],
-                        "additionalProperties": False,
-                    }
-                },
-                "conclusion": {
-                    "type": "string"
-                },
-            },
-            "required": ["query", "title", "introduction", "content_id_sequence", "content_items", "conclusion"],
-            "additionalProperties": False,
-        }
-    }
-}
-
-
-claim_extraction_format = {
-    "type": "json_schema",
-    "json_schema": {
-        "name": "extracted_claims",
-        "strict": True,
-        "schema": {
-            "type": "object",
-            "properties": {
-                "claim_analysis": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "claim_context": {
-                                "type": "string"
-                            },
-                            "claims": {
-                                "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "claim_statement": {
-                                            "type": "string"
-                                        },
-                                        "claim_attribution": {
-                                            "type": "string"
-                                        },
-                                        "supporting_sources": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "number"
-                                            }
-                                        },
-                                        "contradicting_sources": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "number"
-                                            }
-                                        }
-                                    },
-                                    "required": ["claim_statement", "claim_attribution", "supporting_sources", "contradicting_sources"],
-                                    "additionalProperties": False,
-                                }                   
-                            },
-                        },
-                        "required": ["claim_context", "claims"],
-                        "additionalProperties": False,
-                    }
-                },
-            },
-            "required": ["claim_analysis"],
-            "additionalProperties": False,
-        }
-    }
-}
-
-claim_summarization_format = {
-    "type": "json_schema",
-    "json_schema": {
-        "name": "content_items",
-        "strict": True,
-        "schema": {
-            "type": "object",
-            "properties": {
-                "content_items": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "content_title": {
-                                "type": "string"
-                            },
-                            "content_summary": {
-                                "type": "string"
-                            },
-                            "content_commentary": {
-                                "type": "string"
-                            }
-                        },
-                        "required": ["content_title", "content_summary", "content_commentary"],
-                        "additionalProperties": False,
-                    }                   
-                },
-            },
-            "required": ["content_items"],
-            "additionalProperties": False,
-        }
-    }
-}
-
-content_integration_format = {
-    "type": "json_schema",
-    "json_schema": {
-        "name": "integrated_content",
-        "strict": True,
-        "schema": {
-            "type": "object",
-            "properties": {
-                "query": {
+                "report_implications": {
                     "type": "string"
                 },
                 "answer": {
                     "type": "string"
                 },
-                "report_title": {
+            },
+            "required": ["report_title", "report_overview", "report_implications", "answer"],
+            "additionalProperties": False,
+        }
+    }
+}
+
+
+theme_summarization_format = {
+    "type": "json_schema",
+    "json_schema": {
+        "name": "theme_summary",
+        "strict": True,
+        "schema": {
+            "type": "object",
+            "properties": {
+                "theme_title": {
                     "type": "string"
                 },
-                "report_summary": {
-                    "type": "string"
+                "theme_points": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "point_title": {
+                                "type": "string"
+                            },
+                            "point_evidence": {
+                                "type": "string"
+                            },
+                            "point_commentary": {
+                                "type": "string"
+                            }
+                        },
+                        "required": ["point_title", "point_evidence", "point_commentary"],
+                        "additionalProperties": False,
+                    }                   
+                }
+
+            },
+            "required": ["theme_title", "theme_points"],
+            "additionalProperties": False,
+        }
+    }
+}
+
+thematic_update_format = {
+    "type": "json_schema",
+    "json_schema": {
+        "name": "thematic_analysis",
+        "strict": True,
+        "schema": {
+            "type": "object",
+            "properties": {
+                "updates": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "point_id": {
+                                "type": "number"
+                            },
+                            "point_title": {
+                                "type": "string"
+                            },
+                            "source_ids": {
+                                "type": "array",
+                                "items": {
+                                    "type": "number"
+                                }
+                            }
+                        },
+                        "required": ["point_id", "point_title", "source_ids"],
+                        "additionalProperties": False,
+                    }
                 },
-                "theme_order": {
+                "themes": {
                     "type": "array",
                     "items": {
                         "type": "object",
@@ -169,66 +102,19 @@ content_integration_format = {
                             "theme_title": {
                                 "type": "string"
                             },
-                            "theme_summary": {
-                                "type": "string"
-                            },
-                            "content_id_order": {
+                            "point_ids": {
                                 "type": "array",
                                 "items": {
                                     "type": "number"
                                 }
-                            },
-                            "merge_content_ids": {
-                                "type": "array",
-                                "items": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "number"
-                                    }
-                                }
-                            },
-                            "theme_commentary": {
-                                "type": "string"
                             }
                         },
-                        "required": ["theme_title", "theme_summary", "content_id_order", "merge_content_ids", "theme_commentary"],
+                        "required": ["theme_title", "point_ids"],
                         "additionalProperties": False,
-                    }
-                },
-                "report_commentary": {
-                    "type": "string"
+                    },
                 }
             },
-            "required": ["query", "answer", "report_title", "report_summary", "theme_order", "report_commentary"],
-            "additionalProperties": False,
-        }
-    }
-}
-
-
-claim_requery_format = {
-    "type": "json_schema",
-    "json_schema": {
-        "name": "requeried_claims",
-        "strict": True,
-        "schema": {
-            "type": "object",
-            "properties": {
-
-                "supporting_sources": {
-                    "type": "array",
-                    "items": {
-                        "type": "number",
-                    }
-                },
-                "contradicting_sources": {
-                    "type": "array",
-                    "items": {
-                        "type": "number",
-                    }
-                }
-            },
-            "required": ["supporting_sources", "contradicting_sources"],
+            "required": ["updates", "themes"],
             "additionalProperties": False,
         }
     }

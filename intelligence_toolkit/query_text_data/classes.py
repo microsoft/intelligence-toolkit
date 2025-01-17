@@ -61,7 +61,8 @@ class ChunkSearchConfig:
         community_ranking_chunks: int,
         relevance_test_batch_size: int,
         relevance_test_budget: int,
-        irrelevant_community_restart: int
+        irrelevant_community_restart: int,
+        analysis_update_interval: int = 0
     ) -> None:
         """
         Represents the configuration used to search for relevant text chunks.
@@ -73,6 +74,7 @@ class ChunkSearchConfig:
             relevance_test_batch_size (int): How many relevance tests to run in parallel at a time
             relevance_test_budget (int): How many relevance tests are permitted per query. Higher values may provide higher quality results at higher cost
             irrelevant_community_restart (int): When to restart testing communities in relevance order
+            analysis_update_interval (int): How many chunks to process before updating the analysis. Use 0 to skip analysis updates
         """
         self.adjacent_test_steps = adjacent_test_steps
         self.community_relevance_tests = community_relevance_tests
@@ -80,31 +82,10 @@ class ChunkSearchConfig:
         self.relevance_test_batch_size = relevance_test_batch_size
         self.relevance_test_budget = relevance_test_budget
         self.irrelevant_community_restart = irrelevant_community_restart
+        self.analysis_update_interval = analysis_update_interval
 
     def __repr__(self):
-        return f"ChunkSearchConfig(adjacent_test_steps={self.adjacent_test_steps}, community_relevance_tests={self.community_relevance_tests}, relevance_test_batch_size={self.relevance_test_batch_size}, relevance_test_budget={self.relevance_test_budget}, irrelevant_community_restart={self.irrelevant_community_restart})"
-    
-class AnswerConfig:
-    def __init__(
-        self,
-        target_chunks_per_cluster: int,
-        extract_claims: bool,
-        claim_search_depth: int,
-    ) -> None:
-        """
-        Represents the configuration used to answer a user query.
-
-        Args:
-            target_chunks_per_cluster (int): How many chunks to aim to analyze together in a single LLM call
-            extract_claims (bool): Whether to extract claims from relevant text chunks
-            claim_search_depth (int): If extracting claims, how many chunks to search for additional claim support
-        """
-        self.target_chunks_per_cluster = target_chunks_per_cluster
-        self.extract_claims = extract_claims
-        self.claim_search_depth = claim_search_depth
-
-    def __repr__(self):
-        return f"AnswerConfig(target_chunks_per_cluster={self.target_chunks_per_cluster}, extract_claims={self.extract_claims}, claim_search_depth={self.claim_search_depth})"
+        return f"ChunkSearchConfig(adjacent_test_steps={self.adjacent_test_steps}, community_relevance_tests={self.community_relevance_tests}, relevance_test_batch_size={self.relevance_test_batch_size}, relevance_test_budget={self.relevance_test_budget}, irrelevant_community_restart={self.irrelevant_community_restart}, analysis_update_interval={self.analysis_update_interval})"
     
 class AnswerObject:
     def __init__(

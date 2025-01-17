@@ -13,9 +13,9 @@ Select the `View example outputs` tab (in app) or navigate to [example_outputs/q
 5. [**Embedding Calls**] Text chunks are embedded into a multi-dimensional semantic space, with similar ideas close to one another.
 6. [**Process**] The user's question is embedded into the same space, and the text chunks ranked by similarity.
 7. [**Process**] The ranking of text chunks is used to determine a ranking of topics, which span the entire dataset.
-8. [**AI Calls**] The system uses generative AI to evaluate the relevance of the top-ranked text chunks from each community in turn, until either a relevance test budget is reached, there are no more communities yielding relevant chunks, or there are no more chunks to test.
-9. [**AI Calls**] The system uses generative AI to build an answer report progressively from batches of relevant text chunks.
-10. [**Output**] AI answer report MD/PDF file(s) including a concise answer to the user's question and the extended answer report.
+8. [**AI Calls**] The system uses generative AI to evaluate the relevance of the top-ranked text chunks from each community in turn, until either a relevance test budget is reached or there are no more communities yielding relevant chunks.
+9. [**AI Calls**] The system uses generative AI to build a research report progressively from batches of relevant text chunks.
+10. [**Output**] AI answer report MD/PDF file(s) including a concise answer to the user's question and the extended research report.
 
 ## Input requirements
 
@@ -37,7 +37,7 @@ This file contains one news article per row, stored in the single column `mock_t
 
 Press `Process files` to prepare the data for analysis. After successfully processing the data, you will see a status message like the following:
 
-`Chunked 500 files into 501 chunks of up to 500 tokens. Extracted concept graph with 1327 concepts and 3593 cooccurrences.`
+`Chunked XXX files into XXX chunks of up to XXX tokens. Extracted concept graph with XXX concepts and XXX cooccurrences.`
 
 ### Query method
 
@@ -61,23 +61,33 @@ Select a topic to view the graph of associated concepts. In the graph, concept n
 
 Select a concept node in the graph to view a list of matching text chunks on the right-hand side.
 
-### Generating AI extended answers
+### Generating AI research reports
 
-Navigate to the `Generate AI extended answer` tab to query the data index (i.e., text embeddings plus concept graph) in a way that generates a long-form text answer.
+Navigate to the `Generate AI research report` tab to query the data index (i.e., text embeddings plus concept graph) in a way that generates a long-form text answer.
 
-Click on `Options` to expand the available controls, which are as follows:
+Clicking on `Advanced Options` expands the available controls, which are as follows. These do not need adjusting for standard use.
 
+- **Search options**
+  - `Tests/topic/round`. How many relevant tests to perform for each topic in each round. Larger values reduce the likelihood of prematurely discarding topics whose relevant chunks may not be at the top of the similarity-based ranking, but may result in smaller values of `Relevance test budget` being spread across fewer topics and thus not capturing the full breadth of the data.
+  - `Restart on irrelevant topics`. When this number of topics in a row fail to return any relevant chunks in their `Tests/topic/round`, return to the start of the topic ranking and continue testing `Tests/topic/round` text chunks from each topic with (a) relevance in the previous round and (b) previously untested text chunks. Higher values can avoid prematurely discarding topics that are relevant but whose relevant chunks are not at the top of the similarity-based ranking, but may result in a larger number of irrelevant topics being tested multiple times.
+  - `Test relevant neighbours`. If a text chunk is relevant to the query, then adjacent text chunks in the original document may be able to add additional context to the relevant points. The value of this parameter determines how many chunks before and after each relevant text chunk will be evaluated at the end of the process (or `Relevance test budget`) if they are yet to be tested.
+- **Answer options**
+  - `Target chunks per cluster`. The average number of text chunks to target per cluster, which determines the text chunks that will be evaluated together and in parallel to other clusters. Larger values will generally result in more related text chunks being evaluated in parallel, but may also result in information loss from unprocessed content.
+  - `Show search process`. Show the search process in the UI, including the progress of chunk relevance tests and the search for relevant chunks.
+  - `Live analysis`. Enable live analysis of the text chunks as they are processed. This provides immediate feedback but slows down the overall process.
+  - `Analysis update interval`. The number of text chunks to process before updating the live analysis. Larger values will give faster final reports but also result in longer periods of time between updates.
+  - `Live commentary`. Enable live commentary of analysis themes after text chunks are processed. This provides a preview of report content while the final report is being generated.
+
+The `Query` and the `Relevance test budget` are required in all cases:
+
+- `Query`. The query or task that the user would like the AI to perform with respect to the data.
 - `Relevance test budget`. The query method works by asking an LLM to evaluate the relevance of potentially-relevant text chunks, returning a single token, yes/no judgement. This parameter allows the user to cap the number of relvance tests that may be performed prior to generating an answer using all relevant chunks. Larger budgets will generally give better answers for a greater cost.
-- `Tests/topic/round`. How many relevant tests to perform for each topic in each round. Larger values reduce the likelihood of prematurely discarding topics whose relevant chunks may not be at the top of the similarity-based ranking, but may result in smaller values of `Relevance test budget` being spread across fewer topics and thus not capturing the full breadth of the data.
-- `Restart on irrelevant topics`. When this number of topics in a row fail to return any relevant chunks in their `Tests/topic/round`, return to the start of the topic ranking and continue testing `Tests/topic/round` text chunks from each topic with (a) relevance in the previous round and (b) previously untested text chunks. Higher values can avoid prematurely discarding topics that are relevant but whose relevant chunks are not at the top of the similarity-based ranking, but may result in a larger number of irrelevant topics being tested multiple times.
-- `Test relevant neighbours`. If a text chunk is relevant to the query, then adjacent text chunks in the original document may be able to add additional context to the relevant points. The value of this parameter determines how many chunks before and after each relevant text chunk will be evaluated at the end of the process (or `Relevance test budget`) if they are yet to be tested.
-- `Relevant chunks/answer update`. Determines how many relevant chunks at a time are incorporated into the extended answer in progress. Higher values may require fewer updates, but may miss more details from the chunks provided.
 
-Enter a query in the `Query` field and press `Search` to begin the process of searching for relevant text chunks.
+Enter a query in the `Query` field, set a `Relevance test budget`, then press `Search` to begin the process of searching for relevant text chunks.
 
 For example, try `What are the main political events discussed?`.
 
-The system will first identify relevant chunks before using batches of relevant chunks to update an extended answer in progress. Once this process has completed, a download button will appear after the contents of the extended report text.
+The system will first identify relevant chunks before using batches of relevant chunks to update a research report in progress. Once this process has completed, a download button will appear after the contents of the extended report text.
 
 ### Generating AI answer reports
 

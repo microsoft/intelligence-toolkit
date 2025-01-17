@@ -135,7 +135,7 @@ class MatchEntityRecords(IntelligenceWorkflow):
 
         for messages in batch_messages:
             response = await OpenAIClient(self.ai_configuration).generate_chat_async(
-                messages, stream=True
+                messages, stream=False
             )
             prefix = prefix + response + "\n"
         result = prefix.replace("```\n", "").strip()

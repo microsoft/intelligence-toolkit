@@ -124,6 +124,8 @@ class OpenAIClient:
     async def generate_chat_async(
         self,
         messages: list[str],
+        stream: bool = True,
+        callbacks: list[LLMCallback] | None = None,
         **kwargs,
     ):
         if "max_tokens" in kwargs.keys():
@@ -136,16 +138,28 @@ class OpenAIClient:
             kwargs.pop("temperature")
         else:
             temperature = self.configuration.temperature
-        if "stream" in kwargs.keys():
-            kwargs.pop("stream")
         response = await self._async_client.chat.completions.create(
             model=self.configuration.model,
             temperature=temperature,
             max_tokens=max_tokens,
             messages=messages,
-            stream=False,
+            stream=stream,
             **kwargs,
         )
+        if stream and callbacks is not None:
+            full_response = ""
+            async for chunk in response:
+                delta = chunk.choices[0].delta.content or ""  # type: ignore
+                if delta is not None:
+                    full_response += delta
+                    if callbacks:
+                        show = full_response
+                        if len(delta) > 0:
+                            show += "▌"
+                        for callback in callbacks:
+                            callback.on_llm_new_token(show)
+            return full_response
+        
         return response.choices[0].message.content or ""  # type: ignore
 
     def generate_embedding(
