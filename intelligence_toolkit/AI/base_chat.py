@@ -22,10 +22,10 @@ class BaseChat(BaseBatchAsync, OpenAIClient):
         self.semaphore = asyncio.Semaphore(concurrent_coroutines)
 
     @retry_with_backoff()
-    async def generate_text_async(self, messages, callbacks, **llm_kwargs):
+    async def generate_text_async(self, messages, callbacks, stream, **llm_kwargs):
         async with self.semaphore:
             try:
-                chat = await self.generate_chat_async(messages, **llm_kwargs)
+                chat = await self.generate_chat_async(messages=messages, stream=stream, **llm_kwargs)
                 if callbacks:
                     self.progress_callback()
             except Exception as e:
@@ -44,7 +44,7 @@ class BaseChat(BaseBatchAsync, OpenAIClient):
         self.total_tasks = len(messages_list)
         tasks = [
             asyncio.create_task(
-                self.generate_text_async(messages, callbacks, **llm_kwargs)
+                self.generate_text_async(messages, callbacks, False, **llm_kwargs)
             )
             for messages in messages_list
         ]
