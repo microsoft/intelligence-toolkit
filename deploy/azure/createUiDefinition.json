@@ -8,7 +8,7 @@
         "name": "webAppName",
         "type": "Microsoft.Common.TextBox",
         "label": "Web app name",
-        "defaultValue": "",
+        "defaultValue": "", 
         "toolTip": "The App name, to be accessed",
         "constraints": {
           "required": true,
@@ -96,23 +96,36 @@
             "defaultValue": "",
             "constraints": {
               "required": "[equals(steps('AISettings').aiType, 'Azure OpenAI')]",
-              "regex": "^(https://)([a-zA-Z0-9-]+)(.openai.azure.com)$",
-              "validationMessage": "Must be a valid Azure AI endpoint"
+              "regex": "^(https://)([a-zA-Z0-9-]{2,})(.openai.azure.com)$",
+              "validationMessage": "Must be a valid Azure AI endpoint starting with https:// and ending with openai.azure.com"
             },
             "visible": "[equals(steps('AISettings').aiType, 'Azure OpenAI')]"
           },
           {
-            "name": "openaiApiKey",
+            "name": "openaiApiKeyOpenAI",
             "type": "Microsoft.Common.TextBox",
             "toolTip": "The OpenAI key",
             "label": "Key",
             "constraints": {
               "required": false,
-              "regex": "^[a-zA-Z0-9-]{36}$",
-              "validationMessage": "Must be a valid OpenAI key"
+              "regex": "^sk-.*$",
+              "validationMessage": "Must be a valid OpenAI key starting with sk-"
             },
             "defaultValue": "",
-            "visible": "[or(equals(steps('AISettings').aiManagedIdentity, false), equals(steps('AISettings').aiType, 'OpenAI'))]"
+            "visible": "[equals(steps('AISettings').aiType, 'OpenAI')]"
+          },
+          {
+            "name": "openaiApiKeyAzureOpenAI",
+            "type": "Microsoft.Common.TextBox",
+            "toolTip": "The Azure OpenAI key",
+            "label": "Key",
+            "constraints": {
+              "required": false,
+              "regex": "^[a-zA-Z0-9]{32}$",
+              "validationMessage": "Must be a valid Azure OpenAI key with 32 alphanumeric chars"
+            },
+            "defaultValue": "",
+            "visible": "[and(equals(steps('AISettings').aiManagedIdentity, false), equals(steps('AISettings').aiType, 'Azure OpenAI'))]"
           }
         ]
       },
@@ -141,7 +154,8 @@
       "disableAuth": "[basics('disableAuth')]",
       "aiType": "[steps('AISettings').aiType]",
       "aiManagedIdentity": "[steps('AISettings').aiManagedIdentity]",
-      "openaiApiKey": "[steps('AISettings').openaiApiKey]",
+      "openaiApiKey": "[steps('AISettings').openaiApiKeyOpenAI]",
+      "openaiAzureApiKey": "[steps('AISettings').openaiApiKeyAzureOpenAI]",
       "aiEndpoint": "[steps('AISettings').aiEndpoint]"
     }
   }
