@@ -142,6 +142,7 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                             )
                             sv.anonymize_synthetic_df.value = acd.synthetic_df
                             sv.anonymize_aggregate_df.value = acd.aggregate_df
+                            sv.anonymize_synthetic_aggregate_df.value = acd.synthetic_aggregate_df
                             sv.anonymize_delta.value = f"{acd.delta:.2e}"
                 if epsilon > 12:
                     st.warning(
@@ -209,12 +210,21 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
                         use_container_width=True,
                         height=700,
                     )
-                    st.download_button(
-                        "Download Synthetic data",
-                        data=sv.anonymize_synthetic_df.value.to_csv(index=False),
-                        file_name="synthetic_data.csv",
-                        mime="text/csv",
-                    )
+                    ca, cb = st.columns([4,5])
+                    with ca:
+                        st.download_button(
+                            "Download Synthetic data",
+                            data=sv.anonymize_synthetic_df.value.to_csv(index=False),
+                            file_name="synthetic_data.csv",
+                            mime="text/csv",
+                        )
+                    with cb:
+                        st.download_button(
+                            "Download Synthetic aggregates",
+                            data=sv.anonymize_synthetic_aggregate_df.value.to_csv(index=False),
+                            file_name="synthetic_aggregate_data.csv",
+                            mime="text/csv",
+                        )
 
     with queries_tab:
         if (
