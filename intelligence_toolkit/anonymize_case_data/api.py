@@ -36,6 +36,7 @@ class AnonymizeCaseData(IntelligenceWorkflow):
         self.delta = 0
         self.sensitive_df = pd.DataFrame()
         self.aggregate_df = pd.DataFrame()
+        self.synthetic_aggregate_df = pd.DataFrame()
         self.synthetic_df = pd.DataFrame()
         self.aggregate_error_report = pd.DataFrame()
         self.synthetic_error_report = pd.DataFrame()
@@ -175,6 +176,19 @@ class AnonymizeCaseData(IntelligenceWorkflow):
         self.aggregate_df = self.aggregate_df.sort_values(
             by=["protected_count"], ascending=False
         )
+
+        self.synthetic_aggregate_df = pd.DataFrame(
+            data=synthetic_aggregates.items(),
+            columns=["selections", "protected_count"],
+        )
+        self.synthetic_aggregate_df.loc[len(self.synthetic_aggregate_df)] = [
+            "record_count",
+            self.protected_number_of_records,
+        ]
+        self.synthetic_aggregate_df = self.synthetic_aggregate_df.sort_values(
+            by=["protected_count"], ascending=False
+        )
+
         self.aggregate_error_report = ErrorReport(
             sensitive_aggregates_parsed, dp_aggregates_parsed
         ).gen()
