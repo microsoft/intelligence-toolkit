@@ -100,24 +100,14 @@ def main():
             endpoint = st.text_input(
                 "Azure OpenAI Endpoint",
                 disabled=is_mode_cloud,
-                type="password",
                 value=openai_config.api_base,
+                help="Find this value in https://ai.azure.com/ as 'Azure OpenAI Service endpoint'",
             )
             if endpoint != openai_config.api_base:
                 on_change(secrets_handler, openai_endpoint_key, endpoint)()
                 st.rerun()
 
         with col2:
-            version = st.text_input(
-                "Azure OpenAI Version",
-                disabled=is_mode_cloud,
-                value=openai_config.api_version,
-            )
-            if version != openai_config.api_version:
-                on_change(secrets_handler, openai_version_key, version)()
-                st.rerun()
-
-        with col3:
             deployment_name = st.text_input(
                 "Azure OpenAI Deployment Name",
                 disabled=is_mode_cloud,
@@ -127,13 +117,23 @@ def main():
                 on_change(secrets_handler, openai_model_key, deployment_name)()
                 st.rerun()
 
+        with col3:
+            version = st.text_input(
+                "Azure OpenAI Version",
+                disabled=is_mode_cloud,
+                value=openai_config.api_version,
+            )
+            if version != openai_config.api_version:
+                on_change(secrets_handler, openai_version_key, version)()
+                st.rerun()
+
+
     if type_input == "OpenAI" or type_input_az != "Managed Identity":
         col1, col2 = st.columns(2)
         with col1:
             placeholder = "Enter key here..."
             secret_input = st.text_input(
                 "Enter your key",
-                type="password",
                 disabled=is_mode_cloud,
                 placeholder=placeholder,
                 value=secret,
