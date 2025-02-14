@@ -120,13 +120,13 @@ def main():
         with col3:
             version = st.text_input(
                 "Azure OpenAI Version",
-                disabled=is_mode_cloud,
+                disabled=True,
                 value=openai_config.api_version,
+                help="The minimum of '2024-08-01-preview' will work with all the workflows. If you wish to change (non-advised) please contact the team.",
             )
-            if version != openai_config.api_version:
-                on_change(secrets_handler, openai_version_key, version)()
-                st.rerun()
-
+            # if version != openai_config.api_version:
+            #     on_change(secrets_handler, openai_version_key, version)()
+            #     st.rerun()
 
     if type_input == "OpenAI" or type_input_az != "Managed Identity":
         col1, col2 = st.columns(2)
