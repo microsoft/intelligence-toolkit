@@ -52,6 +52,9 @@ See details on pricing [here](https://azure.microsoft.com/en-us/pricing/details/
             - Having authentication enabled is **strongly** recommended. But if for any case you want to test the app making sure that no private data will be used and you're ok with the website being open to the internet to access, check this option.
         - **App registration client ID**:
             - In here you'll insert the `Application (client) ID` value you created earlier.
+        - **Agent VM size**
+            - Pre-set options on the computation size of your app. Prices may vary. The default optin is the cheaper one. Higher values are better for more users, and/or if you want your app to be faster.
+                - [Click here](https://azure.microsoft.com/en-us/pricing/details/app-service/linux/) for more information on pricing.
         - **AI settings**:
             - This will configure how the app will access an AI instance.
             - **AI type**: 
