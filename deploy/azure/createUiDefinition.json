@@ -35,6 +35,41 @@
           "validationMessage": "Must be a valid GUID"
         },
         "visible": "[equals(steps('basics').disableAuth, false)]"
+      },
+      {
+        "name": "agentVMSize",
+        "type": "Microsoft.Common.DropDown",
+        "label": "Agent VM size",
+        "placeholder": "",
+        "defaultValue": "Low cost",
+        "multiLine": true,
+        "toolTip": "See correct pricing here: https://azure.microsoft.com/en-us/pricing/details/app-service/linux/",
+        "constraints": {
+          "allowedValues": [
+            {
+              "label": "Low cost",
+              "description": "Standard B3 agent. Around $50 monthly cost.",
+              "value": "Standard_B3"
+            },
+            {
+              "label": "Medium cost",
+              "description": "Premium P1V3 agent. Around $115 monthly cost.",
+              "value": "Premium_P1V3"
+            },
+            {
+              "label": "High cost",
+              "description": "Standard B3 value. Around $230 monthly cost.",
+              "value": "Premium_P2V3"
+            },
+            {
+              "label": "Premium cost",
+              "description": "Standard B3 value. Around $452 monthly cost.",
+              "value": "Premium_P3V3"
+            }
+          ],
+          "required": true
+        },
+        "visible": true
       }
     ],
     "config": {
@@ -45,6 +80,10 @@
               {
                 "permission": "Microsoft.Resources/deployments/validate/action",
                 "message": "You don't have the right permissions to perform this action."
+              },
+              {
+                "permission": "Microsoft.Authorization/roleAssignments/write",
+                "message": "You must have write permission for role assignments."
               }
             ]
           }
@@ -151,6 +190,7 @@
       "location": "[location()]",
       "tags": "[steps('tags').tagsObj]",
       "clientId": "[basics('authClientId')]",
+      "agentVMSize": "[basics('agentVMSize')]",
       "disableAuth": "[basics('disableAuth')]",
       "aiType": "[steps('AISettings').aiType]",
       "aiManagedIdentity": "[steps('AISettings').aiManagedIdentity]",
