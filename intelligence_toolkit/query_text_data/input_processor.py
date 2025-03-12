@@ -8,6 +8,7 @@ from enum import Enum
 from json import dumps, loads
 
 import networkx as nx
+
 import intelligence_toolkit.query_text_data.graph_builder as graph_builder
 from intelligence_toolkit.AI.text_splitter import TextSplitter
 from intelligence_toolkit.query_text_data.classes import ProcessedChunks
@@ -84,7 +85,7 @@ def process_chunks(
     file_cids = []
     cid_to_text = {}
     text_to_cid = {}
-    chunk_id = 0
+    chunk_id = 1
     file_to_cids = defaultdict(list)
     for file, chunks in file_to_chunks.items():
         for chunk in chunks:

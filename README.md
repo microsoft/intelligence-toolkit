@@ -194,7 +194,8 @@ You can access the `Settings` page on the left sidebar when running the applicat
 
 - For OpenAI, you will need an active OpenAI account ([create here](https://platform.openai.com/login)) and API key ([create here](https://platform.openai.com/account/api-keys)).
 
-- For Azure OpenAI, you will need an active Azure account ([create here](https://portal.azure.com/)), endpoint, key and version for the AI Service ([create here](https://portal.azure.com/#view/Microsoft_Azure_ProjectOxford/CognitiveServicesHub/~/OpenAI)).
+- For Azure OpenAI, you will need an active Azure account ([create here](https://portal.azure.com/)), endpoint and key ([create here](https://portal.azure.com/#view/Microsoft_Azure_ProjectOxford/CognitiveServicesHub/~/OpenAI)).
+  - It is fixed to the minimum version for all the workflows to work.
 
 
 **Option 3: Using Intelligence Toolkit as a Python Package (via PyPI)**

@@ -104,18 +104,21 @@ class OpenAIClient:
             if stream and callbacks is not None:
                 full_response = ""
                 for chunk in response:
-                    delta = chunk.choices[0].delta.content or ""  # type: ignore
-                    if delta is not None:
-                        full_response += delta
-                        if callbacks:
-                            show = full_response
-                            if len(delta) > 0:
-                                show += "▌"
-                            for callback in callbacks:
-                                callback.on_llm_new_token(show)
+                    if len(chunk.choices) > 0:
+                        delta = chunk.choices[0].delta.content or ""  # type: ignore
+                        if delta is not None:
+                            full_response += delta
+                            if callbacks:
+                                show = full_response
+                                if len(delta) > 0:
+                                    show += "▌"
+                                for callback in callbacks:
+                                    callback.on_llm_new_token(show)
                 return full_response
 
-            return response.choices[0].message.content or ""  # type: ignore
+            return (
+                response.choices[0].message.content if len(response.choices) > 0 else ""
+            )  # type: ignore
         except Exception as e:
             print(f"Error validating report: {e}")
             msg = f"Problem in OpenAI response. {e}"

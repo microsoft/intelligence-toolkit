@@ -8,7 +8,7 @@
         "name": "webAppName",
         "type": "Microsoft.Common.TextBox",
         "label": "Web app name",
-        "defaultValue": "",
+        "defaultValue": "", 
         "toolTip": "The App name, to be accessed",
         "constraints": {
           "required": true,
@@ -35,6 +35,41 @@
           "validationMessage": "Must be a valid GUID"
         },
         "visible": "[equals(steps('basics').disableAuth, false)]"
+      },
+      {
+        "name": "agentVMSize",
+        "type": "Microsoft.Common.DropDown",
+        "label": "Agent VM size",
+        "placeholder": "",
+        "defaultValue": "Low cost",
+        "multiLine": true,
+        "toolTip": "See correct pricing here: https://azure.microsoft.com/en-us/pricing/details/app-service/linux/",
+        "constraints": {
+          "allowedValues": [
+            {
+              "label": "Low cost",
+              "description": "Standard B3 agent. Around $50 monthly cost.",
+              "value": "Standard_B3"
+            },
+            {
+              "label": "Medium cost",
+              "description": "Premium P1V3 agent. Around $115 monthly cost.",
+              "value": "Premium_P1V3"
+            },
+            {
+              "label": "High cost",
+              "description": "Standard B3 value. Around $230 monthly cost.",
+              "value": "Premium_P2V3"
+            },
+            {
+              "label": "Premium cost",
+              "description": "Standard B3 value. Around $452 monthly cost.",
+              "value": "Premium_P3V3"
+            }
+          ],
+          "required": true
+        },
+        "visible": true
       }
     ],
     "config": {
@@ -45,6 +80,10 @@
               {
                 "permission": "Microsoft.Resources/deployments/validate/action",
                 "message": "You don't have the right permissions to perform this action."
+              },
+              {
+                "permission": "Microsoft.Authorization/roleAssignments/write",
+                "message": "You must have write permission for role assignments."
               }
             ]
           }
@@ -96,23 +135,36 @@
             "defaultValue": "",
             "constraints": {
               "required": "[equals(steps('AISettings').aiType, 'Azure OpenAI')]",
-              "regex": "^(https://)([a-zA-Z0-9-]+)(.openai.azure.com)$",
-              "validationMessage": "Must be a valid Azure AI endpoint"
+              "regex": "^(https://)([a-zA-Z0-9-]{2,})(.openai.azure.com)$",
+              "validationMessage": "Must be a valid Azure AI endpoint starting with https:// and ending with openai.azure.com"
             },
             "visible": "[equals(steps('AISettings').aiType, 'Azure OpenAI')]"
           },
           {
-            "name": "openaiApiKey",
+            "name": "openaiApiKeyOpenAI",
             "type": "Microsoft.Common.TextBox",
             "toolTip": "The OpenAI key",
             "label": "Key",
             "constraints": {
               "required": false,
-              "regex": "^[a-zA-Z0-9-]{36}$",
-              "validationMessage": "Must be a valid OpenAI key"
+              "regex": "^sk-.*$",
+              "validationMessage": "Must be a valid OpenAI key starting with sk-"
             },
             "defaultValue": "",
-            "visible": "[or(equals(steps('AISettings').aiManagedIdentity, false), equals(steps('AISettings').aiType, 'OpenAI'))]"
+            "visible": "[equals(steps('AISettings').aiType, 'OpenAI')]"
+          },
+          {
+            "name": "openaiApiKeyAzureOpenAI",
+            "type": "Microsoft.Common.TextBox",
+            "toolTip": "The Azure OpenAI key",
+            "label": "Key",
+            "constraints": {
+              "required": false,
+              "regex": "^[a-zA-Z0-9]{32}$",
+              "validationMessage": "Must be a valid Azure OpenAI key with 32 alphanumeric chars"
+            },
+            "defaultValue": "",
+            "visible": "[and(equals(steps('AISettings').aiManagedIdentity, false), equals(steps('AISettings').aiType, 'Azure OpenAI'))]"
           }
         ]
       },
@@ -138,10 +190,12 @@
       "location": "[location()]",
       "tags": "[steps('tags').tagsObj]",
       "clientId": "[basics('authClientId')]",
+      "agentVMSize": "[basics('agentVMSize')]",
       "disableAuth": "[basics('disableAuth')]",
       "aiType": "[steps('AISettings').aiType]",
       "aiManagedIdentity": "[steps('AISettings').aiManagedIdentity]",
-      "openaiApiKey": "[steps('AISettings').openaiApiKey]",
+      "openaiApiKey": "[steps('AISettings').openaiApiKeyOpenAI]",
+      "openaiAzureApiKey": "[steps('AISettings').openaiApiKeyAzureOpenAI]",
       "aiEndpoint": "[steps('AISettings').aiEndpoint]"
     }
   }

@@ -6,6 +6,7 @@ import os
 from .defaults import (
     DEFAULT_AZ_AUTH_TYPE,
     DEFAULT_EMBEDDING_MODEL,
+    DEFAULT_EMBEDDING_MODEL_AZURE,
     DEFAULT_LLM_MAX_TOKENS,
     DEFAULT_LLM_MODEL,
     DEFAULT_OPENAI_VERSION,
@@ -72,7 +73,12 @@ class OpenAIConfiguration:
         return os.environ.get("OPENAI_API_MODEL", DEFAULT_LLM_MODEL)
 
     def _get_embedding_model(self):
-        return os.environ.get("OPENAI_EMBEDDING_MODEL", DEFAULT_EMBEDDING_MODEL)
+        default_embedding_per_type = (
+            DEFAULT_EMBEDDING_MODEL_AZURE
+            if self._api_type == "Azure OpenAI"
+            else DEFAULT_EMBEDDING_MODEL
+        )
+        return os.environ.get("OPENAI_EMBEDDING_MODEL", default_embedding_per_type)
 
     def _get_azure_api_base(self):
         return os.environ.get("AZURE_OPENAI_ENDPOINT", "")
