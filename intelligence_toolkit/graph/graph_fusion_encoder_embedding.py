@@ -170,9 +170,9 @@ def generate_graph_fusion_encoder_embedding(
                     period_to_pos[period], prior_centroid
                 )
             prior_positions.append(period_to_pos[period])
-        node_to_period_to_shift[node][period] = _cosine_distance(
-            period_to_pos[period], centroid
-        )
+            node_to_period_to_shift[node][period] = _cosine_distance(
+                period_to_pos[period], centroid
+            )
 
     return node_to_period_to_pos, node_to_period_to_shift
 
