@@ -24,6 +24,7 @@ class SessionVariables:
         self.anonymize_last_synthetic_file_name = SessionVariable("", prefix)
         self.anonymize_last_aggregate_file_name = SessionVariable("", prefix)
         self.anonymize_synthetic_df = SessionVariable(pd.DataFrame(), prefix)
+        self.anonymize_synthetic_aggregate_df = SessionVariable(pd.DataFrame(), prefix)
         self.anonymize_aggregate_df = SessionVariable(pd.DataFrame(), prefix)
         self.anonymize_epsilon = SessionVariable(12.0, prefix)
         # self.anonymize_sen_agg_rep = SessionVariable(pd.DataFrame(), prefix)

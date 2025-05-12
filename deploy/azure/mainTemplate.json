@@ -44,13 +44,9 @@
       "type": "bool",
       "defaultValue": true
     },
-    "sku": {
+    "agentVMSize": {
       "type": "string",
-      "defaultValue": "Premium v3"
-    },
-    "skuCode": {
-      "type": "string",
-      "defaultValue": "P0V3"
+      "defaultValue": "Standard_B3"
     },
     "workerSize": {
       "type": "string",
@@ -74,7 +70,9 @@
     "ftpsState": "FtpsOnly",
     "linuxFxVersion": "sitecontainers",
     "siteContainerName": "main",
-    "redirectUrl": "[concat('https://', parameters('webAppName'), '.azurewebsites.net/.auth/login/aad')]"
+    "redirectUrl": "[concat('https://', parameters('webAppName'), '.azurewebsites.net/.auth/login/aad')]",
+    "sku": "[split(parameters('agentVMSize'), '_')[0]]",
+    "sku_code": "[split(parameters('agentVMSize'), '_')[1]]"
   },
   "resources": [
     {
@@ -226,8 +224,8 @@
         "zoneRedundant": false
       },
       "sku": {
-        "Tier": "[parameters('sku')]",
-        "Name": "[parameters('skuCode')]"
+        "Tier": "[variables('sku')]",
+        "Name": "[variables('sku_code')]"
       }
     }
   ],
