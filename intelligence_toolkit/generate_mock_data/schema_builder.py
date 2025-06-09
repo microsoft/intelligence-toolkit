@@ -438,7 +438,11 @@ def evaluate_object_and_schema(obj, schema):
         jsonschema.validate(obj, schema)
         return ValidationResult.VALID
     except jsonschema.exceptions.ValidationError:
-        return ValidationResult.OBJECT_INVALID
+        #check if it's is invalid because there's an empty field
+        if isinstance(obj, dict):
+            for key, value in obj.items():
+                if not value or (isinstance(value, str) and value.strip() != ''):
+                    return ValidationResult.OBJECT_INVALID
     except jsonschema.exceptions.SchemaError:
         return ValidationResult.SCHEMA_INVALID
 
