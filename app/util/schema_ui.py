@@ -80,14 +80,13 @@ def generate_form_from_json_schema(global_schema, default_schema, field_location
                     old_req = key in schema_builder.get_required_list(global_schema, nesting)
                     req = st.checkbox('Required?', 
                                       key=f'{key_with_prefix}_required', 
-                                      value=old_req,
-                                      disabled=True,
+                                      value=True,
                                       help="Non-required fields are not supported in OpenAI structured outputs"
                                     )
 
-                    if not req:
+                    if not old_req:
+                        print('Setting required field: ', new_label)
                         schema_builder.set_required_field_status(global_schema, nesting, new_label, req)
-                        st.rerun()
                 with c3:
                     if st.button('Move down', key=f'{key_with_prefix}_move_down', disabled=key == list(field_location.keys())[-1]):
                         schema_builder.move_field_down(global_schema, nesting, field_location, key)
