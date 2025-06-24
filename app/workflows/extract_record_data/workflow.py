@@ -93,13 +93,13 @@ async def create(sv: variables.SessionVariables, workflow: None):
                             placeholder.empty()
 
                         
-                            
-                        await erd.extract_record_data(
-                            input_texts=input_texts,
-                            generation_guidance=sv.generation_guidance.value,
-                            df_update_callback=on_dfs_update,
-                            callback_batch=None
-                        )
+                        with st.spinner('Extracting...'):
+                            await erd.extract_record_data(
+                                input_texts=input_texts,
+                                generation_guidance=sv.generation_guidance.value,
+                                df_update_callback=on_dfs_update,
+                                callback_batch=None
+                            )
                         sv.final_object.value = erd.json_object,
                         sv.generated_dfs.value = erd.array_dfs
 
