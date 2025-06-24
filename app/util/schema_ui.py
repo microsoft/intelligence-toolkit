@@ -80,7 +80,7 @@ def generate_form_from_json_schema(global_schema, default_schema, field_location
                     old_req = key in schema_builder.get_required_list(global_schema, nesting)
                     req = st.checkbox('Required?', 
                                       key=f'{key_with_prefix}_required', 
-                                      value=old_req,
+                                      value=True,
                                       disabled=True,
                                       help="Non-required fields are not supported in OpenAI structured outputs"
                                     )

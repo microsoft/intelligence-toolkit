@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "intelligence-toolkit"
-version = "0.0.3"
+version = "0.0.4"
 description = "Interactive workflows for generating AI intelligence reports from real-world data sources using GPT models"
 authors = [
     "Dayenne Souza <ddesouza@microsoft.com>",
