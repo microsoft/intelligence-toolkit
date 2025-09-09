@@ -814,6 +814,8 @@ def check_ai_configuration(enforce_structured_output=False):
         "gpt-4o-mini-2024-07-18",
         "gpt-4o",
         "gpt-4o-2024-08-06",
+        "gpt-4.1",
+        "gpt-4.1-mini",
     ]
     if (
         enforce_structured_output

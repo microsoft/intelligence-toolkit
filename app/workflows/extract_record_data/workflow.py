@@ -47,7 +47,7 @@ async def create(sv: variables.SessionVariables, workflow: None):
                 mode = st.radio("Mode", ["Extract from single text", "Extract from rows of CSV file"], horizontal=True)
                 input_texts = []
                 if mode == "Extract from single text":
-                    st.text_area("Unstructured text input", key=sv.text_input.key, value=sv.text_input.value, height=400)
+                    st.text_area("Unstructured text input", key=sv.text_input.key, height=400)
                     input_texts.append(sv.text_input.value)
                 else:
                     _, selected_df, changed = ui_components.multi_csv_uploader(
@@ -60,7 +60,7 @@ async def create(sv: variables.SessionVariables, workflow: None):
                         input_texts = []
                         for ix, row in selected_df.iterrows():
                             input_texts.append(row.to_json())
-                st.text_area("AI record extraction guidance", key=sv.generation_guidance.key, value=sv.generation_guidance.value,
+                st.text_area("AI record extraction guidance", key=sv.generation_guidance.key,
                             help="Guidance to the generative AI model about how data records should be extracted")
                 
                 generate = st.button('Extract record data')

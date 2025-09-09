@@ -16,6 +16,7 @@ from intelligence_toolkit.AI.defaults import (
 from intelligence_toolkit.helpers.constants import CACHE_PATH
 
 
+
 class LocalEmbedder(BaseEmbedder):
     def __init__(
         self,
@@ -26,7 +27,13 @@ class LocalEmbedder(BaseEmbedder):
         model: str | None = DEFAULT_LOCAL_EMBEDDING_MODEL,
     ):
         super().__init__(db_name, db_path, max_tokens, concurrent_coroutines, False)
-        self.local_client = SentenceTransformer(model)
+        # Use default model if None is passed
+        if model is None:
+            model = DEFAULT_LOCAL_EMBEDDING_MODEL
+        try:
+            self.local_client = SentenceTransformer(model)
+        except Exception as e:
+            raise Exception(f"Failed to load local embedding model '{model}': {e}. Please ensure the model is available or check your internet connection for download.")
 
     def _generate_embedding(self, text: str | list[str]) -> list | Any:
         return self.local_client.encode(text).tolist()
