@@ -2,9 +2,9 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 
-DEFAULT_ENCODING = "cl100k_base"
+DEFAULT_ENCODING = "o200k_base"
 #
-DEFAULT_LLM_MODEL = "gpt-4o-mini"
+DEFAULT_LLM_MODEL = "gpt-4.1-mini"
 DEFAULT_LLM_MAX_TOKENS = 4000
 DEFAULT_AZ_AUTH_TYPE = "Azure Key"
 EMBEDDING_BATCHES_NUMBER = 500

@@ -45,7 +45,11 @@ def get_token_count(text: str, encoding=None, model=None) -> int:
     """Function that counts the number of tokens in a string."""
     encoder = tiktoken.get_encoding(encoding or DEFAULT_ENCODING)
     if model:
-        encoder = tiktoken.encoding_for_model(model)
+        try:
+            encoder = tiktoken.encoding_for_model(model)
+        except KeyError:
+            log.warning("model not found, using default encoding: %s", DEFAULT_ENCODING)
+            encoder = tiktoken.get_encoding(DEFAULT_ENCODING)
     return len(encoder.encode(json.dumps(text)))
 
 
