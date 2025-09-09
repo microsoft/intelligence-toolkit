@@ -44,29 +44,27 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
             st.markdown("##### Data generation controls")
             c1, c2, c3, c4 = st.columns(4)
             with c1:
-                st.number_input("Records per batch", min_value=1, value=sv.records_per_batch.value, key=sv.records_per_batch.key,
+                st.number_input("Records per batch", min_value=1, key=sv.records_per_batch.key,
                                 help="How many records to generate in a single LLM call")
             with c2:
                 st.number_input(
                     "Total records to generate",
                     min_value=sv.records_per_batch.value,
-                    value=sv.num_records_overall.value,
                     key=sv.num_records_overall.key,
                     help="How many records to generate. Must be a multiple of `Records per batch` x `Parallel batches`",
                 )
             with c3:
-                st.number_input("Duplicate records per batch", min_value=0, value=sv.duplicate_records_per_batch.value, key=sv.duplicate_records_per_batch.key,
+                st.number_input("Duplicate records per batch", min_value=0, key=sv.duplicate_records_per_batch.key,
                                 help="Within each batch, how many records should be near-duplicates of a seed record randomly selected from existing records")
             with c4:
-                st.number_input("Related records per batch", min_value=0, value=sv.related_records_per_batch.value, key=sv.related_records_per_batch.key,
+                st.number_input("Related records per batch", min_value=0, key=sv.related_records_per_batch.key,
                                 help="Within each batch, how many records should appear closely related to (but not the same as) a seed record randomly selected from existing records")
-            st.text_area("AI data generation guidance", key=sv.generation_guidance.key, value=sv.generation_guidance.value,
+            st.text_area("AI data generation guidance", key=sv.generation_guidance.key,
                          help="Guidance to the generative AI model about how mock data should be generated (e.g., targeting a specific region, time period, industry, etc.)")
             st.number_input(
                 "Temperature",
                 min_value=0.0,
                 max_value=1.0,
-                value=sv.record_synthesis_temperature.value,
                 step=0.1,
                 key=sv.record_synthesis_temperature.key,
                 help="Temperature is a number between 0 and 1 that affects the variation in AI outputs. Lower temperatures mean less variation, and AI outputs will be more accurate and deterministic. Higher temperatures will result in more diverse outputs.",
@@ -154,13 +152,12 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                     for _, row in selected_df.iterrows():
                         sv.input_texts.value.append(row.to_json())
                 sv.generated_texts.value = []
-            st.text_area("AI text generation guidance", key=sv.text_generation_guidance.key, value=sv.text_generation_guidance.value,
+            st.text_area("AI text generation guidance", key=sv.text_generation_guidance.key,
                         help="Guidance to the generative AI model about how text should be generated from records")
             st.number_input(
                 "Temperature",
                 min_value=0.0,
                 max_value=1.0,
-                value=sv.text_synthesis_temperature.value,
                 step=0.1,
                 key=sv.text_synthesis_temperature.key,
                 help="Temperature is a number between 0 and 1 that affects the variation in AI outputs. Lower temperatures mean less variation, and AI outputs will be more accurate and deterministic. Higher temperatures will result in more diverse outputs.",
