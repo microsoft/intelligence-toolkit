@@ -1,110 +1,108 @@
-[tool.poetry]
+[project]
 name = "intelligence-toolkit"
 version = "0.0.5"
 description = "Interactive workflows for generating AI intelligence reports from real-world data sources using GPT models"
 authors = [
-    "Dayenne Souza <ddesouza@microsoft.com>",
-    "Ha Trinh <trinhha@microsoft.com>",
-    "Darren Edge <daedge@microsoft.com>"
-    ]
+    {name = "Dayenne Souza", email = "ddesouza@microsoft.com"},
+    {name = "Ha Trinh", email = "trinhha@microsoft.com"},
+    {name = "Darren Edge", email = "daedge@microsoft.com"}
+]
 readme = "DEVELOPING.md"
-license = "MIT"
-keywords = ["AI", "data analysis", "reports", "workflows"]  
+license = {text = "MIT"}
+keywords = ["AI", "data analysis", "reports", "workflows"]
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "altair==4.2.2",
+    "networkx==3.3",
+    "numpy==1.26.4",
+    "openai>=1.37.1,<2.0.0",
+    "pac-synth==0.0.8",
+    "plotly==5.22.0",
+    "plotly-express==0.4.1",
+    "polars==0.20.10",
+    "pyarrow==15.0.0",
+    "pydantic==2.8.2",
+    "pydantic_core==2.20.1",
+    "scikit-learn==1.5.1",
+    "scipy==1.12.0",
+    "streamlit==1.31.1",
+    "streamlit-aggrid==0.3.4.post3",
+    "streamlit-javascript==0.1.5",
+    "streamlit-agraph==0.0.45",
+    "tiktoken[azure]==0.7.0",
+    "pdfkit==1.0.0",
+    "markdown2==2.5.0",
+    "azure-identity==1.17.1",
+    "azure-core==1.30.2",
+    "semchunk==2.2.0",
+    "lancedb==0.12.0",
+    "duckdb==1.0.0",
+    "seaborn==0.13.2",
+    "textblob==0.18.0.post0",
+    "jsonschema>=4.23.0,<5.0.0",
+    "nest-asyncio>=1.6.0,<2.0.0",
+    "altair-viewer>=0.4.0,<1.0.0",
+    "torch==2.4.1; sys_platform != 'darwin'",
+    "torch==2.5.1; sys_platform == 'darwin'",
+    "sentence-transformers>=3.1.1,<4.0.0",
+    "graspologic>=3.4.1,<4.0.0",
+    "future>=1.0.0,<2.0.0",
+    "pypdf>=5.1.0,<6.0.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "coverage>=7.6.0,<8.0.0",
+    "ruff>=0.4.7,<1.0.0",
+    "pyright>=1.1.371,<2.0.0",
+    "ipykernel>=6.29.5,<7.0.0",
+    "pytest-cov>=5.0.0,<6.0.0",
+    "pytest>=8.2.2,<9.0.0",
+    "pytest-asyncio>=0.23.7,<1.0.0",
+    "pytest-mock>=3.14.0,<4.0.0",
+    "faker>=28.0.0,<29.0.0",
+    "nbformat>=5.10.4,<6.0.0",
+    "setuptools>=75.3.0,<76.0.0",
+    "wheel>=0.44.0,<1.0.0",
+    "twine>=5.1.1,<6.0.0",
+    "poethepoet>=0.27.0,<1.0.0"
+]
 
 [project.urls]
 source = "https://github.com/microsoft/intelligence-toolkit"
 issues = "https://github.com/microsoft/intelligence-toolkit/issues"
 
-
-[tool.poetry.dependencies]
-python = ">=3.11,<3.13"
-altair = "4.2.2"
-networkx = "3.3"
-numpy = "1.26.4"
-openai = "^1.37.1"
-pac-synth = "0.0.8"
-plotly = "5.22.0"
-plotly-express = "0.4.1"
-polars = "0.20.10"
-pyarrow = "15.0.0"
-pydantic = "2.8.2"
-pydantic_core = "2.20.1"
-scikit-learn = "1.5.1"
-scipy = "1.12.0"
-streamlit = "1.31.1"
-streamlit-aggrid = "0.3.4.post3"
-streamlit-javascript = "0.1.5"
-streamlit-agraph = "0.0.45"
-tiktoken =    {version = "0.7.0", extras = ["azure"]}
-pdfkit = "1.0.0"
-markdown2 = "2.5.0"
-azure-identity = "1.17.1"
-azure-core = "1.30.2"
-semchunk = "2.2.0"
-lancedb = "0.12.0"
-duckdb = "1.0.0"
-seaborn = "0.13.2"
-textblob = "0.18.0.post0"
-jsonschema = "^4.23.0"
-nest-asyncio = "^1.6.0"
-altair-viewer = "^0.4.0"
-poetry = "^1.8.3"
-poethepoet = "^0.27.0"
-torch = [
-    {version = "2.4.1", source = "pytorch_cpu", markers = "sys_platform != 'darwin'"},
-    {version = "2.5.1", markers = "sys_platform == 'darwin'"}
-]
-sentence-transformers = "^3.1.1"
-graspologic = "^3.4.1"
-future = "^1.0.0"
-pypdf = "^5.1.0"
-
-[tool.poetry.group.dev.dependencies]
-coverage = "^7.6.0"
-ruff = "^0.4.7"
-pyright = "^1.1.371"
-ipykernel = "^6.29.5"
-pytest-cov = "^5.0.0"
-pytest = "^8.2.2"
-pytest-asyncio = "^0.23.7"
-pytest-mock = "^3.14.0"
-faker = "^28.0.0"
-nbformat = "^5.10.4"
-setuptools = "^75.3.0"
-wheel = "^0.44.0"
-twine = "^5.1.1"
-
-
-[[tool.poetry.source]]
+[[tool.uv.index]]
 name = "pytorch_cpu"
 url = "https://download.pytorch.org/whl/cpu"
-priority = "explicit"
-
+explicit = true
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv.workspace]
+members = ["."]
 
 [tool.poe.tasks]
 _sort_imports = "ruff check --select I --fix . --preview"
-_format_code = "ruff format  . --preview"
-_ruff_check = 'ruff check . --preview'
+_format_code = "ruff format . --preview"
+_ruff_check = "ruff check . --preview"
 _pyright = "pyright"
-check_format = 'ruff format . --check --preview'
-fix = "ruff  --preview check --fix ."
-fix_unsafe = "ruff check --preview --fix --unsafe-fixes ."
+check_format = "ruff format . --check --preview"
+fix = "ruff check --fix . --preview"
+fix_unsafe = "ruff check --fix --unsafe-fixes . --preview"
 test_unit = "pytest ./intelligence_toolkit/tests/unit"
 test_smoke = "pytest ./intelligence_toolkit/tests/smoke"
-
-run_streamlit = "python -m streamlit run app/Home.py ${ARGS}"  
+run_streamlit = "python -m streamlit run app/Home.py ${ARGS}"
 
 [[tool.poe.tasks.format]]
-sequence = ['_sort_imports', '_format_code']
-ignore_fail = 'return_non_zero'
+sequence = ["_sort_imports", "_format_code"]
+ignore_fail = "return_non_zero"
 
 [[tool.poe.tasks.check]]
-sequence = ['check_format', '_ruff_check']
-ignore_fail = 'return_non_zero'
+sequence = ["check_format", "_ruff_check"]
+ignore_fail = "return_non_zero"
 
 [tool.ruff]
 target-version = "py310"

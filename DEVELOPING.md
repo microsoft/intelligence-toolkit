@@ -3,7 +3,7 @@
 ## Requirements
 
 - Python 3.11 ([Download](https://www.python.org/downloads/))
-- poetry < 2.0.0 ([Download](https://python-poetry.org/docs/#installing-with-the-official-installer))
+- uv ([Download](https://docs.astral.sh/uv/getting-started/installation/))
 - wkhtmltopdf (used to generate PDF reports)
 
     - Windows: ([Download](https://wkhtmltopdf.org/downloads.html))
@@ -55,15 +55,15 @@ Use `cd `+ the path to the folder. For example:
 
 `cd C:\Users\user01\projects\intelligence-toolkit`
 
-Run `poetry install` and wait for the packages installation.
+Run `uv sync --extra dev` and wait for the packages installation.
 
 #### Run the app:
 
-Run `poetry run poe run_streamlit`, and it will automatically open the app in your default browser in `localhost:8081`
+Run `uv run poe run_streamlit`, and it will automatically open the app in your default browser in `localhost:8081`
 
 #### Use the API
 
-You can also replicate the examples in your own environment running `pip install intelligence-toolkit`.
+You can also replicate the examples in your own environment running `uv add intelligence-toolkit`.
 
 See the documentation and an example of how to run the code with your data to obtain results without the need to run the UI.
 - [Anonymize Case Data](./app/workflows/anonymize_case_data/README.md)
