@@ -50,5 +50,5 @@ async def _generate_text_async(
     )
 
     return await utils.generate_text_async(
-        ai_configuration, messages, temperature=temperature
+        ai_configuration, messages, stream=False, temperature=temperature
     )
