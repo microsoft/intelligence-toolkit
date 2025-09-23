@@ -76,7 +76,6 @@ Clicking on `Advanced Options` expands the available controls, which are as foll
   - `Show search process`. Show the search process in the UI, including the progress of chunk relevance tests and the search for relevant chunks.
   - `Live analysis`. Enable live analysis of the text chunks as they are processed. This provides immediate feedback but slows down the overall process.
   - `Analysis update interval`. The number of text chunks to process before updating the live analysis. Larger values will give faster final reports but also result in longer periods of time between updates.
-  - `Live commentary`. Enable live commentary of analysis themes after text chunks are processed. This provides a preview of report content while the final report is being generated.
 
 The `Query` and the `Relevance test budget` are required in all cases:
 
