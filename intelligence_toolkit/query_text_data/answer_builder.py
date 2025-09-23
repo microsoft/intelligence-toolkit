@@ -113,7 +113,7 @@ def build_report_markdown(
     matched_chunks = {
         f"{text['title']} ({text['chunk_id']})": text for text in text_jsons
     }
-    home_link = "#top"
+    home_link = "#final-report"
     report = f'## Query\n\n*{query}*\n\n## Expanded Query\n\n*{expanded_query}*\n\n## Answer\n\n{report_wrapper_obj["answer"]}\n\n## Analysis\n\n### {report_wrapper_obj["report_title"]}\n\n{report_wrapper_obj["report_overview"]}\n\n'
     for theme in summarized_themes_objs:
         report += f'#### Theme: {theme["theme_title"]}\n\n'

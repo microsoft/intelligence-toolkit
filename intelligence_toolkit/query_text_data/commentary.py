@@ -82,7 +82,7 @@ class Commentary:
         # Add Sources section like in build_report_markdown
         if all_source_ids:
             output += f"\n## Sources\n\n"
-            home_link = "#top"  # Link back to the top
+            home_link = "#final-report"  # Link back to the top
             for cid in sorted(all_source_ids):
                 if cid in self.cid_to_text:
                     from json import loads

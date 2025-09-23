@@ -12,7 +12,7 @@ RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor
 ENV PATH="/root/.local/bin:$PATH"
 
 COPY . .
-RUN uv sync --extra dev
+RUN uv sync
 
 # Run application
 EXPOSE 80

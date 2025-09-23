@@ -125,16 +125,16 @@ wheels = [
 
 [[package]]
 name = "azure-core"
-version = "1.30.2"
+version = "1.35.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "requests" },
     { name = "six" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/99/d4/1f469fa246f554b86fb5cebc30eef1b2a38b7af7a2c2791bce0a4c6e4604/azure-core-1.30.2.tar.gz", hash = "sha256:a14dc210efcd608821aa472d9fb8e8d035d29b68993819147bc290a8ac224472", size = 271104, upload-time = "2024-06-06T16:53:47.427Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/15/6b/2653adc0f33adba8f11b1903701e6b1c10d34ce5d8e25dfa13a422f832b0/azure_core-1.35.1.tar.gz", hash = "sha256:435d05d6df0fff2f73fb3c15493bb4721ede14203f1ff1382aa6b6b2bdd7e562", size = 345290, upload-time = "2025-09-11T22:58:04.481Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ef/d7/69d53f37733f8cb844862781767aef432ff3152bc9b9864dc98c7e286ce9/azure_core-1.30.2-py3-none-any.whl", hash = "sha256:cf019c1ca832e96274ae85abd3d9f752397194d9fea3b41487290562ac8abe4a", size = 194253, upload-time = "2024-06-06T16:53:49.814Z" },
+    { url = "https://files.pythonhosted.org/packages/27/52/805980aa1ba18282077c484dba634ef0ede1e84eec8be9c92b2e162d0ed6/azure_core-1.35.1-py3-none-any.whl", hash = "sha256:12da0c9e08e48e198f9158b56ddbe33b421477e1dc98c2e1c8f9e254d92c468b", size = 211800, upload-time = "2025-09-11T22:58:06.281Z" },
 ]
 
 [[package]]
@@ -810,7 +810,7 @@ wheels = [
 
 [[package]]
 name = "intelligence-toolkit"
-version = "0.0.5"
+version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "altair" },
@@ -831,6 +831,7 @@ dependencies = [
     { name = "pdfkit" },
     { name = "plotly" },
     { name = "plotly-express" },
+    { name = "poethepoet" },
     { name = "polars" },
     { name = "pyarrow" },
     { name = "pydantic" },
@@ -857,7 +858,6 @@ dev = [
     { name = "faker" },
     { name = "ipykernel" },
     { name = "nbformat" },
-    { name = "poethepoet" },
     { name = "pyright" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -873,7 +873,7 @@ dev = [
 requires-dist = [
     { name = "altair", specifier = "==4.2.2" },
     { name = "altair-viewer", specifier = ">=0.4.0,<1.0.0" },
-    { name = "azure-core", specifier = "==1.30.2" },
+    { name = "azure-core", specifier = "==1.35.1" },
     { name = "azure-identity", specifier = "==1.17.1" },
     { name = "coverage", marker = "extra == 'dev'", specifier = ">=7.6.0,<8.0.0" },
     { name = "duckdb", specifier = "==1.0.0" },
@@ -883,17 +883,17 @@ requires-dist = [
     { name = "ipykernel", marker = "extra == 'dev'", specifier = ">=6.29.5,<7.0.0" },
     { name = "jsonschema", specifier = ">=4.23.0,<5.0.0" },
     { name = "lancedb", specifier = "==0.12.0" },
-    { name = "markdown2", specifier = "==2.5.0" },
+    { name = "markdown2", specifier = "==2.5.4" },
     { name = "nbformat", marker = "extra == 'dev'", specifier = ">=5.10.4,<6.0.0" },
     { name = "nest-asyncio", specifier = ">=1.6.0,<2.0.0" },
-    { name = "networkx", specifier = "==3.3" },
+    { name = "networkx", specifier = "==3.5" },
     { name = "numpy", specifier = "==1.26.4" },
     { name = "openai", specifier = ">=1.37.1,<2.0.0" },
     { name = "pac-synth", specifier = "==0.0.8" },
     { name = "pdfkit", specifier = "==1.0.0" },
     { name = "plotly", specifier = "==5.22.0" },
     { name = "plotly-express", specifier = "==0.4.1" },
-    { name = "poethepoet", marker = "extra == 'dev'", specifier = ">=0.27.0,<1.0.0" },
+    { name = "poethepoet", specifier = ">=0.27.0,<1.0.0" },
     { name = "polars", specifier = "==0.20.10" },
     { name = "pyarrow", specifier = "==15.0.0" },
     { name = "pydantic", specifier = "==2.8.2" },
@@ -915,8 +915,8 @@ requires-dist = [
     { name = "streamlit-aggrid", specifier = "==0.3.4.post3" },
     { name = "streamlit-agraph", specifier = "==0.0.45" },
     { name = "streamlit-javascript", specifier = "==0.1.5" },
-    { name = "textblob", specifier = "==0.18.0.post0" },
-    { name = "tiktoken", extras = ["azure"], specifier = "==0.7.0" },
+    { name = "textblob", specifier = "==0.19.0" },
+    { name = "tiktoken", specifier = "==0.7.0" },
     { name = "torch", marker = "sys_platform != 'darwin'", specifier = "==2.4.1" },
     { name = "torch", marker = "sys_platform == 'darwin'", specifier = "==2.5.1" },
     { name = "twine", marker = "extra == 'dev'", specifier = ">=5.1.1,<6.0.0" },
@@ -1239,11 +1239,11 @@ wheels = [
 
 [[package]]
 name = "markdown2"
-version = "2.5.0"
+version = "2.5.4"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/da/00/3c708de5bffa0494daf894d2e8e2b6165f866ef3ae7939546fae039b5f0e/markdown2-2.5.0.tar.gz", hash = "sha256:9bff02911f8b617b61eb269c4c1a5f9b2087d7ff051604f66a61b63cab30adc2", size = 138574, upload-time = "2024-07-11T18:25:27.677Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/42/f8/b2ae8bf5f28f9b510ae097415e6e4cb63226bb28d7ee01aec03a755ba03b/markdown2-2.5.4.tar.gz", hash = "sha256:a09873f0b3c23dbfae589b0080587df52ad75bb09a5fa6559147554736676889", size = 145652, upload-time = "2025-07-27T16:16:24.307Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/70/8d/ee7f29f0c65f39ea0bb39eaa24c3563e95f8f434ec8c593441854d6df115/markdown2-2.5.0-py2.py3-none-any.whl", hash = "sha256:300d4429b620ebc974ef512339a9e08bc080473f95135a91f33906e24e8280c1", size = 47211, upload-time = "2024-07-11T18:25:26.005Z" },
+    { url = "https://files.pythonhosted.org/packages/b8/06/2697b5043c3ecb720ce0d243fc7cf5024c0b5b1e450506e9b21939019963/markdown2-2.5.4-py3-none-any.whl", hash = "sha256:3c4b2934e677be7fec0e6f2de4410e116681f4ad50ec8e5ba7557be506d3f439", size = 49954, upload-time = "2025-07-27T16:16:23.026Z" },
 ]
 
 [[package]]
@@ -1439,11 +1439,11 @@ wheels = [
 
 [[package]]
 name = "networkx"
-version = "3.3"
+version = "3.5"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/04/e6/b164f94c869d6b2c605b5128b7b0cfe912795a87fc90e78533920001f3ec/networkx-3.3.tar.gz", hash = "sha256:0c127d8b2f4865f59ae9cb8aafcd60b5c70f3241ebd66f7defad7c4ab90126c9", size = 2126579, upload-time = "2024-04-06T12:59:47.137Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6c/4f/ccdb8ad3a38e583f214547fd2f7ff1fc160c43a75af88e6aec213404b96a/networkx-3.5.tar.gz", hash = "sha256:d4c6f9cf81f52d69230866796b82afbccdec3db7ae4fbd1b65ea750feed50037", size = 2471065, upload-time = "2025-05-29T11:35:07.804Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/38/e9/5f72929373e1a0e8d142a130f3f97e6ff920070f87f91c4e13e40e0fba5a/networkx-3.3-py3-none-any.whl", hash = "sha256:28575580c6ebdaf4505b22c6256a2b9de86b316dc63ba9e93abde3d78dfdbcf2", size = 1702396, upload-time = "2024-04-06T12:59:44.283Z" },
+    { url = "https://files.pythonhosted.org/packages/eb/8d/776adee7bbf76365fdd7f2552710282c79a4ead5d2a46408c9043a2b70ba/networkx-3.5-py3-none-any.whl", hash = "sha256:0030d386a9a06dee3565298b4a734b68589749a544acbb6c412dc9e2489ec6ec", size = 2034406, upload-time = "2025-05-29T11:35:04.961Z" },
 ]
 
 [[package]]
@@ -2900,14 +2900,14 @@ wheels = [
 
 [[package]]
 name = "textblob"
-version = "0.18.0.post0"
+version = "0.19.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "nltk" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/95/9b/8648f7ab89afb38de30aef9739a7f31491631635bd364042869162132bc4/textblob-0.18.0.post0.tar.gz", hash = "sha256:8131c52c630bcdf61d04c359f939c98d5b836a01fba224d9e7ae22fc274e0ccb", size = 639600, upload-time = "2024-02-15T20:39:50.452Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/63/a1/31fc6a5e9e46f2d84f72f12048588feac5464486e526dbfcc4719569cd3e/textblob-0.19.0.tar.gz", hash = "sha256:0a3d06a47cf7759441da3418c4843aed3797a998beba2108c6245a2020f83b01", size = 637872, upload-time = "2025-01-13T23:03:07.352Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/02/07/5fd2945356dd839974d3a25de8a142dc37293c21315729a41e775b5f3569/textblob-0.18.0.post0-py3-none-any.whl", hash = "sha256:dd0c7ec4eb7b9346ec0a3f136a63eba13e0f59890d2a693d3d6aeb8371949dca", size = 626330, upload-time = "2024-02-15T20:39:47.971Z" },
+    { url = "https://files.pythonhosted.org/packages/1e/d6/40aa5aead775582ea0cf35870e5a3f16fab4b967f1ad2debe675f673f923/textblob-0.19.0-py3-none-any.whl", hash = "sha256:af6b8827886f1ee839a625f4865e5abb1584eae8db2259627b33a6a0b02ef19d", size = 624280, upload-time = "2025-01-13T23:03:01.034Z" },
 ]
 
 [[package]]

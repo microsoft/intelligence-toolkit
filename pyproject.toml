@@ -1,6 +1,6 @@
 [project]
 name = "intelligence-toolkit"
-version = "0.0.5"
+version = "0.1.0"
 description = "Interactive workflows for generating AI intelligence reports from real-world data sources using GPT models"
 authors = [
     {name = "Dayenne Souza", email = "ddesouza@microsoft.com"},
@@ -13,7 +13,7 @@ keywords = ["AI", "data analysis", "reports", "workflows"]
 requires-python = ">=3.11,<3.13"
 dependencies = [
     "altair==4.2.2",
-    "networkx==3.3",
+    "networkx==3.5",
     "numpy==1.26.4",
     "openai>=1.37.1,<2.0.0",
     "pac-synth==0.0.8",
@@ -27,18 +27,18 @@ dependencies = [
     "scipy==1.12.0",
     "streamlit==1.31.1",
     "streamlit-aggrid==0.3.4.post3",
-    "streamlit-javascript==0.1.5",
+        "streamlit-javascript==0.1.5",
     "streamlit-agraph==0.0.45",
-    "tiktoken[azure]==0.7.0",
+    "tiktoken==0.7.0",
     "pdfkit==1.0.0",
-    "markdown2==2.5.0",
+    "markdown2==2.5.4",
     "azure-identity==1.17.1",
-    "azure-core==1.30.2",
+    "azure-core==1.35.1",
     "semchunk==2.2.0",
     "lancedb==0.12.0",
     "duckdb==1.0.0",
     "seaborn==0.13.2",
-    "textblob==0.18.0.post0",
+    "textblob==0.19.0",
     "jsonschema>=4.23.0,<5.0.0",
     "nest-asyncio>=1.6.0,<2.0.0",
     "altair-viewer>=0.4.0,<1.0.0",
@@ -47,7 +47,8 @@ dependencies = [
     "sentence-transformers>=3.1.1,<4.0.0",
     "graspologic>=3.4.1,<4.0.0",
     "future>=1.0.0,<2.0.0",
-    "pypdf>=5.1.0,<6.0.0"
+    "pypdf>=5.1.0,<6.0.0",
+    "poethepoet>=0.27.0,<1.0.0"
 ]
 
 [project.optional-dependencies]
@@ -64,8 +65,7 @@ dev = [
     "nbformat>=5.10.4,<6.0.0",
     "setuptools>=75.3.0,<76.0.0",
     "wheel>=0.44.0,<1.0.0",
-    "twine>=5.1.1,<6.0.0",
-    "poethepoet>=0.27.0,<1.0.0"
+    "twine>=5.1.1,<6.0.0"
 ]
 
 [project.urls]
