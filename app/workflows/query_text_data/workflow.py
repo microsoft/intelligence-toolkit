@@ -368,103 +368,103 @@ async def create(sv: SessionVariables, workflow=None):
                         sorted_sources = "".join([unique_sources[source_id] for source_id in sorted(unique_sources.keys(), key=int)])
                         st.markdown("## Sources\n\n" + sorted_sources, unsafe_allow_html=True)
 
-                    def do_search():
-                        st.session_state["search_answers"] = True
-                        sv.query.value = st.session_state[sv.query.key]
-                        qtd.prepare_for_new_query()
-                        sv.chunk_progress.value = ""
-                        sv.answer_progress.value = ""
-                        sv.thematic_analysis.value = ""
-                        sv.thematic_commentary.value = ""
-                        answer_placeholder.markdown("")
-                        if sv.do_live_analysis.value or sv.do_live_commentary.value:
-                            analysis_placeholder.markdown("")
-                            if sv.do_live_commentary.value:
-                                commentary_placeholder.markdown("")
-                        main_panel.empty()
-                        
-                    search_button.button("Search", key="search_button", on_click=do_search, use_container_width=True)
-                    query_placeholder.text_input(
-                        "Query",
-                        key=sv.query.key
-                    )
-                    budget_placeholder.number_input(
-                        "Relevance test budget",
-                        value=sv.relevance_test_budget.value,
-                        key=sv.relevance_test_budget.key,
-                        min_value=0,
-                        help="The query method works by asking an LLM to evaluate the relevance of potentially-relevant text chunks, returning a single token, yes/no judgement. This parameter allows the user to cap the number of relvance tests that may be performed prior to generating an answer using all relevant chunks. Larger budgets will generally give better answers for a greater cost."
-                    )
-                    if sv.query.value != "" and st.session_state["search_answers"]:
-                        st.session_state["search_answers"] = False
-                        sv.anchored_query.value = await qtd.anchor_query_to_concepts(
-                            query=sv.query.value,
-                            top_concepts=500,
-                        )
-                        anchored_query_placeholder.markdown(f"**Expanded query:** {sv.anchored_query.value}")
-                        def on_chunk_progress(message):
-                            if sv.show_search_process.value:
-                                status = helper_functions.get_test_progress(message)
-                                chunk_progress_placeholder.markdown(status, unsafe_allow_html=True)
-                            if qtd.stage.value < QueryTextDataStage.QUESTION_ANSWERED.value:
-                                analysis_pb.progress(len(message) / sv.relevance_test_budget.value, f"{len(message)} of {sv.relevance_test_budget.value} chunks tested")
-    
-                        def on_chunk_relevant(message):
-                            if sv.show_search_process.value:
-                                chunk_placeholder.dataframe(
-                                    pd.DataFrame(
-                                        columns=["Relevant text chunks (double click to expand)"],
-                                        data=message,
-                                    ),
-                                    hide_index=True,
-                                    height=400,
-                                    use_container_width=True,
-                                )
-
-                        analysis_callback = LLMCallback()
-                        def on_llm_new_token_analysis(message):
-                            analysis_placeholder.markdown(message, unsafe_allow_html=True)
-                            sv.thematic_analysis.value = message
-                        analysis_callback.on_llm_new_token = on_llm_new_token_analysis
-
-                        commentary_callback = None
+                def do_search():
+                    st.session_state["search_answers"] = True
+                    sv.query.value = st.session_state[sv.query.key]
+                    qtd.prepare_for_new_query()
+                    sv.chunk_progress.value = ""
+                    sv.answer_progress.value = ""
+                    sv.thematic_analysis.value = ""
+                    sv.thematic_commentary.value = ""
+                    answer_placeholder.markdown("")
+                    if sv.do_live_analysis.value or sv.do_live_commentary.value:
+                        analysis_placeholder.markdown("")
                         if sv.do_live_commentary.value:
-                            commentary_callback = LLMCallback()
-                            def on_llm_new_token_commentary(message):
-                                commentary_placeholder.markdown(message, unsafe_allow_html=True)
-                                sv.thematic_commentary.value = message
-                            commentary_callback.on_llm_new_token = on_llm_new_token_commentary
+                            commentary_placeholder.markdown("")
+                    main_panel.empty()
+                        
+                search_button.button("Search", key="search_button", on_click=do_search, use_container_width=True)
+                query_placeholder.text_input(
+                    "Query",
+                    key=sv.query.key
+                )
+                budget_placeholder.number_input(
+                    "Relevance test budget",
+                    value=sv.relevance_test_budget.value,
+                    key=sv.relevance_test_budget.key,
+                    min_value=0,
+                    help="The query method works by asking an LLM to evaluate the relevance of potentially-relevant text chunks, returning a single token, yes/no judgement. This parameter allows the user to cap the number of relvance tests that may be performed prior to generating an answer using all relevant chunks. Larger budgets will generally give better answers for a greater cost."
+                )
+                if sv.query.value != "" and st.session_state["search_answers"]:
+                    st.session_state["search_answers"] = False
+                    sv.anchored_query.value = await qtd.anchor_query_to_concepts(
+                        query=sv.query.value,
+                        top_concepts=500,
+                    )
+                    anchored_query_placeholder.markdown(f"**Expanded query:** {sv.anchored_query.value}")
+                    def on_chunk_progress(message):
+                        if sv.show_search_process.value:
+                            status = helper_functions.get_test_progress(message)
+                            chunk_progress_placeholder.markdown(status, unsafe_allow_html=True)
+                        if qtd.stage.value < QueryTextDataStage.QUESTION_ANSWERED.value:
+                            analysis_pb.progress(len(message) / sv.relevance_test_budget.value, f"{len(message)} of {sv.relevance_test_budget.value} chunks tested")
 
-                        await qtd.detect_relevant_text_chunks(
-                            query=sv.query.value,
-                            expanded_query=sv.anchored_query.value,
-                            chunk_search_config=ChunkSearchConfig(
-                                relevance_test_budget=sv.relevance_test_budget.value,
-                                relevance_test_batch_size=sv.relevance_test_batch_size.value,
-                                community_ranking_chunks=sv.relevance_test_batch_size.value,
-                                irrelevant_community_restart=sv.irrelevant_community_restart.value,
-                                adjacent_test_steps=sv.adjacent_test_steps.value,
-                                community_relevance_tests=sv.relevance_test_batch_size.value,
-                                analysis_update_interval=sv.analysis_update_interval.value if sv.do_live_analysis.value else 0,
-                            ),
-                            chunk_progress_callback=on_chunk_progress,
-                            chunk_callback=on_chunk_relevant,
-                            analysis_callback=analysis_callback,
-                            commentary_callback=commentary_callback,
-                        )
-                        st.rerun()
-                    if gen_answer or qtd.stage.value == QueryTextDataStage.CHUNKS_MINED.value:
-                        analysis_pb.empty()
-                        with answer_spinner:
-                            with st.spinner("Generating research report..."):
-                                if sv.do_live_commentary.value:
-                                    await asyncio.gather(
-                                        qtd.answer_query_with_relevant_chunks(sv.target_chunks_per_cluster.value),
-                                        qtd.generate_analysis_commentary()                      
-                                    )
-                                else:
-                                    await qtd.answer_query_with_relevant_chunks(sv.target_chunks_per_cluster.value)
-                                st.rerun()
+                    def on_chunk_relevant(message):
+                        if sv.show_search_process.value:
+                            chunk_placeholder.dataframe(
+                                pd.DataFrame(
+                                    columns=["Relevant text chunks (double click to expand)"],
+                                    data=message,
+                                ),
+                                hide_index=True,
+                                height=400,
+                                use_container_width=True,
+                            )
+
+                    analysis_callback = LLMCallback()
+                    def on_llm_new_token_analysis(message):
+                        analysis_placeholder.markdown(message, unsafe_allow_html=True)
+                        sv.thematic_analysis.value = message
+                    analysis_callback.on_llm_new_token = on_llm_new_token_analysis
+
+                    commentary_callback = None
+                    if sv.do_live_commentary.value:
+                        commentary_callback = LLMCallback()
+                        def on_llm_new_token_commentary(message):
+                            commentary_placeholder.markdown(message, unsafe_allow_html=True)
+                            sv.thematic_commentary.value = message
+                        commentary_callback.on_llm_new_token = on_llm_new_token_commentary
+
+                    await qtd.detect_relevant_text_chunks(
+                        query=sv.query.value,
+                        expanded_query=sv.anchored_query.value,
+                        chunk_search_config=ChunkSearchConfig(
+                            relevance_test_budget=sv.relevance_test_budget.value,
+                            relevance_test_batch_size=sv.relevance_test_batch_size.value,
+                            community_ranking_chunks=sv.relevance_test_batch_size.value,
+                            irrelevant_community_restart=sv.irrelevant_community_restart.value,
+                            adjacent_test_steps=sv.adjacent_test_steps.value,
+                            community_relevance_tests=sv.relevance_test_batch_size.value,
+                            analysis_update_interval=sv.analysis_update_interval.value if sv.do_live_analysis.value else 0,
+                        ),
+                        chunk_progress_callback=on_chunk_progress,
+                        chunk_callback=on_chunk_relevant,
+                        analysis_callback=analysis_callback,
+                        commentary_callback=commentary_callback,
+                    )
+                    st.rerun()
+                if gen_answer or qtd.stage.value == QueryTextDataStage.CHUNKS_MINED.value:
+                    analysis_pb.empty()
+                    with answer_spinner:
+                        with st.spinner("Generating research report..."):
+                            if sv.do_live_commentary.value:
+                                await asyncio.gather(
+                                    qtd.answer_query_with_relevant_chunks(sv.target_chunks_per_cluster.value),
+                                    qtd.generate_analysis_commentary()                      
+                                )
+                            else:
+                                await qtd.answer_query_with_relevant_chunks(sv.target_chunks_per_cluster.value)
+                            st.rerun()
     with report_tab:
         if qtd.stage.value < QueryTextDataStage.QUESTION_ANSWERED.value:
             st.warning("Generate a research report to continue.")

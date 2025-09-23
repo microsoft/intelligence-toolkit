@@ -185,10 +185,10 @@ Open [http://localhost:80](http://localhost:80) in your web browser to start usi
 
 Intelligence Toolkit can be used with either OpenAI or Azure OpenAI as the generative AI API.
 
-The [`Generate Mock Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_mock_data/README.md) and [`Extract Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/extract_record_data/README.md) workflows additionally use OpenAI's Structured Outputs API, which requires a gpt-4o model as follows:
+The [`Generate Mock Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_mock_data/README.md) and [`Extract Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/extract_record_data/README.md) workflows additionally use OpenAI's Structured Outputs API, which requires a gpt-4.1 model as follows:
 
-- `gpt-4o-mini`
-- `gpt-4o`
+- `gpt-4.1-mini`
+- `gpt-4.1`
 
 You can access the `Settings` page on the left sidebar when running the application:
 

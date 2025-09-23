@@ -20,7 +20,7 @@ def test_get_token_count():
 
 def test_get_token_count_with_model():
     text = "example text"
-    result = get_token_count(text, None, "gpt-4o")
+    result = get_token_count(text, None, "gpt-4.1-mini")
     expected = 4
     assert result == expected
 

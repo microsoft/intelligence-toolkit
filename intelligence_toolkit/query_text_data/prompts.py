@@ -76,10 +76,12 @@ When presenting source evidence, support each sentence with a source reference t
 
 The output object should summarize the theme as follows:
 
-- "theme_title": a title for the theme, in the form of a claim statement supported by the points to follow
+- "theme_title": a title for the theme, in the form of a claim statement supported by the points to follow. Ensure the title is distinct and specific to avoid overlap with other themes
 - "point_title": a title for a specific point within the theme, in the form of a claim statement
 - "point_evidence": a paragraph, starting with "**Source evidence**:", describing evidence from sources that support or contradict the point, without additional interpretation
 - "point_commentary": a paragraph, starting with "**AI commentary**:", suggesting inferences, implications, or conclusions that could be drawn from the source evidence
+
+IMPORTANT: Make theme titles specific and focused to avoid creating duplicate or overlapping themes. If the theme hint suggests a broad category, make your theme title more specific to the actual content found in the sources.
 
 --Query--
 
@@ -107,6 +109,8 @@ The output object should integrate the theme summaries provided as input as foll
 - "report_title": a title for the final report that reflects the overall theme of the content and the user query it answers, in the form of a claim statement. Should not contain punctuation or special characters beyond spaces and hyphens
 - "report_overview": an introductory paragraph that provides an overview of the report themes in a neutral way without offering interpretations or implications
 - "report_implications": a concluding paragraph that summarizes the implications of the themes and their specific points
+
+IMPORTANT: Before generating the final output, consolidate any duplicate or overlapping themes. Merge themes that cover similar concepts or have overlapping content. Ensure each theme represents a distinct aspect of the analysis.
 
 When presenting evidence, support each sentence with one or more source references: "[source: <source_id_1>, <source_id_2>,...]". Include source IDs only - DO NOT include the chunk ID within the source ID - DO NOT repeat the same source ID within a single sentence.
 
@@ -166,6 +170,9 @@ The output object should capture new themes, points, and source references that 
 - Themes should contain at least two points if possible
 - Order themes in a logical sequence that addresses the user query
 - Output themes need not be the same as input themes and should be regenerated as needed to maintain 3-7 themes overall
+- AVOID creating duplicate or overlapping themes - consolidate similar themes under a single, more comprehensive theme title
+- Before creating a new theme, check if the content could be merged with an existing theme
+- Theme titles should be distinct and non-overlapping - avoid themes that cover the same conceptual territory
 
 --User query--
 

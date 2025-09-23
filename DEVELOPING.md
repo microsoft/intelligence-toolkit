@@ -21,7 +21,7 @@ You can configure your OpenAI access when running the app via `Settings page`, o
 
 #### Default values: 
 ```
-OPENAI_API_MODEL="gpt-4o-mini"
+OPENAI_API_MODEL="gpt-4.1-mini"
 OPENAI_TYPE="OpenAI" ## Other option available: Azure OpenAI
 AZURE_AUTH_TYPE="Azure Key" # if OPENAI_TYPE==Azure OpenAI
 DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small"
