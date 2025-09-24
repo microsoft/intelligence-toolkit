@@ -74,9 +74,58 @@ async def answer_query(
         response_format=answer_schema.theme_summarization_format,
     )
 
+    parsed_theme_summaries = []
+    for theme_summary in summarized_themes:
+        if isinstance(theme_summary, str):
+            try:
+                parsed_theme_summaries.append(loads(theme_summary))
+            except Exception as exc:  # noqa: BLE001
+                print(f"Failed to parse theme summary JSON: {exc}")
+        elif isinstance(theme_summary, dict):
+            parsed_theme_summaries.append(theme_summary)
+
+    if parsed_theme_summaries:
+        theme_summaries_payload = dumps(parsed_theme_summaries, ensure_ascii=False)
+    else:
+        theme_summaries_payload = "\n\n".join(
+            theme_summary
+            if isinstance(theme_summary, str)
+            else dumps(theme_summary, ensure_ascii=False)
+            for theme_summary in summarized_themes
+        )
+
+    consolidated_theme_objs = parsed_theme_summaries or []
+    try:
+        consolidation_messages = utils.prepare_messages(
+            prompts.theme_consolidation_prompt,
+            {
+                "query": query,
+                "expanded_query": expanded_query,
+                "theme_summaries": theme_summaries_payload,
+            },
+        )
+        consolidated_response = utils.generate_text(
+            ai_configuration,
+            consolidation_messages,
+            response_format=answer_schema.theme_consolidation_format,
+        )
+        consolidated_result = loads(consolidated_response)
+        consolidated_theme_objs = (
+            consolidated_result.get("consolidated_themes", [])
+            or consolidated_theme_objs
+        )
+    except Exception as exc:  # noqa: BLE001
+        print(f"Theme consolidation failed; using original summaries. Error: {exc}")
+
+    consolidated_themes_payload = (
+        dumps(consolidated_theme_objs, ensure_ascii=False)
+        if consolidated_theme_objs
+        else theme_summaries_payload
+    )
+
     theme_integration_messages = utils.prepare_messages(
         prompts.theme_integration_prompt,
-        {"content": summarized_themes, "query": query},
+        {"content": consolidated_themes_payload, "query": query},
     )
 
     report_wrapper = utils.generate_text(
@@ -88,7 +137,7 @@ async def answer_query(
     report, references, matched_chunks = build_report_markdown(
         query,
         expanded_query,
-        summarized_themes,
+        consolidated_theme_objs if consolidated_theme_objs else summarized_themes,
         report_wrapper,
         processed_chunks.cid_to_text
     )
@@ -107,7 +156,10 @@ def build_report_markdown(
     report_wrapper,
     cid_to_text
 ):
-    summarized_themes_objs = [loads(text) for text in summarized_themes]
+    if summarized_themes and isinstance(summarized_themes[0], dict):
+        summarized_themes_objs = summarized_themes
+    else:
+        summarized_themes_objs = [loads(text) for text in summarized_themes]
     report_wrapper_obj = loads(report_wrapper)
     text_jsons = [loads(text) for text in cid_to_text.values()]
     matched_chunks = {

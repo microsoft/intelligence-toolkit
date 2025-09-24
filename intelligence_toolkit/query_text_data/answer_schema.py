@@ -64,6 +64,53 @@ theme_summarization_format = {
     }
 }
 
+theme_consolidation_format = {
+    "type": "json_schema",
+    "json_schema": {
+        "name": "theme_consolidation",
+        "strict": True,
+        "schema": {
+            "type": "object",
+            "properties": {
+                "consolidated_themes": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "theme_title": {
+                                "type": "string"
+                            },
+                            "theme_points": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "point_title": {
+                                            "type": "string"
+                                        },
+                                        "point_evidence": {
+                                            "type": "string"
+                                        },
+                                        "point_commentary": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": ["point_title", "point_evidence", "point_commentary"],
+                                    "additionalProperties": False,
+                                }
+                            }
+                        },
+                        "required": ["theme_title", "theme_points"],
+                        "additionalProperties": False,
+                    }
+                }
+            },
+            "required": ["consolidated_themes"],
+            "additionalProperties": False,
+        }
+    }
+}
+
 thematic_update_format = {
     "type": "json_schema",
     "json_schema": {

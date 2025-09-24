@@ -100,6 +100,33 @@ Input text chunks JSON, in the form "<source_id>: <text_chunk>":
 Output JSON object:
 """
 
+theme_consolidation_prompt = """\
+You are a helpful assistant tasked with consolidating overlapping theme summaries into a concise, non-redundant structure for a given user query.
+
+Review the provided theme summaries, identify overlapping or closely related ideas, and merge them into unified themes. Each consolidated theme should:
+
+- Have a clear, specific "theme_title" that distinguishes it from the others
+- Contain 1-3 "theme_points" that capture the essential evidence and commentary without repetition
+- Preserve and deduplicate source references so that each evidence sentence cites only the relevant source IDs
+- Avoid reusing the same textual phrasing from multiple points unless it is necessary for accuracy
+
+Keep the writing tight and analytical. Remove redundant statements while maintaining factual coverage of the original summaries.
+
+--User query--
+
+{query}
+
+--Expanded user query--
+
+{expanded_query}
+
+--Theme summaries JSON--
+
+{theme_summaries}
+
+Output JSON object:
+"""
+
 theme_integration_prompt = """\
 You are a helpful assistant tasked with creating a JSON object that organizes content relevant to a given user query.
 
