@@ -14,9 +14,6 @@ schedules:
     include:
       - main
 
-variables:
-  POETRY_VERSION: 1.8.3
-
 stages:
   - stage: Compliance
     dependsOn: []
@@ -56,31 +53,33 @@ stages:
               versionSpec: "3.11"
             displayName: "Use Python 3.11"
           - task: Bash@3
-            displayName: Install poetry
+            displayName: Install uv
             inputs:
               workingDirectory: ./
               targetType: "inline"
               script: |
-                curl -sSL https://install.python-poetry.org | python -
-                export PATH=$PATH:$HOME/.poetry/bin
+                curl -LsSf https://astral.sh/uv/install.sh | sh
           - task: Bash@3
-            displayName: Install packages
+            displayName: Sync dependencies
             inputs:
               workingDirectory: ./
               targetType: "inline"
-              script: poetry install
+              script: |
+                ~/.local/bin/uv sync --extra dev
           - task: Bash@3
             displayName: Run Unit Tests
             inputs:
               workingDirectory: ./
               targetType: "inline"
-              script: poetry run poe test_unit
+              script: |
+                ~/.local/bin/uv run poe test_unit
           - task: Bash@3
             displayName: Run Smoke Tests
             inputs:
               workingDirectory: ./
               targetType: "inline"
-              script: poetry run poe test_smoke
+              script: |
+                ~/.local/bin/uv run poe test_smoke
       
       - job: buildAndPush
         displayName: BuildAndPushContainer
