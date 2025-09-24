@@ -12,29 +12,23 @@ jobs:
 
     env:
       python-version: "3.11"
-      poetry-version: "1.8.3"
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v2
         with:
           python-version: ${{ env.python-version }}
 
-      - name: Install Poetry
-        uses: abatilo/actions-poetry@v3.0.0
-        with:
-          poetry-version: ${{ env.poetry-version }}
+      - name: Sync dependencies
+        run: uv sync --extra dev
 
-      - name: Install Dependencies
-        run: poetry install
+      - name: Unit tests
+        run: uv run poe test_unit
 
-      - name: Unit Tests
-        run: poetry run poe test_unit
-
-      - name: Smoke Tests
-        run: poetry run poe test_smoke
+      - name: Smoke tests
+        run: uv run poe test_smoke
 
 
