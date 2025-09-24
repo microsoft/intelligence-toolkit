@@ -7,13 +7,13 @@ RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor
     apt update -y && \
     apt install wkhtmltopdf -y && \
     apt-get install wkhtmltopdf -y && \
-    curl -sSL https://install.python-poetry.org | POETRY_VERSION=1.8.3 python -
+    curl -LsSf https://astral.sh/uv/install.sh | sh
         
 ENV PATH="/root/.local/bin:$PATH"
 
 COPY . .
-RUN poetry install --only main
+RUN uv sync
 
 # Run application
 EXPOSE 80
-ENTRYPOINT ["poetry", "run", "poe", "run_streamlit", "--server.port=80", "--server.address=0.0.0.0"]
+ENTRYPOINT ["uv", "run", "poe", "run_streamlit", "--server.port=80", "--server.address=0.0.0.0"]

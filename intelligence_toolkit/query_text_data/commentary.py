@@ -61,18 +61,35 @@ class Commentary:
             theme_title = t["theme_title"]
             point_ids = t["point_ids"]
             self.structure["themes"][theme_title] = point_ids
-        print(dumps(self.structure, indent=2))
         for callback in callbacks:
             callback.on_llm_new_token(self.format_structure())
 
     def format_structure(self):
         output = ""
+        all_source_ids = set()
+        
+        # Build the themes and points with clickable links
         for theme_title, point_ids in self.structure["themes"].items():
             output += f"- **{theme_title}**\n"
             for point_id in point_ids:
                 if point_id in self.structure["point_sources"]:
-                    source_list = ", ".join([str(x) for x in self.structure["point_sources"][point_id]])
-                    output += f"  - {self.structure['points'][point_id]} (sources: {source_list})\n"
+                    # Create clickable markdown links similar to extract_and_link_chunk_references
+                    source_links = ", ".join([f"[{x}](#source-{x})" for x in self.structure["point_sources"][point_id]])
+                    output += f"  - {self.structure['points'][point_id]} [source: {source_links}]\n"
+                    # Collect all source IDs for the Sources section
+                    all_source_ids.update(self.structure["point_sources"][point_id])
+        
+        # Add Sources section like in build_report_markdown
+        if all_source_ids:
+            output += f"\n## Sources\n\n"
+            home_link = "#final-report"  # Link back to the top
+            for cid in sorted(all_source_ids):
+                if cid in self.cid_to_text:
+                    from json import loads
+                    chunk = loads(self.cid_to_text[cid])
+                    output += f'#### Source {cid}\n\n<details>\n\n##### Text chunk: {chunk["title"]} ({chunk["chunk_id"]})\n\n{chunk["text_chunk"]}\n\n'
+                    output += f"</details>\n\n[Back to top]({home_link})\n\n"
+        
         return output
     
     def get_clustered_cids(self):
@@ -82,6 +99,8 @@ class Commentary:
             for theme_title, point_ids in self.structure["themes"].items():
                 current_cluster = []
                 for point_id in point_ids:
+                    if point_id not in self.structure["point_sources"]:
+                        continue
                     source_ids = self.structure["point_sources"][point_id]
                     for source_id in source_ids:
                         if source_id not in current_cluster:

@@ -2,8 +2,8 @@
 
 ## Requirements
 
-- Python 3.11 ([Download](https://www.python.org/downloads/))
-- poetry < 2.0.0 ([Download](https://python-poetry.org/docs/#installing-with-the-official-installer))
+- Python 3.11 or 3.12 ([Download](https://www.python.org/downloads/))
+- uv ([Download](https://docs.astral.sh/uv/getting-started/installation/))
 - wkhtmltopdf (used to generate PDF reports)
 
     - Windows: ([Download](https://wkhtmltopdf.org/downloads.html))
@@ -21,7 +21,7 @@ You can configure your OpenAI access when running the app via `Settings page`, o
 
 #### Default values: 
 ```
-OPENAI_API_MODEL="gpt-4o-mini"
+OPENAI_API_MODEL="gpt-4.1-mini"
 OPENAI_TYPE="OpenAI" ## Other option available: Azure OpenAI
 AZURE_AUTH_TYPE="Azure Key" # if OPENAI_TYPE==Azure OpenAI
 DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small"
@@ -55,15 +55,15 @@ Use `cd `+ the path to the folder. For example:
 
 `cd C:\Users\user01\projects\intelligence-toolkit`
 
-Run `poetry install` and wait for the packages installation.
+Run `uv sync --extra dev` and wait for the packages installation.
 
 #### Run the app:
 
-Run `poetry run poe run_streamlit`, and it will automatically open the app in your default browser in `localhost:8081`
+Run `uv run poe run_streamlit`, and it will automatically open the app in your default browser in `localhost:8081`
 
 #### Use the API
 
-You can also replicate the examples in your own environment running `pip install intelligence-toolkit`.
+You can also replicate the examples in your own environment running `pip install intelligence-toolkit` or `uv add intelligence-toolkit`.
 
 See the documentation and an example of how to run the code with your data to obtain results without the need to run the UI.
 - [Anonymize Case Data](./app/workflows/anonymize_case_data/README.md)
@@ -137,19 +137,19 @@ Open [localhost:80](http://localhost:80)
 
 # Lifecycle Scripts
 
-For Lifecycle scripts it utilizes [Poetry](https://python-poetry.org/docs#installation) and [poethepoet](https://pypi.org/project/poethepoet/) to manage build scripts.
+For Lifecycle scripts it utilizes [uv](https://docs.astral.sh/uv/) and [poethepoet](https://pypi.org/project/poethepoet/) to manage build scripts.
 
 Available scripts are:
 
-- `poetry run poe test_unit` - This will execute unit tests on api.
-- `poetry run poe test_smoke` - This will execute smoke tests on api.
-- `poetry run poe check` - This will perform a suite of static checks across the package, including:
+- `uv run poe test_unit` - This will execute unit tests on api.
+- `uv run poe test_smoke` - This will execute smoke tests on api.
+- `uv run poe check` - This will perform a suite of static checks across the package, including:
   - formatting
   - documentation formatting
   - linting
   - security patterns
   - type-checking
-- `poetry run poe fix` - This will apply any available auto-fixes to the package. Usually this is just formatting fixes.
-- `poetry run poe fix_unsafe` - This will apply any available auto-fixes to the package, including those that may be unsafe.
-- `poetry run poe format` - Explicitly run the formatter across the package.
+- `uv run poe fix` - This will apply any available auto-fixes to the package. Usually this is just formatting fixes.
+- `uv run poe fix_unsafe` - This will apply any available auto-fixes to the package, including those that may be unsafe.
+- `uv run poe format` - Explicitly run the formatter across the package.
 

@@ -185,10 +185,10 @@ Open [http://localhost:80](http://localhost:80) in your web browser to start usi
 
 Intelligence Toolkit can be used with either OpenAI or Azure OpenAI as the generative AI API.
 
-The [`Generate Mock Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_mock_data/README.md) and [`Extract Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/extract_record_data/README.md) workflows additionally use OpenAI's Structured Outputs API, which requires a gpt-4o model as follows:
+The [`Generate Mock Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/generate_mock_data/README.md) and [`Extract Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/extract_record_data/README.md) workflows additionally use OpenAI's Structured Outputs API, which requires a gpt-4.1 model as follows:
 
-- `gpt-4o-mini`
-- `gpt-4o`
+- `gpt-4.1-mini`
+- `gpt-4.1`
 
 You can access the `Settings` page on the left sidebar when running the application:
 
@@ -201,12 +201,57 @@ You can access the `Settings` page on the left sidebar when running the applicat
 **Option 3: Using Intelligence Toolkit as a Python Package (via PyPI)**
 
 If you prefer to use Intelligence Toolkit as a Python package, install it directly from PyPI:
+
+**Requirements:**
+- Python 3.11 or 3.12
+- For development: [uv](https://docs.astral.sh/uv/getting-started/installation/) (recommended) or pip
     
-`pip install intelligence-toolkit`
+**Installation:**
+
+Using pip:
+```bash
+pip install intelligence-toolkit
+```
+
+Using uv (recommended for development):
+```bash
+uv add intelligence-toolkit
+```
 
 After installation, explore the examples in the example_notebooks folder to get started with various functionalities.
 
 <hr>
+
+## Development Setup
+
+For developers who want to contribute to Intelligence Toolkit or run it from source:
+
+**Requirements:**
+- Python 3.11 or 3.12 ([Download](https://www.python.org/downloads/))
+- [uv](https://docs.astral.sh/uv/getting-started/installation/) (recommended package manager)
+- wkhtmltopdf (for PDF report generation)
+  - Windows: [Download installer](https://wkhtmltopdf.org/downloads.html)
+  - Linux: `sudo apt-get install wkhtmltopdf`
+  - macOS: `brew install homebrew/cask/wkhtmltopdf`
+
+**Setup Instructions:**
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/microsoft/intelligence-toolkit.git
+   cd intelligence-toolkit
+   ```
+
+2. Install dependencies:
+   ```bash
+   uv sync --extra dev
+   ```
+
+3. Run the application:
+   ```bash
+   uv run poe run_streamlit
+   ```
+
+The app will automatically open in your browser at `localhost:8081`.
 
 - To start developing, see [DEVELOPING.md](./DEVELOPING.md).
 - To instructions on how to deploy, see [DEPLOYING.md](./DEPLOYING.md).

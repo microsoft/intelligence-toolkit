@@ -41,7 +41,7 @@ class SessionVariables:
         self.thematic_commentary = SessionVariable("", prefix)
         self.analysis_update_interval = SessionVariable(10, prefix)
         self.do_live_analysis = SessionVariable(True, prefix)
-        self.do_live_commentary = SessionVariable(True, prefix)
+        self.do_live_commentary = SessionVariable(False, prefix)
 
     def reset_workflow(self):
         for key in st.session_state:
