@@ -110,9 +110,9 @@ The output object should integrate the theme summaries provided as input as foll
 - "report_overview": an introductory paragraph that provides an overview of the report themes in a neutral way without offering interpretations or implications
 - "report_implications": a concluding paragraph that summarizes the implications of the themes and their specific points
 
-IMPORTANT: Before generating the final output, consolidate any duplicate or overlapping themes. Merge themes that cover similar concepts or have overlapping content. Ensure each theme represents a distinct aspect of the analysis.
+IMPORTANT: Before generating the final output, consolidate any duplicate or overlapping themes. Merge themes that cover similar concepts or have overlapping content. 
 
-When presenting evidence, support each sentence with one or more source references: "[source: <source_id_1>, <source_id_2>,...]". Include source IDs only - DO NOT include the chunk ID within the source ID - DO NOT repeat the same source ID within a single sentence.
+When presenting evidence, support each sentence with one or more source references: "[source: <source_id_1>, <source_id_2>,...]". If the references are +10, show the first 3 and a +more . Include source IDs only - DO NOT include the chunk ID within the source ID - DO NOT repeat the same source ID within a single sentence.
 
 
 --Theme summaries--
@@ -165,11 +165,11 @@ The output object should capture new themes, points, and source references that 
 - Each point MUST contain sufficient concrete details to capture the specific source information only, and not related information
 - If a source relates to an existing point, the source ID MUST be assigned to the existing point ID, rather than creating a new point
 - If the addition of a source to a point warrants a change in point title, the point title MUST be updated
-- Aim for 2-7 themes overall, with an even distribution of points across themes
+- Aim for 1-7 themes overall, with an even distribution of points across themes
 - Points should be assigned to a single theme in a logical sequence that addresses the user query
 - Themes should contain at least two points if possible
 - Order themes in a logical sequence that addresses the user query
-- Output themes need not be the same as input themes and should be regenerated as needed to maintain 2-7 themes overall
+- Output themes need not be the same as input themes and should be regenerated as needed to maintain 1-7 themes overall
 - AVOID creating duplicate or overlapping themes - consolidate similar themes under a single, more comprehensive theme title
 - Before creating a new theme, check if the content could be merged with an existing theme
 - Theme titles should be distinct and non-overlapping - avoid themes that cover the same conceptual territory

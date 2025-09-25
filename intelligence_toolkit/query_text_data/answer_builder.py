@@ -113,7 +113,7 @@ async def answer_query(
 ):
     print(f"Answering query with clustered ids: {clustered_cids}")
     partitioned_texts = {}
-    chunk_cap = max(1, max_chunks_per_theme)
+    chunk_cap = max(1, 10)
     for theme, cids in clustered_cids.items():
         selected_cids = select_representative_cids(
             cids,
@@ -163,7 +163,7 @@ async def answer_query(
     report, references, matched_chunks = build_report_markdown(
         query,
         expanded_query,
-        summarized_themes,
+        summarized_themes[:1],
         report_wrapper,
         processed_chunks.cid_to_text
     )

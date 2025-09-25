@@ -1,4 +1,3 @@
-
 import intelligence_toolkit.AI.utils as utils
 import intelligence_toolkit.query_text_data.prompts as prompts
 import intelligence_toolkit.query_text_data.answer_schema as answer_schema
@@ -76,7 +75,7 @@ class Commentary:
             for point_id in point_ids:
                 if point_id in self.structure["point_sources"]:
                     # Create clickable markdown links similar to extract_and_link_chunk_references
-                    source_links = ", ".join([f"[{x}](#source-{x})" for x in self.structure["point_sources"][point_id]])
+                    source_links = ", ".join([f"[{x}](#source-{x})" for x in self.structure["point_sources"][point_id][:10]])
                     output += f"  - {self.structure['points'][point_id]} [source: {source_links}]\n"
                     # Collect all source IDs for the Sources section
                     all_source_ids.update(self.structure["point_sources"][point_id])
