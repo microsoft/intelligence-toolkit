@@ -197,13 +197,11 @@ def build_report_markdown(
     themes_deduplication_prompt = """
     You are given a list of theme summaries that may contain overlapping or duplicate information. 
     Your task is to consolidate these themes into concise summaries without duplication.
-    Rules:
-    1. Merge themes with similar topics or overlapping content
-    2. Create a brief summary of key points for each consolidated theme
-    3. Maintain source references in the format [source: X]
-    4. Create clear, distinct theme titles that don't overlap
-    5. Avoid repeating the same information across themes
-    6. Keep summaries concise and focused on main insights only
+    Check each theme and if their texts are too similar, merge them into one theme.
+    
+    - Maintain source references in the format [source: X]
+    - Avoid repeating the same information across themes
+    - Keep summaries concise and focused on main insights only
     
     Themes to consolidate: {themes}
     
@@ -216,30 +214,29 @@ def build_report_markdown(
     """
     
     themes_json = [theme for theme in summarized_themes_objs]
-    print('themes', themes_json)
-    # deduplication_messages = utils.prepare_messages(
-    #     themes_deduplication_prompt,
-    #     {"themes": themes_json}
-    # )
+    deduplication_messages = utils.prepare_messages(
+        themes_deduplication_prompt,
+        {"themes": themes_json}
+    )
     
-    # # Note: This would need to be async in the actual implementation
-    # # For now, using the original themes if deduplication fails
-    # try:
-    #     deduplicated_themes_response = utils.generate_text(
-    #         ai_configuration,  # This parameter needs to be passed to this function
-    #         deduplication_messages,
-    #         response_format={"type": "json_object"}
-    #     )
-    #     deduplicated_themes = loads(deduplicated_themes_response)
-    #     if isinstance(deduplicated_themes, list):
-    #         summarized_themes_objs = deduplicated_themes
-    # except Exception as e:
-    #     print(f"Theme deduplication failed, using original themes: {e}")
+    # Note: This would need to be async in the actual implementation
+    # For now, using the original themes if deduplication fails
+    try:
+        deduplicated_themes_response = utils.generate_text(
+            ai_configuration,  # This parameter needs to be passed to this function
+            deduplication_messages,
+            response_format={"type": "json_object"}
+        )
+        deduplicated_themes = loads(deduplicated_themes_response)
+        if isinstance(deduplicated_themes, list):
+            summarized_themes_objs = deduplicated_themes
+    except Exception as e:
+        print(f"Theme deduplication failed, using original themes: {e}")
     
-    # for theme in summarized_themes_objs:
-    #     report += f'#### Theme: {theme["theme_title"]}\n\n'
-    #     for point in theme["theme_points"]:
-    #         report += f'##### {point["point_title"]}\n\n{point["point_evidence"]}\n\n{point["point_commentary"]}\n\n'
+    for theme in summarized_themes_objs:
+        report += f'#### Theme: {theme["theme_title"]}\n\n'
+        for point in theme["theme_points"]:
+            report += f'##### {point["point_title"]}\n\n{point["point_evidence"]}\n\n{point["point_commentary"]}\n\n'
     report += (
         f'#### Implications\n\n{report_wrapper_obj["report_implications"]}\n\n'
     )
