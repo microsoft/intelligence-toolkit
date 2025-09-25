@@ -218,18 +218,26 @@ async def create(sv: SessionVariables, workflow=None):
                         help="If a text chunk is relevant to the query, then adjacent text chunks in the original document may be able to add additional context to the relevant points. The value of this parameter determines how many chunks before and after each relevant text chunk will be evaluated at the end of the process (or `Relevance test budget`) if they are yet to be tested."
                     )
                 st.markdown("##### Answer options")
-                c1, c2, c3, c4,c5 = st.columns(5)
+                c1, c2, c3, c4, c5 = st.columns(5)
                 with c1:
                     st.number_input(
-                        "Target chunks per cluster",
-                        value=sv.target_chunks_per_cluster.value,
-                        key=sv.target_chunks_per_cluster.key,
+                        "Max chunks per theme",
+                        value=sv.max_chunks_per_theme.value,
+                        key=sv.max_chunks_per_theme.key,
                         min_value=0,
-                        help="The average number of text chunks to target per cluster, which determines the text chunks that will be evaluated together and in parallel to other clusters. Larger values will generally result in more related text chunks being evaluated in parallel, but may also result in information loss from unprocessed content."
+                        help="Upper bound on the number of text chunks to summarize per theme. Larger values capture more context per theme but may increase runtime."
                     )
                 with c2:
-                    st.text("")
-                    st.text("")
+                    st.slider(
+                        "Min chunk retention",
+                        min_value=0.0,
+                        max_value=1.0,
+                        value=float(sv.min_chunk_retention_ratio.value),
+                        key=sv.min_chunk_retention_ratio.key,
+                        step=0.05,
+                        help="Guarantees that at least this fraction of each theme's relevant chunks are summarized, even if the max chunk cap is smaller."
+                    )
+                with c3:
                     st.checkbox(
                         "Show search process",
                         key=sv.show_search_process.key,
@@ -237,8 +245,6 @@ async def create(sv: SessionVariables, workflow=None):
                         help="Show the search process in the UI, including the progress of chunk relevance tests and the search for relevant chunks."
                     )
                 with c4:
-                    st.text("")
-                    st.text("")
                     st.checkbox(
                         "Live analysis",
                         key=sv.do_live_analysis.key,
@@ -459,11 +465,17 @@ async def create(sv: SessionVariables, workflow=None):
                         with st.spinner("Generating research report..."):
                             if sv.do_live_commentary.value:
                                 await asyncio.gather(
-                                    qtd.answer_query_with_relevant_chunks(sv.target_chunks_per_cluster.value),
+                                    qtd.answer_query_with_relevant_chunks(
+                                        sv.max_chunks_per_theme.value,
+                                        sv.min_chunk_retention_ratio.value,
+                                    ),
                                     qtd.generate_analysis_commentary()                      
                                 )
                             else:
-                                await qtd.answer_query_with_relevant_chunks(sv.target_chunks_per_cluster.value)
+                                await qtd.answer_query_with_relevant_chunks(
+                                    sv.max_chunks_per_theme.value,
+                                    sv.min_chunk_retention_ratio.value,
+                                )
                             st.rerun()
     with report_tab:
         if qtd.stage.value < QueryTextDataStage.QUESTION_ANSWERED.value:

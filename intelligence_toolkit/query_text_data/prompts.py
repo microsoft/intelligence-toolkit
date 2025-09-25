@@ -72,7 +72,7 @@ Output query:
 theme_summarization_prompt = """\
 You are a helpful assistant tasked with creating a JSON object that summarizes a theme relevant to a given user query.
 
-When presenting source evidence, support each sentence with a source reference to the file and text chunk: "[source: <source_id_1>, <source_id_2>, ...]". Include source IDs only - DO NOT include the chunk ID within the source ID - DO NOT repeat the same source ID within a single sentence.
+When presenting source evidence, support each sentence with a source reference to the file and text chunk: "[source: <source_id_1>, <source_id_2>, ...]". Include source IDs only - DO NOT include the chunk ID within the source ID - DO NOT repeat the same source ID within a single sentence. Limit each sentence to the most representative one to three source IDs; if more sources are relevant, choose the strongest evidence and summarize the rest collectively.
 
 The output object should summarize the theme as follows:
 

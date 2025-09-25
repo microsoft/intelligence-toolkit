@@ -1,15 +1,14 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 
+import math
 import re
-from json import loads, dumps
-from collections import defaultdict
+from json import loads
 
 import intelligence_toolkit.AI.utils as utils
 import intelligence_toolkit.query_text_data.answer_schema as answer_schema
 import intelligence_toolkit.query_text_data.prompts as prompts
 from intelligence_toolkit.query_text_data.classes import AnswerObject
-import sklearn.cluster as cluster
 
 
 def _split_on_multiple_delimiters(string, delimiters):
@@ -41,6 +40,67 @@ def extract_and_link_chunk_references(text, link=True):
     references = sorted(references)
     return text, references
 
+
+def select_representative_cids(cids, cid_to_vector, target_count, min_retention_ratio):
+    min_retention_ratio = max(0.0, min(1.0, min_retention_ratio))
+    if target_count <= 0 and min_retention_ratio <= 0:
+        return []
+
+    minimum_count = math.ceil(len(cids) * min_retention_ratio)
+    effective_target = max(target_count, minimum_count)
+    if len(cids) <= effective_target:
+        return list(cids)
+
+    vectorized_cids = [
+        (cid, cid_to_vector[cid])
+        for cid in cids
+        if cid in cid_to_vector
+    ]
+
+    if not vectorized_cids:
+        return list(cids)[:effective_target]
+
+    centroid = _mean_vector([vector for _, vector in vectorized_cids])
+    distances = {
+        cid: _squared_distance(vector, centroid)
+        for cid, vector in vectorized_cids
+    }
+
+    ranked_cids = sorted(distances.keys(), key=lambda cid: distances[cid])
+    selected_vector_cids = set(ranked_cids[:effective_target])
+
+    selected_cids = []
+    for cid in cids:
+        if cid in selected_vector_cids and cid not in selected_cids:
+            selected_cids.append(cid)
+        if len(selected_cids) == effective_target:
+            break
+
+    if len(selected_cids) < effective_target:
+        for cid in cids:
+            if cid not in selected_cids:
+                selected_cids.append(cid)
+            if len(selected_cids) == effective_target:
+                break
+
+    return selected_cids
+
+
+def _mean_vector(vectors):
+    if not vectors:
+        return []
+
+    vector_length = len(vectors[0])
+    sums = [0.0] * vector_length
+    for vector in vectors:
+        for i, value in enumerate(vector):
+            sums[i] += value
+    return [value / len(vectors) for value in sums]
+
+
+def _squared_distance(vector_a, vector_b):
+    return sum((a - b) ** 2 for a, b in zip(vector_a, vector_b))
+
 async def answer_query(
     ai_configuration,
     query,
@@ -48,17 +108,32 @@ async def answer_query(
     processed_chunks,
     clustered_cids,
     cid_to_vector,
-    target_chunks_per_cluster
+    max_chunks_per_theme,
+    min_chunk_retention_ratio=0.6,
 ):
     print(f"Answering query with clustered ids: {clustered_cids}")
     partitioned_texts = {}
+    chunk_cap = max(1, max_chunks_per_theme)
     for theme, cids in clustered_cids.items():
-        if len(cids) > target_chunks_per_cluster:
-            cluster_to_cids = cluster_cids(cids, cid_to_vector, len(cids) // target_chunks_per_cluster)
-            for cluster, cids in cluster_to_cids.items():
-                partitioned_texts[f"{theme} - topic {cluster}"] = [f"{cid}: {processed_chunks.cid_to_text[cid]}" for cid in cids]
-        else:
-            partitioned_texts[theme] = [f"{cid}: {processed_chunks.cid_to_text[cid]}" for cid in cids]
+        selected_cids = select_representative_cids(
+            cids,
+            cid_to_vector,
+            chunk_cap,
+            min_chunk_retention_ratio,
+        )
+        if len(selected_cids) < len(cids):
+            print(
+                "Pruned theme '%s' from %d to %d representative chunks" % (
+                    theme,
+                    len(cids),
+                    len(selected_cids),
+                )
+            )
+        partitioned_texts[theme] = [
+            f"{cid}: {processed_chunks.cid_to_text[cid]}"
+            for cid in selected_cids
+            if cid in processed_chunks.cid_to_text
+        ]
     net_new_sources = 0
     batched_summarization_messages = [
         utils.prepare_messages(
@@ -134,26 +209,5 @@ def build_report_markdown(
             print(f"No match for {cid}")
 
     return report, references, matched_chunks
-
-def cluster_cids(relevant_cids, cid_to_vector, target_clusters):
-    clustered_cids = {}
-    if len(relevant_cids) > 0:
-        # use k-means clustering to group relevant cids into target_clusters clusters
-        cids = []
-        vectors = []
-        for relevant_cid in relevant_cids:
-            if relevant_cid in cid_to_vector:
-                cids.append(relevant_cid)
-                vectors.append(cid_to_vector[relevant_cid])
-        kmeans = cluster.KMeans(n_clusters=target_clusters)
-        kmeans.fit(vectors)
-        cluster_assignments = kmeans.predict(vectors)
-
-        for i, cid in enumerate(cids):
-            cluster_assignment = cluster_assignments[i]
-            if cluster_assignment not in clustered_cids:
-                clustered_cids[cluster_assignment] = []
-            clustered_cids[cluster_assignment].append(cid)
-    return clustered_cids
 
 
