@@ -101,6 +101,65 @@ def _mean_vector(vectors):
 def _squared_distance(vector_a, vector_b):
     return sum((a - b) ** 2 for a, b in zip(vector_a, vector_b))
 
+def _cosine_similarity(vector_a, vector_b):
+    """Calculate cosine similarity between two vectors."""
+    if not vector_a or not vector_b:
+        return 0.0
+    
+    dot_product = sum(a * b for a, b in zip(vector_a, vector_b))
+    magnitude_a = math.sqrt(sum(a * a for a in vector_a))
+    magnitude_b = math.sqrt(sum(b * b for b in vector_b))
+    
+    if magnitude_a == 0 or magnitude_b == 0:
+        return 0.0
+    
+    return dot_product / (magnitude_a * magnitude_b)
+
+async def _deduplicate_themes_by_embedding(ai_configuration, themes, similarity_threshold=0.8):
+    """Deduplicate themes based on embedding similarity."""
+    if len(themes) <= 1:
+        return themes
+    
+    # Generate embeddings for each theme
+    theme_texts = []
+    for theme in themes:
+        # Combine title and key points for embedding
+        theme_text = theme["theme_title"] + " " + " ".join([
+            point.get("point_title", "") + " " + point.get("point_commentary", "")
+            for point in theme.get("theme_points", [])
+        ])
+        theme_texts.append(theme_text)
+    
+    try:
+        # Generate embeddings for all themes
+        embeddings = await utils.map_generate_embeddings(ai_configuration, theme_texts)
+        
+        # Filter themes based on similarity
+        selected_themes = []
+        selected_embeddings = []
+        
+        for i, (theme, embedding) in enumerate(zip(themes, embeddings)):
+            is_similar = False
+            
+            # Check similarity with already selected themes
+            for selected_embedding in selected_embeddings:
+                similarity = _cosine_similarity(embedding, selected_embedding)
+                if similarity > similarity_threshold:
+                    is_similar = True
+                    print(f"Theme '{theme['theme_title']}' is too similar (similarity: {similarity:.3f}) to already selected theme, skipping")
+                    break
+            
+            if not is_similar:
+                selected_themes.append(theme)
+                selected_embeddings.append(embedding)
+        
+        print(f"Deduplicated themes from {len(themes)} to {len(selected_themes)} based on embeddings")
+        return selected_themes
+        
+    except Exception as e:
+        print(f"Embedding-based theme deduplication failed: {e}")
+        return themes
+
 async def answer_query(
     ai_configuration,
     query,
@@ -151,7 +210,7 @@ async def answer_query(
 
     theme_integration_messages = utils.prepare_messages(
         prompts.theme_integration_prompt,
-        {"content": partitioned_texts.items(), "query": query},
+        {"content": summarized_themes, "query": query},
     )
 
     report_wrapper = utils.generate_text(
@@ -193,46 +252,19 @@ def build_report_markdown(
     home_link = "#final-report"
     report = f'## AQuery\n\n*{query}*\n\n## Expanded Query\n\n*{expanded_query}*\n\n## Answer\n\n{report_wrapper_obj["answer"]}\n\n## Analysis\n\n### {report_wrapper_obj["report_title"]}\n\n{report_wrapper_obj["report_overview"]}\n\n'
     
-    # Deduplicate and consolidate themes to avoid repetition
-    themes_deduplication_prompt = """
-    You are given a list of theme summaries that may contain overlapping or duplicate information. 
-    Your task is to consolidate these themes into concise summaries without duplication.
-    Rules:
-    1. Merge themes with similar topics or overlapping content
-    2. Create a brief summary of key points for each consolidated theme
-    3. Maintain source references in the format [source: X]
-    4. Create clear, distinct theme titles that don't overlap
-    5. Avoid repeating the same information across themes
-    6. Keep summaries concise and focused on main insights only
-    
-    Themes to consolidate: {themes}
-    
-    Return consolidated themes as a JSON array where each theme has:
-    - theme_title: Clear, non-overlapping title
-    - theme_summary: Brief summary of key points with source references.
-        Please when creating new theme item, check if source references wheren't used in another theme, so don't use them again.
-    """
-    
-    themes_json = [theme for theme in summarized_themes_objs]
-    print('themes', themes_json)
-    deduplication_messages = utils.prepare_messages(
-        themes_deduplication_prompt,
-        {"themes": themes_json}
-    )
-    
-    # Note: This would need to be async in the actual implementation
-    # For now, using the original themes if deduplication fails
+    # Deduplicate themes using embedding similarity
     try:
-        deduplicated_themes_response = utils.generate_text(
-            ai_configuration,  # This parameter needs to be passed to this function
-            deduplication_messages,
-            response_format={"type": "json_object"}
-        )
-        deduplicated_themes = loads(deduplicated_themes_response)
-        if isinstance(deduplicated_themes, list):
-            summarized_themes_objs = deduplicated_themes
+        # This should be async, but we'll handle it synchronously for now
+        import asyncio
+        deduplicated_themes = asyncio.run(_deduplicate_themes_by_embedding(
+            ai_configuration, 
+            summarized_themes_objs, 
+            similarity_threshold=0.8
+        ))
+        summarized_themes_objs = deduplicated_themes
+        
     except Exception as e:
-        print(f"Theme deduplication failed, using original themes: {e}")
+        print(f"Embedding-based theme deduplication failed, using original themes: {e}")
     
     for theme in summarized_themes_objs:
         report += f'#### Theme: {theme["theme_title"]}\n\n'
