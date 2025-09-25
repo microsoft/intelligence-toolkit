@@ -39,7 +39,7 @@ class Commentary:
         callbacks = [self.analysis_callback] if self.analysis_callback is not None else []
         updates = OpenAIClient(self.ai_configuration).generate_chat(
             messages,
-            stream=True,
+            stream=False,
             response_format=answer_schema.thematic_update_format,
             callbacks=callbacks
         )
