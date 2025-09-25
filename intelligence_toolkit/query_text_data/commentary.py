@@ -39,11 +39,13 @@ class Commentary:
         callbacks = [self.analysis_callback] if self.analysis_callback is not None else []
         updates = OpenAIClient(self.ai_configuration).generate_chat(
             messages,
-            stream=False,
+            stream=True,
             response_format=answer_schema.thematic_update_format,
             callbacks=callbacks
         )
         update_obj = loads(updates)
+        # Replace previously captured themes so each batch reflects only the latest structure.
+        self.structure["themes"] = {}
         for u in update_obj["updates"]:
             point_id = u["point_id"]
             point_title = u["point_title"]

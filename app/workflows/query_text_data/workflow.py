@@ -224,13 +224,13 @@ async def create(sv: SessionVariables, workflow=None):
                         "Max chunks per theme",
                         value=sv.max_chunks_per_theme.value,
                         key=sv.max_chunks_per_theme.key,
-                        min_value=0,
+                        min_value=1,
                         help="Upper bound on the number of text chunks to summarize per theme. Larger values capture more context per theme but may increase runtime."
                     )
                 with c2:
                     st.slider(
                         "Min chunk retention",
-                        min_value=0.0,
+                        min_value=0.1,
                         max_value=1.0,
                         value=float(sv.min_chunk_retention_ratio.value),
                         key=sv.min_chunk_retention_ratio.key,
