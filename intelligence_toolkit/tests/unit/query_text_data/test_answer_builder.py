@@ -6,6 +6,18 @@ import pytest
 from intelligence_toolkit.query_text_data import answer_builder
 
 
+class DummyCommentary:
+    def __init__(self, clustered_cids, structure):
+        self._clustered_cids = clustered_cids
+        self.structure = structure
+
+    def get_clustered_cids(self):
+        return self._clustered_cids
+
+    def format_structure(self):
+        return ""
+
+
 def test_select_representative_cids_prefers_central_vectors():
     cids = [1, 2, 3, 4]
     cid_to_vector = {
@@ -118,6 +130,14 @@ async def test_answer_query_limits_chunks_and_preserves_theme_names(monkeypatch)
         "Theme A": [1, 2, 3, 4, 5],
         "Theme B": [6],
     }
+    commentary = DummyCommentary(
+        clustered_cids,
+        {
+            "themes": {"Theme A": [1], "Theme B": [2]},
+            "points": {1: "Theme A point", 2: "Theme B point"},
+            "point_sources": {1: [1, 2], 2: [6]},
+        },
+    )
     cid_to_vector = {
         cid: [float(cid)]
         for cid in range(1, 7)
@@ -128,9 +148,9 @@ async def test_answer_query_limits_chunks_and_preserves_theme_names(monkeypatch)
         query="Sample query",
         expanded_query="Expanded sample query",
         processed_chunks=processed_chunks,
-        clustered_cids=clustered_cids,
+        commentary=commentary,
         cid_to_vector=cid_to_vector,
-    max_chunks_per_theme=2,
+        max_chunks_per_theme=2,
         min_chunk_retention_ratio=0.0,
     )
 
@@ -167,6 +187,14 @@ async def test_answer_query_retains_minimum_ratio(monkeypatch):
     cid_to_text = {cid: json.dumps({"title": str(cid), "chunk_id": cid, "text_chunk": "x"}) for cid in range(10)}
     processed_chunks = SimpleNamespace(cid_to_text=cid_to_text)
     clustered_cids = {"Theme": list(range(10))}
+    commentary = DummyCommentary(
+        clustered_cids,
+        {
+            "themes": {"Theme": [1]},
+            "points": {1: "Theme point"},
+            "point_sources": {1: list(range(6))},
+        },
+    )
     cid_to_vector = {cid: [float(cid)] for cid in range(10)}
 
     await answer_builder.answer_query(
@@ -174,9 +202,9 @@ async def test_answer_query_retains_minimum_ratio(monkeypatch):
         query="q",
         expanded_query="eq",
         processed_chunks=processed_chunks,
-        clustered_cids=clustered_cids,
+        commentary=commentary,
         cid_to_vector=cid_to_vector,
-    max_chunks_per_theme=2,
+        max_chunks_per_theme=2,
         min_chunk_retention_ratio=0.6,
     )
 

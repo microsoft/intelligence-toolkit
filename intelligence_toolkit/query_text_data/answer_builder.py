@@ -3,7 +3,7 @@
 
 import math
 import re
-from json import loads
+from json import loads, dumps
 
 import intelligence_toolkit.AI.utils as utils
 import intelligence_toolkit.query_text_data.answer_schema as answer_schema
@@ -101,19 +101,71 @@ def _mean_vector(vectors):
 def _squared_distance(vector_a, vector_b):
     return sum((a - b) ** 2 for a, b in zip(vector_a, vector_b))
 
+
+def _build_theme_summaries_from_commentary(commentary):
+    if commentary is None:
+        return []
+
+    structure = getattr(commentary, "structure", None)
+    if not structure:
+        return []
+
+    themes = structure.get("themes") or {}
+    points = structure.get("points") or {}
+    point_sources = structure.get("point_sources") or {}
+
+    summaries = []
+    for theme_title, point_ids in themes.items():
+        theme_points = []
+        for point_id in point_ids:
+            point_title = points.get(point_id)
+            if not point_title:
+                continue
+
+            sources = point_sources.get(point_id, [])
+            if sources:
+                # Preserve insertion order while ensuring unique references.
+                seen = set()
+                ordered_sources = [str(src) for src in sources if not (src in seen or seen.add(src))]
+                sources_text = ", ".join(ordered_sources)
+                evidence_suffix = f" [source: {sources_text}]"
+            else:
+                evidence_suffix = ""
+
+            theme_points.append(
+                {
+                    "point_title": point_title,
+                    "point_evidence": f"**Source evidence**: {point_title}{evidence_suffix}",
+                    "point_commentary": f"**AI commentary**: {point_title}",
+                }
+            )
+
+        if theme_points:
+            summaries.append(
+                dumps(
+                    {
+                        "theme_title": theme_title,
+                        "theme_points": theme_points,
+                    }
+                )
+            )
+
+    return summaries
+
 async def answer_query(
     ai_configuration,
     query,
     expanded_query,
     processed_chunks,
-    clustered_cids,
+    commentary,
     cid_to_vector,
     max_chunks_per_theme,
     min_chunk_retention_ratio=0.6,
 ):
+    clustered_cids = commentary.get_clustered_cids()
     print(f"Answering query with clustered ids: {clustered_cids}")
     partitioned_texts = {}
-    chunk_cap = max(1, 10)
+    chunk_cap = max(1, max_chunks_per_theme)
     for theme, cids in clustered_cids.items():
         selected_cids = select_representative_cids(
             cids,
@@ -135,6 +187,8 @@ async def answer_query(
             if cid in processed_chunks.cid_to_text
         ]
     net_new_sources = 0
+    summarized_themes_analysis = _build_theme_summaries_from_commentary(commentary)
+
     batched_summarization_messages = [
         utils.prepare_messages(
             prompts.theme_summarization_prompt,
@@ -163,7 +217,7 @@ async def answer_query(
     report, references, matched_chunks = build_report_markdown(
         query,
         expanded_query,
-        summarized_themes,
+        summarized_themes_analysis,
         report_wrapper,
         processed_chunks.cid_to_text,
         ai_configuration
@@ -191,47 +245,7 @@ def build_report_markdown(
         f"{text['title']} ({text['chunk_id']})": text for text in text_jsons
     }
     home_link = "#final-report"
-    report = f'## AQuery\n\n*{query}*\n\n## Expanded Query\n\n*{expanded_query}*\n\n## Answer\n\n{report_wrapper_obj["answer"]}\n\n## Analysis\n\n### {report_wrapper_obj["report_title"]}\n\n{report_wrapper_obj["report_overview"]}\n\n'
-    
-    # Deduplicate and consolidate themes to avoid repetition
-    themes_deduplication_prompt = """
-    You are given a list of theme summaries that may contain overlapping or duplicate information. 
-    Your task is to consolidate these themes into concise summaries without duplication.
-    Check each theme and if their texts are too similar, merge them into one theme.
-    
-    - Maintain source references in the format [source: X]
-    - Avoid repeating the same information across themes
-    - Keep summaries concise and focused on main insights only
-    
-    Themes to consolidate: {themes}
-    
-    Please when creating new theme item, check if source references wheren't used in another theme, so don't use them again.
-    Make sure to keep track of all source references used across themes.
-    Don't repeat themes, so it's ok to return less themes than it was given you.
-    Return consolidated themes as a JSON array where each theme has:
-    - theme_title: Clear, non-overlapping title
-    - theme_summary: Brief summary of key points with source references.
-    """
-    
-    themes_json = [theme for theme in summarized_themes_objs]
-    deduplication_messages = utils.prepare_messages(
-        themes_deduplication_prompt,
-        {"themes": themes_json}
-    )
-    
-    # Note: This would need to be async in the actual implementation
-    # For now, using the original themes if deduplication fails
-    try:
-        deduplicated_themes_response = utils.generate_text(
-            ai_configuration,  # This parameter needs to be passed to this function
-            deduplication_messages,
-            response_format={"type": "json_object"}
-        )
-        deduplicated_themes = loads(deduplicated_themes_response)
-        if isinstance(deduplicated_themes, list):
-            summarized_themes_objs = deduplicated_themes
-    except Exception as e:
-        print(f"Theme deduplication failed, using original themes: {e}")
+    report = f'## Query\n\n*{query}*\n\n## Expanded Query\n\n*{expanded_query}*\n\n## Answer\n\n{report_wrapper_obj["answer"]}\n\n## Analysis\n\n### {report_wrapper_obj["report_title"]}\n\n{report_wrapper_obj["report_overview"]}\n\n'
     
     for theme in summarized_themes_objs:
         report += f'#### Theme: {theme["theme_title"]}\n\n'

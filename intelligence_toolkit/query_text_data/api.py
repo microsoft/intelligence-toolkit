@@ -232,28 +232,25 @@ class QueryTextData:
 
     async def answer_query_with_relevant_chunks(
         self,
-        max_chunks_per_theme: int,
-        min_chunk_retention_ratio: float = 0.6,
+        target_chunks_per_cluster: int
     ) -> AnswerObject:
         """
         Answer a query with relevant chunks.
 
         Args:
-            max_chunks_per_theme (int): Baseline maximum number of chunks to include when summarizing each theme
-            min_chunk_retention_ratio (float): Fraction of a theme's chunks to retain at minimum (0-1)
+            target_chunks_per_cluster (int): The target chunks per cluster
         Returns:
             AnswerObject: The answer object
         """
-        self.max_chunks_per_theme = max_chunks_per_theme
+        self.target_chunks_per_cluster = target_chunks_per_cluster
         self.answer_object: AnswerObject = await answer_builder.answer_query(
             self.ai_configuration,
             self.query,
             self.expanded_query,
             self.processed_chunks,
-            self.commentary.get_clustered_cids(),
+            self.commentary,
             self.cid_to_vector,
-            self.max_chunks_per_theme,
-            min_chunk_retention_ratio,
+            self.target_chunks_per_cluster
         )
         self.stage = QueryTextDataStage.QUESTION_ANSWERED
         return self.answer_object

@@ -74,3 +74,11 @@ def test_update_analysis_replaces_existing_themes(monkeypatch):
     assert tracker.structure["themes"] == {"Theme Two": ["point-2"]}
 
     assert outputs == []
+    assert len(tracker.update_history) == 2
+    first_update = tracker.update_history[0]
+    second_update = tracker.update_history[1]
+
+    assert first_update["chunks"] == {1: cid_to_text[1]}
+    assert second_update["chunks"] == {2: cid_to_text[2]}
+    assert first_update["response"]["themes"][0]["theme_title"] == "Theme One"
+    assert tracker.last_update is second_update
