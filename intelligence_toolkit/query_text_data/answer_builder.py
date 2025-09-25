@@ -151,7 +151,7 @@ async def answer_query(
 
     theme_integration_messages = utils.prepare_messages(
         prompts.theme_integration_prompt,
-        {"content": summarized_themes, "query": query},
+        {"content": partitioned_texts.items(), "query": query},
     )
 
     report_wrapper = utils.generate_text(
@@ -209,7 +209,8 @@ def build_report_markdown(
     
     Return consolidated themes as a JSON array where each theme has:
     - theme_title: Clear, non-overlapping title
-    - theme_summary: Brief summary of key points with source references
+    - theme_summary: Brief summary of key points with source references.
+        Please when creating new theme item, check if source references wheren't used in another theme, so don't use them again.
     """
     
     themes_json = [theme for theme in summarized_themes_objs]
