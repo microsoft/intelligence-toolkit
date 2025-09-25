@@ -248,7 +248,7 @@ class QueryTextData:
             self.query,
             self.expanded_query,
             self.processed_chunks,
-            self.commentary.get_clustered_cids(),
+            self.commentary,
             self.cid_to_vector,
             self.target_chunks_per_cluster
         )
