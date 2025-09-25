@@ -191,26 +191,29 @@ def build_report_markdown(
         f"{text['title']} ({text['chunk_id']})": text for text in text_jsons
     }
     home_link = "#final-report"
-    report = f'## Query\n\n*{query}*\n\n## Expanded Query\n\n*{expanded_query}*\n\n## Answer\n\n{report_wrapper_obj["answer"]}\n\n## Analysis\n\n### {report_wrapper_obj["report_title"]}\n\n{report_wrapper_obj["report_overview"]}\n\n'
+    report = f'## AQuery\n\n*{query}*\n\n## Expanded Query\n\n*{expanded_query}*\n\n## Answer\n\n{report_wrapper_obj["answer"]}\n\n## Analysis\n\n### {report_wrapper_obj["report_title"]}\n\n{report_wrapper_obj["report_overview"]}\n\n'
     
     # Deduplicate and consolidate themes to avoid repetition
     themes_deduplication_prompt = """
     You are given a list of theme summaries that may contain overlapping or duplicate information. 
-    Your task is to consolidate and deduplicate these themes while preserving all unique insights and evidence.
-    
+    Your task is to consolidate these themes into concise summaries without duplication.
     Rules:
     1. Merge themes with similar topics or overlapping content
-    2. Preserve all unique evidence and commentary
+    2. Create a brief summary of key points for each consolidated theme
     3. Maintain source references in the format [source: X]
     4. Create clear, distinct theme titles that don't overlap
-    5. Return the consolidated themes in the same JSON format
+    5. Avoid repeating the same information across themes
+    6. Keep summaries concise and focused on main insights only
     
     Themes to consolidate: {themes}
     
-    Return the deduplicated themes as a JSON array with the same structure as the input.
+    Return consolidated themes as a JSON array where each theme has:
+    - theme_title: Clear, non-overlapping title
+    - theme_summary: Brief summary of key points with source references
     """
     
     themes_json = [theme for theme in summarized_themes_objs]
+    print('themes', themes_json)
     deduplication_messages = utils.prepare_messages(
         themes_deduplication_prompt,
         {"themes": themes_json}
