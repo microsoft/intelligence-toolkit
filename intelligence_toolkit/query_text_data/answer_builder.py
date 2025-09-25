@@ -191,7 +191,7 @@ def build_report_markdown(
         f"{text['title']} ({text['chunk_id']})": text for text in text_jsons
     }
     home_link = "#final-report"
-    report = f'## AQuery\n\n*{query}*\n\n## Expanded Query\n\n*{expanded_query}*\n\n## Answer\n\n{report_wrapper_obj["answer"]}\n\n## Analysis\n\n### {report_wrapper_obj["report_title"]}\n\n'
+    report = f'## AQuery\n\n*{query}*\n\n## Expanded Query\n\n*{expanded_query}*\n\n## Answer\n\n{report_wrapper_obj["answer"]}\n\n## Analysis\n\n### {report_wrapper_obj["report_title"]}\n\n{report_wrapper_obj["report_overview"]}\n\n'
     
     # Deduplicate and consolidate themes to avoid repetition
     themes_deduplication_prompt = """
@@ -217,29 +217,29 @@ def build_report_markdown(
     
     themes_json = [theme for theme in summarized_themes_objs]
     print('themes', themes_json)
-    deduplication_messages = utils.prepare_messages(
-        themes_deduplication_prompt,
-        {"themes": themes_json}
-    )
+    # deduplication_messages = utils.prepare_messages(
+    #     themes_deduplication_prompt,
+    #     {"themes": themes_json}
+    # )
     
-    # Note: This would need to be async in the actual implementation
-    # For now, using the original themes if deduplication fails
-    try:
-        deduplicated_themes_response = utils.generate_text(
-            ai_configuration,  # This parameter needs to be passed to this function
-            deduplication_messages,
-            response_format={"type": "json_object"}
-        )
-        deduplicated_themes = loads(deduplicated_themes_response)
-        if isinstance(deduplicated_themes, list):
-            summarized_themes_objs = deduplicated_themes
-    except Exception as e:
-        print(f"Theme deduplication failed, using original themes: {e}")
+    # # Note: This would need to be async in the actual implementation
+    # # For now, using the original themes if deduplication fails
+    # try:
+    #     deduplicated_themes_response = utils.generate_text(
+    #         ai_configuration,  # This parameter needs to be passed to this function
+    #         deduplication_messages,
+    #         response_format={"type": "json_object"}
+    #     )
+    #     deduplicated_themes = loads(deduplicated_themes_response)
+    #     if isinstance(deduplicated_themes, list):
+    #         summarized_themes_objs = deduplicated_themes
+    # except Exception as e:
+    #     print(f"Theme deduplication failed, using original themes: {e}")
     
-    for theme in summarized_themes_objs:
-        report += f'#### Theme: {theme["theme_title"]}\n\n'
-        for point in theme["theme_points"]:
-            report += f'##### {point["point_title"]}\n\n{point["point_evidence"]}\n\n{point["point_commentary"]}\n\n'
+    # for theme in summarized_themes_objs:
+    #     report += f'#### Theme: {theme["theme_title"]}\n\n'
+    #     for point in theme["theme_points"]:
+    #         report += f'##### {point["point_title"]}\n\n{point["point_evidence"]}\n\n{point["point_commentary"]}\n\n'
     report += (
         f'#### Implications\n\n{report_wrapper_obj["report_implications"]}\n\n'
     )
