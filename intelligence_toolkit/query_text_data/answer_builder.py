@@ -97,18 +97,11 @@ async def answer_query(
     expanded_query,
     processed_chunks,
     commentary,
-    cid_to_vector,
-    target_chunks_per_cluster
 ):
     print(f"Answering query with clustered ids: {commentary.get_clustered_cids()}")
     partitioned_texts = {}
     for theme, cids in commentary.get_clustered_cids().items():
-        # if len(cids) > target_chunks_per_cluster:
-        #     cluster_to_cids = cluster_cids(cids, cid_to_vector, len(cids) // target_chunks_per_cluster)
-        #     for cluster, cids in cluster_to_cids.items():
-        #         partitioned_texts[f"{theme} - topic {cluster}"] = [f"{cid}: {processed_chunks.cid_to_text[cid]}" for cid in cids]
-        # else:
-            partitioned_texts[theme] = [f"{cid}: {processed_chunks.cid_to_text[cid]}" for cid in cids]
+        partitioned_texts[theme] = [f"{cid}: {processed_chunks.cid_to_text[cid]}" for cid in cids]
     net_new_sources = 0
 
     summarized_themes_analysis = _build_theme_summaries_from_commentary(commentary)

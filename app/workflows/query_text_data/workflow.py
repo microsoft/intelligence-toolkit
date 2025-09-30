@@ -218,15 +218,7 @@ async def create(sv: SessionVariables, workflow=None):
                         help="If a text chunk is relevant to the query, then adjacent text chunks in the original document may be able to add additional context to the relevant points. The value of this parameter determines how many chunks before and after each relevant text chunk will be evaluated at the end of the process (or `Relevance test budget`) if they are yet to be tested."
                     )
                 st.markdown("##### Answer options")
-                c1, c2, c3, c4,c5 = st.columns(5)
-                with c1:
-                    st.number_input(
-                        "Target chunks per cluster",
-                        value=sv.target_chunks_per_cluster.value,
-                        key=sv.target_chunks_per_cluster.key,
-                        min_value=0,
-                        help="The average number of text chunks to target per cluster, which determines the text chunks that will be evaluated together and in parallel to other clusters. Larger values will generally result in more related text chunks being evaluated in parallel, but may also result in information loss from unprocessed content."
-                    )
+                c2, c3, c4,c5 = st.columns(4)
                 with c2:
                     st.text("")
                     st.text("")
@@ -459,11 +451,11 @@ async def create(sv: SessionVariables, workflow=None):
                         with st.spinner("Generating research report..."):
                             if sv.do_live_commentary.value:
                                 await asyncio.gather(
-                                    qtd.answer_query_with_relevant_chunks(sv.target_chunks_per_cluster.value),
+                                    qtd.answer_query_with_relevant_chunks(),
                                     qtd.generate_analysis_commentary()                      
                                 )
                             else:
-                                await qtd.answer_query_with_relevant_chunks(sv.target_chunks_per_cluster.value)
+                                await qtd.answer_query_with_relevant_chunks()
                             st.rerun()
     with report_tab:
         if qtd.stage.value < QueryTextDataStage.QUESTION_ANSWERED.value:

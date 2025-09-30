@@ -22,7 +22,6 @@ class SessionVariables:
         self.query = SessionVariable("", prefix)
         self.anchored_query = SessionVariable("", prefix)
         self.final_report = SessionVariable("", prefix)
-        self.target_chunks_per_cluster = SessionVariable(5, prefix)
         self.claim_search_depth = SessionVariable(10, prefix)
         self.search_type = SessionVariable("Source text", prefix)
         self.net_new_sources = SessionVariable(0, prefix)
