@@ -44,6 +44,7 @@ class Commentary:
             callbacks=callbacks
         )
         update_obj = loads(updates)
+        self.structure["themes"] = {}
         for u in update_obj["updates"]:
             point_id = u["point_id"]
             point_title = u["point_title"]

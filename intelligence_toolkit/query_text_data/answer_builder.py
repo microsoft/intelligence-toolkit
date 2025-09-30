@@ -41,32 +41,79 @@ def extract_and_link_chunk_references(text, link=True):
     references = sorted(references)
     return text, references
 
+def _build_theme_summaries_from_commentary(commentary):
+    if commentary is None:
+        return []
+
+    structure = getattr(commentary, "structure", None)
+    if not structure:
+        return []
+
+    themes = structure.get("themes") or {}
+    points = structure.get("points") or {}
+    point_sources = structure.get("point_sources") or {}
+
+    summaries = []
+    for theme_title, point_ids in themes.items():
+        theme_points = []
+        for point_id in point_ids:
+            point_title = points.get(point_id)
+            if not point_title:
+                continue
+
+            sources = point_sources.get(point_id, [])
+            if sources:
+                # Preserve insertion order while ensuring unique references.
+                seen = set()
+                ordered_sources = [str(src) for src in sources if not (src in seen or seen.add(src))]
+                sources_text = ", ".join(ordered_sources)
+                evidence_suffix = f" [source: {sources_text}]"
+            else:
+                evidence_suffix = ""
+
+            theme_points.append(
+                {
+                    "point_title": point_title,
+                    "point_evidence": f"**Source evidence**: {point_title}{evidence_suffix}",
+                    "point_commentary": f"**AI commentary**: {point_title}",
+                }
+            )
+
+        if theme_points:
+            summaries.append(
+                dumps(
+                    {
+                        "theme_title": theme_title,
+                        "theme_points": theme_points,
+                    }
+                )
+            )
+
+    return summaries
+
 async def answer_query(
     ai_configuration,
     query,
     expanded_query,
     processed_chunks,
-    clustered_cids,
-    cid_to_vector,
-    target_chunks_per_cluster
+    commentary,
 ):
-    print(f"Answering query with clustered ids: {clustered_cids}")
+    print(f"Answering query with clustered ids: {commentary.get_clustered_cids()}")
     partitioned_texts = {}
-    for theme, cids in clustered_cids.items():
-        if len(cids) > target_chunks_per_cluster:
-            cluster_to_cids = cluster_cids(cids, cid_to_vector, len(cids) // target_chunks_per_cluster)
-            for cluster, cids in cluster_to_cids.items():
-                partitioned_texts[f"{theme} - topic {cluster}"] = [f"{cid}: {processed_chunks.cid_to_text[cid]}" for cid in cids]
-        else:
-            partitioned_texts[theme] = [f"{cid}: {processed_chunks.cid_to_text[cid]}" for cid in cids]
+    for theme, cids in commentary.get_clustered_cids().items():
+        partitioned_texts[theme] = [f"{cid}: {processed_chunks.cid_to_text[cid]}" for cid in cids]
     net_new_sources = 0
-    batched_summarization_messages = [
-        utils.prepare_messages(
-            prompts.theme_summarization_prompt,
-            {"chunks": texts, "theme": theme, "query": expanded_query},
+
+    summarized_themes_analysis = _build_theme_summaries_from_commentary(commentary)
+    batched_summarization_messages = []
+    for i, (theme, texts) in enumerate(partitioned_texts.items()):
+        previous_themes = list(theme for theme, _ in partitioned_texts.items())[:i] if i > 0 else []
+        batched_summarization_messages.append(
+            utils.prepare_messages(
+                prompts.theme_summarization_prompt,
+                {"chunks": texts, "theme": theme, "previous_themes": previous_themes, "query": expanded_query},
+            )
         )
-        for theme, texts in partitioned_texts.items()
-    ]
 
     summarized_themes = await utils.map_generate_text(
         ai_configuration,
@@ -88,7 +135,7 @@ async def answer_query(
     report, references, matched_chunks = build_report_markdown(
         query,
         expanded_query,
-        summarized_themes,
+        summarized_themes_analysis or summarized_themes,
         report_wrapper,
         processed_chunks.cid_to_text
     )

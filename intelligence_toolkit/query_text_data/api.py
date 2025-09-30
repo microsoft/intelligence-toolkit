@@ -232,25 +232,19 @@ class QueryTextData:
 
     async def answer_query_with_relevant_chunks(
         self,
-        target_chunks_per_cluster: int
     ) -> AnswerObject:
         """
         Answer a query with relevant chunks.
 
-        Args:
-            target_chunks_per_cluster (int): The target chunks per cluster
         Returns:
             AnswerObject: The answer object
         """
-        self.target_chunks_per_cluster = target_chunks_per_cluster
         self.answer_object: AnswerObject = await answer_builder.answer_query(
             self.ai_configuration,
             self.query,
             self.expanded_query,
             self.processed_chunks,
-            self.commentary.get_clustered_cids(),
-            self.cid_to_vector,
-            self.target_chunks_per_cluster
+            self.commentary,
         )
         self.stage = QueryTextDataStage.QUESTION_ANSWERED
         return self.answer_object

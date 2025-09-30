@@ -81,6 +81,7 @@ The output object should summarize the theme as follows:
 - "point_evidence": a paragraph, starting with "**Source evidence**:", describing evidence from sources that support or contradict the point, without additional interpretation
 - "point_commentary": a paragraph, starting with "**AI commentary**:", suggesting inferences, implications, or conclusions that could be drawn from the source evidence
 
+Pay attention to previous themes, so don't repeat the same themes or points. If the theme hint is similar to a previous theme, return an empty json object ONLY.
 IMPORTANT: Make theme titles specific and focused to avoid creating duplicate or overlapping themes. If the theme hint suggests a broad category, make your theme title more specific to the actual content found in the sources.
 
 --Query--
@@ -90,6 +91,10 @@ IMPORTANT: Make theme titles specific and focused to avoid creating duplicate or
 --Theme hint--
 
 {theme}
+
+--Previous themes--
+
+{previous_themes}
 
 --Source text chunks--
 
@@ -165,11 +170,11 @@ The output object should capture new themes, points, and source references that 
 - Each point MUST contain sufficient concrete details to capture the specific source information only, and not related information
 - If a source relates to an existing point, the source ID MUST be assigned to the existing point ID, rather than creating a new point
 - If the addition of a source to a point warrants a change in point title, the point title MUST be updated
-- Aim for 3-7 themes overall, with an even distribution of points across themes
+- Aim for 2-7 themes overall, with an even distribution of points across themes
 - Points should be assigned to a single theme in a logical sequence that addresses the user query
 - Themes should contain at least two points if possible
 - Order themes in a logical sequence that addresses the user query
-- Output themes need not be the same as input themes and should be regenerated as needed to maintain 3-7 themes overall
+- Output themes need not be the same as input themes and should be regenerated as needed to maintain 2-7 themes overall
 - AVOID creating duplicate or overlapping themes - consolidate similar themes under a single, more comprehensive theme title
 - Before creating a new theme, check if the content could be merged with an existing theme
 - Theme titles should be distinct and non-overlapping - avoid themes that cover the same conceptual territory
