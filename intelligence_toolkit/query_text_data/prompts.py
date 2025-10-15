@@ -1,7 +1,7 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 
-from app.workflows.security.metaprompts import (
+from intelligence_toolkit.AI.metaprompts import (
     do_not_disrespect_context,
     do_not_harm_question_answering,
 )
