@@ -56,3 +56,5 @@ app/wkhtmltox/*.exe
 .venv
 
 **/dist/*
+
+**.egg-info/

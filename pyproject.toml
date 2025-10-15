@@ -78,8 +78,12 @@ url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app/", "intelligence_toolkit"]
+exclude = ["examples_notebooks*", "tests*"]
 
 [tool.uv.workspace]
 members = ["."]
