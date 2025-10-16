@@ -67,7 +67,7 @@ def get_test_progress(test_history):
     return response
 
 
-def test_history_elements(test_history, previous_cid, next_cid, adjacent_search_steps):
+def parse_history_elements(test_history, previous_cid, next_cid, adjacent_search_steps):
     relevant_list = [x[1] for x in test_history if x[2] == "Yes"]
     seen_list = [x[1] for x in test_history]
     adjacent_targets = set()

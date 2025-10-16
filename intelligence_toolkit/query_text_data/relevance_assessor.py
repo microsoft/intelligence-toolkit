@@ -124,7 +124,7 @@ async def detect_relevant_chunks(
         chunk_progress_callback(test_history)
 
     aq_embedding = np.array(embedder.embed_store_one(query, embedding_cache))
-    relevant, seen, adjacent = helper_functions.test_history_elements(
+    relevant, seen, adjacent = helper_functions.parse_history_elements(
         test_history,
         processed_chunks.previous_cid,
         processed_chunks.next_cid,
@@ -239,7 +239,7 @@ async def detect_relevant_chunks(
         # print(f"Community sequence: {community_sequence}")
         community_to_cids = level_to_community_to_cids[current_level]
         for community in community_sequence:
-            relevant, seen, adjacent = helper_functions.test_history_elements(
+            relevant, seen, adjacent = helper_functions.parse_history_elements(
                 test_history,
                 processed_chunks.previous_cid,
                 processed_chunks.next_cid,
@@ -299,7 +299,7 @@ async def detect_relevant_chunks(
             # print("Reached final level")
             pass
 
-    relevant, seen, adjacent = helper_functions.test_history_elements(
+    relevant, seen, adjacent = helper_functions.parse_history_elements(
         test_history,
         processed_chunks.previous_cid,
         processed_chunks.next_cid,
@@ -321,7 +321,7 @@ async def detect_relevant_chunks(
         chunk_callback=chunk_callback,
         commentary=commentary
     )
-    relevant, seen, adjacent = helper_functions.test_history_elements(
+    relevant, seen, adjacent = helper_functions.parse_history_elements(
         test_history,
         processed_chunks.previous_cid,
         processed_chunks.next_cid,
