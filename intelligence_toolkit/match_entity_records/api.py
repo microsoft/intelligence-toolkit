@@ -55,7 +55,7 @@ class MatchEntityRecords(IntelligenceWorkflow):
 
     def add_df_to_model(self, model: RecordsModel) -> pl.DataFrame:
         if not model.dataframe_name:
-            model.dataframe_name = "dataset_" + len(self.model_dfs) + 1
+            model.dataframe_name = "dataset_" + str(len(self.model_dfs) + 1)
 
         self.model_dfs[model.dataframe_name] = format_model_df(
             model,
