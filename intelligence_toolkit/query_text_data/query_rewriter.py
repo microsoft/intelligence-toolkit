@@ -22,8 +22,7 @@ async def rewrite_query(ai_configuration, query, concept_graph, top_concepts):
         str: The rewritten query.
     """
     concepts = sorted(concept_graph.degree(), key=lambda x: x[1], reverse=True)
-    if "dummynode" in concepts:
-        concepts.remove("dummynode")
+    concepts = [c for c in concepts if c[0] != "dummynode"]
 
     concepts = concepts[:top_concepts]
     concepts_str = ", ".join([concept for concept, _ in concepts])
