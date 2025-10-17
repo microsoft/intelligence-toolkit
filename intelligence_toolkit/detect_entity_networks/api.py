@@ -77,10 +77,11 @@ class DetectEntityNetworks(IntelligenceWorkflow):
         )
 
     def get_attributes(self) -> pl.DataFrame:
-        return pl.DataFrame(self.attributes_list, columns=["Attribute"])
+        return pl.DataFrame(self.attributes_list, schema=["Attribute"])
 
     def remove_attributes(self, selected_rows: pl.DataFrame) -> list[str]:
-        self.additional_trimmed_attributes = selected_rows["Attribute"].tolist()
+        self.additional_trimmed_attributes = selected_rows["Attribute"].to_list()
+        return self.additional_trimmed_attributes
 
     def add_attribute_links(
         self, data_df: pl.DataFrame, entity_id_column: str, columns_to_link: list[str]

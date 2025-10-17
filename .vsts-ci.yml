@@ -97,13 +97,3 @@ stages:
               repository: 'intelligence-toolkit'
               Dockerfile: '**/Dockerfile'
               tags: '$(TAG)'
-          - script: |
-              docker build . -t intelligence-toolkit:$(TAG)
-            displayName: 'Build docker'
-          - script: |
-              docker save -o $(Build.ArtifactStagingDirectory)/intelligence-toolkit.tar intelligence-toolkit:$(TAG)
-            displayName: 'Save Docker image as tar file'
-          - task: PublishBuildArtifacts@1
-            inputs:
-              PathtoPublish: '$(Build.ArtifactStagingDirectory)/intelligence-toolkit.tar'
-              ArtifactName: 'intelligence-toolkit-container'

@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Migrated build system from hatchling to setuptools for better package management
 - Updated import paths to use `intelligence_toolkit.AI.metaprompts` instead of `app.workflows.security.metaprompts`
+- Added unit tests for coverage
 
 ### Removed
 - Removed deprecated `app/workflows/security/` module (metaprompts moved to `intelligence_toolkit.AI.metaprompts`)

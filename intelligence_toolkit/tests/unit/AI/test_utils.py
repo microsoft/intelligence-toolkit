@@ -76,3 +76,32 @@ def test_prepare_messages_user():
     message = prepare_messages(system_message, variables, user_message)
     assert message[0]["content"] == "I can write you a poem about a cat in a tree"
     assert message[1]["content"] == "Make the fireman save the cat"
+
+
+def test_generate_messages():
+    from intelligence_toolkit.AI.utils import generate_messages
+
+    user_prompt = "Write a story about a {animal}"
+    system_prompt = "You are a helpful assistant."
+    variables = {"animal": "dog"}
+    safety_prompt = "Keep it family friendly."
+
+    messages = generate_messages(user_prompt, system_prompt, variables, safety_prompt)
+
+    assert len(messages) == 1
+    assert messages[0]["role"] == "system"
+    assert "dog" in messages[0]["content"]
+    assert "helpful assistant" in messages[0]["content"]
+    assert "family friendly" in messages[0]["content"]
+
+
+def test_try_parse_json_object_invalid_json():
+    obj_test = '{"key": invalid}'
+    with pytest.raises(Exception):
+        try_parse_json_object(obj_test)
+
+
+def test_try_parse_json_object_not_dict():
+    obj_test = '["item1", "item2"]'
+    with pytest.raises(TypeError):
+        try_parse_json_object(obj_test)

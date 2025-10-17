@@ -8,6 +8,7 @@ import pytest
 from intelligence_toolkit.match_entity_records.classes import RecordsModel
 from intelligence_toolkit.match_entity_records.prepare_model import (
     build_attribute_options,
+    build_attributes_list,
     format_model_df,
 )
 
@@ -190,3 +191,92 @@ class TestBuildAttributeOptions:
             "Attribute3::dataset2",
         ]
         assert result == sorted(result)
+
+
+class TestBuildAttributesList:
+    def test_empty_list(self) -> None:
+        """Test build_attributes_list with empty list."""
+        attr_list = []
+        result = build_attributes_list(attr_list)
+        assert result == {}
+
+    def test_single_attribute(self) -> None:
+        """Test build_attributes_list with single attribute."""
+        attr_list = [{"label": "Name", "columns": ["name::dataset1"]}]
+        result = build_attributes_list(attr_list)
+        assert result == {"dataset1": {"name": "Name"}}
+
+    def test_multiple_attributes(self) -> None:
+        """Test build_attributes_list with multiple attributes."""
+        attr_list = [
+            {"label": "Name", "columns": ["name::dataset1", "entity_name::dataset2"]},
+            {"label": "Location", "columns": ["location::dataset1"]},
+        ]
+        result = build_attributes_list(attr_list)
+        assert result == {
+            "dataset1": {"name": "Name", "location": "Location"},
+            "dataset2": {"entity_name": "Name"},
+        }
+
+    def test_no_label_uses_column_name(self) -> None:
+        """Test that missing label uses first column name."""
+        attr_list = [{"label": "", "columns": ["address::dataset1", "addr::dataset2"]}]
+        result = build_attributes_list(attr_list)
+        # Should use "addr" or "address" as the label (sorted)
+        assert "dataset1" in result
+        assert "dataset2" in result
+        # Both should map to same attribute name (first when sorted)
+        assert result["dataset1"]["address"] == result["dataset2"]["addr"]
+
+    def test_no_columns_skips_attribute(self) -> None:
+        """Test that attribute with no columns is skipped."""
+        attr_list = [
+            {"label": "Name", "columns": []},
+            {"label": "Location", "columns": ["location::dataset1"]},
+        ]
+        result = build_attributes_list(attr_list)
+        assert result == {"dataset1": {"location": "Location"}}
+
+    def test_none_columns_skips_attribute(self) -> None:
+        """Test that attribute with None columns is skipped."""
+        attr_list = [
+            {"label": "Name", "columns": None},
+            {"label": "Location", "columns": ["location::dataset1"]},
+        ]
+        result = build_attributes_list(attr_list)
+        assert result == {"dataset1": {"location": "Location"}}
+
+    def test_multiple_columns_same_dataset(self) -> None:
+        """Test multiple columns mapping to same dataset."""
+        attr_list = [
+            {
+                "label": "Name",
+                "columns": ["first_name::dataset1", "last_name::dataset1"],
+            }
+        ]
+        result = build_attributes_list(attr_list)
+        assert result == {"dataset1": {"first_name": "Name", "last_name": "Name"}}
+
+    def test_complex_scenario(self) -> None:
+        """Test complex scenario with multiple datasets and attributes."""
+        attr_list = [
+            {
+                "label": "PersonName",
+                "columns": [
+                    "name::dataset1",
+                    "full_name::dataset2",
+                    "entity_name::dataset3",
+                ],
+            },
+            {"label": "Address", "columns": ["address::dataset1", "addr::dataset2"]},
+            {"label": "", "columns": ["phone::dataset1"]},
+        ]
+        result = build_attributes_list(attr_list)
+        assert "dataset1" in result
+        assert "dataset2" in result
+        assert "dataset3" in result
+        assert result["dataset1"]["name"] == "PersonName"
+        assert result["dataset1"]["address"] == "Address"
+        assert result["dataset2"]["full_name"] == "PersonName"
+        assert result["dataset2"]["addr"] == "Address"
+        assert result["dataset3"]["entity_name"] == "PersonName"

@@ -7,6 +7,7 @@ import os
 
 PDF_ENCODING = "UTF-8"
 PDF_WKHTMLTOPDF_PATH = "C:\\Program Files\\wkhtmltopdf\\bin\\wkhtmltopdf.exe"
+PDF_MARGIN_INCHES = 0.75
 ATTRIBUTE_VALUE_SEPARATOR = "=="
 
 CACHE_PATH = os.path.join(
