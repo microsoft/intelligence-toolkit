@@ -60,7 +60,7 @@ As further string fields within `complaint_records`, now add:
 - `email` as string field
 - `price_issue`, `quality_issue`, `service_issue`, `delivery_issue`, `description_issue` as boolean (`true`/`false`) fields using the `bool` button
 
-Note that all new fields have the `Required?` checkbox checked by default, placing all field names in the `required` field of the object. This is a requirement for the [OpenAI Structured Outputs API](https://platform.openai.com/docs/guides/structured-outputs/supported-schemas), which we'll later use to generate mock data that follows the schema. Similarly, all objects must also have `additionalProperties` set to `false`, so the `Additional?` checkbox is left unchecked by default.
+Note that the schema builder is designed to be compatible with the [OpenAI Structured Outputs API](https://platform.openai.com/docs/guides/structured-outputs/supported-schemas), which we'll later use to generate mock data that follows the schema. The schema builder automatically manages `required` fields and `additionalProperties` settings as required by OpenAI's structured outputs - all fields are automatically marked as required and `additionalProperties` is set to `false`. If you upload an existing schema that doesn't have these settings, they will be automatically added to ensure compatibility.
 
 Next, we want to add a `product_code` string field, but limit the possible values of the field to a predefined list called an "enumeration". Do this by checking the `Enum?` checkbox and observing the default values `A`, `B`, and `C` added to the enumeration. These values can be edited, deleted, and expanded as desired. For this tutorial, simply add further enum values alphabetically from `D` to `H`.
 

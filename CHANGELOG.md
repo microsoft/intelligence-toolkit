@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Added automatic schema normalization for imported schemas to ensure OpenAI structured outputs compatibility
+
 ### Changed
 - Migrated build system from hatchling to setuptools for better package management
 - Updated import paths to use `intelligence_toolkit.AI.metaprompts` instead of `app.workflows.security.metaprompts`
@@ -25,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - Removed deprecated `app/workflows/security/` module (metaprompts moved to `intelligence_toolkit.AI.metaprompts`)
+- Removed Required and Additional fields UI controls from schema builder (now automatically managed for OpenAI structured outputs)
 
 ### Fixed
 - Fixed import paths in Match Entity Records workflow prompts

@@ -124,6 +124,58 @@ def create_boilerplate_schema(
     }
     return schema
 
+def normalize_schema_for_openai(schema):
+    """
+    Normalize an imported schema to be compatible with OpenAI structured outputs.
+    Ensures all objects have required arrays and additionalProperties: false.
+    """
+    def normalize_object(obj):
+        if isinstance(obj, dict):
+            if obj.get('type') == 'object':
+                # Ensure object has required array
+                if 'required' not in obj:
+                    obj['required'] = []
+                # Force additionalProperties to False for OpenAI structured outputs
+                obj['additionalProperties'] = False
+                
+                # Add all property names to required array if not already there
+                if 'properties' in obj:
+                    for prop_name in obj['properties'].keys():
+                        if prop_name not in obj['required']:
+                            obj['required'].append(prop_name)
+            
+            elif obj.get('type') == 'array' and 'items' in obj:
+                # Handle array items that are objects
+                if isinstance(obj['items'], dict) and obj['items'].get('type') == 'object':
+                    normalize_object(obj['items'])
+            
+            # Recursively normalize all nested objects
+            for key, value in obj.items():
+                if isinstance(value, dict):
+                    normalize_object(value)
+                elif isinstance(value, list):
+                    for item in value:
+                        if isinstance(item, dict):
+                            normalize_object(item)
+    
+    # Start normalization from the root
+    normalize_object(schema)
+    
+    # Ensure root object has required and additionalProperties
+    if schema.get('type') == 'object':
+        if 'required' not in schema:
+            schema['required'] = []
+        # Force additionalProperties to False for OpenAI structured outputs
+        schema['additionalProperties'] = False
+        
+        # Add all top-level property names to required array
+        if 'properties' in schema:
+            for prop_name in schema['properties'].keys():
+                if prop_name not in schema['required']:
+                    schema['required'].append(prop_name)
+    
+    return schema
+
 def add_object_field(
         global_schema,
         field_location,

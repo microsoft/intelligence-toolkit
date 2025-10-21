@@ -17,7 +17,9 @@ def build_schema_ui(global_schema, last_filename):
             processed_filename = file.name
             global_schema.clear()
             jsn = loads(file.read())
-            for k, v in jsn.items():
+            # Normalize the imported schema for OpenAI structured outputs compatibility
+            normalized_schema = schema_builder.normalize_schema_for_openai(jsn)
+            for k, v in normalized_schema.items():
                 global_schema[k] = v
         st.markdown('### Edit data schema')
         generate_form_from_json_schema(
@@ -76,34 +78,10 @@ def generate_form_from_json_schema(global_schema, default_schema, field_location
                     if st.button('Move up', key=f'{key_with_prefix}_move_up', disabled=key == list(field_location.keys())[0]):
                         schema_builder.move_field_up(global_schema, nesting, field_location, key)
                         st.rerun()
-
-                    old_req = key in schema_builder.get_required_list(global_schema, nesting)
-                    req = st.checkbox('Required?', 
-                                      key=f'{key_with_prefix}_required', 
-                                      value=True,
-                                      help="Non-required fields are not supported in OpenAI structured outputs"
-                                    )
-
-                    if not old_req:
-                        print('Setting required field: ', new_label)
-                        schema_builder.set_required_field_status(global_schema, nesting, new_label, req)
                 with c3:
                     if st.button('Move down', key=f'{key_with_prefix}_move_down', disabled=key == list(field_location.keys())[-1]):
                         schema_builder.move_field_down(global_schema, nesting, field_location, key)
                         st.rerun()
-
-                    show_additional = value["type"] == "object" or (value["type"] == "array" and value["items"]["type"] == "object")
-                    if show_additional:
-                        add = st.checkbox(
-                            "Additional?",
-                            key=f"{key_with_prefix}_additional",
-                            disabled=True,
-                            help="Additional properties are not supported in OpenAI structured outputs",
-                            value=value["additionalProperties"] if "additionalProperties" in value else value["items"]["additionalProperties"]
-                        )
-                        changed = schema_builder.set_additional_field_status(global_schema, nesting, new_label, add)
-                        if changed:
-                            st.rerun()
 
                 with c4:
                     if st.button('Delete', use_container_width=True, key=f'{key_with_prefix}_delete'):
@@ -313,7 +291,7 @@ def edit_schema_ui(global_schema, nesting, field_location):
             st.rerun()
 
 
-def add_type_field(global_schema, nesting, field_location, to_add, required=True):
+def add_type_field(global_schema, nesting, field_location, to_add):
     label = ''
     if to_add == 'object':
         label = schema_builder.add_object_field(global_schema, field_location)
@@ -331,4 +309,6 @@ def add_type_field(global_schema, nesting, field_location, to_add, required=True
         label = schema_builder.add_array_field(global_schema, field_location, item_type=schema_builder.ArrayFieldType.NUMBER)
     elif to_add == 'boolean array':
         label = schema_builder.add_array_field(global_schema, field_location, item_type=schema_builder.ArrayFieldType.BOOLEAN)
-    schema_builder.set_required_field_status(global_schema, nesting, label, required)
+    
+    # Automatically add all fields to required list for OpenAI structured outputs
+    schema_builder.set_required_field_status(global_schema, nesting, label, True)
