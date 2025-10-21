@@ -31,6 +31,7 @@ from intelligence_toolkit.generate_mock_data.schema_builder import (
     set_required_field_status,
     set_enum_field_status,
     set_additional_field_status,
+    normalize_schema_for_openai,
     generate_object_from_schema,
     convert_to_dataframe,
     evaluate_object_and_schema,
@@ -488,3 +489,84 @@ def test_unique_field_labels():
     assert label1 != label2
     assert label1 in field_location
     assert label2 in field_location
+
+
+def test_normalize_schema_for_openai():
+    """Test that imported schemas are normalized for OpenAI structured outputs."""
+    # Create a schema without required fields or additionalProperties
+    incomplete_schema = {
+        "type": "object",
+        "properties": {
+            "name": {"type": "string"},
+            "age": {"type": "number"},
+            "address": {
+                "type": "object",
+                "properties": {
+                    "street": {"type": "string"},
+                    "city": {"type": "string"}
+                }
+            },
+            "hobbies": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string"},
+                        "category": {"type": "string"}
+                    }
+                }
+            }
+        }
+    }
+    
+    # Normalize the schema
+    normalized = normalize_schema_for_openai(incomplete_schema)
+    
+    # Check root level
+    assert "required" in normalized
+    assert "additionalProperties" in normalized
+    assert normalized["additionalProperties"] == False
+    assert "name" in normalized["required"]
+    assert "age" in normalized["required"]
+    assert "address" in normalized["required"]
+    assert "hobbies" in normalized["required"]
+    
+    # Check nested object
+    address_obj = normalized["properties"]["address"]
+    assert "required" in address_obj
+    assert "additionalProperties" in address_obj
+    assert address_obj["additionalProperties"] == False
+    assert "street" in address_obj["required"]
+    assert "city" in address_obj["required"]
+    
+    # Check array items object
+    hobby_items = normalized["properties"]["hobbies"]["items"]
+    assert "required" in hobby_items
+    assert "additionalProperties" in hobby_items
+    assert hobby_items["additionalProperties"] == False
+    assert "name" in hobby_items["required"]
+    assert "category" in hobby_items["required"]
+
+
+def test_normalize_schema_preserves_existing_required():
+    """Test that existing required fields are preserved during normalization."""
+    schema_with_partial_required = {
+        "type": "object",
+        "properties": {
+            "name": {"type": "string"},
+            "age": {"type": "number"},
+            "email": {"type": "string"}
+        },
+        "required": ["name"],  # Only name is currently required
+        "additionalProperties": True  # This should be changed to False
+    }
+    
+    normalized = normalize_schema_for_openai(schema_with_partial_required)
+    
+    # Should preserve existing required field and add new ones
+    assert "name" in normalized["required"]
+    assert "age" in normalized["required"]
+    assert "email" in normalized["required"]
+    
+    # Should force additionalProperties to False
+    assert normalized["additionalProperties"] == False

@@ -59,7 +59,7 @@ Let's now add some fields to the object using the buttons under `Add top-level f
 
 To create a dataset of records rather than a single object, the schema needs to contain an object array field. Press the `obj[]` button to add an object array field at the top level (i.e., level 0). The new field will be given a generic name by default: `object_array_1`. Rename this to `complaint_records` and see on the right how this creates an array of objects whose properties you can define next.
 
-Note that all new fields have the `Required?` checkbox checked by default, placing all field names in the `required` field of the object. This is a requirement for the [OpenAI Structured Outputs API](https://platform.openai.com/docs/guides/structured-outputs/supported-schemas), which we'll later use to generate mock data that follows the schema. Similarly, all objects must also have `additionalProperties` set to `false`, so the `Additional?` checkbox is left unchecked by default.
+Note that the schema builder is designed to be compatible with the [OpenAI Structured Outputs API](https://platform.openai.com/docs/guides/structured-outputs/supported-schemas), which we'll later use to generate mock data that follows the schema. The schema builder automatically manages `required` fields and `additionalProperties` settings as required by OpenAI's structured outputs - all fields are automatically marked as required and `additionalProperties` is set to `false`. If you upload an existing schema that doesn't have these settings, they will be automatically added to ensure compatibility.
 
 ### Defining record attributes
 
