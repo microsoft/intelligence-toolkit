@@ -21,7 +21,7 @@ async def generate_data(
     temperature,
     df_update_callback,
     callback_batch,
-    parallel_batches=5,
+    parallel_batches=50,
 ):
     record_arrays = extract_array_fields(data_schema)
     primary_record_array = record_arrays[0]

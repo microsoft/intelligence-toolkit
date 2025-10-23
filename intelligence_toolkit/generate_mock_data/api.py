@@ -34,7 +34,7 @@ class GenerateMockData:
         temperature: float = 0.5,
         df_update_callback=None,
         callback_batch=None,
-        parallel_batches: int = 5,
+        parallel_batches: int = 50,
     ):
         """
         Generates structured data records according to the JSON schema
