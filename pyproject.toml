@@ -48,8 +48,7 @@ dependencies = [
     "future>=1.0.0,<2.0.0",
     "pypdf>=5.1.0,<6.0.0",
     "poethepoet>=0.27.0,<1.0.0",
-    "torch==2.4.1; sys_platform == 'linux' or sys_platform == 'win32'",
-    "torch==2.5.1; sys_platform != 'linux' and sys_platform != 'win32'"
+    "torch"
 ]
 
 [project.optional-dependencies]

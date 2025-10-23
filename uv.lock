@@ -937,8 +937,7 @@ requires-dist = [
     { name = "streamlit-javascript", specifier = "==0.1.5" },
     { name = "textblob", specifier = "==0.19.0" },
     { name = "tiktoken", specifier = "==0.7.0" },
-    { name = "torch", marker = "sys_platform != 'linux' and sys_platform != 'win32'", specifier = "==2.5.1", index = "https://download.pytorch.org/whl/cpu" },
-    { name = "torch", marker = "sys_platform == 'linux' or sys_platform == 'win32'", specifier = "==2.4.1", index = "https://download.pytorch.org/whl/cpu" },
+    { name = "torch", index = "https://download.pytorch.org/whl/cpu" },
     { name = "twine", marker = "extra == 'dev'", specifier = ">=5.1.1,<6.0.0" },
     { name = "wheel", marker = "extra == 'dev'", specifier = ">=0.44.0,<1.0.0" },
 ]
