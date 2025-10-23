@@ -20,11 +20,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Added automatic schema normalization for imported schemas to ensure OpenAI structured outputs compatibility
+- Added unit tests for detect entity networks prepare_model functionality
+- Added Docker validation to CI workflow
 
 ### Changed
 - Migrated build system from hatchling to setuptools for better package management
 - Updated import paths to use `intelligence_toolkit.AI.metaprompts` instead of `app.workflows.security.metaprompts`
 - Added unit tests for coverage
+- Changed local embedding default to false in Detect Entity Networks (DEN)
+- Updated example notebooks for better consistency and reduced output verbosity
 
 ### Removed
 - Removed deprecated `app/workflows/security/` module (metaprompts moved to `intelligence_toolkit.AI.metaprompts`)
@@ -34,6 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed import paths in Match Entity Records workflow prompts
 - Fixed import paths in Query Text Data workflow prompts
 - Updated `.gitignore` to exclude `**.egg-info/` directories
+- Fixed Generate Mock Data (GMD) workflow issues in data generation logic
+- Fixed Compare Case Groups (CCG) API and dataframe building functionality
+- Fixed Detect Case Patterns (DCP) workflow processing
+- Fixed Query Text Data (QTD) answer builder and notebook examples
+- Fixed torch dependency version constraints in pyproject.toml
+- Fixed plotly installation in dependencies
+- Fixed detect entity networks prepare_model edge case handling
 
 ## [0.1.2] - 2024-10-15
 
