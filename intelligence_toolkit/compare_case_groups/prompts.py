@@ -22,6 +22,8 @@ Dataset:
 
 {dataset}
 
+Note: The group_attribute_count field represents the overall count for each group across all temporal windows.
+
 Where possible, the text should add numeric counts, ranks, and deltas in parentheses to support its claims, but should avoid using complex column names directly.
 
 """

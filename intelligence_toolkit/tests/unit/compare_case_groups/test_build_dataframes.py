@@ -22,7 +22,7 @@ class TestBuildRankedGroups:
             {
                 "Group": ["A", "A", "B", "B"],
                 "attribute_value": [1, 2, 3, 4],
-                "attribute_rank": [1, 2, 1, 2],
+                "group_attribute_rank": [1, 2, 1, 2],
                 "group_rank": [1, 1, 1, 1],
                 "temporal column": ["2021-01", "2021-02", "2021-01", "2021-02"],
                 "temporal column_window_rank": [1, 2, 1, 2],
@@ -36,7 +36,7 @@ class TestBuildRankedGroups:
             {
                 "Group": ["A", "A", "B", "B"],
                 "attribute_value": [1, 2, 3, 4],
-                "attribute_rank": [1, 2, 1, 2],
+                "group_attribute_rank": [1, 2, 1, 2],
                 "group_rank": [1, 1, 1, 1],
             }
         )
@@ -64,7 +64,7 @@ class TestBuildRankedGroups:
         expected_values = {
             "Group": ["A", "A", "B", "B"],
             "attribute_value": [1, 2, 3, 4],
-            "attribute_rank": [1, 2, 1, 2],
+            "group_attribute_rank": [1, 2, 1, 2],
             "group_rank": [1, 1, 1, 1],
             "temporal column_window_rank": [1, 2, 1, 2],
             "temporal column_window_delta": [0, 1, 0, 1],
@@ -94,7 +94,7 @@ class TestBuildRankedGroups:
         expected_values = {
             "Group": ["A", "A", "B", "B"],
             "attribute_value": [1, 2, 3, 4],
-            "attribute_rank": [1, 2, 1, 2],
+            "group_attribute_rank": [1, 2, 1, 2],
             "group_rank": [1, 1, 1, 1],
         }
 
@@ -108,7 +108,7 @@ class TestBuildRankedGroups:
 
         result_df = build_ranked_df(ldf, gdf, adf, temporal, groups)
 
-        assert result_df["attribute_rank"].dtype == pl.Int32
+        assert result_df["group_attribute_rank"].dtype == pl.Int32
         assert result_df["group_rank"].dtype == pl.Int32
 
     def test_build_ranked_df_sorted(self, sample_data):
@@ -129,7 +129,7 @@ class TestFilterDf:
             {
                 "Group": ["A", "A", "B", "B", "C"],
                 "attribute_value": ["X", "B", "BCD", "ABC", "X"],
-                "attribute_rank": [1, 2, 1, 2, 1],
+                "group_attribute_rank": [1, 2, 1, 2, 1],
                 "group_rank": [1, 1, 1, 1, 1],
             }
         )
@@ -218,8 +218,8 @@ class TestBuildAttributeDf:
                     "Aggregate2:15",
                     "Aggregate2:7",
                 ],
-                "attribute_count": [1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1],
-                "attribute_rank": [
+                "group_attribute_count": [1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1],
+                "group_attribute_rank": [
                     1.0,
                     2.0,
                     1.0,
@@ -259,8 +259,8 @@ class TestBuildAttributeDf:
                     "Aggregate2:20",
                     "Aggregate2:5",
                 ],
-                "attribute_count": [1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0],
-                "attribute_rank": [1, 1, 2, 2, 2, 1, 2, 2, 1, 1, 1, 2],
+                "group_attribute_count": [1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0],
+                "group_attribute_rank": [1, 1, 2, 2, 2, 1, 2, 2, 1, 1, 1, 2],
             }
         ).sort(by=["Group", "attribute_value"])
 
@@ -338,14 +338,14 @@ class TestBuildAttributeDf:
                         "Aggregate1:50",
                         "Aggregate2:7",
                     ],
-                    "attribute_count": [1] * 8 + [0] * 24,
-                    "attribute_rank": [1.0] * 8 + [4.0] * 24,
+                    "group_attribute_count": [1] * 8 + [0] * 24,
+                    "group_attribute_rank": [1.0] * 8 + [4.0] * 24,
                 }
             )
             .with_columns(
                 [
-                    pl.col("attribute_rank").cast(pl.UInt32),
-                    pl.col("attribute_count").cast(pl.UInt32),
+                    pl.col("group_attribute_rank").cast(pl.UInt32),
+                    pl.col("group_attribute_count").cast(pl.UInt32),
                 ]
             )
             .sort(by=["Group", "Group2", "attribute_value"])
