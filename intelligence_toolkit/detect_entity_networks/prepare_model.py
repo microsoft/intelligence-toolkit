@@ -123,7 +123,7 @@ def build_flag_links(
         normalized_bool = (
             pl.col(value_col)
             .cast(pl.Utf8)
-            .str.strip()
+            .str.strip_chars()
             .str.to_lowercase()
         )
 
