@@ -172,8 +172,8 @@ class TestSelectColumnsRankedDf(TestCompareCaseGroups):
                 "group_count": [10, 20],
                 "group_rank": [1, 2],
                 "attribute_value": ["val1", "val2"],
-                "attribute_count": [5, 15],
-                "attribute_rank": [1, 2],
+                "group_attribute_count": [5, 15],
+                "group_attribute_rank": [1, 2],
                 "extra_col": ["x", "y"],
             }
         )
@@ -187,8 +187,8 @@ class TestSelectColumnsRankedDf(TestCompareCaseGroups):
             "group_count",
             "group_rank",
             "attribute_value",
-            "attribute_count",
-            "attribute_rank",
+            "group_attribute_count",
+            "group_attribute_rank",
         ]
         assert api_instance.model_df.columns == expected_columns
         assert "extra_col" not in api_instance.model_df.columns
@@ -201,8 +201,8 @@ class TestSelectColumnsRankedDf(TestCompareCaseGroups):
                 "group_count": [10],
                 "group_rank": [1],
                 "attribute_value": ["val1"],
-                "attribute_count": [5],
-                "attribute_rank": [1],
+                "group_attribute_count": [5],
+                "group_attribute_rank": [1],
                 "year_window": ["2020"],
                 "year_window_count": [3],
                 "year_window_rank": [1],

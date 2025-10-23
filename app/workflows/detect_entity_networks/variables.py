@@ -71,7 +71,7 @@ class SessionVariables:
         self.network_last_show_entities = SessionVariable(False, prefix)
         self.network_last_show_groups = SessionVariable(False, prefix)
         self.network_upload_key = SessionVariable(random.randint(1, 100), prefix)
-        self.network_local_embedding_enabled = SessionVariable(True, prefix)
+        self.network_local_embedding_enabled = SessionVariable(False, prefix)
 
     def reset_workflow(self):
         for key in st.session_state:

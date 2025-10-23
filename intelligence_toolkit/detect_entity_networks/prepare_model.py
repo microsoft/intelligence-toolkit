@@ -119,7 +119,27 @@ def build_flag_links(
         if value_col not in df_flag.columns:
             msg = f"Column {value_col} not found in the DataFrame."
             raise ValueError(msg)
-        gdf = df_flag.with_columns([pl.col(value_col).cast(pl.Int32).alias(value_col)])
+
+        normalized_bool = (
+            pl.col(value_col)
+            .cast(pl.Utf8)
+            .str.strip_chars()
+            .str.to_lowercase()
+        )
+
+        converted_col = (
+            pl.when(pl.col(value_col).is_null())
+            .then(None)
+            .when(normalized_bool == "true")
+            .then(pl.lit(1))
+            .when(normalized_bool == "false")
+            .then(pl.lit(0))
+            .otherwise(pl.col(value_col))
+        )
+
+        gdf = df_flag.with_columns(
+            [converted_col.cast(pl.Int32, strict=False).alias(value_col)]
+        )
         gdf = gdf.group_by(entity_col).agg([pl.sum(col) for col in flag_columns])
         vals = (
             gdf[

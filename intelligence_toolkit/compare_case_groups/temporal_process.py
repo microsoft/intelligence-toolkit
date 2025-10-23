@@ -76,7 +76,7 @@ def build_temporal_count(
         new_rows_df = pl.DataFrame(new_rows, schema=ldf.schema)
         ldf = ldf.vstack(new_rows_df)
 
-    # Remove attribute_values for groups where attribute_count are 0 for the window
+    # Remove attribute_values for groups where group_attribute_count are 0 for the window
     aggregated_df = ldf.group_by([*groups, "attribute_value"]).agg(
         [pl.col(f"{temporal}_window_count").sum().alias("total_window_count")]
     )

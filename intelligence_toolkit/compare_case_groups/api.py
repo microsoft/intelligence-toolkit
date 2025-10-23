@@ -85,8 +85,8 @@ class CompareCaseGroups(IntelligenceWorkflow):
             "group_count",
             "group_rank",
             "attribute_value",
-            "attribute_count",
-            "attribute_rank",
+            "group_attribute_count",
+            "group_attribute_rank",
         ]
 
         columns.extend(default_columns)
@@ -183,7 +183,7 @@ class CompareCaseGroups(IntelligenceWorkflow):
         description_lines.extend(
             [
                 f"- The **group_count** of records for all {groups_text} groups, and corresponding **group_rank**",
-                f"- The **attribute_count** of each **attribute_value** for all {groups_text} groups, and corresponding **attribute_rank**",
+                f"- The **group_attribute_count** of each **attribute_value** for all {groups_text} groups, and corresponding **group_attribute_rank**",
             ]
         )
 

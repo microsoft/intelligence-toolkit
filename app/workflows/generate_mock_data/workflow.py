@@ -46,6 +46,8 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
             with c1:
                 st.number_input("Records per batch", min_value=1, key=sv.records_per_batch.key,
                                 help="How many records to generate in a single LLM call")
+                if int(sv.records_per_batch.value or 0) > 100:
+                    st.warning("Generating more than 100 records per batch may lead to timeouts.")
             with c2:
                 st.number_input(
                     "Total records to generate",
@@ -113,28 +115,28 @@ async def create(sv: bds_variables.SessionVariables, workflow: None):
                             if record_array in sv.generated_dfs.value:
                                 df = sv.generated_dfs.value[record_array]
                                 st.dataframe(df, height=250, hide_index=True, use_container_width=True)
-
+                
                 for ix, record_array in enumerate(sv.record_arrays.value):
                     with dl_placeholders[ix]:
                         c1, c2 = st.columns([1, 1])
-                        with c1:
-                            name = sv.schema.value["title"].replace(" ", "_").lower() + "_[schema].json"
-                            st.download_button(
-                                label=f'Download {name}',
-                                data=dumps(sv.final_object.value, indent=2),
-                                file_name=f'{name}',
-                                mime='application/json',
-                                key=f'{name}_{ix}_json_download'
-                            )
-                        with c2:
-                            if record_array in sv.generated_dfs.value and len(sv.generated_dfs.value[record_array]) > 0:
+                        if record_array in sv.generated_dfs.value and len(sv.generated_dfs.value[record_array]) > 0:
+                            with c1:
+                                name = sv.schema.value["title"].replace(" ", "_").lower() + "_[schema].json"
                                 st.download_button(
-                                    label=f'Download {record_array}_[mock_records].csv',
-                                    data=sv.generated_dfs.value[record_array].to_csv(index=False, encoding='utf-8'),
-                                    file_name=f'{record_array}_[mock_records].csv',
-                                    mime='text/csv',
-                                    key=f'{record_array}_csv_download'
+                                    label=f'Download {name}',
+                                    data=dumps(sv.final_object.value, indent=2),
+                                    file_name=f'{name}',
+                                    mime='application/json',
+                                    key=f'{name}_{ix}_json_download'
                                 )
+                            with c2:
+                                    st.download_button(
+                                        label=f'Download {record_array}_[mock_records].csv',
+                                        data=sv.generated_dfs.value[record_array].to_csv(index=False, encoding='utf-8'),
+                                        file_name=f'{record_array}_[mock_records].csv',
+                                        mime='text/csv',
+                                        key=f'{record_array}_csv_download'
+                                    )
 
     with text_generator_tab:
         d1, d2 = st.columns([1, 1])

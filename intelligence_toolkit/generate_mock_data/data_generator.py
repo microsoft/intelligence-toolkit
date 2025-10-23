@@ -21,7 +21,7 @@ async def generate_data(
     temperature,
     df_update_callback,
     callback_batch,
-    parallel_batches=5,
+    parallel_batches=50,
 ):
     record_arrays = extract_array_fields(data_schema)
     primary_record_array = record_arrays[0]
@@ -34,7 +34,6 @@ async def generate_data(
         data_schema=data_schema,
         temperature=temperature,
     )
-    first_object_json = loads(first_object)
     try:
         first_object_json = loads(first_object)
     except Exception as e:

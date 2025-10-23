@@ -33,7 +33,7 @@ def build_ranked_df(
         )
 
     return odf.with_columns(
-        [pl.col("attribute_rank").cast(pl.Int32), pl.col("group_rank").cast(pl.Int32)]
+        [pl.col("group_attribute_rank").cast(pl.Int32), pl.col("group_rank").cast(pl.Int32)]
     )
 
 
@@ -96,7 +96,7 @@ def build_attribute_df(
 
     # Group by and count the occurrences
     attributes_df = ndf.group_by([*groups, "attribute_value"]).agg(
-        pl.len().alias("attribute_count")
+        pl.len().alias("group_attribute_count")
     )
     # Ensure all groups have entries for all attribute_values
     all_attribute_values = attributes_df["attribute_value"].unique().to_list()
@@ -110,10 +110,10 @@ def build_attribute_df(
     # Calculate the rank
     return attributes_df.with_columns(
         [
-            pl.col("attribute_count")
+            pl.col("group_attribute_count")
             .rank("max", descending=True)
             .over("attribute_value")
-            .alias("attribute_rank")
+            .alias("group_attribute_rank")
         ]
     )
 

@@ -118,7 +118,7 @@ The `After filtering to records matching these values (optional)` allows the dat
 
 Here is a sample row from the resulting data summary and how to interpret it:
 
-| city      | group_count | group_rank | attribute_value    | attribute_count | attribute_rank | period_window | period_window_count | period_window_rank | period_window_delta |
+| city      | group_count | group_rank | attribute_value    | group_attribute_count | group_attribute_rank | period_window | period_window_count | period_window_rank | period_window_delta |
 |-----------|-------------|------------|--------------------|-----------------|----------------|---------------|---------------------|--------------------|---------------------|
 | Rivertown | 204         | 4          | quality_issue:True | 92              | 3              | 2022-H1       | 7                   | 1                  | 5                   |
 
@@ -140,7 +140,7 @@ This table shows:
 
 - A summary of all 2769 data records with values for all grouping attributes
 - The group_count of records for all [city] groups, and corresponding group_rank
-- The attribute_count of each attribute_value for all [city] groups, and corresponding attribute_rank
+- The group_attribute_count of each attribute_value for all [city] groups, and corresponding group_attribute_rank
 - The period_window_count of each attribute_value for each period_window for all [city] groups, and corresponding period_window_rank
 - The period_window_delta, or change in the attribute_value_count for successive period_window values, within each [city] group
 ```

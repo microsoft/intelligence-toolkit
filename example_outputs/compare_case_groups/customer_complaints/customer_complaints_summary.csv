@@ -1,4 +1,4 @@
-city,group_count,group_rank,attribute_value,attribute_count,attribute_rank,period_window,period_window_count,period_window_rank,period_window_delta
+city,group_count,group_rank,attribute_value,group_attribute_count,group_attribute_rank,period_window,period_window_count,period_window_rank,period_window_delta
 Baytown,8,50,delivery_issue:True,2,56,2020-H1,0,3,0
 Baytown,8,50,description_issue:True,3,41,2020-H1,0,3,0
 Baytown,8,50,price_issue:True,3,50,2020-H1,0,2,0

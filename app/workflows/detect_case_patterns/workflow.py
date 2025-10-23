@@ -246,8 +246,11 @@ def create(sv: ap_variables.SessionVariables, workflow):
                         
                     count_ct = dcp.create_time_series_chart(
                         selected_pattern,
-                        selected_pattern_period
+                        selected_pattern_period,
+                        False
                     )
+                    title = "**Pattern: " + selected_pattern + " (" + selected_pattern_period + ")**"
+                    st.markdown(title)
                     st.altair_chart(count_ct, use_container_width=True)                       
 
             elif sv.detect_case_patterns_table_index.value > 0:
@@ -290,10 +293,12 @@ def create(sv: ap_variables.SessionVariables, workflow):
             with c2:
                 st.markdown("##### Selected attribute pattern")
                 if sv.detect_case_patterns_selected_pattern.value != "":
+                    title = "**Pattern: " + selected_pattern + " (" + selected_pattern_period + ")**"
+                    st.markdown(title)
                     count_ct = dcp.create_time_series_chart(
                         sv.detect_case_patterns_selected_pattern.value,
                         sv.detect_case_patterns_selected_pattern_period.value,
-                        True,
+                        False,
                     )
                     st.altair_chart(count_ct, use_container_width=True)
                 report_placeholder = st.empty()
