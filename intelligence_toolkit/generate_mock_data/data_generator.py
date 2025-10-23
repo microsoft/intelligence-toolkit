@@ -34,7 +34,6 @@ async def generate_data(
         data_schema=data_schema,
         temperature=temperature,
     )
-    first_object_json = loads(first_object)
     try:
         first_object_json = loads(first_object)
     except Exception as e:

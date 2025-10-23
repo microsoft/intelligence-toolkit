@@ -242,6 +242,30 @@ class TestBuildFlagLinks:
 
         assert sorted(result) == sorted(expected)
 
+    def test_prepare_instance_bool_(self):
+        flag_with_bool = pl.DataFrame(
+            {
+                "Entity_N": ["A", "C", "D", "F", "Z"],
+                "flags_numb": ["True", "True", " False", "True", "False"],
+            }
+        )
+        entity_col = "Entity_N"
+        flag_agg = FlagAggregatorType.Instance
+        flag_columns = ["flags_numb"]
+
+        result = build_flag_links(flag_with_bool, entity_col, flag_agg, flag_columns)
+
+        expected = [
+            ["A", "flags_numb", 1,1],
+            ["C", "flags_numb", 1,1],
+            ["D", "flags_numb", 0,1],
+            ["F", "flags_numb", 1,1],
+            ["Z", "flags_numb", 0,1],
+        ]
+
+        assert sorted(result) == sorted(expected)
+
+
     def test_prepare_instance_agg(self, df_flag):
         # add one row to the dataframe
         df_flag = pl.concat(
