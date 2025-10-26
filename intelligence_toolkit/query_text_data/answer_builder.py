@@ -135,7 +135,7 @@ async def answer_query(
     report, references, matched_chunks = build_report_markdown(
         query,
         expanded_query,
-        summarized_themes or summarized_themes_analysis,
+        summarized_themes,
         report_wrapper,
         processed_chunks.cid_to_text
     )
