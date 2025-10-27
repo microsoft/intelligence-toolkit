@@ -72,7 +72,11 @@ Output query:
 theme_summarization_prompt = """\
 You are a helpful assistant tasked with creating a JSON object that summarizes a theme relevant to a given user query.
 
-When presenting source evidence, support each sentence with a source reference to the file and text chunk: "[source: <source_id_1>, <source_id_2>, ...]". Include source IDs only - DO NOT include the chunk ID within the source ID - DO NOT repeat the same source ID within a single sentence.
+When presenting source evidence, support each sentence with a source reference using ONLY the numeric source IDs in this exact format: "[source: 7, 8, 19]". 
+CRITICAL: Use ONLY numbers separated by commas. DO NOT add words like "chunks" or any other text. DO NOT repeat the same source ID within a single sentence.
+
+Examples of CORRECT format: "[source: 7, 8, 19]" or "[source: 42]"
+Examples of INCORRECT format: "[source: chunks 7, 8, 19]" or "[source: chunk 7]"
 
 The output object should summarize the theme as follows:
 
@@ -117,7 +121,11 @@ The output object should integrate the theme summaries provided as input as foll
 
 IMPORTANT: Before generating the final output, consolidate any duplicate or overlapping themes. Merge themes that cover similar concepts or have overlapping content. Ensure each theme represents a distinct aspect of the analysis.
 
-When presenting evidence, support each sentence with one or more source references: "[source: <source_id_1>, <source_id_2>,...]". Include source IDs only - DO NOT include the chunk ID within the source ID - DO NOT repeat the same source ID within a single sentence.
+When presenting evidence, support each sentence with source references using ONLY numeric source IDs in this exact format: "[source: 7, 8, 19]".
+CRITICAL: Use ONLY numbers separated by commas. DO NOT add words like "chunks" or any other text. DO NOT repeat the same source ID within a single sentence.
+
+Examples of CORRECT format: "[source: 7, 8, 19]" or "[source: 42]"
+Examples of INCORRECT format: "[source: chunks 7, 8, 19]" or "[source: chunk 7]"
 
 
 --Theme summaries--
