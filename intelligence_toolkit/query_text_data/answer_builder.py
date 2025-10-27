@@ -91,6 +91,30 @@ def _build_theme_summaries_from_commentary(commentary):
 
     return summaries
 
+
+def _ensure_theme_formatting(theme_summaries):
+    formatted_themes = []
+    for theme_json in theme_summaries:
+        theme = loads(theme_json)
+        if "theme_points" in theme:
+            for point in theme["theme_points"]:
+                if "point_evidence" in point:
+                    evidence = point["point_evidence"].strip()
+                    print(f"Original evidence: {evidence[:100]}...")
+                    if not evidence.startswith("**Source evidence**:"):
+                        point["point_evidence"] = f"**Source evidence**: {evidence}"
+                    print(f"Formatted evidence: {point['point_evidence'][:100]}...")
+                
+                if "point_commentary" in point:
+                    commentary = point["point_commentary"].strip()
+                    if not commentary.startswith("**AI commentary**:"):
+                        point["point_commentary"] = f"**AI commentary**: {commentary}"
+        
+        formatted_themes.append(dumps(theme))
+    
+    return formatted_themes
+
+
 async def answer_query(
     ai_configuration,
     query,
@@ -120,6 +144,8 @@ async def answer_query(
         batched_summarization_messages,
         response_format=answer_schema.theme_summarization_format,
     )
+
+    summarized_themes = _ensure_theme_formatting(summarized_themes)
 
     theme_integration_messages = utils.prepare_messages(
         prompts.theme_integration_prompt,
