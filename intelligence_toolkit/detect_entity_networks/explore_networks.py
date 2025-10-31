@@ -71,15 +71,17 @@ def build_network_from_entities(
     graph,
     entity_to_community,
     integrated_flags: pl.DataFrame | None = None,
-    trimmed_attributes: list[tuple[str, int]] | None = None,
+    trimmed_attributes: pl.DataFrame | None = None,
     inferred_links: Any | None = None,
     selected_nodes: list[str] | None = None,
 ) -> nx.Graph:
     network_graph = nx.Graph()
     nodes = selected_nodes
-    # additional_trimmed_nodeset = set(sv.network_additional_trimmed_attributes.value)
-    # trimmed_nodeset = trimmed_attributes["Attribute"].unique().tolist()
-    trimmed_nodeset = {t[0] for t in trimmed_attributes}
+    trimmed_nodeset = (
+        set(trimmed_attributes["Attribute"].unique().to_list())
+        if trimmed_attributes is not None and not trimmed_attributes.is_empty()
+        else set()
+    )
 
     if inferred_links is None:
         inferred_links = {}
@@ -87,7 +89,6 @@ def build_network_from_entities(
     if integrated_flags is None:
         integrated_flags = pl.DataFrame()
 
-    # trimmed_nodeset.extend(additional_trimmed_nodeset)
     for node in nodes:
         n_c = str(entity_to_community[node]) if node in entity_to_community else ""
         network_graph.add_node(node, type=ENTITY_LABEL, network=n_c, flags=0)
