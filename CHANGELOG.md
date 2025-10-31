@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added automatic schema normalization for imported schemas to ensure OpenAI structured outputs compatibility
 - Added unit tests for detect entity networks prepare_model functionality
 - Added Docker validation to CI workflow
+- Added comprehensive test suite for `build_network_from_entities` with coverage for trimmed attributes, integrated flags, and inferred links
 
 ### Changed
 - Migrated build system from hatchling to setuptools for better package management
@@ -29,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added unit tests for coverage
 - Changed local embedding default to false in Detect Entity Networks (DEN)
 - Updated example notebooks for better consistency and reduced output verbosity
+- Updated `detect_entity_networks/explore_networks.py` to handle `trimmed_attributes` as a DataFrame instead of list of tuples for better data consistency
+- Added permission on gh workflow
 
 ### Removed
 - Removed deprecated `app/workflows/security/` module (metaprompts moved to `intelligence_toolkit.AI.metaprompts`)
@@ -45,6 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed torch dependency version constraints in pyproject.toml
 - Fixed plotly installation in dependencies
 - Fixed detect entity networks prepare_model edge case handling
+- Fixed CSV error in detect entity networks report functionality
+- Fixed entity network exploration to properly handle DataFrame-based trimmed attributes
 
 ## [0.1.2] - 2024-10-15
 
