@@ -14,6 +14,11 @@ from intelligence_toolkit.detect_entity_networks.classes import (
     FlagAggregatorType,
     SummaryData,
 )
+from intelligence_toolkit.detect_entity_networks.explore_networks import (
+    build_network_from_entities,
+)
+from intelligence_toolkit.detect_entity_networks.config import ENTITY_LABEL
+from intelligence_toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
 
 
 class TestDetectEntityNetworks:
@@ -658,3 +663,162 @@ class TestGenerateReport(TestDetectEntityNetworks):
             assert result == "Generated report"
             mock_client.assert_called_once()
             mock_instance.generate_chat.assert_called_once()
+
+
+class TestBuildNetworkFromEntities:
+    @pytest.fixture()
+    def base_graph(self) -> nx.Graph:
+        """Create a base graph for testing."""
+        graph = nx.Graph()
+        graph.add_node(f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E1")
+        graph.add_node(f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E2")
+        graph.add_node(f"phone{ATTRIBUTE_VALUE_SEPARATOR}555-1111")
+        graph.add_node(f"email{ATTRIBUTE_VALUE_SEPARATOR}test@test.com")
+        
+        graph.add_edge(f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E1", f"phone{ATTRIBUTE_VALUE_SEPARATOR}555-1111")
+        graph.add_edge(f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E1", f"email{ATTRIBUTE_VALUE_SEPARATOR}test@test.com")
+        graph.add_edge(f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E2", f"phone{ATTRIBUTE_VALUE_SEPARATOR}555-1111")
+        
+        return graph
+
+    def test_build_network_empty_selected_nodes(self, base_graph) -> None:
+        """Test with empty selected_nodes list."""
+        result = build_network_from_entities(
+            base_graph,
+            {},
+            selected_nodes=[],
+        )
+
+        assert isinstance(result, nx.Graph)
+        assert result.number_of_nodes() == 0
+        assert result.number_of_edges() == 0
+
+    def test_build_network_with_single_entity(self, base_graph) -> None:
+        """Test with single entity."""
+        entity_to_community = {f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E1": 0}
+        
+        result = build_network_from_entities(
+            base_graph,
+            entity_to_community,
+            selected_nodes=[f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E1"],
+        )
+
+        assert isinstance(result, nx.Graph)
+        assert result.number_of_nodes() > 0
+        assert f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E1" in result.nodes()
+
+    def test_build_network_with_multiple_entities(self, base_graph) -> None:
+        """Test with multiple entities."""
+        entity_to_community = {
+            f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E1": 0,
+            f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E2": 0,
+        }
+        
+        result = build_network_from_entities(
+            base_graph,
+            entity_to_community,
+            selected_nodes=[f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E1", f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E2"],
+        )
+
+        assert isinstance(result, nx.Graph)
+        assert f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E1" in result.nodes()
+        assert f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E2" in result.nodes()
+        assert f"phone{ATTRIBUTE_VALUE_SEPARATOR}555-1111" in result.nodes()
+
+    def test_build_network_with_trimmed_attributes(self, base_graph) -> None:
+        """Test with trimmed attributes that should be excluded."""
+        entity_to_community = {f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E1": 0}
+        trimmed_attributes = pl.DataFrame({
+            "Attribute": [f"phone{ATTRIBUTE_VALUE_SEPARATOR}555-1111"],
+            "Linked Entities": [5],
+        })
+        
+        result = build_network_from_entities(
+            base_graph,
+            entity_to_community,
+            trimmed_attributes=trimmed_attributes,
+            selected_nodes=[f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E1"],
+        )
+
+        assert isinstance(result, nx.Graph)
+        assert f"phone{ATTRIBUTE_VALUE_SEPARATOR}555-1111" not in result.nodes()
+        assert f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E1" in result.nodes()
+
+    def test_build_network_with_integrated_flags(self, base_graph) -> None:
+        """Test with integrated flags."""
+        entity_to_community = {f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E1": 0}
+        integrated_flags = pl.DataFrame({
+            "qualified_entity": [f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E1"],
+            "count": [5],
+        })
+        
+        result = build_network_from_entities(
+            base_graph,
+            entity_to_community,
+            integrated_flags=integrated_flags,
+            selected_nodes=[f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E1"],
+        )
+
+        assert isinstance(result, nx.Graph)
+        assert f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E1" in result.nodes()
+        assert result.nodes[f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E1"]["flags"] == 5
+
+    def test_build_network_with_inferred_links(self, base_graph) -> None:
+        """Test with inferred links."""
+        entity_to_community = {
+            f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E1": 0,
+            f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E2": 0,
+        }
+        inferred_links = {f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E1": {f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E2"}}
+        
+        result = build_network_from_entities(
+            base_graph,
+            entity_to_community,
+            inferred_links=inferred_links,
+            selected_nodes=[f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E1"],
+        )
+
+        assert isinstance(result, nx.Graph)
+        assert f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E1" in result.nodes()
+        assert f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E2" in result.nodes()
+
+    def test_build_network_node_attributes(self, base_graph) -> None:
+        """Test that nodes have correct attributes."""
+        entity_to_community = {f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E1": 0}
+        
+        result = build_network_from_entities(
+            base_graph,
+            entity_to_community,
+            selected_nodes=[f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E1"],
+        )
+
+        entity_node = f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E1"
+        assert result.nodes[entity_node]["type"] == ENTITY_LABEL
+        assert result.nodes[entity_node]["network"] == "0"
+        assert result.nodes[entity_node]["flags"] == 0
+
+    def test_build_network_with_none_entity_community(self, base_graph) -> None:
+        """Test when entity is not in entity_to_community."""
+        result = build_network_from_entities(
+            base_graph,
+            {},
+            selected_nodes=[f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E1"],
+        )
+
+        assert isinstance(result, nx.Graph)
+        assert f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E1" in result.nodes()
+        assert result.nodes[f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E1"]["network"] == ""
+
+    def test_build_network_with_all_none_defaults(self, base_graph) -> None:
+        """Test with all optional parameters as None."""
+        result = build_network_from_entities(
+            base_graph,
+            {},
+            integrated_flags=None,
+            trimmed_attributes=None,
+            inferred_links=None,
+            selected_nodes=[f"{ENTITY_LABEL}{ATTRIBUTE_VALUE_SEPARATOR}E1"],
+        )
+
+        assert isinstance(result, nx.Graph)
+        assert result.number_of_nodes() > 0
