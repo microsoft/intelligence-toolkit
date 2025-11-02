@@ -822,3 +822,74 @@ class TestBuildNetworkFromEntities:
 
         assert isinstance(result, nx.Graph)
         assert result.number_of_nodes() > 0
+
+
+class TestGetMergedGraphDfNullTarget:
+    def test_get_merged_graph_df_with_null_target_values(self) -> None:
+        """Test get_merged_graph_df when all target values are null.
+        
+        This reproduces the error:
+        ComputeError: The output type of the 'apply' function cannot be determined.
+        The function was never called because 'skip_nulls=True' and all values are null.
+        """
+        api_instance = DetectEntityNetworks()
+        
+        # Setup minimal required data
+        api_instance.community_nodes = [["ENTITY::E1"]]
+        api_instance.graph = nx.Graph()
+        api_instance.graph.add_node("ENTITY::E1", type="entity", flags=0)
+        api_instance.entity_to_community_ix = {}
+        api_instance.integrated_flags = pl.DataFrame()
+        api_instance.trimmed_attributes = pl.DataFrame()
+        api_instance.inferred_links = {}
+        
+        with patch(
+            "intelligence_toolkit.detect_entity_networks.api.build_network_from_entities"
+        ) as mock_build, patch(
+            "intelligence_toolkit.detect_entity_networks.api.simplify_entities_graph"
+        ) as mock_simplify:
+            # Create a graph with null target values
+            test_graph = nx.Graph()
+            test_graph.add_node("node1", type="entity", flags=0)
+            test_graph.add_node("attr::value", type="attribute", flags=0)
+            test_graph.add_edge("node1", "attr::value")
+            
+            mock_build.return_value = test_graph
+            mock_simplify.return_value = test_graph
+            
+            # This should not raise an error after the fix
+            nodes, links = api_instance.get_merged_graph_df(0)
+            
+            assert isinstance(nodes, pl.DataFrame)
+            assert isinstance(links, pl.DataFrame)
+            # Verify the attribute column was created
+            assert "attribute" in links.columns
+
+    def test_get_merged_graph_df_with_all_null_target(self) -> None:
+        """Test get_merged_graph_df when DataFrame has null target values.
+        
+        This creates an edge case where target column has only None values.
+        With return_dtype specified, this should work without ComputeError.
+        """
+        # Create links DataFrame with all null targets
+        links = pl.DataFrame(
+            {
+                "source": ["node1", "node2"],
+                "target": [None, None],
+            }
+        )
+        
+        # With return_dtype, this should NOT raise an error
+        result = links.with_columns(
+            pl.col("target")
+            .map_elements(
+                lambda x: x.split(ATTRIBUTE_VALUE_SEPARATOR)[0],
+                return_dtype=pl.Utf8
+            )
+            .alias("attribute")
+        )
+        
+        assert isinstance(result, pl.DataFrame)
+        assert "attribute" in result.columns
+        # Attribute column should be all null since target was all null
+        assert result["attribute"].null_count() == 2

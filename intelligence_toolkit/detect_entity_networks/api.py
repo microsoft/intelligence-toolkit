@@ -358,7 +358,10 @@ class DetectEntityNetworks(IntelligenceWorkflow):
         )
         links = links.with_columns(
             pl.col("target")
-            .map_elements(lambda x: x.split(ATTRIBUTE_VALUE_SEPARATOR)[0])
+            .map_elements(
+                lambda x: x.split(ATTRIBUTE_VALUE_SEPARATOR)[0],
+                return_dtype=pl.Utf8
+            )
             .alias("attribute")
         )
 
