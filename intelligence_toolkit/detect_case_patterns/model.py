@@ -65,6 +65,9 @@ def compute_attribute_counts(df, pattern, period_col, period, type_val_sep):
         if type_val_sep not in att:
             continue
         attribute, value = att.split(type_val_sep)
+        if attribute not in fdf.columns:
+            print(f"Warning: Column '{attribute}' not found in DataFrame. Skipping this filter.")
+            continue
         fdf = fdf[fdf[attribute] == value]
 
     # Melt with pre-filtered columns
@@ -171,7 +174,7 @@ def detect_patterns(
     # Normalize the overall score
     pattern_df["overall_score"] = (
         pattern_df["overall_score"] / pattern_df["overall_score"].max()
-    )
+    ) if pattern_df["overall_score"].any() else [0]
     pattern_df["overall_score"] = pattern_df["overall_score"].round(2)
 
     # Sort the DataFrame by the overall score in descending order

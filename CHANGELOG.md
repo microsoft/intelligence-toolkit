@@ -48,6 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed torch dependency version constraints in pyproject.toml
 - Fixed plotly installation in dependencies
 - Fixed detect entity networks prepare_model edge case handling
+- Fixed Detect Case Patterns `compute_attribute_counts()` to handle missing columns gracefully with warning message
+- Fixed Detect Case Patterns `detect_patterns()` normalization to handle empty pattern DataFrames without division errors
 - Fixed CSV error in detect entity networks report functionality
 - Fixed entity network exploration to properly handle DataFrame-based trimmed attributes
 
