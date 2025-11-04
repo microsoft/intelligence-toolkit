@@ -266,22 +266,31 @@ def multi_csv_uploader(
 
     if f"{key}_uploader_index" not in st.session_state:
         st.session_state[f"{key}_uploader_index"] = str(random.randint(0, 100))
+    if f"{key}_cached_files" not in st.session_state:
+        st.session_state[f"{key}_cached_files"] = {}
+    if f"{key}_cached_dfs" not in st.session_state:
+        st.session_state[f"{key}_cached_dfs"] = {}
+    
     files = st.file_uploader(
         upload_label,
         type=["csv"],
         accept_multiple_files=True,
         key=key + "_file_uploader_" + st.session_state[f"{key}_uploader_index"],
     )
-    file_names = [file.name for file in files] if files is not None else []
-    uploaded_files_var.value = [v for v in uploaded_files_var.value if v in file_names]
     if files is not None:
+        file_names = [file.name for file in files]
         for file in files:
             if file.name not in uploaded_files_var.value:
-                uploaded_files_var.value.append(file.name)
+                current_files = list(uploaded_files_var.value)
+                current_files.append(file.name)
+                uploaded_files_var.value = current_files
+            st.session_state[f"{key}_cached_files"][file.name] = file
     last_selected_file = st.session_state.get(f"{key}_last_selected_file", None)
+    last_selected_df = st.session_state.get(f"{key}_last_selected_df", None)
+    
     selected_file = st.selectbox(
         "Select a file to process",
-        options=uploaded_files_var.value if files else [],
+        options=uploaded_files_var.value,
         key=f"{key}_file_select",
     )
     changed = selected_file != last_selected_file
@@ -290,7 +299,7 @@ def multi_csv_uploader(
     with col1:
         encoding = st.selectbox(
             "File encoding",
-            disabled=len(files) == 0,
+            disabled=len(uploaded_files_var.value) == 0,
             options=FILE_ENCODING_OPTIONS,
             key=f"{key}_encoding_db",
             index=FILE_ENCODING_OPTIONS.index(st.session_state[f"{key}_encoding"]),
@@ -298,7 +307,7 @@ def multi_csv_uploader(
     with col2:
         st.number_input(
             "Maximum rows to process (0 = all)",
-            disabled=len(files) == 0,
+            disabled=len(uploaded_files_var.value) == 0,
             min_value=0,
             step=1000,
             key=max_rows_var.key,
@@ -306,39 +315,64 @@ def multi_csv_uploader(
     with col3:
         st.text("")
         st.text("")
-        reload = st.button("Reload", key=f"{key}_reload", disabled=len(files) == 0)
+        reload = st.button("Reload", key=f"{key}_reload", disabled=len(uploaded_files_var.value) == 0)
 
     selected_df = pd.DataFrame()
-    if selected_file not in [None, ""] or reload:
+    cache_key = f"{selected_file}_{encoding}_{max_rows_var.value}"
+    
+    if selected_file not in [None, ""] and (changed or reload or cache_key not in st.session_state[f"{key}_cached_dfs"]):
         st.session_state[f"{key}_encoding"] = encoding
-        for file in files:
-            if file.name == selected_file:
-                selected_df = (
-                    pd.read_csv(
-                        file,
-                        encoding=encoding,
-                        nrows=max_rows_var.value,
-                        encoding_errors="ignore",
-                        low_memory=False,
-                    )
-                    if max_rows_var.value > 0
-                    else pd.read_csv(
-                        file,
-                        encoding=encoding,
-                        encoding_errors="ignore",
-                        low_memory=False,
-                    )
+        file_to_read = None
+        
+        if files is not None:
+            for file in files:
+                if file.name == selected_file:
+                    file_to_read = file
+                    break
+        
+        if file_to_read is None and selected_file in st.session_state[f"{key}_cached_files"]:
+            file_to_read = st.session_state[f"{key}_cached_files"][selected_file]
+        
+        if file_to_read is not None:
+            try:
+                file_to_read.seek(0)
+            except (AttributeError, OSError):
+                pass
+            
+            selected_df = (
+                pd.read_csv(
+                    file_to_read,
+                    encoding=encoding,
+                    nrows=max_rows_var.value,
+                    encoding_errors="ignore",
+                    low_memory=False,
                 )
-                selected_df.columns = [
-                    clean_for_column_name(col) for col in selected_df.columns
-                ]
-                break
+                if max_rows_var.value > 0
+                else pd.read_csv(
+                    file_to_read,
+                    encoding=encoding,
+                    encoding_errors="ignore",
+                    low_memory=False,
+                )
+            )
+            selected_df.columns = [
+                clean_for_column_name(col) for col in selected_df.columns
+            ]
+            st.session_state[f"{key}_cached_dfs"][cache_key] = selected_df
+    elif selected_file not in [None, ""] and cache_key in st.session_state[f"{key}_cached_dfs"]:
+        selected_df = st.session_state[f"{key}_cached_dfs"][cache_key]
+    elif (selected_file in [None, ""] or len(uploaded_files_var.value) == 0) and last_selected_df is not None and len(last_selected_df) > 0:
+        selected_df = last_selected_df
+    
+    if selected_df is not None and len(selected_df) > 0:
         st.dataframe(
             selected_df[:show_rows],
             hide_index=True,
             use_container_width=True,
             height=height,
         )
+    st.session_state[f"{key}_last_selected_file"] = selected_file
+    st.session_state[f"{key}_last_selected_df"] = selected_df
     changed = changed or reload
     return selected_file, selected_df, changed
 
