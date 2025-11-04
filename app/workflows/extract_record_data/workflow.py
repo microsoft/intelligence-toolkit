@@ -44,7 +44,24 @@ async def create(sv: variables.SessionVariables, workflow: None):
                 st.warning("Prepare data schema to continue.")
             else:
                 st.markdown("##### Record extraction controls")
-                mode = st.radio("Mode", ["Extract from single text", "Extract from rows of CSV file"], horizontal=True)
+                if f"{workflow}_extraction_mode" not in st.session_state:
+                    st.session_state[f"{workflow}_extraction_mode"] = 0  # 0 = single text, 1 = CSV
+                
+                mode_index = st.radio(
+                    "Mode", 
+                    ["Extract from single text", "Extract from rows of CSV file"], 
+                    horizontal=True,
+                    index=st.session_state[f"{workflow}_extraction_mode"],
+                    key=f"{workflow}_extraction_mode_radio"
+                )
+                
+                mode_index_map = {"Extract from single text": 0, "Extract from rows of CSV file": 1}
+                reverse_map = {0: "Extract from single text", 1: "Extract from rows of CSV file"}
+                if st.session_state[f"{workflow}_extraction_mode"] != mode_index_map[mode_index]:
+                    st.session_state[f"{workflow}_extraction_mode"] = mode_index_map[mode_index]
+                    st.rerun()
+                mode = mode_index
+                
                 input_texts = []
                 if mode == "Extract from single text":
                     st.text_area("Unstructured text input", key=sv.text_input.key, height=400)
