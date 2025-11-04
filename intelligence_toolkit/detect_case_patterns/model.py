@@ -96,7 +96,11 @@ def create_time_series_df(model, pattern_df):
 
     rows = []
     for _, row in pattern_df.iterrows():
-        rows.extend(record_counter.create_time_series_rows(row["pattern"].split(" & ")))
+        pattern = row["pattern"]
+        # Skip invalid patterns (NaN, None, or non-string types)
+        if pd.isna(pattern) or not isinstance(pattern, str):
+            continue
+        rows.extend(record_counter.create_time_series_rows(pattern.split(" & ")))
     columns = ["period", "pattern", "count"]
     return pd.DataFrame(rows, columns=columns)
 
@@ -154,6 +158,10 @@ def detect_patterns(
 
     columns = ["period", "pattern", "length", "count", "mean", "z_score"]
     pattern_df = pd.DataFrame(pattern_rows, columns=columns)
+
+    # Return early if no patterns were found
+    if len(pattern_df) == 0:
+        return pattern_df, close_pairs, all_pairs
 
     # Count the number of periods per pattern and merge it into the DataFrame
     detections = (
