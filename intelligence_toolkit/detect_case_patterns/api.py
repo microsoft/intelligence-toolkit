@@ -38,6 +38,7 @@ class DetectCasePatterns(IntelligenceWorkflow):
             min_edge_weight,
             missing_edge_prop,
         )
+        
 
     def _prepare_graph(
         self,
@@ -79,11 +80,16 @@ class DetectCasePatterns(IntelligenceWorkflow):
             self.min_pattern_count,
             self.max_pattern_length,
         )
+        if len(self.patterns_df) == 0:
+            print("No converging patterns found in the data.")
 
     def create_time_series_df(self):
-        self.time_series_df = model.create_time_series_df(
-            self.dynamic_graph_df, self.patterns_df
-        )
+        if len(self.patterns_df) == 0:
+            self.time_series_df = pd.DataFrame(columns=["period", "pattern", "count"])
+        else:
+            self.time_series_df = model.create_time_series_df(
+                self.dynamic_graph_df, self.patterns_df
+            )
 
     def compute_attribute_counts(self, selected_pattern, selected_pattern_period):
         return model.compute_attribute_counts(
