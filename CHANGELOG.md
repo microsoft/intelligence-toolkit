@@ -48,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed torch dependency version constraints in pyproject.toml
 - Fixed plotly installation in dependencies
 - Fixed detect entity networks prepare_model edge case handling
+- Fixed CSV file upload persistence in Extract Record Data workflow: uploaded CSV files and dataframes now persist when navigating between tabs by caching files and dataframes in session state and preserving the extraction mode selection
 - Fixed Detect Case Patterns to gracefully handle cases with no converging patterns, returning empty DataFrame instead of single NaN row
 - Added comprehensive unit tests for empty pattern detection scenario
 - Fixed Detect Case Patterns `compute_attribute_counts()` to handle missing columns gracefully with warning message
