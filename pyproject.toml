@@ -43,7 +43,7 @@ dependencies = [
     "nest-asyncio>=1.6.0,<2.0.0",
     "altair-viewer>=0.4.0,<1.0.0",
     "torch==2.4.1; sys_platform != 'darwin'",
-    "torch==2.5.1; sys_platform == 'darwin'",
+    "torch==2.8.0; sys_platform == 'darwin'",
     "sentence-transformers>=3.1.1,<4.0.0",
     "graspologic>=3.4.1,<4.0.0",
     "future>=1.0.0,<2.0.0",
