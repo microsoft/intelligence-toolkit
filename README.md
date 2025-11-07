@@ -232,7 +232,12 @@ For developers who want to contribute to Intelligence Toolkit or run it from sou
 - wkhtmltopdf (for PDF report generation)
   - Windows: [Download installer](https://wkhtmltopdf.org/downloads.html)
   - Linux: `sudo apt-get install wkhtmltopdf`
-  - macOS: `brew install homebrew/cask/wkhtmltopdf`
+  - macOS: 
+  ``` 
+  curl -L https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-2/wkhtmltox-0.12.6-2.macos-cocoa.pkg -O
+
+  installer -pkg wkhtmltox-0.12.6-2.macos-cocoa.pkg -target ~
+  ```
 
 **Setup Instructions:**
 1. Clone the repository:
