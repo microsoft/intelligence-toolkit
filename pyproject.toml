@@ -1,6 +1,6 @@
 [project]
 name = "intelligence-toolkit"
-version = "0.1.2"
+version = "0.1.3"
 description = "Interactive workflows for generating AI intelligence reports from real-world data sources using GPT models"
 authors = [
     {name = "Dayenne Souza", email = "ddesouza@microsoft.com"},
