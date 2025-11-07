@@ -292,7 +292,7 @@ def create(sv: ds_variables.SessionVariables, workflow: None):
             att_separator = ";"
             data_schema = acd.get_data_schema()
             with c1:
-                st.markdown("##### Constuct query")
+                st.markdown("##### Construct query")
                 if len(sdf) > 0:
                     count_holder = st.empty()
 

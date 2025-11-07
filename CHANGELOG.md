@@ -55,6 +55,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed Detect Case Patterns `detect_patterns()` normalization to handle empty pattern DataFrames without division errors
 - Fixed CSV error in detect entity networks report functionality
 - Fixed entity network exploration to properly handle DataFrame-based trimmed attributes
+- Fix typo on anonymize case data
+- Fix macos instructions to install package
 
 ## [0.1.2] - 2024-10-15
 
