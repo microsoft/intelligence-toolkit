@@ -1532,15 +1532,72 @@ class BuildEntityDataset:
         runs.sort(key=lambda r: r["name"], reverse=True)
         return runs
 
-    def load_saved_run(self, data_path: str | Path) -> None:
-        """Load a dataset previously written by ``_save_run``."""
+    def load_saved_run(
+        self,
+        data_path: str | Path,
+        api_key: Optional[str] = None,
+        model: str = "gpt-4o-mini",
+        budget: float = 10.0,
+    ) -> None:
+        """Load a dataset previously written by ``_save_run``.
+
+        When ``api_key`` is supplied, also rehydrates a live ``Schemify``
+        instance pointed at the loaded record set so that the user can
+        continue research, add seed entities and curate aliases on the
+        loaded run. Without an api key the dataset is loaded read-only.
+        """
         data = json.loads(Path(data_path).read_text(encoding="utf-8"))
         self.load_dataset(data)
+
+        # Point the run dir at the loaded run so further snapshots / saves
+        # accumulate alongside the original data.json + meta.json.
+        try:
+            self._run_dir = Path(data_path).parent
+        except Exception:  # noqa: BLE001
+            self._run_dir = None
+
+        if api_key:
+            try:
+                self._rehydrate_schemify(data, api_key=api_key, model=model, budget=budget)
+            except Exception:  # noqa: BLE001
+                # Fall back to read-only load if rehydration fails.
+                self._schemify = None
+
+        entity_count = len(data.get("records", []))
         self.progress = ResearchProgress(
             stage="Loaded from saved run",
-            entity_count=len(data.get("records", [])),
+            entity_count=entity_count,
+            query_count=int((self._dataset_json or {}).get("query_count", 0) or 0),
             is_complete=True,
         )
+
+    def _rehydrate_schemify(
+        self,
+        data: dict,
+        *,
+        api_key: str,
+        model: str = "gpt-4o-mini",
+        budget: float = 10.0,
+    ) -> None:
+        """Build a fresh Schemify and seed it with ``data`` so the loaded
+        run can be continued, seeded and curated.
+        """
+        from intelligence_toolkit.schemify import Schemify  # noqa: PLC0415
+        from intelligence_toolkit.schemify.models import (  # noqa: PLC0415
+            RecordSet,
+            SchemifyConfig,
+        )
+
+        cfg = SchemifyConfig(
+            api_key=api_key,
+            search_model=model,
+            completion_model=model,
+            max_budget=budget,
+            cache_enabled=True,
+        )
+        sch = Schemify(cfg)
+        sch.record_set = RecordSet.from_dict(data)
+        self._schemify = sch
 
     def load_dataset(self, data: dict) -> None:
         """Load a previously saved dataset JSON into this object."""

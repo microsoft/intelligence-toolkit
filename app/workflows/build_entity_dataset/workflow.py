@@ -385,7 +385,12 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                     )
                     if st.button("Resume selected run"):
                         try:
-                            api.load_saved_run(saved_runs[idx]["path"])
+                            api.load_saved_run(
+                                saved_runs[idx]["path"],
+                                api_key=functions.get_api_key() or None,
+                                model=sv.bed_model.value,
+                                budget=float(sv.bed_budget.value or 10.0),
+                            )
                             st.success(
                                 f"Loaded {saved_runs[idx]['entity_count']} entities."
                             )
