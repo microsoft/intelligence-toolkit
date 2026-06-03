@@ -346,6 +346,125 @@ class BuildEntityDataset:
         self.progress.is_running = False
         self.progress.stage = "Stopped by user"
 
+    def can_continue_research(self) -> bool:
+        """True iff the in-memory Schemify state is alive enough to keep researching.
+
+        Loaded-from-disk runs don't currently rehydrate the full Schemify
+        object, so a fresh ``start_research`` is required in that case.
+        """
+        return bool(
+            self._schemify
+            and self._schemify.record_set
+            and not self.is_running
+        )
+
+    def continue_research(
+        self,
+        max_queries: int = 30,
+        concurrency: int = 5,
+        verify: bool = False,
+        phase_split: tuple[float, float, float] = (0.2, 0.2, 0.6),
+    ) -> bool:
+        """Run additional research on top of the existing record set.
+
+        Unlike :meth:`start_research` this preserves all current records,
+        aliases and exclusions and simply extends the query history. The
+        default ``phase_split`` shifts effort toward completion (filling in
+        missing attributes for existing entities, including any seeds the
+        user added via :meth:`add_candidate_entities`) rather than broad
+        discovery.
+
+        Returns False if there's no active Schemify state to continue from.
+        """
+        if not self.can_continue_research():
+            return False
+
+        category = self._schemify.record_set.category if self._schemify.record_set else ""
+        # Reset completion / error flags but keep entity_count etc.
+        self.progress.is_running = True
+        self.progress.is_complete = False
+        self.progress.error = None
+        self.progress.stage = "Continuing research…"
+        self.progress.current = 0
+        self.progress.total = 0
+
+        def _run() -> None:
+            try:
+                def _on_progress(stage: str, current: int, total: int) -> None:
+                    self.progress.stage = stage
+                    self.progress.current = current
+                    self.progress.total = total
+                    if self._schemify and self._schemify.record_set:
+                        self.progress.entity_count = len(self._schemify.record_set.records)
+                        history_count = len(
+                            getattr(self._schemify, "query_history", []) or []
+                        )
+                        counter = int(
+                            getattr(self._schemify, "_query_counter", 0) or 0
+                        )
+                        self.progress.query_count = max(history_count, counter, current)
+                    try:
+                        self._snapshot_partial(category=category)
+                    except Exception:  # noqa: BLE001
+                        pass
+
+                self._schemify.on_progress(_on_progress)
+
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    self.progress.stage = "Running additional web search queries…"
+                    loop.run_until_complete(
+                        self._schemify.run_agentic(
+                            max_queries=max_queries,
+                            concurrency=concurrency,
+                            phase_split=phase_split,
+                            output_dir=str(self._run_dir) if self._run_dir else None,
+                        )
+                    )
+
+                    if verify:
+                        self.progress.stage = "Verifying attribute values…"
+                        loop.run_until_complete(
+                            self._schemify.verify_unverified(concurrency=concurrency)
+                        )
+
+                    self.progress.stage = "Finalizing dataset…"
+                    self._schemify.finalize()
+
+                    self._df = self._schemify.to_dataframe()
+                    self._dataset_json = self._build_dataset_json()
+
+                    stats = self._schemify.get_stats()
+                    llm_usage = stats.get("llm_usage", {})
+                    self.usage = UsageStats(
+                        total_tokens=llm_usage.get("total_tokens", 0),
+                        total_cost_usd=llm_usage.get("total_cost_usd", 0.0),
+                        queries_run=self.progress.query_count,
+                    )
+
+                    self.progress.is_running = False
+                    self.progress.is_complete = True
+                    self.progress.stage = "Complete"
+                    if self._schemify.record_set:
+                        self.progress.entity_count = len(self._schemify.record_set.records)
+
+                    try:
+                        self._save_run(category=category)
+                    except Exception:  # noqa: BLE001
+                        pass
+                finally:
+                    loop.close()
+
+            except Exception as e:  # noqa: BLE001
+                self.progress.is_running = False
+                self.progress.error = str(e)
+                self.progress.stage = "Error"
+
+        self._thread = threading.Thread(target=_run, daemon=True)
+        self._thread.start()
+        return True
+
     # ── On-demand verification ──────────────────────────────
 
     def count_unverified(self) -> tuple[int, int]:

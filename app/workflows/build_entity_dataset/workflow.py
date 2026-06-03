@@ -35,6 +35,71 @@ def _suggestion_key(s: dict) -> str:
     return primary + "::" + ",".join(members)
 
 
+def _render_continue_research(api, sv) -> None:
+    """Render a 'Continue research' control that extends the current run
+    instead of discarding results. Used after both successful completion
+    and user stop. No-op when the in-memory Schemify state can't be
+    resumed (e.g. loaded purely from disk)."""
+    if not api.can_continue_research():
+        return
+
+    api_key = functions.get_api_key()
+    with st.expander(
+        "Continue research (keep current results, run more queries)",
+        expanded=False,
+    ):
+        st.caption(
+            "Runs additional web search queries on top of the current "
+            "dataset — useful after adding candidate entities, applying "
+            "exclusions, or curating aliases. Existing records, attribute "
+            "values and citations are preserved. The default plan biases "
+            "toward filling in missing attributes for known entities."
+        )
+        c1, c2 = st.columns(2)
+        more_q = c1.number_input(
+            "Additional query budget",
+            min_value=1,
+            max_value=500,
+            value=min(int(sv.bed_max_queries.value or 30), 30),
+            key="bed_continue_max_q",
+            help="Cap on the number of extra search queries to run.",
+        )
+        concur = c2.number_input(
+            "Concurrency",
+            min_value=1,
+            max_value=20,
+            value=int(sv.bed_concurrency.value or 5),
+            key="bed_continue_concur",
+        )
+        verify = st.checkbox(
+            "Also verify unverified attribute values",
+            value=False,
+            key="bed_continue_verify",
+        )
+        if st.button(
+            "Continue research",
+            type="primary",
+            disabled=not api_key,
+            key="bed_continue_btn",
+        ):
+            if not api_key:
+                st.error("No API key found. Configure it in the Settings page.")
+            else:
+                ok = api.continue_research(
+                    max_queries=int(more_q),
+                    concurrency=int(concur),
+                    verify=bool(verify),
+                )
+                if ok:
+                    time.sleep(0.3)
+                    st.rerun()
+                else:
+                    st.error(
+                        "Can't continue this run — start a fresh research "
+                        "task instead."
+                    )
+
+
 async def create(sv: bed_variables.SessionVariables, workflow=None):
     sv_home = SessionVariables("home")
     ui_components.check_ai_configuration()
@@ -247,6 +312,8 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                 m2.metric("Estimated cost (USD)", f"${api.usage.total_cost_usd:.2f}")
                 st.info("Switch to the **Review dataset** or **Export** tab.")
 
+                _render_continue_research(api, sv)
+
                 if st.button("Re-run research (discard current results)"):
                     api.reset()
                     st.rerun()
@@ -260,6 +327,8 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
             elif prog.stage == "Stopped by user":
                 st.warning("Research stopped. Partial results are available.")
                 st.info("Switch to the **Review dataset** or **Export** tab.")
+
+                _render_continue_research(api, sv)
 
             else:
                 # Not started yet
