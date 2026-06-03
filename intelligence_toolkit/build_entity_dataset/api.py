@@ -1062,11 +1062,25 @@ class BuildEntityDataset:
         accent_color: str,
         logo_bytes: Optional[bytes] = None,
         logo_filename: Optional[str] = None,
+        views: Optional[list[str]] = None,
     ) -> bytes:
-        """Bundle dashboard.html + theme + data into a downloadable ZIP."""
+        """Bundle dashboard.html + theme + data into a downloadable ZIP.
+
+        ``views`` optionally restricts the dashboard's tab bar. Accepted
+        values are ``"table"``, ``"cards"``, ``"network"``. ``None`` (the
+        default) or an empty list keeps all three.
+        """
         dashboard_src = (
             Path(__file__).resolve().parents[1] / "schemify" / "dashboard" / "dashboard.html"
         )
+
+        normalised_views: list[str] = []
+        if views:
+            allowed = {"table", "cards", "network"}
+            for v in views:
+                key = str(v).strip().lower()
+                if key in allowed and key not in normalised_views:
+                    normalised_views.append(key)
 
         theme = {
             "name": "custom",
@@ -1077,6 +1091,7 @@ class BuildEntityDataset:
             "logoAlt": subtitle,
             "favicon": "",
             "footer": "Built with Intelligence Toolkit.",
+            "views": normalised_views,
             "colors": {
                 "primary": primary_color,
                 "accent": accent_color,

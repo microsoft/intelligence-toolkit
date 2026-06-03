@@ -623,6 +623,39 @@ a:hover { text-decoration: underline; }
   if (fav && t.favicon) fav.href = t.favicon;
   window.SCHEMIFY_DATASET_LABEL = t.datasetLabel || 'records';
   window.SCHEMIFY_FOOTER = t.footer || null;
+
+  // Optionally restrict which views (tabs) are exposed. The default
+  // (no `views` key, or an empty list) keeps all three. Names are
+  // matched case-insensitively against the tab buttons' `data-view`.
+  const allowed = Array.isArray(t.views) && t.views.length
+    ? new Set(t.views.map(v => String(v).toLowerCase()))
+    : null;
+  if (allowed) {
+    const tabBar = document.getElementById('tab-bar');
+    let firstVisible = null;
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      const v = btn.dataset.view;
+      if (allowed.has(v)) {
+        if (!firstVisible) firstVisible = v;
+      } else {
+        btn.style.display = 'none';
+        const panel = document.getElementById(v + '-view');
+        if (panel) panel.style.display = 'none';
+      }
+    });
+    if (firstVisible) {
+      // Re-mark the active tab/panel so the default view matches the
+      // first allowed view (was hard-coded to "table" in markup).
+      document.querySelectorAll('.tab-btn').forEach(b =>
+        b.classList.toggle('active', b.dataset.view === firstVisible)
+      );
+      document.querySelectorAll('.view-panel').forEach(p =>
+        p.classList.toggle('active', p.id === firstVisible + '-view')
+      );
+      window.SCHEMIFY_DEFAULT_VIEW = firstVisible;
+    }
+    if (tabBar && allowed.size === 1) tabBar.style.display = 'none';
+  }
 })();
 
 // ═══════════════════════════════════════════════════════════
@@ -636,7 +669,7 @@ const state = {
   search: '',
   filters: {},       // { attrName: Set([val1, val2]) }
   sort: 'alpha-asc',
-  view: 'table',
+  view: (typeof window !== 'undefined' && window.SCHEMIFY_DEFAULT_VIEW) || 'table',
   cardGroupBy: [],    // [] or [attr1, attr2, ...] for nested grouping
   selectedEntity: null,
 };

@@ -36,6 +36,9 @@ class SessionVariables:
         self.bed_dataset_label = SessionVariable("entities", prefix)
         self.bed_primary_color = SessionVariable("#002B49", prefix)
         self.bed_accent_color = SessionVariable("#0078D4", prefix)
+        self.bed_view_table = SessionVariable(True, prefix)
+        self.bed_view_cards = SessionVariable(True, prefix)
+        self.bed_view_network = SessionVariable(True, prefix)
 
         # Safety scan
         self.bed_safety_prompt = SessionVariable("", prefix)

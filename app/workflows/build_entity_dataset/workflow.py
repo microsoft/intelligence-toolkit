@@ -825,6 +825,33 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                     key="bed_logo_upload",
                 )
 
+            st.markdown("**Views to include**")
+            v1, v2, v3 = st.columns(3)
+            show_table = v1.checkbox(
+                "Table", value=sv.bed_view_table.value, key="bed_view_table_cb"
+            )
+            show_cards = v2.checkbox(
+                "Cards", value=sv.bed_view_cards.value, key="bed_view_cards_cb"
+            )
+            show_network = v3.checkbox(
+                "Network", value=sv.bed_view_network.value, key="bed_view_network_cb"
+            )
+            sv.bed_view_table.value = show_table
+            sv.bed_view_cards.value = show_cards
+            sv.bed_view_network.value = show_network
+            selected_views = [
+                name for name, on in (
+                    ("table", show_table),
+                    ("cards", show_cards),
+                    ("network", show_network),
+                ) if on
+            ]
+            if not selected_views:
+                st.caption(
+                    "At least one view is required — defaulting to Table."
+                )
+                selected_views = ["table"]
+
             logo_bytes = logo_file.read() if logo_file else None
             logo_filename = logo_file.name if logo_file else None
 
@@ -841,6 +868,7 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                             accent_color=sv.bed_accent_color.value,
                             logo_bytes=logo_bytes,
                             logo_filename=logo_filename,
+                            views=selected_views,
                         )
                         st.download_button(
                             "Save dashboard.zip",
