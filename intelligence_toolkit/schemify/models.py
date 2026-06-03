@@ -599,6 +599,10 @@ class RecordSet:
     schema_attributes: list[SchemaAttribute] = field(default_factory=list)
     created_at: datetime = field(default_factory=datetime.now)
     fuzzy_threshold: int = 85  # Similarity threshold for fuzzy matching (0-100)
+    # User-supplied exclusion rules: each item is {"label": str, "reason": str}.
+    # Surfaced into discovery/expansion prompts via build_exclusion_text() so
+    # the agent stops re-proposing rejected entities.
+    user_exclusions: list[dict] = field(default_factory=list)
     
     def get_record(self, label: str) -> Optional[Record]:
         """Get a record by label (case-insensitive)."""
@@ -705,12 +709,37 @@ class RecordSet:
         Returns:
             Formatted exclusion text, or empty string if no exclusions
         """
+        sections: list[str] = []
+
+        # User-supplied exclusion rules take priority — they tell the agent
+        # WHY each entity is out of scope, which helps it skip lookalikes too.
+        if self.user_exclusions:
+            rules = []
+            for rule in self.user_exclusions:
+                label = (rule.get("label") or "").strip()
+                if not label:
+                    continue
+                reason = (rule.get("reason") or "").strip()
+                if reason:
+                    rules.append(f"- {label}: {reason}")
+                else:
+                    rules.append(f"- {label}")
+            if rules:
+                sections.append(
+                    "User-defined exclusions — do NOT return these entities or "
+                    "close variants. Apply the stated reason to similar cases:\n"
+                    + "\n".join(rules)
+                )
+
         labels = self.get_well_covered_labels(threshold, max_labels)
-        if not labels:
-            return ""
-        
-        labels_text = ", ".join(labels)
-        return f"Do NOT include these already-documented examples: {labels_text}. Focus on finding NEW and DIFFERENT examples not in this list."
+        if labels:
+            labels_text = ", ".join(labels)
+            sections.append(
+                f"Do NOT include these already-documented examples: {labels_text}. "
+                f"Focus on finding NEW and DIFFERENT examples not in this list."
+            )
+
+        return "\n\n".join(sections)
     
     def deduplicate_fuzzy(self, threshold: int | None = None) -> list[tuple[str, str, int]]:
         """
@@ -815,6 +844,7 @@ class RecordSet:
                 }
                 for a in self.schema_attributes
             ],
+            "user_exclusions": list(self.user_exclusions),
             "created_at": self.created_at.isoformat(),
         }
     
@@ -837,6 +867,7 @@ class RecordSet:
                 )
                 for a in data.get("schema_attributes", [])
             ],
+            user_exclusions=list(data.get("user_exclusions", []) or []),
             created_at=datetime.fromisoformat(data.get("created_at", datetime.now().isoformat())),
         )
     

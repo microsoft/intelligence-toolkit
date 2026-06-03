@@ -91,9 +91,16 @@ class ExtractionEngine:
             exclusion_list=exclusion_text,
         ) + _date_suffix()
         
-        # Check cache - use content hash of exclusion labels for stable keys
+        # Check cache - use content hash of exclusion labels for stable keys.
+        # Include user-defined exclusions so editing them busts the cache.
         exclusion_labels = sorted(record_set.get_well_covered_labels())
-        exclusion_hash = hashlib.sha256("|".join(exclusion_labels).encode()).hexdigest()[:12]
+        user_excl_sig = "|".join(
+            f"{(e.get('label') or '').strip().lower()}::{(e.get('reason') or '').strip().lower()}"
+            for e in (record_set.user_exclusions or [])
+        )
+        exclusion_hash = hashlib.sha256(
+            ("|".join(exclusion_labels) + "##" + user_excl_sig).encode()
+        ).hexdigest()[:12]
         cache_key = {
             "category": record_set.category,
             "guidance": guidance,

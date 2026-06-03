@@ -447,6 +447,54 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                     else:
                         st.info("Nothing to apply.")
 
+            # ── Exclusions ────────────────────────────────────
+            current_exclusions = (
+                api.exclusions if hasattr(api, "exclusions") else []
+            )
+            with st.expander(
+                f"Exclude entities ({len(current_exclusions)} rule"
+                f"{'' if len(current_exclusions) == 1 else 's'})",
+                expanded=False,
+            ):
+                st.caption(
+                    "List entities that should be left out of this dataset, "
+                    "with a reason. The label + reason are injected into "
+                    "future discovery, expansion, and verification prompts "
+                    "so the agent learns to skip similar cases too."
+                )
+                if current_exclusions:
+                    for i, rule in enumerate(current_exclusions):
+                        c1, c2, c3 = st.columns([3, 6, 1])
+                        c1.markdown(f"**{rule.get('label','')}**")
+                        c2.caption(rule.get("reason", "") or "—")
+                        if c3.button("✕", key=f"bed_excl_rm_{i}"):
+                            api.remove_exclusion(rule.get("label", ""))
+                            st.rerun()
+                excl_label = st.text_input(
+                    "Entity to exclude", key="bed_excl_label"
+                )
+                excl_reason = st.text_input(
+                    "Reason (optional, e.g. 'not a sovereign state')",
+                    key="bed_excl_reason",
+                )
+                excl_drop = st.checkbox(
+                    "Also remove matching record from dataset if present",
+                    value=True,
+                    key="bed_excl_drop",
+                )
+                if st.button("Add exclusion", key="bed_excl_add_btn"):
+                    added, removed = api.add_exclusion(
+                        excl_label, excl_reason, remove_existing=excl_drop
+                    )
+                    if added:
+                        msg = f"Exclusion added for **{excl_label}**."
+                        if removed:
+                            msg += f" Removed {removed} matching record(s)."
+                        st.success(msg)
+                        st.rerun()
+                    else:
+                        st.info("Provide an entity label first.")
+
             # ── Harmful content scan (I) ──────────────────────
             with st.expander("Scan for harmful content", expanded=False):
                 st.caption(

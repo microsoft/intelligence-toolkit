@@ -528,6 +528,93 @@ class BuildEntityDataset:
                 pass
         return added
 
+    # ── Exclusions ─────────────────────────────────────────────
+
+    @property
+    def exclusions(self) -> list[dict]:
+        """Current user-supplied exclusion rules ({label, reason})."""
+        if not self._schemify or not self._schemify.record_set:
+            return []
+        return list(self._schemify.record_set.user_exclusions or [])
+
+    def add_exclusion(
+        self, label: str, reason: str = "", remove_existing: bool = True
+    ) -> tuple[bool, int]:
+        """Register an entity to exclude from future research and (optionally)
+        drop any matching record already in the dataset.
+
+        Returns ``(added, removed_count)``.
+        """
+        if not self._schemify or not self._schemify.record_set:
+            return (False, 0)
+        rs = self._schemify.record_set
+        lbl = (label or "").strip()
+        if not lbl:
+            return (False, 0)
+        rs.user_exclusions = list(rs.user_exclusions or [])
+        # Dedupe by case-folded label.
+        existing = {
+            (e.get("label") or "").strip().casefold(): i
+            for i, e in enumerate(rs.user_exclusions)
+        }
+        rule = {"label": lbl, "reason": (reason or "").strip()}
+        if lbl.casefold() in existing:
+            rs.user_exclusions[existing[lbl.casefold()]] = rule
+        else:
+            rs.user_exclusions.append(rule)
+
+        removed = 0
+        if remove_existing:
+            removed = self._remove_records_matching(lbl)
+
+        self._df = self._schemify.to_dataframe()
+        self._dataset_json = self._build_dataset_json()
+        try:
+            self._snapshot_partial(category=rs.category)
+        except Exception:  # noqa: BLE001
+            pass
+        return (True, removed)
+
+    def remove_exclusion(self, label: str) -> bool:
+        if not self._schemify or not self._schemify.record_set:
+            return False
+        rs = self._schemify.record_set
+        lbl = (label or "").strip().casefold()
+        before = len(rs.user_exclusions or [])
+        rs.user_exclusions = [
+            e for e in (rs.user_exclusions or [])
+            if (e.get("label") or "").strip().casefold() != lbl
+        ]
+        if len(rs.user_exclusions) == before:
+            return False
+        self._dataset_json = self._build_dataset_json()
+        try:
+            self._snapshot_partial(category=rs.category)
+        except Exception:  # noqa: BLE001
+            pass
+        return True
+
+    def _remove_records_matching(self, label: str) -> int:
+        """Drop records whose label or alias matches the given string (case-insensitive)."""
+        if not self._schemify or not self._schemify.record_set:
+            return 0
+        rs = self._schemify.record_set
+        target = (label or "").strip().casefold()
+        if not target:
+            return 0
+        keep = []
+        removed = 0
+        for r in rs.records:
+            labels = [r.label] + list(r.aliases or [])
+            if any((s or "").strip().casefold() == target for s in labels):
+                removed += 1
+                continue
+            keep.append(r)
+        if removed:
+            rs.records = keep
+            rs.update_schema_frequencies()
+        return removed
+
     # ── Schema editing (K) ─────────────────────────────────────
 
     def rename_attribute(self, old_name: str, new_name: str) -> int:
