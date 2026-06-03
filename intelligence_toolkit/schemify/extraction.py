@@ -240,11 +240,14 @@ Provide concrete, verifiable details with specific names, dates, organizations, 
             guidance=record_set.guidance or "",
         ) + _date_suffix()
         
-        # Check cache
+        # Check cache. Note: the cache key intentionally excludes the
+        # attribute list — the web_search result for an entity rarely
+        # changes when callers narrow the schema, and reusing the cached
+        # page text avoids a costly second browsing round trip during
+        # re-verification after schema tweaks.
         cache_key = {
             "label": record.label,
             "category": record_set.category,
-            "attributes": sorted(attrs_to_find),
         }
         cached = self.cache.get("entity_expansion", **cache_key)
         

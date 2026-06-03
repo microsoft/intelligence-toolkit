@@ -301,8 +301,9 @@ class Schemify:
 
     async def verify_unverified(
         self,
-        concurrency: int = 5,
+        concurrency: int = 12,
         output_dir: str | None = None,
+        progress_callback: Callable[[int, int, str], None] | None = None,
     ) -> dict:
         """
         Verify unverified attribute values via web search.
@@ -333,6 +334,7 @@ class Schemify:
             self.record_set,
             concurrency=concurrency,
             output_dir=output_dir,
+            progress_callback=progress_callback,
         )
 
     def finalize(

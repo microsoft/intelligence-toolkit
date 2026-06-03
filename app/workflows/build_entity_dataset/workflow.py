@@ -166,12 +166,19 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                     refresh()
                 # Live progress display
                 st.markdown("#### Research in progress…")
-                max_q = max(int(sv.bed_max_queries.value or 0), 1)
-                frac = min(prog.query_count / max_q, 1.0)
-                st.progress(
-                    frac,
-                    text=f"{prog.stage} — {prog.query_count}/{max_q} queries",
-                )
+                if prog.stage.startswith("Verifying") and prog.total:
+                    frac = min(prog.current / max(prog.total, 1), 1.0)
+                    st.progress(
+                        frac,
+                        text=f"{prog.stage} ({prog.current}/{prog.total})",
+                    )
+                else:
+                    max_q = max(int(sv.bed_max_queries.value or 0), 1)
+                    frac = min(prog.query_count / max_q, 1.0)
+                    st.progress(
+                        frac,
+                        text=f"{prog.stage} — {prog.query_count}/{max_q} queries",
+                    )
 
                 m1, m2 = st.columns(2)
                 m1.metric("Entities found", prog.entity_count)
@@ -330,7 +337,9 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                             key="bed_verify_btn",
                         ):
                             api.start_verification(
-                                concurrency=int(sv.bed_concurrency.value or 5)
+                                concurrency=max(
+                                    12, int(sv.bed_concurrency.value or 12)
+                                )
                             )
                             st.rerun()
 

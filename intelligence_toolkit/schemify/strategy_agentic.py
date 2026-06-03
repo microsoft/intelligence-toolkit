@@ -22,7 +22,7 @@ import os
 import logging
 from collections import Counter
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 from .models import (
     Record, RecordSet, SchemaAttribute, AttributeValue,
@@ -2395,8 +2395,9 @@ If a source column has no reasonable match in the target schema, map it to null.
     async def verify_unverified_entities(
         self,
         record_set: RecordSet,
-        concurrency: int = 5,
+        concurrency: int = 12,
         output_dir: str | None = None,
+        progress_callback: Callable[[int, int, str], None] | None = None,
     ) -> dict:
         """
         Attempt to verify all unverified attribute values via web search.
@@ -2465,10 +2466,13 @@ If a source column has no reasonable match in the target schema, map it to null.
         # Count unsourced attrs before
         attrs_before_unsourced = sum(len(attrs) for _, attrs in to_verify)
 
-        # Run one expand_record call per entity, in parallel
+        # Run one expand_record call per entity, in parallel. Use a semaphore
+        # plus as_completed so a slow web_search call does not stall the
+        # whole batch — the pool stays saturated for the full run.
         semaphore = asyncio.Semaphore(concurrency)
         errors = 0
         errors_lock = asyncio.Lock()
+        total = len(to_verify)
 
         async def verify_one(record: Record, unsourced: list[str]):
             nonlocal errors
@@ -2480,24 +2484,29 @@ If a source column has no reasonable match in the target schema, map it to null.
                             record, record_set,
                             target_attributes=unsourced,
                         ),
-                        timeout=600,
+                        timeout=90,
                     )
                 except Exception as e:
                     logger.error(f"Verification failed for {record.label}: {e}")
                     async with errors_lock:
                         errors += 1
+            return record.label
 
-        # Process in batches to give progress updates
-        batch_size = concurrency * 2
-        for i in range(0, len(to_verify), batch_size):
-            batch = to_verify[i:i + batch_size]
-            self._emit(
-                f"  Verifying batch {i // batch_size + 1} "
-                f"({i + 1}–{min(i + len(batch), len(to_verify))} of {len(to_verify)})...",
-                dim=True,
-            )
-            tasks = [verify_one(rec, attrs) for rec, attrs in batch]
-            await asyncio.gather(*tasks)
+        tasks = [verify_one(rec, attrs) for rec, attrs in to_verify]
+        completed = 0
+        for coro in asyncio.as_completed(tasks):
+            label = await coro
+            completed += 1
+            if progress_callback is not None:
+                try:
+                    progress_callback(completed, total, label)
+                except Exception:  # noqa: BLE001
+                    pass
+            if completed == 1 or completed % max(1, concurrency) == 0 or completed == total:
+                self._emit(
+                    f"  Verified {completed}/{total} ({label})",
+                    dim=True,
+                )
 
         self.llm.set_progress_context("")
 

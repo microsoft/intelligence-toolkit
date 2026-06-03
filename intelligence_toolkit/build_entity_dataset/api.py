@@ -342,15 +342,30 @@ class BuildEntityDataset:
                 entities += 1
         return (entities, values)
 
-    def start_verification(self, concurrency: int = 5) -> None:
+    def start_verification(self, concurrency: int = 12) -> None:
         """Run verification in a background daemon thread."""
         if self.is_running or not self._schemify:
             return
+        total_entities = (
+            len(self._schemify.record_set.records)
+            if self._schemify.record_set
+            else 0
+        )
         self.progress = ResearchProgress(
             is_running=True,
             stage="Verifying attribute values…",
-            entity_count=len(self._schemify.record_set.records) if self._schemify.record_set else 0,
+            entity_count=total_entities,
         )
+
+        def _on_verify_progress(done: int, total: int, label: str) -> None:
+            # Called from the verification event loop thread. Mutating the
+            # dataclass fields is fine — the UI polls them.
+            self.progress.current = done
+            self.progress.total = total
+            self.progress.stage = (
+                f"Verifying {done}/{total}: {label}" if label else
+                f"Verifying {done}/{total}…"
+            )
 
         def _run() -> None:
             try:
@@ -358,7 +373,10 @@ class BuildEntityDataset:
                 asyncio.set_event_loop(loop)
                 try:
                     loop.run_until_complete(
-                        self._schemify.verify_unverified(concurrency=concurrency)
+                        self._schemify.verify_unverified(
+                            concurrency=concurrency,
+                            progress_callback=_on_verify_progress,
+                        )
                     )
                     self._df = self._schemify.to_dataframe()
                     self._dataset_json = self._build_dataset_json()
