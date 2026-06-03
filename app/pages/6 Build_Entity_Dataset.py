@@ -8,9 +8,9 @@ import asyncio
 import streamlit as st
 
 import app.workflows.build_entity_dataset.variables as bed_variables
-import app.workflows.build_entity_dataset.workflow
 from app.components.app_loader import load_multipage_app
 from app.util.helper_fn import app_in_dev_mode
+from app.workflows.build_entity_dataset import workflow as bed_workflow
 
 workflow = "build_entity_dataset"
 
@@ -27,7 +27,7 @@ async def main() -> None:
     load_multipage_app(sv)
 
     try:
-        await app.workflows.build_entity_dataset.workflow.create(sv, workflow)
+        await bed_workflow.create(sv, workflow)
     except Exception as e:
         if app_in_dev_mode():
             st.exception(e)

@@ -9,13 +9,19 @@ import asyncio
 import io
 import json
 import os
+import re
 import threading
+import time
 import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Optional
 
 import pandas as pd
+
+from intelligence_toolkit.helpers.constants import CACHE_PATH
+
+_RUNS_DIR = Path(CACHE_PATH) / "build_entity_dataset" / "runs"
 
 
 @dataclass
@@ -89,6 +95,42 @@ class BuildEntityDataset:
             ]
         return []
 
+    def refresh_progress(self) -> None:
+        """Pull live counters from the running Schemify instance.
+
+        The agentic discovery loop does not emit periodic
+        ``on_progress`` callbacks, so the UI polls this method on each
+        Streamlit rerun to surface the current query/entity counts.
+        """
+        if not self._schemify:
+            return
+        try:
+            # ``_query_counter`` is only updated by the legacy iterative path;
+            # the agentic loop tracks queries via ``query_history``. Use whichever
+            # is larger so both code paths surface a live count.
+            history_count = len(getattr(self._schemify, "query_history", []) or [])
+            counter = int(getattr(self._schemify, "_query_counter", 0) or 0)
+            self.progress.query_count = max(history_count, counter)
+        except Exception:  # noqa: BLE001
+            pass
+        rs = getattr(self._schemify, "record_set", None)
+        if rs is not None:
+            try:
+                self.progress.entity_count = len(rs.records)
+            except Exception:  # noqa: BLE001
+                pass
+        # Live cost from the LLM client, if available.
+        llm = getattr(self._schemify, "llm", None)
+        if llm is not None:
+            try:
+                cost = float(getattr(llm, "total_cost", 0.0) or 0.0)
+                tokens = int(getattr(llm, "total_tokens", 0) or 0)
+                self.usage.total_cost_usd = cost
+                self.usage.total_tokens = tokens
+                self.usage.queries_run = self.progress.query_count
+            except Exception:  # noqa: BLE001
+                pass
+
     # ── Research lifecycle ─────────────────────────────────────
 
     def reset(self) -> None:
@@ -140,7 +182,13 @@ class BuildEntityDataset:
                     self.progress.total = total
                     if self._schemify and self._schemify.record_set:
                         self.progress.entity_count = len(self._schemify.record_set.records)
-                        self.progress.query_count = self._schemify._query_counter  # noqa: SLF001
+                        history_count = len(
+                            getattr(self._schemify, "query_history", []) or []
+                        )
+                        counter = int(
+                            getattr(self._schemify, "_query_counter", 0) or 0
+                        )
+                        self.progress.query_count = max(history_count, counter, current)
 
                 self._schemify.on_progress(_on_progress)
 
@@ -214,6 +262,12 @@ class BuildEntityDataset:
                     self.progress.stage = "Complete"
                     if rs:
                         self.progress.entity_count = len(rs.records)
+
+                    # Persist completed run so the UI can resume it later.
+                    try:
+                        self._save_run(category=category)
+                    except Exception:  # noqa: BLE001
+                        pass
                 finally:
                     loop.close()
 
@@ -234,6 +288,78 @@ class BuildEntityDataset:
                 pass
         self.progress.is_running = False
         self.progress.stage = "Stopped by user"
+
+    # ── Persistence of completed runs ──────────────────────────
+
+    def _save_run(self, category: str) -> Optional[Path]:
+        """Write the completed dataset to the local cache so it can be resumed."""
+        if not self._dataset_json:
+            return None
+        _RUNS_DIR.mkdir(parents=True, exist_ok=True)
+        safe = re.sub(r"[^A-Za-z0-9._-]+", "_", category.strip())[:60] or "run"
+        ts = time.strftime("%Y%m%d-%H%M%S")
+        run_dir = _RUNS_DIR / f"{ts}_{safe}"
+        run_dir.mkdir(parents=True, exist_ok=True)
+        data_path = run_dir / "data.json"
+        data_path.write_text(
+            json.dumps(self._dataset_json, indent=2, ensure_ascii=False),
+            encoding="utf-8",
+        )
+        meta = {
+            "category": category,
+            "timestamp": ts,
+            "entity_count": len(self._dataset_json.get("records", [])),
+            "total_tokens": self.usage.total_tokens,
+            "total_cost_usd": self.usage.total_cost_usd,
+            "queries_run": self.usage.queries_run,
+        }
+        (run_dir / "meta.json").write_text(
+            json.dumps(meta, indent=2), encoding="utf-8"
+        )
+        return data_path
+
+    @staticmethod
+    def list_saved_runs() -> list[dict]:
+        """Return saved runs, newest first."""
+        if not _RUNS_DIR.exists():
+            return []
+        runs: list[dict] = []
+        for run_dir in _RUNS_DIR.iterdir():
+            if not run_dir.is_dir():
+                continue
+            data_path = run_dir / "data.json"
+            if not data_path.exists():
+                continue
+            meta_path = run_dir / "meta.json"
+            meta: dict = {}
+            if meta_path.exists():
+                try:
+                    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+                except Exception:  # noqa: BLE001
+                    meta = {}
+            runs.append(
+                {
+                    "name": run_dir.name,
+                    "path": str(data_path),
+                    "category": meta.get("category", ""),
+                    "timestamp": meta.get("timestamp", run_dir.name),
+                    "entity_count": meta.get("entity_count", 0),
+                    "total_cost_usd": meta.get("total_cost_usd", 0.0),
+                    "queries_run": meta.get("queries_run", 0),
+                }
+            )
+        runs.sort(key=lambda r: r["name"], reverse=True)
+        return runs
+
+    def load_saved_run(self, data_path: str | Path) -> None:
+        """Load a dataset previously written by ``_save_run``."""
+        data = json.loads(Path(data_path).read_text(encoding="utf-8"))
+        self.load_dataset(data)
+        self.progress = ResearchProgress(
+            stage="Loaded from saved run",
+            entity_count=len(data.get("records", [])),
+            is_complete=True,
+        )
 
     def load_dataset(self, data: dict) -> None:
         """Load a previously saved dataset JSON into this object."""
@@ -274,7 +400,7 @@ class BuildEntityDataset:
     ) -> bytes:
         """Bundle dashboard.html + theme + data into a downloadable ZIP."""
         dashboard_src = (
-            Path(__file__).resolve().parents[3] / "schemify" / "dashboard" / "dashboard.html"
+            Path(__file__).resolve().parents[1] / "schemify" / "dashboard" / "dashboard.html"
         )
 
         theme = {

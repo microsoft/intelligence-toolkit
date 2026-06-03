@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Schemify Dashboard Theme",
+  "description": "Thin theming layer for the generic schemify dashboard. A theme controls branding, colors, copy, and dataset framing — never behavior.",
+  "type": "object",
+  "required": ["name", "title", "datasetLabel", "colors"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Short identifier for the theme (e.g. 'default', 'tat')."
+    },
+    "title": {
+      "type": "string",
+      "description": "Page title and header text shown to the user."
+    },
+    "subtitle": {
+      "type": ["string", "null"],
+      "description": "Optional second line under the title."
+    },
+    "datasetLabel": {
+      "type": "string",
+      "description": "Noun for entities in this dataset (e.g. 'tools', 'records', 'organizations')."
+    },
+    "logo": {
+      "type": ["string", "null"],
+      "description": "Path (relative to dashboard.html) or data URI for the header logo. null hides the logo."
+    },
+    "logoAlt": {
+      "type": ["string", "null"],
+      "description": "Alt text for the logo image."
+    },
+    "favicon": {
+      "type": ["string", "null"],
+      "description": "Path or data URI for the favicon."
+    },
+    "footer": {
+      "type": ["string", "null"],
+      "description": "Optional footer HTML (kept simple — single line)."
+    },
+    "colors": {
+      "type": "object",
+      "required": ["primary", "accent", "bg", "surface", "text", "muted", "border"],
+      "properties": {
+        "primary":      {"type": "string", "description": "Primary brand color (header bg, headings)."},
+        "accent":       {"type": "string", "description": "Accent color (interactive elements, focus rings)."},
+        "accentSoft":   {"type": "string", "description": "Soft accent for hover/selected backgrounds."},
+        "accent2":      {"type": "string", "description": "Secondary accent for variety in chart fills."},
+        "warn":         {"type": "string", "description": "Warning/danger color (clear button, errors)."},
+        "highlight":    {"type": "string", "description": "Highlight color (badges, callouts)."},
+        "success":      {"type": "string", "description": "Success color."},
+        "bg":           {"type": "string", "description": "Page background."},
+        "surface":      {"type": "string", "description": "Card/panel background."},
+        "text":         {"type": "string", "description": "Primary text color."},
+        "muted":        {"type": "string", "description": "Secondary/muted text."},
+        "border":       {"type": "string", "description": "Border color."}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

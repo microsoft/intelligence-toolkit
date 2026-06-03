@@ -156,15 +156,21 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
             prog = api.progress
 
             if api.is_running:
+                # Pull latest live counters from schemify before rendering.
+                refresh = getattr(api, "refresh_progress", None)
+                if callable(refresh):
+                    refresh()
                 # Live progress display
                 st.markdown("#### Research in progress…")
-                frac = prog.current / max(prog.total, 1)
-                st.progress(frac, text=prog.stage)
+                max_q = max(int(sv.bed_max_queries.value or 0), 1)
+                frac = min(prog.query_count / max_q, 1.0)
+                st.progress(frac, text=f"{prog.query_count} / {max_q} queries")
 
                 m1, m2, m3 = st.columns(3)
-                m1.metric("Queries run", prog.query_count)
+                m1.metric("Queries run", f"{prog.query_count} / {max_q}")
                 m2.metric("Entities found", prog.entity_count)
-                m3.metric("Stage", prog.stage)
+                m3.metric("Cost (USD)", f"${api.usage.total_cost_usd:.2f}")
+                st.caption(f"Stage: {prog.stage}")
 
                 if st.button("Stop and save current results"):
                     api.stop_research()
@@ -233,6 +239,32 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                         )
                         time.sleep(0.3)
                         st.rerun()
+
+                # ── Resume from a previously completed run ────────
+                saved_runs = api.list_saved_runs()
+                if saved_runs:
+                    st.divider()
+                    st.markdown("##### Resume a previous run")
+                    labels = [
+                        f"{r['timestamp']} — {r['category'] or '(unknown)'} "
+                        f"· {r['entity_count']} entities · ${r['total_cost_usd']:.2f}"
+                        for r in saved_runs
+                    ]
+                    idx = st.selectbox(
+                        "Saved runs",
+                        options=list(range(len(saved_runs))),
+                        format_func=lambda i: labels[i],
+                        key="bed_resume_idx",
+                    )
+                    if st.button("Resume selected run"):
+                        try:
+                            api.load_saved_run(saved_runs[idx]["path"])
+                            st.success(
+                                f"Loaded {saved_runs[idx]['entity_count']} entities."
+                            )
+                            st.rerun()
+                        except Exception as e:  # noqa: BLE001
+                            st.error(f"Failed to load run: {e}")
 
     # ── Review dataset ─────────────────────────────────────────
     with review_tab:

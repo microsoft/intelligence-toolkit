@@ -15,10 +15,10 @@ The workflow performs systematic web search across many query angles, extracts a
 
 ## How it works
 
-### 1 · Define task
+### 1. Define task
 Specify what category of entities to collect (e.g., *European Union member states*, *Open-source Python web frameworks*) and any guidance that steers extraction quality or scope. You may optionally provide a JSON list of schema attributes to use instead of the auto-proposed schema.
 
-### 2 · Run research
+### 2. Run research
 The workflow runs structured web search queries in three phases:
 
 | Phase | Purpose |
@@ -29,10 +29,10 @@ The workflow runs structured web search queries in three phases:
 
 A live progress display shows queries run, entities found, and current stage. You can stop the research at any time and save partial results.
 
-### 3 · Review dataset
+### 3. Review dataset
 Inspect the discovered entities in a tabular view. The schema attributes and their coverage are shown. You can also load a previously saved `data.json` file for review.
 
-### 4 · Export
+### 4. Export
 Download the dataset as:
 - **`data.json`** — full structured dataset with per-value source citations
 - **`data.csv`** — flat CSV for use in spreadsheets or other workflows
