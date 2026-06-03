@@ -172,7 +172,7 @@ class ResolutionEngine:
             
             if mapping:
                 logger.info(f"  Normalized {len(mapping)} values for '{attr.name}'")
-                self._apply_value_mapping(record_set, attr.name, mapping, retain_raw=True)
+                self._apply_value_mapping(record_set, attr.name, mapping)
                 all_mappings[attr.name] = mapping
         
         return all_mappings
@@ -306,7 +306,7 @@ class ResolutionEngine:
             
             if mapping:
                 logger.info(f"  Standardized {len(mapping)} values for '{attr.name}'")
-                self._apply_value_mapping(record_set, attr.name, mapping, retain_raw=True)
+                self._apply_value_mapping(record_set, attr.name, mapping)
                 all_mappings[attr.name] = mapping
         
         return all_mappings
@@ -489,7 +489,7 @@ class ResolutionEngine:
             
             # ---- 5. Apply mapping ----
             if mapping:
-                self._apply_value_mapping(record_set, attr.name, mapping, retain_raw=True)
+                self._apply_value_mapping(record_set, attr.name, mapping)
             
             # ---- 6. Update schema attribute metadata ----
             attr.is_closed_set = classification == "closed"
@@ -582,7 +582,7 @@ class ResolutionEngine:
             
             if mapping:
                 logger.info(f"  Cleaned {len(mapping)} values for '{attr_name}'")
-                self._apply_value_mapping(record_set, attr_name, mapping, retain_raw=True)
+                self._apply_value_mapping(record_set, attr_name, mapping)
                 all_mappings[attr_name] = mapping
         
         return all_mappings
@@ -968,7 +968,7 @@ class ResolutionEngine:
         record_set: RecordSet, 
         attr_name: str, 
         mapping: dict[str, str],
-        retain_raw: bool = True,
+        retain_raw: bool = False,
     ):
         """
         Apply value normalization mapping to all records for a specific attribute.
@@ -980,7 +980,9 @@ class ResolutionEngine:
             record_set: The record set to process
             attr_name: Name of the attribute to normalize
             mapping: Dict of original value -> normalized value(s)
-            retain_raw: If True, store original values in "{attr_name} (Raw)" attribute
+            retain_raw: If True, store original values in "{attr_name} (Raw)" attribute.
+                Defaults to False; originals remain recoverable via SourcedValue
+                citations on the original (pre-normalization) record.
         """
         raw_attr_name = f"{attr_name} (Raw)"
         
@@ -1187,7 +1189,19 @@ class ResolutionEngine:
         if not record_set or not record_set.records:
             return {}
 
-        stats = {"labels": 0, "aliases": 0, "units": 0, "pruned_attrs": 0}
+        stats = {"labels": 0, "aliases": 0, "units": 0, "pruned_attrs": 0, "raw_pruned": 0}
+
+        # ── 0. Drop provenance "(Raw)" keys left over from value normalization.
+        # These are an audit-only side effect of _apply_value_mapping(retain_raw=True);
+        # originals remain recoverable via SourcedValue citations on the
+        # post-normalization records. We strip them so dashboard / CSV / dataframe
+        # consumers don't render noisy "<Attr> (Raw)" columns.
+        for record in record_set.records:
+            for bucket in (record.attributes, record.additional_attributes):
+                for key in list(bucket.keys()):
+                    if key.strip().lower().endswith("(raw)"):
+                        bucket.pop(key, None)
+                        stats["raw_pruned"] += 1
 
         # ── 1. Uppercase labels ────────────────────────────────────────
         for record in record_set.records:
