@@ -28,6 +28,10 @@ The following text contains information gathered from web sources. Extract entit
    entity's `aliases` list, NOT as a separate attribute called "Also known as", "AKA", or similar.
 10. Do not invent or hallucinate information not present in the text
 11. If the text references the same entity with different spellings, use the most complete/formal name as the label and put the variants in aliases.
+12. If an attribute's value is not stated in the text, OMIT the attribute entirely
+    for that entity. NEVER emit placeholder strings such as "Unknown", "N/A",
+    "None", "Not specified", "Not disclosed", "TBD", "-", or "?". An absent
+    attribute is preferred over a placeholder.
 
 --Guidance--
 
@@ -69,6 +73,10 @@ The following text contains information gathered from numbered web sources. Extr
 12. If a value comes from your general knowledge without source support, use an empty citation_indices array
 13. Do not invent or hallucinate information not present in the text
 14. If the text references the same entity with different spellings, use the most complete/formal name as the label and put the variants in aliases.
+15. If an attribute's value is not stated in the text, OMIT the attribute entirely
+    for that entity. NEVER emit placeholder strings such as "Unknown", "N/A",
+    "None", "Not specified", "Not disclosed", "TBD", "-", or "?". An absent
+    attribute is preferred over a placeholder.
 
 --Guidance--
 

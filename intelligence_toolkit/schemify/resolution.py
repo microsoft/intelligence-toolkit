@@ -1194,7 +1194,7 @@ class ResolutionEngine:
         if not record_set or not record_set.records:
             return {}
 
-        stats = {"labels": 0, "aliases": 0, "units": 0}
+        stats = {"labels": 0, "aliases": 0, "units": 0, "pruned_attrs": 0}
 
         # ── 1. Uppercase labels ────────────────────────────────────────
         for record in record_set.records:
@@ -1246,10 +1246,86 @@ class ResolutionEngine:
             self._rename_attribute_with_unit_strip(record_set, old_name, new_name)
             stats["units"] += 1
 
+        # ── 4. Strip placeholder values ("Unknown", "N/A", …) ─────────
+        # These slip in when the LLM declines to leave an attribute
+        # empty. They make every downstream surface (CSV, dashboard)
+        # look like the attribute carries real information when it
+        # doesn't, and they prevent step 5 from pruning the attribute.
+        placeholder_set = {
+            "unknown", "n/a", "na", "none", "null",
+            "not available", "not specified", "not disclosed",
+            "not publicly disclosed", "not publicly available",
+            "no information", "no data", "no info",
+            "tbd", "tba", "-", "—", "?",
+        }
+        stripped = 0
+        for record in record_set.records:
+            for bucket in (record.attributes, record.additional_attributes):
+                for key in list(bucket.keys()):
+                    av = bucket[key]
+                    keep_vals = []
+                    for sv in getattr(av, "values", []) or []:
+                        raw = (sv.value or "").strip()
+                        if raw and raw.casefold() not in placeholder_set:
+                            keep_vals.append(sv)
+                    if not keep_vals:
+                        bucket.pop(key)
+                        stripped += 1
+                    elif len(keep_vals) != len(av.values):
+                        av.values = keep_vals
+        stats["placeholders"] = stripped
+
+        # ── 5. Dedupe + prune orphan schema attributes ────────────────
+        # Schema can accumulate duplicates (e.g. case-insensitive
+        # collisions, a `promote` of a name already present, or a
+        # `rename` whose old entry survived). Collapse on case-folded
+        # name, keeping the first occurrence's casing.
+        seen_names: dict[str, int] = {}
+        deduped_attrs = []
+        for sa in record_set.schema_attributes:
+            key = (sa.name or "").strip().casefold()
+            if not key or key in seen_names:
+                continue
+            seen_names[key] = len(deduped_attrs)
+            deduped_attrs.append(sa)
+        dup_removed = len(record_set.schema_attributes) - len(deduped_attrs)
+
+        # Now drop schema attributes that no record populates after the
+        # placeholder strip. Without this, the dashboard prints empty
+        # columns even when every value was "Unknown".
+        def _populated(rec, name: str) -> bool:
+            for bucket_name in ("attributes", "additional_attributes"):
+                av = getattr(rec, bucket_name, {}).get(name)
+                if av is None:
+                    continue
+                for sv in getattr(av, "values", []) or []:
+                    raw = (sv.value or "").strip()
+                    if raw and raw.casefold() not in placeholder_set:
+                        return True
+            return False
+
+        populated_attrs = [
+            sa for sa in deduped_attrs
+            if any(_populated(r, sa.name) for r in record_set.records)
+        ]
+        orphan_pruned = len(deduped_attrs) - len(populated_attrs)
+        record_set.schema_attributes = populated_attrs
+        stats["pruned_attrs"] = dup_removed + orphan_pruned
+
+        # Refresh frequencies so downstream consumers see consistent counts.
+        try:
+            record_set.update_schema_frequencies()
+        except Exception:  # noqa: BLE001
+            pass
+
         if any(stats.values()):
             logger.info(
-                "Finalization: %d labels uppercased, %d aliases merged, %d attributes unit-tagged",
+                "Finalization: %d labels uppercased, %d aliases merged, "
+                "%d attributes unit-tagged, %d placeholder values stripped, "
+                "%d schema attributes pruned (%d dup, %d orphan)",
                 stats["labels"], stats["aliases"], stats["units"],
+                stats["placeholders"], stats["pruned_attrs"],
+                dup_removed, orphan_pruned,
             )
         return stats
 
