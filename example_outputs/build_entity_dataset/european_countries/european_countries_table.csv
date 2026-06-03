@@ -1,0 +1,7 @@
+name,capital,population,area_km2,eu_member,currency,official_language,government_type,gdp_billion_usd
+France,Paris,"68,373,000","643,801",Yes,Euro (EUR),French,Semi-presidential republic,3049
+Germany,Berlin,"84,552,000","357,114",Yes,Euro (EUR),German,Federal parliamentary republic,4456
+Norway,Oslo,"5,488,000","385,207",No,Norwegian krone (NOK),Norwegian (Bokmål; Nynorsk),Constitutional monarchy,546
+Poland,Warsaw,"37,654,000","312,696",Yes,Polish złoty (PLN),Polish,Parliamentary republic,842
+Switzerland,"Bern (de facto)","8,815,000","41,285",No,Swiss franc (CHF),"German; French; Italian; Romansh",Federal republic (direct democracy),905
+Sweden,Stockholm,"10,521,000","450,295",Yes,Swedish krona (SEK),Swedish,Constitutional monarchy (parliamentary democracy),597

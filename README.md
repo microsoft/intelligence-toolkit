@@ -47,6 +47,7 @@ It supports a variety of interactive workflows, each designed to address a speci
 - **Entity Intelligence Workflows**
   - [`Match Entity Records`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/match_entity_records/README.md) generates fuzzy record matches across different entity datasets.
   - [`Detect Entity Networks`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/detect_entity_networks/README.md) generates reports on risk exposure for networks of related entities.
+  - [`Build Entity Dataset`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/build_entity_dataset/README.md) builds an entity dataset using structured web search, with a downloadable interactive web interface.
 - **Text Intelligence Workflows**
   - [`Query Text Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/query_text_data/README.md) generates reports from a collection of text documents.
   - [`Extract Record Data`](https://github.com/microsoft/intelligence-toolkit/blob/main/app/workflows/extract_record_data/README.md) generate schema-aligned JSON objects and CSV records from unstructured text.
@@ -74,6 +75,7 @@ flowchart TD
     HasGroups{"Grouping<br/>Attributes?"} --> |"<b>Compare Case Groups</b><br/>workflow"| MatchedEntities["AI Group Reports"]
     EntityData["<b>Input</b>: Entity Records"] ---> HasInconsistencies{"Inconsistent<br/>Attributes?"} --> |"<b>Match Entity Records</b><br/>workflow"| RecordLinking["AI-Matched Records"]
     EntityData["<b>Input</b>: Entity Records"] ---> HasIdentifiers{"Identifying<br/>Attributes?"} --> |"<b>Detect Entity Networks</b><br/>workflow"| NetworkAnalysis["AI Network Reports"]
+    NoData["<b>Input</b>: None"] --> |"<b>Build Entity Dataset</b><br/>workflow"| EntityData["<b>Input</b>: Entity Records"]
     TextDocs["<b>Input:</b> Text Data"] ---> NeedRecords{"Need<br/>Records?"} --> |"<b>Extract Record Data</b><br/>workflow"| ExtractedRecords["AI-Extracted Records"]
     TextDocs["<b>Input:</b> Text Data"] ---> NeedAnswers{"Need<br/>Answers?"} --> |"<b>Query Text Data</b><br/>workflow"| AnswerReports["AI Answer Reports"]
 ```

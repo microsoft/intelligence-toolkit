@@ -112,6 +112,7 @@ def main():
                 "Azure OpenAI Deployment Name",
                 disabled=is_mode_cloud,
                 value=openai_config.model,
+                help="Name of the Azure deployment to call. The underlying model should be `gpt-5.4-mini` (default), `gpt-5.4-nano`, or `gpt-5.4`.",
             )
             if deployment_name != openai_config.model:
                 on_change(secrets_handler, openai_model_key, deployment_name)()
@@ -155,9 +156,10 @@ def main():
         if type_input == "OpenAI":
             with col2:
                 deployment_name = st.text_input(
-                    "OpenAI Deployment Name",
+                    "OpenAI Model",
                     disabled=is_mode_cloud,
                     value=openai_config.model,
+                    help="Model name sent to the OpenAI API (e.g. `gpt-5.4-mini`, `gpt-5.4-nano`, `gpt-5.4`). Default: `gpt-5.4-mini`.",
                 )
                 if deployment_name != openai_config.model:
                     on_change(secrets_handler, openai_model_key, deployment_name)()

@@ -48,7 +48,8 @@ dependencies = [
     "graspologic>=3.4.1,<4.0.0",
     "future>=1.0.0,<2.0.0",
     "pypdf>=5.1.0,<6.0.0",
-    "poethepoet>=0.27.0,<1.0.0"
+    "poethepoet>=0.27.0,<1.0.0",
+    "rapidfuzz>=3.0.0",
 ]
 
 [project.optional-dependencies]

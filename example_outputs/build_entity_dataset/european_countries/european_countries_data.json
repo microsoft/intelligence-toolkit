@@ -1,0 +1,249 @@
+{
+  "category": "Countries of Europe",
+  "guidance": "Include all sovereign states with territory on the European continent.",
+  "schema_attributes": [
+    {"name": "capital", "description": "Capital city of the country", "is_closed_set": false, "is_multi_valued": false},
+    {"name": "population", "description": "Approximate population (most recent estimate)", "is_closed_set": false, "is_multi_valued": false},
+    {"name": "area_km2", "description": "Total area in square kilometres", "is_closed_set": false, "is_multi_valued": false},
+    {"name": "eu_member", "description": "Whether the country is a member of the European Union", "is_closed_set": true, "is_multi_valued": false},
+    {"name": "currency", "description": "Official currency", "is_closed_set": false, "is_multi_valued": false},
+    {"name": "official_language", "description": "Official language(s)", "is_closed_set": false, "is_multi_valued": true},
+    {"name": "government_type", "description": "Form of government", "is_closed_set": false, "is_multi_valued": false},
+    {"name": "gdp_billion_usd", "description": "GDP in billions of USD (nominal, most recent)", "is_closed_set": false, "is_multi_valued": false}
+  ],
+  "records": [
+    {
+      "label": "France",
+      "aliases": ["French Republic", "République française"],
+      "attributes": {
+        "capital": {
+          "values": [{"value": "Paris", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/france/", "title": "France - The World Factbook", "tier": "AUTHORITATIVE", "snippet": "Capital: Paris"}]}],
+          "confidence": 0.98, "verified": true
+        },
+        "population": {
+          "values": [{"value": "68,373,000", "sources": [{"url": "https://www.insee.fr/en/statistiques/7750591", "title": "France population estimate 2024 - INSEE", "tier": "AUTHORITATIVE", "snippet": "Population of France as of 1 January 2024: 68,373,000"}]}],
+          "confidence": 0.95, "verified": true
+        },
+        "area_km2": {
+          "values": [{"value": "643,801", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/france/", "title": "France - The World Factbook", "tier": "AUTHORITATIVE", "snippet": "Area: total: 643,801 sq km"}]}],
+          "confidence": 0.97, "verified": true
+        },
+        "eu_member": {
+          "values": [{"value": "Yes", "sources": [{"url": "https://european-union.europa.eu/principles-countries-history/country-profiles/france_en", "title": "France - European Union", "tier": "AUTHORITATIVE", "snippet": "France is a founding member of the European Union."}]}],
+          "confidence": 0.99, "verified": true
+        },
+        "currency": {
+          "values": [{"value": "Euro (EUR)", "sources": [{"url": "https://www.ecb.europa.eu/euro/coins/html/fr.en.html", "title": "Euro coins - France - ECB", "tier": "AUTHORITATIVE", "snippet": "France adopted the euro as its currency in 1999."}]}],
+          "confidence": 0.99, "verified": true
+        },
+        "official_language": {
+          "values": [{"value": "French", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/france/", "title": "France - The World Factbook", "tier": "AUTHORITATIVE", "snippet": "Official language: French"}]}],
+          "confidence": 0.99, "verified": true
+        },
+        "government_type": {
+          "values": [{"value": "Semi-presidential republic", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/france/", "title": "France - The World Factbook", "tier": "AUTHORITATIVE", "snippet": "Government type: semi-presidential republic"}]}],
+          "confidence": 0.97, "verified": true
+        },
+        "gdp_billion_usd": {
+          "values": [{"value": "3,049", "sources": [{"url": "https://data.worldbank.org/indicator/NY.GDP.MKTP.CD?locations=FR", "title": "France GDP - World Bank", "tier": "AUTHORITATIVE", "snippet": "France GDP (current US$): 3,049 billion (2023)"}]}],
+          "confidence": 0.93, "verified": true
+        }
+      }
+    },
+    {
+      "label": "Germany",
+      "aliases": ["Federal Republic of Germany", "Bundesrepublik Deutschland"],
+      "attributes": {
+        "capital": {
+          "values": [{"value": "Berlin", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/germany/", "title": "Germany - The World Factbook", "tier": "AUTHORITATIVE", "snippet": "Capital: Berlin"}]}],
+          "confidence": 0.99, "verified": true
+        },
+        "population": {
+          "values": [{"value": "84,552,000", "sources": [{"url": "https://www.destatis.de/EN/Themes/Society-Environment/Population/Current-Population/_node.html", "title": "Population - Federal Statistical Office", "tier": "AUTHORITATIVE", "snippet": "Germany's population: 84,552,000 (end 2023)"}]}],
+          "confidence": 0.95, "verified": true
+        },
+        "area_km2": {
+          "values": [{"value": "357,114", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/germany/", "title": "Germany - The World Factbook", "tier": "AUTHORITATIVE", "snippet": "Area: total: 357,114 sq km"}]}],
+          "confidence": 0.97, "verified": true
+        },
+        "eu_member": {
+          "values": [{"value": "Yes", "sources": [{"url": "https://european-union.europa.eu/principles-countries-history/country-profiles/germany_en", "title": "Germany - European Union", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.99, "verified": true
+        },
+        "currency": {
+          "values": [{"value": "Euro (EUR)", "sources": [{"url": "https://www.ecb.europa.eu/euro/coins/html/de.en.html", "title": "Euro coins - Germany - ECB", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.99, "verified": true
+        },
+        "official_language": {
+          "values": [{"value": "German", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/germany/", "title": "Germany - The World Factbook", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.99, "verified": true
+        },
+        "government_type": {
+          "values": [{"value": "Federal parliamentary republic", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/germany/", "title": "Germany - The World Factbook", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.97, "verified": true
+        },
+        "gdp_billion_usd": {
+          "values": [{"value": "4,456", "sources": [{"url": "https://data.worldbank.org/indicator/NY.GDP.MKTP.CD?locations=DE", "title": "Germany GDP - World Bank", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.93, "verified": true
+        }
+      }
+    },
+    {
+      "label": "Norway",
+      "aliases": ["Kingdom of Norway", "Kongeriket Norge"],
+      "attributes": {
+        "capital": {
+          "values": [{"value": "Oslo", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/norway/", "title": "Norway - The World Factbook", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.99, "verified": true
+        },
+        "population": {
+          "values": [{"value": "5,488,000", "sources": [{"url": "https://www.ssb.no/en/befolkning/folkemengde-og-befolkningsendringer/statistikk/folkemengde", "title": "Population - Statistics Norway", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.95, "verified": true
+        },
+        "area_km2": {
+          "values": [{"value": "385,207", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/norway/", "title": "Norway - The World Factbook", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.97, "verified": true
+        },
+        "eu_member": {
+          "values": [{"value": "No", "sources": [{"url": "https://www.regjeringen.no/en/topics/european-policy/", "title": "European policy - Government of Norway", "tier": "AUTHORITATIVE", "snippet": "Norway is not a member of the EU but participates in the EEA."}]}],
+          "confidence": 0.99, "verified": true
+        },
+        "currency": {
+          "values": [{"value": "Norwegian krone (NOK)", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/norway/", "title": "Norway - The World Factbook", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.99, "verified": true
+        },
+        "official_language": {
+          "values": [{"value": "Norwegian (Bokmål; Nynorsk)", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/norway/", "title": "Norway - The World Factbook", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.97, "verified": true
+        },
+        "government_type": {
+          "values": [{"value": "Constitutional monarchy", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/norway/", "title": "Norway - The World Factbook", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.97, "verified": true
+        },
+        "gdp_billion_usd": {
+          "values": [{"value": "546", "sources": [{"url": "https://data.worldbank.org/indicator/NY.GDP.MKTP.CD?locations=NO", "title": "Norway GDP - World Bank", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.93, "verified": true
+        }
+      }
+    },
+    {
+      "label": "Poland",
+      "aliases": ["Republic of Poland", "Rzeczpospolita Polska"],
+      "attributes": {
+        "capital": {
+          "values": [{"value": "Warsaw", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/poland/", "title": "Poland - The World Factbook", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.99, "verified": true
+        },
+        "population": {
+          "values": [{"value": "37,654,000", "sources": [{"url": "https://stat.gov.pl/en/", "title": "Statistics Poland", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.95, "verified": true
+        },
+        "area_km2": {
+          "values": [{"value": "312,696", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/poland/", "title": "Poland - The World Factbook", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.97, "verified": true
+        },
+        "eu_member": {
+          "values": [{"value": "Yes", "sources": [{"url": "https://european-union.europa.eu/principles-countries-history/country-profiles/poland_en", "title": "Poland - European Union", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.99, "verified": true
+        },
+        "currency": {
+          "values": [{"value": "Polish złoty (PLN)", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/poland/", "title": "Poland - The World Factbook", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.99, "verified": true
+        },
+        "official_language": {
+          "values": [{"value": "Polish", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/poland/", "title": "Poland - The World Factbook", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.99, "verified": true
+        },
+        "government_type": {
+          "values": [{"value": "Parliamentary republic", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/poland/", "title": "Poland - The World Factbook", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.97, "verified": true
+        },
+        "gdp_billion_usd": {
+          "values": [{"value": "842", "sources": [{"url": "https://data.worldbank.org/indicator/NY.GDP.MKTP.CD?locations=PL", "title": "Poland GDP - World Bank", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.93, "verified": true
+        }
+      }
+    },
+    {
+      "label": "Switzerland",
+      "aliases": ["Swiss Confederation", "Schweizerische Eidgenossenschaft"],
+      "attributes": {
+        "capital": {
+          "values": [{"value": "Bern (de facto)", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/switzerland/", "title": "Switzerland - The World Factbook", "tier": "AUTHORITATIVE", "snippet": "Capital: Bern (de facto federal capital)"}]}],
+          "confidence": 0.95, "verified": true
+        },
+        "population": {
+          "values": [{"value": "8,815,000", "sources": [{"url": "https://www.bfs.admin.ch/bfs/en/home/statistics/population.html", "title": "Population - Swiss Federal Statistical Office", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.95, "verified": true
+        },
+        "area_km2": {
+          "values": [{"value": "41,285", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/switzerland/", "title": "Switzerland - The World Factbook", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.97, "verified": true
+        },
+        "eu_member": {
+          "values": [{"value": "No", "sources": [{"url": "https://www.eda.admin.ch/dea/en/home/europapolitik/eu-bilaterale.html", "title": "Switzerland-EU bilateral agreements", "tier": "AUTHORITATIVE", "snippet": "Switzerland is not a member of the EU, but cooperates closely through bilateral agreements."}]}],
+          "confidence": 0.99, "verified": true
+        },
+        "currency": {
+          "values": [{"value": "Swiss franc (CHF)", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/switzerland/", "title": "Switzerland - The World Factbook", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.99, "verified": true
+        },
+        "official_language": {
+          "values": [
+            {"value": "German", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/switzerland/", "title": "Switzerland - The World Factbook", "tier": "AUTHORITATIVE"}]},
+            {"value": "French", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/switzerland/", "title": "Switzerland - The World Factbook", "tier": "AUTHORITATIVE"}]},
+            {"value": "Italian", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/switzerland/", "title": "Switzerland - The World Factbook", "tier": "AUTHORITATIVE"}]},
+            {"value": "Romansh", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/switzerland/", "title": "Switzerland - The World Factbook", "tier": "AUTHORITATIVE"}]}
+          ],
+          "confidence": 0.99, "verified": true
+        },
+        "government_type": {
+          "values": [{"value": "Federal republic (direct democracy)", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/switzerland/", "title": "Switzerland - The World Factbook", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.97, "verified": true
+        },
+        "gdp_billion_usd": {
+          "values": [{"value": "905", "sources": [{"url": "https://data.worldbank.org/indicator/NY.GDP.MKTP.CD?locations=CH", "title": "Switzerland GDP - World Bank", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.93, "verified": true
+        }
+      }
+    },
+    {
+      "label": "Sweden",
+      "aliases": ["Kingdom of Sweden", "Konungariket Sverige"],
+      "attributes": {
+        "capital": {
+          "values": [{"value": "Stockholm", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/sweden/", "title": "Sweden - The World Factbook", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.99, "verified": true
+        },
+        "population": {
+          "values": [{"value": "10,521,000", "sources": [{"url": "https://www.scb.se/en/finding-statistics/statistics-by-subject-area/population/population-composition/population-statistics/", "title": "Population statistics - Statistics Sweden", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.95, "verified": true
+        },
+        "area_km2": {
+          "values": [{"value": "450,295", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/sweden/", "title": "Sweden - The World Factbook", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.97, "verified": true
+        },
+        "eu_member": {
+          "values": [{"value": "Yes", "sources": [{"url": "https://european-union.europa.eu/principles-countries-history/country-profiles/sweden_en", "title": "Sweden - European Union", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.99, "verified": true
+        },
+        "currency": {
+          "values": [{"value": "Swedish krona (SEK)", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/sweden/", "title": "Sweden - The World Factbook", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.99, "verified": true
+        },
+        "official_language": {
+          "values": [{"value": "Swedish", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/sweden/", "title": "Sweden - The World Factbook", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.99, "verified": true
+        },
+        "government_type": {
+          "values": [{"value": "Constitutional monarchy (parliamentary democracy)", "sources": [{"url": "https://www.cia.gov/the-world-factbook/countries/sweden/", "title": "Sweden - The World Factbook", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.97, "verified": true
+        },
+        "gdp_billion_usd": {
+          "values": [{"value": "597", "sources": [{"url": "https://data.worldbank.org/indicator/NY.GDP.MKTP.CD?locations=SE", "title": "Sweden GDP - World Bank", "tier": "AUTHORITATIVE"}]}],
+          "confidence": 0.93, "verified": true
+        }
+      }
+    }
+  ]
+}
