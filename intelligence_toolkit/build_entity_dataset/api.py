@@ -126,7 +126,12 @@ class BuildEntityDataset:
             # is larger so both code paths surface a live count.
             history_count = len(getattr(self._schemify, "query_history", []) or [])
             counter = int(getattr(self._schemify, "_query_counter", 0) or 0)
-            self.progress.query_count = max(history_count, counter)
+            # Preserve any higher value already pushed by the per-query
+            # progress callback; ``query_history`` is only appended when
+            # a whole batch finishes, so it lags mid-batch.
+            self.progress.query_count = max(
+                history_count, counter, self.progress.query_count
+            )
         except Exception:  # noqa: BLE001
             pass
         rs = getattr(self._schemify, "record_set", None)

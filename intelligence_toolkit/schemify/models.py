@@ -60,6 +60,56 @@ def _source_key(url: str) -> str:
     return s.rstrip("/")
 
 
+_PUNCT_RE = re.compile(r"[^\w\s]+", re.UNICODE)
+_WS_RE = re.compile(r"\s+")
+
+
+def _normalize_value(s: str) -> str:
+    """Casefold, drop punctuation, collapse whitespace.
+
+    ``"Web-Based!"`` and ``"web based"`` both collapse to ``"web based"``.
+    """
+    if not s:
+        return ""
+    s = _PUNCT_RE.sub(" ", s.casefold())
+    return _WS_RE.sub(" ", s).strip()
+
+
+def _trigrams(s: str) -> set[str]:
+    """Character trigrams over a normalized string, padded with spaces.
+
+    Padding ensures short strings still yield discriminative shingles
+    (``"eu"`` → ``{" eu", "eu "}``).
+    """
+    if not s:
+        return set()
+    padded = f" {s} "
+    if len(padded) < 3:
+        return {padded}
+    return {padded[i : i + 3] for i in range(len(padded) - 2)}
+
+
+def _mean_pairwise_jaccard(values: list[str]) -> float:
+    """Mean pairwise Jaccard similarity of trigram sets.
+
+    Returns ``1.0`` for 0 or 1 distinct normalized values. For two or
+    more, averages Jaccard over all unordered pairs.
+    """
+    distinct = sorted({_normalize_value(v) for v in values if v and v.strip()})
+    if len(distinct) < 2:
+        return 1.0
+    grams = [_trigrams(v) for v in distinct]
+    total = 0.0
+    pairs = 0
+    for i in range(len(grams)):
+        for j in range(i + 1, len(grams)):
+            a, b = grams[i], grams[j]
+            union = a | b
+            total += (len(a & b) / len(union)) if union else 1.0
+            pairs += 1
+    return total / pairs if pairs else 1.0
+
+
 @dataclass
 class Evidence:
     """Three orthogonal, auditable signals about an attribute value.
@@ -70,24 +120,24 @@ class Evidence:
 
     * ``source_count`` — number of *distinct* citations supporting any
       value of this attribute (deduped by host+path).
-    * ``has_conflict`` — true when two or more case-normalized values
-      coexist for the same attribute.
-    * ``freshest_retrieved`` — ``retrieved_at`` of the most recent
-      citation, or ``None`` if no citations exist. The viewer decides
-      what "recent" means; we don't bake in a decay curve.
+    * ``agreement`` — mean pairwise Jaccard similarity over character
+      trigrams of the normalized values. ``1.0`` when sources agree (or
+      only one value exists); lower as values diverge.
+    * ``last_seen_at`` — most recent ``retrieved_at`` across citations,
+      or ``None`` if no citations exist. NOTE: this is *when we fetched*
+      the page, not when the page was published. Publication date is not
+      currently captured.
     """
     source_count: int
-    has_conflict: bool
-    freshest_retrieved: Optional[datetime]
+    agreement: float
+    last_seen_at: Optional[datetime]
 
     def to_dict(self) -> dict:
         return {
             "source_count": self.source_count,
-            "has_conflict": self.has_conflict,
-            "freshest_retrieved": (
-                self.freshest_retrieved.isoformat()
-                if self.freshest_retrieved
-                else None
+            "agreement": round(self.agreement, 3),
+            "last_seen_at": (
+                self.last_seen_at.isoformat() if self.last_seen_at else None
             ),
         }
 
@@ -192,8 +242,12 @@ class AttributeValue:
             self.add_value(value, source)
     
     def has_conflicts(self) -> bool:
-        """Check if there are multiple distinct (case-normalized) values."""
-        norm = {v.value.strip().casefold() for v in self.values if v.value.strip()}
+        """Back-compat: true when normalized values disagree at all.
+
+        Prefer ``evidence.agreement`` for a continuous measure.
+        """
+        norm = {_normalize_value(v.value) for v in self.values if v.value.strip()}
+        norm.discard("")
         return len(norm) > 1
 
     @property
@@ -206,19 +260,20 @@ class AttributeValue:
         """
         seen: set[str] = set()
         distinct = 0
-        freshest: Optional[datetime] = None
+        last_seen: Optional[datetime] = None
         for s in self.sources:
             key = _source_key(s.url)
             if not key or key in seen:
                 continue
             seen.add(key)
             distinct += 1
-            if freshest is None or s.retrieved_at > freshest:
-                freshest = s.retrieved_at
+            if last_seen is None or s.retrieved_at > last_seen:
+                last_seen = s.retrieved_at
+        agreement = _mean_pairwise_jaccard([v.value for v in self.values])
         return Evidence(
             source_count=distinct,
-            has_conflict=self.has_conflicts(),
-            freshest_retrieved=freshest,
+            agreement=agreement,
+            last_seen_at=last_seen,
         )
 
     def to_dict(self) -> dict:
@@ -286,29 +341,33 @@ class Record:
     def evidence_summary(self) -> dict:
         """Aggregate evidence signals across this record's attributes.
 
-        Returns ``{n_attrs, n_sourced, n_conflicting, freshest_retrieved}``.
-        Useful for record-level filtering/display without inventing a
-        single opaque score.
+        Returns ``{n_attrs, n_sourced, mean_agreement, last_seen_at}``.
+        ``mean_agreement`` averages per-attribute agreement scores over
+        attributes that have any value; ``1.0`` means perfect agreement
+        (or single-value attrs only).
         """
         all_attrs = list(self.attributes.values()) + list(self.additional_attributes.values())
         n_sourced = 0
-        n_conflicting = 0
-        freshest: Optional[datetime] = None
+        agreements: list[float] = []
+        last_seen: Optional[datetime] = None
         for av in all_attrs:
             ev = av.evidence
             if ev.source_count > 0:
                 n_sourced += 1
-            if ev.has_conflict:
-                n_conflicting += 1
-            if ev.freshest_retrieved and (
-                freshest is None or ev.freshest_retrieved > freshest
+            if av.values:
+                agreements.append(ev.agreement)
+            if ev.last_seen_at and (
+                last_seen is None or ev.last_seen_at > last_seen
             ):
-                freshest = ev.freshest_retrieved
+                last_seen = ev.last_seen_at
+        mean_agreement = (
+            sum(agreements) / len(agreements) if agreements else 1.0
+        )
         return {
             "n_attrs": len(all_attrs),
             "n_sourced": n_sourced,
-            "n_conflicting": n_conflicting,
-            "freshest_retrieved": freshest.isoformat() if freshest else None,
+            "mean_agreement": round(mean_agreement, 3),
+            "last_seen_at": last_seen.isoformat() if last_seen else None,
         }
     
     def attribute_coverage(self, schema_attrs: Optional[list["SchemaAttribute"]] = None) -> float:
@@ -539,9 +598,9 @@ class Record:
         # Flat record-level evidence summary for CSV/dataframe export.
         ev = self.evidence_summary()
         result["_sourced_attrs"] = ev["n_sourced"]
-        result["_conflicting_attrs"] = ev["n_conflicting"]
-        if ev["freshest_retrieved"]:
-            result["_freshest_retrieved"] = ev["freshest_retrieved"]
+        result["_mean_agreement"] = ev["mean_agreement"]
+        if ev["last_seen_at"]:
+            result["_last_seen_at"] = ev["last_seen_at"]
 
         return result
     

@@ -1924,10 +1924,13 @@ class Schemify:
             if summaries:
                 total_attrs = sum(s["n_attrs"] for s in summaries)
                 total_sourced = sum(s["n_sourced"] for s in summaries)
-                total_conflicting = sum(s["n_conflicting"] for s in summaries)
+                agreements = [s["mean_agreement"] for s in summaries]
                 stats["records"]["total_attribute_values"] = total_attrs
                 stats["records"]["sourced_attribute_values"] = total_sourced
-                stats["records"]["conflicting_attribute_values"] = total_conflicting
+                stats["records"]["mean_agreement"] = (
+                    round(sum(agreements) / len(agreements), 3)
+                    if agreements else 1.0
+                )
                 if total_attrs:
                     stats["records"]["sourced_fraction"] = total_sourced / total_attrs
 

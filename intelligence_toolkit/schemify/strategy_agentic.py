@@ -2147,7 +2147,7 @@ class AgenticStrategy:
         if rows is not None:
             seed_columns = {
                 k for row in rows for k in row.keys()
-            } - {"Entity", "label", "name", "aliases", "_confidence", "_sourced_attrs", "_conflicting_attrs", "_freshest_retrieved"}
+            } - {"Entity", "label", "name", "aliases", "_confidence", "_sourced_attrs", "_conflicting_attrs", "_freshest_retrieved", "_mean_agreement", "_last_seen_at"}
             unmatched = seed_columns - schema_attr_names
             if unmatched:
                 remap = await self._auto_remap_schema(
@@ -2188,7 +2188,7 @@ class AgenticStrategy:
                     continue
                 rec = Record(label=str(label))
                 for key, val in row.items():
-                    if key in ("Entity", "label", "name", "aliases", "_confidence", "_sourced_attrs", "_conflicting_attrs", "_freshest_retrieved"):
+                    if key in ("Entity", "label", "name", "aliases", "_confidence", "_sourced_attrs", "_conflicting_attrs", "_freshest_retrieved", "_mean_agreement", "_last_seen_at"):
                         continue
                     if val is None or (isinstance(val, float) and val != val):
                         continue  # skip NaN / None

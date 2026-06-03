@@ -2050,7 +2050,7 @@ function buildAttrCard(attrName, attr) {
       if (src.retrieved_at) {
         const date = document.createElement('div');
         date.className = 'cite-date';
-        date.textContent = 'Retrieved: ' + src.retrieved_at.slice(0, 10);
+        date.textContent = 'Last seen: ' + src.retrieved_at.slice(0, 10);
         cite.appendChild(date);
       }
 
