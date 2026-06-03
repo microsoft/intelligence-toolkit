@@ -111,7 +111,9 @@ class Schemify:
         
         # Auto-complete settings
         self.auto_complete_threshold: float = 0.3  # Complete if >30% missing
-        self.auto_expand_threshold: float = 0.5    # Expand if confidence <50%
+        # Auto-expand: records with fewer than this many sourced schema
+        # attributes get an extra extraction pass.
+        self.auto_expand_min_sourced: int = 1
         
         # Callbacks for progress updates
         self._on_progress: Optional[Callable[[str, int, int], None]] = None
@@ -1675,19 +1677,25 @@ class Schemify:
                             existing_values.add(value)
                             logger.debug(f"Added provisional value: {attr.name}={value}")
     
-    async def _auto_expand_low_confidence(self):
-        """Auto-expand records with low confidence scores."""
+    async def _auto_expand_low_evidence(self):
+        """Auto-expand records that lack sourced attributes.
+
+        A record is "low-evidence" when fewer than
+        ``auto_expand_min_sourced`` of its attributes have at least one
+        citation. The old confidence-threshold heuristic was removed
+        along with the weighted score.
+        """
         if not self.record_set:
             return
-        
-        low_conf_records = [
+
+        low_evidence_records = [
             r for r in self.record_set.records
-            if r.average_confidence() < self.auto_expand_threshold
+            if r.evidence_summary()["n_sourced"] < self.auto_expand_min_sourced
         ]
-        
-        if low_conf_records:
-            logger.info(f"Auto-expanding {len(low_conf_records)} low-confidence records")
-            for record in low_conf_records:
+
+        if low_evidence_records:
+            logger.info(f"Auto-expanding {len(low_evidence_records)} low-evidence records")
+            for record in low_evidence_records:
                 await self.extraction.expand_record(record, self.record_set)
 
     async def expand(
@@ -1910,32 +1918,29 @@ class Schemify:
                 "schema_attributes": len(self.record_set.schema_attributes),
                 "category": self.record_set.category,
             }
-            
-            # Confidence distribution
-            confidences = [r.average_confidence() for r in self.record_set.records]
-            if confidences:
-                stats["records"]["avg_confidence"] = sum(confidences) / len(confidences)
-                stats["records"]["min_confidence"] = min(confidences)
-                stats["records"]["max_confidence"] = max(confidences)
-        
+
+            # Evidence distribution (replaces the prior confidence stats).
+            summaries = [r.evidence_summary() for r in self.record_set.records]
+            if summaries:
+                total_attrs = sum(s["n_attrs"] for s in summaries)
+                total_sourced = sum(s["n_sourced"] for s in summaries)
+                total_conflicting = sum(s["n_conflicting"] for s in summaries)
+                stats["records"]["total_attribute_values"] = total_attrs
+                stats["records"]["sourced_attribute_values"] = total_sourced
+                stats["records"]["conflicting_attribute_values"] = total_conflicting
+                if total_attrs:
+                    stats["records"]["sourced_fraction"] = total_sourced / total_attrs
+
         return stats
-    
-    def get_low_confidence_records(self, threshold: float = 0.5) -> list[Record]:
-        """
-        Get records with confidence below threshold.
-        
-        Args:
-            threshold: Confidence threshold
-            
-        Returns:
-            List of low-confidence records
-        """
+
+    def get_low_evidence_records(self, min_sourced: int = 1) -> list[Record]:
+        """Get records with fewer than ``min_sourced`` sourced attributes."""
         if not self.record_set:
             return []
-        
+
         return [
             r for r in self.record_set.records
-            if r.average_confidence() < threshold
+            if r.evidence_summary()["n_sourced"] < min_sourced
         ]
     
     def save(self, filepath: str):

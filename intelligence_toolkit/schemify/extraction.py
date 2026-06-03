@@ -17,7 +17,7 @@ from .models import (
 from .llm import LLMClient
 from .cache import Cache, NoOpCache
 from .search import SearchProvider, OpenAISearchProvider
-from .sources import merge_attribute_values, merge_attribute_values_multi, classify_source
+from .sources import merge_attribute_values, merge_attribute_values_multi
 from . import prompts
 from . import schemas
 from datetime import date as _date
@@ -440,7 +440,6 @@ Provide concrete, verifiable details with specific names, dates, organizations, 
                         start_index=source.start_index,
                         end_index=source.end_index,
                         snippet=snippet or None,
-                        tier=source.tier,
                     )
                     resolved.append(citation_with_evidence)
             return resolved
@@ -471,14 +470,12 @@ Provide concrete, verifiable details with specific names, dates, organizations, 
                         attr_value = AttributeValue()
                         cited_sources = resolve_citations(citation_indices, evidence)
                         attr_value.add_value_with_sources(value, cited_sources)
-                        attr_value.compute_confidence()
                         record.attributes[attr_name] = attr_value
                 elif attr_data:
                     # Old format: plain string (fallback)
                     value = attr_data if isinstance(attr_data, str) else str(attr_data)
                     attr_value = AttributeValue()
                     attr_value.add_value_with_sources(value, citations)
-                    attr_value.compute_confidence()
                     record.attributes[attr_name] = attr_value
             
             # Add additional attributes
@@ -494,7 +491,6 @@ Provide concrete, verifiable details with specific names, dates, organizations, 
                         attr_value.add_value_with_sources(value, cited_sources)
                     else:
                         attr_value.add_value_with_sources(value, citations)
-                    attr_value.compute_confidence()
                     record.additional_attributes[name] = attr_value
             
             new_records.append(record)
@@ -616,7 +612,6 @@ Provide concrete, verifiable details with specific names, dates, organizations, 
                         start_index=source.start_index,
                         end_index=source.end_index,
                         snippet=snippet or None,
-                        tier=source.tier,
                     )
                     resolved.append(citation_with_evidence)
             return resolved

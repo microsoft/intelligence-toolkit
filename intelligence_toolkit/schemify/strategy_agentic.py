@@ -890,8 +890,7 @@ class AgenticStrategy:
             if not label:
                 continue
 
-            confidence_note = ent.get("confidence_note", "medium")
-            base_conf = {"high": 0.3, "medium": 0.2, "low": 0.1}.get(confidence_note, 0.2)
+            confidence_note = ent.get("confidence_note", "medium")  # LLM self-assessment; kept for prompt UX only
 
             rec = Record(label=label)
             rec.aliases = [a.strip() for a in ent.get("aliases", []) if a.strip()]
@@ -902,9 +901,7 @@ class AgenticStrategy:
                 if not val or attr_name not in schema_attr_names:
                     continue
                 av = AttributeValue()
-                av.add_value(val)  # No source — unverified
-                av.confidence = base_conf
-                av.verified = False
+                av.add_value(val)  # No source — will read as 0 source_count in evidence
                 rec.set_attribute(attr_name, av, is_schema_attr=True)
 
             was_new, _ = record_set.add_record(rec, use_fuzzy=True)
@@ -2150,7 +2147,7 @@ class AgenticStrategy:
         if rows is not None:
             seed_columns = {
                 k for row in rows for k in row.keys()
-            } - {"Entity", "label", "name", "aliases", "_confidence"}
+            } - {"Entity", "label", "name", "aliases", "_confidence", "_sourced_attrs", "_conflicting_attrs", "_freshest_retrieved"}
             unmatched = seed_columns - schema_attr_names
             if unmatched:
                 remap = await self._auto_remap_schema(
@@ -2191,7 +2188,7 @@ class AgenticStrategy:
                     continue
                 rec = Record(label=str(label))
                 for key, val in row.items():
-                    if key in ("Entity", "label", "name", "aliases", "_confidence"):
+                    if key in ("Entity", "label", "name", "aliases", "_confidence", "_sourced_attrs", "_conflicting_attrs", "_freshest_retrieved"):
                         continue
                     if val is None or (isinstance(val, float) and val != val):
                         continue  # skip NaN / None
@@ -2580,11 +2577,7 @@ If a source column has no reasonable match in the target schema, map it to null.
 
         self.llm.set_progress_context("")
 
-        # Recompute confidence (and verified flag) on all touched records
-        for record, _ in to_verify:
-            for attr_name, av in record.attributes.items():
-                if attr_name in schema_names and av.value:
-                    av.compute_confidence()
+        # Evidence is derived on read; no recomputation needed.
 
         # Recount unsourced attrs after verification
         attrs_after_unsourced = 0

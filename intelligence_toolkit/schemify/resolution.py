@@ -840,7 +840,6 @@ class ResolutionEngine:
                         else:
                             for src in sv.sources:
                                 target.add_value(sv.value, src)
-                    target.compute_confidence()
                 promoted += 1
 
         # Pass 2: collapse case-insensitive duplicates remaining in additional_attributes.
@@ -877,7 +876,6 @@ class ResolutionEngine:
                         else:
                             for src in sv.sources:
                                 target.add_value(sv.value, src)
-                    target.compute_confidence()
                 collapsed += 1
 
         applied = {**promote_map, **case_collapse}
@@ -1071,9 +1069,6 @@ class ResolutionEngine:
                     SourcedValue(value=m["value"], sources=m["sources"])
                     for m in merged.values()
                 ]
-            
-            # Re-compute confidence after normalization
-            attr_val.compute_confidence()
 
     def _apply_attribute_mapping(self, record_set: RecordSet, mapping: dict[str, str]):
         """Apply attribute name mapping to all records."""
@@ -1089,7 +1084,6 @@ class ResolutionEngine:
                     for sourced_val in attr_value.values:
                         for source in sourced_val.sources:
                             existing.add_value(sourced_val.value, source)
-                    existing.compute_confidence()
                 else:
                     record.attributes[new_name] = attr_value
                 del record.attributes[old_name]
@@ -1104,7 +1098,6 @@ class ResolutionEngine:
                     for sourced_val in attr_value.values:
                         for source in sourced_val.sources:
                             existing.add_value(sourced_val.value, source)
-                    existing.compute_confidence()
                 else:
                     record.additional_attributes[new_name] = attr_value
                 del record.additional_attributes[old_name]

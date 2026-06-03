@@ -1,29 +1,20 @@
 """
 Data models for Schemify.
 
-Implements attribute-level citation tracking, confidence scoring,
-and schema evolution support.
+Implements attribute-level citation tracking, lightweight evidence
+summaries, and schema evolution support.
 """
 
+import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Optional
-from enum import Enum
 import json
 
 
 class BudgetExceededError(Exception):
     """Raised when the estimated token budget is exceeded."""
     pass
-
-
-class SourceTier(Enum):
-    """Source quality tiers for weighting."""
-    AUTHORITATIVE = 1.0  # .gov, .edu, official sites
-    REPUTABLE = 0.8      # Major news, industry publications
-    GENERAL = 0.6        # Wikipedia, general reference
-    USER_GENERATED = 0.3 # Forums, social media, blogs
-    BLACKLISTED = 0.0    # Known unreliable sources
 
 
 @dataclass
@@ -35,26 +26,70 @@ class Citation:
     start_index: Optional[int] = None
     end_index: Optional[int] = None
     snippet: Optional[str] = None  # The actual text from the response that this citation supports
-    tier: SourceTier = SourceTier.GENERAL
-    
+
     def to_dict(self) -> dict:
         return {
             "url": self.url,
             "title": self.title,
             "retrieved_at": self.retrieved_at.isoformat(),
-            "tier": self.tier.name,
             "snippet": self.snippet,
         }
-    
+
     @classmethod
     def from_dict(cls, data: dict) -> "Citation":
         return cls(
             url=data["url"],
             title=data["title"],
             retrieved_at=datetime.fromisoformat(data.get("retrieved_at", datetime.now().isoformat())),
-            tier=SourceTier[data.get("tier", "GENERAL")],
             snippet=data.get("snippet"),
         )
+
+
+def _source_key(url: str) -> str:
+    """Normalize a URL for distinct-source counting.
+
+    Strips protocol, ``www.``, query, fragment, and trailing slashes so
+    that ``https://www.example.com/path/`` and ``http://example.com/path``
+    collapse to a single source.
+    """
+    if not url:
+        return ""
+    s = url.lower().split("?", 1)[0].split("#", 1)[0]
+    s = re.sub(r"^https?://", "", s)
+    s = re.sub(r"^www\.", "", s)
+    return s.rstrip("/")
+
+
+@dataclass
+class Evidence:
+    """Three orthogonal, auditable signals about an attribute value.
+
+    Replaces the prior opaque ``confidence`` float. Each field is
+    something a downstream reader can verify against the citation list
+    themselves:
+
+    * ``source_count`` — number of *distinct* citations supporting any
+      value of this attribute (deduped by host+path).
+    * ``has_conflict`` — true when two or more case-normalized values
+      coexist for the same attribute.
+    * ``freshest_retrieved`` — ``retrieved_at`` of the most recent
+      citation, or ``None`` if no citations exist. The viewer decides
+      what "recent" means; we don't bake in a decay curve.
+    """
+    source_count: int
+    has_conflict: bool
+    freshest_retrieved: Optional[datetime]
+
+    def to_dict(self) -> dict:
+        return {
+            "source_count": self.source_count,
+            "has_conflict": self.has_conflict,
+            "freshest_retrieved": (
+                self.freshest_retrieved.isoformat()
+                if self.freshest_retrieved
+                else None
+            ),
+        }
 
 
 @dataclass
@@ -89,9 +124,7 @@ class AttributeValue:
     - Choosing the best value based on source count/quality
     """
     values: list[SourcedValue] = field(default_factory=list)
-    confidence: float = 0.5
-    verified: bool = False
-    
+
     @property
     def value(self) -> str:
         """Get display value - the primary (best-sourced) value."""
@@ -159,52 +192,42 @@ class AttributeValue:
             self.add_value(value, source)
     
     def has_conflicts(self) -> bool:
-        """Check if there are multiple distinct values."""
-        return len(self.values) > 1
-    
-    def compute_confidence(self) -> float:
-        """Compute confidence score based on sources."""
-        all_sources = self.sources
-        if not all_sources:
-            return 0.3  # Low confidence for unsourced values
-        
-        # Factor 1: Number of corroborating sources
-        source_count_factor = min(len(all_sources) / 3, 1.0)  # Cap at 3 sources
-        
-        # Factor 2: Source quality
-        avg_tier = sum(s.tier.value for s in all_sources) / len(all_sources)
-        
-        # Factor 3: Recency (sources from last 30 days get full weight)
-        now = datetime.now()
-        recency_scores = []
-        for s in all_sources:
-            days_old = (now - s.retrieved_at).days
-            recency_scores.append(max(0, 1 - days_old / 365))  # Decay over 1 year
-        recency_factor = sum(recency_scores) / len(recency_scores)
-        
-        # Factor 4: Agreement penalty if conflicting values
-        agreement_factor = 1.0 if len(self.values) <= 1 else 0.7
-        
-        # Weighted combination
-        self.confidence = (
-            0.25 * source_count_factor +
-            0.4 * avg_tier +
-            0.15 * recency_factor +
-            0.2 * agreement_factor
+        """Check if there are multiple distinct (case-normalized) values."""
+        norm = {v.value.strip().casefold() for v in self.values if v.value.strip()}
+        return len(norm) > 1
+
+    @property
+    def evidence(self) -> Evidence:
+        """Derive the three evidence signals from current sources/values.
+
+        Cheap to recompute; not cached. Sources are deduped by
+        ``(host, path)`` so three URLs pointing at the same article
+        count once.
+        """
+        seen: set[str] = set()
+        distinct = 0
+        freshest: Optional[datetime] = None
+        for s in self.sources:
+            key = _source_key(s.url)
+            if not key or key in seen:
+                continue
+            seen.add(key)
+            distinct += 1
+            if freshest is None or s.retrieved_at > freshest:
+                freshest = s.retrieved_at
+        return Evidence(
+            source_count=distinct,
+            has_conflict=self.has_conflicts(),
+            freshest_retrieved=freshest,
         )
-        # Mark verified when at least one web source supports a value
-        self.verified = len(all_sources) > 0
-        return self.confidence
-    
+
     def to_dict(self) -> dict:
         return {
             "value": self.value,  # Primary value for backward compat
             "values": [v.to_dict() for v in self.values],
-            "confidence": self.confidence,
-            "verified": self.verified,
-            "has_conflicts": self.has_conflicts(),
+            "evidence": self.evidence.to_dict(),
         }
-    
+
     @classmethod
     def from_dict(cls, data: dict) -> "AttributeValue":
         # Support both old format (single value) and new format (values array)
@@ -216,11 +239,9 @@ class AttributeValue:
                 value=data.get("value", ""),
                 sources=[Citation.from_dict(s) for s in data.get("sources", [])],
             )]
-        return cls(
-            values=values,
-            confidence=data.get("confidence", 0.5),
-            verified=data.get("verified", False),
-        )
+        # Legacy ``confidence``/``verified``/``tier`` keys in older
+        # snapshots are ignored — evidence is now derived from sources.
+        return cls(values=values)
 
 
 @dataclass
@@ -262,12 +283,33 @@ class Record:
             sources.extend(attr.sources)
         return sources
     
-    def average_confidence(self) -> float:
-        """Compute average confidence across all attributes."""
+    def evidence_summary(self) -> dict:
+        """Aggregate evidence signals across this record's attributes.
+
+        Returns ``{n_attrs, n_sourced, n_conflicting, freshest_retrieved}``.
+        Useful for record-level filtering/display without inventing a
+        single opaque score.
+        """
         all_attrs = list(self.attributes.values()) + list(self.additional_attributes.values())
-        if not all_attrs:
-            return 0.0
-        return sum(a.confidence for a in all_attrs) / len(all_attrs)
+        n_sourced = 0
+        n_conflicting = 0
+        freshest: Optional[datetime] = None
+        for av in all_attrs:
+            ev = av.evidence
+            if ev.source_count > 0:
+                n_sourced += 1
+            if ev.has_conflict:
+                n_conflicting += 1
+            if ev.freshest_retrieved and (
+                freshest is None or ev.freshest_retrieved > freshest
+            ):
+                freshest = ev.freshest_retrieved
+        return {
+            "n_attrs": len(all_attrs),
+            "n_sourced": n_sourced,
+            "n_conflicting": n_conflicting,
+            "freshest_retrieved": freshest.isoformat() if freshest else None,
+        }
     
     def attribute_coverage(self, schema_attrs: Optional[list["SchemaAttribute"]] = None) -> float:
         """
@@ -494,8 +536,13 @@ class Record:
                         if evidence_json:
                             result[f"_{name}_evidence"] = evidence_json
         
-        result["_confidence"] = self.average_confidence()
-        
+        # Flat record-level evidence summary for CSV/dataframe export.
+        ev = self.evidence_summary()
+        result["_sourced_attrs"] = ev["n_sourced"]
+        result["_conflicting_attrs"] = ev["n_conflicting"]
+        if ev["freshest_retrieved"]:
+            result["_freshest_retrieved"] = ev["freshest_retrieved"]
+
         return result
     
     @classmethod

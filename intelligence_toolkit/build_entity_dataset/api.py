@@ -308,7 +308,11 @@ class BuildEntityDataset:
     # ── On-demand verification ──────────────────────────────
 
     def count_unverified(self) -> tuple[int, int]:
-        """Return ``(entities_with_unverified, total_unverified_values)``."""
+        """Return ``(entities_with_unverified, total_unverified_values)``.
+
+        An attribute value is "unverified" when it has zero distinct
+        citations (``av.evidence.source_count == 0``).
+        """
         if not self._schemify or not self._schemify.record_set:
             return (0, 0)
         entities = 0
@@ -317,7 +321,7 @@ class BuildEntityDataset:
             had = False
             for bucket in (record.attributes, record.additional_attributes):
                 for av in bucket.values():
-                    if not getattr(av, "verified", False):
+                    if av.evidence.source_count == 0:
                         values += 1
                         had = True
             if had:

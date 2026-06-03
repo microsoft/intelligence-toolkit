@@ -16,42 +16,9 @@ import logging
 import os
 import random as _random
 
-from .models import Citation, SourceTier, SchemifyConfig, BudgetExceededError
+from .models import Citation, SchemifyConfig, BudgetExceededError
 
 logger = logging.getLogger("schemify.llm")
-
-
-def classify_domain_tier(url: str) -> SourceTier:
-    """Classify a URL into a source quality tier."""
-    url_lower = url.lower()
-    
-    # Authoritative domains
-    if any(d in url_lower for d in [".gov", ".edu", ".mil"]):
-        return SourceTier.AUTHORITATIVE
-    
-    # Known reputable sources
-    reputable = [
-        "reuters.com", "apnews.com", "bbc.com", "nytimes.com",
-        "washingtonpost.com", "theguardian.com", "forbes.com",
-        "nature.com", "science.org", "ieee.org", "acm.org",
-        "who.int", "un.org", "worldbank.org",
-    ]
-    if any(d in url_lower for d in reputable):
-        return SourceTier.REPUTABLE
-    
-    # General reference
-    if "wikipedia.org" in url_lower:
-        return SourceTier.GENERAL
-    
-    # User-generated content
-    user_generated = [
-        "reddit.com", "quora.com", "medium.com", "twitter.com",
-        "facebook.com", "linkedin.com", "youtube.com",
-    ]
-    if any(d in url_lower for d in user_generated):
-        return SourceTier.USER_GENERATED
-    
-    return SourceTier.GENERAL
 
 
 # Approximate token pricing (input, output) per 1M tokens
@@ -395,7 +362,6 @@ class LLMClient:
                                         start_index=start_idx,
                                         end_index=end_idx,
                                         snippet=snippet,
-                                        tier=classify_domain_tier(url),
                                     ))
         
         self._log_with_context(f"Web search returned {len(citations)} citations")
