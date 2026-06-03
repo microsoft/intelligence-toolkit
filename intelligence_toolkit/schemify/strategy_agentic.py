@@ -927,6 +927,7 @@ class AgenticStrategy:
         seed_state: str | None = None,
         seed_records: str | list[dict] | "pd.DataFrame" | None = None,
         phase_split: tuple[float, float, float] = (0.60, 0.20, 0.20),
+        progress_callback: Callable[[str, int, int], None] | None = None,
     ) -> list[dict]:
         """
         Run the hybrid phased exploration loop.
@@ -1004,6 +1005,18 @@ class AgenticStrategy:
         total_queries_used = 0
         consecutive_all_timeout_iters = 0
         zero_yield_queries: list[str] = []  # Free-form queries that found nothing
+
+        def _emit_progress(phase: str, phase_used: int, phase_budget: int) -> None:
+            if progress_callback is None:
+                return
+            try:
+                progress_callback(
+                    f"{phase} ({phase_used}/{phase_budget})",
+                    total_queries_used + phase_used,
+                    max_queries,
+                )
+            except Exception:  # noqa: BLE001
+                pass
 
         try:
             # ══════════════════════════════════════════════════════════
@@ -1083,6 +1096,7 @@ class AgenticStrategy:
                         concurrency=concurrency,
                     )
                     p1_used += len(queries_to_run)
+                    _emit_progress("Phase 1: Broad discovery", p1_used, p1_budget)
 
                     self._emit(f"\n  Results:")
                     iter_errors = 0
@@ -1235,6 +1249,7 @@ class AgenticStrategy:
                         concurrency=concurrency,
                     )
                     p2_used += len(queries_to_run)
+                    _emit_progress("Phase 2: Targeted discovery", p2_used, p2_budget)
 
                     self._emit(f"\n  Results:")
                     for r in results:
@@ -1263,6 +1278,7 @@ class AgenticStrategy:
                         concurrency=concurrency,
                     )
                     p2_used += comp_queries
+                    _emit_progress("Phase 2: Targeted discovery", p2_used, p2_budget)
 
                 # Align records
                 schema_names = {a.name for a in record_set.schema_attributes}
@@ -1382,6 +1398,7 @@ class AgenticStrategy:
                         concurrency=concurrency,
                     )
                     p3_used += len(queries_to_run)
+                    _emit_progress("Phase 3: Completion", p3_used, p3_budget)
 
                     for r in results:
                         new = r.get("new_entities", 0)
@@ -1406,6 +1423,7 @@ class AgenticStrategy:
                         concurrency=concurrency,
                     )
                     p3_used += comp_queries
+                    _emit_progress("Phase 3: Completion", p3_used, p3_budget)
 
                 # Align records
                 schema_names = {a.name for a in record_set.schema_attributes}

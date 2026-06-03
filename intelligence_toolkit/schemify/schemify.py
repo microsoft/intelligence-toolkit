@@ -280,6 +280,7 @@ class Schemify:
             seed_state=seed_state,
             seed_records=seed_records,
             phase_split=phase_split,
+            progress_callback=self._report_progress,
         )
         
         # Post-processing (normalize attributes, display)
