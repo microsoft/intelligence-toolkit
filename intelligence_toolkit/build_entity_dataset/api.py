@@ -785,11 +785,30 @@ class BuildEntityDataset:
 
     # ── Harmful content scan (I) ───────────────────────────────
 
-    def scan_harmful_content(self) -> list[dict]:
+    DEFAULT_SAFETY_PROMPT = (
+        "You are a content-safety classifier. Given the following "
+        "structured entity record, identify any concerns across these "
+        "categories: hate, harassment, violence, sexual, self-harm, "
+        "illegal-activity, sensitive-PII, dangerous-instructions.\n\n"
+        "If the record is benign, reply exactly: SAFE.\n"
+        "Otherwise reply with one line of comma-separated category labels, "
+        "then a newline, then a one-sentence reason.\n\n"
+        "RECORD:\n{record}\n"
+    )
+
+    def scan_harmful_content(
+        self, prompt_template: Optional[str] = None
+    ) -> list[dict]:
         """Use an LLM to flag potentially harmful values across records.
 
-        Returns a list of ``{"label", "categories", "reason", "fields"}`` dicts.
-        Records with no concerns are omitted.
+        Args:
+            prompt_template: Optional override for the classifier prompt.
+                Must include a ``{record}`` placeholder where the entity
+                fields will be rendered. Falls back to
+                :attr:`DEFAULT_SAFETY_PROMPT`.
+
+        Returns a list of ``{"label", "record_index", "categories", "reason",
+        "fields"}`` dicts. Records with no concerns are omitted.
         """
         if not self._schemify or not self._schemify.record_set:
             return []
@@ -799,10 +818,14 @@ class BuildEntityDataset:
         except Exception:  # noqa: BLE001
             return []
 
+        template = (prompt_template or self.DEFAULT_SAFETY_PROMPT).strip()
+        if "{record}" not in template:
+            template = template + "\n\nRECORD:\n{record}\n"
+
         client = OpenAIClient()
         findings: list[dict] = []
         records = list(self._schemify.record_set.records)
-        for record in records:
+        for idx, record in enumerate(records):
             fields: dict[str, str] = {}
             if record.label:
                 fields["label"] = record.label
@@ -816,16 +839,7 @@ class BuildEntityDataset:
             if not fields:
                 continue
             content = "\n".join(f"{k}: {v}" for k, v in fields.items())
-            prompt = (
-                "You are a content-safety classifier. Given the following "
-                "structured entity record, identify any concerns across these "
-                "categories: hate, harassment, violence, sexual, self-harm, "
-                "illegal-activity, sensitive-PII, dangerous-instructions. "
-                "If the record is benign, reply exactly: SAFE. "
-                "Otherwise reply with one line of comma-separated category "
-                "labels, then a newline, then a one-sentence reason.\n\n"
-                f"RECORD:\n{content}\n"
-            )
+            prompt = template.format(record=content)
             try:
                 resp = client.generate_chat(
                     messages=[{"role": "user", "content": prompt}],
@@ -836,6 +850,7 @@ class BuildEntityDataset:
                 findings.append(
                     {
                         "label": record.label or "(unlabeled)",
+                        "record_index": idx,
                         "categories": ["error"],
                         "reason": f"Scan failed: {e}",
                         "fields": fields,
@@ -852,12 +867,39 @@ class BuildEntityDataset:
             findings.append(
                 {
                     "label": record.label or "(unlabeled)",
+                    "record_index": idx,
                     "categories": cats,
                     "reason": reason,
                     "fields": fields,
                 }
             )
         return findings
+
+    def remove_record_by_label(self, label: str) -> bool:
+        """Drop a single record by exact label (case-insensitive). Returns True if removed."""
+        if not self._schemify or not self._schemify.record_set:
+            return False
+        rs = self._schemify.record_set
+        target = (label or "").strip().casefold()
+        if not target:
+            return False
+        keep = []
+        removed = False
+        for r in rs.records:
+            if (r.label or "").strip().casefold() == target and not removed:
+                removed = True
+                continue
+            keep.append(r)
+        if removed:
+            rs.records = keep
+            rs.update_schema_frequencies()
+            self._df = self._schemify.to_dataframe()
+            self._dataset_json = self._build_dataset_json()
+            try:
+                self._snapshot_partial(category=rs.category)
+            except Exception:  # noqa: BLE001
+                pass
+        return removed
 
     # ── Persistence of completed runs ──────────────────────────
 

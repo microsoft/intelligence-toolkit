@@ -37,6 +37,11 @@ class SessionVariables:
         self.bed_primary_color = SessionVariable("#002B49", prefix)
         self.bed_accent_color = SessionVariable("#0078D4", prefix)
 
+        # Safety scan
+        self.bed_safety_prompt = SessionVariable("", prefix)
+        self.bed_safety_findings = SessionVariable([], prefix)
+        self.bed_safety_dismissed = SessionVariable([], prefix)
+
     def reset_workflow(self):
         for key in list(st.session_state.keys()):
             if key.startswith(self.prefix):

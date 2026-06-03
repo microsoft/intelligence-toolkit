@@ -617,34 +617,124 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                                 )
 
             # ── Harmful content scan (I) ──────────────────────
-            with st.expander("Scan for harmful content", expanded=False):
+            findings_state = list(sv.bed_safety_findings.value or [])
+            dismissed_state = set(sv.bed_safety_dismissed.value or [])
+            visible_findings = [
+                f for f in findings_state
+                if (f.get("label") or "") not in dismissed_state
+            ]
+            scan_title = "Scan for harmful content"
+            if visible_findings:
+                scan_title += f" ({len(visible_findings)} flagged)"
+            with st.expander(scan_title, expanded=False):
                 st.caption(
                     "Use the LLM to flag records that contain potentially "
-                    "harmful, sensitive, or unsafe content. This sends one "
-                    "request per entity."
+                    "harmful, sensitive, or unsafe content. The prompt below "
+                    "is editable — adjust the categories or instructions to "
+                    "match your safety policy. One request is sent per entity."
                 )
-                if st.button("Run safety scan", key="bed_scan_btn"):
+
+                default_prompt = api.DEFAULT_SAFETY_PROMPT
+                current_prompt = sv.bed_safety_prompt.value or default_prompt
+                edited = st.text_area(
+                    "Safety classifier prompt",
+                    value=current_prompt,
+                    height=220,
+                    key="bed_safety_prompt_ta",
+                    help=(
+                        "Must contain the placeholder `{record}`, which is "
+                        "replaced with the entity's fields. The classifier "
+                        "should reply `SAFE` for benign records or a "
+                        "comma-separated category list followed by a "
+                        "one-sentence reason."
+                    ),
+                )
+                sv.bed_safety_prompt.value = edited
+
+                c_run, c_reset, c_clear = st.columns([2, 1, 1])
+                if c_run.button("Run safety scan", key="bed_scan_btn", type="primary"):
                     with st.spinner("Scanning…"):
                         try:
-                            findings = api.scan_harmful_content()
-                        except Exception as e:  # noqa: BLE001
-                            findings = None
-                            st.error(f"Scan failed: {e}")
-                    if findings is not None:
-                        if not findings:
-                            st.success("No concerns flagged.")
-                        else:
-                            st.warning(
-                                f"{len(findings)} record(s) flagged."
+                            new_findings = api.scan_harmful_content(
+                                prompt_template=edited
                             )
-                            for f in findings:
-                                with st.container(border=True):
-                                    st.markdown(
-                                        f"**{f['label']}** — "
-                                        f"{', '.join(f['categories']) or '?'}"
-                                    )
-                                    if f.get("reason"):
-                                        st.caption(f["reason"])
+                        except Exception as e:  # noqa: BLE001
+                            new_findings = None
+                            st.error(f"Scan failed: {e}")
+                    if new_findings is not None:
+                        sv.bed_safety_findings.value = new_findings
+                        sv.bed_safety_dismissed.value = []
+                        st.rerun()
+                if c_reset.button("Reset prompt", key="bed_scan_reset"):
+                    sv.bed_safety_prompt.value = default_prompt
+                    st.rerun()
+                if c_clear.button("Clear results", key="bed_scan_clear"):
+                    sv.bed_safety_findings.value = []
+                    sv.bed_safety_dismissed.value = []
+                    st.rerun()
+
+                if findings_state and not visible_findings:
+                    st.success(
+                        "All flagged records have been resolved or dismissed."
+                    )
+                elif visible_findings:
+                    st.warning(
+                        f"{len(visible_findings)} record(s) flagged. "
+                        "Choose an action for each."
+                    )
+                    for fi, finding in enumerate(visible_findings):
+                        label = finding.get("label") or "(unlabeled)"
+                        cats = ", ".join(finding.get("categories") or []) or "?"
+                        reason = finding.get("reason") or ""
+                        with st.container(border=True):
+                            st.markdown(f"**{label}** — *{cats}*")
+                            if reason:
+                                st.caption(reason)
+                            with st.expander("Show record fields", expanded=False):
+                                fields = finding.get("fields") or {}
+                                for k, v in fields.items():
+                                    st.markdown(f"- **{k}**: {v}")
+
+                            a1, a2, a3 = st.columns(3)
+                            if a1.button(
+                                "Remove record",
+                                key=f"bed_scan_drop_{fi}",
+                                help="Delete this entity from the dataset.",
+                            ):
+                                api.remove_record_by_label(label)
+                                sv.bed_safety_findings.value = [
+                                    f for f in findings_state
+                                    if f.get("label") != label
+                                ]
+                                st.rerun()
+                            if a2.button(
+                                "Add as exclusion",
+                                key=f"bed_scan_excl_{fi}",
+                                help=(
+                                    "Remove from dataset AND register a "
+                                    "rule so future discovery skips it."
+                                ),
+                            ):
+                                excl_reason = (
+                                    f"Safety scan: {cats}"
+                                    + (f" — {reason}" if reason else "")
+                                )
+                                api.add_label_exclusion(
+                                    label, excl_reason, remove_existing=True
+                                )
+                                sv.bed_safety_findings.value = [
+                                    f for f in findings_state
+                                    if f.get("label") != label
+                                ]
+                                st.rerun()
+                            if a3.button(
+                                "Dismiss",
+                                key=f"bed_scan_dismiss_{fi}",
+                                help="Ignore this finding (keep the record).",
+                            ):
+                                dismissed_state.add(label)
+                                sv.bed_safety_dismissed.value = list(dismissed_state)
+                                st.rerun()
 
             if api.dataset_json:
                 with st.expander("Load previously saved dataset JSON", expanded=False):
