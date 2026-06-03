@@ -1108,7 +1108,237 @@ class ResolutionEngine:
                 else:
                     record.additional_attributes[new_name] = attr_value
                 del record.additional_attributes[old_name]
-    
+
+    # ── Deterministic finalization (labels / aliases / units) ──────────
+
+    # Attribute names that should be folded into ``record.aliases`` rather
+    # than kept as ordinary attributes.
+    _ALIAS_ATTR_NAMES = {
+        "also known as",
+        "aka",
+        "alias",
+        "aliases",
+        "alternate name",
+        "alternate names",
+        "alternative name",
+        "alternative names",
+        "other name",
+        "other names",
+        "formerly known as",
+        "previously known as",
+    }
+
+    # Maps a unit (lowercased) to its canonical attribute-suffix form.
+    _UNIT_SUFFIXES = {
+        "km²": "km2",
+        "km2": "km2",
+        "sq km": "km2",
+        "sq. km": "km2",
+        "square kilometres": "km2",
+        "square kilometers": "km2",
+        "mi²": "mi2",
+        "mi2": "mi2",
+        "sq mi": "mi2",
+        "square miles": "mi2",
+        "ha": "ha",
+        "hectares": "ha",
+        "m": "m",
+        "metres": "m",
+        "meters": "m",
+        "km": "km",
+        "kilometres": "km",
+        "kilometers": "km",
+        "kg": "kg",
+        "kilograms": "kg",
+        "t": "t",
+        "tonnes": "t",
+        "usd": "usd",
+        "$": "usd",
+        "eur": "eur",
+        "€": "eur",
+        "gbp": "gbp",
+        "£": "gbp",
+        "%": "pct",
+        "percent": "pct",
+        "years": "years",
+        "yrs": "years",
+    }
+
+    _NUMERIC_VALUE_RE = re.compile(
+        r"""
+        ^\s*
+        (?P<num>-?[\d,]*\.?\d+(?:e-?\d+)?)
+        \s*
+        (?P<unit>[^\d\s].*?)?
+        \s*$
+        """,
+        re.IGNORECASE | re.VERBOSE,
+    )
+
+    def finalize_normalization(self, record_set: RecordSet) -> dict[str, int]:
+        """
+        Deterministic post-processing applied at the end of a run.
+
+        Three independent passes:
+
+        - **Labels** are upper-cased so the canonical entity name is stable.
+        - Attribute values stored under any of ``_ALIAS_ATTR_NAMES`` (e.g.
+          "Also known as") are folded into ``record.aliases`` and the
+          attribute is dropped.
+        - Numeric attributes whose values share a single unit (e.g. ``Area`` =
+          "603 km²", "504 km²") get the unit lifted into the attribute name
+          (``Area (km2)``) and the values are reduced to bare numerals.
+
+        Returns a small dict of counts for logging.
+        """
+        if not record_set or not record_set.records:
+            return {}
+
+        stats = {"labels": 0, "aliases": 0, "units": 0}
+
+        # ── 1. Uppercase labels ────────────────────────────────────────
+        for record in record_set.records:
+            upper = (record.label or "").strip().upper()
+            if upper and upper != record.label:
+                if record.label and record.label not in record.aliases:
+                    record.aliases.append(record.label)
+                record.label = upper
+                stats["labels"] += 1
+            # Dedup aliases (case-insensitive) and exclude the label itself
+            seen: set[str] = set()
+            deduped: list[str] = []
+            label_upper = record.label.upper()
+            for a in record.aliases:
+                if not a:
+                    continue
+                key = a.upper()
+                if key == label_upper or key in seen:
+                    continue
+                seen.add(key)
+                deduped.append(a)
+            record.aliases = deduped
+
+        # ── 2. Fold alias-like attributes into record.aliases ─────────
+        for record in record_set.records:
+            for bucket in (record.attributes, record.additional_attributes):
+                for key in list(bucket.keys()):
+                    if key.strip().lower() not in self._ALIAS_ATTR_NAMES:
+                        continue
+                    attr_val = bucket.pop(key)
+                    for sv in attr_val.values:
+                        for piece in re.split(r"[;,/|]| or | and ", sv.value or ""):
+                            piece = piece.strip().strip("\"'()")
+                            if not piece:
+                                continue
+                            if piece.upper() == record.label.upper():
+                                continue
+                            if any(
+                                piece.upper() == existing.upper()
+                                for existing in record.aliases
+                            ):
+                                continue
+                            record.aliases.append(piece)
+                            stats["aliases"] += 1
+
+        # ── 3. Lift units into numeric attribute names ────────────────
+        renames = self._infer_unit_renames(record_set)
+        for old_name, new_name in renames.items():
+            self._rename_attribute_with_unit_strip(record_set, old_name, new_name)
+            stats["units"] += 1
+
+        if any(stats.values()):
+            logger.info(
+                "Finalization: %d labels uppercased, %d aliases merged, %d attributes unit-tagged",
+                stats["labels"], stats["aliases"], stats["units"],
+            )
+        return stats
+
+    def _infer_unit_renames(self, record_set: RecordSet) -> dict[str, str]:
+        """For each schema attribute, decide if it should be renamed ``Name (unit)``."""
+        renames: dict[str, str] = {}
+        for attr in record_set.schema_attributes:
+            current_name = attr.name
+            # Skip if attribute already includes a parenthesized unit.
+            if "(" in current_name and current_name.rstrip().endswith(")"):
+                continue
+            unit_counts: dict[str, int] = defaultdict(int)
+            numeric_count = 0
+            total_count = 0
+            for record in record_set.records:
+                attr_val = record.attributes.get(current_name)
+                if not attr_val:
+                    continue
+                for sv in attr_val.values:
+                    raw = (sv.value or "").strip()
+                    if not raw:
+                        continue
+                    total_count += 1
+                    parsed = self._parse_numeric_with_unit(raw)
+                    if parsed is None:
+                        continue
+                    numeric_count += 1
+                    unit = parsed[1]
+                    if unit:
+                        unit_counts[unit] += 1
+            # Only rename if a clear majority of values are numeric and one
+            # canonical unit dominates.
+            if total_count < 3 or numeric_count < max(3, int(total_count * 0.7)):
+                continue
+            if not unit_counts:
+                continue
+            top_unit, top_count = max(unit_counts.items(), key=lambda kv: kv[1])
+            if top_count < max(2, int(numeric_count * 0.6)):
+                continue
+            new_name = f"{current_name} ({top_unit})"
+            renames[current_name] = new_name
+        return renames
+
+    def _rename_attribute_with_unit_strip(
+        self,
+        record_set: RecordSet,
+        old_name: str,
+        new_name: str,
+    ) -> None:
+        """Rename ``old_name`` → ``new_name`` and strip units from values."""
+        for attr in record_set.schema_attributes:
+            if attr.name == old_name:
+                attr.name = new_name
+                break
+        for record in record_set.records:
+            for bucket in (record.attributes, record.additional_attributes):
+                if old_name not in bucket:
+                    continue
+                attr_val = bucket.pop(old_name)
+                for sv in attr_val.values:
+                    parsed = self._parse_numeric_with_unit(sv.value or "")
+                    if parsed is not None:
+                        sv.value = parsed[0]
+                bucket[new_name] = attr_val
+
+    @classmethod
+    def _parse_numeric_with_unit(cls, raw: str) -> Optional[tuple[str, str]]:
+        """Return ``(numeric_string, canonical_unit)`` or None if not numeric."""
+        if not raw:
+            return None
+        match = cls._NUMERIC_VALUE_RE.match(raw.replace("\u00a0", " "))
+        if not match:
+            return None
+        num = match.group("num").replace(",", "")
+        try:
+            float(num)
+        except ValueError:
+            return None
+        unit_raw = (match.group("unit") or "").strip().lower()
+        # Strip trailing punctuation/parentheses.
+        unit_raw = unit_raw.rstrip(").,;").lstrip("(")
+        if not unit_raw:
+            return (num, "")
+        canonical = cls._UNIT_SUFFIXES.get(unit_raw)
+        if canonical is None:
+            # Allow simple compound like "km²" matched above; otherwise reject.
+            return None
+        return (num, canonical)
+
     def decompose_compound_values(
         self,
         record_set: RecordSet,

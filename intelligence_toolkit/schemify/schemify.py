@@ -1780,6 +1780,10 @@ class Schemify:
         
         # Update frequencies
         self.record_set.update_schema_frequencies()
+
+        # Deterministic finalization: ALL-CAPS labels, fold "Also known as"
+        # into aliases, and lift units into numeric attribute names.
+        self.resolution.finalize_normalization(self.record_set)
     
     async def cleanup_formats(self, attribute_formats: dict[str, str]) -> None:
         """

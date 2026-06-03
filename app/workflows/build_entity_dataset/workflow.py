@@ -130,9 +130,13 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                 help="Maximum spend on LLM/search calls.",
             )
             sv.bed_verify.value = st.checkbox(
-                "Verify attribute values",
+                "Auto-verify attribute values after research",
                 value=sv.bed_verify.value,
-                help="Run a verification pass to web-ground any unverified values.",
+                help=(
+                    "If on, runs a web-grounded verification pass at the end of "
+                    "research. Verification can also be triggered manually from "
+                    "the Review dataset tab."
+                ),
             )
 
         if sv.bed_category.value:
@@ -298,6 +302,138 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                 with st.expander("Schema attributes", expanded=False):
                     schema_df = pd.DataFrame(schema)
                     st.dataframe(schema_df, use_container_width=True, hide_index=True)
+
+            # ── Verification (on demand) ──────────────────────
+            count_fn = getattr(api, "count_unverified", None)
+            unverified_entities, unverified_values = (
+                count_fn() if callable(count_fn) else (0, 0)
+            )
+            with st.expander(
+                f"Verify attribute values ({unverified_values} unverified across "
+                f"{unverified_entities} entities)",
+                expanded=False,
+            ):
+                if unverified_values == 0:
+                    st.success("All attribute values are already web-sourced.")
+                else:
+                    st.markdown(
+                        "Verification runs one targeted web search per entity "
+                        "with unsourced values. This may take a few minutes and "
+                        "incur extra LLM/search cost."
+                    )
+                    if api.is_running:
+                        st.info(f"Busy: {api.progress.stage}")
+                    else:
+                        if st.button(
+                            f"Verify {unverified_values} unverified values",
+                            type="primary",
+                            key="bed_verify_btn",
+                        ):
+                            api.start_verification(
+                                concurrency=int(sv.bed_concurrency.value or 5)
+                            )
+                            st.rerun()
+
+            # ── Normalize attribute values (J) ────────────────
+            schema_names = [sa.get("name") for sa in schema] if schema else []
+            with st.expander("Normalize attribute values", expanded=False):
+                st.caption(
+                    "Cluster near-duplicate values and map them to canonical "
+                    "forms. Choose specific attributes or normalize all."
+                )
+                picks = st.multiselect(
+                    "Attributes to normalize (empty = all)",
+                    options=schema_names,
+                    key="bed_norm_attrs",
+                )
+                if api.is_running:
+                    st.info(f"Busy: {api.progress.stage}")
+                else:
+                    if st.button("Run normalization", key="bed_norm_btn"):
+                        api.start_normalize(attributes=picks or None)
+                        st.rerun()
+
+            # ── Schema editor (K) ─────────────────────────────
+            with st.expander("Edit schema attributes", expanded=False):
+                if not schema_names:
+                    st.caption("No schema attributes yet.")
+                else:
+                    target_attr = st.selectbox(
+                        "Attribute",
+                        options=schema_names,
+                        key="bed_edit_attr",
+                    )
+                    new_name = st.text_input(
+                        "Rename to",
+                        value=target_attr,
+                        key="bed_edit_newname",
+                    )
+                    col_e1, col_e2 = st.columns(2)
+                    with col_e1:
+                        if st.button("Apply rename", key="bed_rename_btn"):
+                            n = api.rename_attribute(target_attr, new_name)
+                            st.success(f"Renamed in {n} record fields.")
+                            st.rerun()
+                    with col_e2:
+                        if st.button(
+                            "Remove attribute",
+                            key="bed_remove_btn",
+                            type="secondary",
+                        ):
+                            n = api.remove_attribute(target_attr)
+                            st.success(f"Removed from {n} record fields.")
+                            st.rerun()
+
+            # ── Add candidate entities (L) ────────────────────
+            with st.expander("Add candidate entities", expanded=False):
+                st.caption(
+                    "Seed labels you want included in the dataset. They will "
+                    "be added as blank records; run research again to expand "
+                    "their attributes."
+                )
+                cand_text = st.text_area(
+                    "One name per line (or comma-separated)",
+                    key="bed_candidates_text",
+                    height=120,
+                )
+                if st.button("Add candidates", key="bed_candidates_btn"):
+                    raw = cand_text.replace(",", "\n").splitlines()
+                    n = api.add_candidate_entities(raw)
+                    if n:
+                        st.success(f"Added {n} new candidate entities.")
+                        st.rerun()
+                    else:
+                        st.info("No new entities added (all were duplicates or empty).")
+
+            # ── Harmful content scan (I) ──────────────────────
+            with st.expander("Scan for harmful content", expanded=False):
+                st.caption(
+                    "Use the LLM to flag records that contain potentially "
+                    "harmful, sensitive, or unsafe content. This sends one "
+                    "request per entity."
+                )
+                if st.button("Run safety scan", key="bed_scan_btn"):
+                    with st.spinner("Scanning…"):
+                        try:
+                            findings = api.scan_harmful_content()
+                        except Exception as e:  # noqa: BLE001
+                            findings = None
+                            st.error(f"Scan failed: {e}")
+                    if findings is not None:
+                        if not findings:
+                            st.success("No concerns flagged.")
+                        else:
+                            st.warning(
+                                f"{len(findings)} record(s) flagged."
+                            )
+                            for f in findings:
+                                with st.container(border=True):
+                                    st.markdown(
+                                        f"**{f['label']}** — "
+                                        f"{', '.join(f['categories']) or '?'}"
+                                    )
+                                    if f.get("reason"):
+                                        st.caption(f["reason"])
 
             if api.dataset_json:
                 with st.expander("Load previously saved dataset JSON", expanded=False):

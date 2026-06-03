@@ -249,6 +249,9 @@ class BuildEntityDataset:
                     )
 
                     if verify:
+                        # Verification is normally run on demand from the UI
+                        # (Review tab). Leaving the flag for callers that want
+                        # the legacy behaviour of finishing fully verified.
                         self.progress.stage = "Verifying attribute values…"
                         loop.run_until_complete(
                             self._schemify.verify_unverified(concurrency=concurrency)
@@ -319,6 +322,293 @@ class BuildEntityDataset:
                 pass
         self.progress.is_running = False
         self.progress.stage = "Stopped by user"
+
+    # ── On-demand verification ──────────────────────────────
+
+    def count_unverified(self) -> tuple[int, int]:
+        """Return ``(entities_with_unverified, total_unverified_values)``."""
+        if not self._schemify or not self._schemify.record_set:
+            return (0, 0)
+        entities = 0
+        values = 0
+        for record in self._schemify.record_set.records:
+            had = False
+            for bucket in (record.attributes, record.additional_attributes):
+                for av in bucket.values():
+                    if not getattr(av, "verified", False):
+                        values += 1
+                        had = True
+            if had:
+                entities += 1
+        return (entities, values)
+
+    def start_verification(self, concurrency: int = 5) -> None:
+        """Run verification in a background daemon thread."""
+        if self.is_running or not self._schemify:
+            return
+        self.progress = ResearchProgress(
+            is_running=True,
+            stage="Verifying attribute values…",
+            entity_count=len(self._schemify.record_set.records) if self._schemify.record_set else 0,
+        )
+
+        def _run() -> None:
+            try:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    loop.run_until_complete(
+                        self._schemify.verify_unverified(concurrency=concurrency)
+                    )
+                    self._df = self._schemify.to_dataframe()
+                    self._dataset_json = self._build_dataset_json()
+                    # Refresh usage figures.
+                    try:
+                        stats = self._schemify.get_stats()
+                        llm_usage = stats.get("llm_usage", {}) or {}
+                        self.usage = UsageStats(
+                            total_tokens=int(llm_usage.get("total_tokens", 0) or 0),
+                            total_cost_usd=float(
+                                llm_usage.get("total_cost_usd", 0.0) or 0.0
+                            ),
+                            queries_run=self.progress.query_count,
+                        )
+                    except Exception:  # noqa: BLE001
+                        pass
+                    try:
+                        self._snapshot_partial(
+                            category=self._schemify.record_set.category
+                            if self._schemify.record_set
+                            else ""
+                        )
+                    except Exception:  # noqa: BLE001
+                        pass
+                    self.progress.is_running = False
+                    self.progress.is_complete = True
+                    self.progress.stage = "Verification complete"
+                finally:
+                    loop.close()
+            except Exception as e:  # noqa: BLE001
+                self.progress.is_running = False
+                self.progress.error = str(e)
+                self.progress.stage = "Error"
+
+        self._thread = threading.Thread(target=_run, daemon=True)
+        self._thread.start()
+
+    # ── Candidate seeding (L) ──────────────────────────────────
+
+    def add_candidate_entities(self, names: list[str]) -> int:
+        """Add user-supplied entity labels as blank seed records.
+
+        Returns the number of records actually added (skips duplicates).
+        """
+        if not self._schemify or not self._schemify.record_set:
+            return 0
+        from intelligence_toolkit.schemify.models import Record
+
+        added = 0
+        existing = {
+            (r.label or "").strip().casefold()
+            for r in self._schemify.record_set.records
+        }
+        for raw in names:
+            name = (raw or "").strip()
+            if not name or name.casefold() in existing:
+                continue
+            rec = Record(label=name.upper())
+            ok, _ = self._schemify.record_set.add_record(rec, use_fuzzy=False)
+            if ok:
+                added += 1
+                existing.add(name.casefold())
+        if added:
+            self._df = self._schemify.to_dataframe()
+            self._dataset_json = self._build_dataset_json()
+            try:
+                self._snapshot_partial(
+                    category=self._schemify.record_set.category
+                )
+            except Exception:  # noqa: BLE001
+                pass
+        return added
+
+    # ── Schema editing (K) ─────────────────────────────────────
+
+    def rename_attribute(self, old_name: str, new_name: str) -> int:
+        """Rename a schema attribute and update all records. Returns affected records."""
+        if not self._schemify or not self._schemify.record_set:
+            return 0
+        old = (old_name or "").strip()
+        new = (new_name or "").strip()
+        if not old or not new or old == new:
+            return 0
+        rs = self._schemify.record_set
+        # Schema attributes
+        for sa in rs.schema_attributes:
+            if sa.name == old:
+                sa.name = new
+                break
+        affected = 0
+        for record in rs.records:
+            for bucket in (record.attributes, record.additional_attributes):
+                if old in bucket:
+                    bucket[new] = bucket.pop(old)
+                    affected += 1
+        rs.update_schema_frequencies()
+        self._df = self._schemify.to_dataframe()
+        self._dataset_json = self._build_dataset_json()
+        try:
+            self._snapshot_partial(category=rs.category)
+        except Exception:  # noqa: BLE001
+            pass
+        return affected
+
+    def remove_attribute(self, name: str) -> int:
+        """Remove a schema attribute from the schema and all records."""
+        if not self._schemify or not self._schemify.record_set:
+            return 0
+        target = (name or "").strip()
+        if not target:
+            return 0
+        rs = self._schemify.record_set
+        rs.schema_attributes = [
+            sa for sa in rs.schema_attributes if sa.name != target
+        ]
+        affected = 0
+        for record in rs.records:
+            for bucket in (record.attributes, record.additional_attributes):
+                if target in bucket:
+                    bucket.pop(target, None)
+                    affected += 1
+        rs.update_schema_frequencies()
+        self._df = self._schemify.to_dataframe()
+        self._dataset_json = self._build_dataset_json()
+        try:
+            self._snapshot_partial(category=rs.category)
+        except Exception:  # noqa: BLE001
+            pass
+        return affected
+
+    # ── Normalization on demand (J) ────────────────────────────
+
+    def start_normalize(self, attributes: Optional[list[str]] = None) -> None:
+        """Run schemify.normalize in a background thread for the given attributes."""
+        if self.is_running or not self._schemify:
+            return
+        target = (
+            ", ".join(attributes) if attributes else "all attributes"
+        )
+        self.progress = ResearchProgress(
+            is_running=True,
+            stage=f"Normalizing {target}…",
+            entity_count=len(self._schemify.record_set.records)
+            if self._schemify.record_set
+            else 0,
+        )
+
+        def _run() -> None:
+            try:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    coro = self._schemify.normalize(attributes=attributes)
+                    loop.run_until_complete(coro)
+                    self._df = self._schemify.to_dataframe()
+                    self._dataset_json = self._build_dataset_json()
+                    try:
+                        self._snapshot_partial(
+                            category=self._schemify.record_set.category
+                        )
+                    except Exception:  # noqa: BLE001
+                        pass
+                    self.progress.is_running = False
+                    self.progress.is_complete = True
+                    self.progress.stage = "Normalization complete"
+                finally:
+                    loop.close()
+            except Exception as e:  # noqa: BLE001
+                self.progress.is_running = False
+                self.progress.error = str(e)
+                self.progress.stage = "Error"
+
+        self._thread = threading.Thread(target=_run, daemon=True)
+        self._thread.start()
+
+    # ── Harmful content scan (I) ───────────────────────────────
+
+    def scan_harmful_content(self) -> list[dict]:
+        """Use an LLM to flag potentially harmful values across records.
+
+        Returns a list of ``{"label", "categories", "reason", "fields"}`` dicts.
+        Records with no concerns are omitted.
+        """
+        if not self._schemify or not self._schemify.record_set:
+            return []
+        try:
+            from intelligence_toolkit.AI.client import OpenAIClient
+            from intelligence_toolkit.AI.defaults import DEFAULT_TEMPERATURE
+        except Exception:  # noqa: BLE001
+            return []
+
+        client = OpenAIClient()
+        findings: list[dict] = []
+        records = list(self._schemify.record_set.records)
+        for record in records:
+            fields: dict[str, str] = {}
+            if record.label:
+                fields["label"] = record.label
+            if record.aliases:
+                fields["aliases"] = "; ".join(record.aliases)
+            for bucket in (record.attributes, record.additional_attributes):
+                for k, av in bucket.items():
+                    val = getattr(av, "value", None)
+                    if val:
+                        fields[k] = str(val)
+            if not fields:
+                continue
+            content = "\n".join(f"{k}: {v}" for k, v in fields.items())
+            prompt = (
+                "You are a content-safety classifier. Given the following "
+                "structured entity record, identify any concerns across these "
+                "categories: hate, harassment, violence, sexual, self-harm, "
+                "illegal-activity, sensitive-PII, dangerous-instructions. "
+                "If the record is benign, reply exactly: SAFE. "
+                "Otherwise reply with one line of comma-separated category "
+                "labels, then a newline, then a one-sentence reason.\n\n"
+                f"RECORD:\n{content}\n"
+            )
+            try:
+                resp = client.generate_chat(
+                    messages=[{"role": "user", "content": prompt}],
+                    stream=False,
+                    temperature=DEFAULT_TEMPERATURE,
+                )
+            except Exception as e:  # noqa: BLE001
+                findings.append(
+                    {
+                        "label": record.label or "(unlabeled)",
+                        "categories": ["error"],
+                        "reason": f"Scan failed: {e}",
+                        "fields": fields,
+                    }
+                )
+                continue
+            text = (resp or "").strip()
+            if not text or text.upper().startswith("SAFE"):
+                continue
+            lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+            cats_line = lines[0] if lines else ""
+            reason = lines[1] if len(lines) > 1 else ""
+            cats = [c.strip() for c in cats_line.split(",") if c.strip()]
+            findings.append(
+                {
+                    "label": record.label or "(unlabeled)",
+                    "categories": cats,
+                    "reason": reason,
+                    "fields": fields,
+                }
+            )
+        return findings
 
     # ── Persistence of completed runs ──────────────────────────
 

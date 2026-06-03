@@ -28,7 +28,7 @@ class SessionVariables:
         self.bed_max_queries = SessionVariable(config.DEFAULT_MAX_QUERIES, prefix)
         self.bed_concurrency = SessionVariable(config.DEFAULT_CONCURRENCY, prefix)
         self.bed_budget = SessionVariable(config.DEFAULT_BUDGET, prefix)
-        self.bed_verify = SessionVariable(True, prefix)
+        self.bed_verify = SessionVariable(False, prefix)
 
         # Export / theme config
         self.bed_title = SessionVariable("", prefix)
