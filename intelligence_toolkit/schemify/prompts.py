@@ -12,7 +12,7 @@ The following text contains information gathered from web sources. Extract entit
 
 --Rules--
 
-1. Each record label should be in ALL CAPITALS and represent a concrete instance of "{category}"
+1. Each record label MUST be in ALL CAPITALS and represent a concrete instance of "{category}" (e.g., "INDONESIA", "OPENAI"). Never use mixed case.
 2. Only extract entities that are directly mentioned with factual information
 3. Attribute names should use Initial Capitals with spaces (e.g., "Year Founded", "Primary Function")
 4. Attribute values should start with a capital letter (e.g., "Machine learning", "North America")
@@ -21,8 +21,13 @@ The following text contains information gathered from web sources. Extract entit
 7. Keep attribute values ATOMIC — each value should describe one concept/dimension.
    If a value spans two attributes (e.g., "open-source mobile app" = license + deployment model),
    split it: set License = "Open-source" and Deployment model = "Mobile app" separately.
-8. Do not invent or hallucinate information not present in the text
-9. If the text references the same entity with different spellings, use the most complete/formal name
+8. For numeric/measured attributes, put the unit in the attribute NAME and keep the value
+   bare and numeric. E.g., use Area (km2) = "1904569", Population = "277000000",
+   Budget (USD millions) = "42.5". Never write values like "1,904,569 km²" or "$42M".
+9. Alternate names, abbreviations, former names, and "also known as" variants belong in the
+   entity's `aliases` list, NOT as a separate attribute called "Also known as", "AKA", or similar.
+10. Do not invent or hallucinate information not present in the text
+11. If the text references the same entity with different spellings, use the most complete/formal name as the label and put the variants in aliases.
 
 --Guidance--
 
@@ -45,7 +50,7 @@ The following text contains information gathered from numbered web sources. Extr
 
 --Rules--
 
-1. Each record label should be in ALL CAPITALS and represent a concrete instance of "{category}"
+1. Each record label MUST be in ALL CAPITALS and represent a concrete instance of "{category}". Never use mixed case.
 2. Only extract entities that are directly mentioned with factual information
 3. For each attribute value, include citation_indices listing which source(s) (by 0-based index) support that specific value
 4. CRITICAL: Only cite sources that EXPLICITLY mention BOTH the entity AND the attribute value together
@@ -55,10 +60,15 @@ The following text contains information gathered from numbered web sources. Extr
 8. Keep attribute values ATOMIC — each value should describe one concept/dimension.
    If a value spans two attributes (e.g., "open-source mobile app" = license + deployment model),
    assign each dimension to its own attribute rather than concatenating them.
-9. If the same source mentions multiple different entities, extract each as a separate record with only the attributes mentioned for that specific entity
-9. If a value comes from your general knowledge without source support, use an empty citation_indices array
-10. Do not invent or hallucinate information not present in the text
-11. If the text references the same entity with different spellings, use the most complete/formal name
+9. For numeric/measured attributes, put the unit in the attribute NAME and keep the value
+   bare and numeric. E.g., use Area (km2) = "1904569", Population = "277000000",
+   Budget (USD millions) = "42.5". Never write values like "1,904,569 km²" or "$42M".
+10. Alternate names, abbreviations, former names, and "also known as" variants belong in the
+    entity's `aliases` list, NOT as a separate attribute called "Also known as", "AKA", or similar.
+11. If the same source mentions multiple different entities, extract each as a separate record with only the attributes mentioned for that specific entity
+12. If a value comes from your general knowledge without source support, use an empty citation_indices array
+13. Do not invent or hallucinate information not present in the text
+14. If the text references the same entity with different spellings, use the most complete/formal name as the label and put the variants in aliases.
 
 --Guidance--
 
@@ -482,6 +492,12 @@ The same rule applies to attribute VALUES — each value should be a single conc
 - GOOD: "Mobile app" for Deployment model, "Open-source" for License
 - BAD:  "Open-source mobile app" (mixes deployment model + license)
 - If a value describes two dimensions, it belongs in two separate attributes.
+
+UNITS RULE — for numeric/measured attributes, bake the unit into the attribute NAME so
+values can be stored as bare numbers:
+- GOOD: "Area (km2)", "Population", "Budget (USD millions)", "Founded (year)"
+- BAD:  "Area" (forces values like "1,904,569 km²"), "Budget" (forces "$42M")
+- Use lowercase ASCII unit tokens in parentheses (km2, m, kg, usd, pct, year).
 
 Mark the most essential 2-3 attributes as "high" importance, others as "medium".
 

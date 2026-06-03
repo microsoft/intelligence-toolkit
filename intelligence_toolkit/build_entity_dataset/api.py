@@ -656,6 +656,16 @@ class BuildEntityDataset:
         """Write the in-progress dataset to ``<run_dir>/data.json``."""
         if self._run_dir is None:
             return
+        # Apply deterministic finalization (ALL-CAPS labels, fold
+        # "Also known as" into aliases, lift units into attribute names)
+        # so the live preview and on-disk snapshot match the final state.
+        try:
+            if self._schemify and self._schemify.record_set:
+                self._schemify.resolution.finalize_normalization(
+                    self._schemify.record_set
+                )
+        except Exception:  # noqa: BLE001
+            pass
         data = self._build_dataset_json()
         if not data:
             return
