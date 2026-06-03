@@ -92,14 +92,31 @@ class ExtractionEngine:
         ) + _date_suffix()
         
         # Check cache - use content hash of exclusion labels for stable keys.
-        # Include user-defined exclusions so editing them busts the cache.
+        # Include user-defined exclusions (label OR attribute predicates) so
+        # editing them busts the cache.
         exclusion_labels = sorted(record_set.get_well_covered_labels())
-        user_excl_sig = "|".join(
-            f"{(e.get('label') or '').strip().lower()}::{(e.get('reason') or '').strip().lower()}"
-            for e in (record_set.user_exclusions or [])
-        )
+        user_excl_sig_parts: list[str] = []
+        for e in (record_set.user_exclusions or []):
+            if e.get("attribute"):
+                user_excl_sig_parts.append(
+                    "attr::"
+                    + (e.get("attribute") or "").strip().lower()
+                    + "::" + (e.get("operator") or "equals").lower()
+                    + "::" + "|".join(
+                        str(v).strip().lower()
+                        for v in (e.get("values") or [])
+                    )
+                    + "::" + (e.get("reason") or "").strip().lower()
+                )
+            else:
+                user_excl_sig_parts.append(
+                    "label::"
+                    + (e.get("label") or "").strip().lower()
+                    + "::" + (e.get("reason") or "").strip().lower()
+                )
+        user_excl_sig = "##".join(user_excl_sig_parts)
         exclusion_hash = hashlib.sha256(
-            ("|".join(exclusion_labels) + "##" + user_excl_sig).encode()
+            ("|".join(exclusion_labels) + "@@" + user_excl_sig).encode()
         ).hexdigest()[:12]
         cache_key = {
             "category": record_set.category,

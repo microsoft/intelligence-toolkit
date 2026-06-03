@@ -532,58 +532,69 @@ class BuildEntityDataset:
 
     @property
     def exclusions(self) -> list[dict]:
-        """Current user-supplied exclusion rules ({label, reason})."""
+        """Current user-supplied exclusion rules (label-based or attribute predicates)."""
         if not self._schemify or not self._schemify.record_set:
             return []
         return list(self._schemify.record_set.user_exclusions or [])
 
-    def add_exclusion(
+    def add_label_exclusion(
         self, label: str, reason: str = "", remove_existing: bool = True
     ) -> tuple[bool, int]:
-        """Register an entity to exclude from future research and (optionally)
-        drop any matching record already in the dataset.
-
-        Returns ``(added, removed_count)``.
-        """
+        """Exclude a single named entity. See add_attribute_exclusion for predicate rules."""
         if not self._schemify or not self._schemify.record_set:
             return (False, 0)
-        rs = self._schemify.record_set
         lbl = (label or "").strip()
         if not lbl:
             return (False, 0)
-        rs.user_exclusions = list(rs.user_exclusions or [])
-        # Dedupe by case-folded label.
-        existing = {
-            (e.get("label") or "").strip().casefold(): i
-            for i, e in enumerate(rs.user_exclusions)
-        }
         rule = {"label": lbl, "reason": (reason or "").strip()}
-        if lbl.casefold() in existing:
-            rs.user_exclusions[existing[lbl.casefold()]] = rule
-        else:
-            rs.user_exclusions.append(rule)
+        return self._upsert_exclusion(rule, remove_existing=remove_existing)
 
-        removed = 0
-        if remove_existing:
-            removed = self._remove_records_matching(lbl)
+    # Backwards-compatible alias used by older UI code / scripts.
+    def add_exclusion(
+        self, label: str, reason: str = "", remove_existing: bool = True
+    ) -> tuple[bool, int]:
+        return self.add_label_exclusion(label, reason, remove_existing)
 
-        self._df = self._schemify.to_dataframe()
-        self._dataset_json = self._build_dataset_json()
-        try:
-            self._snapshot_partial(category=rs.category)
-        except Exception:  # noqa: BLE001
-            pass
-        return (True, removed)
+    def add_attribute_exclusion(
+        self,
+        attribute: str,
+        operator: str,
+        values: list[str] | None = None,
+        reason: str = "",
+        remove_existing: bool = True,
+    ) -> tuple[bool, int]:
+        """Exclude every entity that satisfies the given attribute predicate.
 
-    def remove_exclusion(self, label: str) -> bool:
+        Supported operators: ``missing``, ``equals``, ``in``, ``contains``, ``regex``.
+        """
+        if not self._schemify or not self._schemify.record_set:
+            return (False, 0)
+        attr = (attribute or "").strip()
+        op = (operator or "equals").strip().lower()
+        if not attr or op not in {"missing", "equals", "in", "contains", "regex"}:
+            return (False, 0)
+        vals = [str(v).strip() for v in (values or []) if str(v).strip()]
+        if op != "missing" and not vals:
+            return (False, 0)
+        rule = {
+            "attribute": attr,
+            "operator": op,
+            "values": vals,
+            "reason": (reason or "").strip(),
+        }
+        return self._upsert_exclusion(rule, remove_existing=remove_existing)
+
+    def remove_exclusion(self, identifier: str | dict) -> bool:
+        """Remove an exclusion rule. ``identifier`` may be a label string
+        (matches label rules) or a rule dict (compared by attribute+operator+values).
+        """
         if not self._schemify or not self._schemify.record_set:
             return False
         rs = self._schemify.record_set
-        lbl = (label or "").strip().casefold()
         before = len(rs.user_exclusions or [])
         rs.user_exclusions = [
             e for e in (rs.user_exclusions or [])
-            if (e.get("label") or "").strip().casefold() != lbl
+            if not self._rule_matches_identifier(e, identifier)
         ]
         if len(rs.user_exclusions) == before:
             return False
@@ -594,26 +605,81 @@ class BuildEntityDataset:
             pass
         return True
 
-    def _remove_records_matching(self, label: str) -> int:
-        """Drop records whose label or alias matches the given string (case-insensitive)."""
+    def _upsert_exclusion(
+        self, rule: dict, remove_existing: bool = True
+    ) -> tuple[bool, int]:
+        rs = self._schemify.record_set
+        rs.user_exclusions = list(rs.user_exclusions or [])
+        # Dedupe — same kind+target overwrites the previous reason.
+        for i, existing in enumerate(rs.user_exclusions):
+            if self._rules_equivalent(existing, rule):
+                rs.user_exclusions[i] = rule
+                break
+        else:
+            rs.user_exclusions.append(rule)
+
+        removed = self._remove_records_matching_rule(rule) if remove_existing else 0
+
+        self._df = self._schemify.to_dataframe()
+        self._dataset_json = self._build_dataset_json()
+        try:
+            self._snapshot_partial(category=rs.category)
+        except Exception:  # noqa: BLE001
+            pass
+        return (True, removed)
+
+    @staticmethod
+    def _rules_equivalent(a: dict, b: dict) -> bool:
+        if not isinstance(a, dict) or not isinstance(b, dict):
+            return False
+        if bool(a.get("attribute")) != bool(b.get("attribute")):
+            return False
+        if a.get("attribute"):
+            return (
+                (a.get("attribute") or "").strip().casefold()
+                == (b.get("attribute") or "").strip().casefold()
+                and (a.get("operator") or "equals").lower()
+                == (b.get("operator") or "equals").lower()
+                and [str(v).strip().casefold() for v in (a.get("values") or [])]
+                == [str(v).strip().casefold() for v in (b.get("values") or [])]
+            )
+        return (
+            (a.get("label") or "").strip().casefold()
+            == (b.get("label") or "").strip().casefold()
+        )
+
+    @classmethod
+    def _rule_matches_identifier(cls, rule: dict, identifier) -> bool:
+        if isinstance(identifier, dict):
+            return cls._rules_equivalent(rule, identifier)
+        ident = (identifier or "").strip().casefold()
+        if not ident:
+            return False
+        if rule.get("attribute"):
+            return False
+        return (rule.get("label") or "").strip().casefold() == ident
+
+    def _remove_records_matching_rule(self, rule: dict) -> int:
         if not self._schemify or not self._schemify.record_set:
             return 0
+        from intelligence_toolkit.schemify.resolution import record_matches_rule
+
         rs = self._schemify.record_set
-        target = (label or "").strip().casefold()
-        if not target:
-            return 0
         keep = []
         removed = 0
         for r in rs.records:
-            labels = [r.label] + list(r.aliases or [])
-            if any((s or "").strip().casefold() == target for s in labels):
+            if record_matches_rule(r, rule):
                 removed += 1
-                continue
-            keep.append(r)
+            else:
+                keep.append(r)
         if removed:
             rs.records = keep
             rs.update_schema_frequencies()
         return removed
+
+    def _remove_records_matching(self, label: str) -> int:
+        """Legacy helper kept for backward compatibility."""
+        return self._remove_records_matching_rule({"label": label})
 
     # ── Schema editing (K) ─────────────────────────────────────
 

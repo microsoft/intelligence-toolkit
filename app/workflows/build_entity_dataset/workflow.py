@@ -457,43 +457,145 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                 expanded=False,
             ):
                 st.caption(
-                    "List entities that should be left out of this dataset, "
-                    "with a reason. The label + reason are injected into "
-                    "future discovery, expansion, and verification prompts "
-                    "so the agent learns to skip similar cases too."
+                    "Define rules for entities to leave out of this dataset. "
+                    "Rules can target a single named entity or any entity "
+                    "matching an attribute condition (e.g. *Currency is "
+                    "missing*, *Continent equals Africa*). Each rule's reason "
+                    "is injected into future discovery and verification "
+                    "prompts so the agent learns to skip similar cases."
                 )
+
                 if current_exclusions:
                     for i, rule in enumerate(current_exclusions):
-                        c1, c2, c3 = st.columns([3, 6, 1])
-                        c1.markdown(f"**{rule.get('label','')}**")
-                        c2.caption(rule.get("reason", "") or "—")
-                        if c3.button("✕", key=f"bed_excl_rm_{i}"):
-                            api.remove_exclusion(rule.get("label", ""))
+                        c1, c2 = st.columns([10, 1])
+                        if rule.get("attribute"):
+                            op = (rule.get("operator") or "equals").lower()
+                            vals = rule.get("values") or []
+                            if op == "missing":
+                                summary = f"`{rule['attribute']}` is missing"
+                            elif op in ("equals", "contains", "regex") and vals:
+                                summary = (
+                                    f"`{rule['attribute']}` {op} \"{vals[0]}\""
+                                )
+                            elif op == "in" and vals:
+                                summary = (
+                                    f"`{rule['attribute']}` in [{', '.join(vals)}]"
+                                )
+                            else:
+                                summary = f"`{rule['attribute']}` {op}"
+                        else:
+                            summary = f"**{rule.get('label','')}**"
+                        c1.markdown(summary)
+                        reason = rule.get("reason", "")
+                        if reason:
+                            c1.caption(reason)
+                        if c2.button("✕", key=f"bed_excl_rm_{i}"):
+                            api.remove_exclusion(rule)
                             st.rerun()
-                excl_label = st.text_input(
-                    "Entity to exclude", key="bed_excl_label"
+                    st.markdown("---")
+
+                schema_names = [sa.get("name") for sa in schema] if schema else []
+                rule_kind = st.radio(
+                    "Rule type",
+                    options=["Named entity", "Attribute condition"],
+                    horizontal=True,
+                    key="bed_excl_kind",
                 )
-                excl_reason = st.text_input(
-                    "Reason (optional, e.g. 'not a sovereign state')",
-                    key="bed_excl_reason",
-                )
-                excl_drop = st.checkbox(
-                    "Also remove matching record from dataset if present",
-                    value=True,
-                    key="bed_excl_drop",
-                )
-                if st.button("Add exclusion", key="bed_excl_add_btn"):
-                    added, removed = api.add_exclusion(
-                        excl_label, excl_reason, remove_existing=excl_drop
+
+                if rule_kind == "Named entity":
+                    excl_label = st.text_input(
+                        "Entity to exclude", key="bed_excl_label"
                     )
-                    if added:
-                        msg = f"Exclusion added for **{excl_label}**."
-                        if removed:
-                            msg += f" Removed {removed} matching record(s)."
-                        st.success(msg)
-                        st.rerun()
+                    excl_reason = st.text_input(
+                        "Reason (optional)",
+                        key="bed_excl_reason_lbl",
+                        placeholder="e.g. not a sovereign state",
+                    )
+                    excl_drop = st.checkbox(
+                        "Also remove matching record from dataset if present",
+                        value=True,
+                        key="bed_excl_drop_lbl",
+                    )
+                    if st.button("Add exclusion", key="bed_excl_add_lbl_btn"):
+                        added, removed = api.add_label_exclusion(
+                            excl_label, excl_reason, remove_existing=excl_drop
+                        )
+                        if added:
+                            msg = f"Exclusion added for **{excl_label}**."
+                            if removed:
+                                msg += f" Removed {removed} matching record(s)."
+                            st.success(msg)
+                            st.rerun()
+                        else:
+                            st.info("Provide an entity label first.")
+                else:
+                    if not schema_names:
+                        st.caption("No schema attributes available yet.")
                     else:
-                        st.info("Provide an entity label first.")
+                        attr_pick = st.selectbox(
+                            "Attribute", options=schema_names, key="bed_excl_attr"
+                        )
+                        op_pick = st.selectbox(
+                            "Operator",
+                            options=[
+                                "missing",
+                                "equals",
+                                "in",
+                                "contains",
+                                "regex",
+                            ],
+                            key="bed_excl_op",
+                            help=(
+                                "missing: value is empty or 'N/A'. "
+                                "equals: exact match. in: any of a list "
+                                "(comma-separated). contains: substring. "
+                                "regex: Python regex (case-insensitive)."
+                            ),
+                        )
+                        excl_vals: list[str] = []
+                        if op_pick != "missing":
+                            raw_vals = st.text_input(
+                                "Value(s) — comma-separated for 'in'",
+                                key="bed_excl_vals",
+                            )
+                            excl_vals = [
+                                v.strip()
+                                for v in (raw_vals or "").split(",")
+                                if v.strip()
+                            ]
+                        excl_reason_a = st.text_input(
+                            "Reason (optional)",
+                            key="bed_excl_reason_attr",
+                            placeholder="e.g. out of scope for this study",
+                        )
+                        excl_drop_a = st.checkbox(
+                            "Also remove matching records from dataset",
+                            value=True,
+                            key="bed_excl_drop_attr",
+                        )
+                        if st.button("Add exclusion", key="bed_excl_add_attr_btn"):
+                            added, removed = api.add_attribute_exclusion(
+                                attr_pick,
+                                op_pick,
+                                excl_vals,
+                                excl_reason_a,
+                                remove_existing=excl_drop_a,
+                            )
+                            if added:
+                                summary = (
+                                    f"`{attr_pick}` is missing"
+                                    if op_pick == "missing"
+                                    else f"`{attr_pick}` {op_pick} {excl_vals}"
+                                )
+                                msg = f"Exclusion added: {summary}."
+                                if removed:
+                                    msg += f" Removed {removed} matching record(s)."
+                                st.success(msg)
+                                st.rerun()
+                            else:
+                                st.info(
+                                    "Provide values for this operator first."
+                                )
 
             # ── Harmful content scan (I) ──────────────────────
             with st.expander("Scan for harmful content", expanded=False):

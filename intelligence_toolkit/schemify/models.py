@@ -712,23 +712,19 @@ class RecordSet:
         sections: list[str] = []
 
         # User-supplied exclusion rules take priority — they tell the agent
-        # WHY each entity is out of scope, which helps it skip lookalikes too.
+        # WHY each entity (or class of entity) is out of scope, which helps
+        # it skip lookalikes too. Rules can be label-based or predicates
+        # over attributes (e.g. "Currency is empty", "Continent = Africa").
         if self.user_exclusions:
-            rules = []
-            for rule in self.user_exclusions:
-                label = (rule.get("label") or "").strip()
-                if not label:
-                    continue
-                reason = (rule.get("reason") or "").strip()
-                if reason:
-                    rules.append(f"- {label}: {reason}")
-                else:
-                    rules.append(f"- {label}")
+            from .resolution import format_exclusion_rule  # local import to avoid cycle
+
+            rules = [format_exclusion_rule(r) for r in self.user_exclusions]
+            rules = [r for r in rules if r]
             if rules:
                 sections.append(
-                    "User-defined exclusions — do NOT return these entities or "
-                    "close variants. Apply the stated reason to similar cases:\n"
-                    + "\n".join(rules)
+                    "User-defined exclusions — do NOT return entities matching "
+                    "these criteria, and apply the stated reasons to similar "
+                    "cases:\n" + "\n".join(f"- {r}" for r in rules)
                 )
 
         labels = self.get_well_covered_labels(threshold, max_labels)

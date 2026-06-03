@@ -1694,6 +1694,130 @@ class ResolutionEngine:
 # Fuzzy Label Matching
 # ============================================================================
 
+# ----- Exclusion rules -----
+
+_MISSING_TOKENS = {"", "n/a", "na", "none", "null", "unknown", "-", "—"}
+
+
+def _rule_kind(rule: dict) -> str:
+    """Return 'attribute' if the rule targets an attribute, else 'label'."""
+    if not isinstance(rule, dict):
+        return "label"
+    if rule.get("attribute"):
+        return "attribute"
+    return rule.get("kind") or "label"
+
+
+def _normalize_values(values) -> list[str]:
+    if values is None:
+        return []
+    if isinstance(values, str):
+        return [values]
+    try:
+        return [str(v) for v in values]
+    except Exception:  # noqa: BLE001
+        return []
+
+
+def format_exclusion_rule(rule: dict) -> str:
+    """Render an exclusion rule as a single-line human-readable string."""
+    if not isinstance(rule, dict):
+        return ""
+    reason = (rule.get("reason") or "").strip()
+    if _rule_kind(rule) == "attribute":
+        attr = (rule.get("attribute") or "").strip()
+        if not attr:
+            return ""
+        op = (rule.get("operator") or "equals").lower()
+        values = _normalize_values(rule.get("values"))
+        if op == "missing":
+            body = f"`{attr}` is missing or unknown"
+        elif op == "equals" and values:
+            body = f"`{attr}` equals \"{values[0]}\""
+        elif op == "in" and values:
+            body = f"`{attr}` is one of [{', '.join(values)}]"
+        elif op == "contains" and values:
+            body = f"`{attr}` contains \"{values[0]}\""
+        elif op == "regex" and values:
+            body = f"`{attr}` matches regex /{values[0]}/"
+        else:
+            body = f"`{attr}` {op} {values}"
+        return f"{body}" + (f" — {reason}" if reason else "")
+    label = (rule.get("label") or "").strip()
+    if not label:
+        return ""
+    return f"{label}" + (f" — {reason}" if reason else "")
+
+
+def _attribute_value_strings(record, attribute: str) -> list[str]:
+    """Return all string values an attribute holds on a record (multi-valued aware)."""
+    out: list[str] = []
+    for bucket_name in ("attributes", "additional_attributes"):
+        bucket = getattr(record, bucket_name, {}) or {}
+        av = bucket.get(attribute)
+        if av is None:
+            continue
+        val = getattr(av, "value", None)
+        if val is None:
+            continue
+        if isinstance(val, (list, tuple, set)):
+            out.extend(str(v) for v in val if v is not None)
+        else:
+            out.append(str(val))
+    return out
+
+
+def record_matches_rule(record, rule: dict) -> bool:
+    """Check whether a record satisfies a single exclusion rule."""
+    if not isinstance(rule, dict):
+        return False
+    if _rule_kind(rule) == "label":
+        target = (rule.get("label") or "").strip().casefold()
+        if not target:
+            return False
+        labels = [getattr(record, "label", "")] + list(
+            getattr(record, "aliases", []) or []
+        )
+        return any((s or "").strip().casefold() == target for s in labels)
+
+    attr = (rule.get("attribute") or "").strip()
+    if not attr:
+        return False
+    op = (rule.get("operator") or "equals").lower()
+    values = [str(v).strip() for v in _normalize_values(rule.get("values"))]
+    folded = [v.casefold() for v in values]
+
+    raw_vals = _attribute_value_strings(record, attr)
+    stripped = [v.strip() for v in raw_vals]
+
+    if op == "missing":
+        if not stripped:
+            return True
+        return all(v.strip().casefold() in _MISSING_TOKENS for v in stripped)
+    if not stripped:
+        return False
+    if op == "equals":
+        return any(v.casefold() == folded[0] for v in stripped) if folded else False
+    if op == "in":
+        if not folded:
+            return False
+        return any(v.casefold() in folded for v in stripped)
+    if op == "contains":
+        if not folded:
+            return False
+        return any(folded[0] in v.casefold() for v in stripped)
+    if op == "regex":
+        if not values:
+            return False
+        try:
+            import re
+            pat = re.compile(values[0], re.IGNORECASE)
+        except re.error:
+            return False
+        return any(pat.search(v) for v in stripped)
+    return False
+
+
 def normalize_label(label: str) -> str:
     """
     Normalize a label for fuzzy matching.
