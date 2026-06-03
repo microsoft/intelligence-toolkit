@@ -70,6 +70,11 @@ You are a research strategist directing a web-search-based entity extraction pro
 Your job: examine the current state and issue broad discovery queries to find as many
 entities as possible.
 
+**Today's date:** {current_date}. Treat your model knowledge as potentially stale
+and prefer queries that surface up-to-date sources (recent years, current versions,
+live websites). Do not assume entities you remember still exist or still have the
+same attributes.
+
 ## Project
 
 **Category:** {category}
@@ -144,6 +149,9 @@ You are a research strategist directing a web-search-based entity extraction pro
 Phase 1 (broad discovery) is complete. Now you're generating targeted, intersectional
 queries to fill coverage gaps.
 
+**Today's date:** {current_date}. Prefer queries that surface current sources;
+your model knowledge may be stale.
+
 ## Project
 
 **Category:** {category}
@@ -205,6 +213,9 @@ Set to true when recent queries are mostly yielding duplicates.
 PHASE3_COMPLETION_PROMPT = """\
 You are a research strategist directing a web-search-based entity extraction project.
 Phases 1 & 2 (discovery) are complete. Now you're filling gaps on existing entities.
+
+**Today's date:** {current_date}. Prefer queries that surface current sources;
+your model knowledge may be stale.
 
 ## Project
 
@@ -1490,6 +1501,7 @@ class AgenticStrategy:
             prompt_template = PHASE3_COMPLETION_PROMPT
 
         # Build common variables
+        from datetime import date as _date
         variables = {
             "category": record_set.category,
             "guidance": record_set.guidance or "(none)",
@@ -1500,6 +1512,7 @@ class AgenticStrategy:
             "max_queries": max_queries,
             "cost": self.llm.total_cost,
             "max_budget": max_budget,
+            "current_date": _date.today().isoformat(),
         }
 
         # Phase-specific variables

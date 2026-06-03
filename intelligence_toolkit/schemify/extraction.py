@@ -20,6 +20,12 @@ from .search import SearchProvider, OpenAISearchProvider
 from .sources import merge_attribute_values, merge_attribute_values_multi, classify_source
 from . import prompts
 from . import schemas
+from datetime import date as _date
+
+
+def _date_suffix() -> str:
+    """Suffix appended to web-search queries so grounding favours current sources."""
+    return f"\n\n(Today's date is {_date.today().isoformat()}. Prefer current/up-to-date sources.)"
 
 logger = logging.getLogger("schemify.extraction")
 
@@ -83,7 +89,7 @@ class ExtractionEngine:
             guidance=guidance,
             subcategory_focus=focus_text,
             exclusion_list=exclusion_text,
-        )
+        ) + _date_suffix()
         
         # Check cache - use content hash of exclusion labels for stable keys
         exclusion_labels = sorted(record_set.get_well_covered_labels())
@@ -232,7 +238,7 @@ Provide concrete, verifiable details with specific names, dates, organizations, 
             category=record_set.category,
             attributes=", ".join(attrs_to_find),
             guidance=record_set.guidance or "",
-        )
+        ) + _date_suffix()
         
         # Check cache
         cache_key = {

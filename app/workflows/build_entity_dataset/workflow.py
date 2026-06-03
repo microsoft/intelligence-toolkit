@@ -164,20 +164,38 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                 st.markdown("#### Research in progress…")
                 max_q = max(int(sv.bed_max_queries.value or 0), 1)
                 frac = min(prog.query_count / max_q, 1.0)
-                st.progress(frac, text=f"{prog.query_count} / {max_q} queries")
+                st.progress(
+                    frac,
+                    text=f"{prog.stage} — {prog.query_count}/{max_q} queries",
+                )
 
-                m1, m2, m3 = st.columns(3)
-                m1.metric("Queries run", f"{prog.query_count} / {max_q}")
-                m2.metric("Entities found", prog.entity_count)
-                m3.metric("Cost (USD)", f"${api.usage.total_cost_usd:.2f}")
-                st.caption(f"Stage: {prog.stage}")
+                m1, m2 = st.columns(2)
+                m1.metric("Entities found", prog.entity_count)
+                m2.metric("Cost (USD)", f"${api.usage.total_cost_usd:.2f}")
+
+                # Live dataset preview (built from the running record set).
+                live_df = (
+                    api.current_dataframe()
+                    if hasattr(api, "current_dataframe")
+                    else api.dataframe
+                )
+                if live_df is not None and not live_df.empty:
+                    st.markdown(f"##### Dataset so far — {len(live_df)} entities")
+                    st.dataframe(
+                        live_df,
+                        height=400,
+                        use_container_width=True,
+                        hide_index=True,
+                    )
+                else:
+                    st.caption("Dataset will appear here as entities are extracted…")
 
                 if st.button("Stop and save current results"):
                     api.stop_research()
                     st.rerun()
 
-                # Auto-refresh every 0.75 s while running
-                time.sleep(0.75)
+                # Auto-refresh every 2 s while running
+                time.sleep(2.0)
                 st.rerun()
 
             elif prog.is_complete:

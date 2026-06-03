@@ -62,6 +62,7 @@ class BuildEntityDataset:
         self._thread: Optional[threading.Thread] = None
         self._dataset_json: Optional[dict] = None
         self._df: Optional[pd.DataFrame] = None
+        self._run_dir: Optional[Path] = None
 
     # ── Public properties ──────────────────────────────────────
 
@@ -76,6 +77,21 @@ class BuildEntityDataset:
     @property
     def dataframe(self) -> Optional[pd.DataFrame]:
         return self._df
+
+    @property
+    def run_dir(self) -> Optional[Path]:
+        return self._run_dir
+
+    def current_dataframe(self) -> Optional[pd.DataFrame]:
+        """Build a DataFrame from the live record set, even mid-run."""
+        if self._df is not None and not self._df.empty:
+            return self._df
+        if not self._schemify or not self._schemify.record_set:
+            return None
+        try:
+            return self._schemify.to_dataframe()
+        except Exception:  # noqa: BLE001
+            return None
 
     @property
     def schema_attributes(self) -> list[dict]:
@@ -140,6 +156,7 @@ class BuildEntityDataset:
         self._thread = None
         self._dataset_json = None
         self._df = None
+        self._run_dir = None
 
     def start_research(
         self,
@@ -161,6 +178,14 @@ class BuildEntityDataset:
         self.progress = ResearchProgress(is_running=True, stage="Starting…")
         self._df = None
         self._dataset_json = None
+
+        # Allocate a run directory up front so per-iteration snapshots and
+        # incremental data.json survive crashes.
+        _RUNS_DIR.mkdir(parents=True, exist_ok=True)
+        safe = re.sub(r"[^A-Za-z0-9._-]+", "_", category.strip())[:60] or "run"
+        ts = time.strftime("%Y%m%d-%H%M%S")
+        self._run_dir = _RUNS_DIR / f"{ts}_{safe}"
+        self._run_dir.mkdir(parents=True, exist_ok=True)
 
         def _run() -> None:
             try:
@@ -189,6 +214,11 @@ class BuildEntityDataset:
                             getattr(self._schemify, "_query_counter", 0) or 0
                         )
                         self.progress.query_count = max(history_count, counter, current)
+                    # Snapshot partial dataset to disk so a crash doesn't lose it.
+                    try:
+                        self._snapshot_partial(category=category)
+                    except Exception:  # noqa: BLE001
+                        pass
 
                 self._schemify.on_progress(_on_progress)
 
@@ -214,6 +244,7 @@ class BuildEntityDataset:
                             max_queries=max_queries,
                             concurrency=concurrency,
                             phase_split=phase_split,
+                            output_dir=str(self._run_dir) if self._run_dir else None,
                         )
                     )
 
@@ -291,15 +322,69 @@ class BuildEntityDataset:
 
     # ── Persistence of completed runs ──────────────────────────
 
+    def _build_dataset_json(self) -> Optional[dict]:
+        """Serialize the current record set to a JSON-able dict."""
+        rs = getattr(self._schemify, "record_set", None) if self._schemify else None
+        if not rs:
+            return None
+        return {
+            "category": rs.category,
+            "guidance": rs.guidance,
+            "schema_attributes": [
+                {
+                    "name": a.name,
+                    "description": getattr(a, "description", ""),
+                    "is_closed_set": getattr(a, "is_closed_set", False),
+                    "is_multi_valued": getattr(a, "is_multi_valued", False),
+                }
+                for a in rs.schema_attributes
+            ],
+            "records": [
+                r.to_dict() for r in rs.records if hasattr(r, "to_dict")
+            ],
+        }
+
+    def _snapshot_partial(self, category: str) -> None:
+        """Write the in-progress dataset to ``<run_dir>/data.json``."""
+        if self._run_dir is None:
+            return
+        data = self._build_dataset_json()
+        if not data:
+            return
+        try:
+            (self._run_dir / "data.json").write_text(
+                json.dumps(data, indent=2, ensure_ascii=False),
+                encoding="utf-8",
+            )
+            ts = self._run_dir.name.split("_", 1)[0]
+            meta = {
+                "category": category,
+                "timestamp": ts,
+                "entity_count": len(data.get("records", [])),
+                "total_tokens": self.usage.total_tokens,
+                "total_cost_usd": self.usage.total_cost_usd,
+                "queries_run": self.usage.queries_run,
+                "in_progress": True,
+            }
+            (self._run_dir / "meta.json").write_text(
+                json.dumps(meta, indent=2), encoding="utf-8"
+            )
+        except Exception:  # noqa: BLE001
+            pass
+
     def _save_run(self, category: str) -> Optional[Path]:
-        """Write the completed dataset to the local cache so it can be resumed."""
+        """Write the completed dataset to the run directory so it can be resumed."""
         if not self._dataset_json:
             return None
-        _RUNS_DIR.mkdir(parents=True, exist_ok=True)
-        safe = re.sub(r"[^A-Za-z0-9._-]+", "_", category.strip())[:60] or "run"
-        ts = time.strftime("%Y%m%d-%H%M%S")
-        run_dir = _RUNS_DIR / f"{ts}_{safe}"
-        run_dir.mkdir(parents=True, exist_ok=True)
+        if self._run_dir is None:
+            _RUNS_DIR.mkdir(parents=True, exist_ok=True)
+            safe = re.sub(r"[^A-Za-z0-9._-]+", "_", category.strip())[:60] or "run"
+            ts = time.strftime("%Y%m%d-%H%M%S")
+            self._run_dir = _RUNS_DIR / f"{ts}_{safe}"
+            self._run_dir.mkdir(parents=True, exist_ok=True)
+        else:
+            ts = self._run_dir.name.split("_", 1)[0]
+        run_dir = self._run_dir
         data_path = run_dir / "data.json"
         data_path.write_text(
             json.dumps(self._dataset_json, indent=2, ensure_ascii=False),
