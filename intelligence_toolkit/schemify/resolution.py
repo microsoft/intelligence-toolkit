@@ -1915,6 +1915,25 @@ def normalize_label(label: str) -> str:
     return normalized
 
 
+def _length_ratio_ok(a: str, b: str, *, min_ratio: float = 0.6, min_len: int = 10) -> bool:
+    """Return True iff both strings meet a minimum length AND the shorter is
+    at least ``min_ratio`` of the longer's length.
+
+    Used to gate substring-style fuzzy scorers (``partial_ratio``,
+    ``token_set_ratio``) so a short specific name (e.g. "MEMEX") cannot be
+    silently absorbed into a long category-like phrase that happens to
+    contain it (e.g. "WEB SCRAPING ARCHIVES: MEMEX, TELLFINDER").
+    """
+    la, lb = len(a), len(b)
+    if la < min_len or lb < min_len:
+        return False
+    shorter = min(la, lb)
+    longer = max(la, lb)
+    if longer == 0:
+        return False
+    return (shorter / longer) >= min_ratio
+
+
 def find_fuzzy_match(
     label: str,
     existing_labels: list[str],
@@ -1971,13 +1990,14 @@ def find_fuzzy_match(
         # e.g., "Polaris" vs "Polaris Project"
         # Only use if both strings are reasonably long to avoid false positives
         score3 = 0
-        if len(normalized_label) > 10 and len(normalized_existing) > 10:
+        if _length_ratio_ok(normalized_label, normalized_existing):
             score3 = fuzz.token_set_ratio(normalized_label, normalized_existing)
         
-        # Partial ratio - only use for longer strings to avoid false positives
-        # Short names like "APP" matching many different apps
+        # Partial ratio - only use for longer strings AND when lengths are
+        # comparable (length-ratio guard) so short specific names cannot be
+        # absorbed into long category-like phrases that contain them.
         score4 = 0
-        if len(normalized_label) > 15 and len(normalized_existing) > 15:
+        if _length_ratio_ok(normalized_label, normalized_existing):
             score4 = fuzz.partial_ratio(normalized_label, normalized_existing)
         
         # Take the maximum score across strategies
@@ -2020,10 +2040,10 @@ def find_all_fuzzy_matches(
             score2 = fuzz.token_sort_ratio(norm1, norm2)
             # Only use partial matching for longer strings
             score3 = 0
-            if len(norm1) > 10 and len(norm2) > 10:
+            if _length_ratio_ok(norm1, norm2):
                 score3 = fuzz.token_set_ratio(norm1, norm2)
             score4 = 0
-            if len(norm1) > 15 and len(norm2) > 15:
+            if _length_ratio_ok(norm1, norm2):
                 score4 = fuzz.partial_ratio(norm1, norm2)
             
             score = max(score1, score2, score3, score4)
@@ -2037,6 +2057,7 @@ def find_all_fuzzy_matches(
 def cluster_fuzzy_matches(
     labels: list[str],
     threshold: int = 85,
+    do_not_merge: set[frozenset[str]] | None = None,
 ) -> list[set[str]]:
     """
     Cluster labels that are fuzzy matches into groups.
@@ -2046,6 +2067,10 @@ def cluster_fuzzy_matches(
     Args:
         labels: List of labels to cluster
         threshold: Minimum similarity score (0-100) to consider a match
+        do_not_merge: Optional set of frozensets of label pairs that must not
+            be unioned (user-curated constraints). Any candidate union that
+            would place both members of a forbidden pair in the same cluster
+            is skipped.
         
     Returns:
         List of sets, each containing labels that refer to the same entity
@@ -2055,18 +2080,36 @@ def cluster_fuzzy_matches(
     if not matches:
         return []
     
+    forbidden = do_not_merge or set()
+    
     # Build clusters using union-find
     parent = {label: label for label in labels}
+    members: dict[str, set[str]] = {label: {label} for label in labels}
     
     def find(x):
         if parent[x] != x:
             parent[x] = find(parent[x])
         return parent[x]
     
+    def would_violate(set_a: set[str], set_b: set[str]) -> bool:
+        for pair in forbidden:
+            if len(pair) != 2:
+                continue
+            a, b = tuple(pair)
+            if (a in set_a and b in set_b) or (b in set_a and a in set_b) \
+               or (a in set_a and b in set_a) or (a in set_b and b in set_b):
+                return True
+        return False
+    
     def union(x, y):
         px, py = find(x), find(y)
-        if px != py:
-            parent[px] = py
+        if px == py:
+            return
+        if would_violate(members[px], members[py]):
+            return
+        parent[px] = py
+        members[py] |= members[px]
+        members[px] = members[py]
     
     for label1, label2, _ in matches:
         union(label1, label2)

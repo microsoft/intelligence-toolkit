@@ -299,6 +299,40 @@ class AttributeValue:
         return cls(values=values)
 
 
+# Tokens that suggest a label is naming a *category* of things rather than
+# a single specific entity. Used by ``_canonical_score`` so that when a
+# record has been (often incorrectly) fuzzy-merged together with specific
+# entity names, the specific name is preferred as the canonical label.
+_CATEGORY_STOP_TOKENS: frozenset[str] = frozenset({
+    "TOOLS", "ARCHIVES", "PLATFORMS", "DATABASES", "INITIATIVES",
+    "FRAMEWORKS", "RESOURCES", "SERVICES", "SYSTEMS", "PROJECTS",
+    "PROGRAMS", "ORGANIZATIONS", "AGENCIES", "GROUPS", "PARTNERS",
+    "PARTNERSHIPS", "NETWORKS", "COALITIONS",
+})
+
+
+def _canonical_score(name, frequency):
+    upper = name.upper()
+    tokens = upper.replace(":", " ").split()
+    word_count = len(tokens)
+    stop_hits = sum(1 for t in tokens if t in _CATEGORY_STOP_TOKENS)
+    is_category_shaped = (
+        word_count >= 4
+        or stop_hits >= 1
+        or ":" in name
+        or " AND " in f" {upper} "
+        or " OR " in f" {upper} "
+    )
+    return (
+        not is_category_shaped,
+        -stop_hits,
+        frequency,
+        -word_count,
+        -len(name),
+        name,
+    )
+
+
 @dataclass
 class Record:
     """
@@ -313,6 +347,7 @@ class Record:
     additional_attributes: dict[str, AttributeValue] = field(default_factory=dict)
     aliases: list[str] = field(default_factory=list)  # Alternate names for this entity
     alias_counts: dict[str, int] = field(default_factory=dict)  # Count of how often each name variant appears
+    manual_canonical: bool = False  # If True, _update_canonical_label will not change the label
     completion_attempts: dict[str, int] = field(default_factory=dict)  # attr_name → targeted search attempt count
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
@@ -457,23 +492,35 @@ class Record:
         self._update_canonical_label()
     
     def _update_canonical_label(self):
-        """Update the canonical label to the most frequent name variant."""
+        """Update the canonical label to the best variant (category-aware).
+
+        Picks the variant that is least "category-shaped" first, then most
+        frequent, then shortest. Skipped entirely when ``manual_canonical`` is
+        True so user pins are preserved across subsequent merges.
+        """
         if not self.alias_counts:
             return
-        
-        # Find the most frequent name
-        most_frequent = max(self.alias_counts.items(), key=lambda x: x[1])
-        new_label = most_frequent[0]
-        
+        if getattr(self, "manual_canonical", False):
+            # Still rebuild aliases list, but don't change canonical label.
+            self.aliases = [
+                name for name in self.alias_counts.keys()
+                if name.upper() != self.label.upper()
+            ]
+            return
+
+        best_name = max(
+            self.alias_counts.items(),
+            key=lambda kv: _canonical_score(kv[0], kv[1]),
+        )[0]
+        new_label = best_name
+
         if new_label.upper() != self.label.upper():
-            # Label is changing - add old label to aliases
             if self.label not in self.aliases:
                 self.aliases.append(self.label)
             self.label = new_label
-        
-        # Rebuild aliases list: all variants except the current canonical label
+
         self.aliases = [
-            name for name in self.alias_counts.keys() 
+            name for name in self.alias_counts.keys()
             if name.upper() != self.label.upper()
         ]
     
@@ -861,7 +908,11 @@ class RecordSet:
         threshold = threshold if threshold is not None else self.fuzzy_threshold
         
         labels = self.get_labels()
-        clusters = cluster_fuzzy_matches(labels, threshold)
+        clusters = cluster_fuzzy_matches(
+            labels,
+            threshold,
+            do_not_merge=getattr(self, "do_not_merge", None),
+        )
         
         merges = []
         

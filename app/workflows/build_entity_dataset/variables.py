@@ -45,6 +45,10 @@ class SessionVariables:
         self.bed_safety_findings = SessionVariable([], prefix)
         self.bed_safety_dismissed = SessionVariable([], prefix)
 
+        # Alias / merge curation (AI suggestions cache)
+        self.bed_alias_suggestions = SessionVariable([], prefix)
+        self.bed_alias_dismissed = SessionVariable([], prefix)
+
     def reset_workflow(self):
         for key in list(st.session_state.keys()):
             if key.startswith(self.prefix):

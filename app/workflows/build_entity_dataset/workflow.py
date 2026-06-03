@@ -25,6 +25,16 @@ def get_intro():
         return f.read()
 
 
+def _suggestion_key(s: dict) -> str:
+    """Stable identity for an AI alias-merge suggestion so we can track
+    dismissals across reruns."""
+    primary = (s.get("primary") or "").strip().casefold()
+    members = sorted(
+        (m or "").strip().casefold() for m in (s.get("members") or [])
+    )
+    return primary + "::" + ",".join(members)
+
+
 async def create(sv: bed_variables.SessionVariables, workflow=None):
     sv_home = SessionVariables("home")
     ui_components.check_ai_configuration()
@@ -465,6 +475,296 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                         st.rerun()
                     else:
                         st.info("Nothing to apply.")
+
+            # ── Curate entity groups (M) ──────────────────────
+            alias_groups_all = (
+                api.list_alias_groups() if hasattr(api, "list_alias_groups") else []
+            )
+            grouped = [g for g in alias_groups_all if g.get("aliases")]
+            curate_title = (
+                f"Curate entity groups ({len(grouped)} of {len(alias_groups_all)} "
+                "entities have aliases)"
+            )
+            with st.expander(curate_title, expanded=False):
+                st.caption(
+                    "Fuzzy deduplication may have over-grouped entities — "
+                    "e.g. a category-like phrase becoming the canonical "
+                    "name for specific tools. Review groups below, set a "
+                    "better canonical, remove or split out spurious "
+                    "aliases, or manually merge two entries. Splits are "
+                    "remembered so later passes won't re-merge them."
+                )
+
+                if not alias_groups_all:
+                    st.info("No entities yet.")
+                else:
+                    # Quick filter so big datasets stay navigable.
+                    show_filter = st.text_input(
+                        "Filter by name or alias (case-insensitive)",
+                        key="bed_curate_filter",
+                        placeholder="e.g. memex",
+                    )
+                    only_groups = st.checkbox(
+                        "Only show entities with aliases",
+                        value=True,
+                        key="bed_curate_only_grouped",
+                    )
+                    needle = (show_filter or "").strip().lower()
+                    candidates = grouped if only_groups else alias_groups_all
+                    if needle:
+                        def _matches(g: dict) -> bool:
+                            hay = " ".join(
+                                [g.get("label") or ""] + list(g.get("aliases") or [])
+                            ).lower()
+                            return needle in hay
+                        candidates = [g for g in candidates if _matches(g)]
+
+                    if not candidates:
+                        st.info("No entities match the current filter.")
+                    else:
+                        st.caption(f"Showing {min(len(candidates), 50)} of {len(candidates)} entities.")
+                        for ci, g in enumerate(candidates[:50]):
+                            label = g["label"]
+                            aliases = g.get("aliases") or []
+                            counts = g.get("alias_counts") or {}
+                            with st.container(border=True):
+                                hdr_cols = st.columns([6, 2])
+                                hdr_cols[0].markdown(
+                                    f"**{label}**" + (
+                                        f"  &nbsp;·&nbsp; {len(aliases)} alias"
+                                        f"{'es' if len(aliases) != 1 else ''}"
+                                        if aliases else ""
+                                    )
+                                )
+                                if counts:
+                                    summary = ", ".join(
+                                        f"{k} ({v})"
+                                        for k, v in sorted(
+                                            counts.items(), key=lambda kv: -kv[1]
+                                        )[:6]
+                                    )
+                                    hdr_cols[0].caption(f"variants seen: {summary}")
+                                hdr_cols[1].caption(
+                                    f"total mentions: {g.get('total_count', 1)}"
+                                )
+
+                                if aliases:
+                                    # Canonical reassignment
+                                    canon_options = [label] + aliases
+                                    new_canon = st.selectbox(
+                                        "Canonical label",
+                                        options=canon_options,
+                                        index=0,
+                                        key=f"bed_curate_canon_{ci}",
+                                    )
+                                    custom_canon = st.text_input(
+                                        "…or type a new canonical name",
+                                        key=f"bed_curate_canon_custom_{ci}",
+                                        placeholder="(leave empty to use selection above)",
+                                    )
+                                    set_btn, _spacer = st.columns([2, 6])
+                                    if set_btn.button(
+                                        "Set canonical",
+                                        key=f"bed_curate_set_canon_{ci}",
+                                    ):
+                                        target = (custom_canon or new_canon or "").strip()
+                                        if target and target != label:
+                                            if api.rename_record_canonical(label, target):
+                                                st.success(
+                                                    f"Canonical set to **{target}**."
+                                                )
+                                                st.rerun()
+                                            else:
+                                                st.error("Could not update canonical.")
+                                        else:
+                                            st.info("No change.")
+
+                                    # Per-alias controls
+                                    st.caption("Aliases — split out, remove, or keep:")
+                                    for ai, alias in enumerate(aliases):
+                                        ac1, ac2, ac3 = st.columns([6, 2, 2])
+                                        ac1.markdown(
+                                            f"&nbsp;&nbsp;·&nbsp;`{alias}`"
+                                            + (
+                                                f" — {counts.get(alias, 1)} mention"
+                                                f"{'s' if counts.get(alias, 1) != 1 else ''}"
+                                                if alias in counts
+                                                else ""
+                                            ),
+                                            unsafe_allow_html=True,
+                                        )
+                                        if ac2.button(
+                                            "Split out",
+                                            key=f"bed_curate_split_{ci}_{ai}",
+                                            help=(
+                                                "Promote this alias into its own "
+                                                "record and remember not to "
+                                                "re-merge them."
+                                            ),
+                                        ):
+                                            if api.split_alias(label, alias):
+                                                st.success(
+                                                    f"Split **{alias}** into a new record."
+                                                )
+                                                st.rerun()
+                                            else:
+                                                st.error("Split failed.")
+                                        if ac3.button(
+                                            "Remove",
+                                            key=f"bed_curate_rmalias_{ci}_{ai}",
+                                            help=(
+                                                "Drop this alias entirely — does "
+                                                "not create a new record."
+                                            ),
+                                        ):
+                                            if api.remove_alias(label, alias):
+                                                st.success(f"Removed alias **{alias}**.")
+                                                st.rerun()
+                                            else:
+                                                st.error("Remove failed.")
+                                else:
+                                    st.caption("No aliases — no curation needed.")
+
+                    st.markdown("---")
+                    st.markdown("**Merge two entities manually**")
+                    all_labels = [g["label"] for g in alias_groups_all]
+                    if len(all_labels) >= 2:
+                        mc1, mc2, mc3 = st.columns([4, 4, 2])
+                        primary_pick = mc1.selectbox(
+                            "Keep this as canonical",
+                            options=all_labels,
+                            key="bed_curate_merge_primary",
+                        )
+                        other_options = [l for l in all_labels if l != primary_pick]
+                        other_pick = mc2.selectbox(
+                            "Merge this one in",
+                            options=other_options,
+                            key="bed_curate_merge_other",
+                        )
+                        if mc3.button("Merge", key="bed_curate_merge_btn"):
+                            if api.merge_records(primary_pick, other_pick):
+                                st.success(
+                                    f"Merged **{other_pick}** → **{primary_pick}**."
+                                )
+                                st.rerun()
+                            else:
+                                st.error("Merge failed.")
+
+                    # Show any do-not-merge constraints already in force.
+                    dnm = (
+                        api.do_not_merge_pairs
+                        if hasattr(api, "do_not_merge_pairs")
+                        else []
+                    )
+                    if dnm:
+                        st.markdown("---")
+                        st.caption(
+                            f"{len(dnm)} pair(s) marked as 'do not merge' "
+                            "(prevents re-merging by fuzzy passes):"
+                        )
+                        for pair in dnm[:25]:
+                            st.markdown(
+                                f"&nbsp;&nbsp;·&nbsp;`{pair[0]}` &nbsp;⇎&nbsp; "
+                                f"`{pair[1]}`",
+                                unsafe_allow_html=True,
+                            )
+
+                    st.markdown("---")
+                    st.markdown("**Suggest groupings with AI**")
+                    st.caption(
+                        "Ask the LLM to review the current canonical labels "
+                        "and propose any that should be merged into a "
+                        "single record. Each proposal is shown for you to "
+                        "accept or dismiss — nothing is applied "
+                        "automatically."
+                    )
+
+                    suggestions = list(sv.bed_alias_suggestions.value or [])
+                    dismissed = set(sv.bed_alias_dismissed.value or [])
+                    visible_sugs = [
+                        s for s in suggestions
+                        if _suggestion_key(s) not in dismissed
+                    ]
+                    sc_run, sc_clear = st.columns([3, 1])
+                    if sc_run.button(
+                        "Suggest groupings (AI)",
+                        key="bed_curate_ai_suggest_btn",
+                        type="primary",
+                    ):
+                        with st.spinner("Asking the model…"):
+                            try:
+                                new_sugs = api.suggest_alias_groups()
+                            except Exception as e:  # noqa: BLE001
+                                new_sugs = None
+                                st.error(f"Suggest failed: {e}")
+                        if new_sugs is not None:
+                            sv.bed_alias_suggestions.value = new_sugs
+                            sv.bed_alias_dismissed.value = []
+                            st.rerun()
+                    if sc_clear.button(
+                        "Clear suggestions", key="bed_curate_ai_clear"
+                    ):
+                        sv.bed_alias_suggestions.value = []
+                        sv.bed_alias_dismissed.value = []
+                        st.rerun()
+
+                    if not suggestions:
+                        st.caption("No AI suggestions yet.")
+                    elif not visible_sugs:
+                        st.success(
+                            "All suggestions have been actioned or dismissed."
+                        )
+                    else:
+                        if len(visible_sugs) > 1:
+                            apply_all_col, _ = st.columns([3, 5])
+                            if apply_all_col.button(
+                                f"Accept all {len(visible_sugs)} suggestions",
+                                key="bed_curate_ai_accept_all",
+                            ):
+                                applied_total = 0
+                                for s in visible_sugs:
+                                    applied_total += api.apply_alias_suggestion(
+                                        s.get("primary", ""),
+                                        s.get("members", []),
+                                    )
+                                sv.bed_alias_suggestions.value = []
+                                sv.bed_alias_dismissed.value = []
+                                st.success(
+                                    f"Applied {applied_total} merge(s)."
+                                )
+                                st.rerun()
+
+                        for si, s in enumerate(visible_sugs):
+                            primary = s.get("primary", "")
+                            members = list(s.get("members", []) or [])
+                            reason = s.get("reason", "")
+                            with st.container(border=True):
+                                st.markdown(
+                                    f"Merge into **{primary}** ← " +
+                                    ", ".join(f"`{m}`" for m in members)
+                                )
+                                if reason:
+                                    st.caption(reason)
+                                ab1, ab2 = st.columns(2)
+                                if ab1.button(
+                                    "Accept",
+                                    key=f"bed_curate_ai_accept_{si}",
+                                    type="primary",
+                                ):
+                                    n = api.apply_alias_suggestion(primary, members)
+                                    sv.bed_alias_suggestions.value = [
+                                        x for x in suggestions
+                                        if _suggestion_key(x) != _suggestion_key(s)
+                                    ]
+                                    st.success(f"Merged {n} record(s) into {primary}.")
+                                    st.rerun()
+                                if ab2.button(
+                                    "Dismiss",
+                                    key=f"bed_curate_ai_dismiss_{si}",
+                                ):
+                                    dismissed.add(_suggestion_key(s))
+                                    sv.bed_alias_dismissed.value = list(dismissed)
+                                    st.rerun()
 
             # ── Exclusions ────────────────────────────────────
             current_exclusions = (
