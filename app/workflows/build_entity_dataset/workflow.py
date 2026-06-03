@@ -394,25 +394,58 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                             st.rerun()
 
             # ── Add candidate entities (L) ────────────────────
-            with st.expander("Add candidate entities", expanded=False):
+            with st.expander("Add candidate entities & guidance", expanded=False):
                 st.caption(
-                    "Seed labels you want included in the dataset. They will "
-                    "be added as blank records; run research again to expand "
-                    "their attributes."
+                    "Seed labels you want included in the dataset (they will "
+                    "be added as blank records — run research again to expand "
+                    "their attributes) and/or leave a free-form note that "
+                    "future research and verification prompts will see."
                 )
                 cand_text = st.text_area(
-                    "One name per line (or comma-separated)",
+                    "Candidate names (one per line or comma-separated)",
                     key="bed_candidates_text",
                     height=120,
                 )
-                if st.button("Add candidates", key="bed_candidates_btn"):
-                    raw = cand_text.replace(",", "\n").splitlines()
-                    n = api.add_candidate_entities(raw)
-                    if n:
-                        st.success(f"Added {n} new candidate entities.")
+                cand_file = st.file_uploader(
+                    "…or upload a file (.txt, .csv, .tsv, .json)",
+                    type=["txt", "csv", "tsv", "json"],
+                    key="bed_candidates_file",
+                )
+                note_text = st.text_area(
+                    "Comment / additional guidance for the research agent",
+                    key="bed_candidates_note",
+                    height=100,
+                    placeholder=(
+                        "e.g. Focus on Southeast Asian member states only, "
+                        "or: Exclude organisations dissolved before 2010."
+                    ),
+                )
+                if st.button("Apply", key="bed_candidates_btn"):
+                    names: list[str] = [
+                        tok.strip()
+                        for tok in cand_text.replace(",", "\n").splitlines()
+                        if tok.strip()
+                    ]
+                    if cand_file is not None:
+                        names.extend(
+                            api.parse_candidate_file(
+                                cand_file.name, cand_file.getvalue()
+                            )
+                        )
+                    added = api.add_candidate_entities(names) if names else 0
+                    noted = api.append_guidance(note_text)
+                    msgs = []
+                    if added:
+                        msgs.append(f"Added {added} new entities.")
+                    elif names:
+                        msgs.append("No new entities added (duplicates).")
+                    if noted:
+                        msgs.append("Guidance updated.")
+                    if msgs:
+                        st.success(" ".join(msgs))
                         st.rerun()
                     else:
-                        st.info("No new entities added (all were duplicates or empty).")
+                        st.info("Nothing to apply.")
 
             # ── Harmful content scan (I) ──────────────────────
             with st.expander("Scan for harmful content", expanded=False):

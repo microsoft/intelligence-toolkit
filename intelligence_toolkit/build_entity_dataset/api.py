@@ -416,6 +416,84 @@ class BuildEntityDataset:
 
     # ── Candidate seeding (L) ──────────────────────────────────
 
+    def append_guidance(self, note: str) -> bool:
+        """Append a free-form user note to the record set's research guidance.
+
+        The text is added on its own paragraph prefixed with ``User note:`` so
+        it shows up clearly in every downstream prompt that interpolates
+        ``{guidance}``. Returns True if anything was appended.
+        """
+        text = (note or "").strip()
+        if not text or not self._schemify or not self._schemify.record_set:
+            return False
+        rs = self._schemify.record_set
+        prefix = (rs.guidance or "").rstrip()
+        suffix = f"User note: {text}"
+        rs.guidance = f"{prefix}\n\n{suffix}" if prefix else suffix
+        self._dataset_json = self._build_dataset_json()
+        try:
+            self._snapshot_partial(category=rs.category)
+        except Exception:  # noqa: BLE001
+            pass
+        return True
+
+    @staticmethod
+    def parse_candidate_file(filename: str, raw: bytes) -> list[str]:
+        """Best-effort extraction of candidate names from an uploaded file.
+
+        Supports plain text (one name per line or comma-separated), CSV
+        (first column or a column whose header contains ``name``/``label``/
+        ``entity``), and JSON (list of strings or list of dicts with one of
+        those keys).
+        """
+        if not raw:
+            return []
+        name = (filename or "").lower()
+        try:
+            text = raw.decode("utf-8-sig", errors="replace")
+        except Exception:  # noqa: BLE001
+            text = raw.decode("latin-1", errors="replace")
+
+        if name.endswith(".json"):
+            try:
+                data = json.loads(text)
+            except Exception:  # noqa: BLE001
+                return []
+            out: list[str] = []
+            if isinstance(data, list):
+                for item in data:
+                    if isinstance(item, str):
+                        out.append(item)
+                    elif isinstance(item, dict):
+                        for key in ("label", "name", "entity", "title"):
+                            v = item.get(key)
+                            if isinstance(v, str) and v.strip():
+                                out.append(v)
+                                break
+            return out
+
+        if name.endswith(".csv") or name.endswith(".tsv"):
+            sep = "\t" if name.endswith(".tsv") else ","
+            try:
+                df = pd.read_csv(io.StringIO(text), sep=sep)
+            except Exception:  # noqa: BLE001
+                return [line.strip() for line in text.splitlines() if line.strip()]
+            cols = list(df.columns)
+            target = cols[0]
+            for c in cols:
+                lc = str(c).lower()
+                if any(k in lc for k in ("label", "name", "entity")):
+                    target = c
+                    break
+            return [str(v).strip() for v in df[target].dropna().tolist() if str(v).strip()]
+
+        # Plain text fallback: split on commas or newlines.
+        return [
+            tok.strip()
+            for tok in text.replace(",", "\n").splitlines()
+            if tok.strip()
+        ]
+
     def add_candidate_entities(self, names: list[str]) -> int:
         """Add user-supplied entity labels as blank seed records.
 
