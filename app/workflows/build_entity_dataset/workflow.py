@@ -164,25 +164,36 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                 refresh = getattr(api, "refresh_progress", None)
                 if callable(refresh):
                     refresh()
-                # Live progress display
+
+                # Build a stable layout once per rerun: header → progress
+                # bar → metrics → live dataframe → stop button. Keeping
+                # the structure identical between reruns prevents the
+                # Streamlit reconciler from tearing down and re-creating
+                # blocks, which is what causes the visible flicker.
                 st.markdown("#### Research in progress…")
+                progress_slot = st.empty()
+                metrics_slot = st.container()
+                table_slot = st.container()
+                button_slot = st.container()
+
                 if prog.stage.startswith("Verifying") and prog.total:
                     frac = min(prog.current / max(prog.total, 1), 1.0)
-                    st.progress(
+                    progress_slot.progress(
                         frac,
                         text=f"{prog.stage} ({prog.current}/{prog.total})",
                     )
                 else:
                     max_q = max(int(sv.bed_max_queries.value or 0), 1)
                     frac = min(prog.query_count / max_q, 1.0)
-                    st.progress(
+                    progress_slot.progress(
                         frac,
                         text=f"{prog.stage} — {prog.query_count}/{max_q} queries",
                     )
 
-                m1, m2 = st.columns(2)
-                m1.metric("Entities found", prog.entity_count)
-                m2.metric("Cost (USD)", f"${api.usage.total_cost_usd:.2f}")
+                with metrics_slot:
+                    m1, m2 = st.columns(2)
+                    m1.metric("Entities found", prog.entity_count)
+                    m2.metric("Cost (USD)", f"${api.usage.total_cost_usd:.2f}")
 
                 # Live dataset preview (built from the running record set).
                 live_df = (
@@ -190,20 +201,28 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                     if hasattr(api, "current_dataframe")
                     else api.dataframe
                 )
-                if live_df is not None and not live_df.empty:
-                    st.markdown(f"##### Dataset so far — {len(live_df)} entities")
-                    st.dataframe(
-                        live_df,
-                        height=400,
-                        use_container_width=True,
-                        hide_index=True,
-                    )
-                else:
-                    st.caption("Dataset will appear here as entities are extracted…")
+                with table_slot:
+                    # Always render the header + table block (even when
+                    # empty) so the layout doesn't reshuffle once the
+                    # first entities arrive.
+                    count = 0 if live_df is None else len(live_df)
+                    st.markdown(f"##### Dataset so far — {count} entities")
+                    if live_df is not None and not live_df.empty:
+                        st.dataframe(
+                            live_df,
+                            height=400,
+                            use_container_width=True,
+                            hide_index=True,
+                        )
+                    else:
+                        st.caption(
+                            "Entities will appear here as they are extracted…"
+                        )
 
-                if st.button("Stop and save current results"):
-                    api.stop_research()
-                    st.rerun()
+                with button_slot:
+                    if st.button("Stop and save current results"):
+                        api.stop_research()
+                        st.rerun()
 
                 # Auto-refresh every 2 s while running
                 time.sleep(2.0)

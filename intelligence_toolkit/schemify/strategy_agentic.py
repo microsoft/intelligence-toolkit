@@ -1018,6 +1018,33 @@ class AgenticStrategy:
             except Exception:  # noqa: BLE001
                 pass
 
+        def _make_query_progress(
+            phase: str, base_used: int, phase_budget: int
+        ) -> Callable[[], None]:
+            """Build an ``on_query_complete`` callback for a batch.
+
+            ``base_used`` is the phase-used count BEFORE the batch starts;
+            each finished query bumps a local counter so the UI reflects
+            in-flight progress instead of jumping in batch-sized steps.
+            """
+            counter = {"n": 0}
+
+            def _cb() -> None:
+                if progress_callback is None:
+                    return
+                counter["n"] += 1
+                used = min(base_used + counter["n"], phase_budget)
+                try:
+                    progress_callback(
+                        f"{phase} ({used}/{phase_budget})",
+                        total_queries_used + used,
+                        max_queries,
+                    )
+                except Exception:  # noqa: BLE001
+                    pass
+
+            return _cb
+
         try:
             # ══════════════════════════════════════════════════════════
             # PHASE 1: Broad Discovery
@@ -1028,6 +1055,11 @@ class AgenticStrategy:
 
             p1_used = 0
             iteration = 0
+
+            # Emit an initial 0-progress event so the UI shows the
+            # current phase immediately instead of sitting on the
+            # caller's pre-run stage label.
+            _emit_progress("Phase 1: Broad discovery", 0, p1_budget)
 
             while p1_used < p1_budget:
                 iteration += 1
@@ -1094,6 +1126,9 @@ class AgenticStrategy:
                         record_set=record_set,
                         queries=queries_to_run,
                         concurrency=concurrency,
+                        on_query_complete=_make_query_progress(
+                            "Phase 1: Broad discovery", p1_used, p1_budget
+                        ),
                     )
                     p1_used += len(queries_to_run)
                     _emit_progress("Phase 1: Broad discovery", p1_used, p1_budget)
@@ -1247,6 +1282,9 @@ class AgenticStrategy:
                         record_set=record_set,
                         queries=queries_to_run,
                         concurrency=concurrency,
+                        on_query_complete=_make_query_progress(
+                            "Phase 2: Targeted discovery", p2_used, p2_budget
+                        ),
                     )
                     p2_used += len(queries_to_run)
                     _emit_progress("Phase 2: Targeted discovery", p2_used, p2_budget)
@@ -1396,6 +1434,9 @@ class AgenticStrategy:
                         record_set=record_set,
                         queries=queries_to_run,
                         concurrency=concurrency,
+                        on_query_complete=_make_query_progress(
+                            "Phase 3: Completion", p3_used, p3_budget
+                        ),
                     )
                     p3_used += len(queries_to_run)
                     _emit_progress("Phase 3: Completion", p3_used, p3_budget)
@@ -1578,6 +1619,7 @@ class AgenticStrategy:
         record_set: RecordSet,
         queries: list[dict],
         concurrency: int,
+        on_query_complete: Optional[Callable[[], None]] = None,
     ) -> list[dict]:
         """Execute agent-issued discovery queries in parallel."""
         semaphore = asyncio.Semaphore(concurrency)
@@ -1609,6 +1651,11 @@ class AgenticStrategy:
                             "duplicates": 0,
                             "error": str(e),
                         })
+                    if on_query_complete is not None:
+                        try:
+                            on_query_complete()
+                        except Exception:  # noqa: BLE001
+                            pass
                     return
 
                 # Deduplicate against existing records
@@ -1654,6 +1701,11 @@ class AgenticStrategy:
                         "new_entities": added,
                         "duplicates": dups,
                     })
+                if on_query_complete is not None:
+                    try:
+                        on_query_complete()
+                    except Exception:  # noqa: BLE001
+                        pass
 
         tasks = [run_one(i, q) for i, q in enumerate(queries)]
         await asyncio.gather(*tasks)
