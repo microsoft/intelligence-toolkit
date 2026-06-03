@@ -261,26 +261,8 @@ class BuildEntityDataset:
                     self._schemify.finalize()
 
                     self._df = self._schemify.to_dataframe()
-                    # Serialize to dict for JSON export
-                    rs = self._schemify.record_set
-                    if rs:
-                        self._dataset_json = {
-                            "category": rs.category,
-                            "guidance": rs.guidance,
-                            "schema_attributes": [
-                                {
-                                    "name": a.name,
-                                    "description": getattr(a, "description", ""),
-                                    "is_closed_set": getattr(a, "is_closed_set", False),
-                                    "is_multi_valued": getattr(a, "is_multi_valued", False),
-                                }
-                                for a in rs.schema_attributes
-                            ],
-                            "records": [
-                                r.to_dict() for r in rs.records
-                                if hasattr(r, "to_dict")
-                            ],
-                        }
+                    # Serialize to dict for JSON export (drops empty schema cols)
+                    self._dataset_json = self._build_dataset_json()
 
                     # Usage stats
                     stats = self._schemify.get_stats()
@@ -904,10 +886,43 @@ class BuildEntityDataset:
     # ── Persistence of completed runs ──────────────────────────
 
     def _build_dataset_json(self) -> Optional[dict]:
-        """Serialize the current record set to a JSON-able dict."""
+        """Serialize the current record set to a JSON-able dict.
+
+        Schema attributes that no surviving record actually populates are
+        dropped so downstream consumers (CSV, dashboard) don't render
+        columns full of blanks.
+        """
         rs = getattr(self._schemify, "record_set", None) if self._schemify else None
         if not rs:
             return None
+
+        records = list(rs.records)
+
+        # Determine which schema attributes have at least one non-empty
+        # value across the surviving records. We check both buckets to be
+        # safe — normalisation may have promoted/demoted attrs at any
+        # point during the run.
+        def _has_value(rec, attr_name: str) -> bool:
+            for bucket_name in ("attributes", "additional_attributes"):
+                bucket = getattr(rec, bucket_name, {}) or {}
+                av = bucket.get(attr_name)
+                if av is None:
+                    continue
+                val = getattr(av, "value", None)
+                if val is None:
+                    continue
+                if isinstance(val, (list, tuple, set)):
+                    if any(str(v).strip() for v in val if v is not None):
+                        return True
+                elif str(val).strip():
+                    return True
+            return False
+
+        populated = {
+            a.name for a in rs.schema_attributes
+            if any(_has_value(r, a.name) for r in records)
+        }
+
         return {
             "category": rs.category,
             "guidance": rs.guidance,
@@ -919,9 +934,10 @@ class BuildEntityDataset:
                     "is_multi_valued": getattr(a, "is_multi_valued", False),
                 }
                 for a in rs.schema_attributes
+                if a.name in populated
             ],
             "records": [
-                r.to_dict() for r in rs.records if hasattr(r, "to_dict")
+                r.to_dict() for r in records if hasattr(r, "to_dict")
             ],
         }
 
