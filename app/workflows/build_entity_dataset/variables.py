@@ -53,6 +53,10 @@ class SessionVariables:
         self.bed_audit_results = SessionVariable({}, prefix)
         self.bed_audit_dismissed = SessionVariable([], prefix)
 
+        # Dedup audit (under-merged cluster suggestions)
+        self.bed_dedup_results = SessionVariable({}, prefix)
+        self.bed_dedup_dismissed = SessionVariable([], prefix)
+
         # Auto mode
         self.bed_mode = SessionVariable("Manual", prefix)
         self.bed_auto_max_iterations = SessionVariable(5, prefix)

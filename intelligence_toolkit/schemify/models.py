@@ -17,6 +17,25 @@ class BudgetExceededError(Exception):
     pass
 
 
+_UNUSUAL_TERMINATORS = str.maketrans({
+    "\u2028": " ",  # LINE SEPARATOR
+    "\u2029": " ",  # PARAGRAPH SEPARATOR
+    "\u0085": " ",  # NEXT LINE
+})
+
+
+def _clean_text(s):
+    """Strip Unicode line terminators that trip editors/parsers.
+
+    Why: scraped web content occasionally contains U+2028 / U+2029 /
+    U+0085 inside text, which VS Code flags as "unusual line terminators"
+    and which some JS consumers treat as real line breaks.
+    """
+    if isinstance(s, str):
+        return s.translate(_UNUSUAL_TERMINATORS)
+    return s
+
+
 @dataclass
 class Citation:
     """A citation from a web search result with source text evidence."""
@@ -26,6 +45,11 @@ class Citation:
     start_index: Optional[int] = None
     end_index: Optional[int] = None
     snippet: Optional[str] = None  # The actual text from the response that this citation supports
+
+    def __post_init__(self):
+        self.url = _clean_text(self.url)
+        self.title = _clean_text(self.title)
+        self.snippet = _clean_text(self.snippet)
 
     def to_dict(self) -> dict:
         return {
@@ -147,7 +171,10 @@ class SourcedValue:
     """A single value with its supporting sources."""
     value: str
     sources: list[Citation] = field(default_factory=list)
-    
+
+    def __post_init__(self):
+        self.value = _clean_text(self.value)
+
     def to_dict(self) -> dict:
         return {
             "value": self.value,

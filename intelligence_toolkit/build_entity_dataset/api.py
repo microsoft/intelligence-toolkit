@@ -2469,6 +2469,76 @@ class BuildEntityDataset:
         self._post_curation_refresh()
         return len(new_records)
 
+    def audit_duplicate_clusters(
+        self,
+        *,
+        api_key: Optional[str] = None,
+        budget: float = 4.0,
+        model: Optional[str] = None,
+        concurrency: int = 8,
+        confidence_threshold: float = 0.7,
+        min_token_overlap: int = 2,
+        progress_cb=None,
+    ) -> dict:
+        """Run the LLM-backed dedup audit (find under-merged clusters).
+
+        Returns ``{"results": [...], "flagged": [...], "clusters": int,
+        "total_records": int}``. Each entry is the dict form of
+        :class:`DedupAuditResult`.
+        """
+        from intelligence_toolkit.schemify import dedup_audit as _da
+        from intelligence_toolkit.schemify.llm import LLMClient
+        from intelligence_toolkit.schemify.models import SchemifyConfig
+
+        if not self._schemify or not self._schemify.record_set:
+            return {
+                "results": [], "flagged": [],
+                "clusters": 0, "total_records": 0,
+            }
+        rs = self._schemify.record_set
+
+        llm = getattr(self._schemify, "llm", None)
+        if llm is None:
+            if not api_key:
+                raise ValueError("audit_duplicate_clusters requires api_key when no llm is attached")
+            cfg_kwargs = {"api_key": api_key, "max_budget": float(budget)}
+            if model:
+                cfg_kwargs["model"] = model
+            llm = LLMClient(SchemifyConfig(**cfg_kwargs))
+
+        async def _run() -> list:
+            return await _da.audit_clusters(
+                rs, llm,
+                concurrency=concurrency,
+                min_token_overlap=min_token_overlap,
+                progress_cb=progress_cb,
+            )
+        results = asyncio.run(_run())
+        flagged = _da.flagged_results(
+            results, confidence_threshold=confidence_threshold
+        )
+        return {
+            "total_records": len(rs.records),
+            "clusters": len(results),
+            "flagged": [r.to_dict() for r in flagged],
+            "results": [r.to_dict() for r in results],
+        }
+
+    def apply_dedup_merge(self, canonical_label: str, member_labels: list[str]) -> int:
+        """Collapse every label in ``member_labels`` (other than
+        ``canonical_label``) into the canonical record. Returns the
+        number of records absorbed.
+        """
+        if not canonical_label or not member_labels:
+            return 0
+        absorbed = 0
+        for other in member_labels:
+            if not other or other.strip().upper() == canonical_label.strip().upper():
+                continue
+            if self.merge_records(canonical_label, other):
+                absorbed += 1
+        return absorbed
+
 
 
 
@@ -2493,12 +2563,22 @@ class BuildEntityDataset:
                     "description": getattr(a, "description", ""),
                     "is_closed_set": getattr(a, "is_closed_set", False),
                     "is_multi_valued": getattr(a, "is_multi_valued", False),
+                    "required": getattr(a, "required", False),
+                    "frequency": getattr(a, "frequency", 0.0),
+                    "provisional_values": getattr(a, "provisional_values", []),
+                    "canonical_values": getattr(a, "canonical_values", []),
                 }
                 for a in rs.schema_attributes
             ],
             "records": [
                 r.to_dict() for r in rs.records if hasattr(r, "to_dict")
             ],
+            "user_exclusions": list(getattr(rs, "user_exclusions", []) or []),
+            "do_not_merge": [
+                sorted(list(p))
+                for p in (getattr(rs, "do_not_merge", None) or set())
+            ],
+            "created_at": rs.created_at.isoformat() if getattr(rs, "created_at", None) else None,
         }
 
     def _snapshot_partial(self, category: str, *, throttle: bool = False) -> None:

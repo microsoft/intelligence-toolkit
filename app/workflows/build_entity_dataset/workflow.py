@@ -1246,6 +1246,128 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                             )
                             st.rerun()
 
+            # ── Audit duplicate clusters (under-merge) ─────────
+            dedup_state = dict(sv.bed_dedup_results.value or {})
+            dedup_dismissed = set(sv.bed_dedup_dismissed.value or [])
+
+            def _dedup_key(entry: dict, ms: dict) -> str:
+                return entry.get("organization", "") + "::" + (ms.get("canonical_label") or "")
+
+            visible_dedup: list[tuple[dict, dict]] = []
+            for entry in (dedup_state.get("flagged") or []):
+                for ms in (entry.get("merge_sets") or []):
+                    if _dedup_key(entry, ms) in dedup_dismissed:
+                        continue
+                    visible_dedup.append((entry, ms))
+            dedup_title = (
+                f"Audit duplicate clusters ({len(visible_dedup)} proposed merges)"
+                if dedup_state else
+                "Audit duplicate clusters"
+            )
+            with st.expander(dedup_title, expanded=False):
+                st.caption(
+                    "Scans for the under-merge pattern: multiple records "
+                    "from the same organisation that describe the same "
+                    "underlying tool but have labels too dissimilar for "
+                    "string matching. Each proposed merge collapses N "
+                    "records into one — review, then accept or dismiss. "
+                    "Nothing is applied automatically."
+                )
+                dc1, dc2 = st.columns([3, 1])
+                run_dedup = dc1.button(
+                    "Run duplicate-cluster audit",
+                    key="bed_dedup_run",
+                    type="primary",
+                )
+                clear_dedup = dc2.button(
+                    "Clear", key="bed_dedup_clear"
+                )
+                if clear_dedup:
+                    sv.bed_dedup_results.value = {}
+                    sv.bed_dedup_dismissed.value = []
+                    st.rerun()
+                if run_dedup:
+                    if not functions.get_api_key():
+                        st.error(
+                            "Set an OpenAI API key in Settings before running "
+                            "the audit."
+                        )
+                    else:
+                        with st.spinner(
+                            "Auditing — one LLM call per candidate cluster…"
+                        ):
+                            try:
+                                dedup_state = api.audit_duplicate_clusters(
+                                    api_key=functions.get_api_key(),
+                                )
+                                sv.bed_dedup_results.value = dedup_state
+                                sv.bed_dedup_dismissed.value = []
+                                st.rerun()
+                            except Exception as e:  # noqa: BLE001
+                                st.error(f"Dedup audit failed: {e}")
+                if dedup_state:
+                    st.caption(
+                        f"Total records: {dedup_state.get('total_records', 0)} "
+                        f"·  clusters scanned: {dedup_state.get('clusters', 0)} "
+                        f"·  proposed merges: {sum(len(e.get('merge_sets') or []) for e in (dedup_state.get('flagged') or []))}"
+                    )
+                if not visible_dedup and dedup_state:
+                    st.success(
+                        "No remaining proposed merges — every audited "
+                        "cluster looks clean (or has been actioned)."
+                    )
+                for di, (entry, ms) in enumerate(visible_dedup[:50]):
+                    org = entry.get("organization", "")
+                    canonical = ms.get("canonical_label", "")
+                    members = list(ms.get("member_labels") or [])
+                    rationale = ms.get("rationale", "")
+                    conf = entry.get("confidence", 0.0)
+                    key = _dedup_key(entry, ms)
+                    with st.container(border=True):
+                        st.markdown(
+                            f"**{canonical}**  &nbsp;·&nbsp; "
+                            f"absorb {len(members) - 1} other(s) "
+                            f"({conf:.0%} confidence) "
+                            f"·  org: _{org}_"
+                        )
+                        if rationale:
+                            st.caption(rationale)
+                        for m in members:
+                            marker = "←" if m == canonical else "→"
+                            st.markdown(f"- {marker} `{m}`")
+                        cc1, cc2 = st.columns(2)
+                        if cc1.button(
+                            "Merge now",
+                            key=f"bed_dedup_merge_{di}",
+                            type="primary",
+                        ):
+                            try:
+                                n_absorbed = api.apply_dedup_merge(canonical, members)
+                            except Exception as e:  # noqa: BLE001
+                                n_absorbed = 0
+                                st.error(f"Merge failed: {e}")
+                            if n_absorbed > 0:
+                                dedup_dismissed.add(key)
+                                sv.bed_dedup_dismissed.value = list(dedup_dismissed)
+                                st.success(
+                                    f"Absorbed {n_absorbed} record(s) into "
+                                    f"`{canonical}`."
+                                )
+                                st.rerun()
+                            else:
+                                st.warning(
+                                    "No merge applied — the records may "
+                                    "have changed since the audit ran. "
+                                    "Re-run the audit."
+                                )
+                        if cc2.button(
+                            "Dismiss",
+                            key=f"bed_dedup_dismiss_{di}",
+                        ):
+                            dedup_dismissed.add(key)
+                            sv.bed_dedup_dismissed.value = list(dedup_dismissed)
+                            st.rerun()
+
             # ── Exclusions ────────────────────────────────────
             current_exclusions = (
                 api.exclusions if hasattr(api, "exclusions") else []
@@ -1604,6 +1726,11 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                     type=["png", "jpg", "jpeg", "svg"],
                     key="bed_logo_upload",
                 )
+                favicon_file = st.file_uploader(
+                    "Favicon (optional, .ico / .svg / .png)",
+                    type=["ico", "svg", "png"],
+                    key="bed_favicon_upload",
+                )
 
             st.markdown("**Views to include**")
             v1, v2, v3 = st.columns(3)
@@ -1634,6 +1761,8 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
 
             logo_bytes = logo_file.read() if logo_file else None
             logo_filename = logo_file.name if logo_file else None
+            favicon_bytes = favicon_file.read() if favicon_file else None
+            favicon_filename = favicon_file.name if favicon_file else None
 
             if st.button("Build & download web interface", type="primary"):
                 if not sv.bed_title.value:
@@ -1648,6 +1777,8 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                             accent_color=sv.bed_accent_color.value,
                             logo_bytes=logo_bytes,
                             logo_filename=logo_filename,
+                            favicon_bytes=favicon_bytes,
+                            favicon_filename=favicon_filename,
                             views=selected_views,
                         )
                         st.download_button(
