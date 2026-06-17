@@ -35,7 +35,7 @@ body {
 }
 button { font: inherit; cursor: pointer; border: none; background: none; }
 input { font: inherit; }
-a { color: var(--color-accent); text-decoration: none; }
+a { color: var(--color-primary); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
 /* ── App Shell ──────────────────────────────────────────── */
@@ -64,8 +64,8 @@ a:hover { text-decoration: underline; }
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 #header .record-badge {
-  background: var(--color-accent); color: #fff; border-radius: 12px;
-  padding: 2px 10px; font-size: 12px; font-weight: 600; white-space: nowrap;
+  background: var(--color-accent); color: var(--color-primary); border-radius: 12px;
+  padding: 2px 10px; font-size: 12px; font-weight: 700; white-space: nowrap;
 }
 #header .load-btn {
   background: rgba(255,255,255,0.15); color: #fff; border-radius: 4px;
@@ -120,7 +120,7 @@ a:hover { text-decoration: underline; }
 .slicer-group.collapsed .arrow { transform: rotate(-90deg); }
 .slicer-group.collapsed .slicer-bars { display: none; }
 .slicer-bars { padding: 0 12px 8px; display: flex; flex-direction: column; gap: 3px; }
-.slicer-toggle { padding: 2px 12px 8px; font-size: 11px; color: var(--color-accent); cursor: pointer; user-select: none; }
+.slicer-toggle { padding: 2px 12px 8px; font-size: 11px; color: var(--color-primary); cursor: pointer; user-select: none; font-weight: 600; }
 .slicer-toggle:hover { text-decoration: underline; }
 
 /* Slicer overlay — full-panel takeover for "Show all values" */
@@ -135,7 +135,7 @@ a:hover { text-decoration: underline; }
   flex-shrink: 0;
 }
 #slicer-overlay .overlay-back {
-  font-size: 13px; color: var(--color-accent); cursor: pointer;
+  font-size: 13px; color: var(--color-primary); cursor: pointer;
   display: flex; align-items: center; gap: 4px;
 }
 #slicer-overlay .overlay-back:hover { text-decoration: underline; }
@@ -181,8 +181,8 @@ a:hover { text-decoration: underline; }
 #active-filters.has-filters { display: flex; }
 .active-pill {
   display: inline-flex; align-items: center; gap: 4px;
-  background: var(--color-accent); color: #fff; border-radius: 12px;
-  padding: 2px 10px; font-size: 11px;
+  background: var(--color-accent); color: var(--color-primary); border-radius: 12px;
+  padding: 2px 10px; font-size: 11px; font-weight: 600;
 }
 .active-pill .remove { cursor: pointer; font-weight: 700; margin-left: 2px; }
 .clear-all-btn { font-size: 11px; color: var(--color-warn); cursor: pointer; margin-left: auto; }
@@ -218,7 +218,7 @@ a:hover { text-decoration: underline; }
   border-bottom: 2px solid transparent; transition: all 0.15s;
 }
 .tab-btn:hover { color: var(--color-text); }
-.tab-btn.active { color: var(--color-accent); border-bottom-color: var(--color-accent); }
+.tab-btn.active { color: var(--color-primary); border-bottom-color: var(--color-accent); }
 
 /* View area */
 #view-area { flex: 1; overflow: hidden; position: relative; }
@@ -246,10 +246,17 @@ a:hover { text-decoration: underline; }
   max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 #data-table tbody tr { cursor: pointer; transition: background 0.1s; }
-#data-table tbody tr:hover { background: var(--color-accent-soft); }
-#data-table tbody tr.selected { background: var(--color-accent-soft); }
-#data-table td:first-child { font-weight: 600; position: sticky; left: 0; background: inherit; z-index: 5; min-width: 200px; }
-#data-table tbody tr:hover td:first-child { background: var(--color-accent-soft); }
+#data-table tbody tr:hover td { background: var(--color-accent-soft); }
+#data-table tbody tr.selected td { background: var(--color-accent-soft); }
+#data-table td:first-child,
+#data-table th:first-child {
+  position: sticky; left: 0; z-index: 5; min-width: 200px;
+  background: var(--color-surface);
+}
+#data-table th:first-child { background: var(--color-primary); z-index: 11; }
+#data-table td:first-child { font-weight: 600; box-shadow: 1px 0 0 var(--color-border); }
+#data-table tbody tr:hover td:first-child,
+#data-table tbody tr.selected td:first-child { background: var(--color-accent-soft); }
 
 
 /* ── Network View ───────────────────────────────────────── */
@@ -354,7 +361,7 @@ a:hover { text-decoration: underline; }
 .entity-card .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
 .entity-card .card-title { font-weight: 700; font-size: 14px; }
 .entity-card .card-src-badge {
-  background: var(--color-accent-soft); color: var(--color-accent); font-size: 11px;
+  background: var(--color-accent-soft); color: var(--color-primary); font-size: 11px;
   font-weight: 700; padding: 2px 8px; border-radius: 10px; white-space: nowrap;
 }
 .entity-card .card-attrs { flex: 1; }
@@ -449,7 +456,7 @@ a:hover { text-decoration: underline; }
 #drawer-header h2 { font-size: 18px; font-weight: 700; color: var(--color-primary); }
 #drawer-header .drawer-aliases { font-size: 12px; color: var(--color-muted); margin-top: 2px; }
 #drawer-header .drawer-meta { display: flex; gap: 12px; margin-top: 4px; font-size: 11px; color: var(--color-muted); }
-#drawer-header .drawer-meta .src-count { color: var(--color-accent); font-weight: 600; }
+#drawer-header .drawer-meta .src-count { color: var(--color-primary); font-weight: 700; }
 .drawer-close {
   font-size: 22px; color: var(--color-muted); cursor: pointer; padding: 0 4px;
   line-height: 1;
@@ -810,16 +817,72 @@ function matchesSearch(rec, query) {
   const q = query.toLowerCase();
   if (rec.label.toLowerCase().includes(q)) return true;
   if (rec.aliases && rec.aliases.some(a => a.toLowerCase().includes(q))) return true;
+  for (const bucket of ['attributes', 'additional_attributes']) {
+    const attrs = rec[bucket] || {};
+    for (const attr of Object.values(attrs)) {
+      if (!attr) continue;
+      if (attr.value != null) {
+        if (Array.isArray(attr.value)) {
+          if (attr.value.some(v => v != null && String(v).toLowerCase().includes(q))) return true;
+        } else if (String(attr.value).toLowerCase().includes(q)) {
+          return true;
+        }
+      }
+      for (const sv of (attr.values || [])) {
+        if (sv && sv.value != null && String(sv.value).toLowerCase().includes(q)) return true;
+      }
+    }
+  }
   return false;
+}
+
+// Collect ALL values for rec.attribute (combines attr.value, which may be
+// a string OR array post-consolidation, with attr.values SourcedValue list).
+// Returns a Set of strings.
+function getRecordValueSet(rec, attrName) {
+  const attr = rec.attributes?.[attrName];
+  const out = new Set();
+  if (!attr) return out;
+  if (Array.isArray(attr.value)) {
+    for (const v of attr.value) if (v != null && v !== '') out.add(String(v));
+  } else if (attr.value != null && attr.value !== '') {
+    out.add(String(attr.value));
+  }
+  for (const sv of (attr.values || [])) {
+    if (sv && sv.value != null && sv.value !== '') out.add(String(sv.value));
+  }
+  return out;
+}
+
+function getRecordValueDisplay(rec, attrName) {
+  const vs = [...getRecordValueSet(rec, attrName)];
+  if (vs.length === 0) return 'Unknown';
+  return vs.join(' · ');
+}
+
+function getAttrValueDisplay(attr) {
+  if (!attr) return 'Unknown';
+  const out = new Set();
+  if (Array.isArray(attr.value)) {
+    for (const v of attr.value) if (v != null && v !== '') out.add(String(v));
+  } else if (attr.value != null && attr.value !== '') {
+    out.add(String(attr.value));
+  }
+  for (const sv of (attr.values || [])) {
+    if (sv && sv.value != null && sv.value !== '') out.add(String(sv.value));
+  }
+  return out.size === 0 ? 'Unknown' : [...out].join(' · ');
 }
 
 function matchesFilters(rec) {
   for (const [attrName, vals] of Object.entries(state.filters)) {
     if (vals.size === 0) continue;
-    const attr = rec.attributes?.[attrName];
-    const val = (attr && attr.value) || 'Unknown';
-    // OR within attribute: record must match at least one selected value
-    if (!vals.has(val)) return false;
+    const recVals = getRecordValueSet(rec, attrName);
+    if (recVals.size === 0) recVals.add('Unknown');
+    // OR within attribute: record matches if ANY of its values is selected
+    let hit = false;
+    for (const v of recVals) { if (vals.has(v)) { hit = true; break; } }
+    if (!hit) return false;
   }
   return true;
 }
@@ -865,16 +928,22 @@ function getSlicerCounts(attrName) {
     for (const [filterAttr, vals] of Object.entries(state.filters)) {
       if (filterAttr === attrName) continue;
       if (vals.size === 0) continue;
-      const attr = r.attributes?.[filterAttr];
-      const v = (attr && attr.value) || 'Unknown';
-      if (!vals.has(v)) return false;
+      const recVals = getRecordValueSet(r, filterAttr);
+      if (recVals.size === 0) recVals.add('Unknown');
+      let hit = false;
+      for (const v of recVals) { if (vals.has(v)) { hit = true; break; } }
+      if (!hit) return false;
     }
     return true;
   });
   const counts = {};
   for (const rec of recs) {
-    const val = rec.attributes?.[attrName]?.value || 'Unknown';
-    counts[val] = (counts[val] || 0) + 1;
+    const vs = getRecordValueSet(rec, attrName);
+    if (vs.size === 0) {
+      counts['Unknown'] = (counts['Unknown'] || 0) + 1;
+    } else {
+      for (const v of vs) counts[v] = (counts[v] || 0) + 1;
+    }
   }
   return Object.entries(counts).sort((a, b) => b[1] - a[1]);
 }
@@ -1172,7 +1241,7 @@ function renderTable() {
     // Schema attr cols
     for (const attrName of state.schemaAttrs) {
       const td = document.createElement('td');
-      const val = rec.attributes?.[attrName]?.value || 'Unknown';
+      const val = getRecordValueDisplay(rec, attrName);
       td.textContent = val;
       td.title = val;
       if (val === 'Unknown') td.classList.add('val-unknown');
@@ -1217,8 +1286,9 @@ function buildCard(rec) {
   const attrs = document.createElement('div');
   attrs.className = 'card-attrs';
   for (const attrName of state.schemaAttrs.slice(0, 4)) {
-    const raw = rec.attributes?.[attrName]?.value;
-    const val = raw || 'Unknown';
+    const setVals = getRecordValueSet(rec, attrName);
+    const hasVal = setVals.size > 0;
+    const val = hasVal ? [...setVals].join(' · ') : 'Unknown';
     const row = document.createElement('div');
     row.className = 'card-attr';
     const name = document.createElement('span');
@@ -1226,7 +1296,7 @@ function buildCard(rec) {
     name.textContent = attrName + ': ';
     const v = document.createElement('span');
     v.className = 'attr-val';
-    if (!raw) v.classList.add('val-unknown');
+    if (!hasVal) v.classList.add('val-unknown');
     v.textContent = val.length > 50 ? val.slice(0, 48) + '…' : val;
     row.appendChild(name);
     row.appendChild(v);
@@ -1255,7 +1325,7 @@ function renderCards() {
 
 const DEPTH_ACCENTS = [
   { border: 'var(--color-warn)', badge: 'var(--color-warn)', badgeText: '#fff' },
-  { border: 'var(--color-accent)',  badge: 'var(--color-accent)',  badgeText: '#fff' },
+  { border: 'var(--color-accent)',  badge: 'var(--color-accent)',  badgeText: 'var(--color-primary)' },
   { border: 'var(--color-highlight)',  badge: 'var(--color-highlight)',  badgeText: 'var(--color-primary)' },
   { border: 'var(--color-success)', badge: 'var(--color-success)', badgeText: '#fff' },
   { border: '#c084d8',          badge: '#c084d8',          badgeText: '#fff' },
@@ -1986,23 +2056,44 @@ function buildAttrCard(attrName, attr) {
   header.appendChild(badges);
   card.appendChild(header);
 
-  // Primary value
+  // Primary value (may be array or string post-consolidation)
   const valEl = document.createElement('div');
   valEl.className = 'attr-card-value';
-  valEl.textContent = attr.value || 'Unknown';
-  if (!attr.value) valEl.classList.add('val-unknown');
+  const displayVal = getAttrValueDisplay(attr);
+  valEl.textContent = displayVal;
+  if (displayVal === 'Unknown') valEl.classList.add('val-unknown');
   card.appendChild(valEl);
 
-  // Evidence list
+  // Evidence list — dedupe SourcedValues by normalized key (trim+lower),
+  // merge sources by URL. Avoids 50+ near-identical evidence blocks for
+  // free-text attributes where extraction produced spelling/case variants.
   const evidenceList = document.createElement('div');
   evidenceList.className = 'evidence-list';
 
+  const mergedSvs = new Map();
   for (const sv of (attr.values || [])) {
-    if (!sv.sources || sv.sources.length === 0) continue;
+    if (!sv || !sv.sources || sv.sources.length === 0) continue;
+    const rawVal = String(sv.value ?? '').trim();
+    if (!rawVal) continue;
+    const key = rawVal.toLowerCase().replace(/[\u2018\u2019]/g, "'").replace(/\s+/g, ' ');
+    const existing = mergedSvs.get(key);
+    if (!existing) {
+      mergedSvs.set(key, { value: rawVal, sources: [...sv.sources] });
+    } else {
+      const seen = new Set(existing.sources.map(s => s && s.url).filter(Boolean));
+      for (const s of sv.sources) {
+        if (!s || !s.url || !seen.has(s.url)) {
+          existing.sources.push(s);
+          if (s && s.url) seen.add(s.url);
+        }
+      }
+    }
+  }
+
+  for (const sv of mergedSvs.values()) {
     const item = document.createElement('div');
     item.className = 'evidence-item';
 
-    // Value label (if different from primary)
     if (sv.value && sv.value !== attr.value) {
       const valLabel = document.createElement('div');
       valLabel.className = 'evidence-value';

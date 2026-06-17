@@ -8,7 +8,7 @@ summaries, and schema evolution support.
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Awaitable, Callable, Optional
 import json
 
 
@@ -756,6 +756,17 @@ class RecordSet:
     # Surfaced into discovery/expansion prompts via build_exclusion_text() so
     # the agent stops re-proposing rejected entities.
     user_exclusions: list[dict] = field(default_factory=list)
+    # Optional LLM-backed arbiter. When set, ``get_record_fuzzy`` will only
+    # return matches that have been previously LLM-approved (cache hit on
+    # the arbiter). Async paths consult the arbiter directly via
+    # ``check_duplicates`` / ``deduplicate_fuzzy`` and warm the cache;
+    # the sync ``add_record`` path falls through this gate, so unverified
+    # fuzzy hits at add-time will NOT auto-merge.
+    merge_arbiter: object | None = None
+    # Pairs (frozenset of 2 labels) that the LLM arbiter has rejected.
+    # Populated by ``deduplicate_fuzzy`` so future clustering passes skip
+    # them.
+    do_not_merge: set = field(default_factory=set)
     
     def get_record(self, label: str) -> Optional[Record]:
         """Get a record by label (case-insensitive)."""
@@ -791,8 +802,18 @@ class RecordSet:
             threshold=threshold,
             include_aliases=alias_map,
         )
-        
+
         if matched_label:
+            # If an arbiter is wired, refuse the merge unless it has been
+            # previously LLM-approved (cache hit). This makes the sync
+            # add-time fuzzy path safe by default: unverified fuzzy hits
+            # become two records that the next async dedup pass will
+            # re-evaluate.
+            arbiter = getattr(self, "merge_arbiter", None)
+            if arbiter is not None:
+                cached = arbiter.get_cached(label, matched_label)
+                if cached is None or not arbiter.approves(cached):
+                    return None, 0
             return self.get_record(matched_label), score
         return None, 0
     
@@ -890,58 +911,84 @@ class RecordSet:
 
         return "\n\n".join(sections)
     
-    def deduplicate_fuzzy(self, threshold: int | None = None) -> list[tuple[str, str, int]]:
+    async def deduplicate_fuzzy(
+        self,
+        threshold: int | None = None,
+        arbiter=None,
+    ) -> list[tuple[str, str, int]]:
         """
         Find and merge fuzzy duplicate records.
-        
-        Uses clustering to find groups of similar labels, then merges each group
-        into a single record with the most frequent label as canonical.
-        
+
+        Uses clustering to find groups of similar labels, then verifies each
+        proposed merge with the LLM arbiter (if provided) before applying.
+        Rejected pairs are added to ``do_not_merge`` so future passes skip
+        them. Without an arbiter, falls back to naive accept-all (legacy
+        behavior — should only be used in offline/no-key mode).
+
         Args:
-            threshold: Similarity threshold (0-100), uses self.fuzzy_threshold if None
-            
+            threshold: Similarity threshold (0-100), uses self.fuzzy_threshold if None.
+            arbiter: Optional ``MergeArbiter`` to confirm each cluster merge.
+
         Returns:
-            List of (canonical_label, merged_label, score) for each merge performed
+            List of (canonical_label, merged_label, score) for each merge performed.
         """
         from .resolution import cluster_fuzzy_matches, find_all_fuzzy_matches
-        
+
         threshold = threshold if threshold is not None else self.fuzzy_threshold
-        
+
         labels = self.get_labels()
         clusters = cluster_fuzzy_matches(
             labels,
             threshold,
             do_not_merge=getattr(self, "do_not_merge", None),
         )
-        
-        merges = []
-        
+
+        if arbiter is not None:
+            # Bind resolver so the arbiter sees full record context.
+            arbiter.record_resolver = lambda lbl: self.get_record(lbl)
+
+        # Ensure do_not_merge container exists; we may add to it on rejection.
+        if not hasattr(self, "do_not_merge") or self.do_not_merge is None:
+            self.do_not_merge = set()
+
+        merges: list[tuple[str, str, int]] = []
+
         for cluster in clusters:
-            # Find all records in this cluster
             cluster_records = [r for r in self.records if r.label in cluster]
-            
             if len(cluster_records) < 2:
                 continue
-            
-            # Pick the record with the most attribute coverage as the base
+
             base_record = max(
                 cluster_records,
-                key=lambda r: (len(r.attributes), sum(r.alias_counts.values(), 0))
+                key=lambda r: (len(r.attributes), sum(r.alias_counts.values(), 0)),
             )
-            
-            # Merge all others into the base
-            for other in cluster_records:
-                if other is base_record:
-                    continue
-                
-                # Find similarity score
-                matches = find_all_fuzzy_matches([base_record.label, other.label], threshold)
+
+            others = [r for r in cluster_records if r is not base_record]
+
+            # Verify each candidate against the base via LLM.
+            approved: list[Record] = []
+            if arbiter is not None:
+                pairs = [(base_record.label, o.label) for o in others]
+                verdicts = await arbiter.verify_pairs(pairs)
+                for o in others:
+                    v = verdicts.get(arbiter._key(base_record.label, o.label))
+                    if v is not None and arbiter.approves(v):
+                        approved.append(o)
+                    else:
+                        # Record rejection so future runs don't re-propose it.
+                        self.do_not_merge.add(frozenset({base_record.label, o.label}))
+            else:
+                approved = others
+
+            for other in approved:
+                matches = find_all_fuzzy_matches(
+                    [base_record.label, other.label], threshold
+                )
                 score = matches[0][2] if matches else threshold
-                
                 merges.append((base_record.label, other.label, score))
                 base_record.merge_from(other)
                 self.records.remove(other)
-        
+
         return merges
     
     def get_all_labels_with_aliases(self) -> list[str]:
@@ -998,6 +1045,7 @@ class RecordSet:
                 for a in self.schema_attributes
             ],
             "user_exclusions": list(self.user_exclusions),
+            "do_not_merge": [sorted(list(p)) for p in (self.do_not_merge or set())],
             "created_at": self.created_at.isoformat(),
         }
     
@@ -1021,6 +1069,10 @@ class RecordSet:
                 for a in data.get("schema_attributes", [])
             ],
             user_exclusions=list(data.get("user_exclusions", []) or []),
+            do_not_merge={
+                frozenset(p) for p in (data.get("do_not_merge") or [])
+                if isinstance(p, (list, tuple)) and len(p) == 2
+            },
             created_at=datetime.fromisoformat(data.get("created_at", datetime.now().isoformat())),
         )
     
@@ -1086,6 +1138,18 @@ class SchemifyConfig:
     
     # Lazy query generation (generate pairs/triples from productive results only)
     lazy_generation: bool = True
-    
+
     # Early stop window (stop if last N queries yield 0 new entities; 0 = disabled)
     early_stop_window: int = 10
+
+    # Multilingual search: if set, every agent-issued search query is
+    # passed through this translator to fan out into additional source
+    # languages. Each entry returned is ``(translated_query, lang_code)``.
+    # Default (None) preserves single-language behaviour.
+    query_translator: Optional[Callable[[str], Awaitable[list[tuple[str, str]]]]] = None
+
+    # Target language for extracted attribute values. When set to
+    # anything other than the empty string, an instruction is added to
+    # the discovery prompt asking the LLM to normalize attribute values
+    # into that language regardless of source-document language.
+    target_language: str = "English"

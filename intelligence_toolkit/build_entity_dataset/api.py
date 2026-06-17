@@ -8,6 +8,7 @@ from __future__ import annotations
 import asyncio
 import io
 import json
+import logging
 import os
 import re
 import threading
@@ -21,7 +22,26 @@ import pandas as pd
 
 from intelligence_toolkit.helpers.constants import CACHE_PATH
 
+from . import config
+
+_logger = logging.getLogger(__name__)
+
 _RUNS_DIR = Path(CACHE_PATH) / "build_entity_dataset" / "runs"
+
+# Minimum seconds between disk snapshots during a running extraction.
+# Progress callbacks fire on every query/extraction tick; without
+# throttling that's a blocking JSON write per tick.
+_SNAPSHOT_MIN_INTERVAL_SECONDS = 10.0
+
+# Max labels per LLM call when asking for alias-merge suggestions.
+# Larger datasets are chunked across multiple calls instead of being
+# silently truncated.
+_ALIAS_SUGGEST_CHUNK_SIZE = 200
+
+# Max records per LLM call when scanning for harmful content. Each
+# batch is one LLM round-trip instead of one per record.
+_SAFETY_SCAN_BATCH_SIZE = 8
+_SAFETY_SCAN_CONCURRENCY = 6
 
 
 def _parse_alias_suggestions(raw: str) -> list[dict]:
@@ -73,6 +93,31 @@ class ResearchProgress:
     is_complete: bool = False
     error: str = ""
 
+    # Auto-mode fields. Left at defaults outside of auto-mode runs so
+    # existing UI code that reads ``ResearchProgress`` is unaffected.
+    iteration: int = 0
+    max_iterations: int = 0
+    sub_phase: str = ""
+    judge_complete: Optional[bool] = None
+    judge_confidence: float = 0.0
+    judge_reason: str = ""
+    judge_missing_gaps: list[str] = field(default_factory=list)
+    iteration_history: list[dict] = field(default_factory=list)
+    stop_reason: str = ""
+
+    # Rediscovery-benchmark fields. Populated by
+    # :meth:`BuildEntityDataset.start_rediscovery_benchmark`.
+    benchmark_reference_count: int = 0
+    benchmark_rediscovered_before: int = 0
+    benchmark_fuzzy_matches_before: int = 0
+    benchmark_missed_before: int = 0
+    benchmark_recovered_via_gap_fill: int = 0
+    benchmark_still_missing: int = 0
+    benchmark_blind_recall: float = 0.0
+    benchmark_blind_recall_fuzzy: float = 0.0
+    benchmark_total_recall: float = 0.0
+    benchmark_still_missing_sample: list[str] = field(default_factory=list)
+
 
 @dataclass
 class UsageStats:
@@ -99,6 +144,27 @@ class BuildEntityDataset:
         self._dataset_json: Optional[dict] = None
         self._df: Optional[pd.DataFrame] = None
         self._run_dir: Optional[Path] = None
+        # Coordinates writes/reads between the background worker and the
+        # Streamlit UI thread. Re-entrant so worker callbacks that call
+        # already-locked helpers don't deadlock.
+        self._state_lock = threading.RLock()
+        # Cache key for the materialized DataFrame. Worker bumps
+        # ``_record_version`` on every record-set mutation; readers rebuild
+        # the DF only when ``_df_cache_version`` lags behind.
+        self._record_version: int = 0
+        self._df_cache_version: int = -1
+        self._cached_df: Optional[pd.DataFrame] = None
+        # Snapshot throttling.
+        self._last_snapshot_time: float = 0.0
+        self._snapshot_pending: bool = False
+        # Distinguishes runs that were rehydrated read-only from disk
+        # (no API key) so the UI can explain why "Continue research" is
+        # unavailable.
+        self._read_only_reason: Optional[str] = None
+        # Cooperative cancellation flag for the auto-mode worker. The
+        # orchestrator checks it between iterations; setting it does not
+        # interrupt an in-flight Schemify call.
+        self._stop_auto: bool = False
 
     # ── Public properties ──────────────────────────────────────
 
@@ -119,15 +185,35 @@ class BuildEntityDataset:
         return self._run_dir
 
     def current_dataframe(self) -> Optional[pd.DataFrame]:
-        """Build a DataFrame from the live record set, even mid-run."""
-        if self._df is not None and not self._df.empty:
-            return self._df
-        if not self._schemify or not self._schemify.record_set:
-            return None
+        """Return a DataFrame snapshot of the live record set.
+
+        Rebuilds only when the underlying record set has changed since the
+        last call — the UI polls this on every Streamlit rerun, so a naive
+        rebuild was O(records) per poll for no new data.
+        """
+        with self._state_lock:
+            if self._df is not None and not self._df.empty:
+                return self._df
+            if not self._schemify or not self._schemify.record_set:
+                return None
+            if (
+                self._cached_df is not None
+                and self._df_cache_version == self._record_version
+            ):
+                return self._cached_df
         try:
-            return self._schemify.to_dataframe()
-        except Exception:  # noqa: BLE001
+            df = self._schemify.to_dataframe()
+        except Exception as e:  # noqa: BLE001
+            _logger.warning("to_dataframe() failed: %s", e)
             return None
+        with self._state_lock:
+            self._cached_df = df
+            self._df_cache_version = self._record_version
+        return df
+
+    def _bump_record_version(self) -> None:
+        with self._state_lock:
+            self._record_version += 1
 
     @property
     def schema_attributes(self) -> list[dict]:
@@ -150,54 +236,73 @@ class BuildEntityDataset:
     def refresh_progress(self) -> None:
         """Pull live counters from the running Schemify instance.
 
-        The agentic discovery loop does not emit periodic
-        ``on_progress`` callbacks, so the UI polls this method on each
-        Streamlit rerun to surface the current query/entity counts.
+        Prefers ``Schemify.get_live_progress()`` (a public O(1) snapshot
+        introduced for the ITK wrapper). Falls back to reading the
+        legacy private counters when running against an older Schemify.
         """
         if not self._schemify:
             return
-        try:
-            # ``_query_counter`` is only updated by the legacy iterative path;
-            # the agentic loop tracks queries via ``query_history``. Use whichever
-            # is larger so both code paths surface a live count.
-            history_count = len(getattr(self._schemify, "query_history", []) or [])
-            counter = int(getattr(self._schemify, "_query_counter", 0) or 0)
-            # Preserve any higher value already pushed by the per-query
-            # progress callback; ``query_history`` is only appended when
-            # a whole batch finishes, so it lags mid-batch.
-            self.progress.query_count = max(
-                history_count, counter, self.progress.query_count
-            )
-        except Exception:  # noqa: BLE001
-            pass
-        rs = getattr(self._schemify, "record_set", None)
-        if rs is not None:
+        snap = None
+        getter = getattr(self._schemify, "get_live_progress", None)
+        if callable(getter):
             try:
-                self.progress.entity_count = len(rs.records)
-            except Exception:  # noqa: BLE001
-                pass
+                snap = getter()
+            except Exception as e:  # noqa: BLE001
+                _logger.warning("get_live_progress() failed: %s", e)
+                snap = None
+        if snap is None:
+            # Legacy fallback.
+            try:
+                history_count = len(getattr(self._schemify, "query_history", []) or [])
+                counter = int(getattr(self._schemify, "_query_counter", 0) or 0)
+                rs = getattr(self._schemify, "record_set", None)
+                entity_count = len(rs.records) if rs is not None else 0
+                snap = {
+                    "query_count": max(history_count, counter),
+                    "entity_count": entity_count,
+                }
+            except Exception as e:  # noqa: BLE001
+                _logger.warning("legacy progress read failed: %s", e)
+                return
+        self.progress.query_count = max(
+            int(snap.get("query_count", 0) or 0), self.progress.query_count
+        )
+        self.progress.entity_count = int(snap.get("entity_count", 0) or 0)
         # Live cost from the LLM client, if available.
         llm = getattr(self._schemify, "llm", None)
         if llm is not None:
             try:
-                cost = float(getattr(llm, "total_cost", 0.0) or 0.0)
-                tokens = int(getattr(llm, "total_tokens", 0) or 0)
-                self.usage.total_cost_usd = cost
-                self.usage.total_tokens = tokens
+                self.usage.total_cost_usd = float(getattr(llm, "total_cost", 0.0) or 0.0)
+                self.usage.total_tokens = int(getattr(llm, "total_tokens", 0) or 0)
                 self.usage.queries_run = self.progress.query_count
-            except Exception:  # noqa: BLE001
-                pass
+            except Exception as e:  # noqa: BLE001
+                _logger.warning("llm usage read failed: %s", e)
 
     # ── Research lifecycle ─────────────────────────────────────
 
     def reset(self) -> None:
-        self._schemify = None
-        self.progress = ResearchProgress()
-        self.usage = UsageStats()
-        self._thread = None
-        self._dataset_json = None
-        self._df = None
-        self._run_dir = None
+        """Drop all in-memory state.
+
+        Refuses while a background worker is still alive — wiping the
+        Schemify reference while the worker holds it would just cause
+        confusing callback errors. Stop research first, then reset.
+        """
+        with self._state_lock:
+            if self.is_running:
+                _logger.warning("reset() called while research is running; ignoring")
+                return
+            self._schemify = None
+            self.progress = ResearchProgress()
+            self.usage = UsageStats()
+            self._thread = None
+            self._dataset_json = None
+            self._df = None
+            self._run_dir = None
+            self._record_version += 1
+            self._df_cache_version = -1
+            self._cached_df = None
+            self._last_snapshot_time = 0.0
+            self._read_only_reason = None
 
     def start_research(
         self,
@@ -207,7 +312,7 @@ class BuildEntityDataset:
         schema_attributes: Optional[list[dict]] = None,
         max_queries: int = 30,
         concurrency: int = 5,
-        model: str = "gpt-4o-mini",
+        model: str = config.DEFAULT_MODEL,
         budget: float = 10.0,
         verify: bool = True,
         phase_split: tuple[float, float, float] = (0.6, 0.2, 0.2),
@@ -247,19 +352,33 @@ class BuildEntityDataset:
                     self.progress.current = current
                     self.progress.total = total
                     if self._schemify and self._schemify.record_set:
-                        self.progress.entity_count = len(self._schemify.record_set.records)
-                        history_count = len(
-                            getattr(self._schemify, "query_history", []) or []
-                        )
-                        counter = int(
-                            getattr(self._schemify, "_query_counter", 0) or 0
-                        )
-                        self.progress.query_count = max(history_count, counter, current)
-                    # Snapshot partial dataset to disk so a crash doesn't lose it.
+                        snap = None
+                        getter = getattr(self._schemify, "get_live_progress", None)
+                        if callable(getter):
+                            try:
+                                snap = getter()
+                            except Exception as e:  # noqa: BLE001
+                                _logger.warning("get_live_progress() failed: %s", e)
+                        if snap is not None:
+                            self.progress.entity_count = int(snap.get("entity_count", 0))
+                            self.progress.query_count = max(
+                                int(snap.get("query_count", 0)), current
+                            )
+                        else:
+                            self.progress.entity_count = len(self._schemify.record_set.records)
+                            history_count = len(
+                                getattr(self._schemify, "query_history", []) or []
+                            )
+                            counter = int(
+                                getattr(self._schemify, "_query_counter", 0) or 0
+                            )
+                            self.progress.query_count = max(history_count, counter, current)
+                        self._bump_record_version()
+                    # Throttled disk snapshot so we don't write JSON on every tick.
                     try:
-                        self._snapshot_partial(category=category)
-                    except Exception:  # noqa: BLE001
-                        pass
+                        self._snapshot_partial(category=category, throttle=True)
+                    except Exception as e:  # noqa: BLE001
+                        _logger.warning("snapshot_partial failed: %s", e)
 
                 self._schemify.on_progress(_on_progress)
 
@@ -317,18 +436,22 @@ class BuildEntityDataset:
                     self.progress.is_running = False
                     self.progress.is_complete = True
                     self.progress.stage = "Complete"
-                    if rs:
-                        self.progress.entity_count = len(rs.records)
+                    if self._schemify and self._schemify.record_set:
+                        self.progress.entity_count = len(
+                            self._schemify.record_set.records
+                        )
+                    self._bump_record_version()
 
                     # Persist completed run so the UI can resume it later.
                     try:
                         self._save_run(category=category)
-                    except Exception:  # noqa: BLE001
-                        pass
+                    except OSError as e:
+                        _logger.warning("_save_run failed: %s", e)
                 finally:
                     loop.close()
 
             except Exception as e:  # noqa: BLE001
+                _logger.exception("research worker failed")
                 self.progress.is_running = False
                 self.progress.error = str(e)
                 self.progress.stage = "Error"
@@ -341,22 +464,733 @@ class BuildEntityDataset:
         if self._schemify and self._schemify.record_set:
             try:
                 self._df = self._schemify.to_dataframe()
-            except Exception:  # noqa: BLE001
-                pass
+                self._bump_record_version()
+            except Exception as e:  # noqa: BLE001
+                _logger.warning("to_dataframe on stop failed: %s", e)
+            # Force-flush any pending throttled snapshot so the user keeps
+            # the work-in-progress on disk.
+            try:
+                self._snapshot_partial(
+                    category=self._schemify.record_set.category
+                )
+            except Exception as e:  # noqa: BLE001
+                _logger.warning("final snapshot on stop failed: %s", e)
         self.progress.is_running = False
         self.progress.stage = "Stopped by user"
+        # Auto-mode orchestrator polls this between iterations.
+        self._stop_auto = True
+
+    # ── Auto mode ───────────────────────────────────────────────
+
+    @staticmethod
+    def reference_labels_from_file(filename: str, raw: bytes) -> list[str]:
+        """Parse an uploaded reference dataset and return the entity labels.
+
+        Accepts the same formats as :meth:`parse_candidate_file` and
+        additionally recognises the full dataset JSON shape written by
+        :meth:`_save_run` (``{"records": [{"label": ...}, ...]}``).
+        Duplicates are deduplicated case-insensitively while preserving
+        input order.
+        """
+        if not raw:
+            return []
+        name = (filename or "").lower()
+        if name.endswith(".json"):
+            try:
+                text = raw.decode("utf-8-sig", errors="replace")
+                data = json.loads(text)
+            except Exception:  # noqa: BLE001
+                data = None
+            if isinstance(data, dict) and isinstance(data.get("records"), list):
+                names = []
+                for r in data["records"]:
+                    if isinstance(r, dict):
+                        v = r.get("label") or r.get("name")
+                        if isinstance(v, str) and v.strip():
+                            names.append(v.strip())
+                return BuildEntityDataset._dedupe_preserving_order(names)
+
+        names = BuildEntityDataset.parse_candidate_file(filename, raw)
+        return BuildEntityDataset._dedupe_preserving_order(names)
+
+    @staticmethod
+    def _dedupe_preserving_order(items: list[str]) -> list[str]:
+        seen: set[str] = set()
+        out: list[str] = []
+        for raw in items:
+            v = (raw or "").strip()
+            if not v:
+                continue
+            k = v.casefold()
+            if k in seen:
+                continue
+            seen.add(k)
+            out.append(v)
+        return out
+
+    def propose_search_languages(
+        self,
+        api_key: str,
+        category: str,
+        guidance: str = "",
+        model: str = config.DEFAULT_MODEL,
+    ) -> list[dict]:
+        """Synchronous wrapper around :func:`multilingual.propose_search_languages`.
+
+        Spins up a one-shot Schemify LLM client to make the call so the
+        UI can offer "Suggest source languages" before any research run
+        has been started. Returns a list of
+        ``{"code", "name", "rationale"}`` dicts.
+        """
+        from intelligence_toolkit.schemify.llm import LLMClient  # noqa: PLC0415
+        from intelligence_toolkit.schemify.models import SchemifyConfig  # noqa: PLC0415
+        from .multilingual import propose_search_languages  # noqa: PLC0415
+
+        cfg = SchemifyConfig(
+            api_key=api_key,
+            search_model=model,
+            completion_model=model,
+            cache_enabled=False,
+        )
+        llm = LLMClient(cfg)
+        loop = asyncio.new_event_loop()
+        try:
+            return loop.run_until_complete(
+                propose_search_languages(llm, category, guidance)
+            )
+        finally:
+            loop.close()
+
+    def start_auto_mode(
+        self,
+        api_key: str,
+        category: str,
+        guidance: str = "",
+        schema_attributes: Optional[list[dict]] = None,
+        *,
+        reference_labels: Optional[list[str]] = None,
+        search_languages: Optional[list[str]] = None,
+        target_language: str = "English",
+        max_iterations: int = 5,
+        per_iter_query_budget: int = 30,
+        normalize_every: int = 3,
+        min_iterations: int = 2,
+        concurrency: int = 5,
+        model: str = config.DEFAULT_MODEL,
+        budget: float = 10.0,
+    ) -> None:
+        """Run auto mode in a daemon background thread.
+
+        Drives ``run_agentic`` → ``verify_unverified`` → ``normalize``
+        in a loop until an LLM judge declares completion or the
+        iteration cap is hit. Optional ``reference_labels`` seed the
+        record set with entity names (values are NOT trusted — fresh
+        verification is required). ``search_languages`` enables
+        multilingual query fan-out via :mod:`multilingual`.
+        """
+        if self.is_running:
+            return
+
+        self._stop_auto = False
+        self.progress = ResearchProgress(
+            is_running=True,
+            stage="Starting auto mode…",
+            max_iterations=int(max_iterations),
+        )
+        self._df = None
+        self._dataset_json = None
+
+        _RUNS_DIR.mkdir(parents=True, exist_ok=True)
+        safe = re.sub(r"[^A-Za-z0-9._-]+", "_", category.strip())[:60] or "run"
+        ts = time.strftime("%Y%m%d-%H%M%S")
+        self._run_dir = _RUNS_DIR / f"{ts}_auto_{safe}"
+        self._run_dir.mkdir(parents=True, exist_ok=True)
+
+        def _run() -> None:
+            try:
+                from intelligence_toolkit.schemify import Schemify  # noqa: PLC0415
+                from intelligence_toolkit.schemify.models import (  # noqa: PLC0415
+                    SchemifyConfig,
+                    SchemaAttribute,
+                )
+                from .auto import run_auto_loop  # noqa: PLC0415
+                from .multilingual import make_query_translator  # noqa: PLC0415
+
+                cfg = SchemifyConfig(
+                    api_key=api_key,
+                    search_model=model,
+                    completion_model=model,
+                    max_budget=budget,
+                    cache_enabled=True,
+                    target_language=(target_language or "English").strip() or "English",
+                )
+                self._schemify = Schemify(cfg)
+
+                # Wire the multilingual translator after the LLM client
+                # exists so it can share the same cache.
+                if search_languages:
+                    cfg.query_translator = make_query_translator(
+                        self._schemify.llm,
+                        list(search_languages),
+                        cache=self._schemify.cache,
+                    )
+
+                def _on_progress(stage: str, current: int, total: int) -> None:
+                    self.progress.stage = stage
+                    self.progress.current = current
+                    self.progress.total = total
+                    if self._schemify and self._schemify.record_set:
+                        snap = None
+                        getter = getattr(self._schemify, "get_live_progress", None)
+                        if callable(getter):
+                            try:
+                                snap = getter()
+                            except Exception as e:  # noqa: BLE001
+                                _logger.warning("get_live_progress() failed: %s", e)
+                        if snap is not None:
+                            self.progress.entity_count = int(
+                                snap.get("entity_count", 0)
+                            )
+                            self.progress.query_count = max(
+                                int(snap.get("query_count", 0)), current
+                            )
+                        else:
+                            self.progress.entity_count = len(
+                                self._schemify.record_set.records
+                            )
+                        self._bump_record_version()
+                    try:
+                        self._snapshot_partial(category=category, throttle=True)
+                    except Exception as e:  # noqa: BLE001
+                        _logger.warning("snapshot_partial failed: %s", e)
+
+                self._schemify.on_progress(_on_progress)
+
+                sa = None
+                if schema_attributes:
+                    sa = [SchemaAttribute(**a) for a in schema_attributes]
+
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    self.progress.stage = "Initializing schema…"
+                    loop.run_until_complete(
+                        self._schemify.initialize(
+                            category=category,
+                            guidance=guidance,
+                            schema_attributes=sa,
+                        )
+                    )
+
+                    if reference_labels:
+                        labels = self._dedupe_preserving_order(reference_labels)
+                        added = 0
+                        if labels:
+                            from intelligence_toolkit.schemify.models import (  # noqa: PLC0415
+                                Record,
+                            )
+                            rs = self._schemify.record_set
+                            existing = {
+                                (r.label or "").strip().casefold()
+                                for r in rs.records
+                            }
+                            for name in labels:
+                                if not name or name.casefold() in existing:
+                                    continue
+                                rec = Record(label=name.upper())
+                                ok, _ = rs.add_record(rec, use_fuzzy=False)
+                                if ok:
+                                    added += 1
+                                    existing.add(name.casefold())
+                            # Bias prompts away from blindly trusting the
+                            # reference values — only the labels are seeds.
+                            base = (rs.guidance or "").rstrip()
+                            note = (
+                                "Auto-mode reference dataset: the entity names "
+                                "below were seeded from a prior partial dataset "
+                                "as research candidates ONLY. Their attribute "
+                                "values are NOT trusted — re-verify everything "
+                                "from fresh web sources, and discover NEW "
+                                "entities beyond the seed list. Seed entities "
+                                f"({len(labels)}): "
+                                + ", ".join(labels[:50])
+                                + (" …" if len(labels) > 50 else "")
+                            )
+                            rs.guidance = f"{base}\n\n{note}" if base else note
+                            self._bump_record_version()
+                        self.progress.stage = (
+                            f"Seeded {added} reference entities…"
+                        )
+
+                    def _auto_progress(phase: str, info: dict) -> None:
+                        self.progress.sub_phase = phase
+                        iter_n = int(info.get("iteration", 0) or 0)
+                        max_n = int(info.get("max_iterations", max_iterations) or 0)
+                        if iter_n:
+                            self.progress.iteration = iter_n
+                        if max_n:
+                            self.progress.max_iterations = max_n
+                        if "entity_count" in info:
+                            self.progress.entity_count = int(
+                                info.get("entity_count") or 0
+                            )
+                        if phase == "Done":
+                            self.progress.stage = "Auto mode finishing…"
+                            self.progress.stop_reason = str(
+                                info.get("stop_reason") or ""
+                            )
+                        else:
+                            label = f"{phase}"
+                            if iter_n and max_n:
+                                label += f" (iter {iter_n}/{max_n})"
+                            self.progress.stage = label
+
+                    async def _judge(rs, history):
+                        from .auto import judge_completeness  # noqa: PLC0415
+                        verdict = await judge_completeness(
+                            self._schemify.llm, rs, history
+                        )
+                        self.progress.judge_complete = bool(verdict.complete)
+                        self.progress.judge_confidence = float(verdict.confidence)
+                        self.progress.judge_reason = verdict.reason or ""
+                        self.progress.judge_missing_gaps = list(
+                            verdict.missing_gaps or []
+                        )
+                        return verdict
+
+                    self.progress.stage = "Auto-mode loop starting…"
+                    result = loop.run_until_complete(
+                        run_auto_loop(
+                            self._schemify,
+                            max_iterations=int(max_iterations),
+                            per_iter_query_budget=int(per_iter_query_budget),
+                            concurrency=int(concurrency),
+                            output_dir=str(self._run_dir) if self._run_dir else None,
+                            progress_callback=_auto_progress,
+                            judge_callback=_judge,
+                            should_stop=lambda: self._stop_auto,
+                            normalize_every=int(normalize_every),
+                            min_iterations=int(min_iterations),
+                        )
+                    )
+
+                    self.progress.iteration_history = [
+                        {
+                            "iteration": h.index,
+                            "new_entities": h.new_entities,
+                            "total_entities": h.total_entities,
+                            "queries_run": h.queries_run,
+                            "cost_usd": round(h.cost_usd, 4),
+                            "phase_split": list(h.phase_split),
+                            "judge": h.judge.to_dict() if h.judge else None,
+                        }
+                        for h in result.per_iteration_history
+                    ]
+                    self.progress.stop_reason = result.stop_reason
+
+                    self._df = self._schemify.to_dataframe()
+                    self._dataset_json = self._build_dataset_json()
+
+                    stats = self._schemify.get_stats()
+                    llm_usage = stats.get("llm_usage", {}) or {}
+                    self.usage = UsageStats(
+                        total_tokens=int(llm_usage.get("total_tokens", 0) or 0),
+                        total_cost_usd=float(
+                            llm_usage.get("total_cost_usd", 0.0) or 0.0
+                        ),
+                        queries_run=self.progress.query_count,
+                    )
+
+                    self.progress.is_running = False
+                    self.progress.is_complete = True
+                    self.progress.stage = (
+                        f"Auto mode complete ({result.stop_reason})"
+                    )
+                    if self._schemify.record_set:
+                        self.progress.entity_count = len(
+                            self._schemify.record_set.records
+                        )
+                    self._bump_record_version()
+
+                    try:
+                        self._save_run(category=category)
+                    except OSError as e:
+                        _logger.warning("_save_run after auto failed: %s", e)
+                finally:
+                    loop.close()
+
+            except Exception as e:  # noqa: BLE001
+                _logger.exception("auto-mode worker failed")
+                self.progress.is_running = False
+                self.progress.error = str(e)
+                self.progress.stage = "Error"
+
+        self._thread = threading.Thread(target=_run, daemon=True)
+        self._thread.start()
+
+    def stop_auto_mode(self) -> None:
+        """Ask the auto-mode worker to stop at the next iteration boundary."""
+        self._stop_auto = True
+        self.progress.stage = "Stopping auto mode…"
+
+    def start_rediscovery_benchmark(
+        self,
+        api_key: str,
+        category: str,
+        guidance: str = "",
+        schema_attributes: Optional[list[dict]] = None,
+        *,
+        reference_labels: list[str],
+        search_languages: Optional[list[str]] = None,
+        target_language: str = "English",
+        max_iterations: int = 4,
+        per_iter_query_budget: int = 25,
+        gap_fill_query_budget: int = 200,
+        gap_fill_cost_reserve_usd: float = 25.0,
+        normalize_every: int = 3,
+        min_iterations: int = 2,
+        concurrency: int = 5,
+        model: str = config.DEFAULT_MODEL,
+        budget: float = 50.0,
+    ) -> None:
+        """Run a blind-rediscovery + gap-fill benchmark in a daemon thread.
+
+        Unlike :meth:`start_auto_mode` (guide mode), the reference labels
+        are NOT seeded before research. The auto loop runs blind, then a
+        comparison + targeted gap-fill pass attempts to recover any
+        reference entities the loop missed, using each missed name as a
+        per-entity search anchor. Returns immediately; poll
+        ``self.progress`` for status.
+
+        Budget is split: blind discovery is capped at
+        ``budget - gap_fill_cost_reserve_usd``; the reserve is held back
+        so the gap-fill probe is guaranteed at least that much headroom.
+        """
+        if self.is_running:
+            return
+        if not reference_labels:
+            raise ValueError("start_rediscovery_benchmark requires reference_labels")
+
+        reserve = max(0.0, float(gap_fill_cost_reserve_usd))
+        if reserve >= budget:
+            raise ValueError(
+                f"gap_fill_cost_reserve_usd ({reserve}) must be < budget ({budget})"
+            )
+        blind_budget = float(budget) - reserve
+
+        self._stop_auto = False
+        self.progress = ResearchProgress(
+            is_running=True,
+            stage="Starting rediscovery benchmark…",
+            max_iterations=int(max_iterations),
+        )
+        self._df = None
+        self._dataset_json = None
+
+        _RUNS_DIR.mkdir(parents=True, exist_ok=True)
+        safe = re.sub(r"[^A-Za-z0-9._-]+", "_", category.strip())[:60] or "run"
+        ts = time.strftime("%Y%m%d-%H%M%S")
+        self._run_dir = _RUNS_DIR / f"{ts}_benchmark_{safe}"
+        self._run_dir.mkdir(parents=True, exist_ok=True)
+
+        def _run() -> None:
+            try:
+                from intelligence_toolkit.schemify import Schemify  # noqa: PLC0415
+                from intelligence_toolkit.schemify.models import (  # noqa: PLC0415
+                    SchemifyConfig,
+                    SchemaAttribute,
+                )
+                from .auto import (  # noqa: PLC0415
+                    run_auto_loop,
+                    gap_fill_against_reference,
+                    judge_completeness,
+                )
+                from .multilingual import make_query_translator  # noqa: PLC0415
+
+                cfg = SchemifyConfig(
+                    api_key=api_key,
+                    search_model=model,
+                    completion_model=model,
+                    max_budget=blind_budget,
+                    cache_enabled=True,
+                    target_language=(target_language or "English").strip() or "English",
+                )
+                self._schemify = Schemify(cfg)
+
+                if search_languages:
+                    cfg.query_translator = make_query_translator(
+                        self._schemify.llm,
+                        list(search_languages),
+                        cache=self._schemify.cache,
+                    )
+
+                def _on_progress(stage: str, current: int, total: int) -> None:
+                    self.progress.stage = stage
+                    self.progress.current = current
+                    self.progress.total = total
+                    if self._schemify and self._schemify.record_set:
+                        snap = None
+                        getter = getattr(self._schemify, "get_live_progress", None)
+                        if callable(getter):
+                            try:
+                                snap = getter()
+                            except Exception as e:  # noqa: BLE001
+                                _logger.warning("get_live_progress() failed: %s", e)
+                        if snap is not None:
+                            self.progress.entity_count = int(
+                                snap.get("entity_count", 0)
+                            )
+                            self.progress.query_count = max(
+                                int(snap.get("query_count", 0)), current
+                            )
+                        else:
+                            self.progress.entity_count = len(
+                                self._schemify.record_set.records
+                            )
+                        self._bump_record_version()
+                    try:
+                        self._snapshot_partial(category=category, throttle=True)
+                    except Exception as e:  # noqa: BLE001
+                        _logger.warning("snapshot_partial failed: %s", e)
+
+                self._schemify.on_progress(_on_progress)
+
+                sa = None
+                if schema_attributes:
+                    sa = [SchemaAttribute(**a) for a in schema_attributes]
+
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    self.progress.stage = "Initializing schema…"
+                    loop.run_until_complete(
+                        self._schemify.initialize(
+                            category=category,
+                            guidance=guidance,
+                            schema_attributes=sa,
+                        )
+                    )
+
+                    def _auto_progress(phase: str, info: dict) -> None:
+                        self.progress.sub_phase = phase
+                        iter_n = int(info.get("iteration", 0) or 0)
+                        max_n = int(info.get("max_iterations", max_iterations) or 0)
+                        if iter_n:
+                            self.progress.iteration = iter_n
+                        if max_n:
+                            self.progress.max_iterations = max_n
+                        if "entity_count" in info:
+                            self.progress.entity_count = int(
+                                info.get("entity_count") or 0
+                            )
+                        if phase == "Done":
+                            self.progress.stage = "Blind discovery finished — comparing…"
+                            self.progress.stop_reason = str(
+                                info.get("stop_reason") or ""
+                            )
+                        else:
+                            label = f"{phase}"
+                            if iter_n and max_n:
+                                label += f" (iter {iter_n}/{max_n})"
+                            self.progress.stage = label
+
+                    async def _judge(rs, history):
+                        verdict = await judge_completeness(
+                            self._schemify.llm, rs, history
+                        )
+                        self.progress.judge_complete = bool(verdict.complete)
+                        self.progress.judge_confidence = float(verdict.confidence)
+                        self.progress.judge_reason = verdict.reason or ""
+                        self.progress.judge_missing_gaps = list(
+                            verdict.missing_gaps or []
+                        )
+                        return verdict
+
+                    # ── Phase A: blind discovery (NO reference seeds) ──
+                    self.progress.stage = "Blind discovery loop starting…"
+                    result = loop.run_until_complete(
+                        run_auto_loop(
+                            self._schemify,
+                            max_iterations=int(max_iterations),
+                            per_iter_query_budget=int(per_iter_query_budget),
+                            concurrency=int(concurrency),
+                            output_dir=str(self._run_dir) if self._run_dir else None,
+                            progress_callback=_auto_progress,
+                            judge_callback=_judge,
+                            should_stop=lambda: self._stop_auto,
+                            normalize_every=int(normalize_every),
+                            min_iterations=int(min_iterations),
+                        )
+                    )
+
+                    self.progress.iteration_history = [
+                        {
+                            "iteration": h.index,
+                            "new_entities": h.new_entities,
+                            "total_entities": h.total_entities,
+                            "queries_run": h.queries_run,
+                            "cost_usd": round(h.cost_usd, 4),
+                            "phase_split": list(h.phase_split),
+                            "judge": h.judge.to_dict() if h.judge else None,
+                        }
+                        for h in result.per_iteration_history
+                    ]
+                    self.progress.stop_reason = result.stop_reason
+
+                    # ── Phase B + C: compare and gap-fill ──
+                    # Restore full budget so the reserved headroom is
+                    # available for targeted gap-fill, regardless of how
+                    # much the blind loop consumed.
+                    cfg.max_budget = float(budget)
+
+                    def _gap_progress(phase: str, info: dict) -> None:
+                        self.progress.sub_phase = phase
+                        # Iteration counter belongs to the auto loop;
+                        # don't pretend gap-fill is part of it.
+                        self.progress.iteration = 0
+                        self.progress.stage = f"Gap-fill: {phase}"
+                        if "reference_count" in info:
+                            self.progress.benchmark_reference_count = int(
+                                info["reference_count"]
+                            )
+                        if "rediscovered_before" in info:
+                            self.progress.benchmark_rediscovered_before = int(
+                                info["rediscovered_before"]
+                            )
+                        if "fuzzy_matches_before" in info:
+                            self.progress.benchmark_fuzzy_matches_before = int(
+                                info["fuzzy_matches_before"]
+                            )
+                        if "missed_before" in info:
+                            self.progress.benchmark_missed_before = int(
+                                info["missed_before"]
+                            )
+
+                    gap = loop.run_until_complete(
+                        gap_fill_against_reference(
+                            self._schemify,
+                            reference_labels,
+                            gap_fill_query_budget=int(gap_fill_query_budget),
+                            concurrency=int(concurrency),
+                            output_dir=str(self._run_dir) if self._run_dir else None,
+                            progress_callback=_gap_progress,
+                            should_stop=lambda: self._stop_auto,
+                        )
+                    )
+
+                    self.progress.benchmark_reference_count = gap.reference_count
+                    self.progress.benchmark_rediscovered_before = gap.rediscovered_before
+                    self.progress.benchmark_fuzzy_matches_before = (
+                        gap.fuzzy_matches_before
+                    )
+                    self.progress.benchmark_missed_before = len(gap.missed_before)
+                    self.progress.benchmark_recovered_via_gap_fill = (
+                        gap.recovered_via_gap_fill
+                    )
+                    self.progress.benchmark_still_missing = len(gap.still_missing)
+                    self.progress.benchmark_blind_recall = gap.blind_recall
+                    self.progress.benchmark_blind_recall_fuzzy = gap.blind_recall_fuzzy
+                    self.progress.benchmark_total_recall = gap.total_recall
+                    self.progress.benchmark_still_missing_sample = list(
+                        gap.still_missing[:50]
+                    )
+
+                    # Persist the full still-missing list to the run dir.
+                    if self._run_dir:
+                        try:
+                            (self._run_dir / "benchmark_report.json").write_text(
+                                json.dumps(
+                                    {
+                                        **gap.to_dict(),
+                                        "still_missing_full": gap.still_missing,
+                                        "stop_reason": result.stop_reason,
+                                    },
+                                    indent=2,
+                                ),
+                                encoding="utf-8",
+                            )
+                        except OSError as e:
+                            _logger.warning("benchmark_report write failed: %s", e)
+
+                    # Final normalize after gap-fill records were added.
+                    try:
+                        loop.run_until_complete(self._schemify.normalize())
+                    except Exception as e:  # noqa: BLE001
+                        _logger.warning("benchmark final normalize failed: %s", e)
+
+                    self._df = self._schemify.to_dataframe()
+                    self._dataset_json = self._build_dataset_json()
+
+                    # Pull a fresh live snapshot so query_count reflects
+                    # ALL phases (blind loop + gap-fill), not just the
+                    # last on_progress callback fire.
+                    try:
+                        live = self._schemify.get_live_progress() or {}
+                        self.progress.query_count = max(
+                            int(live.get("query_count", 0) or 0),
+                            self.progress.query_count,
+                        )
+                    except Exception as e:  # noqa: BLE001
+                        _logger.warning("get_live_progress() at finalize failed: %s", e)
+
+                    stats = self._schemify.get_stats()
+                    llm_usage = stats.get("llm_usage", {}) or {}
+                    self.usage = UsageStats(
+                        total_tokens=int(llm_usage.get("total_tokens", 0) or 0),
+                        total_cost_usd=float(
+                            llm_usage.get("total_cost_usd", 0.0) or 0.0
+                        ),
+                        queries_run=self.progress.query_count,
+                    )
+
+                    self.progress.is_running = False
+                    self.progress.is_complete = True
+                    self.progress.stage = (
+                        f"Rediscovery benchmark complete — "
+                        f"blind {gap.blind_recall:.0%}, "
+                        f"with gap-fill {gap.total_recall:.0%}"
+                    )
+                    if self._schemify.record_set:
+                        self.progress.entity_count = len(
+                            self._schemify.record_set.records
+                        )
+                    self._bump_record_version()
+
+                    try:
+                        self._save_run(category=category)
+                    except OSError as e:
+                        _logger.warning("_save_run after benchmark failed: %s", e)
+                finally:
+                    loop.close()
+
+            except Exception as e:  # noqa: BLE001
+                _logger.exception("rediscovery-benchmark worker failed")
+                self.progress.is_running = False
+                self.progress.error = str(e)
+                self.progress.stage = "Error"
+
+        self._thread = threading.Thread(target=_run, daemon=True)
+        self._thread.start()
 
     def can_continue_research(self) -> bool:
-        """True iff the in-memory Schemify state is alive enough to keep researching.
-
-        Loaded-from-disk runs don't currently rehydrate the full Schemify
-        object, so a fresh ``start_research`` is required in that case.
-        """
+        """True iff the in-memory Schemify state is alive enough to keep researching."""
         return bool(
             self._schemify
             and self._schemify.record_set
             and not self.is_running
         )
+
+    @property
+    def is_read_only(self) -> bool:
+        """True when the loaded dataset has no live Schemify instance
+        (e.g. a saved run loaded without an API key). Curation and
+        continue-research are unavailable in this state."""
+        return self._read_only_reason is not None and self._schemify is None
+
+    @property
+    def read_only_reason(self) -> Optional[str]:
+        """Human-readable explanation of why the dataset is read-only, or None."""
+        return self._read_only_reason if self.is_read_only else None
 
     def continue_research(
         self,
@@ -395,18 +1229,32 @@ class BuildEntityDataset:
                     self.progress.current = current
                     self.progress.total = total
                     if self._schemify and self._schemify.record_set:
-                        self.progress.entity_count = len(self._schemify.record_set.records)
-                        history_count = len(
-                            getattr(self._schemify, "query_history", []) or []
-                        )
-                        counter = int(
-                            getattr(self._schemify, "_query_counter", 0) or 0
-                        )
-                        self.progress.query_count = max(history_count, counter, current)
+                        snap = None
+                        getter = getattr(self._schemify, "get_live_progress", None)
+                        if callable(getter):
+                            try:
+                                snap = getter()
+                            except Exception as e:  # noqa: BLE001
+                                _logger.warning("get_live_progress() failed: %s", e)
+                        if snap is not None:
+                            self.progress.entity_count = int(snap.get("entity_count", 0))
+                            self.progress.query_count = max(
+                                int(snap.get("query_count", 0)), current
+                            )
+                        else:
+                            self.progress.entity_count = len(self._schemify.record_set.records)
+                            history_count = len(
+                                getattr(self._schemify, "query_history", []) or []
+                            )
+                            counter = int(
+                                getattr(self._schemify, "_query_counter", 0) or 0
+                            )
+                            self.progress.query_count = max(history_count, counter, current)
+                        self._bump_record_version()
                     try:
-                        self._snapshot_partial(category=category)
-                    except Exception:  # noqa: BLE001
-                        pass
+                        self._snapshot_partial(category=category, throttle=True)
+                    except Exception as e:  # noqa: BLE001
+                        _logger.warning("snapshot_partial failed: %s", e)
 
                 self._schemify.on_progress(_on_progress)
 
@@ -448,15 +1296,17 @@ class BuildEntityDataset:
                     self.progress.stage = "Complete"
                     if self._schemify.record_set:
                         self.progress.entity_count = len(self._schemify.record_set.records)
+                    self._bump_record_version()
 
                     try:
                         self._save_run(category=category)
-                    except Exception:  # noqa: BLE001
-                        pass
+                    except OSError as e:
+                        _logger.warning("_save_run after continue failed: %s", e)
                 finally:
                     loop.close()
 
             except Exception as e:  # noqa: BLE001
+                _logger.exception("continue_research worker failed")
                 self.progress.is_running = False
                 self.progress.error = str(e)
                 self.progress.stage = "Error"
@@ -526,6 +1376,7 @@ class BuildEntityDataset:
                     )
                     self._df = self._schemify.to_dataframe()
                     self._dataset_json = self._build_dataset_json()
+                    self._bump_record_version()
                     # Refresh usage figures.
                     try:
                         stats = self._schemify.get_stats()
@@ -537,22 +1388,23 @@ class BuildEntityDataset:
                             ),
                             queries_run=self.progress.query_count,
                         )
-                    except Exception:  # noqa: BLE001
-                        pass
+                    except Exception as e:  # noqa: BLE001
+                        _logger.warning("usage refresh after verify failed: %s", e)
                     try:
                         self._snapshot_partial(
                             category=self._schemify.record_set.category
                             if self._schemify.record_set
                             else ""
                         )
-                    except Exception:  # noqa: BLE001
-                        pass
+                    except Exception as e:  # noqa: BLE001
+                        _logger.warning("snapshot after verify failed: %s", e)
                     self.progress.is_running = False
                     self.progress.is_complete = True
                     self.progress.stage = "Verification complete"
                 finally:
                     loop.close()
             except Exception as e:  # noqa: BLE001
+                _logger.exception("verification worker failed")
                 self.progress.is_running = False
                 self.progress.error = str(e)
                 self.progress.stage = "Error"
@@ -579,8 +1431,8 @@ class BuildEntityDataset:
         self._dataset_json = self._build_dataset_json()
         try:
             self._snapshot_partial(category=rs.category)
-        except Exception:  # noqa: BLE001
-            pass
+        except Exception as e:  # noqa: BLE001
+            _logger.warning("snapshot_partial failed: %s", e)
         return True
 
     @staticmethod
@@ -666,12 +1518,13 @@ class BuildEntityDataset:
         if added:
             self._df = self._schemify.to_dataframe()
             self._dataset_json = self._build_dataset_json()
+            self._bump_record_version()
             try:
                 self._snapshot_partial(
                     category=self._schemify.record_set.category
                 )
-            except Exception:  # noqa: BLE001
-                pass
+            except Exception as e:  # noqa: BLE001
+                _logger.warning("snapshot_partial failed: %s", e)
         return added
 
     # ── Exclusions ─────────────────────────────────────────────
@@ -747,8 +1600,8 @@ class BuildEntityDataset:
         self._dataset_json = self._build_dataset_json()
         try:
             self._snapshot_partial(category=rs.category)
-        except Exception:  # noqa: BLE001
-            pass
+        except Exception as e:  # noqa: BLE001
+            _logger.warning("snapshot_partial failed: %s", e)
         return True
 
     def _upsert_exclusion(
@@ -770,8 +1623,8 @@ class BuildEntityDataset:
         self._dataset_json = self._build_dataset_json()
         try:
             self._snapshot_partial(category=rs.category)
-        except Exception:  # noqa: BLE001
-            pass
+        except Exception as e:  # noqa: BLE001
+            _logger.warning("snapshot_partial failed: %s", e)
         return (True, removed)
 
     @staticmethod
@@ -854,8 +1707,8 @@ class BuildEntityDataset:
         self._dataset_json = self._build_dataset_json()
         try:
             self._snapshot_partial(category=rs.category)
-        except Exception:  # noqa: BLE001
-            pass
+        except Exception as e:  # noqa: BLE001
+            _logger.warning("snapshot_partial failed: %s", e)
         return affected
 
     def remove_attribute(self, name: str) -> int:
@@ -880,8 +1733,8 @@ class BuildEntityDataset:
         self._dataset_json = self._build_dataset_json()
         try:
             self._snapshot_partial(category=rs.category)
-        except Exception:  # noqa: BLE001
-            pass
+        except Exception as e:  # noqa: BLE001
+            _logger.warning("snapshot_partial failed: %s", e)
         return affected
 
     # ── Normalization on demand (J) ────────────────────────────
@@ -901,27 +1754,47 @@ class BuildEntityDataset:
             else 0,
         )
 
+        def _on_norm_progress(done: int, total: int, attr_name: str) -> None:
+            self.progress.current = done
+            self.progress.total = total
+            if attr_name:
+                self.progress.stage = (
+                    f"Normalizing {attr_name} ({done}/{total})"
+                )
+            else:
+                self.progress.stage = f"Normalizing ({done}/{total})"
+
         def _run() -> None:
             try:
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
                 try:
-                    coro = self._schemify.normalize(attributes=attributes)
+                    # Pass progress_callback when supported; otherwise fall
+                    # back so older Schemify still works.
+                    try:
+                        coro = self._schemify.normalize(
+                            attributes=attributes,
+                            progress_callback=_on_norm_progress,
+                        )
+                    except TypeError:
+                        coro = self._schemify.normalize(attributes=attributes)
                     loop.run_until_complete(coro)
                     self._df = self._schemify.to_dataframe()
                     self._dataset_json = self._build_dataset_json()
+                    self._bump_record_version()
                     try:
                         self._snapshot_partial(
                             category=self._schemify.record_set.category
                         )
-                    except Exception:  # noqa: BLE001
-                        pass
+                    except Exception as e:  # noqa: BLE001
+                        _logger.warning("snapshot after normalize failed: %s", e)
                     self.progress.is_running = False
                     self.progress.is_complete = True
                     self.progress.stage = "Normalization complete"
                 finally:
                     loop.close()
             except Exception as e:  # noqa: BLE001
+                _logger.exception("normalize worker failed")
                 self.progress.is_running = False
                 self.progress.error = str(e)
                 self.progress.stage = "Error"
@@ -943,25 +1816,38 @@ class BuildEntityDataset:
     )
 
     def scan_harmful_content(
-        self, prompt_template: Optional[str] = None
+        self,
+        prompt_template: Optional[str] = None,
+        *,
+        concurrency: int = _SAFETY_SCAN_CONCURRENCY,
+        progress_callback: Optional[Callable[[int, int], None]] = None,
     ) -> list[dict]:
         """Use an LLM to flag potentially harmful values across records.
+
+        Each record's prompt is dispatched in parallel via a thread pool
+        (the underlying OpenAI client is synchronous) so a 1k-entity
+        dataset finishes in ~``ceil(N/concurrency)`` round-trips instead
+        of N serial calls.
 
         Args:
             prompt_template: Optional override for the classifier prompt.
                 Must include a ``{record}`` placeholder where the entity
                 fields will be rendered. Falls back to
                 :attr:`DEFAULT_SAFETY_PROMPT`.
+            concurrency: Max parallel LLM calls.
+            progress_callback: Optional ``(done, total)`` reporter.
 
         Returns a list of ``{"label", "record_index", "categories", "reason",
-        "fields"}`` dicts. Records with no concerns are omitted.
+        "fields"}`` dicts. Records with no concerns are omitted. Findings
+        are returned in record-index order regardless of completion order.
         """
         if not self._schemify or not self._schemify.record_set:
             return []
         try:
             from intelligence_toolkit.AI.client import OpenAIClient
             from intelligence_toolkit.AI.defaults import DEFAULT_TEMPERATURE
-        except Exception:  # noqa: BLE001
+        except ImportError as e:
+            _logger.warning("safety-scan: AI client import failed: %s", e)
             return []
 
         template = (prompt_template or self.DEFAULT_SAFETY_PROMPT).strip()
@@ -969,8 +1855,10 @@ class BuildEntityDataset:
             template = template + "\n\nRECORD:\n{record}\n"
 
         client = OpenAIClient()
-        findings: list[dict] = []
         records = list(self._schemify.record_set.records)
+
+        # Pre-render the field dicts so the worker pool only does I/O.
+        targets: list[tuple[int, str, dict[str, str]]] = []
         for idx, record in enumerate(records):
             fields: dict[str, str] = {}
             if record.label:
@@ -982,8 +1870,14 @@ class BuildEntityDataset:
                     val = getattr(av, "value", None)
                     if val:
                         fields[k] = str(val)
-            if not fields:
-                continue
+            if fields:
+                targets.append((idx, record.label or "(unlabeled)", fields))
+
+        if not targets:
+            return []
+
+        def _scan_one(item: tuple[int, str, dict[str, str]]) -> Optional[dict]:
+            idx, label, fields = item
             content = "\n".join(f"{k}: {v}" for k, v in fields.items())
             prompt = template.format(record=content)
             try:
@@ -993,32 +1887,48 @@ class BuildEntityDataset:
                     temperature=DEFAULT_TEMPERATURE,
                 )
             except Exception as e:  # noqa: BLE001
-                findings.append(
-                    {
-                        "label": record.label or "(unlabeled)",
-                        "record_index": idx,
-                        "categories": ["error"],
-                        "reason": f"Scan failed: {e}",
-                        "fields": fields,
-                    }
-                )
-                continue
+                _logger.warning("safety-scan: record %s failed: %s", idx, e)
+                return {
+                    "label": label,
+                    "record_index": idx,
+                    "categories": ["error"],
+                    "reason": f"Scan failed: {e}",
+                    "fields": fields,
+                }
             text = (resp or "").strip()
             if not text or text.upper().startswith("SAFE"):
-                continue
+                return None
             lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
             cats_line = lines[0] if lines else ""
             reason = lines[1] if len(lines) > 1 else ""
             cats = [c.strip() for c in cats_line.split(",") if c.strip()]
-            findings.append(
-                {
-                    "label": record.label or "(unlabeled)",
-                    "record_index": idx,
-                    "categories": cats,
-                    "reason": reason,
-                    "fields": fields,
-                }
-            )
+            return {
+                "label": label,
+                "record_index": idx,
+                "categories": cats,
+                "reason": reason,
+                "fields": fields,
+            }
+
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
+        findings: list[dict] = []
+        total = len(targets)
+        done = 0
+        max_workers = max(1, int(concurrency))
+        with ThreadPoolExecutor(max_workers=max_workers) as pool:
+            futures = {pool.submit(_scan_one, t): t for t in targets}
+            for fut in as_completed(futures):
+                result = fut.result()
+                done += 1
+                if progress_callback:
+                    try:
+                        progress_callback(done, total)
+                    except Exception as e:  # noqa: BLE001
+                        _logger.warning("safety-scan progress callback raised: %s", e)
+                if result is not None:
+                    findings.append(result)
+        findings.sort(key=lambda f: f.get("record_index", 0))
         return findings
 
     def remove_record_by_label(self, label: str) -> bool:
@@ -1280,17 +2190,18 @@ class BuildEntityDataset:
         rs = self._schemify.record_set
         try:
             rs.update_schema_frequencies()
-        except Exception:  # noqa: BLE001
-            pass
+        except Exception as e:  # noqa: BLE001
+            _logger.warning("update_schema_frequencies failed: %s", e)
         try:
             self._df = self._schemify.to_dataframe()
-        except Exception:  # noqa: BLE001
-            pass
+        except Exception as e:  # noqa: BLE001
+            _logger.warning("to_dataframe after curation failed: %s", e)
         self._dataset_json = self._build_dataset_json()
+        self._bump_record_version()
         try:
             self._snapshot_partial(category=rs.category)
-        except Exception:  # noqa: BLE001
-            pass
+        except Exception as e:  # noqa: BLE001
+            _logger.warning("snapshot after curation failed: %s", e)
 
     # ── AI-suggested alias groupings ───────────────────────────
 
@@ -1317,9 +2228,17 @@ class BuildEntityDataset:
         self,
         max_groups: int = 25,
         prompt_template: Optional[str] = None,
+        *,
+        chunk_size: int = _ALIAS_SUGGEST_CHUNK_SIZE,
+        progress_callback: Optional[Callable[[int, int], None]] = None,
     ) -> list[dict]:
         """Ask the LLM to propose record-level merges across the current
         dataset.
+
+        Labels are partitioned into chunks of ``chunk_size`` and one LLM
+        call is dispatched per chunk so the whole dataset is considered
+        instead of being silently truncated. Suggestions are de-duplicated
+        across chunks (by primary+members signature).
 
         Returns a list of ``{"primary": str, "members": list[str],
         "reason": str}`` dicts. Members and primary are validated against
@@ -1331,55 +2250,88 @@ class BuildEntityDataset:
         try:
             from intelligence_toolkit.AI.client import OpenAIClient
             from intelligence_toolkit.AI.defaults import DEFAULT_TEMPERATURE
-        except Exception:  # noqa: BLE001
+        except ImportError as e:
+            _logger.warning("alias-suggest: AI client import failed: %s", e)
             return []
 
         rs = self._schemify.record_set
-        # Feed canonical labels only — aliases are already part of those
-        # records, so the LLM is reasoning about which canonicals refer to
-        # the same thing.
         labels = [r.label for r in rs.records if (r.label or "").strip()]
         if len(labels) < 2:
             return []
-        # Cap label list to keep the prompt bounded.
-        labels_for_prompt = labels[:300]
-        labels_block = "\n".join(f"- {lbl}" for lbl in labels_for_prompt)
+
+        # Build deterministic chunks. For datasets larger than chunk_size
+        # we shuffle the chunk boundaries with a stable hash so labels
+        # that *should* group don't end up always in different chunks
+        # (e.g. alphabetical-by-default would split "IBM" and "International
+        # Business Machines").
+        chunk = max(2, int(chunk_size))
+        if len(labels) > chunk:
+            # Stable but spread-out ordering: round-robin into ``num_chunks``
+            # buckets by index. Two passes would be required to catch all
+            # cross-chunk merges, but a single pass already finds within-chunk
+            # ones reliably.
+            num_chunks = (len(labels) + chunk - 1) // chunk
+            buckets: list[list[str]] = [[] for _ in range(num_chunks)]
+            for i, lbl in enumerate(labels):
+                buckets[i % num_chunks].append(lbl)
+            chunks = buckets
+        else:
+            chunks = [list(labels)]
 
         template = (prompt_template or self.DEFAULT_ALIAS_SUGGEST_PROMPT).strip()
-        prompt = template.format(
-            category=rs.category or "(unspecified)",
-            labels=labels_block,
-        )
-
         client = OpenAIClient()
-        try:
-            raw = client.generate_chat(
-                messages=[{"role": "user", "content": prompt}],
-                stream=False,
-                temperature=DEFAULT_TEMPERATURE,
-            )
-        except Exception:  # noqa: BLE001
-            return []
-
-        suggestions = _parse_alias_suggestions(raw or "")
-
-        # Validate against current labels; drop unknown members/primaries.
         label_lookup = {lbl.casefold(): lbl for lbl in labels}
         cleaned: list[dict] = []
-        for s in suggestions:
-            primary_raw = (s.get("primary") or "").strip()
-            primary = label_lookup.get(primary_raw.casefold())
-            members_raw = s.get("members") or []
-            members: list[str] = []
-            seen = set()
-            for m in members_raw:
-                if not isinstance(m, str):
+        seen_keys: set[tuple[str, tuple[str, ...]]] = set()
+
+        for idx, chunk_labels in enumerate(chunks):
+            if progress_callback:
+                try:
+                    progress_callback(idx, len(chunks))
+                except Exception as e:  # noqa: BLE001
+                    _logger.warning("alias-suggest progress raised: %s", e)
+            labels_block = "\n".join(f"- {lbl}" for lbl in chunk_labels)
+            prompt = template.format(
+                category=rs.category or "(unspecified)",
+                labels=labels_block,
+            )
+            try:
+                raw = client.generate_chat(
+                    messages=[{"role": "user", "content": prompt}],
+                    stream=False,
+                    temperature=DEFAULT_TEMPERATURE,
+                )
+            except Exception as e:  # noqa: BLE001
+                _logger.warning("alias-suggest: chunk %d/%d failed: %s",
+                                idx + 1, len(chunks), e)
+                continue
+
+            for s in _parse_alias_suggestions(raw or ""):
+                primary_raw = (s.get("primary") or "").strip()
+                primary = label_lookup.get(primary_raw.casefold())
+                members_raw = s.get("members") or []
+                members: list[str] = []
+                seen_m = set()
+                for m in members_raw:
+                    if not isinstance(m, str):
+                        continue
+                    resolved = label_lookup.get(m.strip().casefold())
+                    if (
+                        resolved
+                        and resolved != primary
+                        and resolved.casefold() not in seen_m
+                    ):
+                        members.append(resolved)
+                        seen_m.add(resolved.casefold())
+                if not (primary and members):
                     continue
-                resolved = label_lookup.get(m.strip().casefold())
-                if resolved and resolved != primary and resolved.casefold() not in seen:
-                    members.append(resolved)
-                    seen.add(resolved.casefold())
-            if primary and members:
+                key = (
+                    primary.casefold(),
+                    tuple(sorted(m.casefold() for m in members)),
+                )
+                if key in seen_keys:
+                    continue
+                seen_keys.add(key)
                 cleaned.append(
                     {
                         "primary": primary,
@@ -1387,8 +2339,16 @@ class BuildEntityDataset:
                         "reason": (s.get("reason") or "").strip(),
                     }
                 )
+                if len(cleaned) >= max_groups:
+                    break
             if len(cleaned) >= max_groups:
                 break
+
+        if progress_callback:
+            try:
+                progress_callback(len(chunks), len(chunks))
+            except Exception as e:  # noqa: BLE001
+                _logger.warning("alias-suggest progress raised: %s", e)
         return cleaned
 
     def apply_alias_suggestion(self, primary: str, members: list[str]) -> int:
@@ -1398,6 +2358,117 @@ class BuildEntityDataset:
             if self.merge_records(primary, m):
                 applied += 1
         return applied
+
+    # ── Merge-quality audit ────────────────────────────────────
+
+    def audit_merge_quality(
+        self,
+        *,
+        api_key: Optional[str] = None,
+        budget: float = 4.0,
+        model: Optional[str] = None,
+        concurrency: int = 8,
+        confidence_threshold: float = 0.7,
+        progress_cb=None,
+    ) -> dict:
+        """Run the LLM-backed merge-quality audit.
+
+        Returns ``{"results": [...], "flagged": [...], "candidates": int,
+        "total_records": int}``. The ``flagged`` list is filtered to
+        results the auditor recommends splitting at the given confidence.
+        Each entry is the dict form of :class:`AuditResult` so the UI
+        can render it directly.
+        """
+        from intelligence_toolkit.schemify import merge_audit as _ma
+        from intelligence_toolkit.schemify.llm import LLMClient
+        from intelligence_toolkit.schemify.models import SchemifyConfig
+
+        if not self._schemify or not self._schemify.record_set:
+            return {
+                "results": [], "flagged": [],
+                "candidates": 0, "total_records": 0,
+            }
+        rs = self._schemify.record_set
+
+        # Reuse the active llm if we have one; otherwise build a fresh
+        # client from the supplied key. We need an api_key one way or
+        # the other — the audit makes one LLM call per candidate.
+        llm = getattr(self._schemify, "llm", None)
+        if llm is None:
+            if not api_key:
+                raise ValueError("audit_merge_quality requires api_key when no llm is attached")
+            cfg_kwargs = {"api_key": api_key, "max_budget": float(budget)}
+            if model:
+                cfg_kwargs["model"] = model
+            llm = LLMClient(SchemifyConfig(**cfg_kwargs))
+
+        async def _run() -> list:
+            return await _ma.audit_records(
+                rs, llm,
+                concurrency=concurrency,
+                progress_cb=progress_cb,
+            )
+        results = asyncio.run(_run())
+        flagged = _ma.flagged_results(
+            results, confidence_threshold=confidence_threshold
+        )
+        return {
+            "total_records": len(rs.records),
+            "candidates": len(results),
+            "flagged": [r.to_dict() for r in flagged],
+            "results": [r.to_dict() for r in results],
+        }
+
+    def apply_audit_split(self, label: str, audit_entry: dict) -> int:
+        """Apply a single split proposal (an entry from the audit's
+        ``flagged`` list) to the record carrying ``label``. Returns the
+        number of new records created (0 if no change).
+        """
+        from intelligence_toolkit.schemify import merge_audit as _ma
+
+        if not self._schemify or not self._schemify.record_set:
+            return 0
+        rs = self._schemify.record_set
+        target = None
+        target_idx = -1
+        for i, r in enumerate(rs.records):
+            if (getattr(r, "label", "") or "").strip().upper() == (label or "").strip().upper():
+                target = r
+                target_idx = i
+                break
+        if target is None:
+            return 0
+
+        proposals = [
+            _ma.SplitProposal(
+                label=str(s.get("label") or "").strip(),
+                description_indices=[int(i) for i in (s.get("description_indices") or [])],
+                rationale=str(s.get("rationale") or ""),
+            )
+            for s in (audit_entry.get("split_proposal") or [])
+            if isinstance(s, dict)
+        ]
+        if len(proposals) < 2:
+            return 0
+        result = _ma.AuditResult(
+            label=audit_entry.get("label") or label,
+            descriptions=list(audit_entry.get("descriptions") or []),
+            split_proposal=proposals,
+        )
+        new_records, dnm_pairs = _ma.apply_split(target, result)
+        if len(new_records) <= 1:
+            return 0
+        # Replace original with the splits in-place to preserve order.
+        rs.records[target_idx:target_idx + 1] = new_records
+        # Lock the splits as do_not_merge so a future pass won't reunite.
+        if not hasattr(rs, "do_not_merge") or rs.do_not_merge is None:
+            rs.do_not_merge = set()
+        for a, b in dnm_pairs:
+            if a and b and a != b:
+                rs.do_not_merge.add(frozenset({a, b}))
+        self._post_curation_refresh()
+        return len(new_records)
+
 
 
 
@@ -1430,10 +2501,26 @@ class BuildEntityDataset:
             ],
         }
 
-    def _snapshot_partial(self, category: str) -> None:
-        """Write the in-progress dataset to ``<run_dir>/data.json``."""
+    def _snapshot_partial(self, category: str, *, throttle: bool = False) -> None:
+        """Write the in-progress dataset to ``<run_dir>/data.json``.
+
+        Pass ``throttle=True`` from the per-query progress callback to
+        rate-limit writes to ``_SNAPSHOT_MIN_INTERVAL_SECONDS``. User-
+        initiated mutations (curation, exclusions, etc.) use the default
+        and persist immediately.
+        """
         if self._run_dir is None:
             return
+        if throttle:
+            now = time.monotonic()
+            if (now - self._last_snapshot_time) < _SNAPSHOT_MIN_INTERVAL_SECONDS:
+                self._snapshot_pending = True
+                return
+            self._last_snapshot_time = now
+            self._snapshot_pending = False
+        else:
+            self._last_snapshot_time = time.monotonic()
+            self._snapshot_pending = False
         # Apply deterministic finalization (ALL-CAPS labels, fold
         # "Also known as" into aliases, lift units into attribute names)
         # so the live preview and on-disk snapshot match the final state.
@@ -1442,8 +2529,8 @@ class BuildEntityDataset:
                 self._schemify.resolution.finalize_normalization(
                     self._schemify.record_set
                 )
-        except Exception:  # noqa: BLE001
-            pass
+        except Exception as e:  # noqa: BLE001
+            _logger.warning("finalize_normalization failed during snapshot: %s", e)
         data = self._build_dataset_json()
         if not data:
             return
@@ -1465,8 +2552,8 @@ class BuildEntityDataset:
             (self._run_dir / "meta.json").write_text(
                 json.dumps(meta, indent=2), encoding="utf-8"
             )
-        except Exception:  # noqa: BLE001
-            pass
+        except OSError as e:
+            _logger.warning("snapshot write failed: %s", e)
 
     def _save_run(self, category: str) -> Optional[Path]:
         """Write the completed dataset to the run directory so it can be resumed."""
@@ -1536,7 +2623,7 @@ class BuildEntityDataset:
         self,
         data_path: str | Path,
         api_key: Optional[str] = None,
-        model: str = "gpt-4o-mini",
+        model: str = config.DEFAULT_MODEL,
         budget: float = 10.0,
     ) -> None:
         """Load a dataset previously written by ``_save_run``.
@@ -1553,15 +2640,31 @@ class BuildEntityDataset:
         # accumulate alongside the original data.json + meta.json.
         try:
             self._run_dir = Path(data_path).parent
-        except Exception:  # noqa: BLE001
+        except (TypeError, ValueError) as e:
+            _logger.warning("could not resolve run_dir from %s: %s", data_path, e)
             self._run_dir = None
 
+        self._read_only_reason = None
         if api_key:
             try:
-                self._rehydrate_schemify(data, api_key=api_key, model=model, budget=budget)
-            except Exception:  # noqa: BLE001
-                # Fall back to read-only load if rehydration fails.
+                self._rehydrate_schemify(
+                    data, api_key=api_key, model=model, budget=budget
+                )
+            except Exception as e:  # noqa: BLE001
+                _logger.exception("rehydrate_schemify failed")
                 self._schemify = None
+                self._read_only_reason = (
+                    f"Failed to rehydrate live research state ({e}). "
+                    "Reload with a valid API key to continue research."
+                )
+        else:
+            self._schemify = None
+            self._read_only_reason = (
+                "Loaded without an API key — dataset is read-only. "
+                "Provide an API key in Settings and reload this run to "
+                "continue research or curate aliases."
+            )
+        self._bump_record_version()
 
         entity_count = len(data.get("records", []))
         self.progress = ResearchProgress(
@@ -1576,7 +2679,7 @@ class BuildEntityDataset:
         data: dict,
         *,
         api_key: str,
-        model: str = "gpt-4o-mini",
+        model: str = config.DEFAULT_MODEL,
         budget: float = 10.0,
     ) -> None:
         """Build a fresh Schemify and seed it with ``data`` so the loaded
@@ -1635,13 +2738,24 @@ class BuildEntityDataset:
         accent_color: str,
         logo_bytes: Optional[bytes] = None,
         logo_filename: Optional[str] = None,
+        favicon_bytes: Optional[bytes] = None,
+        favicon_filename: Optional[str] = None,
         views: Optional[list[str]] = None,
+        secondary_accent_color: Optional[str] = None,
+        colors: Optional[dict[str, str]] = None,
+        footer: Optional[str] = None,
     ) -> bytes:
         """Bundle dashboard.html + theme + data into a downloadable ZIP.
 
         ``views`` optionally restricts the dashboard's tab bar. Accepted
         values are ``"table"``, ``"cards"``, ``"network"``. ``None`` (the
         default) or an empty list keeps all three.
+
+        ``colors`` overrides any of the 12 theme color slots: primary,
+        accent, accentSoft, accent2, warn, highlight, success, bg, surface,
+        text, muted, border. Values not provided fall back to defaults
+        derived from ``primary_color`` / ``accent_color`` /
+        ``secondary_accent_color``.
         """
         dashboard_src = (
             Path(__file__).resolve().parents[1] / "schemify" / "dashboard" / "dashboard.html"
@@ -1655,6 +2769,25 @@ class BuildEntityDataset:
                 if key in allowed and key not in normalised_views:
                     normalised_views.append(key)
 
+        default_colors = {
+            "primary": primary_color,
+            "accent": accent_color,
+            "accentSoft": _lighten(accent_color),
+            "accent2": secondary_accent_color or accent_color,
+            "warn": "#E85D4A",
+            "highlight": "#F0A830",
+            "success": "#4CAF50",
+            "bg": "#F5F7FA",
+            "surface": "#FFFFFF",
+            "text": "#1A2A3A",
+            "muted": "#6B7C8D",
+            "border": "#DDE3EA",
+        }
+        if colors:
+            for k, v in colors.items():
+                if isinstance(v, str) and v:
+                    default_colors[k] = v
+
         theme = {
             "name": "custom",
             "title": title,
@@ -1662,23 +2795,10 @@ class BuildEntityDataset:
             "datasetLabel": dataset_label,
             "logo": logo_filename or "",
             "logoAlt": subtitle,
-            "favicon": "",
-            "footer": "Built with Intelligence Toolkit.",
+            "favicon": favicon_filename or "",
+            "footer": footer or "Built with Intelligence Toolkit.",
             "views": normalised_views,
-            "colors": {
-                "primary": primary_color,
-                "accent": accent_color,
-                "accentSoft": _lighten(accent_color),
-                "accent2": accent_color,
-                "warn": "#E85D4A",
-                "highlight": "#F0A830",
-                "success": "#4CAF50",
-                "bg": "#F5F7FA",
-                "surface": "#FFFFFF",
-                "text": "#1A2A3A",
-                "muted": "#6B7C8D",
-                "border": "#DDE3EA",
-            },
+            "colors": default_colors,
         }
 
         theme_js = "window.SCHEMIFY_THEME = " + json.dumps(theme, indent=2) + ";\n"
@@ -1696,6 +2816,8 @@ class BuildEntityDataset:
             zf.writestr("dashboard/dashboard_data.js", data_js.encode())
             if logo_bytes and logo_filename:
                 zf.writestr(f"dashboard/{logo_filename}", logo_bytes)
+            if favicon_bytes and favicon_filename:
+                zf.writestr(f"dashboard/{favicon_filename}", favicon_bytes)
         buf.seek(0)
         return buf.read()
 

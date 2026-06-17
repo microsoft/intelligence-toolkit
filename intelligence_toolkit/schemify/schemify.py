@@ -120,16 +120,47 @@ class Schemify:
         
         # Track initialization state
         self._initialized: bool = False
+
+    def _attach_merge_arbiter(self, record_set) -> None:
+        """Bind a shared MergeArbiter to a RecordSet so its sync fuzzy
+        merge path (``add_record(use_fuzzy=True)``) refuses unverified
+        merges. The async paths (``check_duplicates``, ``deduplicate_fuzzy``)
+        consult and warm the same arbiter."""
+        if record_set is None:
+            return
+        record_set.merge_arbiter = self.resolution.get_merge_arbiter(
+            record_resolver=lambda lbl: record_set.get_record(lbl)
+        )
     
     def on_progress(self, callback: Callable[[str, int, int], None]):
         """
         Set a progress callback.
-        
+
         Args:
             callback: Function(stage, current, total) called during operations
         """
         self._on_progress = callback
-    
+
+    def get_live_progress(self) -> dict[str, int]:
+        """Return an O(1) snapshot of the current run state.
+
+        Provided so external wrappers (the ITK Streamlit UI) can poll
+        liveness without touching private attributes or rebuilding the
+        full DataFrame on every tick.
+
+        Returns:
+            ``{"query_count": int, "entity_count": int}``
+        """
+        history_count = len(self.query_history or [])
+        counter = int(self._query_counter or 0)
+        entity_count = 0
+        if self.record_set is not None:
+            entity_count = len(self.record_set.records)
+        return {
+            "query_count": max(history_count, counter),
+            "entity_count": entity_count,
+        }
+
     def _report_progress(self, stage: str, current: int, total: int):
         """Report progress if callback is set."""
         if self._on_progress:
@@ -180,6 +211,7 @@ class Schemify:
             category=category,
             guidance=guidance,
         )
+        self._attach_merge_arbiter(self.record_set)
         self.query_history = []
         self._query_counter = 0
         
@@ -1816,19 +1848,22 @@ class Schemify:
         attributes: list[str] | None = None,
         fuzzy_threshold: int = 75,
         cardinality_threshold: int = 50,
+        progress_callback: Callable[[int, int, str], None] | None = None,
     ) -> dict[str, dict]:
         """
         Run an automatic normalization pass over the record set.
-        
+
         For each attribute, analyzes the distribution of observed values,
         clusters near-duplicates, classifies the attribute as open or closed
         based on the data, and maps all values to canonical forms.
-        
+
         Args:
             attributes: Specific attribute names to normalize (default: all schema attributes)
             fuzzy_threshold: Similarity threshold for clustering (0-100, default: 75)
             cardinality_threshold: Max canonical values to still be considered closed-set
-            
+            progress_callback: Optional ``(done, total, attribute_name)`` reporter
+                invoked once per attribute as it completes.
+
         Returns:
             Dict mapping attribute_name -> {
                 "classification": "closed" | "open",
@@ -1841,12 +1876,32 @@ class Schemify:
         """
         if not self.record_set:
             raise ValueError("No record set. Call initialize() first.")
-        return await self.resolution.auto_normalize(
+        result = await self.resolution.auto_normalize(
             self.record_set,
             attributes=attributes,
             fuzzy_threshold=fuzzy_threshold,
             cardinality_threshold=cardinality_threshold,
+            progress_callback=progress_callback,
         )
+
+        # Post-normalize: resolve compound values (e.g. "A / B", "A; B")
+        # left behind by fuzzy clustering. No-op when no compounds exist.
+        try:
+            from .value_cleanup import clean_compound_values
+            cleanup = await clean_compound_values(
+                self.record_set,
+                self.record_set.schema_attributes,
+                self.llm,
+                attributes=attributes,
+                progress_callback=progress_callback,
+            )
+            for attr_name, info in cleanup.items():
+                if attr_name in result and isinstance(result[attr_name], dict):
+                    result[attr_name]["compound_cleanup"] = info
+        except Exception as e:  # noqa: BLE001
+            logger.warning("compound cleanup failed (non-fatal): %s", e)
+
+        return result
 
     def to_dataframe(
         self, 
@@ -1992,6 +2047,7 @@ class Schemify:
         """
         with open(filepath, "r") as f:
             self.record_set = RecordSet.from_json(f.read())
+        self._attach_merge_arbiter(self.record_set)
         
         logger.info(f"Loaded {len(self.record_set.records)} records from {filepath}")
         return self.record_set

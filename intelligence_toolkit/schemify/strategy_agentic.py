@@ -1631,22 +1631,59 @@ class AgenticStrategy:
                     f"Discovery {idx + 1}/{len(queries)}: {goal}"
                 )
 
-                try:
-                    new_records = await asyncio.wait_for(
-                        self.extraction.discover_entities(
-                            record_set,
-                            subcategory_focus=search_query,
-                        ),
-                        timeout=600,  # 10-min hard cap per discovery query
+                # Optional multilingual fan-out. When config.query_translator
+                # is set (auto mode), the same agent-issued query is
+                # rewritten into each configured source language and run as
+                # parallel discovery calls. Default (translator None)
+                # preserves single-language behaviour exactly.
+                translator = getattr(self.config, "query_translator", None)
+                translated: list[tuple[str, str]]
+                if translator is not None and search_query:
+                    try:
+                        translated = await translator(search_query)
+                    except Exception as e:  # noqa: BLE001
+                        logger.warning("query_translator failed: %s", e)
+                        translated = [(search_query, "en")]
+                    if not translated:
+                        translated = [(search_query, "en")]
+                else:
+                    translated = [(search_query, "en")]
+
+                fan_out_aggregate: list = []
+                fan_out_errors: list[str] = []
+
+                async def _run_one_lang(focus: str, lang: str):
+                    try:
+                        recs = await asyncio.wait_for(
+                            self.extraction.discover_entities(
+                                record_set,
+                                subcategory_focus=focus,
+                            ),
+                            timeout=600,
+                        )
+                    except Exception as exc:  # noqa: BLE001
+                        logger.error(
+                            f"Discovery query failed ({lang}): {exc}"
+                        )
+                        fan_out_errors.append(f"{lang}: {exc}")
+                        return
+                    if recs:
+                        fan_out_aggregate.extend(recs)
+
+                if len(translated) == 1:
+                    await _run_one_lang(*translated[0])
+                else:
+                    await asyncio.gather(
+                        *[_run_one_lang(focus, lang) for focus, lang in translated]
                     )
-                except Exception as e:
-                    logger.error(f"Discovery query failed: {e}")
+
+                if not fan_out_aggregate and fan_out_errors:
                     async with results_lock:
                         results.append({
                             "focus": search_query,
                             "new_entities": 0,
                             "duplicates": 0,
-                            "error": str(e),
+                            "error": "; ".join(fan_out_errors),
                         })
                     if on_query_complete is not None:
                         try:
@@ -1654,6 +1691,8 @@ class AgenticStrategy:
                         except Exception:  # noqa: BLE001
                             pass
                     return
+
+                new_records = fan_out_aggregate
 
                 # Deduplicate against existing records
                 dups = 0

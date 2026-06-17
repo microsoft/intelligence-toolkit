@@ -49,6 +49,22 @@ class SessionVariables:
         self.bed_alias_suggestions = SessionVariable([], prefix)
         self.bed_alias_dismissed = SessionVariable([], prefix)
 
+        # Merge-quality audit
+        self.bed_audit_results = SessionVariable({}, prefix)
+        self.bed_audit_dismissed = SessionVariable([], prefix)
+
+        # Auto mode
+        self.bed_mode = SessionVariable("Manual", prefix)
+        self.bed_auto_max_iterations = SessionVariable(5, prefix)
+        self.bed_auto_per_iter_queries = SessionVariable(25, prefix)
+        self.bed_auto_normalize_every = SessionVariable(3, prefix)
+        self.bed_auto_min_iterations = SessionVariable(2, prefix)
+        self.bed_auto_languages = SessionVariable(["en"], prefix)
+        self.bed_auto_language_suggestions = SessionVariable([], prefix)
+        self.bed_auto_target_language = SessionVariable("English", prefix)
+        self.bed_auto_reference_labels = SessionVariable([], prefix)
+        self.bed_auto_reference_filename = SessionVariable("", prefix)
+
     def reset_workflow(self):
         for key in list(st.session_state.keys()):
             if key.startswith(self.prefix):

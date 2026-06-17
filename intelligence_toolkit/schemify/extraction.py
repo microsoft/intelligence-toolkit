@@ -53,7 +53,26 @@ class ExtractionEngine:
             logger.info(f"[{self.llm._progress_context}] {message}")
         else:
             logger.info(message)
-    
+
+    def _augment_guidance(self, guidance: str) -> str:
+        """Prepend a target-language directive to ``guidance`` when set.
+
+        Used by every prompt that interpolates ``{guidance}`` and feeds
+        into a structured-extraction LLM call, so foreign-language
+        sources still produce target-language attribute values.
+        """
+        base = (guidance or "")
+        target = (getattr(self.config, "target_language", "") or "").strip()
+        if not target:
+            return base
+        directive = (
+            f"Source documents may be in any language. Every attribute "
+            f"value you output MUST be written in {target}. Translate "
+            f"foreign-language values rather than copying them verbatim, "
+            f"keeping proper nouns in their commonly used form."
+        )
+        return f"{directive}\n\n{base}" if base.strip() else directive
+
     async def discover_entities(
         self,
         record_set: RecordSet,
@@ -75,20 +94,32 @@ class ExtractionEngine:
         """
         # Build the search query
         guidance = record_set.guidance or "Focus on notable and well-documented examples."
-        
+
         if subcategory_focus:
             focus_text = f"Focus specifically on: {subcategory_focus}"
         else:
             focus_text = ""
-        
+
         # Build exclusion list from well-covered entities
         exclusion_text = record_set.build_exclusion_text(threshold=0.6, max_labels=30)
-        
+
+        target_lang = (getattr(self.config, "target_language", "") or "").strip()
+        if target_lang:
+            target_language_note = (
+                f"IMPORTANT: Source documents may be in any language, but "
+                f"every attribute value you extract MUST be written in "
+                f"{target_lang}. Translate values from foreign-language "
+                f"sources rather than copying them verbatim.\n\n"
+            )
+        else:
+            target_language_note = ""
+
         query = prompts.ENTITY_DISCOVERY_QUERY.format(
             category=record_set.category,
             guidance=guidance,
             subcategory_focus=focus_text,
             exclusion_list=exclusion_text,
+            target_language_note=target_language_note,
         ) + _date_suffix()
         
         # Check cache - use content hash of exclusion labels for stable keys.
@@ -123,6 +154,7 @@ class ExtractionEngine:
             "guidance": guidance,
             "subcategory": subcategory_focus,
             "exclusion_hash": exclusion_hash,
+            "target_language": target_lang,
         }
         cached = self.cache.get("entity_discovery", **cache_key)
         
@@ -261,7 +293,7 @@ Provide concrete, verifiable details with specific names, dates, organizations, 
             label=record.label,
             category=record_set.category,
             attributes=", ".join(attrs_to_find),
-            guidance=record_set.guidance or "",
+            guidance=self._augment_guidance(record_set.guidance or ""),
         ) + _date_suffix()
         
         # Check cache. Note: the cache key intentionally excludes the
@@ -383,7 +415,7 @@ Provide concrete, verifiable details with specific names, dates, organizations, 
         # Extract records
         variables = {
             "category": record_set.category,
-            "guidance": record_set.guidance or "",
+            "guidance": self._augment_guidance(record_set.guidance or ""),
             "existing_labels": "\n".join(existing_labels) if existing_labels else "(none)",
             "text": text,
         }
@@ -552,7 +584,7 @@ Provide concrete, verifiable details with specific names, dates, organizations, 
                 "entity_label": record.label,
                 "entity_aliases": aliases_display,
                 "category": record_set.category,
-                "guidance": record_set.guidance or "",
+                "guidance": self._augment_guidance(record_set.guidance or ""),
                 "sources_list": sources_list,
                 "text": f"Information about {record.label}:\n\n{text}",
             }
@@ -560,7 +592,7 @@ Provide concrete, verifiable details with specific names, dates, organizations, 
             prompt = prompts.RECORD_EXTRACTION
             variables = {
                 "category": record_set.category,
-                "guidance": record_set.guidance or "",
+                "guidance": self._augment_guidance(record_set.guidance or ""),
                 "existing_labels": record.label,
                 "text": f"Information about {record.label}:\n\n{text}",
             }

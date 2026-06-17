@@ -9,7 +9,7 @@ import asyncio
 from collections import defaultdict
 from dataclasses import dataclass, field
 import re
-from typing import Optional
+from typing import Callable, Optional
 import logging
 
 from rapidfuzz import fuzz, process
@@ -36,6 +36,30 @@ class ResolutionEngine:
     def __init__(self, config: SchemifyConfig, llm: LLMClient):
         self.config = config
         self.llm = llm
+        # Lazily-initialized LLM arbiter for fuzzy-merge verification.
+        # Created on first use so callers don't pay the import cost up front.
+        self._merge_arbiter = None
+
+    def get_merge_arbiter(self, record_resolver=None):
+        """Return a shared MergeArbiter instance bound to this resolver's LLM.
+
+        ``record_resolver`` should map label -> Record so the arbiter can
+        include attribute and source context in its decisions. Resolver
+        may be re-bound across calls (RecordSet's lookup function changes
+        as records are added/removed).
+        """
+        from .merge_arbiter import MergeArbiter
+        if self._merge_arbiter is None:
+            self._merge_arbiter = MergeArbiter(
+                self.llm,
+                record_resolver=record_resolver,
+                confidence_threshold=max(
+                    0.7, float(getattr(self.config, "dedup_similarity_threshold", 0.8))
+                ),
+            )
+        elif record_resolver is not None:
+            self._merge_arbiter.record_resolver = record_resolver
+        return self._merge_arbiter
     
     async def resolve_attribute_names(self, record_set: RecordSet) -> dict[str, str]:
         """
@@ -317,6 +341,7 @@ class ResolutionEngine:
         attributes: list[str] | None = None,
         fuzzy_threshold: int = 75,
         cardinality_threshold: int = 50,
+        progress_callback: Callable[[int, int, str], None] | None = None,
     ) -> dict[str, dict]:
         """
         Unified normalization pass that analyzes value distributions to
@@ -362,8 +387,14 @@ class ResolutionEngine:
         
         total_records = len(record_set.records)
         results = {}
-        
-        for attr in target_attrs:
+        total_attrs = len(target_attrs)
+
+        for attr_idx, attr in enumerate(target_attrs):
+            if progress_callback:
+                try:
+                    progress_callback(attr_idx, total_attrs, attr.name)
+                except Exception as e:  # noqa: BLE001
+                    logger.warning("normalize progress callback raised: %s", e)
             # ---- 1. Collect observed values with frequency counts ----
             value_counts: dict[str, int] = {}
             for record in record_set.records:
@@ -506,7 +537,12 @@ class ResolutionEngine:
                 "mappings": mapping,
                 "reasoning": reasoning,
             }
-        
+
+        if progress_callback:
+            try:
+                progress_callback(total_attrs, total_attrs, "")
+            except Exception as e:  # noqa: BLE001
+                logger.warning("normalize progress callback raised: %s", e)
         return results
 
     async def cleanup_value_formats(
@@ -1170,6 +1206,90 @@ class ResolutionEngine:
         re.IGNORECASE | re.VERBOSE,
     )
 
+    _MAX_LABEL_LEN = 60
+    _LISTY_ATTR_CAP = 3
+    _LISTY_ATTR_DEMOTE_RULES = {
+        "Organization Name": "Also affiliated with",
+        "Organization": "Also affiliated with",
+    }
+
+    def _record_description_text(self, rec: "Record") -> str:
+        for bucket_name in ("attributes", "additional_attributes"):
+            bucket = getattr(rec, bucket_name, {}) or {}
+            for attr_name in ("Tool Description", "Description"):
+                av = bucket.get(attr_name)
+                if av is None:
+                    continue
+                parts: list[str] = []
+                for sv in getattr(av, "values", None) or []:
+                    v = getattr(sv, "value", None)
+                    if isinstance(v, str) and v.strip():
+                        parts.append(v.strip())
+                if parts:
+                    return " | ".join(parts).lower()
+        return ""
+
+    def _demote_listy_attributes(self, record_set: RecordSet) -> int:
+        """Demote excess values on configured listy attributes (e.g. an
+        over-unioned Organization Name) into additional_attributes under
+        a configured demotion-target name. Primary kept by frequency in
+        the record's description text, then by source count, then by
+        original order.
+        """
+        demoted_records = 0
+        for rec in record_set.records:
+            desc_text = self._record_description_text(rec)
+            for src_attr_name, dst_attr_name in self._LISTY_ATTR_DEMOTE_RULES.items():
+                src_loc = None
+                for bucket_name in ("attributes", "additional_attributes"):
+                    bucket = getattr(rec, bucket_name, {}) or {}
+                    if src_attr_name in bucket:
+                        src_loc = (bucket_name, bucket)
+                        break
+                if src_loc is None:
+                    continue
+                _bucket_name, bucket = src_loc
+                attr = bucket[src_attr_name]
+                svs = [sv for sv in (getattr(attr, "values", None) or []) if sv]
+                if len(svs) < self._LISTY_ATTR_CAP:
+                    continue
+                scored: list[tuple[int, int, int, "SourcedValue"]] = []
+                for i, sv in enumerate(svs):
+                    name = str(getattr(sv, "value", "") or "").strip()
+                    if not name:
+                        continue
+                    hits = desc_text.count(name.lower()) if desc_text else 0
+                    src_count = len(getattr(sv, "sources", None) or [])
+                    scored.append((hits, src_count, -i, sv))
+                if not scored:
+                    continue
+                scored.sort(reverse=True)
+                primary = scored[0][3]
+                demoted = [sv for _, _, _, sv in scored[1:]]
+                if not demoted:
+                    continue
+                attr.values = [primary]
+                aa = getattr(rec, "additional_attributes", None)
+                if aa is None:
+                    aa = {}
+                    rec.additional_attributes = aa
+                dst = aa.get(dst_attr_name)
+                if dst is None:
+                    dst = AttributeValue(values=[])
+                    aa[dst_attr_name] = dst
+                existing_keys = {
+                    str(getattr(sv, "value", "") or "").strip().lower()
+                    for sv in (getattr(dst, "values", None) or [])
+                }
+                for sv in demoted:
+                    k = str(getattr(sv, "value", "") or "").strip().lower()
+                    if not k or k in existing_keys:
+                        continue
+                    dst.values.append(sv)
+                    existing_keys.add(k)
+                demoted_records += 1
+        return demoted_records
+
     def finalize_normalization(self, record_set: RecordSet) -> dict[str, int]:
         """
         Deterministic post-processing applied at the end of a run.
@@ -1224,6 +1344,61 @@ class ResolutionEngine:
                 seen.add(key)
                 deduped.append(a)
             record.aliases = deduped
+
+        # ── 1b. Cap label length ───────────────────────────────────────
+        # The extractor occasionally emits verbose labels with trailing
+        # parentheticals ("TOOL X (A MOBILE APP THAT…)"). Strip the
+        # parenthetical mechanically if doing so still leaves a useful
+        # label (>=8 chars). Preserve the original as an alias.
+        max_label = self._MAX_LABEL_LEN
+        for record in record_set.records:
+            if len(record.label or "") <= max_label:
+                continue
+            short = re.sub(r"\s*\([^)]*\)\s*$", "", record.label).strip()
+            if not short or len(short) < 8 or short.upper() == record.label.upper():
+                continue
+            short = short.upper()
+            old = record.label
+            if old and old.upper() not in {a.upper() for a in record.aliases}:
+                record.aliases.append(old)
+            record.label = short
+            stats["labels_shortened"] = stats.get("labels_shortened", 0) + 1
+
+        # ── 1c. Merge case-collision duplicates ────────────────────────
+        # Two records with identical uppercase labels but distinct casings
+        # can slip into the dataset when extraction passes complete before
+        # the uppercasing step runs. Union them now.
+        by_upper: dict[str, list[Record]] = {}
+        for r in record_set.records:
+            k = (r.label or "").strip().upper()
+            if k:
+                by_upper.setdefault(k, []).append(r)
+        n_collision = 0
+        for key, group in by_upper.items():
+            if len(group) <= 1:
+                continue
+            canonical = group[0]
+            for other in group[1:]:
+                try:
+                    canonical.merge_from(other)
+                    record_set.records.remove(other)
+                    n_collision += 1
+                except Exception as exc:  # noqa: BLE001
+                    logger.warning(
+                        "case-collision merge failed for %s: %s", key, exc
+                    )
+            canonical.label = key
+        stats["case_collisions_merged"] = n_collision
+
+        # ── 1d. Demote listy attribute values ──────────────────────────
+        # When merges over-union, attributes like Organization Name end
+        # up carrying many values for a single tool. Pick the primary by
+        # mentions in the record's descriptions; demote the rest to
+        # additional_attributes["Also affiliated with"] (for org names)
+        # so the canonical column stays readable and the demoted values
+        # remain searchable.
+        n_demoted = self._demote_listy_attributes(record_set)
+        stats["listy_demoted"] = n_demoted
 
         # ── 2. Fold alias-like attributes into record.aliases ─────────
         for record in record_set.records:
@@ -1281,6 +1456,102 @@ class ResolutionEngine:
                     elif len(keep_vals) != len(av.values):
                         av.values = keep_vals
         stats["placeholders"] = stripped
+
+        # ── 4b. Dedupe SourcedValues within each attribute ────────────
+        # Free-text attributes (Tool Description, Organization Name, …)
+        # accumulate many near-duplicate SourcedValues across extraction
+        # passes — spelling/case/whitespace/apostrophe variants like
+        # "Ohio Attorney General's Office" vs the same with a curly
+        # apostrophe, or with trailing whitespace. Merge by a normalized
+        # key, keeping the first-seen value spelling and unioning sources
+        # by URL. Dashboard, CSV, and downstream consumers all benefit.
+        merged_groups = 0
+        for record in record_set.records:
+            for bucket in (record.attributes, record.additional_attributes):
+                for av in bucket.values():
+                    svs = getattr(av, "values", None) or []
+                    if len(svs) < 2:
+                        continue
+                    by_key: dict[str, "SourcedValue"] = {}
+                    for sv in svs:
+                        raw = (sv.value or "").strip()
+                        if not raw:
+                            continue
+                        key = (
+                            raw.lower()
+                            .replace("\u2018", "'")
+                            .replace("\u2019", "'")
+                            .replace("\u201c", '"')
+                            .replace("\u201d", '"')
+                        )
+                        key = " ".join(key.split())
+                        existing = by_key.get(key)
+                        if existing is None:
+                            by_key[key] = sv
+                        else:
+                            seen_urls = {
+                                getattr(s, "url", None) for s in (existing.sources or [])
+                            }
+                            for s in (sv.sources or []):
+                                if getattr(s, "url", None) not in seen_urls:
+                                    existing.sources.append(s)
+                                    seen_urls.add(getattr(s, "url", None))
+                    new_vals = list(by_key.values())
+                    if len(new_vals) != len(svs):
+                        av.values = new_vals
+                        merged_groups += 1
+        stats["sv_merged_attrs"] = merged_groups
+
+        # ── 4c. Fold additional_attributes that duplicate schema attrs ──
+        # Extraction sometimes lands a schema-attribute value under
+        # additional_attributes with case/whitespace differences
+        # ("Languages" vs "languages", "Organization type" vs
+        # "Organization Type"). The dashboard renders schema and
+        # additional sections separately, so the user sees the same
+        # attribute twice. Fold the additional copy into the schema
+        # attribute, merging SourcedValues by URL.
+        schema_names = {sa.name for sa in (record_set.schema_attributes or []) if sa.name}
+        def _norm_attr_name(n: str) -> str:
+            return " ".join((n or "").strip().lower().replace("_", " ").split())
+        schema_by_norm = {_norm_attr_name(n): n for n in schema_names}
+        folded = 0
+        for record in record_set.records:
+            aa = record.additional_attributes
+            if not aa:
+                continue
+            for key in list(aa.keys()):
+                target = schema_by_norm.get(_norm_attr_name(key))
+                if not target:
+                    continue
+                aa_attr = aa.pop(key)
+                folded += 1
+                schema_attr = record.attributes.get(target)
+                if schema_attr is None:
+                    record.attributes[target] = aa_attr
+                    continue
+                # Merge SourcedValues by normalized value key
+                existing_by_key: dict[str, "SourcedValue"] = {}
+                for sv in (schema_attr.values or []):
+                    k = " ".join((sv.value or "").strip().lower().split())
+                    if k:
+                        existing_by_key[k] = sv
+                for sv in (aa_attr.values or []):
+                    k = " ".join((sv.value or "").strip().lower().split())
+                    if not k:
+                        continue
+                    if k in existing_by_key:
+                        ex = existing_by_key[k]
+                        seen_urls = {
+                            getattr(s, "url", None) for s in (ex.sources or [])
+                        }
+                        for s in (sv.sources or []):
+                            if getattr(s, "url", None) not in seen_urls:
+                                ex.sources.append(s)
+                                seen_urls.add(getattr(s, "url", None))
+                    else:
+                        schema_attr.values.append(sv)
+                        existing_by_key[k] = sv
+        stats["aa_folded"] = folded
 
         # ── 5. Dedupe + prune orphan schema attributes ────────────────
         # Schema can accumulate duplicates (e.g. case-insensitive
@@ -1524,11 +1795,15 @@ class ResolutionEngine:
         """
         if not new_labels or not existing_labels:
             return {}
-        
+
         duplicates = {}
+        fuzzy_candidates: list[tuple[str, str, int]] = []  # (new_label, existing_label, score)
         uncertain_labels = []
-        
-        # Stage 1: Fast fuzzy matching
+
+        # Stage 1: fast fuzzy matching identifies CANDIDATES only — every
+        # candidate must be confirmed by the LLM arbiter before becoming a
+        # merge. Fuzzy scores alone produced cases like INTELLIGRADE ->
+        # INTELLIGENCE TOOLKIT (partial_ratio 85.7 at threshold 85).
         if use_fuzzy:
             for new_label in new_labels:
                 matched_label, score = find_fuzzy_match(
@@ -1538,14 +1813,32 @@ class ResolutionEngine:
                     include_aliases=existing_aliases,
                 )
                 if matched_label:
-                    duplicates[new_label] = matched_label
-                    logger.debug(f"Fuzzy match: {new_label} -> {matched_label} (score: {score})")
+                    fuzzy_candidates.append((new_label, matched_label, score))
                 elif score > fuzzy_threshold - 20:
-                    # Close to threshold - defer to LLM
                     uncertain_labels.append(new_label)
-                # else: no match, skip
         else:
             uncertain_labels = new_labels
+
+        # Stage 1b: LLM arbiter confirms each fuzzy candidate.
+        if fuzzy_candidates:
+            arbiter = self.get_merge_arbiter()
+            verdicts = await arbiter.verify_pairs(
+                [(n, e) for n, e, _ in fuzzy_candidates]
+            )
+            for new_label, existing_label, score in fuzzy_candidates:
+                v = verdicts.get(arbiter._key(new_label, existing_label))
+                if v is not None and arbiter.approves(v):
+                    duplicates[new_label] = existing_label
+                    logger.info(
+                        f"Fuzzy+LLM merge: {new_label} -> {existing_label} "
+                        f"(fuzzy={score}, conf={v.confidence:.2f}: {v.reason})"
+                    )
+                else:
+                    reason = v.reason if v else "no verdict"
+                    logger.info(
+                        f"Fuzzy candidate REJECTED by arbiter: "
+                        f"{new_label} ~ {existing_label} ({reason})"
+                    )
         
         # Stage 2: LLM-based semantic matching for uncertain cases
         if uncertain_labels and existing_labels:
