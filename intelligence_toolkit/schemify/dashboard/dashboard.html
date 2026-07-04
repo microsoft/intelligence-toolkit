@@ -375,14 +375,6 @@ mark { background: var(--color-highlight); color: inherit; padding: 0 1px; borde
 .entity-card .card-header-right { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
 .entity-card .card-open { color: var(--color-muted); font-size: 12px; line-height: 1; }
 .entity-card:hover .card-open { color: var(--color-accent); }
-.entity-card .card-toggle {
-  cursor: pointer; user-select: none; color: var(--color-muted);
-  font-size: 11px; line-height: 1; padding: 2px 4px; border-radius: 4px;
-  transition: transform 0.15s, color 0.15s;
-}
-.entity-card .card-toggle:hover { color: var(--color-accent); }
-.entity-card.collapsed .card-toggle { transform: rotate(-90deg); }
-.entity-card.collapsed .card-attr:not(:first-child) { display: none; }
 .entity-card .card-src-badge {
   background: var(--color-accent-soft); color: var(--color-primary); font-size: 11px;
   font-weight: 700; padding: 2px 8px; border-radius: 10px; white-space: nowrap;
@@ -729,6 +721,13 @@ function getValueDef(attrName, value) {
   return (defs && defs[value]) || '';
 }
 
+// Description of a schema attribute (for attribute-name tooltips).
+function getAttrDef(attrName) {
+  const attrs = (state.data && state.data.schema_attributes) || [];
+  const a = attrs.find(x => x.name === attrName);
+  return (a && a.description) || '';
+}
+
 // Build a tooltip string: value plus its definition when available.
 function valueTooltip(attrName, value) {
   const def = getValueDef(attrName, value);
@@ -796,6 +795,7 @@ function loadData(json) {
     btn.className = 'gb-btn';
     btn.dataset.group = attr.name;
     btn.textContent = attr.name;
+    btn.title = attr.description || '';
     gbWrap.appendChild(btn);
   }
   // Right-aligned bulk expand/collapse for card bodies.
@@ -805,11 +805,11 @@ function loadData(json) {
   const expandBtn = document.createElement('button');
   expandBtn.className = 'card-bulk-btn';
   expandBtn.textContent = 'Expand all';
-  expandBtn.onclick = () => setAllCardsCollapsed(false);
+  expandBtn.onclick = () => setAllGroups(true);
   const collapseBtn = document.createElement('button');
   collapseBtn.className = 'card-bulk-btn';
   collapseBtn.textContent = 'Collapse all';
-  collapseBtn.onclick = () => setAllCardsCollapsed(true);
+  collapseBtn.onclick = () => setAllGroups(false);
   gbWrap.appendChild(expandBtn);
   gbWrap.appendChild(collapseBtn);
   state.cardGroupBy = [];
@@ -1043,6 +1043,7 @@ function buildSlicers() {
     const header = document.createElement('div');
     header.className = 'slicer-header';
     header.innerHTML = `<span>${escapeHtml(attrName)}</span><span class="arrow">&#9660;</span>`;
+    header.title = getAttrDef(attrName);
     header.addEventListener('click', () => group.classList.toggle('collapsed'));
     group.appendChild(header);
 
@@ -1275,6 +1276,7 @@ function renderTable() {
   for (const col of cols) {
     const th = document.createElement('th');
     th.textContent = col;
+    th.title = getAttrDef(col) || col;
     const arrow = document.createElement('span');
     arrow.className = 'sort-arrow';
     arrow.textContent = tableSortCol === col ? (tableSortDir === 'asc' ? ' ▲' : ' ▼') : ' ↕';
@@ -1350,7 +1352,7 @@ function sortTable() { /* handled inline in renderTable */ }
 // ═══════════════════════════════════════════════════════════
 function buildCard(rec) {
   const card = document.createElement('div');
-  card.className = 'entity-card collapsed';
+  card.className = 'entity-card';
   card.addEventListener('click', () => selectEntity(rec.label));
 
   // Header
@@ -1368,17 +1370,8 @@ function buildCard(rec) {
   open.className = 'card-open';
   open.textContent = '\u2197';
   open.title = 'Open details';
-  const toggle = document.createElement('span');
-  toggle.className = 'card-toggle';
-  toggle.textContent = '\u25BC';
-  toggle.title = 'Expand / collapse';
-  toggle.addEventListener('click', (e) => {
-    e.stopPropagation();
-    card.classList.toggle('collapsed');
-  });
   right.appendChild(badge);
   right.appendChild(open);
-  right.appendChild(toggle);
   header.appendChild(title);
   header.appendChild(right);
   card.appendChild(header);
@@ -1395,6 +1388,7 @@ function buildCard(rec) {
     const name = document.createElement('span');
     name.className = 'attr-name';
     name.textContent = attrName + ': ';
+    name.title = getAttrDef(attrName);
     const v = document.createElement('span');
     v.className = 'attr-val';
     if (!hasVal) v.classList.add('val-unknown');
@@ -1411,7 +1405,7 @@ function buildCard(rec) {
   return card;
 }
 
-const collapsedGroups = new Set();
+const expandedGroups = new Set();  // grouped card view starts fully collapsed
 
 function renderCards() {
   const grid = document.getElementById('cards-grid');
@@ -1461,9 +1455,12 @@ function renderCardsStatus(shown, total) {
   }
 }
 
-function setAllCardsCollapsed(collapsed) {
-  document.querySelectorAll('#cards-grid .entity-card')
-    .forEach(c => c.classList.toggle('collapsed', collapsed));
+function setAllGroups(expanded) {
+  document.querySelectorAll('#cards-grid .card-group-header').forEach(h => {
+    if (expanded) expandedGroups.add(h.dataset.key);
+    else expandedGroups.delete(h.dataset.key);
+  });
+  renderCards();
 }
 
 const DEPTH_ACCENTS = [
@@ -1493,8 +1490,9 @@ function renderNestedGroups(container, records, attrs, depth, parentKey) {
     const collapseKey = parentKey + '/' + groupName;
     const hdr = document.createElement('div');
     hdr.className = 'card-group-header depth-' + Math.min(depth, 2);
+    hdr.dataset.key = collapseKey;
     hdr.style.borderLeftColor = colors.border;
-    if (collapsedGroups.has(collapseKey)) hdr.classList.add('collapsed');
+    if (!expandedGroups.has(collapseKey)) hdr.classList.add('collapsed');
     const chevron = document.createElement('span');
     chevron.className = 'group-chevron';
     chevron.textContent = '\u25BC';
@@ -1513,16 +1511,16 @@ function renderNestedGroups(container, records, attrs, depth, parentKey) {
     hdr.appendChild(h3);
     hdr.appendChild(cnt);
     hdr.addEventListener('click', () => {
-      const isCollapsed = collapsedGroups.has(collapseKey);
-      if (isCollapsed) collapsedGroups.delete(collapseKey);
-      else collapsedGroups.add(collapseKey);
-      hdr.classList.toggle('collapsed', !isCollapsed);
-      body.classList.toggle('hidden', !isCollapsed);
+      const isExpanded = expandedGroups.has(collapseKey);
+      if (isExpanded) expandedGroups.delete(collapseKey);
+      else expandedGroups.add(collapseKey);
+      hdr.classList.toggle('collapsed', isExpanded);
+      body.classList.toggle('hidden', isExpanded);
     });
     container.appendChild(hdr);
     const body = document.createElement('div');
     body.className = 'card-group-body depth-' + Math.min(depth, 2);
-    if (collapsedGroups.has(collapseKey)) body.classList.add('hidden');
+    if (!expandedGroups.has(collapseKey)) body.classList.add('hidden');
     if (depth + 1 < attrs.length) {
       renderNestedGroups(body, recs, attrs, depth + 1, collapseKey);
     } else {
@@ -2192,6 +2190,7 @@ function buildAttrCard(attrName, attr) {
   const name = document.createElement('span');
   name.className = 'attr-card-name';
   name.textContent = attrName;
+  name.title = getAttrDef(attrName);
   header.appendChild(name);
 
   const badges = document.createElement('span');
