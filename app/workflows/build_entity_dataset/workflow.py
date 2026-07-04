@@ -778,6 +778,163 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                             st.success(f"Removed from {n} record fields.")
                             st.rerun()
 
+            # ── Re-categorize schema (remap + optional web search) ──
+            with st.expander(
+                "Re-categorize schema (remap + optional web search)",
+                expanded=False,
+            ):
+                st.caption(
+                    "Propose a tightened taxonomy for closed-set attributes and "
+                    "remap existing values **in place** (no web search). Records "
+                    "that pure remapping cannot categorize — or, optionally, all "
+                    "records for an attribute — can then be re-classified against "
+                    "the new taxonomy using targeted web search."
+                )
+                closed_names = [
+                    sa.get("name")
+                    for sa in (schema or [])
+                    if sa.get("is_closed_set")
+                ]
+                if not closed_names:
+                    st.caption("No closed-set attributes to re-categorize.")
+                else:
+                    recat_key = functions.get_api_key()
+                    recat_attrs = st.multiselect(
+                        "Attributes to re-categorize (empty = all closed-set)",
+                        options=closed_names,
+                        key="bed_recat_attrs",
+                    )
+                    recat_constraints = st.text_area(
+                        "Constraints for the new taxonomy",
+                        value="",
+                        placeholder=(
+                            "e.g. Collapse to 8–10 canonical values per attribute. "
+                            "Merge CSEA into 'Sex Trafficking & Sexual Exploitation'. "
+                            "Add a 'Compliance & Inspections' category."
+                        ),
+                        height=110,
+                        key="bed_recat_constraints",
+                    )
+                    rc1, rc2 = st.columns([3, 1])
+                    propose_clicked = rc1.button(
+                        "Propose new taxonomy",
+                        key="bed_recat_propose",
+                        type="primary",
+                        disabled=not recat_key,
+                    )
+                    if rc2.button("Clear", key="bed_recat_clear"):
+                        sv.bed_recat_proposal.value = {}
+                        sv.bed_recat_summary.value = {}
+                        st.rerun()
+                    if not recat_key:
+                        st.info("Set an OpenAI API key in Settings to propose a taxonomy.")
+                    if propose_clicked:
+                        with st.spinner("Proposing tightened taxonomy…"):
+                            try:
+                                proposal = api.propose_recategorization(
+                                    recat_constraints,
+                                    attributes=recat_attrs or None,
+                                    api_key=recat_key,
+                                    model=sv.bed_model.value,
+                                )
+                                sv.bed_recat_proposal.value = proposal
+                                sv.bed_recat_summary.value = {}
+                                st.rerun()
+                            except Exception as e:  # noqa: BLE001
+                                st.error(f"Proposal failed: {e}")
+
+                    proposal = dict(sv.bed_recat_proposal.value or {})
+                    if proposal:
+                        issues = proposal.get("validation_issues") or []
+                        if issues:
+                            st.warning(
+                                "Translation coverage issues (some observed values "
+                                "were not mapped): " + "; ".join(issues)
+                            )
+                        for sattr in proposal.get("schema") or []:
+                            cvs = sattr.get("canonical_values") or []
+                            st.markdown(
+                                f"**{sattr.get('name')}** — {len(cvs)} values"
+                            )
+                            if sattr.get("change_summary"):
+                                st.caption(sattr["change_summary"])
+                            if cvs:
+                                st.caption("Canonical: " + ", ".join(map(str, cvs)))
+                        st.caption(
+                            f"Per-record remappings: "
+                            f"{len(proposal.get('record_remappings') or [])} · "
+                            f"unresolved: {len(proposal.get('unresolved') or [])} · "
+                            f"records left uncategorized (kept for re-search): "
+                            f"{len(proposal.get('out_of_scope_records') or [])}"
+                        )
+
+                        summary = dict(sv.bed_recat_summary.value or {})
+                        if api.is_running:
+                            st.info(f"Busy: {api.progress.stage}")
+                        else:
+                            if st.button(
+                                "Apply remapping (in place)",
+                                key="bed_recat_apply",
+                                type="primary",
+                            ):
+                                try:
+                                    summary = api.apply_recategorization(
+                                        proposal, remove_out_of_scope=False
+                                    )
+                                    sv.bed_recat_summary.value = summary
+                                    st.success(
+                                        f"Remapped {summary.get('remappings_applied', 0)} "
+                                        f"values across {summary.get('records', 0)} records. "
+                                        f"{summary.get('gap_total', 0)} values left "
+                                        f"uncategorized."
+                                    )
+                                    st.rerun()
+                                except Exception as e:  # noqa: BLE001
+                                    st.error(f"Apply failed: {e}")
+
+                        if summary:
+                            gaps = summary.get("gaps") or {}
+                            gap_attrs = [a for a, labs in gaps.items() if labs]
+                            st.markdown("**Optional: web-search re-classification**")
+                            st.caption(
+                                "Re-classify records against the new taxonomy using "
+                                "one targeted web search each. Requires a live "
+                                "research session (API key). Incurs LLM/search cost."
+                            )
+                            search_attrs = st.multiselect(
+                                "Attributes to re-classify",
+                                options=summary.get("attributes") or closed_names,
+                                default=gap_attrs,
+                                key="bed_recat_search_attrs",
+                            )
+                            scope_label = st.radio(
+                                "Scope",
+                                options=[
+                                    "Gaps only (fill uncategorized records)",
+                                    "All records (reassign into new categories)",
+                                ],
+                                key="bed_recat_scope",
+                            )
+                            scope = "all" if scope_label.startswith("All") else "gaps"
+                            if api.is_running:
+                                st.info(f"Busy: {api.progress.stage}")
+                            elif st.button(
+                                "Run web-search re-classification",
+                                key="bed_recat_search_run",
+                                disabled=not search_attrs,
+                            ):
+                                try:
+                                    api.start_recategorization_search(
+                                        search_attrs,
+                                        scope=scope,
+                                        concurrency=max(
+                                            1, int(sv.bed_concurrency.value or 4)
+                                        ),
+                                    )
+                                    st.rerun()
+                                except Exception as e:  # noqa: BLE001
+                                    st.error(f"Re-classification failed: {e}")
+
             # ── Add candidate entities (L) ────────────────────
             with st.expander("Add candidate entities & guidance", expanded=False):
                 st.caption(

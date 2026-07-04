@@ -21,6 +21,91 @@ from .audit import _extract_json_object, _run_openai, _run_subagent
 
 PROMPT_FILENAME = "schema_proposal.md"
 
+# Self-contained default prompt so the workflow works inside ITK without
+# shipping an external prompts directory. `run_schema_proposal` still prefers
+# a `schema_proposal.md` file when a `prompts_dir` is supplied and it exists.
+DEFAULT_SCHEMA_PROPOSAL_PROMPT = """# Schemify Schema Proposal Prompt
+
+Propose tightened, shorter taxonomies for an existing Schemify dataset — without re-running web search. The model reviews the observed-value frequency tables and the user's constraints, then proposes a revised schema and a **complete value translation table** for every observed value. Per-record remappings are then expanded mechanically from that table.
+
+This is step 1 of the **re-categorize in place** workflow. The output is reviewed by a human and applied by the recategorize step.
+
+---
+
+## Inputs
+
+- **constraints** (free text) — what the user wants tightened.
+- **observed_values** — per-attribute frequency tables: `{attr: [{value, count}, ...]}`. Every value in these tables MUST appear as a key in the corresponding `value_translations` sub-object — no abbreviations, no omissions.
+
+## Output contract
+
+Return a single JSON object with these keys:
+
+```json
+{
+  "schema": [
+    {
+      "name": "attribute_name",
+      "description": "...",
+      "is_closed_set": true,
+      "is_multi_value": true,
+      "canonical_values": ["...", "..."],
+      "change_summary": "Reduced from N to M values by …"
+    }
+  ],
+  "added_attributes": [
+    {"name": "tool_description", "description": "...", "is_closed_set": false, "is_multi_value": false}
+  ],
+  "removed_attributes": ["Key Phrases"],
+  "target_users_grouping": {
+    "Parent": ["Canonical child 1", "Canonical child 2"]
+  },
+  "value_translations": {
+    "attribute_name": {
+      "<every observed value>": "<new canonical value>"
+    }
+  }
+}
+```
+
+### `value_translations` rules
+
+- **Every** observed value in the input frequency table must appear as a key.
+- Map each old value to:
+  - a string from your proposed `canonical_values` (the normal case), or
+  - `null` to **drop** that value (e.g. attribute removed, or value falls into a dropped category), or
+  - `"UNRESOLVED"` if you cannot confidently assign it — the human reviews these.
+- `removed_attributes` do not need a `value_translations` entry — the whole attribute is dropped.
+
+## Instructions
+
+1. **Cluster** observed values by meaning, atomicity (one dimension per value), and frequency. Collapse synonyms and one-offs into a small canonical set. Preserve discriminating power — don't over-merge.
+2. **Emit a complete `value_translations` table.** Walk each observed value and map it explicitly. This is the load-bearing artifact; per-record remappings are derived from it mechanically.
+3. **`change_summary`** — one sentence per attribute explaining what got merged or dropped.
+4. **Sibling groupings** — for attributes flagged for grouping, emit `target_users_grouping`: parent → list of canonical children.
+5. **Added attributes** — propose name, description, closed-set/multi-value. For closed-set added attributes, also provide `canonical_values`.
+
+## Constraints
+
+- Use only the observed-value tables provided. Do not invent values that aren't in the input.
+- Confidence ≥ 0.7 implied for non-`UNRESOLVED` mappings.
+- Output **only** the JSON object. No prose, no markdown fences, no tool calls.
+"""
+
+
+def _load_prompt(prompts_dir: Path | None) -> str:
+    """Return the schema-proposal prompt.
+
+    Prefers `<prompts_dir>/schema_proposal.md` when supplied and present;
+    otherwise falls back to the embedded default so the workflow is
+    self-contained inside ITK.
+    """
+    if prompts_dir is not None:
+        candidate = prompts_dir / PROMPT_FILENAME
+        if candidate.exists():
+            return candidate.read_text(encoding="utf-8")
+    return DEFAULT_SCHEMA_PROPOSAL_PROMPT
+
 
 def _observed_values(data: dict, target_attrs: list[str]) -> dict[str, list[dict]]:
     freq: dict[str, Counter] = {a: Counter() for a in target_attrs}
@@ -126,7 +211,7 @@ def run_schema_proposal(
     data: dict,
     constraints: str,
     target_attrs: list[str] | None,
-    prompts_dir: Path,
+    prompts_dir: Path | None = None,
     backend: str = "openai",
     model: str = "gpt-5.2",
     api_key: str | None = None,
@@ -135,12 +220,14 @@ def run_schema_proposal(
     """Propose a tightened schema and expand value_translations into remappings.
 
     `target_attrs` defaults to every closed-set attribute in the dataset.
+    `prompts_dir` is optional; when omitted (or the file is missing) the
+    embedded default prompt is used.
     """
     if target_attrs is None:
         target_attrs = [a["name"] for a in data.get("schema_attributes", [])
                         if a.get("is_closed_set")]
 
-    prompt = (prompts_dir / PROMPT_FILENAME).read_text(encoding="utf-8")
+    prompt = _load_prompt(prompts_dir)
     observed = _observed_values(data, target_attrs)
     message = _build_message(prompt, constraints, observed)
 

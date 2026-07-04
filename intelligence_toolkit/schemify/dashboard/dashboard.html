@@ -347,6 +347,18 @@ a:hover { text-decoration: underline; }
 
 /* ── Cards View ─────────────────────────────────────────── */
 #cards-view { padding: 16px; overflow: auto; }
+mark { background: var(--color-highlight); color: inherit; padding: 0 1px; border-radius: 2px; }
+#cards-status {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 4px 2px 12px; font-size: 12px; color: var(--color-muted);
+}
+#cards-status .load-more {
+  font-size: 12px; padding: 4px 12px; border: 1.5px solid var(--color-border);
+  border-radius: 20px; background: #fff; color: var(--color-primary);
+  font-weight: 600; cursor: pointer;
+}
+#cards-status .load-more:hover { border-color: var(--color-accent); }
+.table-count { padding: 8px 4px; font-size: 12px; color: var(--color-muted); }
 #cards-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 12px;
@@ -360,6 +372,17 @@ a:hover { text-decoration: underline; }
 .entity-card:hover { border-color: var(--color-accent); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
 .entity-card .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
 .entity-card .card-title { font-weight: 700; font-size: 14px; }
+.entity-card .card-header-right { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.entity-card .card-open { color: var(--color-muted); font-size: 12px; line-height: 1; }
+.entity-card:hover .card-open { color: var(--color-accent); }
+.entity-card .card-toggle {
+  cursor: pointer; user-select: none; color: var(--color-muted);
+  font-size: 11px; line-height: 1; padding: 2px 4px; border-radius: 4px;
+  transition: transform 0.15s, color 0.15s;
+}
+.entity-card .card-toggle:hover { color: var(--color-accent); }
+.entity-card.collapsed .card-toggle { transform: rotate(-90deg); }
+.entity-card.collapsed .card-attr:not(:first-child) { display: none; }
 .entity-card .card-src-badge {
   background: var(--color-accent-soft); color: var(--color-primary); font-size: 11px;
   font-weight: 700; padding: 2px 8px; border-radius: 10px; white-space: nowrap;
@@ -419,6 +442,7 @@ a:hover { text-decoration: underline; }
   display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
   padding: 10px 16px; margin: 0;
   background: var(--color-accent-soft); border-bottom: 2px solid var(--color-border);
+  position: sticky; top: 0; z-index: 5;
 }
 #group-by-wrap .gb-label {
   font-size: 12px; font-weight: 700; color: var(--color-primary);
@@ -435,6 +459,13 @@ a:hover { text-decoration: underline; }
 #group-by-wrap .gb-btn.active {
   background: var(--color-primary); color: #fff; border-color: var(--color-primary);
 }
+#group-by-wrap .gb-spacer { margin-left: auto; }
+#group-by-wrap .card-bulk-btn {
+  font-size: 12px; padding: 4px 12px; border: 1.5px solid var(--color-border);
+  border-radius: 20px; background: #fff; color: var(--color-text);
+  font-weight: 600; cursor: pointer; transition: all 0.15s ease; white-space: nowrap;
+}
+#group-by-wrap .card-bulk-btn:hover { border-color: var(--color-accent); color: var(--color-primary); }
 
 
 
@@ -690,6 +721,36 @@ function escapeHtml(str) {
   return el.innerHTML;
 }
 
+// Definition (if any) for a closed-set value, from canonical_value_descriptions.
+function getValueDef(attrName, value) {
+  const attrs = (state.data && state.data.schema_attributes) || [];
+  const a = attrs.find(x => x.name === attrName);
+  const defs = a && a.canonical_value_descriptions;
+  return (defs && defs[value]) || '';
+}
+
+// Build a tooltip string: value plus its definition when available.
+function valueTooltip(attrName, value) {
+  const def = getValueDef(attrName, value);
+  return def ? `${value} — ${def}` : value;
+}
+
+// Set element text, wrapping current search matches in <mark>. Escapes HTML.
+function highlightInto(el, text) {
+  text = String(text == null ? '' : text);
+  const q = (state.search || '').trim();
+  if (!q) { el.textContent = text; return; }
+  const lower = text.toLowerCase(), ql = q.toLowerCase();
+  let i = 0, out = '', pos;
+  while ((pos = lower.indexOf(ql, i)) !== -1) {
+    out += escapeHtml(text.slice(i, pos)) +
+      '<mark>' + escapeHtml(text.slice(pos, pos + q.length)) + '</mark>';
+    i = pos + q.length;
+  }
+  out += escapeHtml(text.slice(i));
+  el.innerHTML = out;
+}
+
 function getRecordSourceCount(rec) {
   const urls = new Set();
   for (const attr of Object.values(rec.attributes || {})) {
@@ -737,6 +798,20 @@ function loadData(json) {
     btn.textContent = attr.name;
     gbWrap.appendChild(btn);
   }
+  // Right-aligned bulk expand/collapse for card bodies.
+  const spacer = document.createElement('span');
+  spacer.className = 'gb-spacer';
+  gbWrap.appendChild(spacer);
+  const expandBtn = document.createElement('button');
+  expandBtn.className = 'card-bulk-btn';
+  expandBtn.textContent = 'Expand all';
+  expandBtn.onclick = () => setAllCardsCollapsed(false);
+  const collapseBtn = document.createElement('button');
+  collapseBtn.className = 'card-bulk-btn';
+  collapseBtn.textContent = 'Collapse all';
+  collapseBtn.onclick = () => setAllCardsCollapsed(true);
+  gbWrap.appendChild(expandBtn);
+  gbWrap.appendChild(collapseBtn);
   state.cardGroupBy = [];
   state.filters = {};
   state.search = '';
@@ -901,6 +976,7 @@ function applyFilters() {
   let recs = state.records.filter(r => matchesSearch(r, state.search) && matchesFilters(r));
   recs = sortRecords(recs);
   state.filtered = recs;
+  state.cardsLimit = 300;
   document.getElementById('record-badge').textContent = `${recs.length} / ${state.records.length}`;
   buildSlicers();
   renderActiveFilters();
@@ -987,7 +1063,7 @@ function buildSlicers() {
       const label = document.createElement('span');
       label.className = 'slicer-bar-label';
       label.textContent = val.length > 32 ? val.slice(0, 30) + '…' : val;
-      label.title = val;
+      label.title = valueTooltip(attrName, val);
 
       const countEl = document.createElement('span');
       countEl.className = 'slicer-bar-count';
@@ -1042,7 +1118,7 @@ function openSlicerOverlay(attrName, counts, maxCount) {
     const label = document.createElement('span');
     label.className = 'slicer-bar-label';
     label.textContent = val.length > 48 ? val.slice(0, 46) + '…' : val;
-    label.title = val;
+    label.title = valueTooltip(attrName, val);
 
     const countEl = document.createElement('span');
     countEl.className = 'slicer-bar-count';
@@ -1184,6 +1260,10 @@ function selectEntity(label) {
 function renderTable() {
   const container = document.getElementById('table-view');
   container.innerHTML = '';
+  const count = document.createElement('div');
+  count.className = 'table-count';
+  count.textContent = `${state.filtered.length} entit${state.filtered.length === 1 ? 'y' : 'ies'}`;
+  container.appendChild(count);
   const table = document.createElement('table');
   table.id = 'data-table';
 
@@ -1234,17 +1314,21 @@ function renderTable() {
 
     // Entity col
     const tdLabel = document.createElement('td');
-    tdLabel.textContent = rec.label;
+    highlightInto(tdLabel, rec.label);
     tdLabel.title = rec.label;
     tr.appendChild(tdLabel);
 
     // Schema attr cols
     for (const attrName of state.schemaAttrs) {
       const td = document.createElement('td');
-      const val = getRecordValueDisplay(rec, attrName);
-      td.textContent = val;
-      td.title = val;
-      if (val === 'Unknown') td.classList.add('val-unknown');
+      const setVals = getRecordValueSet(rec, attrName);
+      const hasVal = setVals.size > 0;
+      const val = hasVal ? [...setVals].join(' · ') : 'Unknown';
+      highlightInto(td, val);
+      td.title = hasVal
+        ? [...setVals].map(sv => valueTooltip(attrName, sv)).join('\n')
+        : 'Unknown';
+      if (!hasVal) td.classList.add('val-unknown');
       tr.appendChild(td);
     }
 
@@ -1266,7 +1350,7 @@ function sortTable() { /* handled inline in renderTable */ }
 // ═══════════════════════════════════════════════════════════
 function buildCard(rec) {
   const card = document.createElement('div');
-  card.className = 'entity-card';
+  card.className = 'entity-card collapsed';
   card.addEventListener('click', () => selectEntity(rec.label));
 
   // Header
@@ -1274,12 +1358,29 @@ function buildCard(rec) {
   header.className = 'card-header';
   const title = document.createElement('div');
   title.className = 'card-title';
-  title.textContent = rec.label;
+  highlightInto(title, rec.label);
+  const right = document.createElement('div');
+  right.className = 'card-header-right';
   const badge = document.createElement('span');
   badge.className = 'card-src-badge';
   badge.textContent = `${rec._sourceCount} src`;
+  const open = document.createElement('span');
+  open.className = 'card-open';
+  open.textContent = '\u2197';
+  open.title = 'Open details';
+  const toggle = document.createElement('span');
+  toggle.className = 'card-toggle';
+  toggle.textContent = '\u25BC';
+  toggle.title = 'Expand / collapse';
+  toggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    card.classList.toggle('collapsed');
+  });
+  right.appendChild(badge);
+  right.appendChild(open);
+  right.appendChild(toggle);
   header.appendChild(title);
-  header.appendChild(badge);
+  header.appendChild(right);
   card.appendChild(header);
 
   // Attrs
@@ -1297,7 +1398,11 @@ function buildCard(rec) {
     const v = document.createElement('span');
     v.className = 'attr-val';
     if (!hasVal) v.classList.add('val-unknown');
-    v.textContent = val.length > 50 ? val.slice(0, 48) + '…' : val;
+    highlightInto(v, val.length > 50 ? val.slice(0, 48) + '…' : val);
+    // Tooltip: full value(s) + any canonical definitions.
+    row.title = hasVal
+      ? [...setVals].map(sv => valueTooltip(attrName, sv)).join('\n')
+      : 'Unknown';
     row.appendChild(name);
     row.appendChild(v);
     attrs.appendChild(row);
@@ -1311,7 +1416,9 @@ const collapsedGroups = new Set();
 function renderCards() {
   const grid = document.getElementById('cards-grid');
   grid.innerHTML = '';
-  const records = state.filtered.slice(0, 300);
+  const total = state.filtered.length;
+  const limit = state.cardsLimit || 300;
+  const records = state.filtered.slice(0, limit);
   const frag = document.createDocumentFragment();
   const groupAttrs = state.cardGroupBy;
 
@@ -1321,6 +1428,42 @@ function renderCards() {
     renderNestedGroups(frag, records, groupAttrs, 0, '');
   }
   grid.appendChild(frag);
+  renderCardsStatus(records.length, total);
+}
+
+function renderCardsStatus(shown, total) {
+  let status = document.getElementById('cards-status');
+  if (!status) {
+    status = document.createElement('div');
+    status.id = 'cards-status';
+    const grid = document.getElementById('cards-grid');
+    grid.parentNode.insertBefore(status, grid);
+  }
+  status.innerHTML = '';
+  const label = document.createElement('span');
+  label.textContent = total === 0
+    ? 'No entities match the current filters.'
+    : (shown < total
+        ? `Showing ${shown} of ${total} entities`
+        : `${total} entit${total === 1 ? 'y' : 'ies'}`);
+  status.appendChild(label);
+  if (shown < total) {
+    const more = document.createElement('button');
+    more.className = 'load-more';
+    more.textContent = 'Load more';
+    more.onclick = () => { state.cardsLimit = (state.cardsLimit || 300) + 300; renderCards(); };
+    status.appendChild(more);
+    const all = document.createElement('button');
+    all.className = 'load-more';
+    all.textContent = 'Show all';
+    all.onclick = () => { state.cardsLimit = total; renderCards(); };
+    status.appendChild(all);
+  }
+}
+
+function setAllCardsCollapsed(collapsed) {
+  document.querySelectorAll('#cards-grid .entity-card')
+    .forEach(c => c.classList.toggle('collapsed', collapsed));
 }
 
 const DEPTH_ACCENTS = [
@@ -2062,6 +2205,13 @@ function buildAttrCard(attrName, attr) {
   const displayVal = getAttrValueDisplay(attr);
   valEl.textContent = displayVal;
   if (displayVal === 'Unknown') valEl.classList.add('val-unknown');
+  // Tooltip: canonical definitions for any of this attribute's values.
+  const valSet = new Set();
+  if (Array.isArray(attr.value)) attr.value.forEach(v => { if (v) valSet.add(String(v)); });
+  else if (attr.value) valSet.add(String(attr.value));
+  (attr.values || []).forEach(sv => { if (sv && sv.value) valSet.add(String(sv.value)); });
+  const defTips = [...valSet].map(v => valueTooltip(attrName, v)).filter(t => t.includes(' — '));
+  if (defTips.length) valEl.title = defTips.join('\n');
   card.appendChild(valEl);
 
   // Evidence list — dedupe SourcedValues by normalized key (trim+lower),

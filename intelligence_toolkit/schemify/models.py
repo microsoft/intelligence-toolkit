@@ -703,6 +703,7 @@ class SchemaAttribute:
     # Exploration support
     provisional_values: list[str] = field(default_factory=list)  # Values for combinatorial exploration (may evolve)
     canonical_values: list[str] = field(default_factory=list)  # Fixed values for normalization (immutable)
+    canonical_value_descriptions: dict = field(default_factory=dict)  # Optional {value: definition} to disambiguate closed-set choices during extraction
     is_closed_set: bool = False  # True if finite/bounded value set (e.g., continent, country)
     cardinality_threshold: int = 50  # Values below this = closed set
     values_explored: set = field(default_factory=set)  # Track which values have been explored
@@ -1068,6 +1069,7 @@ class RecordSet:
                     "is_closed_set": a.is_closed_set,
                     "provisional_values": a.provisional_values,
                     "canonical_values": a.canonical_values,
+                    "canonical_value_descriptions": a.canonical_value_descriptions,
                 }
                 for a in self.schema_attributes
             ],
@@ -1092,6 +1094,7 @@ class RecordSet:
                     is_closed_set=a.get("is_closed_set", False),
                     provisional_values=a.get("provisional_values", []),
                     canonical_values=a.get("canonical_values", []),
+                    canonical_value_descriptions=a.get("canonical_value_descriptions", {}) or {},
                 )
                 for a in data.get("schema_attributes", [])
             ],

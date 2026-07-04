@@ -42,6 +42,15 @@ def get_record_extraction_schema(
                 attr_name = attr.name
                 canonical_values = attr.canonical_values if attr.canonical_values else None
                 description = attr.description or f"Value for {attr.name}"
+                # Fold any per-value definitions into the field description so
+                # the model can disambiguate overlapping closed-set options.
+                cvd = getattr(attr, "canonical_value_descriptions", None) or {}
+                if canonical_values and cvd:
+                    gloss = "; ".join(
+                        f"{v} = {cvd[v]}" for v in canonical_values if cvd.get(v)
+                    )
+                    if gloss:
+                        description = f"{description}. Value definitions: {gloss}"
             
             if with_citations:
                 # Attribute value with citation indices and evidence

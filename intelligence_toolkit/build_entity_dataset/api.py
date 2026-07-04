@@ -2539,8 +2539,245 @@ class BuildEntityDataset:
                 absorbed += 1
         return absorbed
 
+    # ── Re-categorize in place (+ optional web search) ─────────
 
+    def propose_recategorization(
+        self,
+        constraints: str,
+        *,
+        attributes: Optional[list[str]] = None,
+        api_key: Optional[str] = None,
+        model: Optional[str] = None,
+    ) -> dict:
+        """Ask an LLM to propose tightened taxonomies for the current dataset.
 
+        No web search is performed here — the model only sees per-attribute
+        observed-value frequency tables and the user's ``constraints`` and
+        returns a revised schema plus a complete value-translation table.
+        Per-record remappings are expanded mechanically from that table.
+
+        Returns the proposal dict (``schema``, ``value_translations``,
+        ``record_remappings``, ``out_of_scope_records``, ``unresolved``,
+        ``validation_issues``). Nothing is applied — review then call
+        :meth:`apply_recategorization`.
+        """
+        from intelligence_toolkit.schemify.propose import run_schema_proposal
+
+        data = self._build_dataset_json()
+        if not data:
+            raise ValueError("No dataset to re-categorize. Run or load a dataset first.")
+
+        # Prefer the live client's key; fall back to the supplied one.
+        key = api_key
+        llm = getattr(self._schemify, "llm", None)
+        if not key and llm is not None:
+            key = getattr(getattr(llm, "config", None), "api_key", None)
+        if not key:
+            raise ValueError("propose_recategorization requires an OpenAI API key.")
+
+        proposal = run_schema_proposal(
+            data,
+            constraints=constraints or "",
+            target_attrs=attributes or None,
+            model=model or config.DEFAULT_MODEL,
+            api_key=key,
+        )
+        return proposal
+
+    def apply_recategorization(
+        self,
+        proposal: dict,
+        *,
+        remove_out_of_scope: bool = False,
+    ) -> dict:
+        """Apply a reviewed proposal to the live dataset in place.
+
+        Remaps existing attribute values to the new canonical set and updates
+        each attribute's ``canonical_values`` so subsequent web-search
+        re-classification is constrained to the new taxonomy.
+
+        By default records whose target attribute values were *all* dropped
+        are kept (with that attribute emptied) so they can be re-classified
+        via :meth:`start_recategorization_search`. Set ``remove_out_of_scope``
+        to drop them instead.
+
+        Returns a summary dict with counts and, per attribute, the labels of
+        records left with no value (``gaps``).
+        """
+        from intelligence_toolkit.schemify.audit import apply_recategorization as _apply
+        from intelligence_toolkit.schemify.models import RecordSet
+
+        if not self._schemify or not self._schemify.record_set:
+            raise ValueError("No live dataset to re-categorize.")
+
+        data = self._build_dataset_json()
+        if not data:
+            raise ValueError("No dataset to re-categorize.")
+
+        # When gap-filling, keep out-of-scope records so they can be
+        # re-searched rather than deleted.
+        effective = proposal
+        if not remove_out_of_scope and proposal.get("out_of_scope_records"):
+            effective = dict(proposal)
+            effective["out_of_scope_records"] = []
+
+        new_data = _apply(data, effective)
+
+        rs = RecordSet.from_dict(new_data)
+        self._schemify.record_set = rs
+        # Reattach the merge arbiter to the fresh record set (best effort).
+        attach = getattr(self._schemify, "_attach_merge_arbiter", None)
+        if callable(attach):
+            try:
+                attach(rs)
+            except Exception as e:  # noqa: BLE001
+                _logger.warning("re-attach merge arbiter failed: %s", e)
+
+        self._post_curation_refresh()
+
+        target_attrs = [
+            s["name"] for s in (proposal.get("schema") or []) if s.get("name")
+        ] or [a.name for a in rs.schema_attributes if getattr(a, "is_closed_set", False)]
+        gaps = self.recategorization_gaps(target_attrs)
+        return {
+            "records": len(rs.records),
+            "attributes": [a.name for a in rs.schema_attributes],
+            "remappings_applied": len(proposal.get("record_remappings") or []),
+            "unresolved": len(proposal.get("unresolved") or []),
+            "removed_out_of_scope": (
+                len(proposal.get("out_of_scope_records") or [])
+                if remove_out_of_scope else 0
+            ),
+            "gaps": gaps,
+            "gap_total": sum(len(v) for v in gaps.values()),
+        }
+
+    def recategorization_gaps(self, attributes: list[str]) -> dict[str, list[str]]:
+        """Return, per attribute, the labels of records with no value.
+
+        These are the records that pure remapping could not categorize (all
+        their old values were dropped or unresolved) — the candidates for
+        web-search gap-fill.
+        """
+        rs = getattr(self._schemify, "record_set", None) if self._schemify else None
+        if not rs:
+            return {}
+        out: dict[str, list[str]] = {}
+        for attr in attributes or []:
+            missing: list[str] = []
+            for r in rs.records:
+                av = r.attributes.get(attr)
+                if av is None or not getattr(av, "value", ""):
+                    missing.append(r.label)
+            out[attr] = missing
+        return out
+
+    def start_recategorization_search(
+        self,
+        attributes: list[str],
+        *,
+        scope: str = "gaps",
+        concurrency: int = 4,
+    ) -> None:
+        """Re-classify records against the new taxonomy using web search.
+
+        Runs in a background thread. For each target attribute the affected
+        records are re-extracted via one grounded web search each; the
+        extraction is constrained to the attribute's current
+        ``canonical_values`` (set by :meth:`apply_recategorization`).
+
+        ``scope``:
+          - ``"gaps"`` (default): only records left with no value for the
+            attribute (cheapest — fills the holes pure remapping left).
+          - ``"all"``: every record is re-classified for the attribute; the
+            existing value is cleared first so the model reassigns freely
+            into the new taxonomy (needed to populate genuinely new
+            categories that had no source value to remap from).
+        """
+        if self.is_running:
+            return
+        if not self._schemify or not self._schemify.record_set:
+            raise ValueError("No live dataset — load a run with an API key first.")
+        if getattr(self._schemify, "llm", None) is None:
+            raise ValueError(
+                "Web-search re-classification requires a live research session "
+                "with an API key."
+            )
+        attrs = [a for a in (attributes or []) if a]
+        if not attrs:
+            return
+
+        from intelligence_toolkit.schemify.models import AttributeValue
+
+        rs = self._schemify.record_set
+        scope = (scope or "gaps").strip().lower()
+
+        # Resolve the target (record, attribute) work items up front.
+        work: list[tuple[object, str]] = []
+        for attr in attrs:
+            for r in rs.records:
+                av = r.attributes.get(attr)
+                has_value = av is not None and getattr(av, "value", "")
+                if scope == "all":
+                    # Clear so re-search reassigns into the new taxonomy.
+                    r.attributes[attr] = AttributeValue(values=[])
+                    work.append((r, attr))
+                elif not has_value:
+                    work.append((r, attr))
+
+        total = len(work)
+        self.progress = ResearchProgress(
+            is_running=True,
+            stage=f"Re-classifying {total} values via web search…",
+            total=total,
+            current=0,
+            entity_count=len(rs.records),
+        )
+
+        def _run() -> None:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                semaphore = asyncio.Semaphore(max(1, int(concurrency)))
+                done = [0]
+
+                async def _one(record, attr):
+                    async with semaphore:
+                        try:
+                            await self._schemify.extraction.expand_record(
+                                record, rs, target_attributes=[attr]
+                            )
+                        except Exception as e:  # noqa: BLE001
+                            _logger.warning(
+                                "re-classify %s/%s failed: %s",
+                                getattr(record, "label", "?"), attr, e,
+                            )
+                        finally:
+                            done[0] += 1
+                            self.progress.current = done[0]
+                            self.progress.stage = (
+                                f"Re-classifying via web search "
+                                f"({done[0]}/{total})"
+                            )
+
+                async def _go():
+                    await asyncio.gather(*[_one(r, a) for r, a in work])
+
+                loop.run_until_complete(_go())
+                self._post_curation_refresh()
+                self.progress.is_running = False
+                self.progress.is_complete = True
+                self.progress.stage = "Re-classification complete"
+            except Exception as e:  # noqa: BLE001
+                _logger.exception("recategorization search worker failed")
+                self.progress.is_running = False
+                self.progress.error = str(e)
+                self.progress.stage = "Error"
+            finally:
+                loop.close()
+
+        self._thread = threading.Thread(target=_run, daemon=True)
+        self._thread.start()
 
     def _build_dataset_json(self) -> Optional[dict]:
         """Serialize the current record set to a JSON-able dict.
@@ -2567,6 +2804,7 @@ class BuildEntityDataset:
                     "frequency": getattr(a, "frequency", 0.0),
                     "provisional_values": getattr(a, "provisional_values", []),
                     "canonical_values": getattr(a, "canonical_values", []),
+                    "canonical_value_descriptions": getattr(a, "canonical_value_descriptions", {}) or {},
                 }
                 for a in rs.schema_attributes
             ],
