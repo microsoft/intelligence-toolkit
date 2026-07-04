@@ -895,6 +895,7 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                         if summary:
                             gaps = summary.get("gaps") or {}
                             gap_attrs = [a for a, labs in gaps.items() if labs]
+                            attr_opts = summary.get("attributes") or closed_names
                             st.markdown("**Optional: web-search re-classification**")
                             st.caption(
                                 "Re-classify records against the new taxonomy using "
@@ -903,19 +904,71 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                             )
                             search_attrs = st.multiselect(
                                 "Attributes to re-classify",
-                                options=summary.get("attributes") or closed_names,
+                                options=attr_opts,
                                 default=gap_attrs,
                                 key="bed_recat_search_attrs",
                             )
-                            scope_label = st.radio(
-                                "Scope",
+                            mode_label = st.radio(
+                                "Mode",
                                 options=[
-                                    "Gaps only (fill uncategorized records)",
-                                    "All records (reassign into new categories)",
+                                    "Add new categories only (keeps existing values)",
+                                    "Reassign from scratch (may change existing values)",
                                 ],
-                                key="bed_recat_scope",
+                                key="bed_recat_mode",
                             )
-                            scope = "all" if scope_label.startswith("All") else "gaps"
+                            mode = "augment" if mode_label.startswith("Add") else "reassign"
+
+                            # Net-new canonical values (in schema but with no records yet)
+                            # make sensible defaults for augment mode.
+                            present = {}
+                            for r in (api.dataset_json or {}).get("records", []):
+                                for a, blk in (r.get("attributes") or {}).items():
+                                    for v in blk.get("values", []):
+                                        if v.get("value"):
+                                            present.setdefault(a, set()).add(v["value"])
+                            schema_by_name = {s.get("name"): s for s in (schema or [])}
+                            netnew_opts, netnew_default = [], []
+                            for a in search_attrs:
+                                for v in (schema_by_name.get(a, {}).get("canonical_values") or []):
+                                    netnew_opts.append(v)
+                                    if v not in present.get(a, set()):
+                                        netnew_default.append(v)
+
+                            only_values = None
+                            if mode == "augment":
+                                only_values = st.multiselect(
+                                    "Only add these values (blank = add any supported value)",
+                                    options=sorted(set(netnew_opts)),
+                                    default=sorted(set(netnew_default)),
+                                    key="bed_recat_only_values",
+                                )
+                            kw_raw = st.text_input(
+                                "Candidate keywords (comma-separated, optional — targets "
+                                "records whose text matches; cheapest)",
+                                key="bed_recat_keywords",
+                            )
+                            keywords = [k.strip() for k in kw_raw.split(",") if k.strip()] or None
+                            scope = "gaps" if st.checkbox(
+                                "Limit to records with no value (gaps only)",
+                                key="bed_recat_gaps_only",
+                            ) else "all"
+
+                            if st.button("Preview candidates", key="bed_recat_preview"):
+                                try:
+                                    cand = api.recategorization_candidates(
+                                        search_attrs, scope=scope, candidate_keywords=keywords
+                                    )
+                                    n = sum(len(v) for v in cand.values())
+                                    parts = ", ".join(
+                                        f"{a}: {len(v)}" for a, v in cand.items()
+                                    )
+                                    st.info(
+                                        f"{n} record-searches ({parts}) · "
+                                        f"est. cost ~${n * 0.032:.2f}"
+                                    )
+                                except Exception as e:  # noqa: BLE001
+                                    st.error(f"Preview failed: {e}")
+
                             if api.is_running:
                                 st.info(f"Busy: {api.progress.stage}")
                             elif st.button(
@@ -926,6 +979,9 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                                 try:
                                     api.start_recategorization_search(
                                         search_attrs,
+                                        mode=mode,
+                                        only_values=only_values or None,
+                                        candidate_keywords=keywords,
                                         scope=scope,
                                         concurrency=max(
                                             1, int(sv.bed_concurrency.value or 4)

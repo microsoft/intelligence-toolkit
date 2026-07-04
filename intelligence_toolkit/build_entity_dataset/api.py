@@ -165,6 +165,8 @@ class BuildEntityDataset:
         # orchestrator checks it between iterations; setting it does not
         # interrupt an in-flight Schemify call.
         self._stop_auto: bool = False
+        # Values added by the most recent recategorization web-search pass.
+        self.recat_added: list[dict] = []
 
     # ── Public properties ──────────────────────────────────────
 
@@ -2672,27 +2674,91 @@ class BuildEntityDataset:
             out[attr] = missing
         return out
 
+    @staticmethod
+    def _recat_text_blob(record) -> str:
+        """Lowercased label + aliases + description/org fields for keyword
+        candidate matching."""
+        parts = [getattr(record, "label", "")] + list(getattr(record, "aliases", []) or [])
+        for a in ("tool_description", "Technology Description", "Organization Type",
+                  "operating_org_name"):
+            av = record.attributes.get(a)
+            if av:
+                parts += [v.value for v in av.values if v.value]
+        return " \n ".join(p for p in parts if p).lower()
+
+    def _resolve_recat_candidates(self, attr, scope, keywords):
+        """Records to re-search for ``attr`` given scope + optional keywords."""
+        rs = self._schemify.record_set
+        kws = [k.lower() for k in (keywords or []) if k]
+        out = []
+        for r in rs.records:
+            av = r.attributes.get(attr)
+            has_value = av is not None and getattr(av, "value", "")
+            if scope == "gaps" and has_value:
+                continue
+            if kws:
+                blob = self._recat_text_blob(r)
+                if not any(k in blob for k in kws):
+                    continue
+            out.append(r)
+        return out
+
+    def recategorization_candidates(
+        self,
+        attributes: list[str],
+        *,
+        scope: str = "all",
+        candidate_keywords: Optional[list[str]] = None,
+    ) -> dict[str, list[str]]:
+        """Preview which records a web-search pass would touch (per attribute).
+
+        Lets the UI estimate cost before spending. Same selection logic as
+        :meth:`start_recategorization_search`.
+        """
+        rs = getattr(self._schemify, "record_set", None) if self._schemify else None
+        if not rs:
+            return {}
+        scope = (scope or "all").strip().lower()
+        return {
+            attr: [r.label for r in self._resolve_recat_candidates(attr, scope, candidate_keywords)]
+            for attr in (attributes or []) if attr
+        }
+
     def start_recategorization_search(
         self,
         attributes: list[str],
         *,
-        scope: str = "gaps",
+        mode: str = "augment",
+        only_values: Optional[list[str]] = None,
+        candidate_keywords: Optional[list[str]] = None,
+        scope: str = "all",
         concurrency: int = 4,
     ) -> None:
         """Re-classify records against the new taxonomy using web search.
 
-        Runs in a background thread. For each target attribute the affected
-        records are re-extracted via one grounded web search each; the
-        extraction is constrained to the attribute's current
-        ``canonical_values`` (set by :meth:`apply_recategorization`).
+        Runs in a background thread. Each targeted record is re-extracted via
+        one grounded web search; extraction is constrained to the attribute's
+        current ``canonical_values`` (set by :meth:`apply_recategorization`).
 
-        ``scope``:
-          - ``"gaps"`` (default): only records left with no value for the
-            attribute (cheapest — fills the holes pure remapping left).
-          - ``"all"``: every record is re-classified for the attribute; the
-            existing value is cleared first so the model reassigns freely
-            into the new taxonomy (needed to populate genuinely new
-            categories that had no source value to remap from).
+        ``mode``:
+          - ``"augment"`` (default, zero-regression): the record's existing
+            value(s) are preserved; the search result is only *added* when it
+            introduces a value that isn't already present. With ``only_values``
+            set, only those values are added — ideal for populating genuinely
+            new categories (e.g. "Compliance & Inspections") without disturbing
+            correct classifications.
+          - ``"reassign"``: the existing value is cleared and fully replaced by
+            the fresh search result (may churn good values — use deliberately).
+
+        ``candidate_keywords``: restrict the pass to records whose label /
+        aliases / description / org fields contain any of these substrings
+        (case-insensitive). Cheapest way to target a specific new category.
+
+        ``scope`` (applied on top of keywords): ``"all"`` = every matching
+        record; ``"gaps"`` = only records currently empty for the attribute.
+
+        Progress is reported on ``self.progress``; the list of additions is
+        available afterwards on ``self.recat_added``.
         """
         if self.is_running:
             return
@@ -2707,25 +2773,22 @@ class BuildEntityDataset:
         if not attrs:
             return
 
+        import copy as _copy
+
         from intelligence_toolkit.schemify.models import AttributeValue
 
         rs = self._schemify.record_set
-        scope = (scope or "gaps").strip().lower()
+        mode = (mode or "augment").strip().lower()
+        scope = (scope or "all").strip().lower()
+        accept = set(only_values or [])
 
-        # Resolve the target (record, attribute) work items up front.
         work: list[tuple[object, str]] = []
         for attr in attrs:
-            for r in rs.records:
-                av = r.attributes.get(attr)
-                has_value = av is not None and getattr(av, "value", "")
-                if scope == "all":
-                    # Clear so re-search reassigns into the new taxonomy.
-                    r.attributes[attr] = AttributeValue(values=[])
-                    work.append((r, attr))
-                elif not has_value:
-                    work.append((r, attr))
+            for r in self._resolve_recat_candidates(attr, scope, candidate_keywords):
+                work.append((r, attr))
 
         total = len(work)
+        self.recat_added = []  # [{"label","attribute","value"}]
         self.progress = ResearchProgress(
             is_running=True,
             stage=f"Re-classifying {total} values via web search…",
@@ -2743,6 +2806,9 @@ class BuildEntityDataset:
 
                 async def _one(record, attr):
                     async with semaphore:
+                        original = _copy.deepcopy(record.attributes.get(attr))
+                        # Clear so the model reassigns freely into the new taxonomy.
+                        record.attributes[attr] = AttributeValue(values=[])
                         try:
                             await self._schemify.extraction.expand_record(
                                 record, rs, target_attributes=[attr]
@@ -2752,13 +2818,35 @@ class BuildEntityDataset:
                                 "re-classify %s/%s failed: %s",
                                 getattr(record, "label", "?"), attr, e,
                             )
-                        finally:
-                            done[0] += 1
-                            self.progress.current = done[0]
-                            self.progress.stage = (
-                                f"Re-classifying via web search "
-                                f"({done[0]}/{total})"
-                            )
+                        new_av = record.attributes.get(attr)
+                        new_sourced = (
+                            {v.value: v.sources for v in new_av.values} if new_av else {}
+                        )
+                        if mode == "reassign":
+                            # Keep the fresh result as-is (may be empty on failure).
+                            for val in new_sourced:
+                                self.recat_added.append(
+                                    {"label": record.label, "attribute": attr, "value": val}
+                                )
+                        else:  # augment — restore original, add only accepted new values
+                            if original is not None:
+                                record.attributes[attr] = original
+                            else:
+                                record.attributes.pop(attr, None)
+                            for val, srcs in new_sourced.items():
+                                if accept and val not in accept:
+                                    continue
+                                if record.attributes.get(attr) is None:
+                                    record.attributes[attr] = AttributeValue(values=[])
+                                record.attributes[attr].add_value_with_sources(val, srcs)
+                                self.recat_added.append(
+                                    {"label": record.label, "attribute": attr, "value": val}
+                                )
+                        done[0] += 1
+                        self.progress.current = done[0]
+                        self.progress.stage = (
+                            f"Re-classifying via web search ({done[0]}/{total})"
+                        )
 
                 async def _go():
                     await asyncio.gather(*[_one(r, a) for r, a in work])
@@ -2767,7 +2855,9 @@ class BuildEntityDataset:
                 self._post_curation_refresh()
                 self.progress.is_running = False
                 self.progress.is_complete = True
-                self.progress.stage = "Re-classification complete"
+                self.progress.stage = (
+                    f"Re-classification complete — {len(self.recat_added)} values added"
+                )
             except Exception as e:  # noqa: BLE001
                 _logger.exception("recategorization search worker failed")
                 self.progress.is_running = False
