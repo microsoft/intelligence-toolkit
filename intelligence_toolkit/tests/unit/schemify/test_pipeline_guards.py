@@ -189,6 +189,22 @@ def test_seed_state_restore_preserves_taxonomy(sch, tmp_path):
     assert attr.canonical_value_descriptions == {FUNC[0]: "scores risk"}
 
 
+def test_reloaded_run_keeps_recorded_usage(tmp_path):
+    from intelligence_toolkit.build_entity_dataset.api import BuildEntityDataset, UsageStats
+
+    (tmp_path / "data.json").write_text(json.dumps(make_rs([]).to_dict()), encoding="utf-8")
+    (tmp_path / "meta.json").write_text(json.dumps(
+        {"total_cost_usd": 12.5, "total_tokens": 1000, "queries_run": 40}
+    ), encoding="utf-8")
+    api = BuildEntityDataset()
+    api.load_saved_run(tmp_path / "data.json")
+    api.usage = UsageStats(total_tokens=10, total_cost_usd=0.5, queries_run=2)
+    api._save_run("Tools")
+    meta = json.loads((tmp_path / "meta.json").read_text(encoding="utf-8"))
+    assert meta["total_cost_usd"] == 13.0
+    assert meta["queries_run"] == 42
+
+
 async def test_scope_audit_failure_keeps_records():
     rs = make_rs([Record(label="A"), Record(label="B")])
     results = await scope_audit.audit_scope(rs, ForbiddenLLM())

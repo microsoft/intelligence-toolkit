@@ -167,6 +167,8 @@ class BuildEntityDataset:
         self._stop_auto: bool = False
         # Values added by the most recent recategorization web-search pass.
         self.recat_added: list[dict] = []
+        # Usage already recorded in a reloaded run's meta.json; session usage adds to it.
+        self._usage_baseline: UsageStats = UsageStats()
 
     # ── Public properties ──────────────────────────────────────
 
@@ -296,6 +298,7 @@ class BuildEntityDataset:
             self._schemify = None
             self.progress = ResearchProgress()
             self.usage = UsageStats()
+            self._usage_baseline = UsageStats()
             self._thread = None
             self._dataset_json = None
             self._df = None
@@ -334,6 +337,7 @@ class BuildEntityDataset:
         ts = time.strftime("%Y%m%d-%H%M%S")
         self._run_dir = _RUNS_DIR / f"{ts}_{safe}"
         self._run_dir.mkdir(parents=True, exist_ok=True)
+        self._usage_baseline = UsageStats()
 
         def _run() -> None:
             try:
@@ -607,6 +611,7 @@ class BuildEntityDataset:
         ts = time.strftime("%Y%m%d-%H%M%S")
         self._run_dir = _RUNS_DIR / f"{ts}_auto_{safe}"
         self._run_dir.mkdir(parents=True, exist_ok=True)
+        self._usage_baseline = UsageStats()
 
         def _run() -> None:
             try:
@@ -894,6 +899,7 @@ class BuildEntityDataset:
         ts = time.strftime("%Y%m%d-%H%M%S")
         self._run_dir = _RUNS_DIR / f"{ts}_benchmark_{safe}"
         self._run_dir.mkdir(parents=True, exist_ok=True)
+        self._usage_baseline = UsageStats()
 
         def _run() -> None:
             try:
@@ -3024,9 +3030,7 @@ class BuildEntityDataset:
                 "category": category,
                 "timestamp": ts,
                 "entity_count": len(data.get("records", [])),
-                "total_tokens": self.usage.total_tokens,
-                "total_cost_usd": self.usage.total_cost_usd,
-                "queries_run": self.usage.queries_run,
+                **self._cumulative_usage(),
                 "in_progress": True,
             }
             (self._run_dir / "meta.json").write_text(
@@ -3057,14 +3061,20 @@ class BuildEntityDataset:
             "category": category,
             "timestamp": ts,
             "entity_count": len(self._dataset_json.get("records", [])),
-            "total_tokens": self.usage.total_tokens,
-            "total_cost_usd": self.usage.total_cost_usd,
-            "queries_run": self.usage.queries_run,
+            **self._cumulative_usage(),
         }
         (run_dir / "meta.json").write_text(
             json.dumps(meta, indent=2), encoding="utf-8"
         )
         return data_path
+
+    def _cumulative_usage(self) -> dict:
+        b, u = self._usage_baseline, self.usage
+        return {
+            "total_tokens": b.total_tokens + u.total_tokens,
+            "total_cost_usd": round(b.total_cost_usd + u.total_cost_usd, 4),
+            "queries_run": b.queries_run + u.queries_run,
+        }
 
     @staticmethod
     def list_saved_runs() -> list[dict]:
@@ -3123,6 +3133,20 @@ class BuildEntityDataset:
         except (TypeError, ValueError) as e:
             _logger.warning("could not resolve run_dir from %s: %s", data_path, e)
             self._run_dir = None
+
+        self.usage = UsageStats()
+        self._usage_baseline = UsageStats()
+        meta_path = self._run_dir / "meta.json" if self._run_dir else None
+        if meta_path and meta_path.exists():
+            try:
+                meta = json.loads(meta_path.read_text(encoding="utf-8"))
+                self._usage_baseline = UsageStats(
+                    total_tokens=int(meta.get("total_tokens", 0) or 0),
+                    total_cost_usd=float(meta.get("total_cost_usd", 0.0) or 0.0),
+                    queries_run=int(meta.get("queries_run", 0) or 0),
+                )
+            except (OSError, ValueError) as e:
+                _logger.warning("could not read usage from %s: %s", meta_path, e)
 
         self._read_only_reason = None
         if api_key:
