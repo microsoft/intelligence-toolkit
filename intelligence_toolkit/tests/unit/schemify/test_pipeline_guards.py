@@ -360,6 +360,21 @@ def test_import_and_lock_taxonomy_applies_immediately(tmp_path, monkeypatch):
     assert vals == [FUNC[0]]
 
 
+def test_load_dataset_cleans_citation_titles():
+    from intelligence_toolkit.build_entity_dataset.api import BuildEntityDataset
+
+    data = make_rs([Record(label="A", attributes={"Functionality": AttributeValue(values=[SourcedValue(
+        value=FUNC[0], sources=[Citation(url="https://x", title="t")],
+    )])})]).to_dict()
+    data["records"][0]["attributes"]["Functionality"]["values"][0]["sources"][0]["title"] = (
+        "REPORT May 2024 None | | | --- | --- |"
+    )
+    api = BuildEntityDataset()
+    api.load_dataset(data)
+    src = api.dataset_json["records"][0]["attributes"]["Functionality"]["values"][0]["sources"][0]
+    assert src["title"] == "REPORT May 2024"
+
+
 async def test_scope_audit_failure_keeps_records():
     rs = make_rs([Record(label="A"), Record(label="B")])
     results = await scope_audit.audit_scope(rs, ForbiddenLLM())

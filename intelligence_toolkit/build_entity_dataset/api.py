@@ -3530,6 +3530,15 @@ class BuildEntityDataset:
 
     def load_dataset(self, data: dict) -> None:
         """Load a previously saved dataset JSON into this object."""
+        from intelligence_toolkit.schemify.models import _clean_title
+
+        for r in data.get("records", []):
+            for bucket in ("attributes", "additional_attributes"):
+                for av in (r.get(bucket) or {}).values():
+                    for sv in (av.get("values") or []) if isinstance(av, dict) else []:
+                        for s in sv.get("sources") or []:
+                            if isinstance(s, dict) and s.get("title"):
+                                s["title"] = _clean_title(s["title"])
         self._dataset_json = data
         records = data.get("records", [])
         attrs = [a.get("name", "") for a in data.get("schema_attributes", [])]
