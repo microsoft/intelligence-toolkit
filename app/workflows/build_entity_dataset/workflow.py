@@ -304,7 +304,12 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
     # ── Run research ───────────────────────────────────────────
     with run_tab:
         if not sv.bed_category.value:
-            st.info("Define a task in the **Define task** tab first.")
+            st.info(
+                "Define a task in the **Define task** tab to start new research, "
+                "or open an existing dataset below."
+            )
+            st.markdown("##### Continue from an existing dataset")
+            _render_import_dataset(api, sv, key="bed_run_import_empty")
         else:
             st.markdown(f"**Category:** {sv.bed_category.value}")
             if sv.bed_guidance.value:
