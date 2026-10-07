@@ -3564,6 +3564,161 @@ class BuildEntityDataset:
             return self._df.to_csv(index=False).encode()
         return b""
 
+    # ── Record-level curation & release ────────────────────────
+
+    def restore_records(self, records: list[dict], reason: str = "") -> int:
+        """Re-add records (dicts from a previous dataset JSON) and lift their label
+        exclusions so research won't drop them again. Returns count restored."""
+        from intelligence_toolkit.schemify.models import Record
+
+        if not self._schemify or not self._schemify.record_set:
+            return 0
+        rs = self._schemify.record_set
+        present = {(r.label or "").casefold() for r in rs.records}
+        restored = []
+        for d in records or []:
+            label = (d.get("label") or "").strip()
+            if not label or label.casefold() in present:
+                continue
+            rs.records.append(Record.from_dict(d))
+            present.add(label.casefold())
+            restored.append(label)
+        wanted = {l.casefold() for l in restored}
+        rs.user_exclusions = [
+            e for e in (rs.user_exclusions or [])
+            if e.get("attribute") or (e.get("label") or "").casefold() not in wanted
+        ]
+        if restored:
+            rs.history.append({
+                "op": "restore_records",
+                "applied_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                "labels": restored,
+                "reason": reason,
+            })
+            self._post_curation_refresh()
+        return len(restored)
+
+    def set_record_values(
+        self, label: str, attribute: str, values: list[str], *, note: str = "", source_url: str = "",
+    ) -> bool:
+        """Replace one record's values for an attribute (manual curation).
+
+        Sources already cited for a kept value are preserved; new values get the
+        optional ``source_url``/``note`` as their citation.
+        """
+        from intelligence_toolkit.schemify.models import AttributeValue, Citation, SourcedValue
+
+        rec = self._find_record(label)
+        if rec is None:
+            return False
+        old = rec.attributes.get(attribute)
+        old_sources = {sv.value: sv.sources for sv in (old.values if old else [])}
+        all_old = [s for srcs in old_sources.values() for s in srcs]
+        new_values = []
+        for v in [v.strip() for v in values if v and v.strip()]:
+            if v in old_sources:
+                srcs = old_sources[v]
+            elif source_url:
+                srcs = [Citation(url=source_url, title="Manual curation", snippet=note or None)]
+            else:
+                # Keep the record's existing evidence so the value stays sourced.
+                srcs = list(all_old)
+            new_values.append(SourcedValue(value=v, sources=list(srcs)))
+        if new_values:
+            rec.attributes[attribute] = AttributeValue(values=new_values)
+        else:
+            rec.attributes.pop(attribute, None)
+        self._schemify.record_set.history.append({
+            "op": "set_record_values",
+            "applied_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "label": rec.label,
+            "attribute": attribute,
+            "old": list(old_sources),
+            "new": [sv.value for sv in new_values],
+            "note": note,
+        })
+        self._post_curation_refresh()
+        return True
+
+    def get_release_csv_bytes(self) -> bytes:
+        """Flat CSV for publication: label, aliases, every schema attribute, sources."""
+        data = self._dataset_json or {}
+        attrs = [a.get("name", "") for a in data.get("schema_attributes", [])]
+        rows = []
+        for r in data.get("records", []):
+            urls: list[str] = []
+            row: dict = {"name": r.get("label", ""), "aliases": "; ".join(r.get("aliases") or [])}
+            for attr in attrs:
+                vals = (r.get("attributes") or {}).get(attr, {}).get("values", [])
+                row[attr] = "; ".join(v.get("value", "") for v in vals if v.get("value"))
+                for v in vals:
+                    for s in v.get("sources") or []:
+                        if s.get("url") and s["url"] not in urls:
+                            urls.append(s["url"])
+            row["source_count"] = len(urls)
+            row["sources"] = " | ".join(urls)
+            rows.append(row)
+        return pd.DataFrame(rows).to_csv(index=False).encode() if rows else b""
+
+    def build_release_manifest(self, *, title: str, version: str, notes: str = "") -> dict:
+        data = self._dataset_json or {}
+        records = data.get("records", [])
+        schema = data.get("schema_attributes", [])
+        value_counts = {}
+        for a in schema:
+            if not a.get("is_closed_set"):
+                continue
+            counts: dict[str, int] = {}
+            for r in records:
+                for v in (r.get("attributes") or {}).get(a["name"], {}).get("values", []):
+                    if v.get("value"):
+                        counts[v["value"]] = counts.get(v["value"], 0) + 1
+            value_counts[a["name"]] = dict(sorted(counts.items(), key=lambda kv: -kv[1]))
+        dates = sorted(
+            s["retrieved_at"][:10]
+            for r in records for av in (r.get("attributes") or {}).values()
+            for v in av.get("values", []) for s in v.get("sources") or [] if s.get("retrieved_at")
+        )
+        return {
+            "title": title,
+            "version": version,
+            "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "category": data.get("category"),
+            "guidance": data.get("guidance"),
+            "record_count": len(records),
+            "sources_retrieved": {"earliest": dates[0], "latest": dates[-1]} if dates else None,
+            "schema": [
+                {k: a.get(k) for k in (
+                    "name", "description", "is_closed_set", "is_multi_valued", "locked",
+                    "canonical_values", "canonical_value_descriptions",
+                )}
+                for a in schema
+            ],
+            "value_counts": value_counts,
+            "exclusions": len(data.get("user_exclusions") or []),
+            "history": data.get("history") or [],
+            "notes": notes,
+        }
+
+    def build_release_zip(self, *, version: str, notes: str = "", **dashboard_kwargs) -> bytes:
+        """One zip for publication: data.json, data.csv, manifest.json and dashboard/.
+
+        ``dashboard_kwargs`` are passed to :meth:`build_dashboard_zip`.
+        """
+        dash = zipfile.ZipFile(io.BytesIO(self.build_dashboard_zip(**dashboard_kwargs)))
+        manifest = self.build_release_manifest(
+            title=dashboard_kwargs.get("title", ""), version=version, notes=notes,
+        )
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr("data.json", self.get_dataset_bytes_json())
+            zf.writestr("data.csv", self.get_release_csv_bytes())
+            zf.writestr("manifest.json", json.dumps(manifest, indent=2, ensure_ascii=False))
+            for name in dash.namelist():
+                zf.writestr(name, dash.read(name))
+        buf.seek(0)
+        return buf.read()
+
     def build_dashboard_zip(
         self,
         title: str,

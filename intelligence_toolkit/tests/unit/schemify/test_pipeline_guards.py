@@ -375,6 +375,51 @@ def test_load_dataset_cleans_citation_titles():
     assert src["title"] == "REPORT May 2024"
 
 
+def _live_api(records):
+    from intelligence_toolkit.build_entity_dataset.api import BuildEntityDataset
+
+    api = BuildEntityDataset()
+    api._schemify = Schemify(SchemifyConfig(api_key="test", cache_enabled=False))
+    api._schemify.record_set = make_rs(records, locked=False)
+    return api
+
+
+def test_restore_records_lifts_exclusion_and_logs():
+    api = _live_api([Record(label="A")])
+    api._schemify.record_set.user_exclusions = [{"label": "B", "reason": "r"}]
+    n = api.restore_records([Record(label="B", attributes={"Functionality": av(FUNC[0])}).to_dict()], "csam")
+    rs = api._schemify.record_set
+    assert n == 1 and [r.label for r in rs.records] == ["A", "B"]
+    assert rs.user_exclusions == []
+    assert rs.history[-1]["op"] == "restore_records"
+
+
+def test_set_record_values_keeps_evidence_and_logs():
+    api = _live_api([Record(label="A", attributes={"Functionality": av(FUNC[0])})])
+    assert api.set_record_values("A", "Functionality", [FUNC[1]], note="per taxonomy")
+    sv = api._schemify.record_set.records[0].attributes["Functionality"].values[0]
+    assert sv.value == FUNC[1] and sv.sources
+    assert api._schemify.record_set.history[-1]["old"] == [FUNC[0]]
+
+
+def test_release_zip_contains_package(tmp_path):
+    import io
+    import zipfile
+
+    api = _live_api([Record(label="A", aliases=["Alpha"], attributes={"Functionality": av(FUNC[0])})])
+    api._dataset_json = api._build_dataset_json()
+    z = zipfile.ZipFile(io.BytesIO(api.build_release_zip(
+        version="1.0", title="T", subtitle="S", dataset_label="tools",
+        primary_color="#000000", accent_color="#111111",
+    )))
+    names = set(z.namelist())
+    assert {"data.json", "data.csv", "manifest.json", "dashboard/dashboard.html"} <= names
+    manifest = json.loads(z.read("manifest.json"))
+    assert manifest["record_count"] == 1 and manifest["value_counts"]["Functionality"] == {FUNC[0]: 1}
+    csv = z.read("data.csv").decode()
+    assert "Alpha" in csv and "https://x/0" in csv
+
+
 async def test_scope_audit_failure_keeps_records():
     rs = make_rs([Record(label="A"), Record(label="B")])
     results = await scope_audit.audit_scope(rs, ForbiddenLLM())

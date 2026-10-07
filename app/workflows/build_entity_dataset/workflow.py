@@ -167,6 +167,72 @@ def _render_import_dataset(api, sv, key: str) -> None:
             st.error(f"Failed to open dataset: {e}")
 
 
+def _render_record_editor(api, schema: list[dict]) -> None:
+    """Manually set one record's values for one attribute (logged in history)."""
+    records = (api.dataset_json or {}).get("records", [])
+    if not records or not schema or not api.can_continue_research():
+        return
+    with st.expander("Edit a record", expanded=False):
+        st.caption(
+            "Correct one entity's values. Kept values keep their citations; new values "
+            "cite the URL you give, or the entity's existing sources. Every edit is logged."
+        )
+        label = st.selectbox("Entity", sorted(r.get("label", "") for r in records), key="bed_rec_label")
+        attr = st.selectbox("Attribute", [s["name"] for s in schema], key="bed_rec_attr")
+        spec = next((s for s in schema if s["name"] == attr), {})
+        rec = next((r for r in records if r.get("label") == label), {})
+        current = [v.get("value") for v in (rec.get("attributes") or {}).get(attr, {}).get("values", [])]
+        key = f"bed_rec_{label}_{attr}"
+        if spec.get("canonical_values"):
+            options = list(spec["canonical_values"])
+            new = st.multiselect(
+                "Values", options, default=[v for v in current if v in options], key=f"{key}_vals"
+            )
+        else:
+            new = [
+                v for v in st.text_area(
+                    "Values (one per line)", value="\n".join(current), key=f"{key}_text"
+                ).splitlines() if v.strip()
+            ]
+        c1, c2 = st.columns(2)
+        url = c1.text_input("Source URL for new values (optional)", key=f"{key}_url")
+        note = c2.text_input("Reason / note", key=f"{key}_note")
+        if st.button("Save record", key="bed_rec_save"):
+            if api.set_record_values(label, attr, new, note=note, source_url=url.strip()):
+                st.success(f"Updated {attr} for {label}.")
+                st.rerun()
+            else:
+                st.error("Record not found.")
+
+
+def _render_restore_records(api) -> None:
+    """Bring back records from an earlier dataset file (e.g. after an over-strict filter)."""
+    if not api.can_continue_research():
+        return
+    with st.expander("Restore records from an earlier dataset", expanded=False):
+        st.caption(
+            "Pick entities from a previous data.json to add back as they were; their "
+            "exclusion rules are lifted so research won't remove them again."
+        )
+        f = st.file_uploader("Earlier dataset JSON", type=["json"], key="bed_restore_file")
+        if f is None:
+            return
+        try:
+            older = json.load(f)
+        except Exception as e:  # noqa: BLE001
+            st.error(f"Could not read file: {e}")
+            return
+        present = {(r.get("label") or "").casefold() for r in (api.dataset_json or {}).get("records", [])}
+        missing = {r["label"]: r for r in older.get("records", []) if r.get("label", "").casefold() not in present}
+        picks = st.multiselect(f"Entities to restore ({len(missing)} not in current dataset)",
+                               sorted(missing), key="bed_restore_picks")
+        reason = st.text_input("Reason", key="bed_restore_reason")
+        if picks and st.button(f"Restore {len(picks)}", key="bed_restore_btn"):
+            n = api.restore_records([missing[p] for p in picks], reason=reason)
+            st.success(f"Restored {n} entities.")
+            st.rerun()
+
+
 async def create(sv: bed_variables.SessionVariables, workflow=None):
     sv_home = SessionVariables("home")
     ui_components.check_ai_configuration()
@@ -880,6 +946,9 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                     st.rerun()
 
             # ── Fill missing attributes ───────────────────────
+            _render_record_editor(api, schema)
+            _render_restore_records(api)
+
             inc_records, inc_cells = api.count_incomplete()
             with st.expander(
                 f"Fill missing attributes ({inc_cells} empty values across {inc_records} entities)",
@@ -2180,7 +2249,7 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
             with col_dl2:
                 st.download_button(
                     "Download data.csv",
-                    data=api.get_dataset_bytes_csv(),
+                    data=api.get_release_csv_bytes(),
                     file_name="data.csv",
                     mime="text/csv",
                 )
@@ -2289,6 +2358,50 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                         )
                     except Exception as e:  # noqa: BLE001
                         st.error(f"Failed to build dashboard: {e}")
+
+            st.divider()
+            st.markdown("#### Release package")
+            st.markdown(
+                "One ZIP for publication: `data.json`, `data.csv` (with aliases and source "
+                "URLs), the themed dashboard above, and `manifest.json` (version, counts, "
+                "schema with value definitions, curation history)."
+            )
+            rcol1, rcol2 = st.columns([1, 3])
+            sv.bed_release_version.value = rcol1.text_input(
+                "Version", value=sv.bed_release_version.value or time.strftime("%Y.%m.%d"),
+            )
+            sv.bed_release_notes.value = rcol2.text_area(
+                "Release notes (stored in manifest.json)", value=sv.bed_release_notes.value, height=90,
+            )
+            if st.button("Build release package", key="bed_release_btn"):
+                if not sv.bed_title.value:
+                    st.error("Please enter a dashboard title.")
+                else:
+                    try:
+                        version = sv.bed_release_version.value.strip() or "1.0"
+                        release = api.build_release_zip(
+                            version=version,
+                            notes=sv.bed_release_notes.value,
+                            title=sv.bed_title.value,
+                            subtitle=sv.bed_subtitle.value,
+                            dataset_label=sv.bed_dataset_label.value or "entities",
+                            primary_color=sv.bed_primary_color.value,
+                            accent_color=sv.bed_accent_color.value,
+                            logo_bytes=logo_bytes,
+                            logo_filename=logo_filename,
+                            favicon_bytes=favicon_bytes,
+                            favicon_filename=favicon_filename,
+                            views=selected_views,
+                        )
+                        safe = "".join(c if c.isalnum() or c in "-._" else "_" for c in version)
+                        st.download_button(
+                            "Save release ZIP",
+                            data=release,
+                            file_name=f"release_{safe}.zip",
+                            mime="application/zip",
+                        )
+                    except Exception as e:  # noqa: BLE001
+                        st.error(f"Failed to build release: {e}")
 
     # ── Example outputs ────────────────────────────────────────
     with examples_tab:

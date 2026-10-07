@@ -61,6 +61,10 @@ class SessionVariables:
         self.bed_relevance_dismissed = SessionVariable([], prefix)
         self.bed_complete = SessionVariable(False, prefix)
 
+        # Release package
+        self.bed_release_version = SessionVariable("", prefix)
+        self.bed_release_notes = SessionVariable("", prefix)
+
         # Re-categorize schema (remap + optional web search)
         self.bed_recat_proposal = SessionVariable({}, prefix)
         self.bed_recat_summary = SessionVariable({}, prefix)
