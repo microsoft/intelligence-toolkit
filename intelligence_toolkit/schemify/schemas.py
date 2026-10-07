@@ -7,6 +7,14 @@ if TYPE_CHECKING:
     from .models import SchemaAttribute
 
 
+def _enum_options(attr, canonical_values: list[str]) -> tuple[list[str], str]:
+    """Enum values + instruction; locked taxonomies get no implicit 'Other'."""
+    has_other = any(v.casefold() == "other" for v in canonical_values)
+    if getattr(attr, "locked", False) or has_other:
+        return list(canonical_values), "Choose the best-fitting listed option."
+    return canonical_values + ["Other"], "Choose from the listed options, or 'Other' if none fit."
+
+
 def get_record_extraction_schema(
     attributes: list | None = None, 
     with_citations: bool = False
@@ -56,11 +64,11 @@ def get_record_extraction_schema(
                 # Attribute value with citation indices and evidence
                 value_schema: dict[str, Any]
                 if canonical_values:
-                    # Use enum for canonical values (add "Other" for edge cases)
+                    options, hint = _enum_options(attr, canonical_values)
                     value_schema = {
                         "type": "string",
-                        "enum": canonical_values + ["Other"],
-                        "description": f"{description}. Choose from the listed options, or 'Other' if none fit."
+                        "enum": options,
+                        "description": f"{description}. {hint}"
                     }
                 else:
                     value_schema = {
@@ -87,10 +95,11 @@ def get_record_extraction_schema(
                 }
             else:
                 if canonical_values:
+                    options, hint = _enum_options(attr, canonical_values)
                     properties[attr_name] = {
                         "type": "string",
-                        "enum": canonical_values + ["Other"],
-                        "description": f"{description}. Choose from the listed options, or 'Other' if none fit."
+                        "enum": options,
+                        "description": f"{description}. {hint}"
                     }
                 else:
                     properties[attr_name] = {

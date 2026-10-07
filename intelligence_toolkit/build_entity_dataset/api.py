@@ -2762,12 +2762,15 @@ class BuildEntityDataset:
                 parts += [v.value for v in av.values if v.value]
         return " \n ".join(p for p in parts if p).lower()
 
-    def _resolve_recat_candidates(self, attr, scope, keywords):
-        """Records to re-search for ``attr`` given scope + optional keywords."""
+    def _resolve_recat_candidates(self, attr, scope, keywords, labels=None):
+        """Records to re-search for ``attr`` given scope + optional keywords/labels."""
         rs = self._schemify.record_set
         kws = [k.lower() for k in (keywords or []) if k]
+        wanted = {l.strip().upper() for l in (labels or []) if l} or None
         out = []
         for r in rs.records:
+            if wanted is not None and (r.label or "").upper() not in wanted:
+                continue
             av = r.attributes.get(attr)
             has_value = av is not None and getattr(av, "value", "")
             if scope == "gaps" and has_value:
@@ -2785,6 +2788,7 @@ class BuildEntityDataset:
         *,
         scope: str = "all",
         candidate_keywords: Optional[list[str]] = None,
+        labels: Optional[list[str]] = None,
     ) -> dict[str, list[str]]:
         """Preview which records a web-search pass would touch (per attribute).
 
@@ -2796,7 +2800,7 @@ class BuildEntityDataset:
             return {}
         scope = (scope or "all").strip().lower()
         return {
-            attr: [r.label for r in self._resolve_recat_candidates(attr, scope, candidate_keywords)]
+            attr: [r.label for r in self._resolve_recat_candidates(attr, scope, candidate_keywords, labels)]
             for attr in (attributes or []) if attr
         }
 
@@ -2807,6 +2811,7 @@ class BuildEntityDataset:
         mode: str = "augment",
         only_values: Optional[list[str]] = None,
         candidate_keywords: Optional[list[str]] = None,
+        labels: Optional[list[str]] = None,
         scope: str = "all",
         concurrency: int = 4,
     ) -> None:
@@ -2860,7 +2865,7 @@ class BuildEntityDataset:
 
         work: list[tuple[object, str]] = []
         for attr in attrs:
-            for r in self._resolve_recat_candidates(attr, scope, candidate_keywords):
+            for r in self._resolve_recat_candidates(attr, scope, candidate_keywords, labels):
                 work.append((r, attr))
 
         total = len(work)

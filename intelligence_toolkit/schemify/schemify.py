@@ -394,13 +394,22 @@ class Schemify:
 
         from .strategy_agentic import AgenticStrategy
 
+        # Completion/verification passes run after the last snapshot, so the
+        # deterministic clean-up must be re-applied here.
+        self.resolution.finalize_normalization(self.record_set)
+
         strategy = AgenticStrategy(
             config=self.config,
             llm=self.llm,
             extraction=self.extraction,
             resolution=self.resolution,
         )
-        return strategy.finalize(self.record_set, output_dir=output_dir)
+        finalized = strategy.finalize(self.record_set, output_dir=output_dir)
+        if output_dir:
+            import json, os
+            with open(os.path.join(output_dir, "usage_stats.json"), "w") as f:
+                json.dump(self.llm.get_usage_stats(), f, indent=2)
+        return finalized
 
     async def discover(
         self,

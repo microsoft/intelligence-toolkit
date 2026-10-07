@@ -1694,8 +1694,6 @@ class ResolutionEngine:
                     raw = (sv.value or "").strip()
                     if enforce:
                         target = canon.get(raw.casefold())
-                        if target is None and raw.casefold() == "other":
-                            target = "Other"
                         if target is None:
                             off_tax += 1
                             continue

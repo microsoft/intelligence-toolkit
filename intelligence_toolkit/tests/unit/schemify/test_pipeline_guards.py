@@ -66,7 +66,7 @@ def test_finalize_drops_fallback_values_alongside_specific(sch):
     rs = make_rs([
         Record(label="A", attributes={"Functionality": av("Other", FUNC[0])}),
         Record(label="B", attributes={"Functionality": av("Other")}),
-    ])
+    ], locked=False)
     rs.schema_attributes.append(SchemaAttribute(
         name="Trafficking Type", is_closed_set=True,
         canonical_values=["Labor", "Not Applicable / General-Purpose"],
@@ -88,6 +88,26 @@ def test_finalize_snaps_locked_values_to_taxonomy(sch):
     stats = sch.resolution.finalize_normalization(rs)
     assert values(rs.records[0], "Functionality") == [FUNC[0]]
     assert stats["off_taxonomy_dropped"] == 1
+
+
+def test_locked_taxonomy_without_other_rejects_other(sch):
+    from intelligence_toolkit.schemify.schemas import get_record_extraction_schema
+
+    rs = make_rs([Record(label="A", attributes={"Functionality": av("Other")})])
+    schema = get_record_extraction_schema(rs.schema_attributes, with_citations=True)
+    props = schema["json_schema"]["schema"]["properties"]["records"]["items"]["properties"]
+    assert "Other" not in props["Functionality"]["properties"]["value"]["enum"]
+    sch.resolution.finalize_normalization(rs)
+    assert values(rs.records[0], "Functionality") == []
+
+
+def test_unlocked_taxonomy_still_offers_other():
+    from intelligence_toolkit.schemify.schemas import get_record_extraction_schema
+
+    attrs = make_rs([], locked=False).schema_attributes
+    schema = get_record_extraction_schema(attrs, with_citations=False)
+    props = schema["json_schema"]["schema"]["properties"]["records"]["items"]["properties"]
+    assert props["Functionality"]["enum"][-1] == "Other"
 
 
 def test_finalize_leaves_unlocked_values_alone(sch):
