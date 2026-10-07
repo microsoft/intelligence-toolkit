@@ -235,6 +235,31 @@ async def test_seed_names_keep_aliases_and_carry_no_values(sch):
     assert rec.attributes == {}
 
 
+async def test_scope_audit_weak_relevance_is_review_only():
+    rs = make_rs([Record(label="OKTA")])
+    llm = FixedLLM({"results": [
+        {"label": "OKTA", "in_scope": True, "weak_relevance": True,
+         "entity_kind": "Product / Tool / Platform", "confidence": 0.9, "reason": "general IAM"},
+    ]})
+    results = await scope_audit.audit_scope(rs, llm)
+    assert scope_audit.flagged_results(results) == []
+    assert [r["label"] for r in scope_audit.weak_relevance_results(results)] == ["OKTA"]
+
+
+def test_scope_exclusion_removes_only_exact_label():
+    from intelligence_toolkit.build_entity_dataset.api import BuildEntityDataset
+
+    api = BuildEntityDataset()
+    api._schemify = Schemify(SchemifyConfig(api_key="test", cache_enabled=False))
+    api._schemify.record_set = make_rs([
+        Record(label="PERSONA"),
+        Record(label="PERSONA CANDIDATE VERIFICATION", aliases=["Persona"]),
+    ])
+    removed = api.apply_scope_exclusions([{"label": "PERSONA", "entity_kind": "Other", "reason": "r"}])
+    assert removed == 1
+    assert [r.label for r in api._schemify.record_set.records] == ["PERSONA CANDIDATE VERIFICATION"]
+
+
 async def test_scope_audit_failure_keeps_records():
     rs = make_rs([Record(label="A"), Record(label="B")])
     results = await scope_audit.audit_scope(rs, ForbiddenLLM())

@@ -2408,19 +2408,29 @@ class BuildEntityDataset:
             "total_records": len(rs.records),
             "results": results,
             "flagged": _sa.flagged_results(results, confidence_threshold),
+            "weak_relevance": _sa.weak_relevance_results(results),
         }
 
     def apply_scope_exclusions(self, entries: list[dict]) -> int:
-        """Exclude flagged records (also blocks their re-discovery). Returns count removed."""
-        removed = 0
+        """Exclude flagged records (also blocks their re-discovery). Returns count removed.
+
+        Removes only the record whose label matches exactly; other records that merely
+        carry the label as an alias are left alone.
+        """
+        if not self._schemify or not self._schemify.record_set:
+            return 0
+        rs = self._schemify.record_set
+        targets: set[str] = set()
         for e in entries or []:
             label = (e.get("label") or "").strip()
             if not label:
                 continue
             reason = f"Out of scope ({e.get('entity_kind', 'Other')}): {e.get('reason', '')}".strip()
-            ok, n = self.add_label_exclusion(label, reason=reason, remove_existing=True)
-            if ok:
-                removed += n
+            self.add_label_exclusion(label, reason=reason, remove_existing=False)
+            targets.add(label.casefold())
+        before = len(rs.records)
+        rs.records = [r for r in rs.records if (r.label or "").strip().casefold() not in targets]
+        removed = before - len(rs.records)
         if removed:
             self._post_curation_refresh()
         return removed

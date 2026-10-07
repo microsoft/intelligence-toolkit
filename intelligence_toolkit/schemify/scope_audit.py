@@ -40,12 +40,15 @@ awareness campaign, an event, a person, an organization described without any
 qualifying product or service, or a source that is merely ABOUT the topic or used
 as data by others rather than an instance of the category.
 When an organization or program ships a qualifying product, it is in scope.
+A product's relevance to the topic is NOT a scope question: if it is a real product
+of the right kind but its documented use for the topic is weak or general-purpose,
+keep in_scope=true and set weak_relevance=true instead.
 Default to in_scope=true when uncertain, with low confidence.
 
 Use one of these entity_kind values: {kinds}
 
-For each entity return: label (echo exactly), in_scope, entity_kind,
-confidence (0-1, how sure you are of the decision), reason (one short sentence).
+For each entity return: label (echo exactly), in_scope, weak_relevance, entity_kind,
+confidence (0-1, how sure you are of the in_scope decision), reason (one short sentence).
 
 Entities:
 {entities}
@@ -66,11 +69,12 @@ RESPONSE_FORMAT = {
                         "properties": {
                             "label": {"type": "string"},
                             "in_scope": {"type": "boolean"},
+                            "weak_relevance": {"type": "boolean"},
                             "entity_kind": {"type": "string", "enum": ENTITY_KINDS},
                             "confidence": {"type": "number"},
                             "reason": {"type": "string"},
                         },
-                        "required": ["label", "in_scope", "entity_kind", "confidence", "reason"],
+                        "required": ["label", "in_scope", "weak_relevance", "entity_kind", "confidence", "reason"],
                         "additionalProperties": False,
                     },
                 }
@@ -97,7 +101,7 @@ def entity_brief(record, attr_names: list[str]) -> dict:
 
 def _unclassified(label: str, reason: str) -> dict:
     # Errors keep the record: an audit failure must never look like a removal signal.
-    return {"label": label, "in_scope": True, "entity_kind": "Other",
+    return {"label": label, "in_scope": True, "weak_relevance": False, "entity_kind": "Other",
             "confidence": 0.0, "reason": reason}
 
 
@@ -147,6 +151,7 @@ async def audit_scope(
                     out.append({
                         "label": b["label"],
                         "in_scope": bool(it.get("in_scope", True)),
+                        "weak_relevance": bool(it.get("weak_relevance", False)),
                         "entity_kind": it.get("entity_kind") or "Other",
                         "confidence": float(it.get("confidence") or 0.0),
                         "reason": str(it.get("reason") or ""),
@@ -165,3 +170,8 @@ def flagged_results(results: list[dict], confidence_threshold: float = 0.7) -> l
         r for r in results
         if not r.get("in_scope", True) and r.get("confidence", 0.0) >= confidence_threshold
     ]
+
+
+def weak_relevance_results(results: list[dict]) -> list[dict]:
+    """In-scope records whose documented relevance is weak: for human review, never auto-removal."""
+    return [r for r in results if r.get("in_scope", True) and r.get("weak_relevance")]
