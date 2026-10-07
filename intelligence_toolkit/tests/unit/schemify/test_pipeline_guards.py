@@ -347,6 +347,19 @@ async def test_search_focus_steers_search(sch):
     assert captured["key"]["focus"] == "forced labour"
 
 
+def test_import_and_lock_taxonomy_applies_immediately(tmp_path, monkeypatch):
+    import intelligence_toolkit.build_entity_dataset.api as bed
+
+    monkeypatch.setattr(bed, "_RUNS_DIR", tmp_path)
+    rs = make_rs([Record(label="A", attributes={"Functionality": av(FUNC[0], FUNC[1])})], locked=False)
+    api = bed.BuildEntityDataset()
+    api.import_dataset(rs.to_dict(), api_key="test")
+    assert api.can_continue_research()
+    api.update_schema_attribute("Functionality", canonical_values=[FUNC[0]], locked=True)
+    vals = [v["value"] for v in api.dataset_json["records"][0]["attributes"]["Functionality"]["values"]]
+    assert vals == [FUNC[0]]
+
+
 async def test_scope_audit_failure_keeps_records():
     rs = make_rs([Record(label="A"), Record(label="B")])
     results = await scope_audit.audit_scope(rs, ForbiddenLLM())

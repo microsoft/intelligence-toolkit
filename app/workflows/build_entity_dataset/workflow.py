@@ -104,6 +104,69 @@ def _render_continue_research(api, sv) -> None:
                     )
 
 
+def _render_reference_labels(api, sv, key: str) -> None:
+    """Upload known entity names; values are re-researched from scratch."""
+    with st.expander("Known entities to include (optional)", expanded=False):
+        st.caption(
+            "Upload a prior dataset (saved-run JSON, candidate list, or CSV). "
+            "Only the **entity labels** are used as seeds — every value is "
+            "re-researched from scratch with fresh sources."
+        )
+        ref_file = st.file_uploader(
+            "Reference file (.json / .csv / .tsv / .txt)",
+            type=["json", "csv", "tsv", "txt"],
+            key=f"{key}_ref_upload",
+        )
+        rc1, rc2 = st.columns(2)
+        if ref_file is not None and rc1.button("Use these entities", key=f"{key}_ref_use"):
+            try:
+                labels = api.reference_labels_from_file(ref_file.name, ref_file.getvalue())
+            except Exception as e:  # noqa: BLE001
+                labels = []
+                st.error(f"Failed to parse reference file: {e}")
+            sv.bed_auto_reference_labels.value = labels
+            sv.bed_auto_reference_filename.value = ref_file.name
+            if labels:
+                st.success(f"Loaded {len(labels)} entity labels from `{ref_file.name}`.")
+            else:
+                st.warning("No entity labels found in that file.")
+        if rc2.button("Clear", key=f"{key}_ref_clear"):
+            sv.bed_auto_reference_labels.value = []
+            sv.bed_auto_reference_filename.value = ""
+            st.rerun()
+        cur_labels = list(sv.bed_auto_reference_labels.value or [])
+        if cur_labels:
+            st.caption(
+                f"Current list: **{len(cur_labels)} labels** "
+                f"from `{sv.bed_auto_reference_filename.value or '?'}`"
+            )
+
+
+def _render_import_dataset(api, sv, key: str) -> None:
+    """Upload a dataset JSON and open it as an editable run."""
+    uploaded = st.file_uploader(
+        "Dataset JSON (data.json from a previous run or export)", type=["json"], key=f"{key}_file"
+    )
+    api_key = functions.get_api_key()
+    if not api_key:
+        st.caption("Without an API key the dataset opens read-only.")
+    if uploaded is not None and st.button("Open dataset", key=f"{key}_btn"):
+        try:
+            data = json.load(uploaded)
+            api.import_dataset(
+                data,
+                api_key=api_key or None,
+                model=sv.bed_model.value,
+                budget=float(sv.bed_budget.value or 10.0),
+            )
+            sv.bed_category.value = data.get("category", sv.bed_category.value)
+            sv.bed_guidance.value = data.get("guidance", sv.bed_guidance.value)
+            st.success(f"Opened {len(data.get('records', []))} entities. Continue in the Review tab.")
+            st.rerun()
+        except Exception as e:  # noqa: BLE001
+            st.error(f"Failed to open dataset: {e}")
+
+
 async def create(sv: bed_variables.SessionVariables, workflow=None):
     sv_home = SessionVariables("home")
     ui_components.check_ai_configuration()
@@ -162,8 +225,15 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
             )
             schema_placeholder = json.dumps(
                 [
-                    {"name": "founded_year", "description": "Year the project was founded"},
-                    {"name": "primary_language", "description": "Main programming language", "is_closed_set": True},
+                    {"name": "Tool Description", "description": "One sentence describing the tool"},
+                    {
+                        "name": "Functionality",
+                        "description": "Primary capability",
+                        "is_closed_set": True,
+                        "locked": True,
+                        "canonical_values": ["Detection", "Case Management", "Other"],
+                        "canonical_value_descriptions": {"Detection": "Finds harmful content"},
+                    },
                 ],
                 indent=2,
             )
@@ -172,7 +242,12 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                 value=sv.bed_schema_json.value,
                 placeholder=schema_placeholder,
                 height=200,
-                help="Optional list of {name, description, is_closed_set, is_multi_valued} objects.",
+                help=(
+                    "Optional list of {name, description, is_closed_set, is_multi_valued, "
+                    "canonical_values, canonical_value_descriptions, locked} objects. "
+                    "`locked: true` fixes a taxonomy: values are classified only into "
+                    "`canonical_values`, and automated passes cannot rename, merge or extend it."
+                ),
             )
 
         with col_right:
@@ -424,6 +499,13 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                         "Click **Start research** to begin web search and entity extraction. "
                         "This may take several minutes depending on the number of queries."
                     )
+                    _render_reference_labels(api, sv, key="bed_manual")
+                    sv.bed_complete.value = st.checkbox(
+                        "Fill missing attributes for every entity after discovery",
+                        value=sv.bed_complete.value,
+                        help="Runs one grounded search per incomplete entity. Recommended when "
+                             "seeding known entities; adds cost proportional to entity count.",
+                    )
 
                     if st.button("Start research", type="primary", disabled=not api_key):
                         if not api_key:
@@ -439,6 +521,8 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                                 model=sv.bed_model.value,
                                 budget=sv.bed_budget.value,
                                 verify=sv.bed_verify.value,
+                                seed_labels=list(sv.bed_auto_reference_labels.value or []),
+                                complete=bool(sv.bed_complete.value),
                             )
                             time.sleep(0.3)
                             st.rerun()
@@ -450,50 +534,7 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                     )
 
                     # ── Reference dataset (entity-label seeds) ────
-                    with st.expander(
-                        "Reference dataset (optional — used as a *guide* only)",
-                        expanded=False,
-                    ):
-                        st.caption(
-                            "Upload a prior dataset (saved-run JSON, candidate list, or CSV). "
-                            "Only the **entity labels** are used as seeds — values are "
-                            "re-researched from scratch."
-                        )
-                        ref_file = st.file_uploader(
-                            "Reference file (.json / .csv / .tsv / .txt)",
-                            type=["json", "csv", "tsv", "txt"],
-                            key="bed_auto_ref_upload",
-                        )
-                        rc1, rc2 = st.columns(2)
-                        if ref_file is not None and rc1.button(
-                            "Use as guide", key="bed_auto_ref_use"
-                        ):
-                            try:
-                                labels = api.reference_labels_from_file(
-                                    ref_file.name, ref_file.getvalue()
-                                )
-                            except Exception as e:  # noqa: BLE001
-                                labels = []
-                                st.error(f"Failed to parse reference file: {e}")
-                            sv.bed_auto_reference_labels.value = labels
-                            sv.bed_auto_reference_filename.value = ref_file.name
-                            if labels:
-                                st.success(
-                                    f"Loaded {len(labels)} entity labels from "
-                                    f"`{ref_file.name}`."
-                                )
-                            else:
-                                st.warning("No entity labels found in that file.")
-                        if rc2.button("Clear reference", key="bed_auto_ref_clear"):
-                            sv.bed_auto_reference_labels.value = []
-                            sv.bed_auto_reference_filename.value = ""
-                            st.rerun()
-                        cur_labels = list(sv.bed_auto_reference_labels.value or [])
-                        if cur_labels:
-                            st.caption(
-                                f"Current reference: **{len(cur_labels)} labels** "
-                                f"from `{sv.bed_auto_reference_filename.value or '?'}`"
-                            )
+                    _render_reference_labels(api, sv, key="bed_auto")
 
                     # ── Source languages ──────────────────────────
                     with st.expander("Source languages", expanded=False):
@@ -650,9 +691,11 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                             st.rerun()
 
                 # ── Resume from a previously completed run ────────
+                st.divider()
+                st.markdown("##### Continue from an existing dataset")
+                _render_import_dataset(api, sv, key="bed_run_import")
                 saved_runs = api.list_saved_runs()
                 if saved_runs:
-                    st.divider()
                     st.markdown("##### Resume a previous run")
                     labels = [
                         f"{r['timestamp']} — {r['category'] or '(unknown)'} "
@@ -749,34 +792,108 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
 
             # ── Schema editor (K) ─────────────────────────────
             with st.expander("Edit schema attributes", expanded=False):
-                if not schema_names:
-                    st.caption("No schema attributes yet.")
-                else:
-                    target_attr = st.selectbox(
-                        "Attribute",
-                        options=schema_names,
-                        key="bed_edit_attr",
-                    )
-                    new_name = st.text_input(
-                        "Rename to",
-                        value=target_attr,
-                        key="bed_edit_newname",
-                    )
-                    col_e1, col_e2 = st.columns(2)
-                    with col_e1:
-                        if st.button("Apply rename", key="bed_rename_btn"):
-                            n = api.rename_attribute(target_attr, new_name)
-                            st.success(f"Renamed in {n} record fields.")
-                            st.rerun()
-                    with col_e2:
-                        if st.button(
-                            "Remove attribute",
-                            key="bed_remove_btn",
-                            type="secondary",
-                        ):
-                            n = api.remove_attribute(target_attr)
-                            st.success(f"Removed from {n} record fields.")
-                            st.rerun()
+                st.caption(
+                    "Edit an attribute's definition and taxonomy, or add a new attribute "
+                    "(fill it with **Fill missing attributes** or the re-categorize search). "
+                    "Locking a taxonomy drops values outside it and stops automated passes "
+                    "from renaming, merging or extending it."
+                )
+                new_label = "+ New attribute"
+                target_attr = st.selectbox(
+                    "Attribute",
+                    options=[new_label] + schema_names,
+                    key="bed_edit_attr",
+                )
+                current = next((s for s in schema if s.get("name") == target_attr), {})
+                is_new = target_attr == new_label
+                ek = f"bed_edit_{target_attr}"
+                attr_name = st.text_input(
+                    "Name", value="" if is_new else target_attr, key=f"{ek}_name"
+                )
+                attr_desc = st.text_area(
+                    "Description (guides extraction)",
+                    value=current.get("description") or "",
+                    key=f"{ek}_desc", height=80,
+                )
+                ec1, ec2, ec3 = st.columns(3)
+                closed = ec1.checkbox(
+                    "Closed set", value=bool(current.get("is_closed_set")), key=f"{ek}_closed"
+                )
+                multi = ec2.checkbox(
+                    "Multi-valued", value=bool(current.get("is_multi_valued")), key=f"{ek}_multi"
+                )
+                locked = ec3.checkbox(
+                    "Locked taxonomy", value=bool(current.get("locked")), key=f"{ek}_locked"
+                )
+                values_text = st.text_area(
+                    "Allowed values (one per line)",
+                    value="\n".join(current.get("canonical_values") or []),
+                    key=f"{ek}_values", height=140, disabled=not closed,
+                )
+                defs = current.get("canonical_value_descriptions") or {}
+                defs_text = st.text_area(
+                    "Value definitions (one per line: `Value: definition`)",
+                    value="\n".join(f"{k}: {v}" for k, v in defs.items()),
+                    key=f"{ek}_defs", height=140, disabled=not closed,
+                    help="Shown to the model during extraction and as dashboard tooltips.",
+                )
+                col_e1, col_e2 = st.columns(2)
+                if col_e1.button("Save attribute", key="bed_attr_save", type="primary"):
+                    name = (attr_name or "").strip()
+                    values = [v.strip() for v in values_text.splitlines() if v.strip()]
+                    parsed_defs = {}
+                    for line in defs_text.splitlines():
+                        if ":" in line:
+                            k, v = line.split(":", 1)
+                            parsed_defs[k.strip()] = v.strip()
+                    unknown = sorted(set(parsed_defs) - set(values)) if closed else []
+                    if not name:
+                        st.error("Name is required.")
+                    elif unknown:
+                        st.error(f"Definitions for values not in the list: {', '.join(unknown)}")
+                    else:
+                        if is_new:
+                            api.add_schema_attribute(name, attr_desc, locked=locked)
+                        elif name != target_attr:
+                            api.rename_attribute(target_attr, name)
+                        api.update_schema_attribute(
+                            name,
+                            description=attr_desc,
+                            is_closed_set=closed,
+                            is_multi_valued=multi,
+                            canonical_values=values if closed else [],
+                            canonical_value_descriptions=parsed_defs if closed else {},
+                            locked=locked,
+                        )
+                        st.success(f"Saved '{name}'.")
+                        st.rerun()
+                if not is_new and col_e2.button(
+                    "Remove attribute", key="bed_remove_btn", type="secondary"
+                ):
+                    n = api.remove_attribute(target_attr)
+                    st.success(f"Removed from {n} record fields.")
+                    st.rerun()
+
+            # ── Fill missing attributes ───────────────────────
+            inc_records, inc_cells = api.count_incomplete()
+            with st.expander(
+                f"Fill missing attributes ({inc_cells} empty values across {inc_records} entities)",
+                expanded=False,
+            ):
+                st.caption(
+                    "Runs grounded web searches for every entity with empty schema "
+                    "attributes (up to 3 calls per entity). Use after adding an attribute "
+                    "or seeding entities."
+                )
+                if api.is_running:
+                    st.info(f"Busy: {api.progress.stage}")
+                elif st.button(
+                    f"Fill {inc_cells} missing values",
+                    key="bed_complete_btn",
+                    disabled=inc_cells == 0 or not api.can_continue_research(),
+                ):
+                    api.start_completion(concurrency=int(sv.bed_concurrency.value or 8))
+                    st.rerun()
 
             # ── Re-categorize schema (remap + optional web search) ──
             with st.expander(
@@ -844,7 +961,9 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                                 st.error(f"Proposal failed: {e}")
 
                     proposal = dict(sv.bed_recat_proposal.value or {})
-                    if proposal:
+                    summary = dict(sv.bed_recat_summary.value or {})
+                    if proposal or api.can_continue_research():
+                      if proposal:
                         issues = proposal.get("validation_issues") or []
                         if issues:
                             st.warning(
@@ -868,7 +987,6 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                             f"{len(proposal.get('out_of_scope_records') or [])}"
                         )
 
-                        summary = dict(sv.bed_recat_summary.value or {})
                         if api.is_running:
                             st.info(f"Busy: {api.progress.stage}")
                         else:
@@ -892,7 +1010,7 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                                 except Exception as e:  # noqa: BLE001
                                     st.error(f"Apply failed: {e}")
 
-                        if summary:
+                      if summary or api.can_continue_research():
                             gaps = summary.get("gaps") or {}
                             gap_attrs = [a for a, labs in gaps.items() if labs]
                             attr_opts = summary.get("attributes") or closed_names
@@ -948,6 +1066,25 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                                 key="bed_recat_keywords",
                             )
                             keywords = [k.strip() for k in kw_raw.split(",") if k.strip()] or None
+                            tagged = st.multiselect(
+                                "Only entities currently tagged with (optional)",
+                                options=sorted({
+                                    f"{a} = {v}" for a, vs in present.items()
+                                    if a in search_attrs for v in vs
+                                }),
+                                key="bed_recat_tagged",
+                                help="e.g. re-check every entity in an over-used catch-all category.",
+                            )
+                            target_labels = None
+                            if tagged:
+                                pairs = [t.split(" = ", 1) for t in tagged]
+                                target_labels = [
+                                    r.get("label") for r in (api.dataset_json or {}).get("records", [])
+                                    if any(
+                                        any(v.get("value") == val for v in (r.get("attributes") or {}).get(a, {}).get("values", []))
+                                        for a, val in pairs
+                                    )
+                                ]
                             scope = "gaps" if st.checkbox(
                                 "Limit to records with no value (gaps only)",
                                 key="bed_recat_gaps_only",
@@ -956,7 +1093,8 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                             if st.button("Preview candidates", key="bed_recat_preview"):
                                 try:
                                     cand = api.recategorization_candidates(
-                                        search_attrs, scope=scope, candidate_keywords=keywords
+                                        search_attrs, scope=scope, candidate_keywords=keywords,
+                                        labels=target_labels,
                                     )
                                     n = sum(len(v) for v in cand.values())
                                     parts = ", ".join(
@@ -982,6 +1120,7 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                                         mode=mode,
                                         only_values=only_values or None,
                                         candidate_keywords=keywords,
+                                        labels=target_labels,
                                         scope=scope,
                                         concurrency=max(
                                             1, int(sv.bed_concurrency.value or 4)
@@ -1402,6 +1541,102 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                         if b2.button("Keep", key=f"bed_scope_keep_{si}"):
                             sv.bed_scope_dismissed.value = list(scope_dismissed | {entry["label"]})
                             st.rerun()
+
+            # ── Relevance filter (explicit connection) ─────────
+            rel = dict(getattr(api, "relevance_results", {}) or {})
+            rel_dismissed = set(sv.bed_relevance_dismissed.value or [])
+            rel_visible = [r for r in (rel.get("not_explicit") or []) if r["label"] not in rel_dismissed]
+            with st.expander(
+                f"Relevance filter ({len(rel_visible)} without an explicit connection)"
+                if rel else "Relevance filter (require an explicit connection)",
+                expanded=False,
+            ):
+                st.caption(
+                    "Researches a sourced evidence attribute for each entity with a targeted "
+                    "search, then keeps only entities whose evidence explicitly meets your "
+                    "requirement. Links inferred from general capabilities don't count. "
+                    "Nothing is removed until you confirm."
+                )
+                rel_criterion = st.text_area(
+                    "Requirement",
+                    key="bed_rel_criterion",
+                    height=100,
+                    placeholder=(
+                        "e.g. The tool has an explicit connection to human trafficking, "
+                        "modern slavery or forced labour."
+                    ),
+                )
+                rc1, rc2 = st.columns(2)
+                rel_attr = rc1.text_input(
+                    "Evidence attribute (added to the schema)",
+                    value="Connection Evidence", key="bed_rel_attr",
+                )
+                rel_conn = rc2.text_input(
+                    "Accepted connection types (comma-separated)", key="bed_rel_conn",
+                    placeholder="Human trafficking, Modern slavery, Forced labour",
+                )
+                rel_focus = st.text_input(
+                    "Search focus", key="bed_rel_focus",
+                    placeholder="use against human trafficking, modern slavery or forced labour",
+                    help="Steers the evidence search; leave blank to reuse each entity's general page.",
+                )
+                rel_research = st.checkbox(
+                    "Research evidence via web search (recommended)", value=True, key="bed_rel_research"
+                )
+                if api.is_running:
+                    st.info(f"Busy: {api.progress.stage}")
+                elif st.button(
+                    "Run relevance check",
+                    key="bed_rel_run",
+                    type="primary",
+                    disabled=not (rel_criterion.strip() and rel_attr.strip() and api.can_continue_research()),
+                ):
+                    try:
+                        api.start_relevance_filter(
+                            criterion=rel_criterion.strip(),
+                            evidence_attribute=rel_attr.strip(),
+                            connections=[c.strip() for c in rel_conn.split(",") if c.strip()]
+                            or ["Explicit connection"],
+                            search_focus=rel_focus.strip() or None,
+                            research_evidence=rel_research,
+                            context_attributes=[n for n in schema_names if n != rel_attr.strip()][:3],
+                            concurrency=int(sv.bed_concurrency.value or 8),
+                        )
+                        sv.bed_relevance_dismissed.value = []
+                        st.rerun()
+                    except Exception as e:  # noqa: BLE001
+                        st.error(f"Relevance check failed: {e}")
+                if rel:
+                    st.caption(
+                        f"Checked {len(rel.get('results') or [])} · without explicit connection "
+                        f"{len(rel.get('not_explicit') or [])} · uncertain (kept) "
+                        f"{len(rel.get('uncertain') or [])}"
+                    )
+                    if rel_visible and st.button(
+                        f"Exclude all {len(rel_visible)}", key="bed_rel_apply_all"
+                    ):
+                        n = api.apply_scope_exclusions(
+                            [{**r, "entity_kind": "No explicit connection"} for r in rel_visible]
+                        )
+                        sv.bed_relevance_dismissed.value = list(
+                            rel_dismissed | {r["label"] for r in rel_visible}
+                        )
+                        st.success(f"Excluded {n} entities.")
+                        st.rerun()
+                    for ri, entry in enumerate(rel_visible[:50]):
+                        with st.container(border=True):
+                            st.markdown(f"**{entry['label']}** ({entry.get('confidence', 0):.0%})")
+                            st.caption(entry.get("reason", ""))
+                            b1, b2 = st.columns(2)
+                            if b1.button("Exclude", key=f"bed_rel_ex_{ri}", type="primary"):
+                                api.apply_scope_exclusions(
+                                    [{**entry, "entity_kind": "No explicit connection"}]
+                                )
+                                sv.bed_relevance_dismissed.value = list(rel_dismissed | {entry["label"]})
+                                st.rerun()
+                            if b2.button("Keep", key=f"bed_rel_keep_{ri}"):
+                                sv.bed_relevance_dismissed.value = list(rel_dismissed | {entry["label"]})
+                                st.rerun()
 
             # ── Audit merge quality ────────────────────────────
             audit_state = dict(sv.bed_audit_results.value or {})
@@ -1919,32 +2154,8 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                                 sv.bed_safety_dismissed.value = list(dismissed_state)
                                 st.rerun()
 
-            if api.dataset_json:
-                with st.expander("Load previously saved dataset JSON", expanded=False):
-                    uploaded = st.file_uploader(
-                        "Upload data.json", type=["json"], key="bed_load_json"
-                    )
-                    if uploaded and st.button("Load dataset"):
-                        try:
-                            data = json.load(uploaded)
-                            api.load_dataset(data)
-                            st.success("Dataset loaded.")
-                            st.rerun()
-                        except Exception as e:  # noqa: BLE001
-                            st.error(f"Failed to load: {e}")
-            else:
-                with st.expander("Load a previously saved dataset JSON", expanded=False):
-                    uploaded = st.file_uploader(
-                        "Upload data.json", type=["json"], key="bed_load_json2"
-                    )
-                    if uploaded and st.button("Load dataset"):
-                        try:
-                            data = json.load(uploaded)
-                            api.load_dataset(data)
-                            st.success("Dataset loaded.")
-                            st.rerun()
-                        except Exception as e:  # noqa: BLE001
-                            st.error(f"Failed to load: {e}")
+            with st.expander("Load another dataset JSON", expanded=False):
+                _render_import_dataset(api, sv, key="bed_review_import")
 
     # ── Export ─────────────────────────────────────────────────
     with export_tab:

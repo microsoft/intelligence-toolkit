@@ -57,6 +57,10 @@ class SessionVariables:
         self.bed_scope_results = SessionVariable({}, prefix)
         self.bed_scope_dismissed = SessionVariable([], prefix)
 
+        # Relevance filter + full completion pass
+        self.bed_relevance_dismissed = SessionVariable([], prefix)
+        self.bed_complete = SessionVariable(False, prefix)
+
         # Re-categorize schema (remap + optional web search)
         self.bed_recat_proposal = SessionVariable({}, prefix)
         self.bed_recat_summary = SessionVariable({}, prefix)

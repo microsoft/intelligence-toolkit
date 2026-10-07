@@ -228,12 +228,26 @@ class BuildEntityDataset:
                     "name": a.name,
                     "description": getattr(a, "description", ""),
                     "is_closed_set": getattr(a, "is_closed_set", False),
+                    "is_multi_valued": getattr(a, "is_multi_valued", False),
+                    "locked": getattr(a, "locked", False),
+                    "canonical_values": list(getattr(a, "canonical_values", []) or []),
+                    "canonical_value_descriptions": dict(
+                        getattr(a, "canonical_value_descriptions", {}) or {}
+                    ),
                 }
                 for a in self._schemify.record_set.schema_attributes
             ]
         if self._dataset_json:
             return [
-                {"name": a.get("name", ""), "description": a.get("description", "")}
+                {
+                    "name": a.get("name", ""),
+                    "description": a.get("description", ""),
+                    "is_closed_set": a.get("is_closed_set", False),
+                    "is_multi_valued": a.get("is_multi_valued", False),
+                    "locked": a.get("locked", False),
+                    "canonical_values": list(a.get("canonical_values") or []),
+                    "canonical_value_descriptions": dict(a.get("canonical_value_descriptions") or {}),
+                }
                 for a in self._dataset_json.get("schema_attributes", [])
             ]
         return []
@@ -2211,6 +2225,10 @@ class BuildEntityDataset:
         if not self._schemify or not self._schemify.record_set:
             return
         rs = self._schemify.record_set
+        try:
+            self._schemify.resolution.finalize_normalization(rs)
+        except Exception as e:  # noqa: BLE001
+            _logger.warning("finalize_normalization after curation failed: %s", e)
         try:
             rs.update_schema_frequencies()
         except Exception as e:  # noqa: BLE001
