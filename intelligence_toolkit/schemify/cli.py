@@ -32,7 +32,17 @@ def _cmd_run(args: argparse.Namespace) -> int:
     output_dir = Path(cfg.get("output_dir") or args.out or f"output/{cfg_path.stem}")
     prior_dataset = cfg.get("prior_dataset")
     verify = cfg.get("verify", True)
+    complete = cfg.get("complete", False)
     schema_attributes = cfg.get("schema_attributes")  # optional override
+    # Names-only seeding: re-research known entities from scratch (no old values carried over).
+    seed_entities = None
+    if cfg.get("seed_entities"):
+        seed_data = json.loads(Path(cfg["seed_entities"]).read_text(encoding="utf-8"))
+        seed_rows = seed_data.get("records", []) if isinstance(seed_data, dict) else seed_data
+        seed_entities = [
+            {"label": r.get("label") or r.get("name"), "aliases": list(r.get("aliases") or [])}
+            for r in seed_rows if (r.get("label") or r.get("name"))
+        ]
 
     # SchemifyConfig: api_key from env unless config overrides it, plus any other knobs
     sc_kwargs = dict(cfg.get("config", {}))
@@ -46,7 +56,9 @@ def _cmd_run(args: argparse.Namespace) -> int:
     print(f"[run] output_dir={output_dir}")
     if prior_dataset:
         print(f"[run] prior_dataset={prior_dataset}")
-    print(f"[run] max_queries={max_queries} concurrency={concurrency} verify={verify}")
+    if seed_entities:
+        print(f"[run] seed_entities={len(seed_entities)} names (values re-researched)")
+    print(f"[run] max_queries={max_queries} concurrency={concurrency} verify={verify} complete={complete}")
 
     async def _go():
         schemify = Schemify(SchemifyConfig(**sc_kwargs))
@@ -61,8 +73,12 @@ def _cmd_run(args: argparse.Namespace) -> int:
             concurrency=concurrency,
             output_dir=str(output_dir),
             seed_state=prior_dataset,
+            seed_records=seed_entities,
             phase_split=phase_split,
         )
+        if complete:
+            await schemify.complete_all(concurrency=concurrency, verbose=True)
+            schemify.save(str(output_dir / "after_completion.json"))
         if verify:
             await schemify.verify_unverified(concurrency=concurrency, output_dir=str(output_dir))
         schemify.finalize(output_dir=str(output_dir))

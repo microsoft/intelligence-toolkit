@@ -205,6 +205,16 @@ def test_reloaded_run_keeps_recorded_usage(tmp_path):
     assert meta["queries_run"] == 42
 
 
+async def test_seed_names_keep_aliases_and_carry_no_values(sch):
+    target = make_rs([])
+    agent = AgenticStrategy(sch.config, sch.llm, sch.extraction, sch.resolution)
+    added = await agent._ingest_seed_records(target, [{"label": "TOOL X", "aliases": ["X App"]}])
+    assert added == 1
+    rec = target.records[0]
+    assert rec.aliases == ["X App"]
+    assert rec.attributes == {}
+
+
 async def test_scope_audit_failure_keeps_records():
     rs = make_rs([Record(label="A"), Record(label="B")])
     results = await scope_audit.audit_scope(rs, ForbiddenLLM())

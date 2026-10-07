@@ -2243,6 +2243,9 @@ class AgenticStrategy:
                 if not label:
                     continue
                 rec = Record(label=str(label))
+                aliases = row.get("aliases")
+                if isinstance(aliases, list):
+                    rec.aliases = [str(a) for a in aliases if a]
                 for key, val in row.items():
                     if key in ("Entity", "label", "name", "aliases", "_confidence", "_sourced_attrs", "_conflicting_attrs", "_freshest_retrieved", "_mean_agreement", "_last_seen_at"):
                         continue
