@@ -295,6 +295,14 @@ async def test_relevance_audit_errors_never_filter():
     assert scope_audit.not_explicit_results(results) == []
 
 
+def test_citation_title_drops_pdf_table_fragments():
+    raw = ("TRAFFICKING IN HUMAN BEINGS AND ICT May 2024 None | | | --- | --- | --- | --- "
+           "TRAFFICKING IN HUMAN BEINGS AND ICT May 2024 | | |Co-funded")
+    assert Citation(url="https://x", title=raw).title == "TRAFFICKING IN HUMAN BEINGS AND ICT May 2024"
+    assert Citation(url="https://x", title="Normal | Page Title").title == "Normal | Page Title"
+    assert Citation(url="https://x", title="word " * 100).title.endswith("\u2026")
+
+
 async def test_scope_audit_failure_keeps_records():
     rs = make_rs([Record(label="A"), Record(label="B")])
     results = await scope_audit.audit_scope(rs, ForbiddenLLM())

@@ -36,6 +36,22 @@ def _clean_text(s):
     return s
 
 
+# PDF sources sometimes arrive with extracted markdown tables as their "title".
+_TABLE_FRAGMENT = re.compile(r"\s*(?:\bNone\b\s*)?\|\s*(?:\||-{3}).*$", re.DOTALL)
+_MAX_TITLE_CHARS = 200
+
+
+def _clean_title(title):
+    if not isinstance(title, str):
+        return title
+    t = _TABLE_FRAGMENT.sub("", _clean_text(title))
+    t = re.sub(r"\s+", " ", t).strip()
+    t = re.sub(r"\s+None$", "", t)
+    if len(t) > _MAX_TITLE_CHARS:
+        t = t[:_MAX_TITLE_CHARS].rsplit(" ", 1)[0] + "…"
+    return t
+
+
 @dataclass
 class Citation:
     """A citation from a web search result with source text evidence."""
@@ -48,7 +64,7 @@ class Citation:
 
     def __post_init__(self):
         self.url = _clean_text(self.url)
-        self.title = _clean_text(self.title)
+        self.title = _clean_title(self.title)
         self.snippet = _clean_text(self.snippet)
 
     def to_dict(self) -> dict:
