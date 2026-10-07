@@ -2361,6 +2361,64 @@ class BuildEntityDataset:
                 applied += 1
         return applied
 
+    # ── Scope audit ────────────────────────────────────────────
+
+    def audit_scope(
+        self,
+        *,
+        api_key: Optional[str] = None,
+        model: Optional[str] = None,
+        budget: float = 4.0,
+        confidence_threshold: float = 0.7,
+        concurrency: int = 6,
+        progress_cb=None,
+    ) -> dict:
+        """Flag records that aren't instances of the dataset's category
+        (reports, policies, campaigns, data sources about the topic, …).
+
+        Returns ``{"results", "flagged", "total_records"}``; nothing is
+        removed — apply flagged entries with :meth:`apply_scope_exclusions`.
+        """
+        from intelligence_toolkit.schemify import scope_audit as _sa
+        from intelligence_toolkit.schemify.llm import LLMClient
+        from intelligence_toolkit.schemify.models import SchemifyConfig
+
+        if not self._schemify or not self._schemify.record_set:
+            return {"results": [], "flagged": [], "total_records": 0}
+        rs = self._schemify.record_set
+        llm = getattr(self._schemify, "llm", None)
+        if llm is None:
+            if not api_key:
+                raise ValueError("audit_scope requires api_key when no llm is attached")
+            cfg_kwargs = {"api_key": api_key, "max_budget": float(budget)}
+            if model:
+                cfg_kwargs["completion_model"] = model
+            llm = LLMClient(SchemifyConfig(**cfg_kwargs))
+
+        results = asyncio.run(
+            _sa.audit_scope(rs, llm, concurrency=concurrency, progress_cb=progress_cb)
+        )
+        return {
+            "total_records": len(rs.records),
+            "results": results,
+            "flagged": _sa.flagged_results(results, confidence_threshold),
+        }
+
+    def apply_scope_exclusions(self, entries: list[dict]) -> int:
+        """Exclude flagged records (also blocks their re-discovery). Returns count removed."""
+        removed = 0
+        for e in entries or []:
+            label = (e.get("label") or "").strip()
+            if not label:
+                continue
+            reason = f"Out of scope ({e.get('entity_kind', 'Other')}): {e.get('reason', '')}".strip()
+            ok, n = self.add_label_exclusion(label, reason=reason, remove_existing=True)
+            if ok:
+                removed += n
+        if removed:
+            self._post_curation_refresh()
+        return removed
+
     # ── Merge-quality audit ────────────────────────────────────
 
     def audit_merge_quality(
@@ -2626,6 +2684,18 @@ class BuildEntityDataset:
         new_data = _apply(data, effective)
 
         rs = RecordSet.from_dict(new_data)
+        rs.history.append({
+            "op": "recategorize",
+            "applied_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "schema": proposal.get("schema") or [],
+            "value_translations": proposal.get("value_translations") or {},
+            "removed_attributes": proposal.get("removed_attributes") or [],
+            "remappings_applied": len(proposal.get("record_remappings") or []),
+            "removed_records": (
+                [r.get("label") for r in (proposal.get("out_of_scope_records") or [])]
+                if remove_out_of_scope else []
+            ),
+        })
         self._schemify.record_set = rs
         # Reattach the merge arbiter to the fresh record set (best effort).
         attach = getattr(self._schemify, "_attach_merge_arbiter", None)
@@ -2674,13 +2744,13 @@ class BuildEntityDataset:
             out[attr] = missing
         return out
 
-    @staticmethod
-    def _recat_text_blob(record) -> str:
-        """Lowercased label + aliases + description/org fields for keyword
+    def _recat_text_blob(self, record) -> str:
+        """Lowercased label + aliases + open-set attribute values for keyword
         candidate matching."""
+        rs = self._schemify.record_set
+        open_attrs = [a.name for a in rs.schema_attributes if not a.is_closed_set]
         parts = [getattr(record, "label", "")] + list(getattr(record, "aliases", []) or [])
-        for a in ("tool_description", "Technology Description", "Organization Type",
-                  "operating_org_name"):
+        for a in open_attrs:
             av = record.attributes.get(a)
             if av:
                 parts += [v.value for v in av.values if v.value]
@@ -2895,6 +2965,7 @@ class BuildEntityDataset:
                     "provisional_values": getattr(a, "provisional_values", []),
                     "canonical_values": getattr(a, "canonical_values", []),
                     "canonical_value_descriptions": getattr(a, "canonical_value_descriptions", {}) or {},
+                    "locked": bool(getattr(a, "locked", False)),
                 }
                 for a in rs.schema_attributes
             ],
@@ -2906,6 +2977,7 @@ class BuildEntityDataset:
                 sorted(list(p))
                 for p in (getattr(rs, "do_not_merge", None) or set())
             ],
+            "history": list(getattr(rs, "history", []) or []),
             "created_at": rs.created_at.isoformat() if getattr(rs, "created_at", None) else None,
         }
 

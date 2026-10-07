@@ -704,6 +704,7 @@ class SchemaAttribute:
     provisional_values: list[str] = field(default_factory=list)  # Values for combinatorial exploration (may evolve)
     canonical_values: list[str] = field(default_factory=list)  # Fixed values for normalization (immutable)
     canonical_value_descriptions: dict = field(default_factory=dict)  # Optional {value: definition} to disambiguate closed-set choices during extraction
+    locked: bool = False  # User-owned taxonomy: name, membership and canonical_values must not be changed by automated passes
     is_closed_set: bool = False  # True if finite/bounded value set (e.g., continent, country)
     cardinality_threshold: int = 50  # Values below this = closed set
     values_explored: set = field(default_factory=set)  # Track which values have been explored
@@ -795,6 +796,9 @@ class RecordSet:
     # Populated by ``deduplicate_fuzzy`` so future clustering passes skip
     # them.
     do_not_merge: set = field(default_factory=set)
+    # Append-only log of dataset-level operations (e.g. recategorizations)
+    # so value changes stay reproducible after the fact.
+    history: list[dict] = field(default_factory=list)
     
     def get_record(self, label: str) -> Optional[Record]:
         """Get a record by label (case-insensitive)."""
@@ -1070,11 +1074,13 @@ class RecordSet:
                     "provisional_values": a.provisional_values,
                     "canonical_values": a.canonical_values,
                     "canonical_value_descriptions": a.canonical_value_descriptions,
+                    "locked": a.locked,
                 }
                 for a in self.schema_attributes
             ],
             "user_exclusions": list(self.user_exclusions),
             "do_not_merge": [sorted(list(p)) for p in (self.do_not_merge or set())],
+            "history": list(self.history),
             "created_at": self.created_at.isoformat(),
         }
     
@@ -1095,6 +1101,7 @@ class RecordSet:
                     provisional_values=a.get("provisional_values", []),
                     canonical_values=a.get("canonical_values", []),
                     canonical_value_descriptions=a.get("canonical_value_descriptions", {}) or {},
+                    locked=bool(a.get("locked", False)),
                 )
                 for a in data.get("schema_attributes", [])
             ],
@@ -1103,6 +1110,7 @@ class RecordSet:
                 frozenset(p) for p in (data.get("do_not_merge") or [])
                 if isinstance(p, (list, tuple)) and len(p) == 2
             },
+            history=list(data.get("history", []) or []),
             created_at=datetime.fromisoformat(data.get("created_at", datetime.now().isoformat())),
         )
     

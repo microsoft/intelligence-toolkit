@@ -1889,6 +1889,7 @@ class AgenticStrategy:
         """
         changes = 0
         schema_attr_names = {a.name for a in record_set.schema_attributes}
+        locked = {a.name: a for a in record_set.schema_attributes if a.locked}
 
         for norm in normalizations:
             attr_name = norm.get("attribute", "")
@@ -1899,6 +1900,14 @@ class AgenticStrategy:
                 continue
             if attr_name not in schema_attr_names:
                 continue
+            if attr_name in locked:
+                # Only fold off-taxonomy values into a taxonomy value.
+                allowed = set(locked[attr_name].canonical_values)
+                if canonical not in allowed:
+                    continue
+                merge_values = {v for v in merge_values if v not in allowed}
+                if not merge_values:
+                    continue
 
             # Apply to all records (both attributes and additional_attributes)
             for record in record_set.records:
@@ -1954,11 +1963,16 @@ class AgenticStrategy:
         """
         applied = 0
         schema_attr_names = {a.name for a in record_set.schema_attributes}
+        locked_names = {a.name for a in record_set.schema_attributes if a.locked}
 
         for change in schema_changes:
             kind = change.get("kind", "")
             attr_name = change.get("attribute", "")
             reason = change.get("reason", "")
+
+            if kind in ("demote", "rename") and attr_name in locked_names:
+                self._emit(f"  Ignored {kind} of locked '{attr_name}'", dim=True)
+                continue
 
             if kind == "demote" and attr_name in schema_attr_names:
                 # Move attribute from schema to additional_attributes
@@ -2085,6 +2099,9 @@ class AgenticStrategy:
                     pv if isinstance(pv, str) else pv.get("value", str(pv))
                     for pv in a.get("provisional_values", [])
                 ],
+                canonical_values=list(a.get("canonical_values", []) or []),
+                canonical_value_descriptions=dict(a.get("canonical_value_descriptions", {}) or {}),
+                locked=bool(a.get("locked", False)),
             )
             for a in data.get("schema_attributes", [])
         ]

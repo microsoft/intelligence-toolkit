@@ -1335,6 +1335,66 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                                     sv.bed_alias_dismissed.value = list(dismissed)
                                     st.rerun()
 
+            # ── Scope audit ────────────────────────────────────────
+            scope_state = dict(sv.bed_scope_results.value or {})
+            scope_dismissed = set(sv.bed_scope_dismissed.value or [])
+            scope_visible = [
+                f for f in (scope_state.get("flagged") or [])
+                if f.get("label") not in scope_dismissed
+            ]
+            with st.expander(
+                f"Audit scope ({len(scope_visible)} flagged)" if scope_state else "Audit scope",
+                expanded=False,
+            ):
+                st.caption(
+                    "Flags records that aren't instances of the dataset category "
+                    "(reports, policies, campaigns, events, sources about the topic). "
+                    "Excluding a record also stops research from re-adding it."
+                )
+                sc1, sc2 = st.columns([3, 1])
+                if sc1.button("Run scope audit", key="bed_scope_run", type="primary"):
+                    if not functions.get_api_key():
+                        st.error("Set an OpenAI API key in Settings first.")
+                    else:
+                        with st.spinner("Auditing scope…"):
+                            try:
+                                sv.bed_scope_results.value = api.audit_scope(
+                                    api_key=functions.get_api_key(),
+                                    model=sv.bed_model.value,
+                                )
+                                sv.bed_scope_dismissed.value = []
+                                st.rerun()
+                            except Exception as e:  # noqa: BLE001
+                                st.error(f"Scope audit failed: {e}")
+                if sc2.button("Clear", key="bed_scope_clear"):
+                    sv.bed_scope_results.value = {}
+                    sv.bed_scope_dismissed.value = []
+                    st.rerun()
+                if scope_visible and st.button(
+                    f"Exclude all {len(scope_visible)} flagged", key="bed_scope_apply_all"
+                ):
+                    n = api.apply_scope_exclusions(scope_visible)
+                    sv.bed_scope_dismissed.value = list(
+                        scope_dismissed | {f["label"] for f in scope_visible}
+                    )
+                    st.success(f"Excluded {n} records.")
+                    st.rerun()
+                for si, entry in enumerate(scope_visible[:50]):
+                    with st.container(border=True):
+                        st.markdown(
+                            f"**{entry['label']}** · {entry.get('entity_kind', '')} "
+                            f"({entry.get('confidence', 0):.0%})"
+                        )
+                        st.caption(entry.get("reason", ""))
+                        b1, b2 = st.columns(2)
+                        if b1.button("Exclude", key=f"bed_scope_ex_{si}", type="primary"):
+                            api.apply_scope_exclusions([entry])
+                            sv.bed_scope_dismissed.value = list(scope_dismissed | {entry["label"]})
+                            st.rerun()
+                        if b2.button("Keep", key=f"bed_scope_keep_{si}"):
+                            sv.bed_scope_dismissed.value = list(scope_dismissed | {entry["label"]})
+                            st.rerun()
+
             # ── Audit merge quality ────────────────────────────
             audit_state = dict(sv.bed_audit_results.value or {})
             audit_dismissed = set(sv.bed_audit_dismissed.value or [])

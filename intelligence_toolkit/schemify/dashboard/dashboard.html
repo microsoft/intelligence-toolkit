@@ -1476,10 +1476,13 @@ function renderNestedGroups(container, records, attrs, depth, parentKey) {
   const colors = DEPTH_ACCENTS[depth % DEPTH_ACCENTS.length];
   const attr = attrs[depth];
   const groups = {};
+  // Multi-valued records appear under every value so groups agree with the slicers.
   for (const rec of records) {
-    const val = rec.attributes?.[attr]?.value || 'Unknown';
-    if (!groups[val]) groups[val] = [];
-    groups[val].push(rec);
+    const vals = [...getRecordValueSet(rec, attr)];
+    for (const val of (vals.length ? vals : ['Unknown'])) {
+      if (!groups[val]) groups[val] = [];
+      groups[val].push(rec);
+    }
   }
   const sorted = Object.entries(groups).sort((a, b) => {
     if (a[0] === 'Unknown') return 1;
@@ -1501,6 +1504,7 @@ function renderNestedGroups(container, records, attrs, depth, parentKey) {
     label.textContent = attr;
     const h3 = document.createElement('h3');
     h3.textContent = groupName;
+    hdr.title = valueTooltip(attr, groupName);
     const cnt = document.createElement('span');
     cnt.className = 'group-count';
     cnt.textContent = `${recs.length}`;

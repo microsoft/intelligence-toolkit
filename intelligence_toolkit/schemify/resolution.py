@@ -90,10 +90,13 @@ class ResolutionEngine:
         )
         
         # Build mapping
+        locked_names = {a.name for a in record_set.schema_attributes if a.locked}
         mapping = {}
         for item in result.get("mappings", []):
             original = item.get("original", "")
             canonical = item.get("canonical", "")
+            if original in locked_names:
+                continue
             if original and canonical and original != canonical:
                 mapping[original] = canonical
         
@@ -408,6 +411,12 @@ class ResolutionEngine:
                 continue
             
             unique_raw = len(value_counts)
+
+            # Locked taxonomies are enforced deterministically in
+            # finalize_normalization; never let the LLM redefine them.
+            if attr.locked:
+                logger.info(f"Skipping '{attr.name}': taxonomy is locked")
+                continue
             
             # If already well-constrained (few unique values relative to records)
             # and canonical_values match observations, skip
@@ -758,7 +767,7 @@ class ResolutionEngine:
         expansions = {}
         
         for attr in record_set.schema_attributes:
-            if not attr.is_closed_set or not attr.canonical_values:
+            if not attr.is_closed_set or not attr.canonical_values or attr.locked:
                 continue
             
             # Find entities with "Other" for this attribute
@@ -1323,6 +1332,9 @@ class ResolutionEngine:
                         bucket.pop(key, None)
                         stats["raw_pruned"] += 1
 
+        # ── 0b. Consistent attribute naming (snake_case → Title Case) ──
+        stats["attrs_renamed"] = self._normalize_attribute_display_names(record_set)
+
         # ── 1. Uppercase labels ────────────────────────────────────────
         for record in record_set.records:
             upper = (record.label or "").strip().upper()
@@ -1514,7 +1526,9 @@ class ResolutionEngine:
         def _norm_attr_name(n: str) -> str:
             return " ".join((n or "").strip().lower().replace("_", " ").split())
         schema_by_norm = {_norm_attr_name(n): n for n in schema_names}
+        schema_obj = {sa.name: sa for sa in (record_set.schema_attributes or [])}
         folded = 0
+        stale_dropped = 0
         for record in record_set.records:
             aa = record.additional_attributes
             if not aa:
@@ -1526,6 +1540,16 @@ class ResolutionEngine:
                 aa_attr = aa.pop(key)
                 folded += 1
                 schema_attr = record.attributes.get(target)
+                # For taxonomies, additional copies are pre-normalization leftovers
+                # (merges/demotions); only fill a record that has no normalized value.
+                sa = schema_obj.get(target)
+                if sa and sa.is_closed_set and sa.canonical_values and schema_attr and schema_attr.values:
+                    canon = {v.casefold() for v in sa.canonical_values}
+                    keep = [sv for sv in aa_attr.values if (sv.value or "").strip().casefold() in canon]
+                    stale_dropped += len(aa_attr.values) - len(keep)
+                    aa_attr.values = keep
+                    if not keep:
+                        continue
                 if schema_attr is None:
                     record.attributes[target] = aa_attr
                     continue
@@ -1552,6 +1576,12 @@ class ResolutionEngine:
                         schema_attr.values.append(sv)
                         existing_by_key[k] = sv
         stats["aa_folded"] = folded
+        stats["stale_taxonomy_copies_dropped"] = stale_dropped
+
+        # ── 4d. Closed-set value hygiene ──
+        off_tax, fallbacks = self._enforce_closed_set_values(record_set)
+        stats["off_taxonomy_dropped"] = off_tax
+        stats["fallbacks_dropped"] = fallbacks
 
         # ── 5. Dedupe + prune orphan schema attributes ────────────────
         # Schema can accumulate duplicates (e.g. case-insensitive
@@ -1582,9 +1612,11 @@ class ResolutionEngine:
                         return True
             return False
 
+        # Locked attributes survive even when unpopulated: snapshots run
+        # mid-discovery, before extraction has filled them.
         populated_attrs = [
             sa for sa in deduped_attrs
-            if any(_populated(r, sa.name) for r in record_set.records)
+            if sa.locked or any(_populated(r, sa.name) for r in record_set.records)
         ]
         orphan_pruned = len(deduped_attrs) - len(populated_attrs)
         record_set.schema_attributes = populated_attrs
@@ -1606,6 +1638,84 @@ class ResolutionEngine:
                 dup_removed, orphan_pruned,
             )
         return stats
+
+    @staticmethod
+    def _display_attr_name(name: str) -> str:
+        """``tool_description`` → ``Tool Description``; mixed-case names unchanged."""
+        if not name or ("_" not in name and not name.islower()):
+            return name
+        words = name.replace("_", " ").split()
+        return " ".join(w[:1].upper() + w[1:] if w.islower() else w for w in words)
+
+    def _normalize_attribute_display_names(self, record_set: RecordSet) -> int:
+        existing = {sa.name for sa in record_set.schema_attributes}
+        renamed = 0
+        for sa in record_set.schema_attributes:
+            if sa.locked:
+                continue
+            new = self._display_attr_name(sa.name)
+            if new == sa.name or new in existing:
+                continue
+            old = sa.name
+            sa.name = new
+            existing.discard(old)
+            existing.add(new)
+            for record in record_set.records:
+                for bucket in (record.attributes, record.additional_attributes):
+                    if old in bucket and new not in bucket:
+                        bucket[new] = bucket.pop(old)
+            renamed += 1
+        return renamed
+
+    @staticmethod
+    def _is_fallback_value(value: str) -> bool:
+        v = (value or "").strip().casefold()
+        return v == "other" or v.startswith("not applicable")
+
+    def _enforce_closed_set_values(self, record_set: RecordSet) -> tuple[int, int]:
+        """Snap locked attrs onto their taxonomy and drop catch-all values
+        ("Other", "Not Applicable …") that co-occur with a specific value.
+
+        Returns ``(off_taxonomy_dropped, fallbacks_dropped)``.
+        """
+        off_tax = fallbacks = 0
+        for sa in record_set.schema_attributes:
+            if not sa.is_closed_set:
+                continue
+            canon = {v.casefold(): v for v in (sa.canonical_values or [])}
+            enforce = sa.locked and bool(canon)
+            for record in record_set.records:
+                av = record.attributes.get(sa.name)
+                if not av or not av.values:
+                    continue
+                kept: list[SourcedValue] = []
+                by_value: dict[str, SourcedValue] = {}
+                for sv in av.values:
+                    raw = (sv.value or "").strip()
+                    if enforce:
+                        target = canon.get(raw.casefold())
+                        if target is None and raw.casefold() == "other":
+                            target = "Other"
+                        if target is None:
+                            off_tax += 1
+                            continue
+                        sv.value = target
+                    existing = by_value.get(sv.value)
+                    if existing is None:
+                        by_value[sv.value] = sv
+                        kept.append(sv)
+                    else:
+                        urls = {s.url for s in existing.sources}
+                        existing.sources.extend(s for s in sv.sources if s.url not in urls)
+                specific = [sv for sv in kept if not self._is_fallback_value(sv.value)]
+                if specific and len(specific) < len(kept):
+                    fallbacks += len(kept) - len(specific)
+                    kept = specific
+                if kept:
+                    av.values = kept
+                else:
+                    del record.attributes[sa.name]
+        return off_tax, fallbacks
 
     def _infer_unit_renames(self, record_set: RecordSet) -> dict[str, str]:
         """For each schema attribute, decide if it should be renamed ``Name (unit)``."""
@@ -1902,6 +2012,7 @@ class ResolutionEngine:
         
         # Update schema
         new_schema_names = {name for name, _ in qualified_attrs}
+        new_schema_names |= {a.name for a in record_set.schema_attributes if a.locked}
         old_schema_names = {a.name for a in record_set.schema_attributes}
         
         # Track newly added attributes

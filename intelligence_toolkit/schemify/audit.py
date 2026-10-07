@@ -213,6 +213,10 @@ def apply_recategorization(data: dict, proposal: dict) -> dict:
                 attr["canonical_values"] = upd["canonical_values"]
             if "description" in upd:
                 attr["description"] = upd["description"]
+            if "canonical_value_descriptions" in upd:
+                attr["canonical_value_descriptions"] = upd["canonical_value_descriptions"]
+            if "locked" in upd:
+                attr["locked"] = bool(upd["locked"])
         new_schema.append(attr)
     for added in (proposal.get("added_attributes") or []):
         new_schema.append({

@@ -53,6 +53,10 @@ class SessionVariables:
         self.bed_audit_results = SessionVariable({}, prefix)
         self.bed_audit_dismissed = SessionVariable([], prefix)
 
+        # Scope audit (records that aren't instances of the category)
+        self.bed_scope_results = SessionVariable({}, prefix)
+        self.bed_scope_dismissed = SessionVariable([], prefix)
+
         # Re-categorize schema (remap + optional web search)
         self.bed_recat_proposal = SessionVariable({}, prefix)
         self.bed_recat_summary = SessionVariable({}, prefix)

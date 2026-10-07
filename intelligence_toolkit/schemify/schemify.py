@@ -1432,8 +1432,8 @@ class Schemify:
         promoted = []
         
         for attr in self.record_set.schema_attributes:
-            if attr.is_closed_set:
-                continue  # Already closed
+            if attr.is_closed_set or attr.locked:
+                continue  # Already closed, or user-owned
             
             # Collect observed values from records
             observed_values: set[str] = set()
