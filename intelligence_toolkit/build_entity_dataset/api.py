@@ -167,6 +167,7 @@ class BuildEntityDataset:
         self._stop_auto: bool = False
         # Values added by the most recent recategorization web-search pass.
         self.recat_added: list[dict] = []
+        self.relevance_results: dict = {}
         # Usage already recorded in a reloaded run's meta.json; session usage adds to it.
         self._usage_baseline: UsageStats = UsageStats()
 
@@ -321,8 +322,14 @@ class BuildEntityDataset:
         budget: float = 10.0,
         verify: bool = True,
         phase_split: tuple[float, float, float] = (0.6, 0.2, 0.2),
+        seed_labels: Optional[list[str]] = None,
+        complete: bool = False,
     ) -> None:
-        """Start research in a daemon background thread."""
+        """Start research in a daemon background thread.
+
+        ``seed_labels`` are known entity names whose values are researched from scratch;
+        ``complete`` fills every record's missing attributes after discovery.
+        """
         if self.is_running:
             return
 
@@ -405,14 +412,22 @@ class BuildEntityDataset:
                     )
 
                     self.progress.stage = "Running web search queries…"
+                    seeds = [{"label": s} for s in self._dedupe_preserving_order(seed_labels or [])]
                     loop.run_until_complete(
                         self._schemify.run_agentic(
                             max_queries=max_queries,
                             concurrency=concurrency,
                             phase_split=phase_split,
                             output_dir=str(self._run_dir) if self._run_dir else None,
+                            seed_records=seeds or None,
                         )
                     )
+
+                    if complete:
+                        self.progress.stage = "Filling missing attributes…"
+                        loop.run_until_complete(
+                            self._schemify.complete_all(concurrency=concurrency, verbose=False)
+                        )
 
                     if verify:
                         # Verification is normally run on demand from the UI
@@ -2449,6 +2464,8 @@ class BuildEntityDataset:
         evidence_attribute: str,
         connections: list[str],
         context_attributes: Optional[list[str]] = None,
+        extra_evidence_attributes: Optional[list[str]] = None,
+        labels: Optional[list[str]] = None,
         confidence_threshold: float = 0.7,
         concurrency: int = 6,
         progress_cb=None,
@@ -2471,6 +2488,8 @@ class BuildEntityDataset:
             evidence_attribute=evidence_attribute,
             connections=connections,
             context_attributes=context_attributes,
+            extra_evidence_attributes=extra_evidence_attributes,
+            labels=labels,
             concurrency=concurrency,
             progress_cb=progress_cb,
         ))
@@ -2933,10 +2952,6 @@ class BuildEntityDataset:
         if not attrs:
             return
 
-        import copy as _copy
-
-        from intelligence_toolkit.schemify.models import AttributeValue
-
         rs = self._schemify.record_set
         mode = (mode or "augment").strip().lower()
         scope = (scope or "all").strip().lower()
@@ -2961,57 +2976,9 @@ class BuildEntityDataset:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             try:
-                semaphore = asyncio.Semaphore(max(1, int(concurrency)))
-                done = [0]
-
-                async def _one(record, attr):
-                    async with semaphore:
-                        original = _copy.deepcopy(record.attributes.get(attr))
-                        # Clear so the model reassigns freely into the new taxonomy.
-                        record.attributes[attr] = AttributeValue(values=[])
-                        try:
-                            await self._schemify.extraction.expand_record(
-                                record, rs, target_attributes=[attr]
-                            )
-                        except Exception as e:  # noqa: BLE001
-                            _logger.warning(
-                                "re-classify %s/%s failed: %s",
-                                getattr(record, "label", "?"), attr, e,
-                            )
-                        new_av = record.attributes.get(attr)
-                        new_sourced = (
-                            {v.value: v.sources for v in new_av.values} if new_av else {}
-                        )
-                        if mode == "reassign":
-                            # Keep the fresh result as-is (may be empty on failure).
-                            for val in new_sourced:
-                                self.recat_added.append(
-                                    {"label": record.label, "attribute": attr, "value": val}
-                                )
-                        else:  # augment — restore original, add only accepted new values
-                            if original is not None:
-                                record.attributes[attr] = original
-                            else:
-                                record.attributes.pop(attr, None)
-                            for val, srcs in new_sourced.items():
-                                if accept and val not in accept:
-                                    continue
-                                if record.attributes.get(attr) is None:
-                                    record.attributes[attr] = AttributeValue(values=[])
-                                record.attributes[attr].add_value_with_sources(val, srcs)
-                                self.recat_added.append(
-                                    {"label": record.label, "attribute": attr, "value": val}
-                                )
-                        done[0] += 1
-                        self.progress.current = done[0]
-                        self.progress.stage = (
-                            f"Re-classifying via web search ({done[0]}/{total})"
-                        )
-
-                async def _go():
-                    await asyncio.gather(*[_one(r, a) for r, a in work])
-
-                loop.run_until_complete(_go())
+                loop.run_until_complete(
+                    self._reclassify(work, mode=mode, accept=accept, concurrency=concurrency)
+                )
                 self._post_curation_refresh()
                 self.progress.is_running = False
                 self.progress.is_complete = True
@@ -3020,6 +2987,259 @@ class BuildEntityDataset:
                 )
             except Exception as e:  # noqa: BLE001
                 _logger.exception("recategorization search worker failed")
+                self.progress.is_running = False
+                self.progress.error = str(e)
+                self.progress.stage = "Error"
+            finally:
+                loop.close()
+
+        self._thread = threading.Thread(target=_run, daemon=True)
+        self._thread.start()
+
+    async def _reclassify(
+        self, work, *, mode: str, accept: set, concurrency: int, search_focus: Optional[str] = None,
+    ) -> None:
+        """Re-extract ``(record, attribute)`` pairs via grounded search; see start_recategorization_search."""
+        import copy as _copy
+
+        from intelligence_toolkit.schemify.models import AttributeValue
+
+        rs = self._schemify.record_set
+        total = len(work)
+        semaphore = asyncio.Semaphore(max(1, int(concurrency)))
+        done = [0]
+
+        async def _one(record, attr):
+            async with semaphore:
+                original = _copy.deepcopy(record.attributes.get(attr))
+                record.attributes[attr] = AttributeValue(values=[])
+                try:
+                    await self._schemify.extraction.expand_record(
+                        record, rs, target_attributes=[attr], search_focus=search_focus,
+                    )
+                except Exception as e:  # noqa: BLE001
+                    _logger.warning(
+                        "re-classify %s/%s failed: %s",
+                        getattr(record, "label", "?"), attr, e,
+                    )
+                new_av = record.attributes.get(attr)
+                new_sourced = {v.value: v.sources for v in new_av.values} if new_av else {}
+                if mode == "reassign":
+                    for val in new_sourced:
+                        self.recat_added.append({"label": record.label, "attribute": attr, "value": val})
+                else:
+                    if original is not None:
+                        record.attributes[attr] = original
+                    else:
+                        record.attributes.pop(attr, None)
+                    for val, srcs in new_sourced.items():
+                        if accept and val not in accept:
+                            continue
+                        if record.attributes.get(attr) is None:
+                            record.attributes[attr] = AttributeValue(values=[])
+                        record.attributes[attr].add_value_with_sources(val, srcs)
+                        self.recat_added.append({"label": record.label, "attribute": attr, "value": val})
+                done[0] += 1
+                self.progress.current = done[0]
+                self.progress.stage = f"Researching via web search ({done[0]}/{total})"
+
+        await asyncio.gather(*[_one(r, a) for r, a in work])
+
+    # ── Dataset lifecycle helpers for the UI ───────────────────
+
+    def import_dataset(
+        self,
+        data: dict,
+        *,
+        api_key: Optional[str] = None,
+        model: str = config.DEFAULT_MODEL,
+        budget: float = 10.0,
+    ) -> Path:
+        """Import a dataset JSON as a new saved run so it can be edited, extended and re-published.
+
+        Without ``api_key`` the dataset loads read-only (same as :meth:`load_saved_run`).
+        """
+        _RUNS_DIR.mkdir(parents=True, exist_ok=True)
+        category = (data.get("category") or "imported").strip()
+        safe = re.sub(r"[^A-Za-z0-9._-]+", "_", category)[:60] or "run"
+        run_dir = _RUNS_DIR / f"{time.strftime('%Y%m%d-%H%M%S')}_import_{safe}"
+        run_dir.mkdir(parents=True, exist_ok=True)
+        path = run_dir / "data.json"
+        path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+        (run_dir / "meta.json").write_text(json.dumps({
+            "category": category,
+            "timestamp": run_dir.name.split("_", 1)[0],
+            "entity_count": len(data.get("records", [])),
+            "total_tokens": 0, "total_cost_usd": 0.0, "queries_run": 0,
+        }, indent=2), encoding="utf-8")
+        self.load_saved_run(path, api_key=api_key, model=model, budget=budget)
+        return path
+
+    def update_schema_attribute(
+        self,
+        name: str,
+        *,
+        description: Optional[str] = None,
+        is_closed_set: Optional[bool] = None,
+        is_multi_valued: Optional[bool] = None,
+        canonical_values: Optional[list[str]] = None,
+        canonical_value_descriptions: Optional[dict] = None,
+        locked: Optional[bool] = None,
+    ) -> bool:
+        """Edit an attribute's definition/taxonomy. With ``locked`` set, existing values
+        outside ``canonical_values`` are dropped at the next refresh."""
+        if not self._schemify or not self._schemify.record_set:
+            return False
+        attr = next((a for a in self._schemify.record_set.schema_attributes if a.name == name), None)
+        if attr is None:
+            return False
+        if description is not None:
+            attr.description = description
+        if is_closed_set is not None:
+            attr.is_closed_set = is_closed_set
+        if is_multi_valued is not None:
+            attr.is_multi_valued = is_multi_valued
+        if canonical_values is not None:
+            attr.canonical_values = [v.strip() for v in canonical_values if v and v.strip()]
+            attr.provisional_values = list(attr.canonical_values)
+            if attr.canonical_values:
+                attr.is_closed_set = True
+        if canonical_value_descriptions is not None:
+            attr.canonical_value_descriptions = {
+                k.strip(): v.strip() for k, v in canonical_value_descriptions.items() if k and v
+            }
+        if locked is not None:
+            attr.locked = locked
+        self._post_curation_refresh()
+        return True
+
+    def count_incomplete(self) -> tuple[int, int]:
+        """(records with any empty schema attribute, empty cells) across the dataset."""
+        rs = getattr(self._schemify, "record_set", None) if self._schemify else None
+        if not rs:
+            return (0, 0)
+        names = [a.name for a in rs.schema_attributes]
+        per = [sum(1 for n in names if not (r.attributes.get(n) and r.attributes[n].value)) for r in rs.records]
+        return (sum(1 for p in per if p), sum(per))
+
+    def start_completion(self, concurrency: int = 8) -> None:
+        """Fill missing schema attributes for every record (background)."""
+        if self.is_running or not self._schemify or not self._schemify.record_set:
+            return
+        if getattr(self._schemify, "llm", None) is None:
+            raise ValueError("Completion requires a live session with an API key.")
+        self.progress = ResearchProgress(
+            is_running=True, stage="Filling missing attributes…",
+            entity_count=len(self._schemify.record_set.records),
+        )
+
+        def _run() -> None:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                loop.run_until_complete(
+                    self._schemify.complete_all(concurrency=concurrency, verbose=False)
+                )
+                self._post_curation_refresh()
+                self.progress.is_running = False
+                self.progress.is_complete = True
+                self.progress.stage = "Completion pass complete"
+            except Exception as e:  # noqa: BLE001
+                _logger.exception("completion worker failed")
+                self.progress.is_running = False
+                self.progress.error = str(e)
+                self.progress.stage = "Error"
+            finally:
+                loop.close()
+
+        self._thread = threading.Thread(target=_run, daemon=True)
+        self._thread.start()
+
+    def start_relevance_filter(
+        self,
+        *,
+        criterion: str,
+        evidence_attribute: str,
+        connections: list[str],
+        evidence_description: str = "",
+        research_evidence: bool = True,
+        search_focus: Optional[str] = None,
+        labels: Optional[list[str]] = None,
+        context_attributes: Optional[list[str]] = None,
+        extra_evidence_attributes: Optional[list[str]] = None,
+        confidence_threshold: float = 0.7,
+        concurrency: int = 8,
+    ) -> None:
+        """Background: optionally research a sourced evidence attribute for every record,
+        then judge each record against ``criterion``. Results land on
+        ``self.relevance_results``; nothing is removed (use :meth:`apply_scope_exclusions`).
+
+        ``search_focus`` runs a targeted search for the evidence (not the entity's cached
+        general page); ``labels`` restricts research and judging to those records.
+        """
+        from intelligence_toolkit.schemify import scope_audit as _sa
+
+        if self.is_running or not self._schemify or not self._schemify.record_set:
+            return
+        if getattr(self._schemify, "llm", None) is None:
+            raise ValueError("The relevance filter requires a live session with an API key.")
+        self.add_schema_attribute(evidence_attribute, evidence_description or criterion)
+        rs = self._schemify.record_set
+        self.relevance_results = {}
+        self.recat_added = []
+        self.progress = ResearchProgress(
+            is_running=True, stage="Researching evidence…",
+            total=len(rs.records), entity_count=len(rs.records),
+        )
+
+        def _run() -> None:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                if research_evidence:
+                    wanted = {l.casefold() for l in labels} if labels else None
+                    work = [
+                        (r, evidence_attribute) for r in rs.records
+                        if wanted is None or (r.label or "").casefold() in wanted
+                    ]
+                    loop.run_until_complete(self._reclassify(
+                        work, mode="reassign", accept=set(), concurrency=concurrency,
+                        search_focus=search_focus,
+                    ))
+                self.progress.stage = "Judging explicit connections…"
+
+                def _p(done: int, total: int) -> None:
+                    self.progress.current, self.progress.total = done, total
+
+                results = loop.run_until_complete(_sa.audit_relevance(
+                    rs, self._schemify.llm,
+                    criterion=criterion,
+                    evidence_attribute=evidence_attribute,
+                    connections=connections,
+                    context_attributes=context_attributes,
+                    extra_evidence_attributes=extra_evidence_attributes,
+                    labels=labels,
+                    concurrency=concurrency,
+                    progress_cb=_p,
+                ))
+                self.relevance_results = {
+                    "total_records": len(rs.records),
+                    "results": results,
+                    "not_explicit": _sa.not_explicit_results(results, confidence_threshold),
+                    "uncertain": [
+                        r for r in results
+                        if r["explicit"] is None
+                        or (r["explicit"] is False and r["confidence"] < confidence_threshold)
+                    ],
+                }
+                self._post_curation_refresh()
+                self.progress.is_running = False
+                self.progress.is_complete = True
+                self.progress.stage = (
+                    f"Relevance check complete — {len(self.relevance_results['not_explicit'])} without an explicit connection"
+                )
+            except Exception as e:  # noqa: BLE001
+                _logger.exception("relevance filter worker failed")
                 self.progress.is_running = False
                 self.progress.error = str(e)
                 self.progress.stage = "Error"

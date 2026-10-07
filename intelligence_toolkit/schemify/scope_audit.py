@@ -197,9 +197,11 @@ that meets this requirement:
 {criterion}
 
 Explicit means the evidence states that the tool is designed for, marketed for, or documented
-as used against that problem. It is NOT explicit when the connection is only inferred from
-general capabilities (e.g. identity or age verification, content moderation, fraud detection,
-human rights monitoring, child safety) or phrased hypothetically ("could help", "may be used").
+as used against that problem. Documented use to detect, prevent, investigate, mitigate or
+report risks of that problem counts as explicit, even when the tool also serves other purposes.
+It is NOT explicit when the connection is only inferred from general capabilities (e.g.
+identity or age verification, content moderation, fraud detection, human rights monitoring,
+child safety) or phrased hypothetically ("could help", "may be used").
 Judge only from the evidence given; do not use outside knowledge.
 
 Use one of these connection values: {connections}
@@ -245,19 +247,20 @@ def _relevance_format(connections: list[str]) -> dict:
 
 
 def evidence_brief(record, evidence_attribute: str, context_attributes: list[str],
-                   max_snippets: int = 3) -> dict:
+                   max_snippets: int = 4, extra_evidence_attributes: Optional[list[str]] = None) -> dict:
     """Record summary built around one evidence attribute and its cited snippets."""
     brief = entity_brief(record, context_attributes)
-    av = record.attributes.get(evidence_attribute)
     statements, snippets, sources = [], [], []
-    for sv in (av.values if av else []):
-        if sv.value:
-            statements.append(sv.value[:_MAX_VALUE_CHARS])
-        for s in sv.sources:
-            if s.snippet and len(snippets) < max_snippets:
-                snippets.append(s.snippet[:300])
-            if s.title and len(sources) < max_snippets:
-                sources.append(s.title[:120])
+    for attr in [evidence_attribute] + list(extra_evidence_attributes or []):
+        av = record.attributes.get(attr)
+        for sv in (av.values if av else []):
+            if attr == evidence_attribute and sv.value:
+                statements.append(sv.value[:_MAX_VALUE_CHARS])
+            for s in sv.sources:
+                if s.snippet and len(snippets) < max_snippets and s.snippet[:500] not in snippets:
+                    snippets.append(s.snippet[:500])
+                if s.title and len(sources) < max_snippets and s.title[:120] not in sources:
+                    sources.append(s.title[:120])
     brief["connection_statement"] = statements or "(none found in sources)"
     brief["evidence_snippets"] = snippets
     brief["source_titles"] = sources
@@ -272,6 +275,8 @@ async def audit_relevance(
     evidence_attribute: str,
     connections: list[str],
     context_attributes: Optional[list[str]] = None,
+    extra_evidence_attributes: Optional[list[str]] = None,
+    labels: Optional[list[str]] = None,
     batch_size: int = 12,
     concurrency: int = 6,
     progress_cb: Optional[Callable[[int, int], None]] = None,
@@ -279,12 +284,15 @@ async def audit_relevance(
     """Judge whether each record's cited evidence explicitly meets ``criterion``.
 
     ``connections`` lists the accepted connection kinds; "None" is appended.
-    Errors keep the record (``explicit=None``).
+    ``labels`` restricts the audit to those records. Errors keep the record (``explicit=None``).
     """
     options = list(connections) + ["None"]
+    wanted = {l.casefold() for l in labels} if labels else None
     briefs = [
-        evidence_brief(r, evidence_attribute, context_attributes or [])
+        evidence_brief(r, evidence_attribute, context_attributes or [],
+                       extra_evidence_attributes=extra_evidence_attributes)
         for r in record_set.records
+        if wanted is None or (r.label or "").casefold() in wanted
     ]
 
     def parse(b: dict, it: dict) -> dict:

@@ -263,6 +263,7 @@ Provide concrete, verifiable details with specific names, dates, organizations, 
         record: Record,
         record_set: RecordSet,
         target_attributes: list[str] | None = None,
+        search_focus: str | None = None,
     ) -> Record:
         """
         Expand a record with additional information via web search.
@@ -271,6 +272,9 @@ Provide concrete, verifiable details with specific names, dates, organizations, 
             record: The record to expand
             record_set: The parent record set
             target_attributes: Specific attributes to search for
+            search_focus: Optional topic to steer the search (e.g. evidence of a
+                specific use); gets its own cache entry instead of reusing the
+                entity's general page.
             
         Returns:
             The expanded record
@@ -295,6 +299,8 @@ Provide concrete, verifiable details with specific names, dates, organizations, 
             attributes=", ".join(attrs_to_find),
             guidance=self._augment_guidance(record_set.guidance or ""),
         ) + _date_suffix()
+        if search_focus:
+            query += f" Focus specifically on evidence about: {search_focus}."
         
         # Check cache. Note: the cache key intentionally excludes the
         # attribute list — the web_search result for an entity rarely
@@ -305,6 +311,8 @@ Provide concrete, verifiable details with specific names, dates, organizations, 
             "label": record.label,
             "category": record_set.category,
         }
+        if search_focus:
+            cache_key["focus"] = search_focus
         cached = self.cache.get("entity_expansion", **cache_key)
         
         if cached:

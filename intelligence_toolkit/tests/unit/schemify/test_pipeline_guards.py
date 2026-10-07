@@ -303,6 +303,50 @@ def test_citation_title_drops_pdf_table_fragments():
     assert Citation(url="https://x", title="word " * 100).title.endswith("\u2026")
 
 
+async def test_relevance_audit_uses_extra_evidence_and_label_subset():
+    rec = Record(label="A", attributes={"Trafficking Type": AttributeValue(values=[SourcedValue(
+        value="Labor", sources=[Citation(url="https://x/2", title="t", snippet="used to flag forced labour risk")],
+    )])})
+    rs = make_rs([rec, Record(label="B")])
+    llm = CapturingLLM({"results": []})
+    await scope_audit.audit_relevance(
+        rs, llm, criterion="c", evidence_attribute="Connection", connections=["X"],
+        extra_evidence_attributes=["Trafficking Type"], labels=["a"],
+    )
+    sent = json.loads(llm.kwargs["variables"]["entities"])
+    assert [b["label"] for b in sent] == ["A"]
+    assert sent[0]["evidence_snippets"] == ["used to flag forced labour risk"]
+
+
+async def test_search_focus_steers_search(sch):
+    captured = {}
+
+    class FakeSearch:
+        async def search(self, query):
+            captured["query"] = query
+            return "text", []
+
+    class FakeCache:
+        def get(self, ns, **key):
+            captured["key"] = key
+            return None
+
+        def set(self, value, ns, **key):
+            pass
+
+    async def no_extract(**kwargs):
+        return None
+
+    sch.extraction.search = FakeSearch()
+    sch.extraction.cache = FakeCache()
+    sch.extraction._extract_attributes_into_record = no_extract
+    await sch.extraction.expand_record(
+        Record(label="A"), make_rs([]), target_attributes=["Functionality"], search_focus="forced labour",
+    )
+    assert "forced labour" in captured["query"]
+    assert captured["key"]["focus"] == "forced labour"
+
+
 async def test_scope_audit_failure_keeps_records():
     rs = make_rs([Record(label="A"), Record(label="B")])
     results = await scope_audit.audit_scope(rs, ForbiddenLLM())
