@@ -1370,6 +1370,14 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                     sv.bed_scope_results.value = {}
                     sv.bed_scope_dismissed.value = []
                     st.rerun()
+                weak = scope_state.get("weak_relevance") or []
+                if weak:
+                    with st.popover(f"{len(weak)} in scope but weakly documented (review only)"):
+                        st.caption("Real products whose documented use for this topic is weak. Not excluded.")
+                        st.dataframe(
+                            pd.DataFrame(weak)[["label", "entity_kind", "reason"]],
+                            hide_index=True, use_container_width=True,
+                        )
                 if scope_visible and st.button(
                     f"Exclude all {len(scope_visible)} flagged", key="bed_scope_apply_all"
                 ):
