@@ -260,6 +260,41 @@ def test_scope_exclusion_removes_only_exact_label():
     assert [r.label for r in api._schemify.record_set.records] == ["PERSONA CANDIDATE VERIFICATION"]
 
 
+class CapturingLLM(FixedLLM):
+    async def structured_completion(self, **kwargs):
+        self.kwargs = kwargs
+        return self.result
+
+
+async def test_relevance_audit_uses_cited_evidence_and_filters_not_explicit():
+    rec_yes = Record(label="A", attributes={"Connection": AttributeValue(values=[SourcedValue(
+        value="Built for forced-labour screening",
+        sources=[Citation(url="https://x/1", title="Vendor page", snippet="detects forced labour")],
+    )])})
+    rs = make_rs([rec_yes, Record(label="B")])
+    llm = CapturingLLM({"results": [
+        {"label": "A", "explicit": True, "connection": "Forced labour", "confidence": 0.9, "reason": "r"},
+        {"label": "B", "explicit": False, "connection": "None", "confidence": 0.9, "reason": "r"},
+    ]})
+    results = await scope_audit.audit_relevance(
+        rs, llm, criterion="explicit forced labour link", evidence_attribute="Connection",
+        connections=["Forced labour"],
+    )
+    sent = json.loads(llm.kwargs["variables"]["entities"])
+    assert sent[0]["evidence_snippets"] == ["detects forced labour"]
+    assert sent[1]["connection_statement"] == "(none found in sources)"
+    assert [r["label"] for r in scope_audit.not_explicit_results(results)] == ["B"]
+
+
+async def test_relevance_audit_errors_never_filter():
+    rs = make_rs([Record(label="A")])
+    results = await scope_audit.audit_relevance(
+        rs, ForbiddenLLM(), criterion="c", evidence_attribute="Connection", connections=["X"],
+    )
+    assert results[0]["explicit"] is None
+    assert scope_audit.not_explicit_results(results) == []
+
+
 async def test_scope_audit_failure_keeps_records():
     rs = make_rs([Record(label="A"), Record(label="B")])
     results = await scope_audit.audit_scope(rs, ForbiddenLLM())

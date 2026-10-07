@@ -2411,6 +2411,75 @@ class BuildEntityDataset:
             "weak_relevance": _sa.weak_relevance_results(results),
         }
 
+    def add_schema_attribute(
+        self,
+        name: str,
+        description: str = "",
+        *,
+        is_closed_set: bool = False,
+        is_multi_valued: bool = False,
+        canonical_values: Optional[list[str]] = None,
+        canonical_value_descriptions: Optional[dict] = None,
+        locked: bool = True,
+    ) -> bool:
+        """Add a schema attribute (empty until researched). Returns False if it already exists."""
+        from intelligence_toolkit.schemify.models import SchemaAttribute
+
+        if not self._schemify or not self._schemify.record_set:
+            return False
+        rs = self._schemify.record_set
+        if any(a.name.casefold() == name.strip().casefold() for a in rs.schema_attributes):
+            return False
+        rs.schema_attributes.append(SchemaAttribute(
+            name=name.strip(),
+            description=description,
+            is_closed_set=is_closed_set,
+            is_multi_valued=is_multi_valued,
+            canonical_values=list(canonical_values or []),
+            canonical_value_descriptions=dict(canonical_value_descriptions or {}),
+            locked=locked,
+        ))
+        self._dataset_json = self._build_dataset_json()
+        return True
+
+    def audit_relevance(
+        self,
+        *,
+        criterion: str,
+        evidence_attribute: str,
+        connections: list[str],
+        context_attributes: Optional[list[str]] = None,
+        confidence_threshold: float = 0.7,
+        concurrency: int = 6,
+        progress_cb=None,
+    ) -> dict:
+        """Judge each record's cited evidence against an explicit-connection ``criterion``.
+
+        Returns ``{"results", "not_explicit", "total_records"}``. Nothing is removed;
+        pass ``not_explicit`` to :meth:`apply_scope_exclusions` to filter.
+        """
+        from intelligence_toolkit.schemify import scope_audit as _sa
+
+        if not self._schemify or not self._schemify.record_set:
+            return {"results": [], "not_explicit": [], "total_records": 0}
+        if getattr(self._schemify, "llm", None) is None:
+            raise ValueError("audit_relevance requires a live session with an API key")
+        rs = self._schemify.record_set
+        results = asyncio.run(_sa.audit_relevance(
+            rs, self._schemify.llm,
+            criterion=criterion,
+            evidence_attribute=evidence_attribute,
+            connections=connections,
+            context_attributes=context_attributes,
+            concurrency=concurrency,
+            progress_cb=progress_cb,
+        ))
+        return {
+            "total_records": len(rs.records),
+            "results": results,
+            "not_explicit": _sa.not_explicit_results(results, confidence_threshold),
+        }
+
     def apply_scope_exclusions(self, entries: list[dict]) -> int:
         """Exclude flagged records (also blocks their re-discovery). Returns count removed.
 
