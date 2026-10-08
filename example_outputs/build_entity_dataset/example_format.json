@@ -1,0 +1,15 @@
+{
+  "example_order": ["table", "data"],
+  "example_metadata": {
+    "table": {
+      "heading": "Entity table",
+      "description": "Flat CSV showing one row per discovered entity with all schema attributes.",
+      "type": "csv"
+    },
+    "data": {
+      "heading": "Full dataset (JSON)",
+      "description": "Complete structured dataset including per-value source citations and confidence scores.",
+      "type": "json"
+    }
+  }
+}

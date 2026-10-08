@@ -1,0 +1,2408 @@
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project.
+#
+
+# ruff: noqa
+import json
+import os
+import time
+
+import pandas as pd
+import streamlit as st
+
+import app.util.example_outputs_ui as example_outputs_ui
+import workflows.build_entity_dataset.variables as bed_variables
+import workflows.build_entity_dataset.functions as functions
+from util import ui_components
+from util.session_variables import SessionVariables
+
+from intelligence_toolkit.build_entity_dataset import config
+
+
+def get_intro():
+    file_path = os.path.join(os.path.dirname(__file__), "README.md")
+    with open(file_path, encoding="utf-8") as f:
+        return f.read()
+
+
+def _suggestion_key(s: dict) -> str:
+    """Stable identity for an AI alias-merge suggestion so we can track
+    dismissals across reruns."""
+    primary = (s.get("primary") or "").strip().casefold()
+    members = sorted(
+        (m or "").strip().casefold() for m in (s.get("members") or [])
+    )
+    return primary + "::" + ",".join(members)
+
+
+def _render_continue_research(api, sv) -> None:
+    """Render a 'Continue research' control that extends the current run
+    instead of discarding results. Used after both successful completion
+    and user stop. No-op when the in-memory Schemify state can't be
+    resumed (e.g. loaded purely from disk)."""
+    if not api.can_continue_research():
+        # Surface *why* — otherwise read-only loaded runs are confusing.
+        reason = getattr(api, "read_only_reason", None)
+        if reason:
+            st.info(f"**Continue research unavailable:** {reason}")
+        return
+
+    api_key = functions.get_api_key()
+    with st.expander(
+        "Continue research (keep current results, run more queries)",
+        expanded=False,
+    ):
+        st.caption(
+            "Runs additional web search queries on top of the current "
+            "dataset — useful after adding candidate entities, applying "
+            "exclusions, or curating aliases. Existing records, attribute "
+            "values and citations are preserved. The default plan biases "
+            "toward filling in missing attributes for known entities."
+        )
+        c1, c2 = st.columns(2)
+        more_q = c1.number_input(
+            "Additional query budget",
+            min_value=1,
+            max_value=500,
+            value=min(int(sv.bed_max_queries.value or 30), 30),
+            key="bed_continue_max_q",
+            help="Cap on the number of extra search queries to run.",
+        )
+        concur = c2.number_input(
+            "Concurrency",
+            min_value=1,
+            max_value=20,
+            value=int(sv.bed_concurrency.value or 5),
+            key="bed_continue_concur",
+        )
+        verify = st.checkbox(
+            "Also verify unverified attribute values",
+            value=False,
+            key="bed_continue_verify",
+        )
+        if st.button(
+            "Continue research",
+            type="primary",
+            disabled=not api_key,
+            key="bed_continue_btn",
+        ):
+            if not api_key:
+                st.error("No API key found. Configure it in the Settings page.")
+            else:
+                ok = api.continue_research(
+                    max_queries=int(more_q),
+                    concurrency=int(concur),
+                    verify=bool(verify),
+                )
+                if ok:
+                    time.sleep(0.3)
+                    st.rerun()
+                else:
+                    st.error(
+                        "Can't continue this run — start a fresh research "
+                        "task instead."
+                    )
+
+
+def _render_reference_labels(api, sv, key: str) -> None:
+    """Upload known entity names; values are re-researched from scratch."""
+    with st.expander("Known entities to include (optional)", expanded=False):
+        st.caption(
+            "Upload a prior dataset (saved-run JSON, candidate list, or CSV). "
+            "Only the **entity labels** are used as seeds — every value is "
+            "re-researched from scratch with fresh sources."
+        )
+        ref_file = st.file_uploader(
+            "Reference file (.json / .csv / .tsv / .txt)",
+            type=["json", "csv", "tsv", "txt"],
+            key=f"{key}_ref_upload",
+        )
+        rc1, rc2 = st.columns(2)
+        if ref_file is not None and rc1.button("Use these entities", key=f"{key}_ref_use"):
+            try:
+                labels = api.reference_labels_from_file(ref_file.name, ref_file.getvalue())
+            except Exception as e:  # noqa: BLE001
+                labels = []
+                st.error(f"Failed to parse reference file: {e}")
+            sv.bed_auto_reference_labels.value = labels
+            sv.bed_auto_reference_filename.value = ref_file.name
+            if labels:
+                st.success(f"Loaded {len(labels)} entity labels from `{ref_file.name}`.")
+            else:
+                st.warning("No entity labels found in that file.")
+        if rc2.button("Clear", key=f"{key}_ref_clear"):
+            sv.bed_auto_reference_labels.value = []
+            sv.bed_auto_reference_filename.value = ""
+            st.rerun()
+        cur_labels = list(sv.bed_auto_reference_labels.value or [])
+        if cur_labels:
+            st.caption(
+                f"Current list: **{len(cur_labels)} labels** "
+                f"from `{sv.bed_auto_reference_filename.value or '?'}`"
+            )
+
+
+def _render_import_dataset(api, sv, key: str) -> None:
+    """Upload a dataset JSON and open it as an editable run."""
+    uploaded = st.file_uploader(
+        "Dataset JSON (data.json from a previous run or export)", type=["json"], key=f"{key}_file"
+    )
+    api_key = functions.get_api_key()
+    if not api_key:
+        st.caption("Without an API key the dataset opens read-only.")
+    if uploaded is not None and st.button("Open dataset", key=f"{key}_btn"):
+        try:
+            data = json.load(uploaded)
+            api.import_dataset(
+                data,
+                api_key=api_key or None,
+                model=sv.bed_model.value,
+                budget=float(sv.bed_budget.value or 10.0),
+            )
+            sv.bed_category.value = data.get("category", sv.bed_category.value)
+            sv.bed_guidance.value = data.get("guidance", sv.bed_guidance.value)
+            st.success(f"Opened {len(data.get('records', []))} entities. Continue in the Review tab.")
+            st.rerun()
+        except Exception as e:  # noqa: BLE001
+            st.error(f"Failed to open dataset: {e}")
+
+
+def _render_record_editor(api, schema: list[dict]) -> None:
+    """Manually set one record's values for one attribute (logged in history)."""
+    records = (api.dataset_json or {}).get("records", [])
+    if not records or not schema or not api.can_continue_research():
+        return
+    with st.expander("Edit a record", expanded=False):
+        st.caption(
+            "Correct one entity's values. Kept values keep their citations; new values "
+            "cite the URL you give, or the entity's existing sources. Every edit is logged."
+        )
+        label = st.selectbox("Entity", sorted(r.get("label", "") for r in records), key="bed_rec_label")
+        attr = st.selectbox("Attribute", [s["name"] for s in schema], key="bed_rec_attr")
+        spec = next((s for s in schema if s["name"] == attr), {})
+        rec = next((r for r in records if r.get("label") == label), {})
+        current = [v.get("value") for v in (rec.get("attributes") or {}).get(attr, {}).get("values", [])]
+        key = f"bed_rec_{label}_{attr}"
+        if spec.get("canonical_values"):
+            options = list(spec["canonical_values"])
+            new = st.multiselect(
+                "Values", options, default=[v for v in current if v in options], key=f"{key}_vals"
+            )
+        else:
+            new = [
+                v for v in st.text_area(
+                    "Values (one per line)", value="\n".join(current), key=f"{key}_text"
+                ).splitlines() if v.strip()
+            ]
+        c1, c2 = st.columns(2)
+        url = c1.text_input("Source URL for new values (optional)", key=f"{key}_url")
+        note = c2.text_input("Reason / note", key=f"{key}_note")
+        if st.button("Save record", key="bed_rec_save"):
+            if api.set_record_values(label, attr, new, note=note, source_url=url.strip()):
+                st.success(f"Updated {attr} for {label}.")
+                st.rerun()
+            else:
+                st.error("Record not found.")
+
+
+def _render_restore_records(api) -> None:
+    """Bring back records from an earlier dataset file (e.g. after an over-strict filter)."""
+    if not api.can_continue_research():
+        return
+    with st.expander("Restore records from an earlier dataset", expanded=False):
+        st.caption(
+            "Pick entities from a previous data.json to add back as they were; their "
+            "exclusion rules are lifted so research won't remove them again."
+        )
+        f = st.file_uploader("Earlier dataset JSON", type=["json"], key="bed_restore_file")
+        if f is None:
+            return
+        try:
+            older = json.load(f)
+        except Exception as e:  # noqa: BLE001
+            st.error(f"Could not read file: {e}")
+            return
+        present = {(r.get("label") or "").casefold() for r in (api.dataset_json or {}).get("records", [])}
+        missing = {r["label"]: r for r in older.get("records", []) if r.get("label", "").casefold() not in present}
+        picks = st.multiselect(f"Entities to restore ({len(missing)} not in current dataset)",
+                               sorted(missing), key="bed_restore_picks")
+        reason = st.text_input("Reason", key="bed_restore_reason")
+        if picks and st.button(f"Restore {len(picks)}", key="bed_restore_btn"):
+            n = api.restore_records([missing[p] for p in picks], reason=reason)
+            st.success(f"Restored {n} entities.")
+            st.rerun()
+
+
+async def create(sv: bed_variables.SessionVariables, workflow=None):
+    sv_home = SessionVariables("home")
+    ui_components.check_ai_configuration()
+    api = sv.workflow_object.value
+
+    (
+        intro_tab,
+        define_tab,
+        run_tab,
+        review_tab,
+        export_tab,
+        examples_tab,
+    ) = st.tabs(
+        [
+            "Build Entity Dataset workflow:",
+            "Define task",
+            "Run research",
+            "Review dataset",
+            "Export",
+            "View example outputs",
+        ]
+    )
+
+    # ── Intro ──────────────────────────────────────────────────
+    with intro_tab:
+        file_content = get_intro()
+        st.markdown(file_content)
+
+    # ── Define task ────────────────────────────────────────────
+    with define_tab:
+        st.markdown("##### Task definition")
+        st.markdown(
+            "Describe the category of entities you want to discover. "
+            "The workflow will search the web and extract structured records."
+        )
+
+        col_left, col_right = st.columns([3, 2])
+        with col_left:
+            sv.bed_category.value = st.text_input(
+                "Entity category",
+                value=sv.bed_category.value,
+                placeholder="e.g. Open-source relational databases",
+                help="What kind of entities should be discovered?",
+            )
+            sv.bed_guidance.value = st.text_area(
+                "Guidance (optional)",
+                value=sv.bed_guidance.value,
+                placeholder="e.g. Focus on systems with active communities and >1000 GitHub stars.",
+                height=100,
+                help="Additional instructions to steer extraction quality and scope.",
+            )
+            st.markdown("##### Schema attributes (optional)")
+            st.markdown(
+                "Provide a JSON list of attribute definitions to use instead of the "
+                "auto-generated schema. Leave blank to let the model propose a schema."
+            )
+            schema_placeholder = json.dumps(
+                [
+                    {"name": "Tool Description", "description": "One sentence describing the tool"},
+                    {
+                        "name": "Functionality",
+                        "description": "Primary capability",
+                        "is_closed_set": True,
+                        "locked": True,
+                        "canonical_values": ["Detection", "Case Management", "Other"],
+                        "canonical_value_descriptions": {"Detection": "Finds harmful content"},
+                    },
+                ],
+                indent=2,
+            )
+            sv.bed_schema_json.value = st.text_area(
+                "Schema JSON",
+                value=sv.bed_schema_json.value,
+                placeholder=schema_placeholder,
+                height=200,
+                help=(
+                    "Optional list of {name, description, is_closed_set, is_multi_valued, "
+                    "canonical_values, canonical_value_descriptions, locked} objects. "
+                    "`locked: true` fixes a taxonomy: values are classified only into "
+                    "`canonical_values`, and automated passes cannot rename, merge or extend it."
+                ),
+            )
+
+        with col_right:
+            st.markdown("##### Research configuration")
+            sv.bed_model.value = st.selectbox(
+                "Model",
+                ["gpt-5.4-nano", "gpt-5.4-mini", "gpt-5.4"],
+                index=["gpt-5.4-nano", "gpt-5.4-mini", "gpt-5.4"].index(sv.bed_model.value)
+                if sv.bed_model.value in ["gpt-5.4-nano", "gpt-5.4-mini", "gpt-5.4"]
+                else 1,
+                help="Model used for both search and extraction.",
+            )
+            sv.bed_max_queries.value = st.number_input(
+                "Max queries",
+                min_value=5,
+                max_value=500,
+                value=sv.bed_max_queries.value,
+                step=5,
+                help="Total web-search queries. More queries = more entities, higher cost.",
+            )
+            sv.bed_concurrency.value = st.number_input(
+                "Concurrency",
+                min_value=1,
+                max_value=20,
+                value=sv.bed_concurrency.value,
+                help="Parallel web searches. Higher values are faster but may hit rate limits.",
+            )
+            sv.bed_budget.value = st.number_input(
+                "Budget (USD)",
+                min_value=0.5,
+                max_value=500.0,
+                value=sv.bed_budget.value,
+                step=0.5,
+                help="Maximum spend on LLM/search calls.",
+            )
+            sv.bed_verify.value = st.checkbox(
+                "Auto-verify attribute values after research",
+                value=sv.bed_verify.value,
+                help=(
+                    "If on, runs a web-grounded verification pass at the end of "
+                    "research. Verification can also be triggered manually from "
+                    "the Review dataset tab."
+                ),
+            )
+
+        if sv.bed_category.value:
+            if st.button(
+                "Save task definition",
+                type="primary",
+                help="Save settings and continue to the Run research tab.",
+            ):
+                st.success("Task saved. Switch to the **Run research** tab to start.")
+
+    # ── Run research ───────────────────────────────────────────
+    with run_tab:
+        if not sv.bed_category.value:
+            st.info(
+                "Define a task in the **Define task** tab to start new research, "
+                "or open an existing dataset below."
+            )
+            st.markdown("##### Continue from an existing dataset")
+            _render_import_dataset(api, sv, key="bed_run_import_empty")
+        else:
+            st.markdown(f"**Category:** {sv.bed_category.value}")
+            if sv.bed_guidance.value:
+                st.markdown(f"**Guidance:** {sv.bed_guidance.value}")
+
+            st.divider()
+            prog = api.progress
+
+            if api.is_running:
+                # Pull latest live counters from schemify before rendering.
+                refresh = getattr(api, "refresh_progress", None)
+                if callable(refresh):
+                    refresh()
+
+                # Build a stable layout once per rerun: header → progress
+                # bar → metrics → live dataframe → stop button. Keeping
+                # the structure identical between reruns prevents the
+                # Streamlit reconciler from tearing down and re-creating
+                # blocks, which is what causes the visible flicker.
+                st.markdown("#### Research in progress…")
+                progress_slot = st.empty()
+                metrics_slot = st.container()
+                table_slot = st.container()
+                button_slot = st.container()
+
+                if prog.stage.startswith("Verifying") and prog.total:
+                    frac = min(prog.current / max(prog.total, 1), 1.0)
+                    progress_slot.progress(
+                        frac,
+                        text=f"{prog.stage} ({prog.current}/{prog.total})",
+                    )
+                else:
+                    max_q = max(int(sv.bed_max_queries.value or 0), 1)
+                    frac = min(prog.query_count / max_q, 1.0)
+                    progress_slot.progress(
+                        frac,
+                        text=f"{prog.stage} — {prog.query_count}/{max_q} queries",
+                    )
+
+                with metrics_slot:
+                    is_auto = bool(getattr(prog, "iteration", 0))
+                    if is_auto:
+                        m1, m2, m3, m4 = st.columns(4)
+                        m1.metric(
+                            "Iteration",
+                            f"{prog.iteration}/{prog.max_iterations}",
+                        )
+                        m2.metric("Sub-phase", prog.sub_phase or prog.stage)
+                        m3.metric("Entities found", prog.entity_count)
+                        m4.metric("Cost (USD)", f"${api.usage.total_cost_usd:.2f}")
+                        if prog.judge_reason or prog.judge_missing_gaps:
+                            label = "Judge verdict"
+                            if prog.judge_complete:
+                                label += " ✓ complete"
+                            else:
+                                label += f" ({prog.judge_confidence:.2f} confidence)"
+                            with st.expander(label, expanded=False):
+                                if prog.judge_reason:
+                                    st.markdown(prog.judge_reason)
+                                gaps = list(prog.judge_missing_gaps or [])
+                                if gaps:
+                                    st.markdown("**Missing gaps to address:**")
+                                    for g in gaps:
+                                        st.markdown(f"- {g}")
+                    else:
+                        m1, m2 = st.columns(2)
+                        m1.metric("Entities found", prog.entity_count)
+                        m2.metric("Cost (USD)", f"${api.usage.total_cost_usd:.2f}")
+
+                # Live dataset preview (built from the running record set).
+                live_df = (
+                    api.current_dataframe()
+                    if hasattr(api, "current_dataframe")
+                    else api.dataframe
+                )
+                with table_slot:
+                    # Always render the header + table block (even when
+                    # empty) so the layout doesn't reshuffle once the
+                    # first entities arrive.
+                    count = 0 if live_df is None else len(live_df)
+                    st.markdown(f"##### Dataset so far — {count} entities")
+                    if live_df is not None and not live_df.empty:
+                        st.dataframe(
+                            live_df,
+                            height=400,
+                            use_container_width=True,
+                            hide_index=True,
+                        )
+                    else:
+                        st.caption(
+                            "Entities will appear here as they are extracted…"
+                        )
+
+                with button_slot:
+                    if st.button("Stop and save current results"):
+                        if getattr(prog, "iteration", 0):
+                            api.stop_auto_mode()
+                        else:
+                            api.stop_research()
+                        st.rerun()
+
+                # Auto-refresh while running. DataFrame is cached on the
+                # api side so each tick is cheap.
+                time.sleep(2.0)
+                st.rerun()
+
+            elif prog.is_complete:
+                st.success(
+                    f"Research complete — **{prog.entity_count} entities** discovered."
+                )
+                m1, m2 = st.columns(2)
+                m1.metric("Total queries", api.usage.queries_run)
+                m2.metric("Estimated cost (USD)", f"${api.usage.total_cost_usd:.2f}")
+
+                history = list(getattr(prog, "iteration_history", []) or [])
+                if history:
+                    stop_reason = getattr(prog, "stop_reason", "") or "—"
+                    st.caption(f"Auto-mode stop reason: **{stop_reason}**")
+                    with st.expander(
+                        f"Per-iteration history ({len(history)} iterations)",
+                        expanded=False,
+                    ):
+                        hist_rows = []
+                        for h in history:
+                            judge = h.get("judge") or {}
+                            hist_rows.append({
+                                "iter": h.get("iteration"),
+                                "new entities": h.get("new_entities"),
+                                "total": h.get("total_entities"),
+                                "queries": h.get("queries_run"),
+                                "cost (USD)": h.get("cost_usd"),
+                                "phase split": str(h.get("phase_split")),
+                                "judge complete": judge.get("complete"),
+                                "judge confidence": judge.get("confidence"),
+                                "judge reason": judge.get("reason"),
+                            })
+                        st.dataframe(
+                            pd.DataFrame(hist_rows),
+                            use_container_width=True,
+                            hide_index=True,
+                        )
+
+                st.info("Switch to the **Review dataset** or **Export** tab.")
+
+                _render_continue_research(api, sv)
+
+                if st.button("Re-run research (discard current results)"):
+                    api.reset()
+                    st.rerun()
+
+            elif prog.error:
+                st.error(f"Research failed: {prog.error}")
+                if st.button("Reset and retry"):
+                    api.reset()
+                    st.rerun()
+
+            elif prog.stage == "Stopped by user":
+                st.warning("Research stopped. Partial results are available.")
+                st.info("Switch to the **Review dataset** or **Export** tab.")
+
+                _render_continue_research(api, sv)
+
+            else:
+                # Not started yet
+                api_key = functions.get_api_key()
+
+                # Parse schema if provided (shared by both modes)
+                schema_attrs = None
+                if sv.bed_schema_json.value.strip():
+                    try:
+                        schema_attrs = json.loads(sv.bed_schema_json.value)
+                        st.caption(f"Using {len(schema_attrs)} predefined schema attributes.")
+                    except json.JSONDecodeError as e:
+                        st.error(f"Schema JSON is invalid: {e}")
+                        schema_attrs = None
+
+                sv.bed_mode.value = st.radio(
+                    "Research mode",
+                    options=["Manual", "Auto"],
+                    index=0 if (sv.bed_mode.value or "Manual") == "Manual" else 1,
+                    horizontal=True,
+                    help=(
+                        "**Manual**: one-shot research pass using the budget on the Define tab. "
+                        "**Auto**: iterative loop with an LLM judge that decides when the dataset "
+                        "is complete — optionally seeded by a reference list and able to search "
+                        "in multiple source languages."
+                    ),
+                )
+
+                if sv.bed_mode.value == "Manual":
+                    st.markdown(
+                        "Click **Start research** to begin web search and entity extraction. "
+                        "This may take several minutes depending on the number of queries."
+                    )
+                    _render_reference_labels(api, sv, key="bed_manual")
+                    sv.bed_complete.value = st.checkbox(
+                        "Fill missing attributes for every entity after discovery",
+                        value=sv.bed_complete.value,
+                        help="Runs one grounded search per incomplete entity. Recommended when "
+                             "seeding known entities; adds cost proportional to entity count.",
+                    )
+
+                    if st.button("Start research", type="primary", disabled=not api_key):
+                        if not api_key:
+                            st.error("No API key found. Configure it in the Settings page.")
+                        else:
+                            api.start_research(
+                                api_key=api_key,
+                                category=sv.bed_category.value,
+                                guidance=sv.bed_guidance.value,
+                                schema_attributes=schema_attrs,
+                                max_queries=sv.bed_max_queries.value,
+                                concurrency=sv.bed_concurrency.value,
+                                model=sv.bed_model.value,
+                                budget=sv.bed_budget.value,
+                                verify=sv.bed_verify.value,
+                                seed_labels=list(sv.bed_auto_reference_labels.value or []),
+                                complete=bool(sv.bed_complete.value),
+                            )
+                            time.sleep(0.3)
+                            st.rerun()
+                else:
+                    st.markdown(
+                        "Auto mode runs **Discovery → Verification → Normalize → Judge** in a "
+                        "loop until an LLM judge declares completion (or the iteration / budget "
+                        "caps fire). Per-iteration progress is shown live."
+                    )
+
+                    # ── Reference dataset (entity-label seeds) ────
+                    _render_reference_labels(api, sv, key="bed_auto")
+
+                    # ── Source languages ──────────────────────────
+                    with st.expander("Source languages", expanded=False):
+                        st.caption(
+                            "Each query is translated into every selected language and run as "
+                            "an independent search. Results are extracted into the target "
+                            "language (default English). Default: `en` only."
+                        )
+                        if st.button(
+                            "Suggest source languages from category",
+                            key="bed_auto_lang_suggest",
+                            disabled=not api_key,
+                        ):
+                            try:
+                                with st.spinner("Asking the model…"):
+                                    suggestions = api.propose_search_languages(
+                                        api_key=api_key,
+                                        category=sv.bed_category.value,
+                                        guidance=sv.bed_guidance.value,
+                                        model=sv.bed_model.value,
+                                    )
+                                sv.bed_auto_language_suggestions.value = (
+                                    suggestions or []
+                                )
+                                proposed_codes = [
+                                    s.get("code", "").lower()
+                                    for s in (suggestions or [])
+                                    if s.get("code")
+                                ]
+                                merged = list(
+                                    dict.fromkeys(
+                                        (sv.bed_auto_languages.value or [])
+                                        + proposed_codes
+                                    )
+                                )
+                                sv.bed_auto_languages.value = merged or ["en"]
+                            except Exception as e:  # noqa: BLE001
+                                st.error(f"Suggestion failed: {e}")
+                        sugs = list(sv.bed_auto_language_suggestions.value or [])
+                        if sugs:
+                            st.caption("Suggested languages:")
+                            for s in sugs:
+                                code = s.get("code", "")
+                                name = s.get("name", "")
+                                rationale = s.get("rationale", "")
+                                st.markdown(
+                                    f"- **{code}** ({name}) — {rationale}"
+                                )
+                        current = list(sv.bed_auto_languages.value or ["en"])
+                        option_set = sorted(
+                            set(current)
+                            | {s.get("code", "") for s in sugs if s.get("code")}
+                            | {"en"}
+                        )
+                        sv.bed_auto_languages.value = st.multiselect(
+                            "Languages to search in",
+                            options=option_set,
+                            default=current,
+                            key="bed_auto_lang_ms",
+                            help=(
+                                "Search-query languages (ISO 639-1 codes). Each language "
+                                "multiplies the per-iteration query count by ~1×."
+                            ),
+                        )
+                        sv.bed_auto_target_language.value = st.text_input(
+                            "Target language for extracted values",
+                            value=sv.bed_auto_target_language.value or "English",
+                            key="bed_auto_target_lang",
+                            help=(
+                                "All attribute values are normalized to this language during "
+                                "extraction, regardless of source-document language."
+                            ),
+                        )
+                        n_langs = max(len(sv.bed_auto_languages.value or []), 1)
+                        if n_langs > 1:
+                            st.caption(
+                                f"⚠ {n_langs} languages selected — actual query count will be "
+                                f"~{n_langs}× the per-iteration budget."
+                            )
+
+                    # ── Auto-mode controls ────────────────────────
+                    ac1, ac2 = st.columns(2)
+                    sv.bed_auto_max_iterations.value = ac1.number_input(
+                        "Max iterations",
+                        min_value=1,
+                        max_value=20,
+                        value=int(sv.bed_auto_max_iterations.value or 5),
+                        help="Hard cap on the number of loop iterations.",
+                    )
+                    sv.bed_auto_per_iter_queries.value = ac2.number_input(
+                        "Per-iteration query budget",
+                        min_value=5,
+                        max_value=500,
+                        value=int(sv.bed_auto_per_iter_queries.value or 25),
+                        step=5,
+                        help="Maximum search queries the discovery phase may issue per iteration.",
+                    )
+                    ac3, ac4 = st.columns(2)
+                    sv.bed_auto_min_iterations.value = ac3.number_input(
+                        "Min iterations before judging",
+                        min_value=1,
+                        max_value=20,
+                        value=int(sv.bed_auto_min_iterations.value or 2),
+                        help="The judge starts evaluating completeness from this iteration onward.",
+                    )
+                    sv.bed_auto_normalize_every.value = ac4.number_input(
+                        "Normalize every N iterations",
+                        min_value=1,
+                        max_value=10,
+                        value=int(sv.bed_auto_normalize_every.value or 3),
+                        help="Cluster near-duplicate attribute values every N iterations + at the end.",
+                    )
+
+                    if st.button(
+                        "Start auto mode",
+                        type="primary",
+                        disabled=not api_key,
+                        key="bed_auto_start_btn",
+                    ):
+                        if not api_key:
+                            st.error("No API key found. Configure it in the Settings page.")
+                        else:
+                            api.start_auto_mode(
+                                api_key=api_key,
+                                category=sv.bed_category.value,
+                                guidance=sv.bed_guidance.value,
+                                schema_attributes=schema_attrs,
+                                reference_labels=list(
+                                    sv.bed_auto_reference_labels.value or []
+                                )
+                                or None,
+                                search_languages=list(
+                                    sv.bed_auto_languages.value or ["en"]
+                                ),
+                                target_language=sv.bed_auto_target_language.value
+                                or "English",
+                                max_iterations=int(
+                                    sv.bed_auto_max_iterations.value
+                                ),
+                                per_iter_query_budget=int(
+                                    sv.bed_auto_per_iter_queries.value
+                                ),
+                                normalize_every=int(
+                                    sv.bed_auto_normalize_every.value
+                                ),
+                                min_iterations=int(
+                                    sv.bed_auto_min_iterations.value
+                                ),
+                                concurrency=int(sv.bed_concurrency.value or 5),
+                                model=sv.bed_model.value,
+                                budget=float(sv.bed_budget.value or 10.0),
+                            )
+                            time.sleep(0.3)
+                            st.rerun()
+
+                # ── Resume from a previously completed run ────────
+                st.divider()
+                st.markdown("##### Continue from an existing dataset")
+                _render_import_dataset(api, sv, key="bed_run_import")
+                saved_runs = api.list_saved_runs()
+                if saved_runs:
+                    st.markdown("##### Resume a previous run")
+                    labels = [
+                        f"{r['timestamp']} — {r['category'] or '(unknown)'} "
+                        f"· {r['entity_count']} entities · ${r['total_cost_usd']:.2f}"
+                        for r in saved_runs
+                    ]
+                    idx = st.selectbox(
+                        "Saved runs",
+                        options=list(range(len(saved_runs))),
+                        format_func=lambda i: labels[i],
+                        key="bed_resume_idx",
+                    )
+                    if st.button("Resume selected run"):
+                        try:
+                            api.load_saved_run(
+                                saved_runs[idx]["path"],
+                                api_key=functions.get_api_key() or None,
+                                model=sv.bed_model.value,
+                                budget=float(sv.bed_budget.value or 10.0),
+                            )
+                            st.success(
+                                f"Loaded {saved_runs[idx]['entity_count']} entities."
+                            )
+                            st.rerun()
+                        except Exception as e:  # noqa: BLE001
+                            st.error(f"Failed to load run: {e}")
+
+    # ── Review dataset ─────────────────────────────────────────
+    with review_tab:
+        df = api.dataframe
+        if df is None or df.empty:
+            st.info("No dataset yet. Run research first.")
+        else:
+            st.markdown(f"##### Dataset — {len(df)} entities")
+            st.dataframe(df, height=500, use_container_width=True, hide_index=True)
+
+            schema = api.schema_attributes
+            if schema:
+                with st.expander("Schema attributes", expanded=False):
+                    schema_df = pd.DataFrame(schema)
+                    st.dataframe(schema_df, use_container_width=True, hide_index=True)
+
+            # ── Verification (on demand) ──────────────────────
+            count_fn = getattr(api, "count_unverified", None)
+            unverified_entities, unverified_values = (
+                count_fn() if callable(count_fn) else (0, 0)
+            )
+            with st.expander(
+                f"Verify attribute values ({unverified_values} unverified across "
+                f"{unverified_entities} entities)",
+                expanded=False,
+            ):
+                if unverified_values == 0:
+                    st.success("All attribute values are already web-sourced.")
+                else:
+                    st.markdown(
+                        "Verification runs one targeted web search per entity "
+                        "with unsourced values. This may take a few minutes and "
+                        "incur extra LLM/search cost."
+                    )
+                    if api.is_running:
+                        st.info(f"Busy: {api.progress.stage}")
+                    else:
+                        if st.button(
+                            f"Verify {unverified_values} unverified values",
+                            type="primary",
+                            key="bed_verify_btn",
+                        ):
+                            api.start_verification(
+                                concurrency=max(
+                                    12, int(sv.bed_concurrency.value or 12)
+                                )
+                            )
+                            st.rerun()
+
+            # ── Normalize attribute values (J) ────────────────
+            schema_names = [sa.get("name") for sa in schema] if schema else []
+            with st.expander("Normalize attribute values", expanded=False):
+                st.caption(
+                    "Cluster near-duplicate values and map them to canonical "
+                    "forms. Choose specific attributes or normalize all."
+                )
+                picks = st.multiselect(
+                    "Attributes to normalize (empty = all)",
+                    options=schema_names,
+                    key="bed_norm_attrs",
+                )
+                if api.is_running:
+                    st.info(f"Busy: {api.progress.stage}")
+                else:
+                    if st.button("Run normalization", key="bed_norm_btn"):
+                        api.start_normalize(attributes=picks or None)
+                        st.rerun()
+
+            # ── Schema editor (K) ─────────────────────────────
+            with st.expander("Edit schema attributes", expanded=False):
+                st.caption(
+                    "Edit an attribute's definition and taxonomy, or add a new attribute "
+                    "(fill it with **Fill missing attributes** or the re-categorize search). "
+                    "Locking a taxonomy drops values outside it and stops automated passes "
+                    "from renaming, merging or extending it."
+                )
+                new_label = "+ New attribute"
+                target_attr = st.selectbox(
+                    "Attribute",
+                    options=[new_label] + schema_names,
+                    key="bed_edit_attr",
+                )
+                current = next((s for s in schema if s.get("name") == target_attr), {})
+                is_new = target_attr == new_label
+                ek = f"bed_edit_{target_attr}"
+                attr_name = st.text_input(
+                    "Name", value="" if is_new else target_attr, key=f"{ek}_name"
+                )
+                attr_desc = st.text_area(
+                    "Description (guides extraction)",
+                    value=current.get("description") or "",
+                    key=f"{ek}_desc", height=80,
+                )
+                ec1, ec2, ec3 = st.columns(3)
+                closed = ec1.checkbox(
+                    "Closed set", value=bool(current.get("is_closed_set")), key=f"{ek}_closed"
+                )
+                multi = ec2.checkbox(
+                    "Multi-valued", value=bool(current.get("is_multi_valued")), key=f"{ek}_multi"
+                )
+                locked = ec3.checkbox(
+                    "Locked taxonomy", value=bool(current.get("locked")), key=f"{ek}_locked"
+                )
+                values_text = st.text_area(
+                    "Allowed values (one per line)",
+                    value="\n".join(current.get("canonical_values") or []),
+                    key=f"{ek}_values", height=140, disabled=not closed,
+                )
+                defs = current.get("canonical_value_descriptions") or {}
+                defs_text = st.text_area(
+                    "Value definitions (one per line: `Value: definition`)",
+                    value="\n".join(f"{k}: {v}" for k, v in defs.items()),
+                    key=f"{ek}_defs", height=140, disabled=not closed,
+                    help="Shown to the model during extraction and as dashboard tooltips.",
+                )
+                col_e1, col_e2 = st.columns(2)
+                if col_e1.button("Save attribute", key="bed_attr_save", type="primary"):
+                    name = (attr_name or "").strip()
+                    values = [v.strip() for v in values_text.splitlines() if v.strip()]
+                    parsed_defs = {}
+                    for line in defs_text.splitlines():
+                        if ":" in line:
+                            k, v = line.split(":", 1)
+                            parsed_defs[k.strip()] = v.strip()
+                    unknown = sorted(set(parsed_defs) - set(values)) if closed else []
+                    if not name:
+                        st.error("Name is required.")
+                    elif unknown:
+                        st.error(f"Definitions for values not in the list: {', '.join(unknown)}")
+                    else:
+                        if is_new:
+                            api.add_schema_attribute(name, attr_desc, locked=locked)
+                        elif name != target_attr:
+                            api.rename_attribute(target_attr, name)
+                        api.update_schema_attribute(
+                            name,
+                            description=attr_desc,
+                            is_closed_set=closed,
+                            is_multi_valued=multi,
+                            canonical_values=values if closed else [],
+                            canonical_value_descriptions=parsed_defs if closed else {},
+                            locked=locked,
+                        )
+                        st.success(f"Saved '{name}'.")
+                        st.rerun()
+                if not is_new and col_e2.button(
+                    "Remove attribute", key="bed_remove_btn", type="secondary"
+                ):
+                    n = api.remove_attribute(target_attr)
+                    st.success(f"Removed from {n} record fields.")
+                    st.rerun()
+
+            # ── Fill missing attributes ───────────────────────
+            _render_record_editor(api, schema)
+            _render_restore_records(api)
+
+            inc_records, inc_cells = api.count_incomplete()
+            with st.expander(
+                f"Fill missing attributes ({inc_cells} empty values across {inc_records} entities)",
+                expanded=False,
+            ):
+                st.caption(
+                    "Runs grounded web searches for every entity with empty schema "
+                    "attributes (up to 3 calls per entity). Use after adding an attribute "
+                    "or seeding entities."
+                )
+                if api.is_running:
+                    st.info(f"Busy: {api.progress.stage}")
+                elif st.button(
+                    f"Fill {inc_cells} missing values",
+                    key="bed_complete_btn",
+                    disabled=inc_cells == 0 or not api.can_continue_research(),
+                ):
+                    api.start_completion(concurrency=int(sv.bed_concurrency.value or 8))
+                    st.rerun()
+
+            # ── Re-categorize schema (remap + optional web search) ──
+            with st.expander(
+                "Re-categorize schema (remap + optional web search)",
+                expanded=False,
+            ):
+                st.caption(
+                    "Propose a tightened taxonomy for closed-set attributes and "
+                    "remap existing values **in place** (no web search). Records "
+                    "that pure remapping cannot categorize — or, optionally, all "
+                    "records for an attribute — can then be re-classified against "
+                    "the new taxonomy using targeted web search."
+                )
+                closed_names = [
+                    sa.get("name")
+                    for sa in (schema or [])
+                    if sa.get("is_closed_set")
+                ]
+                if not closed_names:
+                    st.caption("No closed-set attributes to re-categorize.")
+                else:
+                    recat_key = functions.get_api_key()
+                    recat_attrs = st.multiselect(
+                        "Attributes to re-categorize (empty = all closed-set)",
+                        options=closed_names,
+                        key="bed_recat_attrs",
+                    )
+                    recat_constraints = st.text_area(
+                        "Constraints for the new taxonomy",
+                        value="",
+                        placeholder=(
+                            "e.g. Collapse to 8–10 canonical values per attribute. "
+                            "Merge CSEA into 'Sex Trafficking & Sexual Exploitation'. "
+                            "Add a 'Compliance & Inspections' category."
+                        ),
+                        height=110,
+                        key="bed_recat_constraints",
+                    )
+                    rc1, rc2 = st.columns([3, 1])
+                    propose_clicked = rc1.button(
+                        "Propose new taxonomy",
+                        key="bed_recat_propose",
+                        type="primary",
+                        disabled=not recat_key,
+                    )
+                    if rc2.button("Clear", key="bed_recat_clear"):
+                        sv.bed_recat_proposal.value = {}
+                        sv.bed_recat_summary.value = {}
+                        st.rerun()
+                    if not recat_key:
+                        st.info("Set an OpenAI API key in Settings to propose a taxonomy.")
+                    if propose_clicked:
+                        with st.spinner("Proposing tightened taxonomy…"):
+                            try:
+                                proposal = api.propose_recategorization(
+                                    recat_constraints,
+                                    attributes=recat_attrs or None,
+                                    api_key=recat_key,
+                                    model=sv.bed_model.value,
+                                )
+                                sv.bed_recat_proposal.value = proposal
+                                sv.bed_recat_summary.value = {}
+                                st.rerun()
+                            except Exception as e:  # noqa: BLE001
+                                st.error(f"Proposal failed: {e}")
+
+                    proposal = dict(sv.bed_recat_proposal.value or {})
+                    summary = dict(sv.bed_recat_summary.value or {})
+                    if proposal or api.can_continue_research():
+                      if proposal:
+                        issues = proposal.get("validation_issues") or []
+                        if issues:
+                            st.warning(
+                                "Translation coverage issues (some observed values "
+                                "were not mapped): " + "; ".join(issues)
+                            )
+                        for sattr in proposal.get("schema") or []:
+                            cvs = sattr.get("canonical_values") or []
+                            st.markdown(
+                                f"**{sattr.get('name')}** — {len(cvs)} values"
+                            )
+                            if sattr.get("change_summary"):
+                                st.caption(sattr["change_summary"])
+                            if cvs:
+                                st.caption("Canonical: " + ", ".join(map(str, cvs)))
+                        st.caption(
+                            f"Per-record remappings: "
+                            f"{len(proposal.get('record_remappings') or [])} · "
+                            f"unresolved: {len(proposal.get('unresolved') or [])} · "
+                            f"records left uncategorized (kept for re-search): "
+                            f"{len(proposal.get('out_of_scope_records') or [])}"
+                        )
+
+                        if api.is_running:
+                            st.info(f"Busy: {api.progress.stage}")
+                        else:
+                            if st.button(
+                                "Apply remapping (in place)",
+                                key="bed_recat_apply",
+                                type="primary",
+                            ):
+                                try:
+                                    summary = api.apply_recategorization(
+                                        proposal, remove_out_of_scope=False
+                                    )
+                                    sv.bed_recat_summary.value = summary
+                                    st.success(
+                                        f"Remapped {summary.get('remappings_applied', 0)} "
+                                        f"values across {summary.get('records', 0)} records. "
+                                        f"{summary.get('gap_total', 0)} values left "
+                                        f"uncategorized."
+                                    )
+                                    st.rerun()
+                                except Exception as e:  # noqa: BLE001
+                                    st.error(f"Apply failed: {e}")
+
+                      if summary or api.can_continue_research():
+                            gaps = summary.get("gaps") or {}
+                            gap_attrs = [a for a, labs in gaps.items() if labs]
+                            attr_opts = summary.get("attributes") or closed_names
+                            st.markdown("**Optional: web-search re-classification**")
+                            st.caption(
+                                "Re-classify records against the new taxonomy using "
+                                "one targeted web search each. Requires a live "
+                                "research session (API key). Incurs LLM/search cost."
+                            )
+                            search_attrs = st.multiselect(
+                                "Attributes to re-classify",
+                                options=attr_opts,
+                                default=gap_attrs,
+                                key="bed_recat_search_attrs",
+                            )
+                            mode_label = st.radio(
+                                "Mode",
+                                options=[
+                                    "Add new categories only (keeps existing values)",
+                                    "Reassign from scratch (may change existing values)",
+                                ],
+                                key="bed_recat_mode",
+                            )
+                            mode = "augment" if mode_label.startswith("Add") else "reassign"
+
+                            # Net-new canonical values (in schema but with no records yet)
+                            # make sensible defaults for augment mode.
+                            present = {}
+                            for r in (api.dataset_json or {}).get("records", []):
+                                for a, blk in (r.get("attributes") or {}).items():
+                                    for v in blk.get("values", []):
+                                        if v.get("value"):
+                                            present.setdefault(a, set()).add(v["value"])
+                            schema_by_name = {s.get("name"): s for s in (schema or [])}
+                            netnew_opts, netnew_default = [], []
+                            for a in search_attrs:
+                                for v in (schema_by_name.get(a, {}).get("canonical_values") or []):
+                                    netnew_opts.append(v)
+                                    if v not in present.get(a, set()):
+                                        netnew_default.append(v)
+
+                            only_values = None
+                            if mode == "augment":
+                                only_values = st.multiselect(
+                                    "Only add these values (blank = add any supported value)",
+                                    options=sorted(set(netnew_opts)),
+                                    default=sorted(set(netnew_default)),
+                                    key="bed_recat_only_values",
+                                )
+                            kw_raw = st.text_input(
+                                "Candidate keywords (comma-separated, optional — targets "
+                                "records whose text matches; cheapest)",
+                                key="bed_recat_keywords",
+                            )
+                            keywords = [k.strip() for k in kw_raw.split(",") if k.strip()] or None
+                            tagged = st.multiselect(
+                                "Only entities currently tagged with (optional)",
+                                options=sorted({
+                                    f"{a} = {v}" for a, vs in present.items()
+                                    if a in search_attrs for v in vs
+                                }),
+                                key="bed_recat_tagged",
+                                help="e.g. re-check every entity in an over-used catch-all category.",
+                            )
+                            target_labels = None
+                            if tagged:
+                                pairs = [t.split(" = ", 1) for t in tagged]
+                                target_labels = [
+                                    r.get("label") for r in (api.dataset_json or {}).get("records", [])
+                                    if any(
+                                        any(v.get("value") == val for v in (r.get("attributes") or {}).get(a, {}).get("values", []))
+                                        for a, val in pairs
+                                    )
+                                ]
+                            scope = "gaps" if st.checkbox(
+                                "Limit to records with no value (gaps only)",
+                                key="bed_recat_gaps_only",
+                            ) else "all"
+
+                            if st.button("Preview candidates", key="bed_recat_preview"):
+                                try:
+                                    cand = api.recategorization_candidates(
+                                        search_attrs, scope=scope, candidate_keywords=keywords,
+                                        labels=target_labels,
+                                    )
+                                    n = sum(len(v) for v in cand.values())
+                                    parts = ", ".join(
+                                        f"{a}: {len(v)}" for a, v in cand.items()
+                                    )
+                                    st.info(
+                                        f"{n} record-searches ({parts}) · "
+                                        f"est. cost ~${n * 0.032:.2f}"
+                                    )
+                                except Exception as e:  # noqa: BLE001
+                                    st.error(f"Preview failed: {e}")
+
+                            if api.is_running:
+                                st.info(f"Busy: {api.progress.stage}")
+                            elif st.button(
+                                "Run web-search re-classification",
+                                key="bed_recat_search_run",
+                                disabled=not search_attrs,
+                            ):
+                                try:
+                                    api.start_recategorization_search(
+                                        search_attrs,
+                                        mode=mode,
+                                        only_values=only_values or None,
+                                        candidate_keywords=keywords,
+                                        labels=target_labels,
+                                        scope=scope,
+                                        concurrency=max(
+                                            1, int(sv.bed_concurrency.value or 4)
+                                        ),
+                                    )
+                                    st.rerun()
+                                except Exception as e:  # noqa: BLE001
+                                    st.error(f"Re-classification failed: {e}")
+
+            # ── Add candidate entities (L) ────────────────────
+            with st.expander("Add candidate entities & guidance", expanded=False):
+                st.caption(
+                    "Seed labels you want included in the dataset (they will "
+                    "be added as blank records — run research again to expand "
+                    "their attributes) and/or leave a free-form note that "
+                    "future research and verification prompts will see."
+                )
+                cand_text = st.text_area(
+                    "Candidate names (one per line or comma-separated)",
+                    key="bed_candidates_text",
+                    height=120,
+                )
+                cand_file = st.file_uploader(
+                    "…or upload a file (.txt, .csv, .tsv, .json)",
+                    type=["txt", "csv", "tsv", "json"],
+                    key="bed_candidates_file",
+                )
+                note_text = st.text_area(
+                    "Comment / additional guidance for the research agent",
+                    key="bed_candidates_note",
+                    height=100,
+                    placeholder=(
+                        "e.g. Focus on Southeast Asian member states only, "
+                        "or: Exclude organisations dissolved before 2010."
+                    ),
+                )
+                if st.button("Apply", key="bed_candidates_btn"):
+                    names: list[str] = [
+                        tok.strip()
+                        for tok in cand_text.replace(",", "\n").splitlines()
+                        if tok.strip()
+                    ]
+                    if cand_file is not None:
+                        names.extend(
+                            api.parse_candidate_file(
+                                cand_file.name, cand_file.getvalue()
+                            )
+                        )
+                    added = api.add_candidate_entities(names) if names else 0
+                    noted = api.append_guidance(note_text)
+                    msgs = []
+                    if added:
+                        msgs.append(f"Added {added} new entities.")
+                    elif names:
+                        msgs.append("No new entities added (duplicates).")
+                    if noted:
+                        msgs.append("Guidance updated.")
+                    if msgs:
+                        st.success(" ".join(msgs))
+                        st.rerun()
+                    else:
+                        st.info("Nothing to apply.")
+
+            # ── Curate entity groups (M) ──────────────────────
+            alias_groups_all = (
+                api.list_alias_groups() if hasattr(api, "list_alias_groups") else []
+            )
+            grouped = [g for g in alias_groups_all if g.get("aliases")]
+            curate_title = (
+                f"Curate entity groups ({len(grouped)} of {len(alias_groups_all)} "
+                "entities have aliases)"
+            )
+            with st.expander(curate_title, expanded=False):
+                st.caption(
+                    "Fuzzy deduplication may have over-grouped entities — "
+                    "e.g. a category-like phrase becoming the canonical "
+                    "name for specific tools. Review groups below, set a "
+                    "better canonical, remove or split out spurious "
+                    "aliases, or manually merge two entries. Splits are "
+                    "remembered so later passes won't re-merge them."
+                )
+
+                if not alias_groups_all:
+                    st.info("No entities yet.")
+                else:
+                    # Quick filter so big datasets stay navigable.
+                    show_filter = st.text_input(
+                        "Filter by name or alias (case-insensitive)",
+                        key="bed_curate_filter",
+                        placeholder="e.g. memex",
+                    )
+                    only_groups = st.checkbox(
+                        "Only show entities with aliases",
+                        value=True,
+                        key="bed_curate_only_grouped",
+                    )
+                    needle = (show_filter or "").strip().lower()
+                    candidates = grouped if only_groups else alias_groups_all
+                    if needle:
+                        def _matches(g: dict) -> bool:
+                            hay = " ".join(
+                                [g.get("label") or ""] + list(g.get("aliases") or [])
+                            ).lower()
+                            return needle in hay
+                        candidates = [g for g in candidates if _matches(g)]
+
+                    if not candidates:
+                        st.info("No entities match the current filter.")
+                    else:
+                        st.caption(f"Showing {min(len(candidates), 50)} of {len(candidates)} entities.")
+                        for ci, g in enumerate(candidates[:50]):
+                            label = g["label"]
+                            aliases = g.get("aliases") or []
+                            counts = g.get("alias_counts") or {}
+                            with st.container(border=True):
+                                hdr_cols = st.columns([6, 2])
+                                hdr_cols[0].markdown(
+                                    f"**{label}**" + (
+                                        f"  &nbsp;·&nbsp; {len(aliases)} alias"
+                                        f"{'es' if len(aliases) != 1 else ''}"
+                                        if aliases else ""
+                                    )
+                                )
+                                if counts:
+                                    summary = ", ".join(
+                                        f"{k} ({v})"
+                                        for k, v in sorted(
+                                            counts.items(), key=lambda kv: -kv[1]
+                                        )[:6]
+                                    )
+                                    hdr_cols[0].caption(f"variants seen: {summary}")
+                                hdr_cols[1].caption(
+                                    f"total mentions: {g.get('total_count', 1)}"
+                                )
+
+                                if aliases:
+                                    # Canonical reassignment
+                                    canon_options = [label] + aliases
+                                    new_canon = st.selectbox(
+                                        "Canonical label",
+                                        options=canon_options,
+                                        index=0,
+                                        key=f"bed_curate_canon_{ci}",
+                                    )
+                                    custom_canon = st.text_input(
+                                        "…or type a new canonical name",
+                                        key=f"bed_curate_canon_custom_{ci}",
+                                        placeholder="(leave empty to use selection above)",
+                                    )
+                                    set_btn, _spacer = st.columns([2, 6])
+                                    if set_btn.button(
+                                        "Set canonical",
+                                        key=f"bed_curate_set_canon_{ci}",
+                                    ):
+                                        target = (custom_canon or new_canon or "").strip()
+                                        if target and target != label:
+                                            if api.rename_record_canonical(label, target):
+                                                st.success(
+                                                    f"Canonical set to **{target}**."
+                                                )
+                                                st.rerun()
+                                            else:
+                                                st.error("Could not update canonical.")
+                                        else:
+                                            st.info("No change.")
+
+                                    # Per-alias controls
+                                    st.caption("Aliases — split out, remove, or keep:")
+                                    for ai, alias in enumerate(aliases):
+                                        ac1, ac2, ac3 = st.columns([6, 2, 2])
+                                        ac1.markdown(
+                                            f"&nbsp;&nbsp;·&nbsp;`{alias}`"
+                                            + (
+                                                f" — {counts.get(alias, 1)} mention"
+                                                f"{'s' if counts.get(alias, 1) != 1 else ''}"
+                                                if alias in counts
+                                                else ""
+                                            ),
+                                            unsafe_allow_html=True,
+                                        )
+                                        if ac2.button(
+                                            "Split out",
+                                            key=f"bed_curate_split_{ci}_{ai}",
+                                            help=(
+                                                "Promote this alias into its own "
+                                                "record and remember not to "
+                                                "re-merge them."
+                                            ),
+                                        ):
+                                            if api.split_alias(label, alias):
+                                                st.success(
+                                                    f"Split **{alias}** into a new record."
+                                                )
+                                                st.rerun()
+                                            else:
+                                                st.error("Split failed.")
+                                        if ac3.button(
+                                            "Remove",
+                                            key=f"bed_curate_rmalias_{ci}_{ai}",
+                                            help=(
+                                                "Drop this alias entirely — does "
+                                                "not create a new record."
+                                            ),
+                                        ):
+                                            if api.remove_alias(label, alias):
+                                                st.success(f"Removed alias **{alias}**.")
+                                                st.rerun()
+                                            else:
+                                                st.error("Remove failed.")
+                                else:
+                                    st.caption("No aliases — no curation needed.")
+
+                    st.markdown("---")
+                    st.markdown("**Merge two entities manually**")
+                    all_labels = [g["label"] for g in alias_groups_all]
+                    if len(all_labels) >= 2:
+                        mc1, mc2, mc3 = st.columns([4, 4, 2])
+                        primary_pick = mc1.selectbox(
+                            "Keep this as canonical",
+                            options=all_labels,
+                            key="bed_curate_merge_primary",
+                        )
+                        other_options = [l for l in all_labels if l != primary_pick]
+                        other_pick = mc2.selectbox(
+                            "Merge this one in",
+                            options=other_options,
+                            key="bed_curate_merge_other",
+                        )
+                        if mc3.button("Merge", key="bed_curate_merge_btn"):
+                            if api.merge_records(primary_pick, other_pick):
+                                st.success(
+                                    f"Merged **{other_pick}** → **{primary_pick}**."
+                                )
+                                st.rerun()
+                            else:
+                                st.error("Merge failed.")
+
+                    # Show any do-not-merge constraints already in force.
+                    dnm = (
+                        api.do_not_merge_pairs
+                        if hasattr(api, "do_not_merge_pairs")
+                        else []
+                    )
+                    if dnm:
+                        st.markdown("---")
+                        st.caption(
+                            f"{len(dnm)} pair(s) marked as 'do not merge' "
+                            "(prevents re-merging by fuzzy passes):"
+                        )
+                        for pair in dnm[:25]:
+                            st.markdown(
+                                f"&nbsp;&nbsp;·&nbsp;`{pair[0]}` &nbsp;⇎&nbsp; "
+                                f"`{pair[1]}`",
+                                unsafe_allow_html=True,
+                            )
+
+                    st.markdown("---")
+                    st.markdown("**Suggest groupings with AI**")
+                    st.caption(
+                        "Ask the LLM to review the current canonical labels "
+                        "and propose any that should be merged into a "
+                        "single record. Each proposal is shown for you to "
+                        "accept or dismiss — nothing is applied "
+                        "automatically."
+                    )
+
+                    suggestions = list(sv.bed_alias_suggestions.value or [])
+                    dismissed = set(sv.bed_alias_dismissed.value or [])
+                    visible_sugs = [
+                        s for s in suggestions
+                        if _suggestion_key(s) not in dismissed
+                    ]
+                    sc_run, sc_clear = st.columns([3, 1])
+                    if sc_run.button(
+                        "Suggest groupings (AI)",
+                        key="bed_curate_ai_suggest_btn",
+                        type="primary",
+                    ):
+                        with st.spinner("Asking the model…"):
+                            try:
+                                new_sugs = api.suggest_alias_groups()
+                            except Exception as e:  # noqa: BLE001
+                                new_sugs = None
+                                st.error(f"Suggest failed: {e}")
+                        if new_sugs is not None:
+                            sv.bed_alias_suggestions.value = new_sugs
+                            sv.bed_alias_dismissed.value = []
+                            st.rerun()
+                    if sc_clear.button(
+                        "Clear suggestions", key="bed_curate_ai_clear"
+                    ):
+                        sv.bed_alias_suggestions.value = []
+                        sv.bed_alias_dismissed.value = []
+                        st.rerun()
+
+                    if not suggestions:
+                        st.caption("No AI suggestions yet.")
+                    elif not visible_sugs:
+                        st.success(
+                            "All suggestions have been actioned or dismissed."
+                        )
+                    else:
+                        if len(visible_sugs) > 1:
+                            apply_all_col, _ = st.columns([3, 5])
+                            if apply_all_col.button(
+                                f"Accept all {len(visible_sugs)} suggestions",
+                                key="bed_curate_ai_accept_all",
+                            ):
+                                applied_total = 0
+                                for s in visible_sugs:
+                                    applied_total += api.apply_alias_suggestion(
+                                        s.get("primary", ""),
+                                        s.get("members", []),
+                                    )
+                                sv.bed_alias_suggestions.value = []
+                                sv.bed_alias_dismissed.value = []
+                                st.success(
+                                    f"Applied {applied_total} merge(s)."
+                                )
+                                st.rerun()
+
+                        for si, s in enumerate(visible_sugs):
+                            primary = s.get("primary", "")
+                            members = list(s.get("members", []) or [])
+                            reason = s.get("reason", "")
+                            with st.container(border=True):
+                                st.markdown(
+                                    f"Merge into **{primary}** ← " +
+                                    ", ".join(f"`{m}`" for m in members)
+                                )
+                                if reason:
+                                    st.caption(reason)
+                                ab1, ab2 = st.columns(2)
+                                if ab1.button(
+                                    "Accept",
+                                    key=f"bed_curate_ai_accept_{si}",
+                                    type="primary",
+                                ):
+                                    n = api.apply_alias_suggestion(primary, members)
+                                    sv.bed_alias_suggestions.value = [
+                                        x for x in suggestions
+                                        if _suggestion_key(x) != _suggestion_key(s)
+                                    ]
+                                    st.success(f"Merged {n} record(s) into {primary}.")
+                                    st.rerun()
+                                if ab2.button(
+                                    "Dismiss",
+                                    key=f"bed_curate_ai_dismiss_{si}",
+                                ):
+                                    dismissed.add(_suggestion_key(s))
+                                    sv.bed_alias_dismissed.value = list(dismissed)
+                                    st.rerun()
+
+            # ── Scope audit ────────────────────────────────────────
+            scope_state = dict(sv.bed_scope_results.value or {})
+            scope_dismissed = set(sv.bed_scope_dismissed.value or [])
+            scope_visible = [
+                f for f in (scope_state.get("flagged") or [])
+                if f.get("label") not in scope_dismissed
+            ]
+            with st.expander(
+                f"Audit scope ({len(scope_visible)} flagged)" if scope_state else "Audit scope",
+                expanded=False,
+            ):
+                st.caption(
+                    "Flags records that aren't instances of the dataset category "
+                    "(reports, policies, campaigns, events, sources about the topic). "
+                    "Excluding a record also stops research from re-adding it."
+                )
+                sc1, sc2 = st.columns([3, 1])
+                if sc1.button("Run scope audit", key="bed_scope_run", type="primary"):
+                    if not functions.get_api_key():
+                        st.error("Set an OpenAI API key in Settings first.")
+                    else:
+                        with st.spinner("Auditing scope…"):
+                            try:
+                                sv.bed_scope_results.value = api.audit_scope(
+                                    api_key=functions.get_api_key(),
+                                    model=sv.bed_model.value,
+                                )
+                                sv.bed_scope_dismissed.value = []
+                                st.rerun()
+                            except Exception as e:  # noqa: BLE001
+                                st.error(f"Scope audit failed: {e}")
+                if sc2.button("Clear", key="bed_scope_clear"):
+                    sv.bed_scope_results.value = {}
+                    sv.bed_scope_dismissed.value = []
+                    st.rerun()
+                weak = scope_state.get("weak_relevance") or []
+                if weak:
+                    with st.popover(f"{len(weak)} in scope but weakly documented (review only)"):
+                        st.caption("Real products whose documented use for this topic is weak. Not excluded.")
+                        st.dataframe(
+                            pd.DataFrame(weak)[["label", "entity_kind", "reason"]],
+                            hide_index=True, use_container_width=True,
+                        )
+                if scope_visible and st.button(
+                    f"Exclude all {len(scope_visible)} flagged", key="bed_scope_apply_all"
+                ):
+                    n = api.apply_scope_exclusions(scope_visible)
+                    sv.bed_scope_dismissed.value = list(
+                        scope_dismissed | {f["label"] for f in scope_visible}
+                    )
+                    st.success(f"Excluded {n} records.")
+                    st.rerun()
+                for si, entry in enumerate(scope_visible[:50]):
+                    with st.container(border=True):
+                        st.markdown(
+                            f"**{entry['label']}** · {entry.get('entity_kind', '')} "
+                            f"({entry.get('confidence', 0):.0%})"
+                        )
+                        st.caption(entry.get("reason", ""))
+                        b1, b2 = st.columns(2)
+                        if b1.button("Exclude", key=f"bed_scope_ex_{si}", type="primary"):
+                            api.apply_scope_exclusions([entry])
+                            sv.bed_scope_dismissed.value = list(scope_dismissed | {entry["label"]})
+                            st.rerun()
+                        if b2.button("Keep", key=f"bed_scope_keep_{si}"):
+                            sv.bed_scope_dismissed.value = list(scope_dismissed | {entry["label"]})
+                            st.rerun()
+
+            # ── Relevance filter (explicit connection) ─────────
+            rel = dict(getattr(api, "relevance_results", {}) or {})
+            rel_dismissed = set(sv.bed_relevance_dismissed.value or [])
+            rel_visible = [r for r in (rel.get("not_explicit") or []) if r["label"] not in rel_dismissed]
+            with st.expander(
+                f"Relevance filter ({len(rel_visible)} without an explicit connection)"
+                if rel else "Relevance filter (require an explicit connection)",
+                expanded=False,
+            ):
+                st.caption(
+                    "Researches a sourced evidence attribute for each entity with a targeted "
+                    "search, then keeps only entities whose evidence explicitly meets your "
+                    "requirement. Links inferred from general capabilities don't count. "
+                    "Nothing is removed until you confirm."
+                )
+                rel_criterion = st.text_area(
+                    "Requirement",
+                    key="bed_rel_criterion",
+                    height=100,
+                    placeholder=(
+                        "e.g. The tool has an explicit connection to human trafficking, "
+                        "modern slavery or forced labour."
+                    ),
+                )
+                rc1, rc2 = st.columns(2)
+                rel_attr = rc1.text_input(
+                    "Evidence attribute (added to the schema)",
+                    value="Connection Evidence", key="bed_rel_attr",
+                )
+                rel_conn = rc2.text_input(
+                    "Accepted connection types (comma-separated)", key="bed_rel_conn",
+                    placeholder="Human trafficking, Modern slavery, Forced labour",
+                )
+                rel_focus = st.text_input(
+                    "Search focus", key="bed_rel_focus",
+                    placeholder="use against human trafficking, modern slavery or forced labour",
+                    help="Steers the evidence search; leave blank to reuse each entity's general page.",
+                )
+                rel_research = st.checkbox(
+                    "Research evidence via web search (recommended)", value=True, key="bed_rel_research"
+                )
+                if api.is_running:
+                    st.info(f"Busy: {api.progress.stage}")
+                elif st.button(
+                    "Run relevance check",
+                    key="bed_rel_run",
+                    type="primary",
+                    disabled=not (rel_criterion.strip() and rel_attr.strip() and api.can_continue_research()),
+                ):
+                    try:
+                        api.start_relevance_filter(
+                            criterion=rel_criterion.strip(),
+                            evidence_attribute=rel_attr.strip(),
+                            connections=[c.strip() for c in rel_conn.split(",") if c.strip()]
+                            or ["Explicit connection"],
+                            search_focus=rel_focus.strip() or None,
+                            research_evidence=rel_research,
+                            context_attributes=[n for n in schema_names if n != rel_attr.strip()][:3],
+                            concurrency=int(sv.bed_concurrency.value or 8),
+                        )
+                        sv.bed_relevance_dismissed.value = []
+                        st.rerun()
+                    except Exception as e:  # noqa: BLE001
+                        st.error(f"Relevance check failed: {e}")
+                if rel:
+                    st.caption(
+                        f"Checked {len(rel.get('results') or [])} · without explicit connection "
+                        f"{len(rel.get('not_explicit') or [])} · uncertain (kept) "
+                        f"{len(rel.get('uncertain') or [])}"
+                    )
+                    if rel_visible and st.button(
+                        f"Exclude all {len(rel_visible)}", key="bed_rel_apply_all"
+                    ):
+                        n = api.apply_scope_exclusions(
+                            [{**r, "entity_kind": "No explicit connection"} for r in rel_visible]
+                        )
+                        sv.bed_relevance_dismissed.value = list(
+                            rel_dismissed | {r["label"] for r in rel_visible}
+                        )
+                        st.success(f"Excluded {n} entities.")
+                        st.rerun()
+                    for ri, entry in enumerate(rel_visible[:50]):
+                        with st.container(border=True):
+                            st.markdown(f"**{entry['label']}** ({entry.get('confidence', 0):.0%})")
+                            st.caption(entry.get("reason", ""))
+                            b1, b2 = st.columns(2)
+                            if b1.button("Exclude", key=f"bed_rel_ex_{ri}", type="primary"):
+                                api.apply_scope_exclusions(
+                                    [{**entry, "entity_kind": "No explicit connection"}]
+                                )
+                                sv.bed_relevance_dismissed.value = list(rel_dismissed | {entry["label"]})
+                                st.rerun()
+                            if b2.button("Keep", key=f"bed_rel_keep_{ri}"):
+                                sv.bed_relevance_dismissed.value = list(rel_dismissed | {entry["label"]})
+                                st.rerun()
+
+            # ── Audit merge quality ────────────────────────────
+            audit_state = dict(sv.bed_audit_results.value or {})
+            audit_dismissed = set(sv.bed_audit_dismissed.value or [])
+            flagged_visible = [
+                f for f in (audit_state.get("flagged") or [])
+                if f.get("label") not in audit_dismissed
+            ]
+            audit_title = (
+                f"Audit merge quality ({len(flagged_visible)} flagged)"
+                if audit_state else
+                "Audit merge quality"
+            )
+            with st.expander(audit_title, expanded=False):
+                st.caption(
+                    "Scans records for the over-merge pattern (one record "
+                    "carrying multiple descriptions that describe materially "
+                    "different products, or sibling-catalog aliases). Each "
+                    "flagged record comes with an LLM-proposed split — "
+                    "review, then accept or dismiss. Nothing is applied "
+                    "automatically."
+                )
+                ac1, ac2 = st.columns([3, 1])
+                run_audit = ac1.button(
+                    "Run merge-quality audit",
+                    key="bed_audit_run",
+                    type="primary",
+                )
+                clear_audit = ac2.button(
+                    "Clear", key="bed_audit_clear"
+                )
+                if clear_audit:
+                    sv.bed_audit_results.value = {}
+                    sv.bed_audit_dismissed.value = []
+                    st.rerun()
+                if run_audit:
+                    if not functions.get_api_key():
+                        st.error(
+                            "Set an OpenAI API key in Settings before running "
+                            "the audit."
+                        )
+                    else:
+                        with st.spinner("Auditing — one LLM call per candidate…"):
+                            try:
+                                audit_state = api.audit_merge_quality(
+                                    api_key=functions.get_api_key(),
+                                )
+                                sv.bed_audit_results.value = audit_state
+                                sv.bed_audit_dismissed.value = []
+                                st.rerun()
+                            except Exception as e:  # noqa: BLE001
+                                st.error(f"Audit failed: {e}")
+                if audit_state:
+                    st.caption(
+                        f"Total records: {audit_state.get('total_records', 0)} "
+                        f"·  candidates scanned: {audit_state.get('candidates', 0)} "
+                        f"·  flagged: {len(audit_state.get('flagged') or [])}"
+                    )
+                if not flagged_visible and audit_state:
+                    st.success(
+                        "No remaining flagged records — every audited merge "
+                        "looks coherent (or has been actioned)."
+                    )
+                for fi, entry in enumerate(flagged_visible[:25]):
+                    label = entry.get("label", "")
+                    splits = entry.get("split_proposal") or []
+                    conf = entry.get("confidence", 0.0)
+                    reason = entry.get("reason", "")
+                    with st.container(border=True):
+                        st.markdown(
+                            f"**{label}**  &nbsp;·&nbsp; "
+                            f"split into {len(splits)} "
+                            f"({conf:.0%} confidence)"
+                        )
+                        if reason:
+                            st.caption(reason)
+                        for sp in splits:
+                            st.markdown(
+                                f"- `{sp.get('label','')}` — "
+                                f"{sp.get('rationale','')}"
+                            )
+                        bb1, bb2 = st.columns(2)
+                        if bb1.button(
+                            "Split now",
+                            key=f"bed_audit_split_{fi}",
+                            type="primary",
+                        ):
+                            try:
+                                n_new = api.apply_audit_split(label, entry)
+                            except Exception as e:  # noqa: BLE001
+                                n_new = 0
+                                st.error(f"Split failed: {e}")
+                            if n_new > 1:
+                                audit_dismissed.add(label)
+                                sv.bed_audit_dismissed.value = list(
+                                    audit_dismissed
+                                )
+                                # Drop the entry from flagged so it doesn't
+                                # reappear after rerun.
+                                kept_flagged = [
+                                    f for f in (audit_state.get("flagged") or [])
+                                    if f.get("label") != label
+                                ]
+                                audit_state["flagged"] = kept_flagged
+                                sv.bed_audit_results.value = audit_state
+                                st.success(
+                                    f"Split into {n_new} records."
+                                )
+                                st.rerun()
+                            elif n_new == 0:
+                                st.warning(
+                                    "No split applied — the record may "
+                                    "have changed since the audit ran. "
+                                    "Re-run the audit."
+                                )
+                        if bb2.button(
+                            "Dismiss",
+                            key=f"bed_audit_dismiss_{fi}",
+                        ):
+                            audit_dismissed.add(label)
+                            sv.bed_audit_dismissed.value = list(
+                                audit_dismissed
+                            )
+                            st.rerun()
+
+            # ── Audit duplicate clusters (under-merge) ─────────
+            dedup_state = dict(sv.bed_dedup_results.value or {})
+            dedup_dismissed = set(sv.bed_dedup_dismissed.value or [])
+
+            def _dedup_key(entry: dict, ms: dict) -> str:
+                return entry.get("organization", "") + "::" + (ms.get("canonical_label") or "")
+
+            visible_dedup: list[tuple[dict, dict]] = []
+            for entry in (dedup_state.get("flagged") or []):
+                for ms in (entry.get("merge_sets") or []):
+                    if _dedup_key(entry, ms) in dedup_dismissed:
+                        continue
+                    visible_dedup.append((entry, ms))
+            dedup_title = (
+                f"Audit duplicate clusters ({len(visible_dedup)} proposed merges)"
+                if dedup_state else
+                "Audit duplicate clusters"
+            )
+            with st.expander(dedup_title, expanded=False):
+                st.caption(
+                    "Scans for the under-merge pattern: multiple records "
+                    "from the same organisation that describe the same "
+                    "underlying tool but have labels too dissimilar for "
+                    "string matching. Each proposed merge collapses N "
+                    "records into one — review, then accept or dismiss. "
+                    "Nothing is applied automatically."
+                )
+                dc1, dc2 = st.columns([3, 1])
+                run_dedup = dc1.button(
+                    "Run duplicate-cluster audit",
+                    key="bed_dedup_run",
+                    type="primary",
+                )
+                clear_dedup = dc2.button(
+                    "Clear", key="bed_dedup_clear"
+                )
+                if clear_dedup:
+                    sv.bed_dedup_results.value = {}
+                    sv.bed_dedup_dismissed.value = []
+                    st.rerun()
+                if run_dedup:
+                    if not functions.get_api_key():
+                        st.error(
+                            "Set an OpenAI API key in Settings before running "
+                            "the audit."
+                        )
+                    else:
+                        with st.spinner(
+                            "Auditing — one LLM call per candidate cluster…"
+                        ):
+                            try:
+                                dedup_state = api.audit_duplicate_clusters(
+                                    api_key=functions.get_api_key(),
+                                )
+                                sv.bed_dedup_results.value = dedup_state
+                                sv.bed_dedup_dismissed.value = []
+                                st.rerun()
+                            except Exception as e:  # noqa: BLE001
+                                st.error(f"Dedup audit failed: {e}")
+                if dedup_state:
+                    st.caption(
+                        f"Total records: {dedup_state.get('total_records', 0)} "
+                        f"·  clusters scanned: {dedup_state.get('clusters', 0)} "
+                        f"·  proposed merges: {sum(len(e.get('merge_sets') or []) for e in (dedup_state.get('flagged') or []))}"
+                    )
+                if not visible_dedup and dedup_state:
+                    st.success(
+                        "No remaining proposed merges — every audited "
+                        "cluster looks clean (or has been actioned)."
+                    )
+                for di, (entry, ms) in enumerate(visible_dedup[:50]):
+                    org = entry.get("organization", "")
+                    canonical = ms.get("canonical_label", "")
+                    members = list(ms.get("member_labels") or [])
+                    rationale = ms.get("rationale", "")
+                    conf = entry.get("confidence", 0.0)
+                    key = _dedup_key(entry, ms)
+                    with st.container(border=True):
+                        st.markdown(
+                            f"**{canonical}**  &nbsp;·&nbsp; "
+                            f"absorb {len(members) - 1} other(s) "
+                            f"({conf:.0%} confidence) "
+                            f"·  org: _{org}_"
+                        )
+                        if rationale:
+                            st.caption(rationale)
+                        for m in members:
+                            marker = "←" if m == canonical else "→"
+                            st.markdown(f"- {marker} `{m}`")
+                        cc1, cc2 = st.columns(2)
+                        if cc1.button(
+                            "Merge now",
+                            key=f"bed_dedup_merge_{di}",
+                            type="primary",
+                        ):
+                            try:
+                                n_absorbed = api.apply_dedup_merge(canonical, members)
+                            except Exception as e:  # noqa: BLE001
+                                n_absorbed = 0
+                                st.error(f"Merge failed: {e}")
+                            if n_absorbed > 0:
+                                dedup_dismissed.add(key)
+                                sv.bed_dedup_dismissed.value = list(dedup_dismissed)
+                                st.success(
+                                    f"Absorbed {n_absorbed} record(s) into "
+                                    f"`{canonical}`."
+                                )
+                                st.rerun()
+                            else:
+                                st.warning(
+                                    "No merge applied — the records may "
+                                    "have changed since the audit ran. "
+                                    "Re-run the audit."
+                                )
+                        if cc2.button(
+                            "Dismiss",
+                            key=f"bed_dedup_dismiss_{di}",
+                        ):
+                            dedup_dismissed.add(key)
+                            sv.bed_dedup_dismissed.value = list(dedup_dismissed)
+                            st.rerun()
+
+            # ── Exclusions ────────────────────────────────────
+            current_exclusions = (
+                api.exclusions if hasattr(api, "exclusions") else []
+            )
+            with st.expander(
+                f"Exclude entities ({len(current_exclusions)} rule"
+                f"{'' if len(current_exclusions) == 1 else 's'})",
+                expanded=False,
+            ):
+                st.caption(
+                    "Define rules for entities to leave out of this dataset. "
+                    "Rules can target a single named entity or any entity "
+                    "matching an attribute condition (e.g. *Currency is "
+                    "missing*, *Continent equals Africa*). Each rule's reason "
+                    "is injected into future discovery and verification "
+                    "prompts so the agent learns to skip similar cases."
+                )
+
+                if current_exclusions:
+                    for i, rule in enumerate(current_exclusions):
+                        c1, c2 = st.columns([10, 1])
+                        if rule.get("attribute"):
+                            op = (rule.get("operator") or "equals").lower()
+                            vals = rule.get("values") or []
+                            if op == "missing":
+                                summary = f"`{rule['attribute']}` is missing"
+                            elif op in ("equals", "contains", "regex") and vals:
+                                summary = (
+                                    f"`{rule['attribute']}` {op} \"{vals[0]}\""
+                                )
+                            elif op == "in" and vals:
+                                summary = (
+                                    f"`{rule['attribute']}` in [{', '.join(vals)}]"
+                                )
+                            else:
+                                summary = f"`{rule['attribute']}` {op}"
+                        else:
+                            summary = f"**{rule.get('label','')}**"
+                        c1.markdown(summary)
+                        reason = rule.get("reason", "")
+                        if reason:
+                            c1.caption(reason)
+                        if c2.button("✕", key=f"bed_excl_rm_{i}"):
+                            api.remove_exclusion(rule)
+                            st.rerun()
+                    st.markdown("---")
+
+                schema_names = [sa.get("name") for sa in schema] if schema else []
+                rule_kind = st.radio(
+                    "Rule type",
+                    options=["Named entity", "Attribute condition"],
+                    horizontal=True,
+                    key="bed_excl_kind",
+                )
+
+                if rule_kind == "Named entity":
+                    excl_label = st.text_input(
+                        "Entity to exclude", key="bed_excl_label"
+                    )
+                    excl_reason = st.text_input(
+                        "Reason (optional)",
+                        key="bed_excl_reason_lbl",
+                        placeholder="e.g. not a sovereign state",
+                    )
+                    excl_drop = st.checkbox(
+                        "Also remove matching record from dataset if present",
+                        value=True,
+                        key="bed_excl_drop_lbl",
+                    )
+                    if st.button("Add exclusion", key="bed_excl_add_lbl_btn"):
+                        added, removed = api.add_label_exclusion(
+                            excl_label, excl_reason, remove_existing=excl_drop
+                        )
+                        if added:
+                            msg = f"Exclusion added for **{excl_label}**."
+                            if removed:
+                                msg += f" Removed {removed} matching record(s)."
+                            st.success(msg)
+                            st.rerun()
+                        else:
+                            st.info("Provide an entity label first.")
+                else:
+                    if not schema_names:
+                        st.caption("No schema attributes available yet.")
+                    else:
+                        attr_pick = st.selectbox(
+                            "Attribute", options=schema_names, key="bed_excl_attr"
+                        )
+                        op_pick = st.selectbox(
+                            "Operator",
+                            options=[
+                                "missing",
+                                "equals",
+                                "in",
+                                "contains",
+                                "regex",
+                            ],
+                            key="bed_excl_op",
+                            help=(
+                                "missing: value is empty or 'N/A'. "
+                                "equals: exact match. in: any of a list "
+                                "(comma-separated). contains: substring. "
+                                "regex: Python regex (case-insensitive)."
+                            ),
+                        )
+                        excl_vals: list[str] = []
+                        if op_pick != "missing":
+                            raw_vals = st.text_input(
+                                "Value(s) — comma-separated for 'in'",
+                                key="bed_excl_vals",
+                            )
+                            excl_vals = [
+                                v.strip()
+                                for v in (raw_vals or "").split(",")
+                                if v.strip()
+                            ]
+                        excl_reason_a = st.text_input(
+                            "Reason (optional)",
+                            key="bed_excl_reason_attr",
+                            placeholder="e.g. out of scope for this study",
+                        )
+                        excl_drop_a = st.checkbox(
+                            "Also remove matching records from dataset",
+                            value=True,
+                            key="bed_excl_drop_attr",
+                        )
+                        if st.button("Add exclusion", key="bed_excl_add_attr_btn"):
+                            added, removed = api.add_attribute_exclusion(
+                                attr_pick,
+                                op_pick,
+                                excl_vals,
+                                excl_reason_a,
+                                remove_existing=excl_drop_a,
+                            )
+                            if added:
+                                summary = (
+                                    f"`{attr_pick}` is missing"
+                                    if op_pick == "missing"
+                                    else f"`{attr_pick}` {op_pick} {excl_vals}"
+                                )
+                                msg = f"Exclusion added: {summary}."
+                                if removed:
+                                    msg += f" Removed {removed} matching record(s)."
+                                st.success(msg)
+                                st.rerun()
+                            else:
+                                st.info(
+                                    "Provide values for this operator first."
+                                )
+
+            # ── Harmful content scan (I) ──────────────────────
+            findings_state = list(sv.bed_safety_findings.value or [])
+            dismissed_state = set(sv.bed_safety_dismissed.value or [])
+            visible_findings = [
+                f for f in findings_state
+                if (f.get("label") or "") not in dismissed_state
+            ]
+            scan_title = "Scan for harmful content"
+            if visible_findings:
+                scan_title += f" ({len(visible_findings)} flagged)"
+            with st.expander(scan_title, expanded=False):
+                st.caption(
+                    "Use the LLM to flag records that contain potentially "
+                    "harmful, sensitive, or unsafe content. The prompt below "
+                    "is editable — adjust the categories or instructions to "
+                    "match your safety policy. One request is sent per entity."
+                )
+
+                default_prompt = api.DEFAULT_SAFETY_PROMPT
+                current_prompt = sv.bed_safety_prompt.value or default_prompt
+                edited = st.text_area(
+                    "Safety classifier prompt",
+                    value=current_prompt,
+                    height=220,
+                    key="bed_safety_prompt_ta",
+                    help=(
+                        "Must contain the placeholder `{record}`, which is "
+                        "replaced with the entity's fields. The classifier "
+                        "should reply `SAFE` for benign records or a "
+                        "comma-separated category list followed by a "
+                        "one-sentence reason."
+                    ),
+                )
+                sv.bed_safety_prompt.value = edited
+
+                c_run, c_reset, c_clear = st.columns([2, 1, 1])
+                if c_run.button("Run safety scan", key="bed_scan_btn", type="primary"):
+                    with st.spinner("Scanning…"):
+                        try:
+                            new_findings = api.scan_harmful_content(
+                                prompt_template=edited
+                            )
+                        except Exception as e:  # noqa: BLE001
+                            new_findings = None
+                            st.error(f"Scan failed: {e}")
+                    if new_findings is not None:
+                        sv.bed_safety_findings.value = new_findings
+                        sv.bed_safety_dismissed.value = []
+                        st.rerun()
+                if c_reset.button("Reset prompt", key="bed_scan_reset"):
+                    sv.bed_safety_prompt.value = default_prompt
+                    st.rerun()
+                if c_clear.button("Clear results", key="bed_scan_clear"):
+                    sv.bed_safety_findings.value = []
+                    sv.bed_safety_dismissed.value = []
+                    st.rerun()
+
+                if findings_state and not visible_findings:
+                    st.success(
+                        "All flagged records have been resolved or dismissed."
+                    )
+                elif visible_findings:
+                    st.warning(
+                        f"{len(visible_findings)} record(s) flagged. "
+                        "Choose an action for each."
+                    )
+                    for fi, finding in enumerate(visible_findings):
+                        label = finding.get("label") or "(unlabeled)"
+                        cats = ", ".join(finding.get("categories") or []) or "?"
+                        reason = finding.get("reason") or ""
+                        with st.container(border=True):
+                            st.markdown(f"**{label}** — *{cats}*")
+                            if reason:
+                                st.caption(reason)
+                            with st.expander("Show record fields", expanded=False):
+                                fields = finding.get("fields") or {}
+                                for k, v in fields.items():
+                                    st.markdown(f"- **{k}**: {v}")
+
+                            a1, a2, a3 = st.columns(3)
+                            if a1.button(
+                                "Remove record",
+                                key=f"bed_scan_drop_{fi}",
+                                help="Delete this entity from the dataset.",
+                            ):
+                                api.remove_record_by_label(label)
+                                sv.bed_safety_findings.value = [
+                                    f for f in findings_state
+                                    if f.get("label") != label
+                                ]
+                                st.rerun()
+                            if a2.button(
+                                "Add as exclusion",
+                                key=f"bed_scan_excl_{fi}",
+                                help=(
+                                    "Remove from dataset AND register a "
+                                    "rule so future discovery skips it."
+                                ),
+                            ):
+                                excl_reason = (
+                                    f"Safety scan: {cats}"
+                                    + (f" — {reason}" if reason else "")
+                                )
+                                api.add_label_exclusion(
+                                    label, excl_reason, remove_existing=True
+                                )
+                                sv.bed_safety_findings.value = [
+                                    f for f in findings_state
+                                    if f.get("label") != label
+                                ]
+                                st.rerun()
+                            if a3.button(
+                                "Dismiss",
+                                key=f"bed_scan_dismiss_{fi}",
+                                help="Ignore this finding (keep the record).",
+                            ):
+                                dismissed_state.add(label)
+                                sv.bed_safety_dismissed.value = list(dismissed_state)
+                                st.rerun()
+
+            with st.expander("Load another dataset JSON", expanded=False):
+                _render_import_dataset(api, sv, key="bed_review_import")
+
+    # ── Export ─────────────────────────────────────────────────
+    with export_tab:
+        df = api.dataframe
+        if df is None or df.empty:
+            st.info("No dataset yet. Run research first.")
+        else:
+            st.markdown("#### Download dataset")
+            col_dl1, col_dl2 = st.columns(2)
+            with col_dl1:
+                st.download_button(
+                    "Download data.json",
+                    data=api.get_dataset_bytes_json(),
+                    file_name="data.json",
+                    mime="application/json",
+                )
+            with col_dl2:
+                st.download_button(
+                    "Download data.csv",
+                    data=api.get_release_csv_bytes(),
+                    file_name="data.csv",
+                    mime="text/csv",
+                )
+
+            st.divider()
+            st.markdown("#### Download themed web interface")
+            st.markdown(
+                "Configure branding below, then download a self-contained HTML dashboard "
+                "that lets anyone explore the dataset in a browser (no server needed)."
+            )
+
+            tcol1, tcol2 = st.columns(2)
+            with tcol1:
+                sv.bed_title.value = st.text_input(
+                    "Dashboard title",
+                    value=sv.bed_title.value or sv.bed_category.value,
+                    placeholder="My Entity Dataset",
+                )
+                sv.bed_subtitle.value = st.text_input(
+                    "Subtitle / organisation",
+                    value=sv.bed_subtitle.value,
+                    placeholder="Produced by Contoso Research",
+                )
+                sv.bed_dataset_label.value = st.text_input(
+                    "Dataset label (plural noun)",
+                    value=sv.bed_dataset_label.value,
+                    placeholder="entities",
+                )
+            with tcol2:
+                sv.bed_primary_color.value = st.color_picker(
+                    "Primary color",
+                    value=sv.bed_primary_color.value,
+                )
+                sv.bed_accent_color.value = st.color_picker(
+                    "Accent color",
+                    value=sv.bed_accent_color.value,
+                )
+                logo_file = st.file_uploader(
+                    "Logo image (optional)",
+                    type=["png", "jpg", "jpeg", "svg"],
+                    key="bed_logo_upload",
+                )
+                favicon_file = st.file_uploader(
+                    "Favicon (optional, .ico / .svg / .png)",
+                    type=["ico", "svg", "png"],
+                    key="bed_favicon_upload",
+                )
+
+            st.markdown("**Views to include**")
+            v1, v2, v3 = st.columns(3)
+            show_table = v1.checkbox(
+                "Table", value=sv.bed_view_table.value, key="bed_view_table_cb"
+            )
+            show_cards = v2.checkbox(
+                "Cards", value=sv.bed_view_cards.value, key="bed_view_cards_cb"
+            )
+            show_network = v3.checkbox(
+                "Network", value=sv.bed_view_network.value, key="bed_view_network_cb"
+            )
+            sv.bed_view_table.value = show_table
+            sv.bed_view_cards.value = show_cards
+            sv.bed_view_network.value = show_network
+            selected_views = [
+                name for name, on in (
+                    ("table", show_table),
+                    ("cards", show_cards),
+                    ("network", show_network),
+                ) if on
+            ]
+            if not selected_views:
+                st.caption(
+                    "At least one view is required — defaulting to Table."
+                )
+                selected_views = ["table"]
+
+            logo_bytes = logo_file.read() if logo_file else None
+            logo_filename = logo_file.name if logo_file else None
+            favicon_bytes = favicon_file.read() if favicon_file else None
+            favicon_filename = favicon_file.name if favicon_file else None
+
+            if st.button("Build & download web interface", type="primary"):
+                if not sv.bed_title.value:
+                    st.error("Please enter a dashboard title.")
+                else:
+                    try:
+                        zip_bytes = api.build_dashboard_zip(
+                            title=sv.bed_title.value,
+                            subtitle=sv.bed_subtitle.value,
+                            dataset_label=sv.bed_dataset_label.value or "entities",
+                            primary_color=sv.bed_primary_color.value,
+                            accent_color=sv.bed_accent_color.value,
+                            logo_bytes=logo_bytes,
+                            logo_filename=logo_filename,
+                            favicon_bytes=favicon_bytes,
+                            favicon_filename=favicon_filename,
+                            views=selected_views,
+                        )
+                        st.download_button(
+                            "Save dashboard.zip",
+                            data=zip_bytes,
+                            file_name="dashboard.zip",
+                            mime="application/zip",
+                        )
+                        st.caption(
+                            "Extract the ZIP and open `dashboard/dashboard.html` in a browser."
+                        )
+                    except Exception as e:  # noqa: BLE001
+                        st.error(f"Failed to build dashboard: {e}")
+
+            st.divider()
+            st.markdown("#### Release package")
+            st.markdown(
+                "One ZIP for publication: `data.json`, `data.csv` (with aliases and source "
+                "URLs), the themed dashboard above, and `manifest.json` (version, counts, "
+                "schema with value definitions, curation history)."
+            )
+            rcol1, rcol2 = st.columns([1, 3])
+            sv.bed_release_version.value = rcol1.text_input(
+                "Version", value=sv.bed_release_version.value or time.strftime("%Y.%m.%d"),
+            )
+            sv.bed_release_notes.value = rcol2.text_area(
+                "Release notes (stored in manifest.json)", value=sv.bed_release_notes.value, height=90,
+            )
+            if st.button("Build release package", key="bed_release_btn"):
+                if not sv.bed_title.value:
+                    st.error("Please enter a dashboard title.")
+                else:
+                    try:
+                        version = sv.bed_release_version.value.strip() or "1.0"
+                        release = api.build_release_zip(
+                            version=version,
+                            notes=sv.bed_release_notes.value,
+                            title=sv.bed_title.value,
+                            subtitle=sv.bed_subtitle.value,
+                            dataset_label=sv.bed_dataset_label.value or "entities",
+                            primary_color=sv.bed_primary_color.value,
+                            accent_color=sv.bed_accent_color.value,
+                            logo_bytes=logo_bytes,
+                            logo_filename=logo_filename,
+                            favicon_bytes=favicon_bytes,
+                            favicon_filename=favicon_filename,
+                            views=selected_views,
+                        )
+                        safe = "".join(c if c.isalnum() or c in "-._" else "_" for c in version)
+                        st.download_button(
+                            "Save release ZIP",
+                            data=release,
+                            file_name=f"release_{safe}.zip",
+                            mime="application/zip",
+                        )
+                    except Exception as e:  # noqa: BLE001
+                        st.error(f"Failed to build release: {e}")
+
+    # ── Example outputs ────────────────────────────────────────
+    with examples_tab:
+        example_outputs_ui.create_example_outputs_ui(examples_tab, workflow)

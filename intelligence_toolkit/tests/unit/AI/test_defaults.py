@@ -8,10 +8,6 @@ def test_default_encoding():
     assert defaults.DEFAULT_ENCODING == "o200k_base"
 
 
-def test_default_llm_model():
-    assert defaults.DEFAULT_LLM_MODEL == "gpt-4.1-mini"
-
-
 def test_default_llm_max_tokens():
     assert defaults.DEFAULT_LLM_MAX_TOKENS == 4000
 

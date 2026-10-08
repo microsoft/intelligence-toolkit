@@ -17,7 +17,8 @@ class AppMode:
             self.sv = SessionVariables("home")
 
     def config(self):
-        print("save embeddings not available")
+        # "Save embeddings" sidebar toggle is currently disabled.
+        pass
         # cache = st.sidebar.toggle(
         #     "Save embeddings",
         #     value=self.sv.save_cache.value,

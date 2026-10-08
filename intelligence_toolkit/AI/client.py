@@ -14,6 +14,14 @@ from .openai_configuration import OpenAIConfiguration
 log = logging.getLogger(__name__)
 
 
+def _is_reasoning_model(model: str) -> bool:
+    """Return True for models that accept the `reasoning_effort` parameter."""
+    if not model:
+        return False
+    m = model.lower()
+    return m.startswith("gpt-5") or m.startswith("o1") or m.startswith("o3") or m.startswith("o4")
+
+
 class OpenAIClient:
     """OpenAI Client class definition."""
 
@@ -93,13 +101,20 @@ class OpenAIClient:
                 kwargs.pop("temperature")
             else:
                 temperature = self.configuration.temperature
+            call_kwargs = dict(kwargs)
+            if _is_reasoning_model(self.configuration.model):
+                call_kwargs["max_completion_tokens"] = max_tokens
+                if "reasoning_effort" not in call_kwargs:
+                    call_kwargs["reasoning_effort"] = "none"
+                # Reasoning models only support the default temperature.
+            else:
+                call_kwargs["max_tokens"] = max_tokens
+                call_kwargs["temperature"] = temperature
             response = self._client.chat.completions.create(
                 model=self.configuration.model,
-                temperature=temperature,
-                max_tokens=max_tokens,
                 messages=messages,
                 stream=stream,
-                **kwargs,
+                **call_kwargs,
             )
             if stream and callbacks is not None:
                 full_response = ""
@@ -141,13 +156,20 @@ class OpenAIClient:
             kwargs.pop("temperature")
         else:
             temperature = self.configuration.temperature
+        call_kwargs = dict(kwargs)
+        if _is_reasoning_model(self.configuration.model):
+            call_kwargs["max_completion_tokens"] = max_tokens
+            if "reasoning_effort" not in call_kwargs:
+                call_kwargs["reasoning_effort"] = "none"
+            # Reasoning models only support the default temperature.
+        else:
+            call_kwargs["max_tokens"] = max_tokens
+            call_kwargs["temperature"] = temperature
         response = await self._async_client.chat.completions.create(
             model=self.configuration.model,
-            temperature=temperature,
-            max_tokens=max_tokens,
             messages=messages,
             stream=stream,
-            **kwargs,
+            **call_kwargs,
         )
         if stream and callbacks is not None:
             full_response = ""

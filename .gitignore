@@ -40,6 +40,11 @@ cache
 data
 legacy
 
+# Curator-side scripts and dataset-specific artifacts (one-off
+# curation tools, audit outputs, themed dashboards/CSVs etc.).
+# Keep TAT and other dataset-specific work out of core ITK.
+scripts/
+
 app/wkhtmltox/*.exe
 /wheels
 *reports
