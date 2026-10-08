@@ -249,7 +249,7 @@ def make_query_translator(
                     continue
                 code = (item.get("code") or "").strip().lower()
                 text = (item.get("query") or "").strip()
-                if not code or not text or code in seen_codes:
+                if code not in non_en or not text or code in seen_codes:
                     continue
                 seen_codes.add(code)
                 translations.append((text, code))

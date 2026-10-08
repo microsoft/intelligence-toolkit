@@ -494,7 +494,15 @@ Provide concrete, verifiable details with specific names, dates, organizations, 
                 logger.debug(f"Skipping duplicate: {label}")
                 continue
             
-            record = Record(label=label)
+            aliases = raw_record.get("aliases", [])
+            record = Record(
+                label=label,
+                aliases=[
+                    alias.strip()
+                    for alias in aliases
+                    if isinstance(alias, str) and alias.strip()
+                ] if isinstance(aliases, list) else [],
+            )
             
             # Add schema attributes with proper citation tracking
             for schema_attr in schema_attrs:

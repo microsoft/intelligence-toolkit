@@ -37,6 +37,14 @@
       "type": ["string", "null"],
       "description": "Optional footer HTML (kept simple — single line)."
     },
+    "views": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["table", "cards", "network"]
+      },
+      "description": "Dashboard views to display."
+    },
     "colors": {
       "type": "object",
       "required": ["primary", "accent", "bg", "surface", "text", "muted", "border"],

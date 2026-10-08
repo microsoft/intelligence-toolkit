@@ -231,7 +231,8 @@ async def clean_compound_values(
     """
     targets = [
         a for a in schema_attributes
-        if a.is_closed_set and (attributes is None or a.name in attributes)
+        if a.is_closed_set and not a.locked
+        and (attributes is None or a.name in attributes)
     ]
     total = len(targets)
     summary: dict[str, dict] = {}
@@ -265,6 +266,18 @@ async def clean_compound_values(
             mapping.update(batch_map)
 
         changed = _apply_to_record_set(record_set, attr.name, mapping)
+        canonical_values: list[str] = []
+        canonical_value_descriptions: dict[str, str] = {}
+        for value in attr.canonical_values:
+            cleaned_values = mapping.get(value, [value])
+            for cleaned in cleaned_values:
+                if cleaned not in canonical_values:
+                    canonical_values.append(cleaned)
+                description = attr.canonical_value_descriptions.get(value)
+                if description and cleaned not in canonical_value_descriptions:
+                    canonical_value_descriptions[cleaned] = description
+        attr.canonical_values = canonical_values
+        attr.canonical_value_descriptions = canonical_value_descriptions
         summary[attr.name] = {
             "n_values": len(distinct),
             "n_compounds": len(compounds),

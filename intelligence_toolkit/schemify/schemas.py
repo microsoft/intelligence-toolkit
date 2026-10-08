@@ -33,9 +33,14 @@ def get_record_extraction_schema(
         "label": {
             "type": "string",
             "description": "Entity name in ALL CAPITALS"
-        }
+        },
+        "aliases": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Alternate names, abbreviations, or former names for this entity",
+        },
     }
-    required = ["label"]
+    required = ["label", "aliases"]
     
     # Add known attributes
     if attributes:

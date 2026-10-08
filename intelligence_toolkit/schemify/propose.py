@@ -183,6 +183,7 @@ def _expand_remappings(
                         "label": label, "attribute": a,
                         "issue": f"UNRESOLVED translation for {old!r}",
                     })
+                    per_attr_new[a].add(old)
                 elif new is None or new != old:
                     remaps.append({
                         "label": label, "attribute": a,

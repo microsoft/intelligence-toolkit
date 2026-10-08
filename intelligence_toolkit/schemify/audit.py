@@ -17,10 +17,20 @@ from pathlib import Path
 from typing import Any
 
 PROMPT_FILENAME = "audit.md"
+DEFAULT_AUDIT_PROMPT = """\
+Audit the dataset below for duplicates, offensive content, miscategorized values,
+out-of-scope records, completeness gaps, and weak sourcing. Return one JSON object
+with keys `summary`, `duplicates`, `offensive`, `miscategorized`, `out_of_scope`,
+`completeness_gaps`, and `source_weakness`. Use empty arrays for sections with no
+findings. Base findings on the supplied dataset and do not invent evidence.
+"""
 
 
 def load_prompt(prompts_dir: Path) -> str:
-    return (prompts_dir / PROMPT_FILENAME).read_text(encoding="utf-8")
+    prompt_path = prompts_dir / PROMPT_FILENAME
+    if prompt_path.exists():
+        return prompt_path.read_text(encoding="utf-8")
+    return DEFAULT_AUDIT_PROMPT
 
 
 @dataclass
@@ -130,7 +140,7 @@ def _run_openai(message: str, model: str, api_key: str | None) -> str:
     response = client.responses.create(
         model=model,
         input=message,
-        response_format={"type": "json_object"},
+        text={"format": {"type": "json_object"}},
     )
     return getattr(response, "output_text", None) or ""
 
@@ -215,6 +225,9 @@ def apply_recategorization(data: dict, proposal: dict) -> dict:
                 attr["description"] = upd["description"]
             if "canonical_value_descriptions" in upd:
                 attr["canonical_value_descriptions"] = upd["canonical_value_descriptions"]
+            multi_value = upd.get("is_multi_value", upd.get("is_multi_valued"))
+            if multi_value is not None:
+                attr["is_multi_valued"] = bool(multi_value)
             if "locked" in upd:
                 attr["locked"] = bool(upd["locked"])
         new_schema.append(attr)
@@ -223,7 +236,9 @@ def apply_recategorization(data: dict, proposal: dict) -> dict:
             "name": added["name"],
             "description": added.get("description", ""),
             "is_closed_set": added.get("is_closed_set", False),
-            "is_multi_value": added.get("is_multi_value", False),
+            "is_multi_valued": added.get(
+                "is_multi_value", added.get("is_multi_valued", False)
+            ),
             "canonical_values": added.get("canonical_values", []),
         })
     out["schema_attributes"] = new_schema
@@ -255,6 +270,17 @@ def apply_recategorization(data: dict, proposal: dict) -> dict:
                         continue
                     v["value"] = new
                 if v.get("value") in seen:
+                    existing = next(
+                        kept_value for kept_value in kept
+                        if kept_value.get("value") == v.get("value")
+                    )
+                    sources = existing.setdefault("sources", [])
+                    seen_sources = {json.dumps(source, sort_keys=True) for source in sources}
+                    for source in v.get("sources", []):
+                        source_key = json.dumps(source, sort_keys=True)
+                        if source_key not in seen_sources:
+                            sources.append(source)
+                            seen_sources.add(source_key)
                     continue
                 seen.add(v.get("value"))
                 kept.append(v)

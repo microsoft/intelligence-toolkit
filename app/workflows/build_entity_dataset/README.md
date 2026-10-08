@@ -4,7 +4,7 @@
 
 **Build Entity Dataset** discovers and extracts structured information about real-world entities from the web, producing a citable, schema-aligned dataset that can be explored through a downloadable interactive web interface.
 
-The workflow performs systematic web search across many query angles, extracts attribute values from authoritative sources, deduplicates and merges records, and verifies attribute values with supporting citations. Every value traces back to at least one real web source.
+The workflow performs systematic web search across many query angles, extracts attribute values from authoritative sources, deduplicates and merges records, and can verify attribute values with supporting citations. Values derived from general knowledge may be uncited unless verification is enabled.
 
 ### Typical uses
 - Building a landscape map of technologies, organisations, databases, or tools in a domain
