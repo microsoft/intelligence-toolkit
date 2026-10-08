@@ -7,7 +7,7 @@ import pytest
 
 from intelligence_toolkit.AI.classes import LLMCallback
 from intelligence_toolkit.AI.client import OpenAIClient
-from intelligence_toolkit.AI.defaults import DEFAULT_EMBEDDING_MODEL
+from intelligence_toolkit.AI.defaults import DEFAULT_EMBEDDING_MODEL, EMBEDDING_TIMEOUT_SECONDS
 from intelligence_toolkit.AI.openai_configuration import OpenAIConfiguration
 
 
@@ -38,8 +38,8 @@ def test_openai_client_initialization_openai(openai_config):
         
         client = OpenAIClient(openai_config)
         
-        mock_openai.assert_called_once_with(api_key="test_key")
-        mock_async_openai.assert_called_once_with(api_key="test_key")
+        mock_openai.assert_called_once_with(api_key="test_key", max_retries=0)
+        mock_async_openai.assert_called_once_with(api_key="test_key", max_retries=0)
         assert client.configuration == openai_config
 
 
@@ -52,11 +52,13 @@ def test_openai_client_initialization_azure_with_key(azure_openai_config):
         mock_azure.assert_called_once_with(
             api_version="2024-02-01",
             azure_endpoint="https://test.openai.azure.com",
+            max_retries=0,
             api_key="test_key",
         )
         mock_async_azure.assert_called_once_with(
             api_version="2024-02-01",
             azure_endpoint="https://test.openai.azure.com",
+            max_retries=0,
             api_key="test_key",
         )
 
@@ -102,6 +104,7 @@ def test_openai_client_initialization_azure_managed_identity():
             api_version="2024-02-01",
             azure_ad_token_provider="mock_token_provider",
             azure_endpoint="https://test.openai.azure.com",
+            max_retries=0,
         )
 
 
@@ -185,7 +188,8 @@ def test_openai_client_generate_embedding(openai_config):
         assert result == [0.1, 0.2, 0.3]
         mock_client.embeddings.create.assert_called_once_with(
             input="test text",
-            model=DEFAULT_EMBEDDING_MODEL
+            model=DEFAULT_EMBEDDING_MODEL,
+            timeout=EMBEDDING_TIMEOUT_SECONDS,
         )
 
 
