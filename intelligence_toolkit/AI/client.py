@@ -1,6 +1,7 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 #
+import asyncio
 import logging
 import re
 from typing import Any
@@ -57,11 +58,31 @@ class OpenAIClient:
     """
 
     _client = None
-    _async_client = None
+    _async_client_instance = None
+    _async_client_loop = None
+    _async_client_factory = None
 
     def __init__(self, configuration: OpenAIConfiguration | None = None) -> None:
         self.configuration = configuration or OpenAIConfiguration()
         self._create_openai_client()
+
+    @property
+    def _async_client(self):
+        """Async SDK client bound to the running event loop.
+
+        httpx connection pools can't be reused once their event loop is closed
+        (e.g. one ``asyncio.run`` per Streamlit rerun), so rebuild on loop change.
+        """
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return self._async_client_instance
+        if self._async_client_loop is None:
+            self._async_client_loop = loop
+        elif self._async_client_loop is not loop:
+            self._async_client_instance = self._async_client_factory()
+            self._async_client_loop = loop
+        return self._async_client_instance
 
     def _create_openai_client(self) -> None:
         """Create a new OpenAI client instance."""
@@ -87,13 +108,16 @@ class OpenAIClient:
                 **auth,
             }
             self._client = AzureOpenAI(**common)
-            self._async_client = AsyncAzureOpenAI(**common)
+            self._async_client_factory = lambda: AsyncAzureOpenAI(**common)
         else:
             log.info("Creating OpenAI client")
-            self._client = OpenAI(api_key=self.configuration.api_key, max_retries=0)
-            self._async_client = AsyncOpenAI(
-                api_key=self.configuration.api_key, max_retries=0
+            api_key = self.configuration.api_key
+            self._client = OpenAI(api_key=api_key, max_retries=0)
+            self._async_client_factory = lambda: AsyncOpenAI(
+                api_key=api_key, max_retries=0
             )
+        self._async_client_instance = self._async_client_factory()
+        self._async_client_loop = None
 
     def _build_call_kwargs(self, kwargs: dict[str, Any]) -> dict[str, Any]:
         call_kwargs = dict(kwargs)

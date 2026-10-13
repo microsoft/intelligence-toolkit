@@ -276,3 +276,19 @@ def test_truncate_to_tokens_limits_token_count():
 def test_truncate_to_tokens_returns_short_text_unchanged():
     text = "short text"
     assert truncate_to_tokens(text, 50) is text
+
+
+def test_async_client_rebuilt_per_event_loop():
+    client = OpenAIClient(
+        OpenAIConfiguration({"api_type": "OpenAI", "api_key": "test-key", "model": "gpt-4"})
+    )
+
+    async def grab():
+        first = client._async_client
+        assert client._async_client is first  # stable within one loop
+        return first
+
+    run1 = asyncio.run(grab())
+    run2 = asyncio.run(grab())
+    assert run1 is not run2
+    assert client._async_client is run2  # outside a loop: last instance
