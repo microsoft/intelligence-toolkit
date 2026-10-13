@@ -195,3 +195,31 @@ def test_vector_store_drop_table_without_table():
         
         with pytest.raises(ValueError, match="Table not initialized"):
             store.drop_table()
+
+
+def _seed(store):
+    store.save(
+        [
+            {"hash": "hash1", "text": "it's quoted", "vector": [0.1, 0.2, 0.3], "additional_details": "{}"},
+            {"hash": "hash2", "text": "test text 2", "vector": [0.4, 0.5, 0.6], "additional_details": "{}"},
+        ]
+    )
+    store.update_duckdb_data()
+
+
+def test_vector_store_search_by_column_handles_quotes(vector_store):
+    _seed(vector_store)
+    result = vector_store.search_by_column("it's quoted", "text")
+    assert list(result["hash"]) == ["hash1"]
+
+
+def test_vector_store_search_by_column_rejects_unknown_column(vector_store):
+    with pytest.raises(ValueError, match="Unknown column"):
+        vector_store.search_by_column("x", "hash; DROP TABLE x")
+
+
+def test_vector_store_drop_table(temp_db_path):
+    store = VectorStore("drop_me", temp_db_path, schema)
+    store.drop_table()
+    assert store.table is None
+    assert "drop_me" not in store.db_connection.table_names()

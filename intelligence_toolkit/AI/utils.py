@@ -41,16 +41,31 @@ async def map_generate_text(
     )
 
 
-def get_token_count(text: str, encoding=None, model=None) -> int:
-    """Function that counts the number of tokens in a string."""
-    encoder = tiktoken.get_encoding(encoding or DEFAULT_ENCODING)
+def _get_encoder(encoding=None, model=None):
     if model:
         try:
-            encoder = tiktoken.encoding_for_model(model)
+            return tiktoken.encoding_for_model(model)
         except KeyError:
             log.warning("model not found, using default encoding: %s", DEFAULT_ENCODING)
-            encoder = tiktoken.get_encoding(DEFAULT_ENCODING)
-    return len(encoder.encode(json.dumps(text)))
+    return tiktoken.get_encoding(encoding or DEFAULT_ENCODING)
+
+
+def _as_text(text: Any) -> str:
+    return text if isinstance(text, str) else json.dumps(text)
+
+
+def get_token_count(text: str, encoding=None, model=None) -> int:
+    """Function that counts the number of tokens in a string."""
+    return len(_get_encoder(encoding, model).encode(_as_text(text)))
+
+
+def truncate_to_tokens(text: str, max_tokens: int, encoding=None, model=None) -> str:
+    """Truncate text so that it encodes to at most `max_tokens` tokens."""
+    encoder = _get_encoder(encoding, model)
+    tokens = encoder.encode(_as_text(text))
+    if len(tokens) <= max_tokens:
+        return text
+    return encoder.decode(tokens[:max_tokens])
 
 
 def prepare_messages(

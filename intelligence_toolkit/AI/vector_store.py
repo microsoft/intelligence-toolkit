@@ -1,6 +1,6 @@
-# # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-# # Licensed under the MIT license. See LICENSE file in the project.
-# #
+# Copyright (c) 2024 Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project.
+#
 from typing import Any
 
 import duckdb
@@ -15,6 +15,7 @@ table_missing_msg = "Table not initialized"
 
 class VectorStore:
     table = None
+    table_name: str | None = None
     duckdb_data = None
 
     def __init__(
@@ -24,6 +25,7 @@ class VectorStore:
         schema: pa.Schema = None,
     ):
         self.db_connection = lancedb.connect(path)
+        self.table_name = table_name
         if table_name is not None:
             self.table = self.db_connection.create_table(
                 table_name, schema=schema, exist_ok=True
@@ -38,11 +40,17 @@ class VectorStore:
     def search_by_column(self, texts: list[str] | str, column: str) -> DataFrame:
         if self.table is None:
             raise ValueError(table_missing_msg)
+        if column not in self.table.schema.names:
+            msg = f"Unknown column: {column}"
+            raise ValueError(msg)
         if isinstance(texts, str):
             texts = [texts]
-        arrow_data = self.duckdb_data
-        query = f"SELECT DISTINCT * FROM arrow_data WHERE {column} IN {tuple(texts)}"
-        return duckdb.execute(query).df()
+        with duckdb.connect() as con:
+            con.register("arrow_data", self.duckdb_data)
+            return con.execute(
+                f'SELECT DISTINCT * FROM arrow_data WHERE "{column}" IN (SELECT UNNEST(?))',
+                [list(texts)],
+            ).df()
 
     def search_by_vector(self, vector: list[float], k: int = 10) -> list[dict]:
         if self.table is None:
@@ -59,6 +67,8 @@ class VectorStore:
         if self.table is None:
             raise ValueError(table_missing_msg)
         self.db_connection.drop_table(self.table_name)
+        self.table = None
+        self.duckdb_data = None
 
     def drop_db(self):
         self.db_connection.drop_database()

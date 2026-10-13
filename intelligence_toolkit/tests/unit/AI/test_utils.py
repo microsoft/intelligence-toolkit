@@ -13,7 +13,7 @@ from intelligence_toolkit.AI.utils import (
 def test_get_token_count():
     text = "example text"
     result = get_token_count(text)
-    expected = 4
+    expected = 2
 
     assert result == expected
 
@@ -21,14 +21,14 @@ def test_get_token_count():
 def test_get_token_count_with_model():
     text = "example text"
     result = get_token_count(text, None, "gpt-4.1-mini")
-    expected = 4
+    expected = 2
     assert result == expected
 
 
 def test_get_token_count_with_encoding():
     text = "example text"
     result = get_token_count(text, "o200k_base")
-    expected = 4
+    expected = 2
     assert result == expected
 
 

@@ -18,10 +18,10 @@ from intelligence_toolkit.AI.defaults import (
     DEFAULT_LLM_MAX_TOKENS,
     EMBEDDING_BATCHES_NUMBER,
 )
-from intelligence_toolkit.AI.utils import get_token_count, hash_text
+from intelligence_toolkit.AI.errors import EmbeddingError
+from intelligence_toolkit.AI.utils import hash_text, truncate_to_tokens
 from intelligence_toolkit.AI.vector_store import VectorStore
 from intelligence_toolkit.helpers.constants import CACHE_PATH
-from intelligence_toolkit.helpers.decorators import retry_with_backoff
 from intelligence_toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 logger = logging.getLogger(__name__)
@@ -37,6 +37,12 @@ schema = pa.schema(
 
 
 class BaseEmbedder(ABC, BaseBatchAsync):
+    """Batch embedding with concurrency limiting and progress tracking.
+
+    Transient API failures are retried by the underlying client (see
+    OpenAIClient); this class does not add another retry layer.
+    """
+
     def __init__(
         self,
         db_name: str = "embeddings",
@@ -47,10 +53,21 @@ class BaseEmbedder(ABC, BaseBatchAsync):
     ) -> None:
         self.vector_store = VectorStore(db_name, db_path, schema)
         self.max_tokens = max_tokens
-        self.semaphore = asyncio.Semaphore(concurrent_coroutines)
+        self.set_concurrency(concurrent_coroutines)
         self.check_token_count = check_token_count
 
-    @retry_with_backoff()
+    def _truncate(self, text: str) -> str:
+        if not self.check_token_count:
+            return text
+        try:
+            truncated = truncate_to_tokens(text, self.max_tokens)
+        except Exception as e:  # noqa: BLE001
+            logger.warning("Token counting failed, embedding untruncated text: %s", e)
+            return text
+        if truncated is not text:
+            logger.info("Truncated text to %s tokens", self.max_tokens)
+        return truncated
+
     async def embed_one_async(
         self,
         data: VectorData,
@@ -58,73 +75,77 @@ class BaseEmbedder(ABC, BaseBatchAsync):
     ) -> Any | list[float]:
         async with self.semaphore:
             if not data["hash"]:
-                text_hashed = hash_text(data["text"])
-                data["hash"] = text_hashed
-                if self.check_token_count:
-                    try:
-                        tokens = get_token_count(data["text"])
-                        if tokens > self.max_tokens:
-                            text = data["text"][: self.max_tokens]
-                            data["text"] = text
-                            logger.info("Truncated text to max tokens")
-                    except Exception:
-                        pass
+                data["hash"] = hash_text(data["text"])
+                data["text"] = self._truncate(data["text"])
             try:
-                embedding = await asyncio.wait_for(
-                    self._generate_embedding_async(data["text"]), timeout=90
-                )
-                data["additional_details"] = json.dumps(
-                    data["additional_details"] if "additional_details" in data else {}
-                )
-                data["vector"] = embedding
+                embedding = await self._generate_embedding_async(data["text"])
             except Exception as e:
-                msg = f"Timeout in embedding generation. {e} Please try again."
-                raise Exception(msg)
+                msg = f"Problem in embedding generation. {e}"
+                raise EmbeddingError(msg) from e
+            data["additional_details"] = json.dumps(
+                data["additional_details"] if "additional_details" in data else {}
+            )
+            data["vector"] = embedding
 
             if has_callback:
                 self.progress_callback()
             return embedding, data
 
-    @retry_with_backoff()
     def embed_store_one(
         self, text: str, cache_data=True, additional_detail: Any = "{}"
     ) -> Any | list[float]:
         cache_data = False  # disable for now
         text_hashed = hash_text(text)
         if cache_data:
-            existing_embedding = (
-                self.vector_store.search_by_column(text_hashed, "hash")
-                if cache_data
-                else []
-            )
+            existing_embedding = self.vector_store.search_by_column(text_hashed, "hash")
             if len(existing_embedding) > 0:
                 return existing_embedding.get("vector")[0]
 
-        # error when local
-        if self.check_token_count:
-            try:
-                tokens = get_token_count(text)
-                if tokens > self.max_tokens:
-                    text = text[: self.max_tokens]
-                    logger.info("Truncated text to max tokens")
-            except:
-                pass
-
+        text = self._truncate(text)
         try:
             embedding = self._generate_embedding(text)
-            data = {
-                "hash": text_hashed,
-                "text": text,
-                "vector": embedding,
-                "additional_details": json.dumps(additional_detail),
-            }
-            self.vector_store.save([data]) if cache_data else None
         except Exception as e:
             msg = f"Problem in embedding generation. {e}"
-            raise Exception(msg)
+            raise EmbeddingError(msg) from e
+        if cache_data:
+            self.vector_store.save(
+                [
+                    {
+                        "hash": text_hashed,
+                        "text": text,
+                        "vector": embedding,
+                        "additional_details": json.dumps(additional_detail),
+                    }
+                ]
+            )
         return embedding
 
-    @retry_with_backoff()
+    async def _gather_batch(
+        self,
+        items: list[VectorData],
+        callbacks: list[ProgressBatchCallback] | None,
+    ) -> list:
+        tasks = [
+            asyncio.create_task(self.embed_one_async(item, bool(callbacks)))
+            for item in items
+        ]
+        progress_task = (
+            asyncio.create_task(self.track_progress(tasks, callbacks))
+            if callbacks
+            else None
+        )
+        try:
+            return await tqdm_asyncio.gather(*tasks)
+        except BaseException:
+            # Don't leave sibling requests running (and billing) after a failure.
+            for task in tasks:
+                task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
+            raise
+        finally:
+            if progress_task is not None:
+                await progress_task
+
     async def embed_store_many(
         self,
         data: list[VectorData],
@@ -132,13 +153,13 @@ class BaseEmbedder(ABC, BaseBatchAsync):
         cache_data=True,
     ) -> np.ndarray[Any, np.dtype[Any]]:
         cache_data = False  # disable for now
-        self.total_tasks = len(data)
+        self.reset_progress(len(data))
         final_embeddings = []
-        loaded_texts = []
+        loaded_texts = set()
         all_data = []
 
-        for i in range(0, len(data), (EMBEDDING_BATCHES_NUMBER)):
-            batch_data = data[i : i + (EMBEDDING_BATCHES_NUMBER)]
+        for i in range(0, len(data), EMBEDDING_BATCHES_NUMBER):
+            batch_data = data[i : i + EMBEDDING_BATCHES_NUMBER]
 
             if cache_data:
                 hash_all_texts = [hash_text(item["text"]) for item in batch_data]
@@ -157,24 +178,14 @@ class BaseEmbedder(ABC, BaseBatchAsync):
                                 else "{}",
                             }
                         )
-                        loaded_texts.append(item[1])
+                        loaded_texts.add(item[1])
                         final_embeddings.append(item[2])
 
             new_items = [
                 item for item in batch_data if item["text"] not in loaded_texts
             ]
             if len(new_items) > 0:
-                tasks = [
-                    asyncio.create_task(self.embed_one_async(item, callbacks))
-                    for item in new_items
-                ]
-                if callbacks:
-                    progress_task = asyncio.create_task(
-                        self.track_progress(tasks, callbacks)
-                    )
-                result = await tqdm_asyncio.gather(*tasks)
-                if callbacks:
-                    await progress_task
+                result = await self._gather_batch(new_items, callbacks)
                 embeddings = [embedding[0] for embedding in result]
                 new_data = [embedding[1] for embedding in result]
                 all_data.extend(new_data)
@@ -184,9 +195,7 @@ class BaseEmbedder(ABC, BaseBatchAsync):
                     self.vector_store.save(new_data)
                     self.vector_store.update_duckdb_data()
 
-        print(f"Got {len(loaded_texts)} existing texts")
         logger.info("Got %s existing texts", len(loaded_texts))
-        print(f"Got {len(final_embeddings) - len(loaded_texts)} new texts")
         logger.info("Got %s new texts", len(final_embeddings) - len(loaded_texts))
 
         return all_data

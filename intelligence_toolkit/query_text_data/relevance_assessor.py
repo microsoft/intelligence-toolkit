@@ -82,6 +82,7 @@ def process_relevance_responses(
     tested_relevant = []
     for r, c in zip(mapped_responses, search_cids):
         if c not in [x[1] for x in test_history]:
+            r = "Yes" if r.strip().rstrip(".").lower() == "yes" else r
             test_history.append((search_label, c, r))
             if r == "Yes":
                 tested_relevant.append(c)
