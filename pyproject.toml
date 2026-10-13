@@ -93,6 +93,8 @@ fix = "ruff check --fix . --preview"
 fix_unsafe = "ruff check --fix --unsafe-fixes . --preview"
 test_unit = "pytest ./intelligence_toolkit/tests/unit"
 test_smoke = "pytest ./intelligence_toolkit/tests/smoke"
+# v1 query_text_data output depends on str hash order; goldens are pinned to seed 0.
+test_characterization = { cmd = "pytest ./intelligence_toolkit/tests/characterization", env = { PYTHONHASHSEED = "0" } }
 run_streamlit = "python -m streamlit run app/Home.py ${ARGS}"
 
 [[tool.poe.tasks.format]]

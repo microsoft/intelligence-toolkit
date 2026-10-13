@@ -1,0 +1,342 @@
+{
+  "analysis_callback_tokens": [
+    "{\"updates\": [{\"point_id\": \"P2\", \"point_title\": \"Point from source 2\", \"source_ids\": [2]}, {\"point_id\": \"P7\", \"point_title\": \"Point from source 7\", \"source_ids\": [7]}, {\"point_id\": \"P1\", \"point_title\": \"Point from source 1\", \"source_ids\": [1]}], \"themes\": [{\"theme_title\": \"Even sources\", \"point_ids\": [\"P2\"]}, {\"theme_title\": \"Odd sources\", \"point_ids\": [\"P7\", \"P1\"]}]}",
+    "- **Even sources**\n  - Point from source 2 [source: [2](#source-2)]\n- **Odd sources**\n  - Point from source 7 [source: [7](#source-7)]\n  - Point from source 1 [source: [1](#source-1)]\n\n## Sources\n\n#### Source 1\n\n<details>\n\n##### Text chunk: climate.txt (1)\n\nClimate change is reshaping coastal cities. Sea level rise threatens coastal cities with flooding, and extreme weather events are becoming more frequent. Scientists link climate change to carbon emissions from fossil fuels.\n\n</details>\n\n[Back to top](#final-report)\n\n#### Source 2\n\n<details>\n\n##### Text chunk: climate.txt (2)\n\nCarbon emissions continue to grow in many regions. Reducing carbon emissions requires renewable energy investment, and renewable energy now supplies a growing share of electricity. Wind turbines and solar panels are the main sources of renewable energy.\n\n</details>\n\n[Back to top](#final-report)\n\n#### Source 7\n\n<details>\n\n##### Text chunk: health.txt (3)\n\nAir pollution from carbon emissions causes respiratory illness. Respiratory illness rates are highest in dense urban areas with poor air quality monitoring. Public health researchers study air pollution and respiratory illness together.\n\n\n</details>\n\n[Back to top](#final-report)\n\n",
+    "{\"updates\": [{\"point_id\": \"P5\", \"point_title\": \"Point from source 5\", \"source_ids\": [5]}, {\"point_id\": \"P13\", \"point_title\": \"Point from source 13\", \"source_ids\": [13]}, {\"point_id\": \"P3\", \"point_title\": \"Point from source 3\", \"source_ids\": [3]}], \"themes\": [{\"theme_title\": \"Even sources\", \"point_ids\": [\"P2\"]}, {\"theme_title\": \"Odd sources\", \"point_ids\": [\"P7\", \"P1\", \"P5\", \"P13\", \"P3\"]}]}",
+    "- **Even sources**\n  - Point from source 2 [source: [2](#source-2)]\n- **Odd sources**\n  - Point from source 7 [source: [7](#source-7)]\n  - Point from source 1 [source: [1](#source-1)]\n  - Point from source 5 [source: [5](#source-5)]\n  - Point from source 13 [source: [13](#source-13)]\n  - Point from source 3 [source: [3](#source-3)]\n\n## Sources\n\n#### Source 1\n\n<details>\n\n##### Text chunk: climate.txt (1)\n\nClimate change is reshaping coastal cities. Sea level rise threatens coastal cities with flooding, and extreme weather events are becoming more frequent. Scientists link climate change to carbon emissions from fossil fuels.\n\n</details>\n\n[Back to top](#final-report)\n\n#### Source 2\n\n<details>\n\n##### Text chunk: climate.txt (2)\n\nCarbon emissions continue to grow in many regions. Reducing carbon emissions requires renewable energy investment, and renewable energy now supplies a growing share of electricity. Wind turbines and solar panels are the main sources of renewable energy.\n\n</details>\n\n[Back to top](#final-report)\n\n#### Source 3\n\n<details>\n\n##### Text chunk: climate.txt (3)\n\nHeat waves are a direct consequence of climate change. Heat waves stress power grids and raise energy prices. Extreme weather also damages infrastructure in coastal cities, increasing insurance costs.\n\n</details>\n\n[Back to top](#final-report)\n\n#### Source 5\n\n<details>\n\n##### Text chunk: health.txt (1)\n\nPublic health agencies warn that heat waves increase hospital admissions. Hospital capacity is strained during heat waves, especially for elderly patients. Air pollution worsens respiratory illness during heat waves.\n\n</details>\n\n[Back to top](#final-report)\n\n#### Source 7\n\n<details>\n\n##### Text chunk: health.txt (3)\n\nAir pollution from carbon emissions causes respiratory illness. Respiratory illness rates are highest in dense urban areas with poor air quality monitoring. Public health researchers study air pollution and respiratory illness together.\n\n\n</details>\n\n[Back to top](#final-report)\n\n#### Source 13\n\n<details>\n\n##### Text chunk: regions.csv_3 (1)\n\nregion: Metro Area; note: Hospital capacity fell during heat waves linked to climate change.\n\n</details>\n\n[Back to top](#final-report)\n\n"
+  ],
+  "answer": {
+    "extended_answer": "## Query\n\n*What are the impacts of climate change?*\n\n## Expanded Query\n\n*What are the impacts of climate change? (anchored to: carbon emissions, coastal cities, air pollution, hospital capacity, respiratory illness)*\n\n## Answer\n\nClimate change drives coastal risk [source: [1](#source-1), [2](#source-2)].\n\n## Analysis\n\n### Climate impacts report\n\nThis report summarises the themes found.\n\n#### Theme: Summary of Even sources\n\n##### Key point for Even sources\n\n**Source evidence**: Evidence drawn from sources [source: [2](#source-2)]\n\n**AI commentary**: These sources suggest a pattern.\n\n#### Theme: Summary of Odd sources\n\n##### Key point for Odd sources\n\n**Source evidence**: Evidence drawn from sources [source: [7](#source-7), [1](#source-1), [5](#source-5), [13](#source-13), [3](#source-3)]\n\n**AI commentary**: These sources suggest a pattern.\n\n#### Implications\n\nThe implications are broad [source: [999](#source-999)].\n\n## Sources\n\n#### Source 1\n\n<details>\n\n##### Text chunk: climate.txt (1)\n\nClimate change is reshaping coastal cities. Sea level rise threatens coastal cities with flooding, and extreme weather events are becoming more frequent. Scientists link climate change to carbon emissions from fossil fuels.\n\n</details>\n\n[Back to top](#final-report)\n\n#### Source 2\n\n<details>\n\n##### Text chunk: climate.txt (2)\n\nCarbon emissions continue to grow in many regions. Reducing carbon emissions requires renewable energy investment, and renewable energy now supplies a growing share of electricity. Wind turbines and solar panels are the main sources of renewable energy.\n\n</details>\n\n[Back to top](#final-report)\n\n#### Source 3\n\n<details>\n\n##### Text chunk: climate.txt (3)\n\nHeat waves are a direct consequence of climate change. Heat waves stress power grids and raise energy prices. Extreme weather also damages infrastructure in coastal cities, increasing insurance costs.\n\n</details>\n\n[Back to top](#final-report)\n\n#### Source 5\n\n<details>\n\n##### Text chunk: health.txt (1)\n\nPublic health agencies warn that heat waves increase hospital admissions. Hospital capacity is strained during heat waves, especially for elderly patients. Air pollution worsens respiratory illness during heat waves.\n\n</details>\n\n[Back to top](#final-report)\n\n#### Source 7\n\n<details>\n\n##### Text chunk: health.txt (3)\n\nAir pollution from carbon emissions causes respiratory illness. Respiratory illness rates are highest in dense urban areas with poor air quality monitoring. Public health researchers study air pollution and respiratory illness together.\n\n\n</details>\n\n[Back to top](#final-report)\n\n#### Source 13\n\n<details>\n\n##### Text chunk: regions.csv_3 (1)\n\nregion: Metro Area; note: Hospital capacity fell during heat waves linked to climate change.\n\n</details>\n\n[Back to top](#final-report)\n\n",
+    "net_new_sources": 0,
+    "referenced_chunk_keys": [
+      "climate.txt (1)",
+      "climate.txt (2)",
+      "climate.txt (3)",
+      "climate.txt (4)",
+      "economy.txt (1)",
+      "economy.txt (2)",
+      "economy.txt (3)",
+      "health.txt (1)",
+      "health.txt (2)",
+      "health.txt (3)",
+      "regions.csv_1 (1)",
+      "regions.csv_2 (1)",
+      "regions.csv_3 (1)"
+    ],
+    "references": [
+      1,
+      2,
+      3,
+      5,
+      7,
+      13,
+      999
+    ]
+  },
+  "chunk_callback_counts": [
+    2,
+    3,
+    5,
+    6,
+    6
+  ],
+  "clustered_cids": [
+    [
+      "Even sources",
+      [
+        2
+      ]
+    ],
+    [
+      "Odd sources",
+      [
+        7,
+        1,
+        5,
+        13,
+        3
+      ]
+    ]
+  ],
+  "commentary": "Commentary on the emerging themes [source: 1].",
+  "commentary_callback_tokens": [
+    "Commentary on the emerging themes [source: 1]."
+  ],
+  "commentary_structure": {
+    "point_sources": {
+      "P1": [
+        1
+      ],
+      "P13": [
+        13
+      ],
+      "P2": [
+        2
+      ],
+      "P3": [
+        3
+      ],
+      "P5": [
+        5
+      ],
+      "P7": [
+        7
+      ]
+    },
+    "points": {
+      "P1": "Point from source 1",
+      "P13": "Point from source 13",
+      "P2": "Point from source 2",
+      "P3": "Point from source 3",
+      "P5": "Point from source 5",
+      "P7": "Point from source 7"
+    },
+    "themes": {
+      "Even sources": [
+        "P2"
+      ],
+      "Odd sources": [
+        "P7",
+        "P1",
+        "P5",
+        "P13",
+        "P3"
+      ]
+    }
+  },
+  "condense_callback_tokens": [
+    "Condensed answer."
+  ],
+  "condensed_answer": "Condensed answer.",
+  "expanded_query": "What are the impacts of climate change? (anchored to: carbon emissions, coastal cities, air pollution, hospital capacity, respiratory illness)",
+  "llm_calls": [
+    {
+      "key": "What are the impacts of climate change?",
+      "kind": "query_anchoring",
+      "logit_bias": null,
+      "max_tokens": null,
+      "num_messages": 1,
+      "stream": false
+    },
+    {
+      "key": "climate.txt#2",
+      "kind": "relevance",
+      "logit_bias": {
+        "13022": 5,
+        "3160": 5
+      },
+      "max_tokens": 1,
+      "num_messages": 1,
+      "stream": false
+    },
+    {
+      "key": "health.txt#3",
+      "kind": "relevance",
+      "logit_bias": {
+        "13022": 5,
+        "3160": 5
+      },
+      "max_tokens": 1,
+      "num_messages": 1,
+      "stream": false
+    },
+    {
+      "key": "climate.txt#1",
+      "kind": "relevance",
+      "logit_bias": {
+        "13022": 5,
+        "3160": 5
+      },
+      "max_tokens": 1,
+      "num_messages": 1,
+      "stream": false
+    },
+    {
+      "key": "economy.txt#2",
+      "kind": "relevance",
+      "logit_bias": {
+        "13022": 5,
+        "3160": 5
+      },
+      "max_tokens": 1,
+      "num_messages": 1,
+      "stream": false
+    },
+    {
+      "key": [
+        2,
+        7,
+        1
+      ],
+      "kind": "thematic_analysis",
+      "logit_bias": null,
+      "max_tokens": null,
+      "num_messages": 1,
+      "stream": false
+    },
+    {
+      "key": "health.txt#1",
+      "kind": "relevance",
+      "logit_bias": {
+        "13022": 5,
+        "3160": 5
+      },
+      "max_tokens": 1,
+      "num_messages": 1,
+      "stream": false
+    },
+    {
+      "key": "regions.csv_3#1",
+      "kind": "relevance",
+      "logit_bias": {
+        "13022": 5,
+        "3160": 5
+      },
+      "max_tokens": 1,
+      "num_messages": 1,
+      "stream": false
+    },
+    {
+      "key": "climate.txt#3",
+      "kind": "relevance",
+      "logit_bias": {
+        "13022": 5,
+        "3160": 5
+      },
+      "max_tokens": 1,
+      "num_messages": 1,
+      "stream": false
+    },
+    {
+      "key": "economy.txt#3",
+      "kind": "relevance",
+      "logit_bias": {
+        "13022": 5,
+        "3160": 5
+      },
+      "max_tokens": 1,
+      "num_messages": 1,
+      "stream": false
+    },
+    {
+      "key": [
+        5,
+        13,
+        3
+      ],
+      "kind": "thematic_analysis",
+      "logit_bias": null,
+      "max_tokens": null,
+      "num_messages": 1,
+      "stream": false
+    },
+    {
+      "key": "Even sources",
+      "kind": "theme_summary",
+      "logit_bias": null,
+      "max_tokens": null,
+      "num_messages": 1,
+      "stream": false
+    },
+    {
+      "key": "Odd sources",
+      "kind": "theme_summary",
+      "logit_bias": null,
+      "max_tokens": null,
+      "num_messages": 1,
+      "stream": false
+    },
+    {
+      "key": [
+        1,
+        2,
+        3,
+        5,
+        7,
+        13
+      ],
+      "kind": "final_report",
+      "logit_bias": null,
+      "max_tokens": null,
+      "num_messages": 1,
+      "stream": false
+    },
+    {
+      "key": null,
+      "kind": "commentary",
+      "logit_bias": null,
+      "max_tokens": null,
+      "num_messages": 1,
+      "stream": true
+    },
+    {
+      "key": null,
+      "kind": "condense",
+      "logit_bias": null,
+      "max_tokens": null,
+      "num_messages": 1,
+      "stream": true
+    }
+  ],
+  "progress_history_lengths": [
+    0,
+    2,
+    4,
+    6,
+    8,
+    8
+  ],
+  "relevant_cids": [
+    1,
+    2,
+    3,
+    5,
+    7,
+    13
+  ],
+  "search_summary": "**Relevant chunks / tested chunks: 6/8** (topic 1: 2/2; topic 1.4: 1/2; topic 1.1: 2/2; topic 1.2: 1/2)",
+  "stage_after_answer": "QUESTION_ANSWERED",
+  "stage_after_search": "CHUNKS_MINED",
+  "test_history": [
+    [
+      "topic 1",
+      2,
+      "Yes"
+    ],
+    [
+      "topic 1",
+      7,
+      "Yes"
+    ],
+    [
+      "topic 1.4",
+      1,
+      "Yes"
+    ],
+    [
+      "topic 1.4",
+      9,
+      "No"
+    ],
+    [
+      "topic 1.1",
+      5,
+      "Yes"
+    ],
+    [
+      "topic 1.1",
+      13,
+      "Yes"
+    ],
+    [
+      "topic 1.2",
+      3,
+      "Yes"
+    ],
+    [
+      "topic 1.2",
+      10,
+      "No"
+    ]
+  ]
+}
