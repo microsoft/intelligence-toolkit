@@ -117,6 +117,25 @@ class TestProcessRelevanceResponses:
         
         assert num_relevant == 0
 
+    def test_process_relevance_responses_normalizes_yes(self) -> None:
+        """Responses like ' yes.' count as relevant without logit_bias steering."""
+        test_history = []
+        cid_to_text = {i: json.dumps({"text_chunk": f"Chunk {i}"}) for i in (1, 2, 3)}
+
+        num_relevant = process_relevance_responses(
+            search_label="test",
+            search_cids=[1, 2, 3],
+            cid_to_text=cid_to_text,
+            mapped_responses=[" yes.", "YES", "No."],
+            test_history=test_history,
+            progress_callback=None,
+            chunk_callback=None,
+            commentary=None
+        )
+
+        assert num_relevant == 2
+        assert [x[2] for x in test_history[:2]] == ["Yes", "Yes"]
+
 
 class TestAssessRelevance:
     @pytest.mark.asyncio

@@ -205,7 +205,36 @@ def test_o_series_call_omits_reasoning_effort_and_temperature():
     kwargs = client._client.chat.completions.create.call_args.kwargs
     assert "reasoning_effort" not in kwargs
     assert "temperature" not in kwargs
-    assert kwargs["max_completion_tokens"] == 50
+    assert kwargs["max_completion_tokens"] == 256
+
+
+def test_reasoning_model_drops_logit_bias_and_floors_tiny_budget():
+    client = _client("gpt-5.4")
+    client._client.chat.completions.create = MagicMock(return_value=_response("Yes"))
+    client.generate_chat(
+        [{"role": "user", "content": "hi"}], stream=False, max_tokens=1, logit_bias={1: 5}
+    )
+    kwargs = client._client.chat.completions.create.call_args.kwargs
+    assert "logit_bias" not in kwargs
+    assert kwargs["max_completion_tokens"] == 256
+
+
+def test_reasoning_model_keeps_large_budget():
+    client = _client("gpt-5.4")
+    client._client.chat.completions.create = MagicMock(return_value=_response("ok"))
+    client.generate_chat([{"role": "user", "content": "hi"}], stream=False, max_tokens=4000)
+    assert client._client.chat.completions.create.call_args.kwargs["max_completion_tokens"] == 4000
+
+
+def test_chat_model_keeps_logit_bias_and_max_tokens():
+    client = _client("gpt-4.1-mini")
+    client._client.chat.completions.create = MagicMock(return_value=_response("Yes"))
+    client.generate_chat(
+        [{"role": "user", "content": "hi"}], stream=False, max_tokens=1, logit_bias={1: 5}
+    )
+    kwargs = client._client.chat.completions.create.call_args.kwargs
+    assert kwargs["logit_bias"] == {1: 5}
+    assert kwargs["max_tokens"] == 1
 
 
 def test_explicit_reasoning_effort_is_preserved():

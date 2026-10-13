@@ -22,6 +22,7 @@ from .openai_configuration import OpenAIConfiguration
 log = logging.getLogger(__name__)
 
 STREAM_CURSOR = "▌"
+REASONING_MIN_COMPLETION_TOKENS = 256
 
 _GPT5_VERSION = re.compile(r"^gpt-5(?:\.(\d+))?")
 
@@ -125,7 +126,12 @@ class OpenAIClient:
         temperature = call_kwargs.pop("temperature", self.configuration.temperature)
         model = self.configuration.model
         if _is_reasoning_model(model):
-            call_kwargs["max_completion_tokens"] = max_tokens
+            # Reasoning models reject logit_bias and may spend tiny budgets on
+            # reasoning tokens, returning empty content; billing is per token used.
+            call_kwargs.pop("logit_bias", None)
+            call_kwargs["max_completion_tokens"] = max(
+                max_tokens, REASONING_MIN_COMPLETION_TOKENS
+            )
             if "reasoning_effort" not in call_kwargs:
                 effort = _default_reasoning_effort(model)
                 if effort is not None:
