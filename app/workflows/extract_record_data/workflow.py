@@ -117,7 +117,7 @@ async def create(sv: variables.SessionVariables, workflow: None):
                                 df_update_callback=on_dfs_update,
                                 callback_batch=None
                             )
-                        sv.final_object.value = erd.json_object,
+                        sv.final_object.value = erd.json_object
                         sv.generated_dfs.value = erd.array_dfs
 
                     for ix, record_array in enumerate(sv.record_arrays.value):
