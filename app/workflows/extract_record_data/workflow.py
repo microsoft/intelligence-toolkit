@@ -11,8 +11,6 @@ import app.workflows.extract_record_data.variables as variables
 from app.util.download_pdf import add_download_pdf
 from app.util.openai_wrapper import UIOpenAIConfiguration
 
-ai_configuration = UIOpenAIConfiguration().get_configuration()
-
 def get_intro():
     file_path = os.path.join(os.path.dirname(__file__), "README.md")
     with open(file_path) as file:
@@ -22,6 +20,7 @@ def get_intro():
 async def create(sv: variables.SessionVariables, workflow: None):
     ui_components.check_ai_configuration(enforce_structured_output=True)
     erd = sv.workflow_object.value
+    ai_configuration = UIOpenAIConfiguration().get_configuration()
     erd.set_ai_configuration(ai_configuration)
     intro_tab, schema_tab, generator_tab, mock_tab = st.tabs(['Extract Record Data workflow:', 'Prepare data schema', 'Extract structured records', 'View example outputs'])
     with intro_tab:

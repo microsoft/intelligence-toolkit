@@ -26,7 +26,6 @@ from intelligence_toolkit.query_text_data.classes import (
 )
 
 sv_home = SessionVariables("home")
-ai_configuration = UIOpenAIConfiguration().get_configuration()
 
 def get_intro():
     file_path = os.path.join(os.path.dirname(__file__), "README.md")
@@ -41,6 +40,7 @@ async def create(sv: SessionVariables, workflow=None):
     ui_components.check_ai_configuration()
 
     qtd = sv.workflow_object.value
+    ai_configuration = UIOpenAIConfiguration().get_configuration()
     qtd.set_ai_config(ai_configuration, sv_home.save_cache.value)
     intro_tab, uploader_tab, graph_tab, search_tab, report_tab, examples_tab = st.tabs(
         [
