@@ -11,6 +11,7 @@ v2 rewrite must reproduce these results, or deliberately diverge (see the
 import asyncio
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -270,12 +271,21 @@ def test_v1_quirk_next_cid_uses_last_file_chunk_count(fake_embedder):
     assert crosses_file_boundary or missing_links
 
 
-def test_v1_quirk_windows_paths_keep_full_path_as_label(fake_embedder):
+def test_v1_quirk_windows_paths_keep_full_path_as_label(fake_embedder, tmp_path):
     """convert_files_to_chunks only splits on '/', so backslash paths keep directories."""
     qtd = QueryTextData()
-    path = str(CORPUS_DIR / "climate.txt").replace("/", "\\")
+    if os.name == "nt":
+        path = str(CORPUS_DIR / "climate.txt")
+    else:
+        # On POSIX '\\' is a valid filename character, so a literal backslash name
+        # reproduces the same quirk.
+        target = tmp_path / "corpus\\climate.txt"
+        shutil.copyfile(CORPUS_DIR / "climate.txt", target)
+        path = str(target)
     labels = list(qtd.process_data_from_files([path], chunk_size=CHUNK_SIZE))
-    assert labels == [path.replace(" ", "_").replace("(", "").replace(")", "")]
+    expected = path.split("/")[-1].replace(" ", "_").replace("(", "").replace(")", "")
+    assert "\\" in expected
+    assert labels == [expected]
 
 
 _COMMUNITY_SNAPSHOT_SCRIPT = """
