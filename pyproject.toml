@@ -12,7 +12,6 @@ license = {text = "MIT"}
 keywords = ["AI", "data analysis", "reports", "workflows"]
 requires-python = ">=3.11,<3.13"
 dependencies = [
-    "itk-core[local]",
     "altair==4.2.2",
     "networkx==3.5",
     "numpy==1.26.4",
@@ -51,6 +50,10 @@ dependencies = [
     "pypdf>=5.1.0,<6.0.0",
     "poethepoet>=0.27.0,<1.0.0",
     "rapidfuzz>=3.0.0",
+    # Bundled itk_core (packages/itk-core) dependencies not listed above.
+    "pandas>=2.0.0",
+    "pylance>=0.18.2",
+    "tqdm>=4.66.0",
 ]
 
 [project.optional-dependencies]
@@ -81,11 +84,14 @@ explicit = true
 requires = ["hatchling"]
 build-backend = "hatchling.build" 
 
+# itk_core is developed in packages/itk-core but shipped inside this wheel;
+# it is not published on its own (the PyPI name "itk-core" belongs to ITK).
+[tool.hatch.build.targets.wheel]
+packages = ["intelligence_toolkit", "packages/itk-core/src/itk_core"]
+dev-mode-dirs = [".", "packages/itk-core/src"]
+
 [tool.uv.workspace]
 members = [".", "packages/*"]
-
-[tool.uv.sources]
-itk-core = { workspace = true }
 
 [tool.poe.tasks]
 _sort_imports = "ruff check --select I --fix . --preview"

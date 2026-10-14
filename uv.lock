@@ -827,7 +827,6 @@ dependencies = [
     { name = "duckdb" },
     { name = "future" },
     { name = "graspologic" },
-    { name = "itk-core", extra = ["local"] },
     { name = "jsonschema" },
     { name = "lancedb" },
     { name = "markdown2" },
@@ -836,6 +835,7 @@ dependencies = [
     { name = "numpy" },
     { name = "openai" },
     { name = "pac-synth" },
+    { name = "pandas" },
     { name = "pdfkit" },
     { name = "plotly" },
     { name = "plotly-express" },
@@ -844,6 +844,7 @@ dependencies = [
     { name = "pyarrow" },
     { name = "pydantic" },
     { name = "pydantic-core" },
+    { name = "pylance" },
     { name = "pypdf" },
     { name = "rapidfuzz" },
     { name = "scikit-learn" },
@@ -859,6 +860,7 @@ dependencies = [
     { name = "tiktoken" },
     { name = "torch", version = "2.4.1", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'darwin'" },
     { name = "torch", version = "2.5.1", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'darwin'" },
+    { name = "tqdm" },
 ]
 
 [package.optional-dependencies]
@@ -887,7 +889,6 @@ requires-dist = [
     { name = "future", specifier = ">=1.0.0,<2.0.0" },
     { name = "graspologic", specifier = ">=3.4.1,<4.0.0" },
     { name = "ipykernel", marker = "extra == 'dev'", specifier = ">=6.29.5,<7.0.0" },
-    { name = "itk-core", extras = ["local"], editable = "packages/itk-core" },
     { name = "jsonschema", specifier = ">=4.23.0,<5.0.0" },
     { name = "lancedb", specifier = "==0.14.0" },
     { name = "markdown2", specifier = "==2.5.4" },
@@ -897,6 +898,7 @@ requires-dist = [
     { name = "numpy", specifier = "==1.26.4" },
     { name = "openai", specifier = ">=1.37.1,<2.0.0" },
     { name = "pac-synth", specifier = "==0.0.8" },
+    { name = "pandas", specifier = ">=2.0.0" },
     { name = "pdfkit", specifier = "==1.0.0" },
     { name = "plotly", specifier = "==5.22.0" },
     { name = "plotly-express", specifier = "==0.4.1" },
@@ -905,6 +907,7 @@ requires-dist = [
     { name = "pyarrow", specifier = "==15.0.0" },
     { name = "pydantic", specifier = "==2.8.2" },
     { name = "pydantic-core", specifier = "==2.20.1" },
+    { name = "pylance", specifier = ">=0.18.2" },
     { name = "pypdf", specifier = ">=5.1.0,<6.0.0" },
     { name = "pyright", marker = "extra == 'dev'", specifier = ">=1.1.371,<2.0.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.2.2,<9.0.0" },
@@ -926,6 +929,7 @@ requires-dist = [
     { name = "tiktoken", specifier = "==0.7.0" },
     { name = "torch", marker = "sys_platform != 'darwin'", specifier = "==2.4.1" },
     { name = "torch", marker = "sys_platform == 'darwin'", specifier = "==2.5.1" },
+    { name = "tqdm", specifier = ">=4.66.0" },
 ]
 provides-extras = ["dev"]
 

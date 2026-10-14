@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
-- Extracted the shared AI core (`intelligence_toolkit.AI`, `helpers.decorators`, `helpers.progress_batch_callback`) into the `itk-core` workspace package (`packages/itk-core`, import name `itk_core`). Imports changed to `itk_core`, `itk_core.retry` and `itk_core.progress`; there are no compatibility shims.
+- Extracted the shared AI core (`intelligence_toolkit.AI`, `helpers.decorators`, `helpers.progress_batch_callback`) into the `itk-core` workspace package (`packages/itk-core`, import name `itk_core`), which is bundled in the `intelligence-toolkit` wheel rather than published separately. Imports changed to `itk_core`, `itk_core.retry` and `itk_core.progress`; there are no compatibility shims.
 
 ### Removed
 - `VECTOR_STORE_MAX_RETRIES` and `VECTOR_STORE_MAX_RETRIES_WAIT_TIME` from `helpers.constants`.
