@@ -12,8 +12,6 @@ from app.util.download_pdf import add_download_pdf
 from app.util.openai_wrapper import UIOpenAIConfiguration
 from intelligence_toolkit.generate_mock_data.api import GenerateMockData
 
-ai_configuration = UIOpenAIConfiguration().get_configuration()
-
 def get_intro():
     file_path = os.path.join(os.path.dirname(__file__), "README.md")
     with open(file_path) as file:
@@ -23,6 +21,7 @@ def get_intro():
 async def create(sv: bds_variables.SessionVariables, workflow: None):
     ui_components.check_ai_configuration(enforce_structured_output=True)
     gmd: GenerateMockData = sv.workflow_object.value
+    ai_configuration = UIOpenAIConfiguration().get_configuration()
     gmd.set_ai_configuration(ai_configuration)
     intro_tab, schema_tab, record_generator_tab, text_generator_tab, mock_tab = st.tabs(['Generate Mock Data workflow:', 'Prepare data schema', 'Generate mock records', 'Generate mock texts', 'View example outputs'])
     with intro_tab:
