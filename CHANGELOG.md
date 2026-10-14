@@ -23,7 +23,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - `VECTOR_STORE_MAX_RETRIES` and `VECTOR_STORE_MAX_RETRIES_WAIT_TIME` from `helpers.constants`.
 
+## [0.2.0] - 2026-10-14
+
+### Added
+- Added the Build Entity Dataset workflow, powered by the vendored schemify engine: AI-driven entity discovery and research, taxonomies, dedup/merge/scope audits, safety scan, and exportable dashboard and release packages
+- Added typed `LLMError` and `EmbeddingError` exceptions for AI failures
+
+### Changed
+- Changed the default LLM model to `gpt-5.4-mini`
+- Added `rapidfuzz` as a dependency
+- Updated LanceDB to 0.14.0, as 0.12.0 is no longer available on package indexes
+
 ### Fixed
+- Fixed async AI calls never retrying; retries now honor `Retry-After` and only apply to transient errors, with SDK retries disabled to avoid multiplied retries
+- Fixed streaming without callbacks and on empty-choice chunks
+- Fixed `reasoning_effort` defaults for o-series models
+- Fixed async OpenAI client and semaphores being reused across event loops
+- Fixed sibling tasks not being cancelled when a batch fails, and progress not resetting between runs
+- Fixed token counting of plain strings and replaced character-based truncation with token-accurate truncation
+- Fixed vector store column search to use parameters and validated column names, and fixed `drop_table`
 - Fixed Extract Record Data schema JSON download being wrapped in an extra list due to a stray trailing comma
 
 ## [0.1.3] - 2024-11-07
