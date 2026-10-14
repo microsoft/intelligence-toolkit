@@ -31,6 +31,6 @@ Output matches v1 on the characterization corpus (see `tests/test_qtd2_parity.py
 - Importing does not call `nltk.download`.
 - Empty corpora and corpora with no concepts return empty results instead of crashing.
 
-It is not published or bundled in the `intelligence-toolkit` wheel yet.
+It is not published or bundled in the `intelligence-toolkit` wheel yet; `uv sync` installs it into the workspace through the root `dev` dependency group.
 
 Tests: `uv run pytest packages/itk-query-text-data/tests` (set `UPDATE_GOLDEN=1` to regenerate `tests/golden`).

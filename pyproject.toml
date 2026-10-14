@@ -70,6 +70,14 @@ dev = [
     "nbformat>=5.10.4,<6.0.0",
 ]
 
+# Workspace packages not bundled in the wheel; `uv sync` installs the default
+# dev group, so their tests run in CI and local checkouts.
+[dependency-groups]
+dev = ["itk-query-text-data"]
+
+[tool.uv.sources]
+itk-query-text-data = { workspace = true }
+
 [project.urls]
 source = "https://github.com/microsoft/intelligence-toolkit"
 issues = "https://github.com/microsoft/intelligence-toolkit/issues"
