@@ -1881,8 +1881,8 @@ class BuildEntityDataset:
         if not self._schemify or not self._schemify.record_set:
             return []
         try:
-            from intelligence_toolkit.AI.client import OpenAIClient
-            from intelligence_toolkit.AI.defaults import DEFAULT_TEMPERATURE
+            from itk_core.client import OpenAIClient
+            from itk_core.defaults import DEFAULT_TEMPERATURE
         except ImportError as e:
             _logger.warning("safety-scan: AI client import failed: %s", e)
             return []
@@ -2289,8 +2289,8 @@ class BuildEntityDataset:
         if not self._schemify or not self._schemify.record_set:
             return []
         try:
-            from intelligence_toolkit.AI.client import OpenAIClient
-            from intelligence_toolkit.AI.defaults import DEFAULT_TEMPERATURE
+            from itk_core.client import OpenAIClient
+            from itk_core.defaults import DEFAULT_TEMPERATURE
         except ImportError as e:
             _logger.warning("alias-suggest: AI client import failed: %s", e)
             return []

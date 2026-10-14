@@ -1,10 +1,12 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-import pandas as pd
 import asyncio
+
+import itk_core.utils as utils
+import pandas as pd
+from itk_core.openai_configuration import OpenAIConfiguration
 from tqdm.asyncio import tqdm_asyncio
-import intelligence_toolkit.AI.utils as utils
+
 import intelligence_toolkit.generate_mock_data.prompts as prompts
-from intelligence_toolkit.AI.openai_configuration import OpenAIConfiguration
 
 
 async def generate_text_data(

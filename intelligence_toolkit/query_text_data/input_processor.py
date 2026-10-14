@@ -8,9 +8,9 @@ from enum import Enum
 from json import dumps, loads
 
 import networkx as nx
+from itk_core.text_splitter import TextSplitter
 
 import intelligence_toolkit.query_text_data.graph_builder as graph_builder
-from intelligence_toolkit.AI.text_splitter import TextSplitter
 from intelligence_toolkit.query_text_data.classes import ProcessedChunks
 
 PeriodOption = Enum("Period", "NONE DAY WEEK MONTH QUARTER YEAR")

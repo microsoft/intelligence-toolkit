@@ -7,9 +7,10 @@ from typing import Any
 
 import networkx as nx
 import polars as pl
+from itk_core import utils
+from itk_core.client import OpenAIClient
+from itk_core.progress import ProgressBatchCallback
 
-from intelligence_toolkit.AI import utils
-from intelligence_toolkit.AI.client import OpenAIClient
 from intelligence_toolkit.detect_entity_networks import prompts
 from intelligence_toolkit.detect_entity_networks.classes import (
     FlagAggregatorType,
@@ -46,7 +47,6 @@ from intelligence_toolkit.detect_entity_networks.prepare_model import (
 )
 from intelligence_toolkit.helpers.classes import IntelligenceWorkflow
 from intelligence_toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
-from intelligence_toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 
 class DetectEntityNetworks(IntelligenceWorkflow):

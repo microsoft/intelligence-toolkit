@@ -8,6 +8,8 @@ import re
 
 import pandas as pd
 import streamlit as st
+from itk_core.classes import LLMCallback
+from itk_core.defaults import CHUNK_SIZE
 
 import app.util.embedder as embedder
 import app.util.example_outputs_ui as example_outputs_ui
@@ -17,13 +19,11 @@ from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
 from app.util.openai_wrapper import UIOpenAIConfiguration
 from app.util.session_variables import SessionVariables
-from intelligence_toolkit.AI.defaults import CHUNK_SIZE
-from intelligence_toolkit.query_text_data.api import QueryTextDataStage
 from intelligence_toolkit.query_text_data import helper_functions
+from intelligence_toolkit.query_text_data.api import QueryTextDataStage
 from intelligence_toolkit.query_text_data.classes import (
     ChunkSearchConfig,
 )
-from intelligence_toolkit.AI.classes import LLMCallback
 
 sv_home = SessionVariables("home")
 ai_configuration = UIOpenAIConfiguration().get_configuration()

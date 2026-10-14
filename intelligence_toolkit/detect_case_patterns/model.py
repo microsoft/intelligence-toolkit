@@ -5,9 +5,9 @@ from collections import defaultdict
 
 import numpy as np
 import pandas as pd
+from itk_core.metaprompts import do_not_harm
+from itk_core.utils import generate_messages
 
-from intelligence_toolkit.AI.metaprompts import do_not_harm
-from intelligence_toolkit.AI.utils import generate_messages
 from intelligence_toolkit.helpers import df_functions
 
 from .detection_functions import (

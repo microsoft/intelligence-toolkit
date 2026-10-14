@@ -1,4 +1,3 @@
-# noqa: N999
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 #
@@ -7,6 +6,9 @@ import time
 
 import streamlit as st
 from components.app_loader import load_multipage_app
+from itk_core.defaults import DEFAULT_LOCAL_EMBEDDING_MODEL
+from itk_core.utils import prepare_messages
+from itk_core.vector_store import VectorStore
 from util.constants import LOCAL_EMBEDDING_MODEL_KEY, MAX_SIZE_EMBEDDINGS_KEY
 from util.enums import Mode
 from util.openai_wrapper import (
@@ -22,9 +24,6 @@ from util.openai_wrapper import (
 from util.secrets_handler import SecretsHandler
 
 from app.util import ui_components
-from intelligence_toolkit.AI.defaults import DEFAULT_LOCAL_EMBEDDING_MODEL
-from intelligence_toolkit.AI.utils import prepare_messages
-from intelligence_toolkit.AI.vector_store import VectorStore
 from intelligence_toolkit.helpers.constants import CACHE_PATH
 
 openai_embedding_models = [

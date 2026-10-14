@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import PIL
 import streamlit as st
+from itk_core.classes import LLMCallback
 from st_aggrid import (
     AgGrid,
     ColumnsAutoSizeMode,
@@ -22,7 +23,6 @@ import app.workflows.detect_case_patterns.variables as ap_variables
 import intelligence_toolkit.detect_case_patterns.config as config
 from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
-from intelligence_toolkit.AI.classes import LLMCallback
 from intelligence_toolkit.detect_case_patterns import prompts
 
 

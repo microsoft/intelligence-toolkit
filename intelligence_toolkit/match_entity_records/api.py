@@ -6,12 +6,12 @@
 import io
 from typing import ClassVar
 
+import itk_core.utils as utils
 import numpy as np
 import polars as pl
+from itk_core.classes import LLMCallback
+from itk_core.client import OpenAIClient
 
-import intelligence_toolkit.AI.utils as utils
-from intelligence_toolkit.AI.classes import LLMCallback
-from intelligence_toolkit.AI.client import OpenAIClient
 from intelligence_toolkit.helpers.classes import IntelligenceWorkflow
 from intelligence_toolkit.match_entity_records import prompts
 from intelligence_toolkit.match_entity_records.classes import (

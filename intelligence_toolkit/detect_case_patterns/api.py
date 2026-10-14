@@ -2,13 +2,13 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 
 import altair as alt
+import itk_core.utils as utils
 import pandas as pd
+from itk_core.client import OpenAIClient
 
-import intelligence_toolkit.AI.utils as utils
 import intelligence_toolkit.detect_case_patterns.model as model
 import intelligence_toolkit.detect_case_patterns.prompts as prompts
 import intelligence_toolkit.graph.graph_fusion_encoder_embedding as gfee
-from intelligence_toolkit.AI.client import OpenAIClient
 from intelligence_toolkit.helpers.classes import IntelligenceWorkflow
 
 

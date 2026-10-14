@@ -1,0 +1,1970 @@
+{
+  "chunk_batches": [
+    [
+      1,
+      13
+    ],
+    [
+      2,
+      13
+    ],
+    [
+      3,
+      13
+    ],
+    [
+      4,
+      13
+    ],
+    [
+      5,
+      13
+    ],
+    [
+      6,
+      13
+    ],
+    [
+      7,
+      13
+    ],
+    [
+      8,
+      13
+    ],
+    [
+      9,
+      13
+    ],
+    [
+      10,
+      13
+    ],
+    [
+      11,
+      13
+    ],
+    [
+      12,
+      13
+    ],
+    [
+      13,
+      13
+    ]
+  ],
+  "cid_to_concepts": {
+    "1": [
+      "carbon emissions",
+      "coastal cities",
+      "extreme weather events",
+      "link climate",
+      "sea level rise threatens coastal cities"
+    ],
+    "10": [
+      "chains exposure",
+      "coastal cities",
+      "insurance costs",
+      "insurance costs reflect extreme weather risk",
+      "insurance costs squeeze"
+    ],
+    "11": [
+      "coastal cities",
+      "north coast",
+      "sea level rise"
+    ],
+    "12": [
+      "energy prices",
+      "renewable energy projects"
+    ],
+    "13": [
+      "heat waves",
+      "hospital capacity"
+    ],
+    "2": [
+      "carbon emissions",
+      "main sources",
+      "renewable energy",
+      "renewable energy investment",
+      "solar panels"
+    ],
+    "3": [
+      "coastal cities",
+      "damages infrastructure",
+      "direct consequence",
+      "energy prices",
+      "insurance costs",
+      "waves stress power grids"
+    ],
+    "4": [
+      "adaptation plans",
+      "extreme weather intensifies",
+      "flood defenses",
+      "insurance costs rise",
+      "sea level rise forces coastal cities"
+    ],
+    "5": [
+      "air pollution",
+      "elderly patients",
+      "heat waves",
+      "heat waves increase hospital admissions",
+      "hospital capacity",
+      "public health agencies",
+      "respiratory illness"
+    ],
+    "6": [
+      "air quality",
+      "hospital admissions",
+      "hospital capacity",
+      "public health",
+      "public health budgets fund vaccine programs",
+      "winter outbreaks"
+    ],
+    "7": [
+      "air pollution",
+      "carbon emissions",
+      "dense urban areas",
+      "illness rates",
+      "poor air quality",
+      "public health researchers study air pollution",
+      "respiratory illness"
+    ],
+    "8": [
+      "central banks",
+      "energy prices",
+      "extreme weather",
+      "inflation pressure",
+      "interest rates",
+      "predictable interest rates",
+      "stable shipping routes",
+      "supply chains"
+    ],
+    "9": [
+      "energy prices",
+      "interest rates",
+      "prices drive inflation pressure",
+      "renewable energy",
+      "stabilize energy prices"
+    ]
+  },
+  "cid_to_title": {
+    "1": "climate.txt",
+    "10": "economy.txt",
+    "11": "regions.csv_1",
+    "12": "regions.csv_2",
+    "13": "regions.csv_3",
+    "2": "climate.txt",
+    "3": "climate.txt",
+    "4": "climate.txt",
+    "5": "health.txt",
+    "6": "health.txt",
+    "7": "health.txt",
+    "8": "economy.txt",
+    "9": "economy.txt"
+  },
+  "communities": [
+    [
+      "adaptation plans",
+      0,
+      "1.5",
+      null,
+      false
+    ],
+    [
+      "adaptation plans",
+      1,
+      "1.5.2",
+      "1.5",
+      true
+    ],
+    [
+      "air pollution",
+      0,
+      "1.1",
+      null,
+      false
+    ],
+    [
+      "air pollution",
+      1,
+      "1.1.1",
+      "1.1",
+      true
+    ],
+    [
+      "air quality",
+      0,
+      "1.6",
+      null,
+      true
+    ],
+    [
+      "carbon emissions",
+      0,
+      "1.4",
+      null,
+      false
+    ],
+    [
+      "carbon emissions",
+      1,
+      "1.4.1",
+      "1.4",
+      true
+    ],
+    [
+      "central banks",
+      0,
+      "1.3",
+      null,
+      false
+    ],
+    [
+      "central banks",
+      1,
+      "1.3.1",
+      "1.3",
+      true
+    ],
+    [
+      "chains exposure",
+      0,
+      "1.2",
+      null,
+      false
+    ],
+    [
+      "chains exposure",
+      1,
+      "1.2.1",
+      "1.2",
+      true
+    ],
+    [
+      "coastal cities",
+      0,
+      "1.2",
+      null,
+      false
+    ],
+    [
+      "coastal cities",
+      1,
+      "1.2.3",
+      "1.2",
+      true
+    ],
+    [
+      "damages infrastructure",
+      0,
+      "1.2",
+      null,
+      false
+    ],
+    [
+      "damages infrastructure",
+      1,
+      "1.2.2",
+      "1.2",
+      true
+    ],
+    [
+      "dense urban areas",
+      0,
+      "1.1",
+      null,
+      false
+    ],
+    [
+      "dense urban areas",
+      1,
+      "1.1.2",
+      "1.1",
+      true
+    ],
+    [
+      "direct consequence",
+      0,
+      "1.2",
+      null,
+      false
+    ],
+    [
+      "direct consequence",
+      1,
+      "1.2.2",
+      "1.2",
+      true
+    ],
+    [
+      "dummynode",
+      0,
+      "1.5",
+      null,
+      false
+    ],
+    [
+      "dummynode",
+      1,
+      "1.5.2",
+      "1.5",
+      true
+    ],
+    [
+      "elderly patients",
+      0,
+      "1.1",
+      null,
+      false
+    ],
+    [
+      "elderly patients",
+      1,
+      "1.1.1",
+      "1.1",
+      true
+    ],
+    [
+      "extreme weather",
+      0,
+      "1.3",
+      null,
+      false
+    ],
+    [
+      "extreme weather",
+      1,
+      "1.3.1",
+      "1.3",
+      true
+    ],
+    [
+      "extreme weather events",
+      0,
+      "1.4",
+      null,
+      false
+    ],
+    [
+      "extreme weather events",
+      1,
+      "1.4.1",
+      "1.4",
+      true
+    ],
+    [
+      "extreme weather intensifies",
+      0,
+      "1.5",
+      null,
+      false
+    ],
+    [
+      "extreme weather intensifies",
+      1,
+      "1.5.1",
+      "1.5",
+      true
+    ],
+    [
+      "flood defenses",
+      0,
+      "1.5",
+      null,
+      false
+    ],
+    [
+      "flood defenses",
+      1,
+      "1.5.1",
+      "1.5",
+      true
+    ],
+    [
+      "heat waves",
+      0,
+      "1.1",
+      null,
+      false
+    ],
+    [
+      "heat waves",
+      1,
+      "1.1.1",
+      "1.1",
+      true
+    ],
+    [
+      "heat waves increase hospital admissions",
+      0,
+      "1.1",
+      null,
+      false
+    ],
+    [
+      "heat waves increase hospital admissions",
+      1,
+      "1.1.1",
+      "1.1",
+      true
+    ],
+    [
+      "hospital admissions",
+      0,
+      "1.6",
+      null,
+      true
+    ],
+    [
+      "hospital capacity",
+      0,
+      "1.6",
+      null,
+      true
+    ],
+    [
+      "illness rates",
+      0,
+      "1.1",
+      null,
+      false
+    ],
+    [
+      "illness rates",
+      1,
+      "1.1.2",
+      "1.1",
+      true
+    ],
+    [
+      "inflation pressure",
+      0,
+      "1.3",
+      null,
+      false
+    ],
+    [
+      "inflation pressure",
+      1,
+      "1.3.1",
+      "1.3",
+      true
+    ],
+    [
+      "insurance costs",
+      0,
+      "1.2",
+      null,
+      false
+    ],
+    [
+      "insurance costs",
+      1,
+      "1.2.1",
+      "1.2",
+      true
+    ],
+    [
+      "insurance costs reflect extreme weather risk",
+      0,
+      "1.2",
+      null,
+      false
+    ],
+    [
+      "insurance costs reflect extreme weather risk",
+      1,
+      "1.2.1",
+      "1.2",
+      true
+    ],
+    [
+      "insurance costs rise",
+      0,
+      "1.5",
+      null,
+      false
+    ],
+    [
+      "insurance costs rise",
+      1,
+      "1.5.1",
+      "1.5",
+      true
+    ],
+    [
+      "insurance costs squeeze",
+      0,
+      "1.2",
+      null,
+      false
+    ],
+    [
+      "insurance costs squeeze",
+      1,
+      "1.2.1",
+      "1.2",
+      true
+    ],
+    [
+      "interest rates",
+      0,
+      "1.3",
+      null,
+      false
+    ],
+    [
+      "interest rates",
+      1,
+      "1.3.2",
+      "1.3",
+      true
+    ],
+    [
+      "link climate",
+      0,
+      "1.4",
+      null,
+      false
+    ],
+    [
+      "link climate",
+      1,
+      "1.4.1",
+      "1.4",
+      true
+    ],
+    [
+      "main sources",
+      0,
+      "1.4",
+      null,
+      false
+    ],
+    [
+      "main sources",
+      1,
+      "1.4.2",
+      "1.4",
+      true
+    ],
+    [
+      "north coast",
+      0,
+      "1.2",
+      null,
+      false
+    ],
+    [
+      "north coast",
+      1,
+      "1.2.3",
+      "1.2",
+      true
+    ],
+    [
+      "poor air quality",
+      0,
+      "1.1",
+      null,
+      false
+    ],
+    [
+      "poor air quality",
+      1,
+      "1.1.2",
+      "1.1",
+      true
+    ],
+    [
+      "predictable interest rates",
+      0,
+      "1.3",
+      null,
+      false
+    ],
+    [
+      "predictable interest rates",
+      1,
+      "1.3.1",
+      "1.3",
+      true
+    ],
+    [
+      "prices drive inflation pressure",
+      0,
+      "1.3",
+      null,
+      false
+    ],
+    [
+      "prices drive inflation pressure",
+      1,
+      "1.3.2",
+      "1.3",
+      true
+    ],
+    [
+      "public health",
+      0,
+      "1.6",
+      null,
+      true
+    ],
+    [
+      "public health agencies",
+      0,
+      "1.1",
+      null,
+      false
+    ],
+    [
+      "public health agencies",
+      1,
+      "1.1.1",
+      "1.1",
+      true
+    ],
+    [
+      "public health budgets fund vaccine programs",
+      0,
+      "1.6",
+      null,
+      true
+    ],
+    [
+      "public health researchers study air pollution",
+      0,
+      "1.1",
+      null,
+      false
+    ],
+    [
+      "public health researchers study air pollution",
+      1,
+      "1.1.2",
+      "1.1",
+      true
+    ],
+    [
+      "renewable energy",
+      0,
+      "1.4",
+      null,
+      false
+    ],
+    [
+      "renewable energy",
+      1,
+      "1.4.2",
+      "1.4",
+      true
+    ],
+    [
+      "renewable energy investment",
+      0,
+      "1.4",
+      null,
+      false
+    ],
+    [
+      "renewable energy investment",
+      1,
+      "1.4.2",
+      "1.4",
+      true
+    ],
+    [
+      "respiratory illness",
+      0,
+      "1.1",
+      null,
+      false
+    ],
+    [
+      "respiratory illness",
+      1,
+      "1.1.1",
+      "1.1",
+      true
+    ],
+    [
+      "sea level rise",
+      0,
+      "1.2",
+      null,
+      false
+    ],
+    [
+      "sea level rise",
+      1,
+      "1.2.3",
+      "1.2",
+      true
+    ],
+    [
+      "sea level rise forces coastal cities",
+      0,
+      "1.5",
+      null,
+      false
+    ],
+    [
+      "sea level rise forces coastal cities",
+      1,
+      "1.5.1",
+      "1.5",
+      true
+    ],
+    [
+      "sea level rise threatens coastal cities",
+      0,
+      "1.4",
+      null,
+      false
+    ],
+    [
+      "sea level rise threatens coastal cities",
+      1,
+      "1.4.1",
+      "1.4",
+      true
+    ],
+    [
+      "solar panels",
+      0,
+      "1.4",
+      null,
+      false
+    ],
+    [
+      "solar panels",
+      1,
+      "1.4.2",
+      "1.4",
+      true
+    ],
+    [
+      "stabilize energy prices",
+      0,
+      "1.3",
+      null,
+      false
+    ],
+    [
+      "stabilize energy prices",
+      1,
+      "1.3.2",
+      "1.3",
+      true
+    ],
+    [
+      "stable shipping routes",
+      0,
+      "1.3",
+      null,
+      false
+    ],
+    [
+      "stable shipping routes",
+      1,
+      "1.3.1",
+      "1.3",
+      true
+    ],
+    [
+      "supply chains",
+      0,
+      "1.3",
+      null,
+      false
+    ],
+    [
+      "supply chains",
+      1,
+      "1.3.1",
+      "1.3",
+      true
+    ],
+    [
+      "waves stress power grids",
+      0,
+      "1.2",
+      null,
+      false
+    ],
+    [
+      "waves stress power grids",
+      1,
+      "1.2.2",
+      "1.2",
+      true
+    ],
+    [
+      "winter outbreaks",
+      0,
+      "1.6",
+      null,
+      true
+    ]
+  ],
+  "community_labels": [
+    "1.1",
+    "1.1.1",
+    "1.1.2",
+    "1.2",
+    "1.2.1",
+    "1.2.2",
+    "1.2.3",
+    "1.3",
+    "1.3.1",
+    "1.3.2",
+    "1.4",
+    "1.4.1",
+    "1.4.2",
+    "1.5",
+    "1.5.1",
+    "1.5.2",
+    "1.6"
+  ],
+  "concept_to_cids": {
+    "adaptation plans": [
+      4
+    ],
+    "air pollution": [
+      5,
+      7
+    ],
+    "air quality": [
+      6
+    ],
+    "carbon emissions": [
+      1,
+      2,
+      7
+    ],
+    "central banks": [
+      8
+    ],
+    "chains exposure": [
+      10
+    ],
+    "coastal cities": [
+      1,
+      3,
+      10,
+      11
+    ],
+    "damages infrastructure": [
+      3
+    ],
+    "dense urban areas": [
+      7
+    ],
+    "direct consequence": [
+      3
+    ],
+    "elderly patients": [
+      5
+    ],
+    "energy prices": [
+      3,
+      8,
+      9,
+      12
+    ],
+    "extreme weather": [
+      8
+    ],
+    "extreme weather events": [
+      1
+    ],
+    "extreme weather intensifies": [
+      4
+    ],
+    "flood defenses": [
+      4
+    ],
+    "heat waves": [
+      5,
+      13
+    ],
+    "heat waves increase hospital admissions": [
+      5
+    ],
+    "hospital admissions": [
+      6
+    ],
+    "hospital capacity": [
+      5,
+      6,
+      13
+    ],
+    "illness rates": [
+      7
+    ],
+    "inflation pressure": [
+      8
+    ],
+    "insurance costs": [
+      3,
+      10
+    ],
+    "insurance costs reflect extreme weather risk": [
+      10
+    ],
+    "insurance costs rise": [
+      4
+    ],
+    "insurance costs squeeze": [
+      10
+    ],
+    "interest rates": [
+      8,
+      9
+    ],
+    "link climate": [
+      1
+    ],
+    "main sources": [
+      2
+    ],
+    "north coast": [
+      11
+    ],
+    "poor air quality": [
+      7
+    ],
+    "predictable interest rates": [
+      8
+    ],
+    "prices drive inflation pressure": [
+      9
+    ],
+    "public health": [
+      6
+    ],
+    "public health agencies": [
+      5
+    ],
+    "public health budgets fund vaccine programs": [
+      6
+    ],
+    "public health researchers study air pollution": [
+      7
+    ],
+    "renewable energy": [
+      2,
+      9
+    ],
+    "renewable energy investment": [
+      2
+    ],
+    "renewable energy projects": [
+      12
+    ],
+    "respiratory illness": [
+      5,
+      7
+    ],
+    "sea level rise": [
+      11
+    ],
+    "sea level rise forces coastal cities": [
+      4
+    ],
+    "sea level rise threatens coastal cities": [
+      1
+    ],
+    "solar panels": [
+      2
+    ],
+    "stabilize energy prices": [
+      9
+    ],
+    "stable shipping routes": [
+      8
+    ],
+    "supply chains": [
+      8
+    ],
+    "waves stress power grids": [
+      3
+    ],
+    "winter outbreaks": [
+      6
+    ]
+  },
+  "graphs": {
+    "ALL": {
+      "edges": [
+        [
+          "adaptation plans",
+          "dummynode",
+          1
+        ],
+        [
+          "adaptation plans",
+          "extreme weather intensifies",
+          1
+        ],
+        [
+          "adaptation plans",
+          "flood defenses",
+          1
+        ],
+        [
+          "adaptation plans",
+          "insurance costs rise",
+          1
+        ],
+        [
+          "adaptation plans",
+          "sea level rise forces coastal cities",
+          1
+        ],
+        [
+          "air pollution",
+          "carbon emissions",
+          1
+        ],
+        [
+          "air pollution",
+          "dense urban areas",
+          1
+        ],
+        [
+          "air pollution",
+          "elderly patients",
+          1
+        ],
+        [
+          "air pollution",
+          "heat waves",
+          1
+        ],
+        [
+          "air pollution",
+          "heat waves increase hospital admissions",
+          1
+        ],
+        [
+          "air pollution",
+          "hospital capacity",
+          1
+        ],
+        [
+          "air pollution",
+          "illness rates",
+          1
+        ],
+        [
+          "air pollution",
+          "poor air quality",
+          1
+        ],
+        [
+          "air pollution",
+          "public health agencies",
+          1
+        ],
+        [
+          "air pollution",
+          "public health researchers study air pollution",
+          1
+        ],
+        [
+          "air pollution",
+          "respiratory illness",
+          2
+        ],
+        [
+          "air quality",
+          "hospital admissions",
+          1
+        ],
+        [
+          "air quality",
+          "hospital capacity",
+          1
+        ],
+        [
+          "air quality",
+          "public health",
+          1
+        ],
+        [
+          "air quality",
+          "public health budgets fund vaccine programs",
+          1
+        ],
+        [
+          "air quality",
+          "winter outbreaks",
+          1
+        ],
+        [
+          "carbon emissions",
+          "coastal cities",
+          1
+        ],
+        [
+          "carbon emissions",
+          "dense urban areas",
+          1
+        ],
+        [
+          "carbon emissions",
+          "dummynode",
+          1
+        ],
+        [
+          "carbon emissions",
+          "extreme weather events",
+          1
+        ],
+        [
+          "carbon emissions",
+          "illness rates",
+          1
+        ],
+        [
+          "carbon emissions",
+          "link climate",
+          1
+        ],
+        [
+          "carbon emissions",
+          "main sources",
+          1
+        ],
+        [
+          "carbon emissions",
+          "poor air quality",
+          1
+        ],
+        [
+          "carbon emissions",
+          "public health researchers study air pollution",
+          1
+        ],
+        [
+          "carbon emissions",
+          "renewable energy",
+          1
+        ],
+        [
+          "carbon emissions",
+          "renewable energy investment",
+          1
+        ],
+        [
+          "carbon emissions",
+          "respiratory illness",
+          1
+        ],
+        [
+          "carbon emissions",
+          "sea level rise threatens coastal cities",
+          1
+        ],
+        [
+          "carbon emissions",
+          "solar panels",
+          1
+        ],
+        [
+          "central banks",
+          "extreme weather",
+          1
+        ],
+        [
+          "central banks",
+          "inflation pressure",
+          1
+        ],
+        [
+          "central banks",
+          "interest rates",
+          1
+        ],
+        [
+          "central banks",
+          "predictable interest rates",
+          1
+        ],
+        [
+          "central banks",
+          "stable shipping routes",
+          1
+        ],
+        [
+          "central banks",
+          "supply chains",
+          1
+        ],
+        [
+          "chains exposure",
+          "coastal cities",
+          1
+        ],
+        [
+          "chains exposure",
+          "insurance costs",
+          1
+        ],
+        [
+          "chains exposure",
+          "insurance costs reflect extreme weather risk",
+          1
+        ],
+        [
+          "chains exposure",
+          "insurance costs squeeze",
+          1
+        ],
+        [
+          "coastal cities",
+          "damages infrastructure",
+          1
+        ],
+        [
+          "coastal cities",
+          "direct consequence",
+          1
+        ],
+        [
+          "coastal cities",
+          "extreme weather events",
+          1
+        ],
+        [
+          "coastal cities",
+          "insurance costs",
+          2
+        ],
+        [
+          "coastal cities",
+          "insurance costs reflect extreme weather risk",
+          1
+        ],
+        [
+          "coastal cities",
+          "insurance costs squeeze",
+          1
+        ],
+        [
+          "coastal cities",
+          "link climate",
+          1
+        ],
+        [
+          "coastal cities",
+          "north coast",
+          1
+        ],
+        [
+          "coastal cities",
+          "sea level rise",
+          1
+        ],
+        [
+          "coastal cities",
+          "sea level rise threatens coastal cities",
+          1
+        ],
+        [
+          "coastal cities",
+          "waves stress power grids",
+          1
+        ],
+        [
+          "damages infrastructure",
+          "direct consequence",
+          1
+        ],
+        [
+          "damages infrastructure",
+          "insurance costs",
+          1
+        ],
+        [
+          "damages infrastructure",
+          "waves stress power grids",
+          1
+        ],
+        [
+          "dense urban areas",
+          "illness rates",
+          1
+        ],
+        [
+          "dense urban areas",
+          "poor air quality",
+          1
+        ],
+        [
+          "dense urban areas",
+          "public health researchers study air pollution",
+          1
+        ],
+        [
+          "dense urban areas",
+          "respiratory illness",
+          1
+        ],
+        [
+          "direct consequence",
+          "insurance costs",
+          1
+        ],
+        [
+          "direct consequence",
+          "waves stress power grids",
+          1
+        ],
+        [
+          "elderly patients",
+          "heat waves",
+          1
+        ],
+        [
+          "elderly patients",
+          "heat waves increase hospital admissions",
+          1
+        ],
+        [
+          "elderly patients",
+          "hospital capacity",
+          1
+        ],
+        [
+          "elderly patients",
+          "public health agencies",
+          1
+        ],
+        [
+          "elderly patients",
+          "respiratory illness",
+          1
+        ],
+        [
+          "extreme weather",
+          "inflation pressure",
+          1
+        ],
+        [
+          "extreme weather",
+          "interest rates",
+          1
+        ],
+        [
+          "extreme weather",
+          "predictable interest rates",
+          1
+        ],
+        [
+          "extreme weather",
+          "stable shipping routes",
+          1
+        ],
+        [
+          "extreme weather",
+          "supply chains",
+          1
+        ],
+        [
+          "extreme weather events",
+          "link climate",
+          1
+        ],
+        [
+          "extreme weather events",
+          "sea level rise threatens coastal cities",
+          1
+        ],
+        [
+          "extreme weather intensifies",
+          "flood defenses",
+          1
+        ],
+        [
+          "extreme weather intensifies",
+          "insurance costs rise",
+          1
+        ],
+        [
+          "extreme weather intensifies",
+          "sea level rise forces coastal cities",
+          1
+        ],
+        [
+          "flood defenses",
+          "insurance costs rise",
+          1
+        ],
+        [
+          "flood defenses",
+          "sea level rise forces coastal cities",
+          1
+        ],
+        [
+          "heat waves",
+          "heat waves increase hospital admissions",
+          1
+        ],
+        [
+          "heat waves",
+          "hospital capacity",
+          2
+        ],
+        [
+          "heat waves",
+          "public health agencies",
+          1
+        ],
+        [
+          "heat waves",
+          "respiratory illness",
+          1
+        ],
+        [
+          "heat waves increase hospital admissions",
+          "hospital capacity",
+          1
+        ],
+        [
+          "heat waves increase hospital admissions",
+          "public health agencies",
+          1
+        ],
+        [
+          "heat waves increase hospital admissions",
+          "respiratory illness",
+          1
+        ],
+        [
+          "hospital admissions",
+          "hospital capacity",
+          1
+        ],
+        [
+          "hospital admissions",
+          "public health",
+          1
+        ],
+        [
+          "hospital admissions",
+          "public health budgets fund vaccine programs",
+          1
+        ],
+        [
+          "hospital admissions",
+          "winter outbreaks",
+          1
+        ],
+        [
+          "hospital capacity",
+          "public health",
+          1
+        ],
+        [
+          "hospital capacity",
+          "public health agencies",
+          1
+        ],
+        [
+          "hospital capacity",
+          "public health budgets fund vaccine programs",
+          1
+        ],
+        [
+          "hospital capacity",
+          "respiratory illness",
+          1
+        ],
+        [
+          "hospital capacity",
+          "winter outbreaks",
+          1
+        ],
+        [
+          "illness rates",
+          "poor air quality",
+          1
+        ],
+        [
+          "illness rates",
+          "public health researchers study air pollution",
+          1
+        ],
+        [
+          "illness rates",
+          "respiratory illness",
+          1
+        ],
+        [
+          "inflation pressure",
+          "interest rates",
+          1
+        ],
+        [
+          "inflation pressure",
+          "predictable interest rates",
+          1
+        ],
+        [
+          "inflation pressure",
+          "stable shipping routes",
+          1
+        ],
+        [
+          "inflation pressure",
+          "supply chains",
+          1
+        ],
+        [
+          "insurance costs",
+          "insurance costs reflect extreme weather risk",
+          1
+        ],
+        [
+          "insurance costs",
+          "insurance costs squeeze",
+          1
+        ],
+        [
+          "insurance costs",
+          "waves stress power grids",
+          1
+        ],
+        [
+          "insurance costs reflect extreme weather risk",
+          "insurance costs squeeze",
+          1
+        ],
+        [
+          "insurance costs rise",
+          "sea level rise forces coastal cities",
+          1
+        ],
+        [
+          "interest rates",
+          "predictable interest rates",
+          1
+        ],
+        [
+          "interest rates",
+          "prices drive inflation pressure",
+          1
+        ],
+        [
+          "interest rates",
+          "renewable energy",
+          1
+        ],
+        [
+          "interest rates",
+          "stabilize energy prices",
+          1
+        ],
+        [
+          "interest rates",
+          "stable shipping routes",
+          1
+        ],
+        [
+          "interest rates",
+          "supply chains",
+          1
+        ],
+        [
+          "link climate",
+          "sea level rise threatens coastal cities",
+          1
+        ],
+        [
+          "main sources",
+          "renewable energy",
+          1
+        ],
+        [
+          "main sources",
+          "renewable energy investment",
+          1
+        ],
+        [
+          "main sources",
+          "solar panels",
+          1
+        ],
+        [
+          "north coast",
+          "sea level rise",
+          1
+        ],
+        [
+          "poor air quality",
+          "public health researchers study air pollution",
+          1
+        ],
+        [
+          "poor air quality",
+          "respiratory illness",
+          1
+        ],
+        [
+          "predictable interest rates",
+          "stable shipping routes",
+          1
+        ],
+        [
+          "predictable interest rates",
+          "supply chains",
+          1
+        ],
+        [
+          "prices drive inflation pressure",
+          "renewable energy",
+          1
+        ],
+        [
+          "prices drive inflation pressure",
+          "stabilize energy prices",
+          1
+        ],
+        [
+          "public health",
+          "public health budgets fund vaccine programs",
+          1
+        ],
+        [
+          "public health",
+          "winter outbreaks",
+          1
+        ],
+        [
+          "public health agencies",
+          "respiratory illness",
+          1
+        ],
+        [
+          "public health budgets fund vaccine programs",
+          "winter outbreaks",
+          1
+        ],
+        [
+          "public health researchers study air pollution",
+          "respiratory illness",
+          1
+        ],
+        [
+          "renewable energy",
+          "renewable energy investment",
+          1
+        ],
+        [
+          "renewable energy",
+          "solar panels",
+          1
+        ],
+        [
+          "renewable energy",
+          "stabilize energy prices",
+          1
+        ],
+        [
+          "renewable energy investment",
+          "solar panels",
+          1
+        ],
+        [
+          "stable shipping routes",
+          "supply chains",
+          1
+        ]
+      ],
+      "nodes": [
+        [
+          "adaptation plans",
+          1,
+          15
+        ],
+        [
+          "air pollution",
+          2,
+          9
+        ],
+        [
+          "air quality",
+          1,
+          5
+        ],
+        [
+          "carbon emissions",
+          3,
+          6
+        ],
+        [
+          "central banks",
+          1,
+          14
+        ],
+        [
+          "chains exposure",
+          1,
+          11
+        ],
+        [
+          "coastal cities",
+          4,
+          12
+        ],
+        [
+          "damages infrastructure",
+          1,
+          10
+        ],
+        [
+          "dense urban areas",
+          1,
+          8
+        ],
+        [
+          "direct consequence",
+          1,
+          10
+        ],
+        [
+          "dummynode",
+          null,
+          15
+        ],
+        [
+          "elderly patients",
+          1,
+          9
+        ],
+        [
+          "extreme weather",
+          1,
+          14
+        ],
+        [
+          "extreme weather events",
+          1,
+          6
+        ],
+        [
+          "extreme weather intensifies",
+          1,
+          16
+        ],
+        [
+          "flood defenses",
+          1,
+          16
+        ],
+        [
+          "heat waves",
+          2,
+          9
+        ],
+        [
+          "heat waves increase hospital admissions",
+          1,
+          9
+        ],
+        [
+          "hospital admissions",
+          1,
+          5
+        ],
+        [
+          "hospital capacity",
+          3,
+          5
+        ],
+        [
+          "illness rates",
+          1,
+          8
+        ],
+        [
+          "inflation pressure",
+          1,
+          14
+        ],
+        [
+          "insurance costs",
+          2,
+          11
+        ],
+        [
+          "insurance costs reflect extreme weather risk",
+          1,
+          11
+        ],
+        [
+          "insurance costs rise",
+          1,
+          16
+        ],
+        [
+          "insurance costs squeeze",
+          1,
+          11
+        ],
+        [
+          "interest rates",
+          2,
+          13
+        ],
+        [
+          "link climate",
+          1,
+          6
+        ],
+        [
+          "main sources",
+          1,
+          7
+        ],
+        [
+          "north coast",
+          1,
+          12
+        ],
+        [
+          "poor air quality",
+          1,
+          8
+        ],
+        [
+          "predictable interest rates",
+          1,
+          14
+        ],
+        [
+          "prices drive inflation pressure",
+          1,
+          13
+        ],
+        [
+          "public health",
+          1,
+          5
+        ],
+        [
+          "public health agencies",
+          1,
+          9
+        ],
+        [
+          "public health budgets fund vaccine programs",
+          1,
+          5
+        ],
+        [
+          "public health researchers study air pollution",
+          1,
+          8
+        ],
+        [
+          "renewable energy",
+          2,
+          7
+        ],
+        [
+          "renewable energy investment",
+          1,
+          7
+        ],
+        [
+          "respiratory illness",
+          2,
+          9
+        ],
+        [
+          "sea level rise",
+          1,
+          12
+        ],
+        [
+          "sea level rise forces coastal cities",
+          1,
+          16
+        ],
+        [
+          "sea level rise threatens coastal cities",
+          1,
+          6
+        ],
+        [
+          "solar panels",
+          1,
+          7
+        ],
+        [
+          "stabilize energy prices",
+          1,
+          13
+        ],
+        [
+          "stable shipping routes",
+          1,
+          14
+        ],
+        [
+          "supply chains",
+          1,
+          14
+        ],
+        [
+          "waves stress power grids",
+          1,
+          10
+        ],
+        [
+          "winter outbreaks",
+          1,
+          5
+        ]
+      ]
+    }
+  },
+  "next_cid": {},
+  "period_to_cids": {
+    "ALL": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13
+    ]
+  },
+  "previous_cid": {
+    "10": 9,
+    "2": 1,
+    "3": 2,
+    "4": 3,
+    "6": 5,
+    "7": 6,
+    "9": 8
+  },
+  "stages": [
+    "INITIAL",
+    "CHUNKS_CREATED",
+    "CHUNKS_PROCESSED",
+    "CHUNKS_EMBEDDED"
+  ],
+  "text_to_cid_matches": true
+}

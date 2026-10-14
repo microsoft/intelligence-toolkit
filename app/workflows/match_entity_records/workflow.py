@@ -7,6 +7,7 @@ import os
 import numpy as np
 import polars as pl
 import streamlit as st
+from itk_core.progress import ProgressBatchCallback
 
 import app.util.example_outputs_ui as example_outputs_ui
 import app.util.session_variables as home_vars
@@ -15,7 +16,6 @@ import app.workflows.match_entity_records.variables as rm_variables
 import intelligence_toolkit.match_entity_records.prompts as prompts
 from app.util import ui_components
 from app.util.download_pdf import add_download_pdf
-from intelligence_toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 from intelligence_toolkit.match_entity_records.api import MatchEntityRecords
 from intelligence_toolkit.match_entity_records.classes import (
     AttributeToMatch,

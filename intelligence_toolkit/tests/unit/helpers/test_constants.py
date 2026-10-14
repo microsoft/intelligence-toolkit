@@ -28,13 +28,3 @@ def test_cache_path_exists():
 def test_cache_path_contains_intelligence_toolkit():
     assert "intelligence-toolkit-data" in constants.CACHE_PATH
     assert "cache" in constants.CACHE_PATH
-
-
-def test_vector_store_max_retries():
-    assert constants.VECTOR_STORE_MAX_RETRIES == 5
-    assert isinstance(constants.VECTOR_STORE_MAX_RETRIES, int)
-
-
-def test_vector_store_max_retries_wait_time():
-    assert constants.VECTOR_STORE_MAX_RETRIES_WAIT_TIME == 1
-    assert isinstance(constants.VECTOR_STORE_MAX_RETRIES_WAIT_TIME, int)

@@ -1,0 +1,107 @@
+{
+  "file_batches": [
+    [
+      1,
+      4
+    ],
+    [
+      2,
+      4
+    ],
+    [
+      3,
+      4
+    ],
+    [
+      4,
+      4
+    ]
+  ],
+  "label_order": [
+    "climate.txt",
+    "health.txt",
+    "economy.txt",
+    "regions.csv_1",
+    "regions.csv_2",
+    "regions.csv_3"
+  ],
+  "label_to_chunks": {
+    "climate.txt": [
+      {
+        "chunk_id": 1,
+        "text_chunk": "Climate change is reshaping coastal cities. Sea level rise threatens coastal cities with flooding, and extreme weather events are becoming more frequent. Scientists link climate change to carbon emissions from fossil fuels.",
+        "title": "climate.txt"
+      },
+      {
+        "chunk_id": 2,
+        "text_chunk": "Carbon emissions continue to grow in many regions. Reducing carbon emissions requires renewable energy investment, and renewable energy now supplies a growing share of electricity. Wind turbines and solar panels are the main sources of renewable energy.",
+        "title": "climate.txt"
+      },
+      {
+        "chunk_id": 3,
+        "text_chunk": "Heat waves are a direct consequence of climate change. Heat waves stress power grids and raise energy prices. Extreme weather also damages infrastructure in coastal cities, increasing insurance costs.",
+        "title": "climate.txt"
+      },
+      {
+        "chunk_id": 4,
+        "text_chunk": "Sea level rise forces coastal cities to build flood defenses. Flood defenses are expensive, and insurance costs rise as extreme weather intensifies. Climate change adaptation plans now include flood defenses and early warning systems.\n",
+        "title": "climate.txt"
+      }
+    ],
+    "economy.txt": [
+      {
+        "chunk_id": 1,
+        "text_chunk": "Supply chains were disrupted by extreme weather and rising energy prices. Supply chains depend on stable shipping routes and predictable interest rates. Central banks raised interest rates to fight inflation pressure.",
+        "title": "economy.txt"
+      },
+      {
+        "chunk_id": 2,
+        "text_chunk": "Energy prices drive inflation pressure across the economy. Renewable energy can stabilize energy prices over time, while interest rates affect renewable energy financing. Investors watch interest rates and energy prices closely.",
+        "title": "economy.txt"
+      },
+      {
+        "chunk_id": 3,
+        "text_chunk": "Insurance costs are rising for businesses in coastal cities. Insurance costs reflect extreme weather risk and supply chains exposure. Inflation pressure and insurance costs squeeze small businesses.\n",
+        "title": "economy.txt"
+      }
+    ],
+    "health.txt": [
+      {
+        "chunk_id": 1,
+        "text_chunk": "Public health agencies warn that heat waves increase hospital admissions. Hospital capacity is strained during heat waves, especially for elderly patients. Air pollution worsens respiratory illness during heat waves.",
+        "title": "health.txt"
+      },
+      {
+        "chunk_id": 2,
+        "text_chunk": "Vaccine programs remain central to public health. Vaccine programs reduce hospital admissions and protect hospital capacity during winter outbreaks. Public health budgets fund vaccine programs and air quality monitoring.",
+        "title": "health.txt"
+      },
+      {
+        "chunk_id": 3,
+        "text_chunk": "Air pollution from carbon emissions causes respiratory illness. Respiratory illness rates are highest in dense urban areas with poor air quality monitoring. Public health researchers study air pollution and respiratory illness together.\n",
+        "title": "health.txt"
+      }
+    ],
+    "regions.csv_1": [
+      {
+        "chunk_id": 1,
+        "text_chunk": "region: North Coast; note: Flood defenses were upgraded after sea level rise damaged coastal cities.",
+        "title": "regions.csv_1"
+      }
+    ],
+    "regions.csv_2": [
+      {
+        "chunk_id": 1,
+        "text_chunk": "region: Inland Valley; note: Interest rates delayed renewable energy projects and raised energy prices.",
+        "title": "regions.csv_2"
+      }
+    ],
+    "regions.csv_3": [
+      {
+        "chunk_id": 1,
+        "text_chunk": "region: Metro Area; note: Hospital capacity fell during heat waves linked to climate change.",
+        "title": "regions.csv_3"
+      }
+    ]
+  }
+}

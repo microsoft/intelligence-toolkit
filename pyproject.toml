@@ -50,6 +50,10 @@ dependencies = [
     "pypdf>=5.1.0,<6.0.0",
     "poethepoet>=0.27.0,<1.0.0",
     "rapidfuzz>=3.0.0",
+    # Bundled itk_core (packages/itk-core) dependencies not listed above.
+    "pandas>=2.0.0",
+    "pylance>=0.18.2",
+    "tqdm>=4.66.0",
 ]
 
 [project.optional-dependencies]
@@ -80,8 +84,14 @@ explicit = true
 requires = ["hatchling"]
 build-backend = "hatchling.build" 
 
+# itk_core is developed in packages/itk-core but shipped inside this wheel;
+# it is not published on its own (the PyPI name "itk-core" belongs to ITK).
+[tool.hatch.build.targets.wheel]
+packages = ["intelligence_toolkit", "packages/itk-core/src/itk_core"]
+dev-mode-dirs = [".", "packages/itk-core/src"]
+
 [tool.uv.workspace]
-members = ["."]
+members = [".", "packages/*"]
 
 [tool.poe.tasks]
 _sort_imports = "ruff check --select I --fix . --preview"
@@ -91,8 +101,10 @@ _pyright = "pyright"
 check_format = "ruff format . --check --preview"
 fix = "ruff check --fix . --preview"
 fix_unsafe = "ruff check --fix --unsafe-fixes . --preview"
-test_unit = "pytest ./intelligence_toolkit/tests/unit"
+test_unit = "pytest ./intelligence_toolkit/tests/unit ./packages/itk-core/tests"
 test_smoke = "pytest ./intelligence_toolkit/tests/smoke"
+# v1 query_text_data output depends on str hash order; goldens are pinned to seed 0.
+test_characterization = { cmd = "pytest ./intelligence_toolkit/tests/characterization", env = { PYTHONHASHSEED = "0" } }
 run_streamlit = "python -m streamlit run app/Home.py ${ARGS}"
 
 [[tool.poe.tasks.format]]
@@ -187,6 +199,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "intelligence_toolkit/tests/*" = ["S", "D", "ANN", "T201", "ASYNC", "ARG", "PTH", "TRY"]
+"packages/*/tests/*" = ["S", "D", "ANN", "T201", "ASYNC", "ARG", "PTH", "TRY"]
 # "examples/*" = ["S", "D", "ANN", "T201", "PTH", "TRY", "PERF"]
 "*.ipynb" = ["S", "T201", "I001"]
 
@@ -201,7 +214,7 @@ convention = "numpy"
 
 # https://github.com/microsoft/pyright/blob/9f81564a4685ff5c55edd3959f9b39030f590b2f/docs/configuration.md#sample-pyprojecttoml-file
 [tool.pyright]
-include = ["app", "intelligence_toolkit", "example_notebooks"]
+include = ["app", "intelligence_toolkit", "packages", "example_notebooks"]
 typeCheckingMode = "off"
 
 

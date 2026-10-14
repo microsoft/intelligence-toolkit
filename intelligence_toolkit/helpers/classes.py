@@ -2,9 +2,9 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 
-from intelligence_toolkit.AI.local_embedder import LocalEmbedder
-from intelligence_toolkit.AI.openai_configuration import OpenAIConfiguration
-from intelligence_toolkit.AI.openai_embedder import OpenAIEmbedder
+from itk_core.local_embedder import LocalEmbedder
+from itk_core.openai_configuration import OpenAIConfiguration
+from itk_core.openai_embedder import OpenAIEmbedder
 
 
 class IntelligenceWorkflow:

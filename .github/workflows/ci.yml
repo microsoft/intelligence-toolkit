@@ -33,6 +33,9 @@ jobs:
       - name: Smoke tests
         run: uv run poe test_smoke
 
+      - name: Characterization tests
+        run: uv run poe test_characterization
+
       - name: Verify Docker build
         run: docker build .
 

@@ -10,12 +10,7 @@ PDF_WKHTMLTOPDF_PATH = "C:\\Program Files\\wkhtmltopdf\\bin\\wkhtmltopdf.exe"
 PDF_MARGIN_INCHES = 0.75
 ATTRIBUTE_VALUE_SEPARATOR = "=="
 
-CACHE_PATH = os.path.join(
-    os.environ.get("LOCALAPPDATA", os.getcwd()), "intelligence-toolkit-data", "cache"
-)
-# create a new directory if it does not exist
-if not os.path.exists(CACHE_PATH):
-    os.makedirs(CACHE_PATH)
+from itk_core.paths import CACHE_PATH
 
-VECTOR_STORE_MAX_RETRIES = 5
-VECTOR_STORE_MAX_RETRIES_WAIT_TIME = 1
+# The app stores per-workflow data under CACHE_PATH and expects it to exist.
+os.makedirs(CACHE_PATH, exist_ok=True)
