@@ -17,8 +17,8 @@ from typing import Any
 
 import pytest
 
-from intelligence_toolkit.AI.base_embedder import BaseEmbedder
-from intelligence_toolkit.AI.client import OpenAIClient
+from itk_core.base_embedder import BaseEmbedder
+from itk_core.client import OpenAIClient
 
 HERE = Path(__file__).parent
 CORPUS_DIR = HERE / "corpus"

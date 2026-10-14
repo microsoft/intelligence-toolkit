@@ -37,7 +37,7 @@ from intelligence_toolkit.detect_entity_networks.index_and_infer import (
     index_nodes,
 )
 from intelligence_toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
-from intelligence_toolkit.helpers.progress_batch_callback import ProgressBatchCallback
+from itk_core.progress import ProgressBatchCallback
 
 
 def get_intro():

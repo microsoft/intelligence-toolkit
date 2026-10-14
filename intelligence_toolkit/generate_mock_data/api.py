@@ -2,10 +2,10 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 import pandas as pd
+from itk_core.openai_configuration import OpenAIConfiguration
 
 import intelligence_toolkit.generate_mock_data.data_generator as data_generator
 import intelligence_toolkit.generate_mock_data.text_generator as text_generator
-from intelligence_toolkit.AI.openai_configuration import OpenAIConfiguration
 
 
 class GenerateMockData:

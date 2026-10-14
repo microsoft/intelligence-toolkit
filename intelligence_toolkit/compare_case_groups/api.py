@@ -3,10 +3,10 @@
 #
 
 
+import itk_core.utils as utils
 import polars as pl
+from itk_core.client import OpenAIClient
 
-import intelligence_toolkit.AI.utils as utils
-from intelligence_toolkit.AI.client import OpenAIClient
 from intelligence_toolkit.compare_case_groups import prompts
 from intelligence_toolkit.compare_case_groups.build_dataframes import (
     build_attribute_df,

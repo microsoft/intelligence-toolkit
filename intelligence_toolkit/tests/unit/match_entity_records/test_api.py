@@ -9,8 +9,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import numpy as np
 import polars as pl
 import pytest
+from itk_core.classes import LLMCallback
 
-from intelligence_toolkit.AI.classes import LLMCallback
 from intelligence_toolkit.match_entity_records.api import MatchEntityRecords
 from intelligence_toolkit.match_entity_records.classes import (
     AttributeToMatch,

@@ -2,12 +2,12 @@
 import random
 from json import loads
 
+import itk_core.utils as utils
 import pandas as pd
+from itk_core.progress import ProgressBatchCallback
 
-import intelligence_toolkit.AI.utils as utils
 import intelligence_toolkit.generate_mock_data.prompts as prompts
 import intelligence_toolkit.generate_mock_data.schema_builder as schema_builder
-from intelligence_toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 
 async def generate_data(

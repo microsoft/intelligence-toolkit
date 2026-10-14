@@ -12,6 +12,7 @@ license = {text = "MIT"}
 keywords = ["AI", "data analysis", "reports", "workflows"]
 requires-python = ">=3.11,<3.13"
 dependencies = [
+    "itk-core[local]",
     "altair==4.2.2",
     "networkx==3.5",
     "numpy==1.26.4",
@@ -81,7 +82,10 @@ requires = ["hatchling"]
 build-backend = "hatchling.build" 
 
 [tool.uv.workspace]
-members = ["."]
+members = [".", "packages/*"]
+
+[tool.uv.sources]
+itk-core = { workspace = true }
 
 [tool.poe.tasks]
 _sort_imports = "ruff check --select I --fix . --preview"
@@ -91,7 +95,7 @@ _pyright = "pyright"
 check_format = "ruff format . --check --preview"
 fix = "ruff check --fix . --preview"
 fix_unsafe = "ruff check --fix --unsafe-fixes . --preview"
-test_unit = "pytest ./intelligence_toolkit/tests/unit"
+test_unit = "pytest ./intelligence_toolkit/tests/unit ./packages/itk-core/tests"
 test_smoke = "pytest ./intelligence_toolkit/tests/smoke"
 # v1 query_text_data output depends on str hash order; goldens are pinned to seed 0.
 test_characterization = { cmd = "pytest ./intelligence_toolkit/tests/characterization", env = { PYTHONHASHSEED = "0" } }
@@ -189,6 +193,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "intelligence_toolkit/tests/*" = ["S", "D", "ANN", "T201", "ASYNC", "ARG", "PTH", "TRY"]
+"packages/*/tests/*" = ["S", "D", "ANN", "T201", "ASYNC", "ARG", "PTH", "TRY"]
 # "examples/*" = ["S", "D", "ANN", "T201", "PTH", "TRY", "PERF"]
 "*.ipynb" = ["S", "T201", "I001"]
 
@@ -203,7 +208,7 @@ convention = "numpy"
 
 # https://github.com/microsoft/pyright/blob/9f81564a4685ff5c55edd3959f9b39030f590b2f/docs/configuration.md#sample-pyprojecttoml-file
 [tool.pyright]
-include = ["app", "intelligence_toolkit", "example_notebooks"]
+include = ["app", "intelligence_toolkit", "packages", "example_notebooks"]
 typeCheckingMode = "off"
 
 

@@ -4,20 +4,20 @@ from typing import Any
 import networkx as nx
 import numpy as np
 import polars as pl
+from itk_core.base_embedder import BaseEmbedder
+from itk_core.openai_configuration import OpenAIConfiguration
+from itk_core.openai_embedder import OpenAIEmbedder
+from itk_core.progress import ProgressBatchCallback
+from itk_core.utils import hash_text
 from sklearn.neighbors import NearestNeighbors
 
 import intelligence_toolkit.detect_entity_networks.config as config
-from intelligence_toolkit.AI.base_embedder import BaseEmbedder
-from intelligence_toolkit.AI.openai_configuration import OpenAIConfiguration
-from intelligence_toolkit.AI.openai_embedder import OpenAIEmbedder
-from intelligence_toolkit.AI.utils import hash_text
 from intelligence_toolkit.detect_entity_networks.config import (
     ENTITY_LABEL,
     SIMILARITY_THRESHOLD_MAX,
     SIMILARITY_THRESHOLD_MIN,
 )
 from intelligence_toolkit.helpers.constants import ATTRIBUTE_VALUE_SEPARATOR
-from intelligence_toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 
 async def index_nodes(

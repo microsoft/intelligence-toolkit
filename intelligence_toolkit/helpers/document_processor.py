@@ -1,10 +1,12 @@
 
-from collections import defaultdict
-import pandas as pd
-from json import dumps, loads
-from pypdf import PdfReader
 import io
-from intelligence_toolkit.AI.text_splitter import TextSplitter
+from collections import defaultdict
+from json import dumps, loads
+
+import pandas as pd
+from itk_core.text_splitter import TextSplitter
+from pypdf import PdfReader
+
 
 def convert_files_to_chunks(
     input_filepaths,

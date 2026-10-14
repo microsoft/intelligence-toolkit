@@ -1,10 +1,11 @@
+from itk_core.base_embedder import BaseEmbedder
+from itk_core.defaults import DEFAULT_CONCURRENT_COROUTINES
+from itk_core.local_embedder import LocalEmbedder
+from itk_core.openai_embedder import OpenAIEmbedder
+
 from app.util.constants import LOCAL_EMBEDDING_MODEL_KEY
 from app.util.openai_wrapper import UIOpenAIConfiguration
 from app.util.secrets_handler import SecretsHandler
-from intelligence_toolkit.AI.base_embedder import BaseEmbedder
-from intelligence_toolkit.AI.defaults import DEFAULT_CONCURRENT_COROUTINES
-from intelligence_toolkit.AI.local_embedder import LocalEmbedder
-from intelligence_toolkit.AI.openai_embedder import OpenAIEmbedder
 from intelligence_toolkit.query_text_data import config
 
 

@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 
 import networkx as nx
 import pytest
+from itk_core.progress import ProgressBatchCallback
 
 from intelligence_toolkit.detect_entity_networks.config import (
     SIMILARITY_THRESHOLD_MAX,
@@ -18,7 +19,6 @@ from intelligence_toolkit.detect_entity_networks.index_and_infer import (
     index_nodes,
     infer_nodes,
 )
-from intelligence_toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 
 class TestIndexNodes:

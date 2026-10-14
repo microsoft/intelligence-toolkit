@@ -8,6 +8,12 @@ resolution-markers = [
     "python_full_version < '3.12' and sys_platform == 'darwin'",
 ]
 
+[manifest]
+members = [
+    "intelligence-toolkit",
+    "itk-core",
+]
+
 [[package]]
 name = "altair"
 version = "4.2.2"
@@ -821,6 +827,7 @@ dependencies = [
     { name = "duckdb" },
     { name = "future" },
     { name = "graspologic" },
+    { name = "itk-core", extra = ["local"] },
     { name = "jsonschema" },
     { name = "lancedb" },
     { name = "markdown2" },
@@ -880,6 +887,7 @@ requires-dist = [
     { name = "future", specifier = ">=1.0.0,<2.0.0" },
     { name = "graspologic", specifier = ">=3.4.1,<4.0.0" },
     { name = "ipykernel", marker = "extra == 'dev'", specifier = ">=6.29.5,<7.0.0" },
+    { name = "itk-core", extras = ["local"], editable = "packages/itk-core" },
     { name = "jsonschema", specifier = ">=4.23.0,<5.0.0" },
     { name = "lancedb", specifier = "==0.14.0" },
     { name = "markdown2", specifier = "==2.5.4" },
@@ -978,6 +986,46 @@ sdist = { url = "https://files.pythonhosted.org/packages/ef/4c/5dd1d8af08107f88c
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d9/33/1f075bf72b0b747cb3288d011319aaf64083cf2efef8354174e3ed4540e2/ipython_pygments_lexers-1.1.1-py3-none-any.whl", hash = "sha256:a9462224a505ade19a605f71f8fa63c2048833ce50abc86768a0d81d876dc81c", size = 8074, upload-time = "2025-01-17T11:24:33.271Z" },
 ]
+
+[[package]]
+name = "itk-core"
+version = "0.1.0"
+source = { editable = "packages/itk-core" }
+dependencies = [
+    { name = "azure-identity" },
+    { name = "duckdb" },
+    { name = "lancedb" },
+    { name = "numpy" },
+    { name = "openai" },
+    { name = "pandas" },
+    { name = "pyarrow" },
+    { name = "pylance" },
+    { name = "semchunk" },
+    { name = "tiktoken" },
+    { name = "tqdm" },
+]
+
+[package.optional-dependencies]
+local = [
+    { name = "sentence-transformers" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "azure-identity", specifier = ">=1.17.1" },
+    { name = "duckdb", specifier = ">=1.1.0" },
+    { name = "lancedb", specifier = ">=0.14.0" },
+    { name = "numpy", specifier = ">=1.26.4" },
+    { name = "openai", specifier = ">=1.37.1,<2.0.0" },
+    { name = "pandas", specifier = ">=2.0.0" },
+    { name = "pyarrow", specifier = ">=15.0.0" },
+    { name = "pylance", specifier = ">=0.18.2" },
+    { name = "semchunk", specifier = ">=2.2.0,<3" },
+    { name = "sentence-transformers", marker = "extra == 'local'", specifier = ">=3.1.1,<4.0.0" },
+    { name = "tiktoken", specifier = ">=0.7.0" },
+    { name = "tqdm", specifier = ">=4.66.0" },
+]
+provides-extras = ["local"]
 
 [[package]]
 name = "jedi"

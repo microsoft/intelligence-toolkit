@@ -1,11 +1,11 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 from json import loads
 
+import itk_core.utils as utils
 import pandas as pd
+from itk_core.progress import ProgressBatchCallback
 
-import intelligence_toolkit.AI.utils as utils
 import intelligence_toolkit.extract_record_data.prompts as prompts
-from intelligence_toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 
 async def extract_record_data(

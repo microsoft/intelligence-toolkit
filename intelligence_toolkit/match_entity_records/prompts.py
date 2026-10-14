@@ -2,10 +2,11 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 
-from intelligence_toolkit.AI.metaprompts import (
+from itk_core.metaprompts import (
     do_not_disrespect_context,
     do_not_harm,
 )
+
 report_prompt = """\
 Goal: evaluate the overall RELATEDNESS of the records in each record group provided on a scale of 0-10, where 0 is definitively different entities and 10 is definitivly the same entity or entity group (e.g., branches of a company).
 

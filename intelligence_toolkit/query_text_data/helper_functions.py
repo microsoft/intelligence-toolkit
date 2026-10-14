@@ -3,9 +3,9 @@
 
 import json
 
-from intelligence_toolkit.AI.base_embedder import BaseEmbedder
-from intelligence_toolkit.AI.classes import VectorData
-from intelligence_toolkit.AI.utils import hash_text
+from itk_core.base_embedder import BaseEmbedder
+from itk_core.classes import VectorData
+from itk_core.utils import hash_text
 
 
 def get_adjacent_chunks(source, previous_chunk_dict, next_chunk_dict, steps):

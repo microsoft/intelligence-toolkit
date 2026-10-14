@@ -4,10 +4,9 @@
 from collections import defaultdict
 
 import streamlit as st
+from itk_core.progress import ProgressBatchCallback
 from seaborn import color_palette
 from streamlit_agraph import Config, Edge, Node, agraph
-
-from intelligence_toolkit.helpers.progress_batch_callback import ProgressBatchCallback
 
 
 def create_progress_callback(template: str):

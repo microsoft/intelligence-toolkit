@@ -3,10 +3,14 @@
 from collections import defaultdict
 from enum import Enum
 
+import itk_core.utils as utils
 import networkx as nx
 import pandas as pd
+from itk_core.base_embedder import BaseEmbedder
+from itk_core.client import OpenAIClient
+from itk_core.openai_configuration import OpenAIConfiguration
 
-import intelligence_toolkit.AI.utils as utils
+import intelligence_toolkit.helpers.document_processor as document_processor
 import intelligence_toolkit.query_text_data.answer_builder as answer_builder
 import intelligence_toolkit.query_text_data.graph_builder as graph_builder
 import intelligence_toolkit.query_text_data.helper_functions as helper_functions
@@ -14,16 +18,13 @@ import intelligence_toolkit.query_text_data.input_processor as input_processor
 import intelligence_toolkit.query_text_data.prompts as prompts
 import intelligence_toolkit.query_text_data.query_rewriter as query_rewriter
 import intelligence_toolkit.query_text_data.relevance_assessor as relevance_assessor
-import intelligence_toolkit.helpers.document_processor as document_processor
-from intelligence_toolkit.AI.base_embedder import BaseEmbedder
-from intelligence_toolkit.AI.client import OpenAIClient
-from intelligence_toolkit.AI.openai_configuration import OpenAIConfiguration
 from intelligence_toolkit.query_text_data.classes import (
     AnswerObject,
     ChunkSearchConfig,
     ProcessedChunks,
 )
 from intelligence_toolkit.query_text_data.commentary import Commentary
+
 
 class QueryTextDataStage(Enum):
     """

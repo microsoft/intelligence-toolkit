@@ -1,7 +1,8 @@
+import pandas as pd
+from itk_core.openai_configuration import OpenAIConfiguration
+
 import intelligence_toolkit.extract_record_data.data_extractor as data_extractor
 import intelligence_toolkit.generate_mock_data.data_generator as data_generator
-from intelligence_toolkit.AI.openai_configuration import OpenAIConfiguration
-import pandas as pd
 
 
 class ExtractRecordData:

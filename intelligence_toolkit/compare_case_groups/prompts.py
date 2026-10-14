@@ -1,5 +1,5 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
-from intelligence_toolkit.AI.metaprompts import do_not_harm
+from itk_core.metaprompts import do_not_harm
 
 report_prompt = """\
 You are a data analyst preparing a detailed "group comparison report" on a given dataset.

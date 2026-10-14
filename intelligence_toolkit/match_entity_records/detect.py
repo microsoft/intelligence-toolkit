@@ -8,10 +8,10 @@ from typing import Any
 
 import numpy as np
 import polars as pl
+from itk_core.classes import VectorData
+from itk_core.utils import hash_text
 from sklearn.neighbors import NearestNeighbors
 
-from intelligence_toolkit.AI.classes import VectorData
-from intelligence_toolkit.AI.utils import hash_text
 from intelligence_toolkit.match_entity_records.config import (
     DEFAULT_COLUMNS_DONT_CONVERT,
     DEFAULT_MAX_RECORD_DISTANCE,

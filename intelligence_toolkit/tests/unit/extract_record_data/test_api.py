@@ -5,8 +5,8 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from itk_core.openai_configuration import OpenAIConfiguration
 
-from intelligence_toolkit.AI.openai_configuration import OpenAIConfiguration
 from intelligence_toolkit.extract_record_data.api import ExtractRecordData
 
 

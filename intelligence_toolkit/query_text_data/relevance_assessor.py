@@ -2,14 +2,17 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 
 import asyncio
-from json import loads
 from collections import defaultdict
+from json import loads
+
+import itk_core.utils as utils
 import numpy as np
 import scipy.spatial.distance
 import tiktoken
-import intelligence_toolkit.AI.utils as utils
+
 import intelligence_toolkit.query_text_data.helper_functions as helper_functions
 import intelligence_toolkit.query_text_data.prompts as prompts
+
 
 async def assess_relevance(
     ai_configuration,

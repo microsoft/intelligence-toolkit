@@ -1,9 +1,12 @@
 
-import intelligence_toolkit.AI.utils as utils
-import intelligence_toolkit.query_text_data.prompts as prompts
+from json import dumps, loads
+
+import itk_core.utils as utils
+from itk_core.client import OpenAIClient
+
 import intelligence_toolkit.query_text_data.answer_schema as answer_schema
-from intelligence_toolkit.AI.client import OpenAIClient
-from json import loads, dumps
+import intelligence_toolkit.query_text_data.prompts as prompts
+
 
 class Commentary:
 

@@ -4,8 +4,8 @@
 from unittest.mock import patch
 
 import pytest
+from itk_core.openai_configuration import OpenAIConfiguration
 
-from intelligence_toolkit.AI.openai_configuration import OpenAIConfiguration
 from intelligence_toolkit.helpers.classes import IntelligenceWorkflow
 
 
@@ -66,8 +66,8 @@ def test_set_embedder_local(openai_config):
 
 def test_set_embedder_openai(openai_config):
     with patch("intelligence_toolkit.helpers.classes.OpenAIEmbedder") as mock_openai, \
-         patch("intelligence_toolkit.AI.client.OpenAI"), \
-         patch("intelligence_toolkit.AI.client.AsyncOpenAI"):
+         patch("itk_core.client.OpenAI"), \
+         patch("itk_core.client.AsyncOpenAI"):
         
         workflow = IntelligenceWorkflow(openai_config)
         workflow.set_embedder(local_embedding=False, cache_embeddings=True)
@@ -79,8 +79,8 @@ def test_set_embedder_openai(openai_config):
 
 def test_set_embedder_default_parameters(openai_config):
     with patch("intelligence_toolkit.helpers.classes.OpenAIEmbedder") as mock_openai, \
-         patch("intelligence_toolkit.AI.client.OpenAI"), \
-         patch("intelligence_toolkit.AI.client.AsyncOpenAI"):
+         patch("itk_core.client.OpenAI"), \
+         patch("itk_core.client.AsyncOpenAI"):
         
         workflow = IntelligenceWorkflow(openai_config)
         workflow.set_embedder()

@@ -2,14 +2,15 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 
 import re
-from json import loads, dumps
 from collections import defaultdict
+from json import dumps, loads
 
-import intelligence_toolkit.AI.utils as utils
+import itk_core.utils as utils
+import sklearn.cluster as cluster
+
 import intelligence_toolkit.query_text_data.answer_schema as answer_schema
 import intelligence_toolkit.query_text_data.prompts as prompts
 from intelligence_toolkit.query_text_data.classes import AnswerObject
-import sklearn.cluster as cluster
 
 
 def _split_on_multiple_delimiters(string, delimiters):

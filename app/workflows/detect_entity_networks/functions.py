@@ -2,14 +2,14 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 import streamlit as st
+from itk_core.base_embedder import BaseEmbedder
+from itk_core.local_embedder import LocalEmbedder
+from itk_core.openai_embedder import OpenAIEmbedder
 from util.openai_wrapper import UIOpenAIConfiguration
 
 import intelligence_toolkit.detect_entity_networks.config as config
 from app.util.constants import LOCAL_EMBEDDING_MODEL_KEY
 from app.util.secrets_handler import SecretsHandler
-from intelligence_toolkit.AI.base_embedder import BaseEmbedder
-from intelligence_toolkit.AI.local_embedder import LocalEmbedder
-from intelligence_toolkit.AI.openai_embedder import OpenAIEmbedder
 
 
 def embedder(local_embedding: bool | None = True) -> BaseEmbedder:
