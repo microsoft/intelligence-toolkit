@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 ```
 
+## [Unreleased]
+
+### Fixed
+- Fixed Extract Record Data schema JSON download being wrapped in an extra list due to a stray trailing comma
+
 ## [0.1.3] - 2024-11-07
 
 ### Added
