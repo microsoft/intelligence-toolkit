@@ -12,6 +12,7 @@ resolution-markers = [
 members = [
     "intelligence-toolkit",
     "itk-core",
+    "itk-query-text-data",
 ]
 
 [[package]]
@@ -1030,6 +1031,35 @@ requires-dist = [
     { name = "tqdm", specifier = ">=4.66.0" },
 ]
 provides-extras = ["local"]
+
+[[package]]
+name = "itk-query-text-data"
+version = "0.1.0"
+source = { editable = "packages/itk-query-text-data" }
+dependencies = [
+    { name = "graspologic-native" },
+    { name = "itk-core" },
+    { name = "networkx" },
+    { name = "nltk" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "pypdf" },
+    { name = "textblob" },
+    { name = "tiktoken" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "graspologic-native", specifier = ">=1.2.1,<1.3" },
+    { name = "itk-core", editable = "packages/itk-core" },
+    { name = "networkx", specifier = ">=3.0" },
+    { name = "nltk", specifier = ">=3.8" },
+    { name = "numpy", specifier = ">=1.26.4" },
+    { name = "pandas", specifier = ">=2.0.0" },
+    { name = "pypdf", specifier = ">=5.1.0,<6.0.0" },
+    { name = "textblob", specifier = ">=0.18.0" },
+    { name = "tiktoken", specifier = ">=0.7.0" },
+]
 
 [[package]]
 name = "jedi"
