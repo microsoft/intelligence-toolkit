@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ```
 
 ## [Unreleased]
+### Added
+- `itk-query-text-data` workspace package (`packages/itk-query-text-data`, import name `itk_query_text_data`): a v2 rewrite of Query Text Data as standalone steps over typed records, with parity tests against the v1 characterization goldens. It keeps adjacent-chunk search within one source, drops citations to unknown chunks, is independent of `PYTHONHASHSEED`, and handles empty or concept-less corpora. The app still uses v1, and v2 is not bundled in the wheel.
+
 ### Changed
 - Extracted the shared AI core (`intelligence_toolkit.AI`, `helpers.decorators`, `helpers.progress_batch_callback`) into the `itk-core` workspace package (`packages/itk-core`, import name `itk_core`), which is bundled in the `intelligence-toolkit` wheel rather than published separately. Imports changed to `itk_core`, `itk_core.retry` and `itk_core.progress`; there are no compatibility shims.
 

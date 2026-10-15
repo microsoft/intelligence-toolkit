@@ -1,0 +1,618 @@
+{
+  "analysis_markdown": "",
+  "answer": {
+    "markdown": "## Query\n\n*What are the impacts of climate change?*\n\n## Expanded Query\n\n*What are the impacts of climate change? (anchored to: carbon emissions, coastal cities, air pollution, hospital capacity, respiratory illness)*\n\n## Answer\n\nClimate change drives coastal risk [source: [1](#source-1), [2](#source-2)].\n\n## Analysis\n\n### Climate impacts report\n\nThis report summarises the themes found.\n\n#### Theme: Summary of All relevant chunks\n\n##### Key point for All relevant chunks\n\n**Source evidence**: Evidence drawn from sources [source: [2](#source-2), [7](#source-7), [1](#source-1), [5](#source-5), [13](#source-13), [3](#source-3)]\n\n**AI commentary**: These sources suggest a pattern.\n\n#### Implications\n\nThe implications are broad.\n\n## Sources\n\n#### Source 1\n\n<details>\n\n##### Text chunk: climate.txt (1)\n\nClimate change is reshaping coastal cities. Sea level rise threatens coastal cities with flooding, and extreme weather events are becoming more frequent. Scientists link climate change to carbon emissions from fossil fuels.\n\n</details>\n\n[Back to top](#final-report)\n\n#### Source 2\n\n<details>\n\n##### Text chunk: climate.txt (2)\n\nCarbon emissions continue to grow in many regions. Reducing carbon emissions requires renewable energy investment, and renewable energy now supplies a growing share of electricity. Wind turbines and solar panels are the main sources of renewable energy.\n\n</details>\n\n[Back to top](#final-report)\n\n#### Source 3\n\n<details>\n\n##### Text chunk: climate.txt (3)\n\nHeat waves are a direct consequence of climate change. Heat waves stress power grids and raise energy prices. Extreme weather also damages infrastructure in coastal cities, increasing insurance costs.\n\n</details>\n\n[Back to top](#final-report)\n\n#### Source 5\n\n<details>\n\n##### Text chunk: health.txt (1)\n\nPublic health agencies warn that heat waves increase hospital admissions. Hospital capacity is strained during heat waves, especially for elderly patients. Air pollution worsens respiratory illness during heat waves.\n\n</details>\n\n[Back to top](#final-report)\n\n#### Source 7\n\n<details>\n\n##### Text chunk: health.txt (3)\n\nAir pollution from carbon emissions causes respiratory illness. Respiratory illness rates are highest in dense urban areas with poor air quality monitoring. Public health researchers study air pollution and respiratory illness together.\n\n\n</details>\n\n[Back to top](#final-report)\n\n#### Source 13\n\n<details>\n\n##### Text chunk: regions.csv_3 (1)\n\nregion: Metro Area; note: Hospital capacity fell during heat waves linked to climate change.\n\n</details>\n\n[Back to top](#final-report)\n\n",
+    "references": [
+      1,
+      2,
+      3,
+      5,
+      7,
+      13
+    ],
+    "report": {
+      "answer": "Climate change drives coastal risk [source: 1, 2].",
+      "report_implications": "The implications are broad [source: 999].",
+      "report_overview": "This report summarises the themes found.",
+      "report_title": "Climate impacts report"
+    },
+    "themes": [
+      {
+        "theme_points": [
+          {
+            "point_commentary": "**AI commentary**: These sources suggest a pattern.",
+            "point_evidence": "**Source evidence**: Evidence drawn from sources [source: 2, 7, 1, 5, 13, 3]",
+            "point_title": "Key point for All relevant chunks"
+          }
+        ],
+        "theme_title": "Summary of All relevant chunks"
+      }
+    ]
+  },
+  "commentary": "Commentary on the emerging themes [source: 1].",
+  "commentary_tokens": [
+    "Commentary on the emerging themes [source: 1]."
+  ],
+  "communities": [
+    [
+      "1.1",
+      0,
+      null,
+      [
+        "air pollution",
+        "dense urban areas",
+        "elderly patients",
+        "heat waves",
+        "heat waves increase hospital admissions",
+        "illness rates",
+        "poor air quality",
+        "public health agencies",
+        "public health researchers study air pollution",
+        "respiratory illness"
+      ]
+    ],
+    [
+      "1.2",
+      0,
+      null,
+      [
+        "chains exposure",
+        "coastal cities",
+        "damages infrastructure",
+        "direct consequence",
+        "insurance costs",
+        "insurance costs reflect extreme weather risk",
+        "insurance costs squeeze",
+        "north coast",
+        "sea level rise",
+        "waves stress power grids"
+      ]
+    ],
+    [
+      "1.3",
+      0,
+      null,
+      [
+        "central banks",
+        "extreme weather",
+        "inflation pressure",
+        "interest rates",
+        "predictable interest rates",
+        "prices drive inflation pressure",
+        "stabilize energy prices",
+        "stable shipping routes",
+        "supply chains"
+      ]
+    ],
+    [
+      "1.4",
+      0,
+      null,
+      [
+        "carbon emissions",
+        "extreme weather events",
+        "link climate",
+        "main sources",
+        "renewable energy",
+        "renewable energy investment",
+        "sea level rise threatens coastal cities",
+        "solar panels"
+      ]
+    ],
+    [
+      "1.5",
+      0,
+      null,
+      [
+        "adaptation plans",
+        "extreme weather intensifies",
+        "flood defenses",
+        "insurance costs rise",
+        "sea level rise forces coastal cities"
+      ]
+    ],
+    [
+      "1.6",
+      0,
+      null,
+      [
+        "air quality",
+        "hospital admissions",
+        "hospital capacity",
+        "public health",
+        "public health budgets fund vaccine programs",
+        "winter outbreaks"
+      ]
+    ],
+    [
+      "1.4.1",
+      1,
+      "1.4",
+      [
+        "carbon emissions",
+        "extreme weather events",
+        "link climate",
+        "sea level rise threatens coastal cities"
+      ]
+    ],
+    [
+      "1.4.2",
+      1,
+      "1.4",
+      [
+        "main sources",
+        "renewable energy",
+        "renewable energy investment",
+        "solar panels"
+      ]
+    ],
+    [
+      "1.1.1",
+      1,
+      "1.1",
+      [
+        "air pollution",
+        "elderly patients",
+        "heat waves",
+        "heat waves increase hospital admissions",
+        "public health agencies",
+        "respiratory illness"
+      ]
+    ],
+    [
+      "1.1.2",
+      1,
+      "1.1",
+      [
+        "dense urban areas",
+        "illness rates",
+        "poor air quality",
+        "public health researchers study air pollution"
+      ]
+    ],
+    [
+      "1.2.1",
+      1,
+      "1.2",
+      [
+        "chains exposure",
+        "insurance costs",
+        "insurance costs reflect extreme weather risk",
+        "insurance costs squeeze"
+      ]
+    ],
+    [
+      "1.2.2",
+      1,
+      "1.2",
+      [
+        "damages infrastructure",
+        "direct consequence",
+        "waves stress power grids"
+      ]
+    ],
+    [
+      "1.2.3",
+      1,
+      "1.2",
+      [
+        "coastal cities",
+        "north coast",
+        "sea level rise"
+      ]
+    ],
+    [
+      "1.3.1",
+      1,
+      "1.3",
+      [
+        "central banks",
+        "extreme weather",
+        "inflation pressure",
+        "predictable interest rates",
+        "stable shipping routes",
+        "supply chains"
+      ]
+    ],
+    [
+      "1.3.2",
+      1,
+      "1.3",
+      [
+        "interest rates",
+        "prices drive inflation pressure",
+        "stabilize energy prices"
+      ]
+    ],
+    [
+      "1.5.1",
+      1,
+      "1.5",
+      [
+        "extreme weather intensifies",
+        "flood defenses",
+        "insurance costs rise",
+        "sea level rise forces coastal cities"
+      ]
+    ],
+    [
+      "1.5.2",
+      1,
+      "1.5",
+      [
+        "adaptation plans"
+      ]
+    ]
+  ],
+  "condense_tokens": [
+    "Condensed answer."
+  ],
+  "condensed": "Condensed answer.",
+  "embed_calls": [
+    13,
+    1
+  ],
+  "events": [
+    [
+      "progress",
+      "read",
+      1,
+      4
+    ],
+    [
+      "progress",
+      "read",
+      2,
+      4
+    ],
+    [
+      "progress",
+      "read",
+      3,
+      4
+    ],
+    [
+      "progress",
+      "read",
+      4,
+      4
+    ],
+    [
+      "progress",
+      "concepts",
+      1,
+      13
+    ],
+    [
+      "progress",
+      "concepts",
+      2,
+      13
+    ],
+    [
+      "progress",
+      "concepts",
+      3,
+      13
+    ],
+    [
+      "progress",
+      "concepts",
+      4,
+      13
+    ],
+    [
+      "progress",
+      "concepts",
+      5,
+      13
+    ],
+    [
+      "progress",
+      "concepts",
+      6,
+      13
+    ],
+    [
+      "progress",
+      "concepts",
+      7,
+      13
+    ],
+    [
+      "progress",
+      "concepts",
+      8,
+      13
+    ],
+    [
+      "progress",
+      "concepts",
+      9,
+      13
+    ],
+    [
+      "progress",
+      "concepts",
+      10,
+      13
+    ],
+    [
+      "progress",
+      "concepts",
+      11,
+      13
+    ],
+    [
+      "progress",
+      "concepts",
+      12,
+      13
+    ],
+    [
+      "progress",
+      "concepts",
+      13,
+      13
+    ],
+    [
+      "progress",
+      "embed",
+      0,
+      13
+    ],
+    [
+      "progress",
+      "embed",
+      13,
+      13
+    ],
+    [
+      "tested",
+      0,
+      []
+    ],
+    [
+      "tested",
+      2,
+      [
+        2,
+        7
+      ]
+    ],
+    [
+      "tested",
+      4,
+      [
+        2,
+        7,
+        1
+      ]
+    ],
+    [
+      "tested",
+      6,
+      [
+        2,
+        7,
+        1,
+        5,
+        13
+      ]
+    ],
+    [
+      "tested",
+      8,
+      [
+        2,
+        7,
+        1,
+        5,
+        13,
+        3
+      ]
+    ]
+  ],
+  "expanded_query": "What are the impacts of climate change? (anchored to: carbon emissions, coastal cities, air pollution, hospital capacity, respiratory illness)",
+  "llm_calls": [
+    {
+      "key": "What are the impacts of climate change?",
+      "kind": "query_anchoring",
+      "logit_bias": null,
+      "max_tokens": null,
+      "num_messages": 1,
+      "stream": false
+    },
+    {
+      "key": "climate.txt#2",
+      "kind": "relevance",
+      "logit_bias": {
+        "13022": 5,
+        "3160": 5
+      },
+      "max_tokens": 1,
+      "num_messages": 1,
+      "stream": false
+    },
+    {
+      "key": "health.txt#3",
+      "kind": "relevance",
+      "logit_bias": {
+        "13022": 5,
+        "3160": 5
+      },
+      "max_tokens": 1,
+      "num_messages": 1,
+      "stream": false
+    },
+    {
+      "key": "climate.txt#1",
+      "kind": "relevance",
+      "logit_bias": {
+        "13022": 5,
+        "3160": 5
+      },
+      "max_tokens": 1,
+      "num_messages": 1,
+      "stream": false
+    },
+    {
+      "key": "economy.txt#2",
+      "kind": "relevance",
+      "logit_bias": {
+        "13022": 5,
+        "3160": 5
+      },
+      "max_tokens": 1,
+      "num_messages": 1,
+      "stream": false
+    },
+    {
+      "key": "health.txt#1",
+      "kind": "relevance",
+      "logit_bias": {
+        "13022": 5,
+        "3160": 5
+      },
+      "max_tokens": 1,
+      "num_messages": 1,
+      "stream": false
+    },
+    {
+      "key": "regions.csv_3#1",
+      "kind": "relevance",
+      "logit_bias": {
+        "13022": 5,
+        "3160": 5
+      },
+      "max_tokens": 1,
+      "num_messages": 1,
+      "stream": false
+    },
+    {
+      "key": "climate.txt#3",
+      "kind": "relevance",
+      "logit_bias": {
+        "13022": 5,
+        "3160": 5
+      },
+      "max_tokens": 1,
+      "num_messages": 1,
+      "stream": false
+    },
+    {
+      "key": "health.txt#2",
+      "kind": "relevance",
+      "logit_bias": {
+        "13022": 5,
+        "3160": 5
+      },
+      "max_tokens": 1,
+      "num_messages": 1,
+      "stream": false
+    },
+    {
+      "key": "All relevant chunks",
+      "kind": "theme_summary",
+      "logit_bias": null,
+      "max_tokens": null,
+      "num_messages": 1,
+      "stream": false
+    },
+    {
+      "key": [
+        1,
+        2,
+        3,
+        5,
+        7,
+        13
+      ],
+      "kind": "final_report",
+      "logit_bias": null,
+      "max_tokens": null,
+      "num_messages": 1,
+      "stream": false
+    },
+    {
+      "key": null,
+      "kind": "commentary",
+      "logit_bias": null,
+      "max_tokens": null,
+      "num_messages": 1,
+      "stream": true
+    },
+    {
+      "key": null,
+      "kind": "condense",
+      "logit_bias": null,
+      "max_tokens": null,
+      "num_messages": 1,
+      "stream": true
+    }
+  ],
+  "relevant_chunk_ids": [
+    1,
+    2,
+    3,
+    5,
+    7,
+    13
+  ],
+  "summary": "**Relevant chunks / tested chunks: 6/8** (topic 1: 2/2; topic 1.4: 1/2; topic 1.1: 2/2; neighbours: 1/2)",
+  "tests": [
+    [
+      "topic 1",
+      2,
+      "Yes"
+    ],
+    [
+      "topic 1",
+      7,
+      "Yes"
+    ],
+    [
+      "topic 1.4",
+      1,
+      "Yes"
+    ],
+    [
+      "topic 1.4",
+      9,
+      "No"
+    ],
+    [
+      "topic 1.1",
+      5,
+      "Yes"
+    ],
+    [
+      "topic 1.1",
+      13,
+      "Yes"
+    ],
+    [
+      "neighbours",
+      3,
+      "Yes"
+    ],
+    [
+      "neighbours",
+      6,
+      "No"
+    ]
+  ],
+  "themes": [
+    [
+      "All relevant chunks",
+      [
+        2,
+        7,
+        1,
+        5,
+        13,
+        3
+      ]
+    ]
+  ]
+}
