@@ -2,7 +2,7 @@
 
 Query Text Data (v2) for Intelligence Toolkit: concept graphs, relevance search and grounded answers over text corpora.
 
-Each step is a standalone function that takes and returns typed records, with no Streamlit or session state:
+Each step is a standalone function that takes and returns typed records, with no Streamlit or session state. For a runnable end-to-end walkthrough, see [example_notebooks/query_text_data_v2.ipynb](../../example_notebooks/query_text_data_v2.ipynb).
 
 ```python
 import itk_query_text_data as qtd

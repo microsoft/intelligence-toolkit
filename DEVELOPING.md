@@ -102,6 +102,7 @@ See the documentation and an example of how to run the code with your data to ob
 - [Query Text Data](./app/workflows/query_text_data/README.md)
 
     - [Example](./example_notebooks/query_text_data.ipynb)
+    - [Example (v2 package)](./example_notebooks/query_text_data_v2.ipynb)
 
 
 ### Running with docker
