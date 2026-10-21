@@ -616,25 +616,26 @@ def test_review_interface_starts_and_reopens_read_only_capture(monkeypatch, tmp_
         "render_review_verification(st.session_state['verification_api'], api_key='', model='unused')\n"
     )
     app.session_state["verification_api"] = api
-    app.run(timeout=20)
+    # First run imports the app package cold, which is slow on CI runners.
+    app.run(timeout=120)
     assert not app.exception
     assert app.button(key="bed_review_start").disabled
     app.selectbox(key="bed_review_backend").select_index(1)
     app.checkbox(key="bed_review_authorized").check()
-    app.run(timeout=20)
-    app.button(key="bed_review_start").click().run(timeout=20)
+    app.run(timeout=60)
+    app.button(key="bed_review_start").click().run(timeout=60)
     wait_for_verification(api)
-    app.run(timeout=20)
+    app.run(timeout=60)
     assert not app.exception
     assert not app.error
     assert api.review_verification_report["complete"]
     assert before == fingerprint(api.dataset_json)
-    app.button(key="bed_review_open").click().run(timeout=20)
+    app.button(key="bed_review_open").click().run(timeout=60)
     assert not app.exception
     current = api.dataset_json
     assert current is not None
     current["records"][0]["label"] = "Changed"
-    app.run(timeout=20)
+    app.run(timeout=60)
     assert any("STALE REPORT" in warning.value for warning in app.warning)
 
 

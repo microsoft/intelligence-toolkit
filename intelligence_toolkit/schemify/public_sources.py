@@ -122,9 +122,10 @@ class PublicSourceRetriever:
             for _ in range(6):
                 hostname, port, addresses = public_addresses(current)
                 parsed = urlsplit(current)
-                context = (
-                    ssl.create_default_context() if parsed.scheme == "https" else None
-                )
+                context = None
+                if parsed.scheme == "https":
+                    context = ssl.create_default_context()
+                    context.minimum_version = ssl.TLSVersion.TLSv1_2
                 connection = (
                     http.client.HTTPSConnection(
                         hostname, port, timeout=self.timeout, context=context
