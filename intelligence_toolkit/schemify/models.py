@@ -9,6 +9,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Awaitable, Callable, Optional
+from urllib.parse import urlsplit, urlunsplit
 import json
 
 
@@ -34,6 +35,17 @@ def _clean_text(s):
     if isinstance(s, str):
         return s.translate(_UNUSUAL_TERMINATORS)
     return s
+
+
+def _clean_url(url):
+    """Drop ``utm_*`` tracking parameters (e.g. ``?utm_source=openai`` added by
+    web search) while leaving the rest of the URL byte-for-byte unchanged."""
+    url = _clean_text(url)
+    if not isinstance(url, str) or "utm_" not in url.lower():
+        return url
+    parts = urlsplit(url)
+    kept = [p for p in parts.query.split("&") if p and not p.lower().startswith("utm_")]
+    return urlunsplit(parts._replace(query="&".join(kept)))
 
 
 # PDF sources sometimes arrive with extracted markdown tables as their "title".
@@ -63,7 +75,7 @@ class Citation:
     snippet: Optional[str] = None  # The actual text from the response that this citation supports
 
     def __post_init__(self):
-        self.url = _clean_text(self.url)
+        self.url = _clean_url(self.url)
         self.title = _clean_title(self.title)
         self.snippet = _clean_text(self.snippet)
 
@@ -77,10 +89,14 @@ class Citation:
 
     @classmethod
     def from_dict(cls, data: dict) -> "Citation":
+        retrieved_at = datetime.fromisoformat(data.get("retrieved_at", datetime.now().isoformat()))
+        if retrieved_at.tzinfo is not None:
+            # Datasets store naive local times; review verification writes UTC-aware ones.
+            retrieved_at = retrieved_at.astimezone().replace(tzinfo=None)
         return cls(
             url=data["url"],
             title=data["title"],
-            retrieved_at=datetime.fromisoformat(data.get("retrieved_at", datetime.now().isoformat())),
+            retrieved_at=retrieved_at,
             snippet=data.get("snippet"),
         )
 
@@ -190,6 +206,14 @@ class SourcedValue:
 
     def __post_init__(self):
         self.value = _clean_text(self.value)
+        # Citations differing only by stripped tracking parameters collapse here.
+        seen, unique = set(), []
+        for c in self.sources:
+            key = (c.url, c.snippet) if isinstance(c, Citation) else id(c)
+            if key not in seen:
+                seen.add(key)
+                unique.append(c)
+        self.sources = unique
 
     def to_dict(self) -> dict:
         return {
@@ -501,6 +525,8 @@ class Record:
         }
         if self.completion_attempts:
             d["completion_attempts"] = self.completion_attempts
+        if self.manual_canonical:
+            d["manual_canonical"] = True
         return d
     
     def add_alias(self, name: str, count: int = 1):
@@ -703,6 +729,7 @@ class Record:
             attributes={k: AttributeValue.from_dict(v) for k, v in data.get("attributes", {}).items()},
             additional_attributes={k: AttributeValue.from_dict(v) for k, v in data.get("additional_attributes", {}).items()},
             completion_attempts=data.get("completion_attempts", {}),
+            manual_canonical=bool(data.get("manual_canonical", False)),
             created_at=datetime.fromisoformat(data.get("created_at", datetime.now().isoformat())),
             updated_at=datetime.fromisoformat(data.get("updated_at", datetime.now().isoformat())),
         )

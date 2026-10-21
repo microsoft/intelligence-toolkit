@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import asyncio
+import copy
 import io
 import json
 import logging
@@ -17,6 +18,7 @@ import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Optional
+from uuid import uuid4
 
 import pandas as pd
 
@@ -168,6 +170,11 @@ class BuildEntityDataset:
         # Values added by the most recent recategorization web-search pass.
         self.recat_added: list[dict] = []
         self.relevance_results: dict = {}
+        self._review_verification_report: dict = {}
+        self._review_verification_dir: Optional[Path] = None
+        self._review_verification_active = False
+        self._review_verification_stop = False
+        self.review_verification_progress = ResearchProgress()
         # Usage already recorded in a reloaded run's meta.json; session usage adds to it.
         self._usage_baseline: UsageStats = UsageStats()
 
@@ -176,6 +183,172 @@ class BuildEntityDataset:
     @property
     def is_running(self) -> bool:
         return self._thread is not None and self._thread.is_alive()
+
+    @property
+    def is_verifying_review(self) -> bool:
+        return self._review_verification_active
+
+    @property
+    def review_verification_report(self) -> dict:
+        with self._state_lock:
+            return copy.deepcopy(self._review_verification_report)
+
+    @property
+    def review_dataset_fingerprint(self) -> str:
+        from intelligence_toolkit.schemify.review_verification import fingerprint
+
+        with self._state_lock:
+            return fingerprint(self._build_dataset_json() or self._dataset_json)
+
+    def list_review_verifications(self) -> list[dict]:
+        """List persisted captures for the loaded dataset, without changing it."""
+        from intelligence_toolkit.schemify.review_verification import read_report
+
+        root = (self._run_dir or _RUNS_DIR) / "review_verification"
+        current = self.review_dataset_fingerprint
+        runs = []
+        for path in sorted(root.glob("*/report.json"), reverse=True):
+            try:
+                report = read_report(path.parent)
+                if report["dataset_fingerprint"] == current:
+                    runs.append({
+                        "directory": str(path.parent), "started_at": report["started_at"],
+                        "backend": report["backend"], "complete": report["complete"],
+                        "summary": report["summary"],
+                    })
+            except (OSError, ValueError, KeyError) as exc:
+                _logger.warning("Could not read review verification %s: %s", path, exc)
+        return runs
+
+    def open_review_verification(self, directory: str) -> None:
+        from intelligence_toolkit.schemify.review_verification import read_report
+
+        if self.is_running:
+            msg = "Wait for the active job before opening a verification report"
+            raise ValueError(msg)
+        path = Path(directory)
+        report = read_report(path)
+        with self._state_lock:
+            self._review_verification_report = report
+            self._review_verification_dir = path
+
+    def review_verification_bundle(self) -> bytes:
+        from intelligence_toolkit.schemify.review_verification import evidence_bundle
+
+        with self._state_lock:
+            if self.is_verifying_review or not self._review_verification_dir:
+                msg = "Open a completed or paused verification before exporting evidence"
+                raise ValueError(msg)
+            return evidence_bundle(self._review_verification_dir)
+
+    def stop_review_verification(self) -> None:
+        if not self.is_verifying_review:
+            msg = "No review verification is running"
+            raise ValueError(msg)
+        self._review_verification_stop = True
+
+    def start_review_verification(
+        self,
+        proposals: list[dict],
+        *,
+        backend: str = "openai",
+        api_key: str | None = None,
+        model: str | None = None,
+        concurrency: int = 4,
+        max_sources: int = 12,
+        resume_directory: str | None = None,
+        retry_failed_sources: bool = False,
+    ) -> None:
+        """Verify an immutable snapshot, including loaded read-only datasets."""
+        from intelligence_toolkit.schemify.review_verification import (
+            bind_proposals,
+            make_client,
+            verify_proposals,
+        )
+
+        with self._state_lock:
+            if self.is_running:
+                msg = "Another dataset job is already running"
+                raise ValueError(msg)
+            snapshot = copy.deepcopy(self._build_dataset_json() or self._dataset_json)
+            if snapshot is None:
+                msg = "Load a dataset before verifying review decisions"
+                raise ValueError(msg)
+            bound = bind_proposals(snapshot, proposals)
+            client = make_client(backend, api_key=api_key, model=model)
+            directory = Path(resume_directory) if resume_directory else (
+                (self._run_dir or _RUNS_DIR) / "review_verification"
+                / f"{time.strftime('%Y%m%d-%H%M%S')}-{uuid4().hex[:8]}"
+            )
+            self._review_verification_dir = directory
+            self._review_verification_report = {}
+            self._review_verification_stop = False
+            self._review_verification_active = True
+            self.review_verification_progress = ResearchProgress(
+                stage="Verifying review decisions", is_running=True, total=len(bound),
+            )
+
+            def progress(report: dict) -> None:
+                with self._state_lock:
+                    self._review_verification_report = report
+                    self.review_verification_progress.current = report["summary"]["completed_records"]
+
+            def run() -> None:
+                from jsonschema import ValidationError
+                from openai import OpenAIError
+
+                try:
+                    report = asyncio.run(verify_proposals(
+                        snapshot, bound, directory, client, backend=backend,
+                        concurrency=concurrency, max_sources=max_sources,
+                        resume=resume_directory is not None, on_progress=progress,
+                        retry_failed_sources=retry_failed_sources,
+                        should_stop=lambda: self._review_verification_stop,
+                    ))
+                    with self._state_lock:
+                        self._review_verification_report = report
+                        self.review_verification_progress.is_complete = report["complete"]
+                        self.review_verification_progress.stage = (
+                            "Review verification complete; no changes applied" if report["complete"]
+                            else "Review verification paused; checkpoints saved"
+                        )
+                        errors = report["summary"]["processing_errors"]
+                        if errors:
+                            self.review_verification_progress.error = (
+                                f"{errors} records have processing/retrieval errors; inspect the report"
+                            )
+                except (OSError, ValueError, RuntimeError, KeyError, ValidationError, OpenAIError) as exc:
+                    _logger.exception("Review verification failed; checkpoints retained")
+                    self.review_verification_progress.error = str(exc)
+                    self.review_verification_progress.stage = "Review verification failed"
+                finally:
+                    with self._state_lock:
+                        self._review_verification_active = False
+                        self.review_verification_progress.is_running = False
+                        if self.review_verification_progress.stage == "Verifying review decisions":
+                            _logger.error("Verification terminated unexpectedly", exc_info=True)
+                            self.review_verification_progress.error = (
+                                "Verification terminated unexpectedly; inspect application logs. "
+                                "Existing checkpoints are retained."
+                            )
+
+            self._thread = threading.Thread(target=run, daemon=True)
+            self._thread.start()
+
+    def resume_review_verification(
+        self, directory: str, *, api_key: str | None = None,
+        model: str | None = None, concurrency: int = 4, retry_failed_sources: bool = False,
+    ) -> None:
+        path = Path(directory)
+        manifest = json.loads((path / "manifest.json").read_text(encoding="utf-8"))
+        proposals = json.loads((path / "proposals.json").read_text(encoding="utf-8"))["items"]
+        self.start_review_verification(
+            proposals, backend=manifest["backend"], api_key=api_key,
+            model=model if model is not None else manifest.get("requested_model"),
+            concurrency=concurrency, max_sources=manifest["max_sources"],
+            resume_directory=directory,
+            retry_failed_sources=retry_failed_sources,
+        )
 
     @property
     def dataset_json(self) -> Optional[dict]:
@@ -2042,15 +2215,20 @@ class BuildEntityDataset:
             rs.do_not_merge.add(frozenset((a_norm, b_norm)))
 
     def _find_record(self, label: str):
-        """Find a record by exact label or by alias (case-insensitive)."""
+        """Find a record by exact label, else by alias (case-insensitive).
+
+        Labels win over aliases so a record whose label equals another
+        record's alias is still addressable."""
         if not self._schemify or not self._schemify.record_set:
             return None
         target = (label or "").strip().casefold()
         if not target:
             return None
-        for r in self._schemify.record_set.records:
+        records = self._schemify.record_set.records
+        for r in records:
             if (r.label or "").strip().casefold() == target:
                 return r
+        for r in records:
             for a in r.aliases or []:
                 if (a or "").strip().casefold() == target:
                     return r
@@ -2129,6 +2307,37 @@ class BuildEntityDataset:
         if changed:
             self._post_curation_refresh()
         return changed
+
+    def remove_source(self, label: str, url_contains: str) -> int:
+        """Drop citations whose URL contains ``url_contains`` from one record.
+
+        Values left without any citation and attributes left without values
+        are removed too, so claims supported only by a bad source disappear.
+        Returns the number of citations removed."""
+        rec = self._find_record(label)
+        needle = (url_contains or "").strip()
+        if rec is None or not needle:
+            return 0
+        removed = 0
+        for attr in list(rec.attributes):
+            av = rec.attributes[attr]
+            kept_values = []
+            for sv in av.values:
+                before = len(sv.sources)
+                sv.sources = [c for c in sv.sources if needle not in (c.url or "")]
+                removed += before - len(sv.sources)
+                if sv.sources or before == 0:
+                    kept_values.append(sv)
+            av.values = kept_values
+            if not kept_values:
+                del rec.attributes[attr]
+        if removed:
+            self._schemify.record_set.history.append({
+                "op": "remove_source", "applied_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                "label": rec.label, "url_contains": needle, "citations": removed,
+            })
+            self._post_curation_refresh()
+        return removed
 
     def split_alias(self, label: str, alias: str) -> bool:
         """Extract ``alias`` from the given record into a new standalone
@@ -3532,6 +3741,12 @@ class BuildEntityDataset:
         """Load a previously saved dataset JSON into this object."""
         from intelligence_toolkit.schemify.models import _clean_title
 
+        if self.is_verifying_review:
+            msg = "Stop review verification before loading a different dataset"
+            raise ValueError(msg)
+        self._review_verification_report = {}
+        self._review_verification_dir = None
+
         for r in data.get("records", []):
             for bucket in ("attributes", "additional_attributes"):
                 for av in (r.get(bucket) or {}).values():
@@ -3640,6 +3855,120 @@ class BuildEntityDataset:
         self._post_curation_refresh()
         return True
 
+    def select_single_values(
+        self,
+        attribute: str,
+        *,
+        context_attributes: Optional[list[str]] = None,
+        api_key: Optional[str] = None,
+        model: Optional[str] = None,
+        budget: float = 2.0,
+        concurrency: int = 6,
+        progress_cb=None,
+    ) -> list[dict]:
+        """LLM picks the one value per record that best fits the named entity, for
+        records holding several values of ``attribute`` (e.g. accumulated descriptions).
+
+        Returns reviewable choices; apply with :meth:`apply_single_value_choices`.
+        """
+        from intelligence_toolkit.schemify import value_consolidation as _vc
+        from intelligence_toolkit.schemify.llm import LLMClient
+        from intelligence_toolkit.schemify.models import SchemifyConfig
+
+        if not self._schemify or not self._schemify.record_set:
+            return []
+        llm = getattr(self._schemify, "llm", None)
+        if llm is None:
+            if not api_key:
+                raise ValueError("select_single_values requires api_key when no llm is attached")
+            cfg_kwargs = {"api_key": api_key, "max_budget": float(budget)}
+            if model:
+                cfg_kwargs["completion_model"] = model
+            llm = LLMClient(SchemifyConfig(**cfg_kwargs))
+        return asyncio.run(_vc.select_single_values(
+            self._schemify.record_set, llm, attribute,
+            context_attributes=context_attributes, concurrency=concurrency, progress_cb=progress_cb,
+        ))
+
+    def apply_single_value_choices(self, attribute: str, choices: list[dict]) -> int:
+        """Keep only the chosen value per record and mark ``attribute`` single-valued."""
+        from intelligence_toolkit.schemify import value_consolidation as _vc
+
+        if not self._schemify or not self._schemify.record_set or not choices:
+            return 0
+        n = _vc.apply_single_value_choices(self._schemify.record_set, attribute, choices)
+        self._schemify.record_set.history.append({
+            "op": "select_single_values", "applied_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "attribute": attribute, "records": n,
+        })
+        self._post_curation_refresh()
+        return n
+
+    def value_variant_changes(self, attribute: str) -> list[dict]:
+        """Preview spelling variants of one name within each record (``"Acme"`` /
+        ``"Acme, Inc."`` / ``"Acme (ACM)"``) that :meth:`merge_value_variants` would collapse."""
+        from intelligence_toolkit.schemify import value_consolidation as _vc
+
+        if not self._schemify or not self._schemify.record_set:
+            return []
+        return _vc.value_variant_changes(self._schemify.record_set, attribute)
+
+    def merge_value_variants(self, attribute: str) -> int:
+        """Collapse spelling variants within each record, keeping the fullest form and all sources."""
+        from intelligence_toolkit.schemify import value_consolidation as _vc
+
+        if not self._schemify or not self._schemify.record_set:
+            return 0
+        n = _vc.apply_value_variant_changes(self._schemify.record_set, attribute)
+        self._schemify.record_set.history.append({
+            "op": "merge_value_variants", "applied_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "attribute": attribute, "records": n,
+        })
+        self._post_curation_refresh()
+        return n
+
+    def rename_attribute_value(
+        self, attribute: str, old: str, new: str, *, description: Optional[str] = None,
+    ) -> int:
+        """Rename one value of ``attribute`` in the schema and every record (sources kept).
+        Returns the number of records changed."""
+        if not self._schemify or not self._schemify.record_set:
+            return 0
+        rs = self._schemify.record_set
+        schema = next((a for a in rs.schema_attributes if a.name == attribute), None)
+        in_schema = schema is not None and (
+            old in schema.canonical_values or old in schema.provisional_values
+            or old in (schema.canonical_value_descriptions or {})
+        )
+        in_records = any(
+            sv.value == old for r in rs.records
+            for sv in (r.attributes[attribute].values if attribute in r.attributes else [])
+        )
+        if not (in_schema or in_records):
+            return 0
+        if in_schema:
+            for name in ("canonical_values", "provisional_values"):
+                setattr(schema, name, [new if v == old else v for v in getattr(schema, name)])
+            descs = dict(schema.canonical_value_descriptions or {})
+            if old in descs or description is not None:
+                text = descs.pop(old, None)
+                descs[new] = description if description is not None else text
+            schema.canonical_value_descriptions = descs
+        changed = 0
+        for record in rs.records:
+            av = record.attributes.get(attribute)
+            hit = False
+            for sv in av.values if av else []:
+                if sv.value == old:
+                    sv.value, hit = new, True
+            changed += hit
+        rs.history.append({
+            "op": "rename_attribute_value", "applied_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "attribute": attribute, "old": old, "new": new, "records": changed,
+        })
+        self._post_curation_refresh()
+        return changed
+
     def get_release_csv_bytes(self) -> bytes:
         """Flat CSV for publication: label, aliases, every schema attribute, sources."""
         data = self._dataset_json or {}
@@ -3734,12 +4063,24 @@ class BuildEntityDataset:
         secondary_accent_color: Optional[str] = None,
         colors: Optional[dict[str, str]] = None,
         footer: Optional[str] = None,
+        labels: Optional[dict[str, str]] = None,
+        intro: Optional[str] = None,
+        intro_details: Optional[str] = None,
     ) -> bytes:
         """Bundle dashboard.html + theme + data into a downloadable ZIP.
 
         ``views`` optionally restricts the dashboard's tab bar. Accepted
         values are ``"table"``, ``"cards"``, ``"network"``. ``None`` (the
-        default) or an empty list keeps all three.
+        default) or an empty list keeps all three. The first listed view
+        opens by default.
+
+        ``labels`` overrides display text: ``entity`` (name column header,
+        default "Entity"), ``sources`` (citation-count column, default
+        "Sources") and ``sourcesHelp`` (tooltip explaining that count).
+        ``intro`` is optional plain text shown above the summary tiles; keep it
+        to one line. ``intro_details`` is optional longer plain text opened from
+        an "About this map" header button as an overlay panel, so it takes no
+        page space (blank lines start paragraphs).
 
         ``colors`` overrides any of the 12 theme color slots: primary,
         accent, accentSoft, accent2, warn, highlight, success, bg, surface,
@@ -3788,6 +4129,10 @@ class BuildEntityDataset:
             "favicon": favicon_filename or "",
             "footer": footer or "Built with Intelligence Toolkit.",
             "views": normalised_views,
+            "labels": {k: v for k, v in (labels or {}).items()
+                       if k in ("entity", "sources", "sourcesHelp") and isinstance(v, str) and v},
+            "intro": intro or "",
+            "introDetails": intro_details or "",
             "colors": default_colors,
         }
 

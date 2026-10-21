@@ -1,4 +1,4 @@
-"""Schemify CLI: run, audit, propose-schema, recategorize, build-dashboard."""
+"""Schemify CLI: research, audit, verify-review, schemas and dashboards."""
 
 from __future__ import annotations
 
@@ -121,6 +121,55 @@ def _cmd_audit(args: argparse.Namespace) -> int:
     print(f"wrote {json_path}")
     print(f"wrote {md_path}")
     return 0
+
+
+def _cmd_verify_review(args: argparse.Namespace) -> int:
+    import asyncio
+    import hashlib
+    import logging
+
+    from .review_verification import load_proposals, make_client, verify_proposals
+
+    logging.basicConfig(level=logging.INFO)
+    data_path = Path(args.data)
+    raw_data = data_path.read_bytes()
+    data = json.loads(raw_data)
+    proposal_path = Path(args.proposals)
+    content = proposal_path.read_text(encoding="utf-8-sig")
+    if proposal_path.suffix.lower() == ".json":
+        envelope = json.loads(content)
+        expected = envelope.get("source_hashes", {}).get(data_path.name) if isinstance(envelope, dict) else None
+        if expected and hashlib.sha256(raw_data).hexdigest() != expected:
+            msg = "Proposal source hash does not match the supplied dataset file"
+            raise ValueError(msg)
+    proposals = load_proposals(content, proposal_path.suffix.lstrip("."))
+    if args.record_ids:
+        selected_ids = {int(s.strip()) for s in args.record_ids.split(",")}
+        if selected_ids - {p["record_id"] for p in proposals}:
+            msg = "Selected record IDs are not all present in the proposal file"
+            raise ValueError(msg)
+        proposals = [p for p in proposals if p["record_id"] in selected_ids]
+    client = make_client(args.backend, model=args.model)
+
+    def progress(report: dict) -> None:
+        summary = report["summary"]
+        print(
+            f"[verify-review] {summary['completed_records']}/{summary['total_records']} "
+            f"records; checks={summary['check_statuses']}; errors={summary['processing_errors']}",
+            flush=True,
+        )
+
+    report = asyncio.run(verify_proposals(
+        data, proposals, Path(args.out), client,
+        concurrency=args.concurrency, max_sources=args.max_sources,
+        resume=args.resume, retry_failed_sources=args.retry_failed_sources,
+        backend=args.backend, on_progress=progress,
+    ))
+    if hashlib.sha256(data_path.read_bytes()).hexdigest() != hashlib.sha256(raw_data).hexdigest():
+        msg = "Dataset file changed during verification; do not use these results as current"
+        raise ValueError(msg)
+    print(f"[verify-review] report: {Path(args.out) / 'report.json'}; dataset not modified")
+    return 2 if report["summary"]["processing_errors"] else 0
 
 
 def _cmd_propose_schema(args: argparse.Namespace) -> int:
@@ -248,6 +297,20 @@ def main(argv: list[str] | None = None) -> int:
     pb.add_argument("--out", required=True, help="Output dist directory")
     pb.add_argument("--dashboard-dir", help="Override dashboard source directory")
     pb.set_defaults(func=_cmd_build_dashboard)
+
+    pv = sub.add_parser("verify-review", help="Verify proposed corrections against fresh public sources; never apply them.")
+    pv.add_argument("data", help="Exact dataset JSON to review")
+    pv.add_argument("--proposals", required=True, help="Review CSV or JSON file")
+    pv.add_argument("--out", required=True, help="New evidence/report directory (or existing directory with --resume)")
+    pv.add_argument("--backend", choices=["openai", "copilot"], default="openai")
+    pv.add_argument("--model", help="OpenAI model only; Copilot uses the authenticated account's defaults")
+    pv.add_argument("--concurrency", type=int, default=4)
+    pv.add_argument("--max-sources", type=int, default=12)
+    pv.add_argument("--record-ids", help="Optional comma-separated zero-based record IDs")
+    pv.add_argument("--resume", action="store_true", help="Explicitly reuse this run's original timestamped capture/checkpoints")
+    pv.add_argument("--retry-failed-sources", action="store_true",
+                    help="With --resume, retry failed URLs, preserve attempt history and reassess affected records")
+    pv.set_defaults(func=_cmd_verify_review)
 
     args = p.parse_args(argv)
     return args.func(args)

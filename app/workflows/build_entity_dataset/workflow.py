@@ -13,6 +13,7 @@ import streamlit as st
 import app.util.example_outputs_ui as example_outputs_ui
 import workflows.build_entity_dataset.variables as bed_variables
 import workflows.build_entity_dataset.functions as functions
+from workflows.build_entity_dataset.review_verification import render_review_verification
 from util import ui_components
 from util.session_variables import SessionVariables
 
@@ -318,12 +319,13 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
 
         with col_right:
             st.markdown("##### Research configuration")
+            models = ["gpt-6-luna", "gpt-5.4-nano", "gpt-5.4-mini", "gpt-5.4"]
             sv.bed_model.value = st.selectbox(
                 "Model",
-                ["gpt-5.4-nano", "gpt-5.4-mini", "gpt-5.4"],
-                index=["gpt-5.4-nano", "gpt-5.4-mini", "gpt-5.4"].index(sv.bed_model.value)
-                if sv.bed_model.value in ["gpt-5.4-nano", "gpt-5.4-mini", "gpt-5.4"]
-                else 1,
+                models,
+                index=models.index(sv.bed_model.value)
+                if sv.bed_model.value in models
+                else models.index(config.DEFAULT_MODEL),
                 help="Model used for both search and extraction.",
             )
             sv.bed_max_queries.value = st.number_input(
@@ -384,7 +386,9 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
             st.divider()
             prog = api.progress
 
-            if api.is_running:
+            if api.is_verifying_review:
+                st.info("Review-decision verification is running. Progress and pause controls are in Review dataset.")
+            elif api.is_running:
                 # Pull latest live counters from schemify before rendering.
                 refresh = getattr(api, "refresh_progress", None)
                 if callable(refresh):
@@ -808,6 +812,10 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                 with st.expander("Schema attributes", expanded=False):
                     schema_df = pd.DataFrame(schema)
                     st.dataframe(schema_df, use_container_width=True, hide_index=True)
+
+            render_review_verification(
+                api, api_key=functions.get_api_key(), model=sv.bed_model.value,
+            )
 
             # ── Verification (on demand) ──────────────────────
             count_fn = getattr(api, "count_unverified", None)
@@ -1616,6 +1624,59 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                             sv.bed_scope_dismissed.value = list(scope_dismissed | {entry["label"]})
                             st.rerun()
 
+            # ── Tidy values within records ─────────────────────────
+            with st.expander("Tidy values within records", expanded=False):
+                st.caption(
+                    "Research rounds can leave a record with several near-identical values "
+                    "(e.g. two descriptions, or 'Acme' and 'Acme, Inc.'). Preview, then apply."
+                )
+                tidy_attrs = [a["name"] for a in (api.dataset_json or {}).get("schema_attributes", [])]
+                tidy_attr = st.selectbox("Attribute", tidy_attrs, key="bed_tidy_attr")
+                tv1, tv2 = st.columns(2)
+                if tv1.button("Preview spelling variants", key="bed_tidy_variants"):
+                    st.session_state["bed_tidy_variant_preview"] = api.value_variant_changes(tidy_attr)
+                    st.session_state.pop("bed_tidy_choices", None)
+                if tv2.button("Choose one value per record (AI)", key="bed_tidy_single"):
+                    if not functions.get_api_key():
+                        st.error("Set an OpenAI API key in Settings first.")
+                    else:
+                        with st.spinner("Choosing…"):
+                            try:
+                                st.session_state["bed_tidy_choices"] = api.select_single_values(
+                                    tidy_attr, api_key=functions.get_api_key(), model=sv.bed_model.value,
+                                )
+                                st.session_state.pop("bed_tidy_variant_preview", None)
+                            except Exception as e:  # noqa: BLE001
+                                st.error(f"Choice failed: {e}")
+                variant_preview = st.session_state.get("bed_tidy_variant_preview")
+                if variant_preview is not None:
+                    st.write(f"{len(variant_preview)} records would change.")
+                    if variant_preview:
+                        st.dataframe(pd.DataFrame([
+                            {"record": p["label"], "before": " | ".join(p["before"]),
+                             "after": " | ".join(p["after"])} for p in variant_preview
+                        ]), hide_index=True, use_container_width=True)
+                        if st.button("Merge variants", key="bed_tidy_variants_apply", type="primary"):
+                            n = api.merge_value_variants(tidy_attr)
+                            st.session_state.pop("bed_tidy_variant_preview", None)
+                            st.success(f"Updated {n} records.")
+                            st.rerun()
+                choices = st.session_state.get("bed_tidy_choices")
+                if choices is not None:
+                    usable = [c for c in choices if c.get("choice") is not None]
+                    st.write(f"{len(usable)} of {len(choices)} records have a choice.")
+                    if choices:
+                        st.dataframe(pd.DataFrame([
+                            {"record": c["label"], "keep": c.get("chosen"),
+                             "drop": " | ".join(c.get("dropped") or []), "reason": c.get("reason")}
+                            for c in choices
+                        ]), hide_index=True, use_container_width=True)
+                    if usable and st.button("Keep chosen values", key="bed_tidy_single_apply", type="primary"):
+                        n = api.apply_single_value_choices(tidy_attr, usable)
+                        st.session_state.pop("bed_tidy_choices", None)
+                        st.success(f"Updated {n} records.")
+                        st.rerun()
+
             # ── Relevance filter (explicit connection) ─────────
             rel = dict(getattr(api, "relevance_results", {}) or {})
             rel_dismissed = set(sv.bed_relevance_dismissed.value or [])
@@ -2325,6 +2386,33 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                 )
                 selected_views = ["table"]
 
+            with st.expander("Column labels and intro note (optional)"):
+                lcol1, lcol2 = st.columns(2)
+                entity_label = lcol1.text_input(
+                    "Name column label", value="Entity", key="bed_label_entity",
+                    help="Header of the first table column, e.g. 'Tool name'.",
+                )
+                sources_label = lcol2.text_input(
+                    "Citation-count column label", value="Sources", key="bed_label_sources",
+                    help="Header of the column counting distinct cited web pages, e.g. 'References'.",
+                )
+                sources_help = st.text_input(
+                    "Citation-count explanation (tooltip)", key="bed_label_sources_help",
+                    placeholder="Number of distinct web pages cited. It shows how much documentation was found, not how reliable the entry is.",
+                )
+                intro_note = st.text_input(
+                    "Intro line shown above the dashboard", key="bed_intro_note",
+                    help="Keep to one short sentence, e.g. scope and an endorsement disclaimer.",
+                )
+                intro_details = st.text_area(
+                    "'About this map' text (expandable)", key="bed_intro_details", height=100,
+                    help="Longer explanation shown when users click 'About this map'. Blank lines start paragraphs.",
+                )
+            display_kwargs = {
+                "labels": {"entity": entity_label, "sources": sources_label, "sourcesHelp": sources_help},
+                "intro": intro_note,
+                "intro_details": intro_details,
+            }
             logo_bytes = logo_file.read() if logo_file else None
             logo_filename = logo_file.name if logo_file else None
             favicon_bytes = favicon_file.read() if favicon_file else None
@@ -2346,6 +2434,7 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                             favicon_bytes=favicon_bytes,
                             favicon_filename=favicon_filename,
                             views=selected_views,
+                            **display_kwargs,
                         )
                         st.download_button(
                             "Save dashboard.zip",
@@ -2392,6 +2481,7 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                             favicon_bytes=favicon_bytes,
                             favicon_filename=favicon_filename,
                             views=selected_views,
+                            **display_kwargs,
                         )
                         safe = "".join(c if c.isalnum() or c in "-._" else "_" for c in version)
                         st.download_button(
