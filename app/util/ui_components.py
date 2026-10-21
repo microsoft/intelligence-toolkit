@@ -15,11 +15,15 @@ from itk_core.client import OpenAIClient
 from itk_core.defaults import DEFAULT_MAX_INPUT_TOKENS
 
 from app.util.constants import FILE_ENCODING_DEFAULT, FILE_ENCODING_OPTIONS
-from app.util.df_functions import get_current_time, quantize_datetime, quantize_numeric
 from app.util.download_pdf import add_download_pdf
 from app.util.enums import Mode
 from app.util.openai_wrapper import UIOpenAIConfiguration
 from intelligence_toolkit.helpers import df_functions
+from intelligence_toolkit.helpers.df_functions import (
+    get_current_time,
+    quantize_datetime,
+    quantize_numeric,
+)
 from intelligence_toolkit.helpers.texts import clean_for_column_name
 
 

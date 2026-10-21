@@ -27,7 +27,7 @@ def _generate_embeddings_for_period(
     edge_list = _get_edge_list(graph, node_list)
     num_nodes = len(node_list)
 
-    ############TODO#########################
+    # Row i of every level embedding corresponds to node_list[i]
     node_to_ix = {node: i for i, node in enumerate(node_list)}
 
     # Note that this function relies upon the incoming node_to_label dictionary to be FULL and complete.  Every node MUST be defined for EVERY level in the hierarchy.
@@ -61,7 +61,8 @@ def _generate_embeddings_for_period(
     # Now create a joint embedding across all levels
     # get the length of any vector at the root level - this is the minimal number of dimensions to PCA to
     # and resize all vectors to be of this same length.
-    # TODO: Experiment with different balances of each layer (intuition is we need to weight higher levels in the hierarchy with more weight from observations)
+    # Note: all levels are currently weighted equally. Weighting higher levels of the
+    # hierarchy more heavily may improve results but has not been evaluated.
     embedding_length = level_embeddings[0].shape[1]
 
     normalized_vectors = {}
@@ -70,9 +71,7 @@ def _generate_embeddings_for_period(
         # First check to see if we should PCA the whole thing first to a standard dimensionality
         # Obviously for root level 0 - nothing needs to be done
         if level_embeddings[level].shape[1] == embedding_length:
-            # at the root level, just copy the vectors over
-            # TODO: normalize
-
+            # at the root level, just L2-normalize the vectors
             normalized_vectors[level] = normalize(level_embeddings[level].toarray())
 
         else:
@@ -80,7 +79,6 @@ def _generate_embeddings_for_period(
             tsvd = TruncatedSVD(n_components=embedding_length)
 
             tsvd.fit(level_embeddings[level].toarray())
-            # TODO: normalize vectors
 
             normalized_vectors[level] = normalize(
                 tsvd.transform(level_embeddings[level].toarray())
@@ -102,7 +100,6 @@ def _generate_embeddings_for_period(
                 # Deeper the level 0, we have to check if the node actually exists at this level
                 if node_to_label[node][level - 1] != node_to_label[node][level]:
                     # the node existed at this depth of the hierarchy
-                    # TODO: Check to make sure we're indexing
                     concat_vectors[level][node] = normalized_vectors[level][
                         node_to_ix[node]
                     ]
