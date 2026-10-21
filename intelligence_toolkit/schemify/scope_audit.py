@@ -34,12 +34,17 @@ Dataset guidance:
 {guidance}
 
 For each entity below decide whether it is itself an instance of that category.
+The dataset guidance's inclusions and exclusions take precedence over the defaults below.
 Flag (in_scope=false) only when the evidence clearly shows it is something else, e.g.
 a report or publication, a law, policy, code of conduct or standard document, an
 awareness campaign, an event, a person, an organization described without any
 qualifying product or service, or a source that is merely ABOUT the topic or used
 as data by others rather than an instance of the category.
-When an organization or program ships a qualifying product, it is in scope.
+When an organization or program ships a qualifying product, it is in scope, but the
+record should then name that product; flag records that name only the organization,
+programme, project, initiative, working group, service or process when the guidance
+excludes organizations or programmes without an identifiable product. A programme's
+internal workflow, audit process, field intervention or partnership is not a product.
 A product's relevance to the topic is NOT a scope question: if it is a real product
 of the right kind but its documented use for the topic is weak or general-purpose,
 keep in_scope=true and set weak_relevance=true instead.
