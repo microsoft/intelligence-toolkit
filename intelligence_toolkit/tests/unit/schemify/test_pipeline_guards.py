@@ -81,6 +81,15 @@ def test_finalize_drops_fallback_values_alongside_specific(sch):
     assert stats["fallbacks_dropped"] == 2
 
 
+def test_finalize_keeps_long_pinned_labels(sch):
+    long_label = "Machine-learning inspection targeting model (Stanford Data Lab, Brazil)"
+    rs = make_rs([Record(label=long_label, manual_canonical=True),
+                  Record(label="Another quite long tool name here (with a long parenthetical qualifier)")])
+    sch.resolution.finalize_normalization(rs)
+    assert rs.records[0].label == long_label.upper()
+    assert "(" not in rs.records[1].label
+
+
 def test_finalize_snaps_locked_values_to_taxonomy(sch):
     rs = make_rs([
         Record(label="A", attributes={"Functionality": av("risk assessment & monitoring", "Invented Category")}),
@@ -420,6 +429,49 @@ def test_release_zip_contains_package(tmp_path):
     assert "Alpha" in csv and "https://x/0" in csv
 
 
+def test_manual_canonical_label_survives_round_trip():
+    from intelligence_toolkit.schemify.models import Record
+
+    rec = Record(label="Tool (Org, Place)", alias_counts={"TOOL": 5}, manual_canonical=True)
+    loaded = Record.from_dict(rec.to_dict())
+    loaded._update_canonical_label()
+    assert loaded.manual_canonical and loaded.label == "Tool (Org, Place)"
+    assert "manual_canonical" not in Record(label="X").to_dict()
+
+
+def test_mixed_timezone_sources_compare():
+    from intelligence_toolkit.schemify.models import AttributeValue
+
+    av_ = AttributeValue.from_dict({"value": "x", "values": [{"value": "x", "sources": [
+        {"url": "https://a/1", "title": "", "retrieved_at": "2026-10-07T15:10:25"},
+        {"url": "https://b/2", "title": "", "retrieved_at": "2026-10-20T13:04:08+00:00"},
+    ]}]})
+    ev = av_.to_dict()["evidence"]
+    assert ev["source_count"] == 2 and ev["last_seen_at"].startswith("2026-10-20")
+
+
+def test_dashboard_theme_labels_views_and_intro():
+    import io
+    import zipfile
+
+    api = _live_api([Record(label="A", attributes={"Functionality": av(FUNC[0])})])
+    api._dataset_json = api._build_dataset_json()
+    z = zipfile.ZipFile(io.BytesIO(api.build_dashboard_zip(
+        title="T", subtitle="S", dataset_label="tools",
+        primary_color="#000000", accent_color="#111111",
+        views=["Table", "cards", "bogus"],
+        labels={"entity": "Tool name", "sources": "References", "sourcesHelp": "Pages cited.", "x": "ignored"},
+        intro="About this map.", intro_details="More.",
+    )))
+    theme = json.loads(z.read("dashboard/theme.js").decode().split("=", 1)[1].strip().rstrip(";"))
+    assert theme["views"] == ["table", "cards"]
+    assert theme["labels"] == {"entity": "Tool name", "sources": "References", "sourcesHelp": "Pages cited."}
+    assert theme["intro"] == "About this map." and theme["introDetails"] == "More."
+    html = z.read("dashboard/dashboard.html").decode()
+    assert "SCHEMIFY_LABELS" in html and 'id="intro-note"' in html and 'aria-controls="intro-details"' in html
+    assert "schema_attributes.filter(a => state.facetAttrs.includes(a.name))" in html  # group-by: categorical only
+
+
 async def test_scope_audit_failure_keeps_records():
     rs = make_rs([Record(label="A"), Record(label="B")])
     results = await scope_audit.audit_scope(rs, ForbiddenLLM())
@@ -435,3 +487,112 @@ async def test_scope_audit_flags_confident_out_of_scope():
     ]})
     flagged = scope_audit.flagged_results(await scope_audit.audit_scope(rs, llm))
     assert [f["label"] for f in flagged] == ["A"]
+
+@pytest.mark.asyncio
+async def test_select_single_values_keeps_chosen_and_folds_same_text_sources():
+    from intelligence_toolkit.schemify import value_consolidation as vc
+
+    desc = AttributeValue(values=[
+        SourcedValue(value="Scores supplier risk for forced labour.", sources=[Citation(url="https://a", title="a")]),
+        SourcedValue(value="Scores Supplier Risk For Forced Labour", sources=[Citation(url="https://b", title="b")]),
+        SourcedValue(value="An R package for fishing vessels.", sources=[Citation(url="https://c", title="c")]),
+    ])
+    rs = make_rs([Record(label="A", attributes={"Tool Description": desc}),
+                  Record(label="B", attributes={"Tool Description": av("only one")})])
+    rs.schema_attributes.append(SchemaAttribute(name="Tool Description", is_multi_valued=True))
+    llm = FixedLLM({"results": [{"label": "A", "choice": 0, "reason": "fits"}]})
+    choices = await vc.select_single_values(rs, llm, "Tool Description")
+    assert [c["label"] for c in choices] == ["A"] and choices[0]["chosen"].startswith("Scores supplier")
+    assert vc.apply_single_value_choices(rs, "Tool Description", choices) == 1
+    kept = rs.records[0].attributes["Tool Description"].values
+    assert [sv.value for sv in kept] == ["Scores supplier risk for forced labour."]
+    assert {c.url for c in kept[0].sources} == {"https://a", "https://b"}
+    assert rs.schema_attributes[-1].is_multi_valued is False
+
+
+@pytest.mark.asyncio
+async def test_select_single_values_invalid_choice_changes_nothing():
+    from intelligence_toolkit.schemify import value_consolidation as vc
+
+    rs = make_rs([Record(label="A", attributes={"Tool Description": av("x", "y")})])
+    choices = await vc.select_single_values(rs, FixedLLM({"results": [{"label": "A", "choice": 7, "reason": ""}]}),
+                                            "Tool Description")
+    assert choices[0]["choice"] is None
+    assert vc.apply_single_value_choices(rs, "Tool Description", choices) == 0
+    assert values(rs.records[0], "Tool Description") == ["x", "y"]
+
+
+def test_merge_value_variants_keeps_fullest_form_and_partners():
+    from intelligence_toolkit.schemify import value_consolidation as vc
+
+    rs = make_rs([
+        Record(label="A", attributes={"Org": av(
+            "National Center for Missing & Exploited Children",
+            "National Center for Missing & Exploited Children (NCMEC)")}),
+        Record(label="B", attributes={"Org": av("Recorded Future", "Recorded Future, Inc.")}),
+        Record(label="C", attributes={"Org": av("Seafood Watch, Liberty Shared, and SFP",
+                                                "Seafood Watch", "Liberty Shared", "SFP")}),
+        Record(label="D", attributes={"Org": av("Thorn", "Tech Coalition")}),
+    ])
+    preview = vc.value_variant_changes(rs, "Org")
+    assert [p["label"] for p in preview] == ["A", "B", "C"]
+    assert vc.apply_value_variant_changes(rs, "Org") == 3
+    assert values(rs.records[0], "Org") == ["National Center for Missing & Exploited Children (NCMEC)"]
+    assert values(rs.records[1], "Org") == ["Recorded Future, Inc."]
+    assert values(rs.records[2], "Org") == ["Seafood Watch", "Liberty Shared", "SFP"]
+    assert values(rs.records[3], "Org") == ["Thorn", "Tech Coalition"]
+    merged = rs.records[0].attributes["Org"].values[0]
+    assert len(merged.sources) == 2
+    assert len(rs.records[2].attributes["Org"].values[0].sources) == 2
+
+
+def test_rename_attribute_value_updates_schema_and_records():
+    api = _live_api([Record(label="A", attributes={"Functionality": av(FUNC[0])})])
+    assert api.rename_attribute_value("Functionality", FUNC[0], "Risk", description="new") == 1
+    schema = api._schemify.record_set.schema_attributes[0]
+    assert "Risk" in schema.canonical_values and FUNC[0] not in schema.canonical_values
+    assert schema.canonical_value_descriptions == {"Risk": "new"}
+    assert values(api._schemify.record_set.records[0], "Functionality") == ["Risk"]
+
+async def test_single_value_prompt_renders_entities():
+    rec = Record(label="Tool", attributes={"Desc": av("first", "second")})
+    llm = CapturingLLM({"results": [{"label": "Tool", "choice": 1, "reason": "r"}]})
+    from intelligence_toolkit.schemify import value_consolidation as vc
+    out = await vc.select_single_values(make_rs([rec]), llm, "Desc")
+    rendered = llm.kwargs["prompt"].format(**llm.kwargs["variables"])
+    assert '"second"' in rendered and "{" + "entities}" not in rendered
+    assert out[0]["chosen"] == "second"
+
+
+def test_merge_records_prefers_label_over_alias():
+    api = _live_api([Record(label="THORN SAFER", aliases=["Safer"]), Record(label="SAFER")])
+    assert api.merge_records("THORN SAFER", "SAFER") is True
+    assert [r.label for r in api._schemify.record_set.records] == ["THORN SAFER"]
+
+
+def test_remove_source_drops_claims_only_backed_by_it():
+    rec = Record(label="A", attributes={
+        "Tech": AttributeValue(values=[
+            SourcedValue(value="Web", sources=[Citation(url="https://good/1", title="t"),
+                                               Citation(url="https://bad/app", title="t")]),
+            SourcedValue(value="Mobile", sources=[Citation(url="https://bad/app", title="t")]),
+        ]),
+        "Geo": AttributeValue(values=[SourcedValue(value="Europe", sources=[Citation(url="https://bad/app", title="t")])]),
+    })
+    api = _live_api([rec])
+    assert api.remove_source("A", "bad/app") == 3
+    r = api._schemify.record_set.records[0]
+    assert values(r, "Tech") == ["Web"] and "Geo" not in r.attributes
+    assert [c.url for c in r.attributes["Tech"].values[0].sources] == ["https://good/1"]
+
+
+def test_citation_strips_utm_tracking_only():
+    from intelligence_toolkit.schemify.models import Citation
+    assert Citation(url="https://a.org/p?utm_source=openai", title="t").url == "https://a.org/p"
+    assert Citation(url="https://a.org/p?id=7&utm_source=openai&UTM_medium=x#s", title="t").url == "https://a.org/p?id=7#s"
+    assert Citation.from_dict({"url": "https://a.org/?q=a%20b", "title": "t"}).url == "https://a.org/?q=a%20b"
+    from intelligence_toolkit.schemify.models import SourcedValue
+    sv = SourcedValue.from_dict({"value": "v", "sources": [
+        {"url": "https://a.org/p", "title": "t", "snippet": "s"},
+        {"url": "https://a.org/p?utm_source=openai", "title": "t", "snippet": "s"}]})
+    assert len(sv.sources) == 1

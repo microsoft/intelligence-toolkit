@@ -32,6 +32,126 @@ A live progress display shows queries run, entities found, and current stage. Yo
 ### 3. Review dataset
 Inspect the discovered entities in a tabular view. The schema attributes and their coverage are shown. You can also load a previously saved `data.json` file for review.
 
+#### Verify review decisions against fresh evidence
+
+In **Review dataset**, open **Verify review decisions** to upload a CSV or JSON
+queue of proposed repairs, renames, splits, duplicate checks or scope reviews.
+This is separate from **Verify attribute values**: it checks proposed corrections
+and **never applies them**, including on datasets loaded without an OpenAI key.
+
+Choose OpenAI or the authenticated Copilot CLI installed on the application host,
+authorize account usage, optionally select zero-based record IDs, and start a
+fresh capture. Copilot uses that host's authenticated account and default model
+routing; it does not use the browser user's identity. Proposal/record context and
+retrieved public text are sent to the selected AI service. Configure an OpenAI key
+in Settings when using OpenAI. Copilot must already be installed and authenticated;
+the application does not install it or log in on your behalf.
+Reported usage covers recorded completions, not an authoritative billing total;
+interrupted requests may still incur account usage.
+
+The verifier separately checks the primary identity, proposed description,
+**every original alias**, each split candidate, each related-record overlap and
+each outstanding prerequisite. Results are **supported**, **contradicted** or
+**inconclusive**, with exact source quotations, retrieval dates, hashes and errors.
+Duplicate checks receive both records' context and source candidates; partial
+overlap is not permission to merge bundled records. Scope checks use the dataset's
+existing inclusion guidance.
+
+- **Supported** means the retrieved evidence supports that check, not that a tool
+  is effective, high quality, independently corroborated, or approved for publication.
+- Matching titles, navigation, shared domains and historical AI summaries do not
+  constitute substantive fresh evidence.
+- Failed, browser-only, oversized or unsupported sources remain explicit.
+  This is linked-source retrieval, **not an exhaustive search of the web**.
+  Raise the source limit to cover more candidates; omitted URLs are listed.
+- Overall record status includes outstanding human/workflow prerequisites.
+  **Factual status** excludes those prerequisites. A supported identity or
+  description does not establish all alias, split, scope or duplicate claims.
+  **Contradicted** means at least one check conflicts with fresh evidence, not
+  necessarily that the original triage action was wrong. An open alias
+  relationship can become resolved, or an inclusion check can establish an
+  exclusion. Related products, components and capabilities are not automatically
+  interchangeable tool names; read the per-check reasons.
+- Pause waits for in-flight requests and preserves checkpoints. Opening or
+  resuming a saved capture does not relabel its evidence as newly retrieved.
+  Start a **new** capture to refresh all pages. Alternatively, explicitly
+  **retry failed sources on resume**: successful snapshots retain their dates,
+  new attempts get new dates, prior failures are retained, and affected
+  records are reassessed when their available evidence changes.
+- Saved captures are listed for the same dataset fingerprint. Reports remain
+  separate from dataset files; no normalization, merges, splits, alias changes or
+  exclusions run as part of verification. A changed dataset makes an open or
+  imported report stale.
+
+Download the record-level decisions CSV, per-check CSV, JSON report, or evidence
+ZIP containing extracted source snapshots, manifest, proposals and results.
+An exported JSON report can also be reopened in Review; retain the ZIP for the
+underlying text snapshots and resumable per-record checkpoints. Keep the original
+input dataset alongside the capture. Human approval and any later application
+are separate.
+
+**Proposal format.** JSON accepts an array or `{"items": [...]}`. Each row requires
+`record_id` (or `id`), the exact `current_label`, and `action` (or
+`recommended_action`): `repair_record`, `rename_record`, `split_record`,
+`possible_duplicate`, `scope_review`, or `research_needed`. Optional fields:
+`proposed_label`, `proposed_description`, `rationale`, `references`,
+`checks_before_apply`, `split_entities`, and `related_record_ids`.
+`alias_decisions` must contain every original alias exactly once with an `alias`
+and a `decision` of `keep`, `detach` or `verify`. No aliases are silently truncated.
+Use JSON arrays for names containing newlines. Split entities may be names or
+objects with a `label`; splits need at least two candidates. Duplicate proposals
+need related IDs. Optional `related_record_labels` maps string IDs to exact
+canonical labels. An envelope `dataset_fingerprint` binds the initial import to
+an exact dataset; otherwise initial binding checks canonical IDs/labels and alias
+coverage, not the age of every historical field.
+
+CSV also accepts newline-separated `aliases_to_keep`, `aliases_to_detach`,
+`aliases_to_verify`, `split_entities`, `references` and `checks_before_apply`,
+comma-separated `related_record_ids`, and optional `related_records` lines of
+`ID: canonical label`. JSON arrays inside CSV cells are also supported for list
+fields. Existing first-pass triage CSV/JSON exports are accepted.
+
+**CLI** (from an environment with ITK installed):
+
+```powershell
+python -m intelligence_toolkit.schemify.cli verify-review data.json `
+  --proposals triage.csv --out review_evidence --backend copilot `
+  --concurrency 4 --max-sources 48
+```
+
+Use `--backend openai` with `OPENAI_API_KEY`; `--model` applies only to OpenAI.
+Use `--record-ids 4,21,75` to select a subset. Explicit `--resume` requires the
+same dataset, normalized proposals, backend/model and source limit and reuses the
+capture's original timestamps. CLI JSON imports also check a matching
+`source_hashes` entry for the dataset filename when supplied.
+Add `--retry-failed-sources` to `--resume` to retry inaccessible URLs without
+re-fetching successful snapshots or silently reusing decisions after evidence
+changes. Previous failed attempts remain in source metadata.
+Exit code `2` means the report contains record processing/retrieval errors, not
+that every inconclusive check is an execution failure. Checkpoints are retained.
+
+**Library:**
+
+```python
+from pathlib import Path
+from intelligence_toolkit.schemify.review_verification import (
+    load_proposals, make_client, verify_proposals,
+)
+
+proposals = load_proposals(Path("triage.csv").read_text(encoding="utf-8-sig"), "csv")
+report = await verify_proposals(
+    dataset, proposals, Path("review_evidence"), make_client("copilot"),
+    backend="copilot", max_sources=48,
+)
+```
+
+`BuildEntityDataset.start_review_verification` exposes the same implementation
+as a background job. Read `review_verification_report` and
+`review_verification_progress`; use `stop_review_verification`,
+`list_review_verifications`, `open_review_verification`,
+`resume_review_verification` and `review_verification_bundle` to pause,
+reopen, resume and export without altering the dataset.
+
 ### 4. Export
 Download the dataset as:
 - **`data.json`** — full structured dataset with per-value source citations
@@ -48,7 +168,7 @@ Or build a **themed web interface**: supply a title, subtitle, colours, and an o
 | Entity category | Yes | Short description of what entities to find |
 | Guidance | No | Free-text instructions on scope, quality, or exclusions |
 | Schema attributes | No | JSON list of `{name, description, is_closed_set}` objects |
-| Model | Yes | OpenAI model to use (default: `gpt-5.4-mini`) |
+| Model | Yes | OpenAI model to use (default: `gpt-6-luna`) |
 | Max queries | Yes | Total web-search budget (default: 30) |
 | Budget (USD) | Yes | Maximum LLM/search spend (default: $10) |
 

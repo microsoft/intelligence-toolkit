@@ -1364,7 +1364,7 @@ class ResolutionEngine:
         # label (>=8 chars). Preserve the original as an alias.
         max_label = self._MAX_LABEL_LEN
         for record in record_set.records:
-            if len(record.label or "") <= max_label:
+            if len(record.label or "") <= max_label or record.manual_canonical:
                 continue
             short = re.sub(r"\s*\([^)]*\)\s*$", "", record.label).strip()
             if not short or len(short) < 8 or short.upper() == record.label.upper():
