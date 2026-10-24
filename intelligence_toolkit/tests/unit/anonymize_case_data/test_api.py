@@ -144,7 +144,7 @@ def test_analyze_synthesizability_excess_combinations_ratio():
 
 @patch("intelligence_toolkit.anonymize_case_data.api.DpAggregateSeededSynthesizer")
 @patch("intelligence_toolkit.anonymize_case_data.api.Dataset")
-@patch("intelligence_toolkit.anonymize_case_data.api.df_functions.fix_null_ints")
+@patch("intelligence_toolkit.anonymize_case_data.api.df_functions.fix_null_ints_str")
 def test_anonymize_case_data_method(mock_fix_null_ints, mock_dataset, mock_synth_class):
     # Setup mocks
     mock_fix_null_ints.return_value = pd.DataFrame({"A": [1, 2], "B": [3, 4]})

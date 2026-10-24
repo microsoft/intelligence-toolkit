@@ -116,7 +116,7 @@ sequence = ["check_format", "_ruff_check"]
 ignore_fail = "return_non_zero"
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py311"
 extend-include = ["*.ipynb"]
 
 [tool.ruff.format]
@@ -214,8 +214,9 @@ convention = "numpy"
 
 # https://github.com/microsoft/pyright/blob/9f81564a4685ff5c55edd3959f9b39030f590b2f/docs/configuration.md#sample-pyprojecttoml-file
 [tool.pyright]
-include = ["app", "intelligence_toolkit", "packages", "example_notebooks"]
-typeCheckingMode = "off"
+# Type checking is enabled incrementally: widen `include` as modules are cleaned up.
+include = ["packages/itk-core/src", "intelligence_toolkit/helpers"]
+typeCheckingMode = "basic"
 
 
 [virtualenvs]

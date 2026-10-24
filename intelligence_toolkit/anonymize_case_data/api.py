@@ -13,13 +13,13 @@ from pacsynth import (
     FabricationMode,
 )
 
-import app.util.df_functions as df_functions
 import intelligence_toolkit.anonymize_case_data.queries as queries
 import intelligence_toolkit.anonymize_case_data.visuals as visuals
 from intelligence_toolkit.anonymize_case_data.error_report import ErrorReport
 from intelligence_toolkit.anonymize_case_data.synthesizability_statistics import (
     SynthesizabilityStatistics,
 )
+from intelligence_toolkit.helpers import df_functions
 from intelligence_toolkit.helpers.classes import IntelligenceWorkflow
 
 
@@ -113,7 +113,7 @@ class AnonymizeCaseData(IntelligenceWorkflow):
             use_synthetic_counts (bool, optional): Whether to use synthetic counts in progress to guide sampling. Defaults to True.
             aggregate_counts_scale_factor (float, optional): The scale factor to use for aggregate counts. Defaults to 1.0.
         """
-        self.sensitive_df = df_functions.fix_null_ints(df)
+        self.sensitive_df = df_functions.fix_null_ints_str(df)
 
         sensitive_dataset = Dataset.from_data_frame(self.sensitive_df)
 
