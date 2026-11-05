@@ -2915,20 +2915,41 @@ class BuildEntityDataset:
             "results": [r.to_dict() for r in results],
         }
 
-    def apply_dedup_merge(self, canonical_label: str, member_labels: list[str]) -> int:
+    def apply_dedup_merge(
+        self, canonical_label: str, member_labels: list[str], rationale: str = ""
+    ) -> int:
         """Collapse every label in ``member_labels`` (other than
-        ``canonical_label``) into the canonical record. Returns the
-        number of records absorbed.
+        ``canonical_label``) into the canonical record and log the merge
+        in the dataset history. Returns the number of records absorbed.
         """
+        from intelligence_toolkit.schemify import dedup_audit as _da
+
         if not canonical_label or not member_labels:
             return 0
-        absorbed = 0
-        for other in member_labels:
-            if not other or other.strip().upper() == canonical_label.strip().upper():
-                continue
-            if self.merge_records(canonical_label, other):
-                absorbed += 1
-        return absorbed
+        if not self._schemify or not self._schemify.record_set:
+            return 0
+        absorbed = _da.apply_merge_set(
+            self._schemify.record_set, canonical_label, member_labels, rationale=rationale,
+        )
+        if absorbed:
+            self._post_curation_refresh()
+        return len(absorbed)
+
+    def apply_alias_correction(
+        self, label: str, alias: str, *, belongs_to_label: str = "", rationale: str = ""
+    ) -> bool:
+        """Remove a misattached alias flagged by the duplicate audit (logged in history)."""
+        from intelligence_toolkit.schemify import dedup_audit as _da
+
+        if not self._schemify or not self._schemify.record_set:
+            return False
+        ok = _da.apply_alias_correction(
+            self._schemify.record_set, label, alias,
+            belongs_to_label=belongs_to_label, rationale=rationale,
+        )
+        if ok:
+            self._post_curation_refresh()
+        return ok
 
     # ── Re-categorize in place (+ optional web search) ─────────
 
@@ -3905,27 +3926,45 @@ class BuildEntityDataset:
         return n
 
     def value_variant_changes(self, attribute: str) -> list[dict]:
-        """Preview spelling variants of one name within each record (``"Acme"`` /
-        ``"Acme, Inc."`` / ``"Acme (ACM)"``) that :meth:`merge_value_variants` would collapse."""
+        """Preview spelling variants of one name (``"Acme"`` / ``"Acme, Inc."`` /
+        ``"Acme (ACM)"``) that :meth:`merge_value_variants` would collapse, both within a
+        record and across records, as ``{"label", "before", "after"}`` per changed record."""
+        import copy
+
         from intelligence_toolkit.schemify import value_consolidation as _vc
 
         if not self._schemify or not self._schemify.record_set:
             return []
-        return _vc.value_variant_changes(self._schemify.record_set, attribute)
+        rs = self._schemify.record_set
+        trial = copy.deepcopy(rs)
+        _vc.apply_value_variant_changes(trial, attribute)
+        _vc.apply_dataset_variant_changes(trial, attribute)
+        changes = []
+        for record, after_rec in zip(rs.records, trial.records):
+            av, after_av = record.attributes.get(attribute), after_rec.attributes.get(attribute)
+            before = [sv.value for sv in (av.values if av else [])]
+            after = [sv.value for sv in (after_av.values if after_av else [])]
+            if after != before:
+                changes.append({"label": record.label, "before": before, "after": after})
+        return changes
 
     def merge_value_variants(self, attribute: str) -> int:
-        """Collapse spelling variants within each record, keeping the fullest form and all sources."""
+        """Give each name one spelling, within every record and across the dataset,
+        keeping the fullest form within a record and the most used form across records.
+        All sources are kept. Returns the number of records changed."""
         from intelligence_toolkit.schemify import value_consolidation as _vc
 
         if not self._schemify or not self._schemify.record_set:
             return 0
-        n = _vc.apply_value_variant_changes(self._schemify.record_set, attribute)
-        self._schemify.record_set.history.append({
+        rs = self._schemify.record_set
+        within = _vc.apply_value_variant_changes(rs, attribute)
+        across = _vc.apply_dataset_variant_changes(rs, attribute)
+        rs.history.append({
             "op": "merge_value_variants", "applied_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
-            "attribute": attribute, "records": n,
+            "attribute": attribute, "records": within, "records_across_dataset": across,
         })
         self._post_curation_refresh()
-        return n
+        return within + across
 
     def rename_attribute_value(
         self, attribute: str, old: str, new: str, *, description: Optional[str] = None,
@@ -4155,6 +4194,76 @@ class BuildEntityDataset:
                 zf.writestr(f"dashboard/{favicon_filename}", favicon_bytes)
         buf.seek(0)
         return buf.read()
+
+
+def load_theme_bundle(files: list[tuple[str, bytes]]) -> dict:
+    """Read dashboard branding from a release ZIP or from theme files.
+
+    ``files`` holds ``(filename, bytes)`` pairs: a release/dashboard ZIP, or a
+    ``theme.js`` / ``theme.json`` plus the logo and favicon it references.
+    Returns ``{"theme": dict, "assets": {filename: bytes}}``; raises
+    ``ValueError`` when no theme is found.
+    """
+    entries: dict[str, bytes] = {}
+    for name, raw in files:
+        if name.lower().endswith(".zip"):
+            with zipfile.ZipFile(io.BytesIO(raw)) as zf:
+                for member in zf.namelist():
+                    if not member.endswith("/"):
+                        entries[member] = zf.read(member)
+        else:
+            entries[name] = raw
+    theme_name = next(
+        (n for n in sorted(entries, key=len) if Path(n).name in ("theme.js", "theme.json")), None
+    )
+    if theme_name is None:
+        msg = "No theme.js or theme.json found"
+        raise ValueError(msg)
+    text = entries[theme_name].decode("utf-8")
+    if theme_name.endswith(".js"):
+        start, end = text.find("{"), text.rfind("}")
+        if start < 0 or end < start:
+            msg = f"Could not read the theme object in {theme_name}"
+            raise ValueError(msg)
+        text = text[start:end + 1]
+    theme = json.loads(text)
+    folder = str(Path(theme_name).parent).replace("\\", "/")
+    assets: dict[str, bytes] = {}
+    for key in ("logo", "favicon"):
+        fname = theme.get(key) or ""
+        if not fname:
+            continue
+        for candidate in (f"{folder}/{fname}" if folder not in ("", ".") else fname, fname):
+            if candidate in entries:
+                assets[fname] = entries[candidate]
+                break
+    return {"theme": theme, "assets": assets}
+
+
+def theme_dashboard_kwargs(bundle: dict) -> dict:
+    """Map a loaded theme bundle to :meth:`BuildEntityDataset.build_dashboard_zip` arguments."""
+    theme = bundle.get("theme") or {}
+    assets = bundle.get("assets") or {}
+    colors = dict(theme.get("colors") or {})
+    logo, favicon = theme.get("logo") or "", theme.get("favicon") or ""
+    return {
+        "title": theme.get("title", ""),
+        "subtitle": theme.get("subtitle", ""),
+        "dataset_label": theme.get("datasetLabel") or "entities",
+        "primary_color": colors.get("primary", "#002B49"),
+        "accent_color": colors.get("accent", "#0078D4"),
+        "secondary_accent_color": colors.get("accent2"),
+        "colors": colors,
+        "logo_bytes": assets.get(logo),
+        "logo_filename": logo if logo in assets else None,
+        "favicon_bytes": assets.get(favicon),
+        "favicon_filename": favicon if favicon in assets else None,
+        "views": list(theme.get("views") or []),
+        "footer": theme.get("footer"),
+        "labels": dict(theme.get("labels") or {}),
+        "intro": theme.get("intro") or None,
+        "intro_details": theme.get("introDetails") or None,
+    }
 
 
 def _lighten(hex_color: str) -> str:

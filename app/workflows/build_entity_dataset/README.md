@@ -32,6 +32,33 @@ A live progress display shows queries run, entities found, and current stage. Yo
 ### 3. Review dataset
 Inspect the discovered entities in a tabular view. The schema attributes and their coverage are shown. You can also load a previously saved `data.json` file for review.
 
+#### Find duplicate records and misattached aliases
+
+**Audit duplicate clusters** groups records that may describe the same entity:
+records whose operating organisation matches after normalisation (so
+"Unseen UK" and "Unseen", or "Issara Institute, Inc." and "Issara Institute",
+are compared), and records that share a name or alias regardless of
+organisation. The organisation attribute is detected from the schema
+(`Operating Organization`, `Developer`, `Vendor` and similar). An AI review of
+each group proposes merges and lists aliases that name a different entity
+(for example another organisation's app). Different products from the same
+organisation are not merged. Accept or dismiss each proposal; accepted merges
+and alias removals are recorded in the dataset `history`. Placeholder aliases
+such as "None" are dropped and truncated brackets repaired automatically.
+
+For large datasets, run the same audit from the CLI. `dedup-audit` never
+modifies the dataset and can be rerun to resume; it writes `proposals.csv`
+with an `approve` column pre-filled for proposals at or above `--confidence`.
+Edit that column, then apply the approved rows to a new file. Records not
+affected are written back unchanged.
+
+```powershell
+python -m intelligence_toolkit.schemify.cli dedup-audit data.json `
+  --out duplicate_audit --backend copilot --concurrency 6
+python -m intelligence_toolkit.schemify.cli dedup-apply data.json `
+  --proposals duplicate_audit\proposals.csv --out data.deduplicated.json
+```
+
 #### Verify review decisions against fresh evidence
 
 In **Review dataset**, open **Verify review decisions** to upload a CSV or JSON
@@ -158,6 +185,8 @@ Download the dataset as:
 - **`data.csv`** — flat CSV for use in spreadsheets or other workflows
 
 Or build a **themed web interface**: supply a title, subtitle, colours, and an optional logo, then download a self-contained HTML dashboard that anyone can open in a browser to search and filter the dataset — no server required.
+
+To keep a map's design identical across releases, open **Reuse branding from a previous release or theme** and upload the previous release ZIP, or a `theme.js` / `theme.json` with its logo and favicon. This applies the title, all colours, views, column labels, intro and "About this map" text, and footer in one step. Keep the theme files under version control as the map's single source of truth, and change the design there rather than in the form. The same helpers are available to scripts as `load_theme_bundle` and `theme_dashboard_kwargs` in `intelligence_toolkit.build_entity_dataset.api`.
 
 ---
 

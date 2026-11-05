@@ -164,16 +164,18 @@ _LEGAL_SUFFIX = re.compile(
     r"[\s,]+(inc|incorporated|ltd|limited|llc|llp|plc|gmbh|corp|corporation|co|pbc|pty)\.?$",
     re.IGNORECASE,
 )
+# Trailing country tags ("Unseen UK", "Polaris U.S.") name the same organisation.
+_COUNTRY_SUFFIX = re.compile(r"[\s,]+(uk|u\.k\.|us|u\.s\.|usa|u\.s\.a\.)$", re.IGNORECASE)
 _SPLIT = re.compile(r"\s*(?:;|,|/|\band\b|&)\s*", re.IGNORECASE)
 
 
 def variant_key(value: str) -> str:
     """Key under which spelling variants of one name collapse: parentheticals,
-    trailing legal suffixes, case and punctuation are ignored."""
+    trailing legal suffixes and country tags, case and punctuation are ignored."""
     s = re.sub(r"\([^)]*\)", " ", value or "").strip()
     prev = None
     while prev != s:
-        prev, s = s, _LEGAL_SUFFIX.sub("", s).strip()
+        prev, s = s, _COUNTRY_SUFFIX.sub("", _LEGAL_SUFFIX.sub("", s).strip()).strip()
     return re.sub(r"\W+", "", s.casefold())
 
 
@@ -241,4 +243,55 @@ def apply_value_variant_changes(rs: RecordSet, attribute: str) -> int:
         if [sv.value for sv in new_values] != [sv.value for sv in av.values]:
             av.values = new_values
             changed += 1
+    return changed
+
+
+def dataset_variant_changes(rs: RecordSet, attribute: str) -> list[dict]:
+    """Preview spelling variants of one name used by *different* records.
+
+    Returns ``{"keep", "members": {value: record count}}`` per name with more than
+    one spelling across the dataset (``"ADF Solutions"`` / ``"ADF Solutions, Inc."``).
+    The most used spelling is kept; ties keep the fullest form, as within records.
+    """
+    counts: dict[str, int] = {}
+    for record in rs.records:
+        av = record.attributes.get(attribute)
+        for value in {sv.value for sv in (av.values if av else []) if sv.value}:
+            counts[value] = counts.get(value, 0) + 1
+    groups: dict[str, dict[str, int]] = {}
+    for value, n in counts.items():
+        groups.setdefault(variant_key(value), {})[value] = n
+    out = []
+    for key, members in groups.items():
+        if key and len(members) > 1:
+            keep = max(members, key=lambda v: (members[v], len(v), v))
+            out.append({"keep": keep, "members": dict(sorted(members.items(), key=lambda kv: -kv[1]))})
+    return sorted(out, key=lambda g: -sum(g["members"].values()))
+
+
+def apply_dataset_variant_changes(rs: RecordSet, attribute: str) -> int:
+    """Give every record the same spelling of each name (see :func:`dataset_variant_changes`),
+    keeping all sources. Returns the number of records changed."""
+    rename = {
+        value: g["keep"]
+        for g in dataset_variant_changes(rs, attribute)
+        for value in g["members"] if value != g["keep"]
+    }
+    if not rename:
+        return 0
+    changed = 0
+    for record in rs.records:
+        av = record.attributes.get(attribute)
+        if not av or not any(sv.value in rename for sv in av.values):
+            continue
+        kept: dict[str, SourcedValue] = {}
+        for sv in av.values:
+            target = rename.get(sv.value, sv.value)
+            if target in kept:
+                _merge_sources(kept[target], [sv])
+            else:
+                sv.value = target
+                kept[target] = sv
+        av.values = list(kept.values())
+        changed += 1
     return changed

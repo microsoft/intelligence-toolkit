@@ -400,6 +400,30 @@ def _canonical_score(name, frequency):
     )
 
 
+_PLACEHOLDER_ALIASES = frozenset({
+    "none", "null", "n/a", "na", "nan", "unknown", "-", "—", "not applicable", "not specified",
+})
+
+
+def clean_alias(name) -> str:
+    """Normalise an alias; return "" for placeholders such as "None".
+
+    Collapses whitespace, trims stray separators and balances parentheses
+    left open by truncated extraction (``"Traffik Analysis Hub (TA Hub"``).
+    """
+    text = " ".join(str(name or "").split()).strip(" ,;")
+    if text.casefold() in _PLACEHOLDER_ALIASES:
+        return ""
+    depth, kept = 0, []
+    for ch in text:
+        if ch == ")" and depth == 0:
+            continue  # unmatched closing bracket
+        depth += (ch == "(") - (ch == ")")
+        kept.append(ch)
+    text = " ".join("".join(kept).split()) + ")" * depth
+    return text
+
+
 @dataclass
 class Record:
     """
@@ -534,8 +558,10 @@ class Record:
         Add a name variant as an alias and update counts.
         
         The canonical label is automatically updated to the most frequent variant.
+        Placeholder names ("None", "N/A") are ignored and unbalanced
+        parentheses are repaired.
         """
-        name_normalized = name.strip()
+        name_normalized = clean_alias(name)
         if not name_normalized:
             return
         
@@ -569,6 +595,13 @@ class Record:
         """
         if not self.alias_counts:
             return
+        # Names present only in ``aliases`` (e.g. loaded from JSON) or the
+        # label itself must be counted, otherwise the rebuild below drops them.
+        known = {k.casefold() for k in self.alias_counts}
+        for name in [self.label, *self.aliases]:
+            if name and name.casefold() not in known:
+                self.alias_counts[name] = 1
+                known.add(name.casefold())
         if getattr(self, "manual_canonical", False):
             # Still rebuild aliases list, but don't change canonical label.
             self.aliases = [
@@ -593,6 +626,39 @@ class Record:
             if name.upper() != self.label.upper()
         ]
     
+    def clean_aliases(self) -> list[tuple[str, str]]:
+        """Drop placeholder aliases, repair brackets and remove duplicates.
+
+        Returns ``(old, new)`` pairs for every changed alias; ``new`` is ""
+        when the alias was dropped.
+        """
+        changes: list[tuple[str, str]] = []
+        label_key = (self.label or "").casefold()
+        counts: dict[str, int] = {}
+        for name, count in self.alias_counts.items():
+            cleaned = clean_alias(name)
+            if cleaned != name and name.casefold() != label_key:
+                changes.append((name, cleaned))
+            if not cleaned:
+                continue
+            key = next((k for k in counts if k.casefold() == cleaned.casefold()), None)
+            counts[key or cleaned] = counts.get(key or cleaned, 0) + int(count or 1)
+        aliases: list[str] = []
+        for name in self.aliases:
+            cleaned = clean_alias(name)
+            if cleaned != name and (name, cleaned) not in changes:
+                changes.append((name, cleaned))
+            if (
+                not cleaned
+                or cleaned.casefold() == label_key
+                or any(a.casefold() == cleaned.casefold() for a in aliases)
+            ):
+                continue
+            aliases.append(cleaned)
+        self.alias_counts = counts
+        self.aliases = aliases
+        return changes
+
     def merge_from(self, other: "Record"):
         """
         Merge another record into this one.
