@@ -64,6 +64,8 @@ class SessionVariables:
         # Release package
         self.bed_release_version = SessionVariable("", prefix)
         self.bed_release_notes = SessionVariable("", prefix)
+        # Branding loaded from a theme file or previous release (theme dict + asset bytes).
+        self.bed_theme_bundle = SessionVariable({}, prefix)
 
         # Re-categorize schema (remap + optional web search)
         self.bed_recat_proposal = SessionVariable({}, prefix)

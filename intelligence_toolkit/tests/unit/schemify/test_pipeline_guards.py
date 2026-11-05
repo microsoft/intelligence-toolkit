@@ -546,6 +546,63 @@ def test_merge_value_variants_keeps_fullest_form_and_partners():
     assert len(rs.records[2].attributes["Org"].values[0].sources) == 2
 
 
+def test_dataset_variants_give_each_name_one_spelling_across_records():
+    from intelligence_toolkit.schemify import value_consolidation as vc
+
+    rs = make_rs([
+        Record(label="A", attributes={"Org": av("ADF Solutions, Inc.")}),
+        Record(label="B", attributes={"Org": av("ADF Solutions, Inc.")}),
+        Record(label="C", attributes={"Org": av("ADF Solutions", "Agora, Inc.")}),
+        Record(label="D", attributes={"Org": av("Spire Global")}),
+        Record(label="E", attributes={"Org": av("Spire Global, Inc.")}),
+        Record(label="F", attributes={"Org": av("Thorn")}),
+    ])
+    groups = {g["keep"]: g["members"] for g in vc.dataset_variant_changes(rs, "Org")}
+    assert groups == {"ADF Solutions, Inc.": {"ADF Solutions, Inc.": 2, "ADF Solutions": 1},
+                      "Spire Global, Inc.": {"Spire Global": 1, "Spire Global, Inc.": 1}}
+    assert vc.apply_dataset_variant_changes(rs, "Org") == 2
+    assert values(rs.records[2], "Org") == ["ADF Solutions, Inc.", "Agora, Inc."]
+    assert len(rs.records[2].attributes["Org"].values[0].sources) == 1
+    assert values(rs.records[3], "Org") == ["Spire Global, Inc."]
+    assert values(rs.records[5], "Org") == ["Thorn"]
+    assert vc.dataset_variant_changes(rs, "Org") == []
+
+
+def test_country_tags_are_spelling_variants():
+    from intelligence_toolkit.schemify import value_consolidation as vc
+
+    assert vc.variant_key("Unseen UK") == vc.variant_key("Unseen") == "unseen"
+    assert vc.variant_key("Polaris, U.S.") == vc.variant_key("Polaris")
+    assert vc.variant_key("Spire Global, Inc. USA") == vc.variant_key("Spire Global")
+    assert vc.variant_key("UK") == "uk"
+    rs = make_rs([
+        Record(label="APP", attributes={"Org": av("Unseen UK", "Unseen")}),
+        Record(label="HELPLINE", attributes={"Org": av("Unseen")}),
+        Record(label="PORTAL", attributes={"Org": av("Unseen")}),
+    ])
+    vc.apply_value_variant_changes(rs, "Org")
+    vc.apply_dataset_variant_changes(rs, "Org")
+    assert [values(r, "Org") for r in rs.records] == [["Unseen"]] * 3
+
+
+def test_api_merge_value_variants_covers_records_and_dataset():
+    api = _live_api([
+        Record(label="A", attributes={"Operating Organization": av("Penlink", "PenLink Ltd")}),
+        Record(label="B", attributes={"Operating Organization": av("Penlink")}),
+        Record(label="C", attributes={"Operating Organization": av("PenLink")}),
+    ])
+    preview = api.value_variant_changes("Operating Organization")
+    # Within record A the fullest form wins; across records "PenLink Ltd" then ties on
+    # count and wins on length, so every record ends up with that one spelling.
+    assert {p["label"]: p["after"] for p in preview} == {
+        "A": ["PenLink Ltd"], "B": ["PenLink Ltd"], "C": ["PenLink Ltd"]}
+    assert api.merge_value_variants("Operating Organization") == 3
+    rs = api._schemify.record_set
+    assert [values(r, "Operating Organization") for r in rs.records] == [["PenLink Ltd"]] * 3
+    assert rs.history[-1]["records"] == 1
+    assert rs.history[-1]["records_across_dataset"] == 2
+
+
 def test_rename_attribute_value_updates_schema_and_records():
     api = _live_api([Record(label="A", attributes={"Functionality": av(FUNC[0])})])
     assert api.rename_attribute_value("Functionality", FUNC[0], "Risk", description="new") == 1

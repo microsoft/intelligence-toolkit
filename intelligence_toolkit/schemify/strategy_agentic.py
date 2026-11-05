@@ -26,7 +26,7 @@ from typing import Any, Callable, Optional
 
 from .models import (
     Record, RecordSet, SchemaAttribute, AttributeValue,
-    SchemifyConfig, BudgetExceededError,
+    SchemifyConfig, BudgetExceededError, clean_alias,
 )
 from .llm import LLMClient
 from .extraction import ExtractionEngine
@@ -893,7 +893,7 @@ class AgenticStrategy:
             confidence_note = ent.get("confidence_note", "medium")  # LLM self-assessment; kept for prompt UX only
 
             rec = Record(label=label)
-            rec.aliases = [a.strip() for a in ent.get("aliases", []) if a.strip()]
+            rec.aliases = [clean_alias(a) for a in ent.get("aliases", []) if clean_alias(a)]
 
             for attr in ent.get("attributes", []):
                 attr_name = attr.get("name", "")
@@ -2245,7 +2245,7 @@ class AgenticStrategy:
                 rec = Record(label=str(label))
                 aliases = row.get("aliases")
                 if isinstance(aliases, list):
-                    rec.aliases = [str(a) for a in aliases if a]
+                    rec.aliases = [clean_alias(a) for a in aliases if a and clean_alias(a)]
                 for key, val in row.items():
                     if key in ("Entity", "label", "name", "aliases", "_confidence", "_sourced_attrs", "_conflicting_attrs", "_freshest_retrieved", "_mean_agreement", "_last_seen_at"):
                         continue

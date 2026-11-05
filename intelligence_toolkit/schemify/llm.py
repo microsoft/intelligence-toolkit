@@ -212,18 +212,25 @@ class LLMClient:
             self.input_tokens += input_tokens
             self.output_tokens += output_tokens
             self.total_tokens += total
-            
+
+            # One response can make several billed web_search tool calls.
+            search_calls = 0
             if is_web_search:
-                self.web_search_count += 1
-            
+                search_calls = sum(
+                    1 for item in (getattr(response, "output", None) or [])
+                    if getattr(item, "type", None) == "web_search_call"
+                    or (isinstance(item, dict) and item.get("type") == "web_search_call")
+                )
+                self.web_search_count += search_calls
+
             # Estimate cost
             model = self.config.search_model if is_web_search else self.config.completion_model
             input_price, output_price = MODEL_PRICING.get(model, (2.0, 8.0))
             call_cost = (input_tokens * input_price + output_tokens * output_price) / 1_000_000
-            
+
             # Add per-call web search tool surcharge
-            if is_web_search:
-                call_cost += WEB_SEARCH_CALL_COST.get(model, DEFAULT_WEB_SEARCH_CALL_COST)
+            if search_calls:
+                call_cost += search_calls * WEB_SEARCH_CALL_COST.get(model, DEFAULT_WEB_SEARCH_CALL_COST)
             
             self.total_cost += call_cost
             

@@ -12,9 +12,19 @@ from jsonschema import validate
 
 
 def completion_from_events(output: str) -> tuple[str, dict]:
+    """Extract the single final answer from Copilot CLI JSON events.
+
+    Tools are disabled, but models sometimes still request them (e.g. to
+    fetch a URL mentioned in the prompt). Such requests are refused by the
+    CLI and the answer remains tool-free, so they are tolerated only when
+    every requested call completed unsuccessfully; any tool that actually
+    ran, or a request without a refusal, is an error.
+    """
     messages = []
     metadata: dict = {}
     finished = False
+    requested: set[str] = set()
+    refused: set[str] = set()
     for line in output.splitlines():
         event = json.loads(line)
         if event.get("type") == "session.error":
@@ -22,18 +32,28 @@ def completion_from_events(output: str) -> tuple[str, dict]:
             raise RuntimeError(msg)
         if event.get("type") == "assistant.message":
             data = event["data"]
-            if data.get("toolRequests"):
-                msg = "Tool-free verification unexpectedly requested tools"
-                raise RuntimeError(msg)
+            for request in data.get("toolRequests") or []:
+                requested.add(request.get("toolCallId") or json.dumps(request, sort_keys=True))
             if data.get("phase") == "final_answer":
                 messages.append(data.get("content", ""))
                 metadata["model"] = data.get("model")
+        if event.get("type") == "tool.execution_complete":
+            data = event.get("data") or {}
+            if data.get("success") is not False:
+                msg = "Tool-free verification unexpectedly ran a tool"
+                raise RuntimeError(msg)
+            refused.add(data.get("toolCallId"))
         if event.get("type") == "result":
             finished = True
             if event.get("exitCode") != 0:
                 msg = "Copilot reported an unsuccessful completion"
                 raise RuntimeError(msg)
             metadata["usage"] = event.get("usage", {})
+    if requested - refused:
+        msg = "Tool-free verification unexpectedly requested tools"
+        raise RuntimeError(msg)
+    if requested:
+        metadata["refused_tool_requests"] = len(requested)
     if not finished or len(messages) != 1:
         msg = "Expected one completed final Copilot message"
         raise ValueError(msg)
