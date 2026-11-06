@@ -45,7 +45,16 @@ def test_candidate_pairs_chunks_consistently():
     embeddings = rng.normal(size=(40, 8)).astype(np.float32)
     whole = candidate_pairs(embeddings, max_distance=0.9, neighbors=5)
     chunked = candidate_pairs(embeddings, max_distance=0.9, neighbors=5, chunk_size=7)
-    assert whole == chunked
+    assert [(left, right) for left, right, _ in whole] == [
+        (left, right) for left, right, _ in chunked
+    ]
+    # BLAS kernels can round float32 dot products differently across chunk sizes.
+    np.testing.assert_allclose(
+        [distance for _, _, distance in whole],
+        [distance for _, _, distance in chunked],
+        rtol=0.0,
+        atol=1e-6,
+    )
 
 
 def test_candidate_pairs_trivial_inputs():
