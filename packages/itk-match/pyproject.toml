@@ -1,0 +1,29 @@
+[project]
+name = "itk-match"
+version = "0.1.0"
+description = "Entity record matching for Intelligence Toolkit: embedding blocking, name scoring, clustering and AI evaluation"
+authors = [
+    {name = "Dayenne Souza", email = "ddesouza@microsoft.com"},
+    {name = "Ha Trinh", email = "trinhha@microsoft.com"},
+    {name = "Darren Edge", email = "daedge@microsoft.com"}
+]
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "itk-core",
+    "numpy>=1.26.4",
+    "polars>=0.20.10",
+    "pydantic>=2.0,<3.0",
+    "rapidfuzz>=3.0.0",
+]
+
+[tool.uv.sources]
+itk-core = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/itk_match"]
