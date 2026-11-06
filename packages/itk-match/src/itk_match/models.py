@@ -77,7 +77,7 @@ class MatchConfig(BaseModel):
         0.05, ge=0.0, le=2.0, description="Max cosine distance for a candidate pair"
     )
     min_name_similarity: float = Field(
-        0.0, ge=0.0, le=1.0, description="Min name score for a pair to join a group"
+        0.75, ge=0.0, le=1.0, description="Min name score for a pair to join a group"
     )
     neighbors: int = Field(
         50, ge=1, description="Nearest neighbours searched per record"

@@ -16,6 +16,9 @@ over one unified polars frame:
 `itk_match.Matcher` strings these together and keeps the embeddings on the
 `MatchResult`, so thresholds can be changed with `regroup` without re-embedding.
 
+`MatchConfig.min_name_similarity` defaults to `0.75`, matching the legacy name
+similarity threshold. Set it explicitly to `0.0` to disable name filtering.
+
 ```python
 import polars as pl
 from itk_core.openai_configuration import OpenAIConfiguration

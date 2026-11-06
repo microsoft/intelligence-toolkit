@@ -43,9 +43,17 @@ def test_match_config_bounds_thresholds():
 
 def test_match_config_defaults_are_frozen():
     config = MatchConfig()
+    assert config.min_name_similarity == pytest.approx(0.75)
     assert config.neighbors == 50
     with pytest.raises(ValidationError):
         config.max_distance = 1.0  # type: ignore[misc]
+
+
+def test_match_config_allows_zero_name_similarity() -> None:
+    """Keep the name threshold explicitly disableable."""
+    assert MatchConfig(min_name_similarity=0.0).min_name_similarity == pytest.approx(
+        0.0
+    )
 
 
 def test_pair_requires_ordered_rows():

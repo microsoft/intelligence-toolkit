@@ -19,6 +19,8 @@ async def test_match_groups_identical_records_across_datasets(
     assert adventure.get_column("group_id").n_unique() == 1
     assert result.embeddings is not None
     assert result.embeddings.shape[0] == result.records.height
+    assert result.config.min_name_similarity == pytest.approx(0.75)
+    assert not ({"Sprout Ltd", "Spout Ltd"} & set(frame.get_column("name").to_list()))
 
 
 async def test_regroup_tightens_without_re_embedding(
@@ -26,7 +28,8 @@ async def test_regroup_tightens_without_re_embedding(
 ):
     matcher = Matcher(embedder)
     loose = await matcher.match(
-        [dataset_one, dataset_two], MatchConfig(max_distance=0.2)
+        [dataset_one, dataset_two],
+        MatchConfig(max_distance=0.2, min_name_similarity=0.0),
     )
     calls_after_match = len(embedder.calls)
 
@@ -37,7 +40,7 @@ async def test_regroup_tightens_without_re_embedding(
     assert len(embedder.calls) == calls_after_match
     assert len(tight.groups) <= len(loose.groups)
     assert all(g.name_similarity >= 0.9 for g in tight.groups)
-    assert tight.config.min_name_similarity == 0.9
+    assert tight.config.min_name_similarity == pytest.approx(0.9)
     # Sprout Ltd / Spout Ltd (trigram 0.5) are grouped loosely but not tightly.
     loose_names = set(loose.groups_frame.get_column("name").to_list())
     tight_names = set(tight.groups_frame.get_column("name").to_list())
