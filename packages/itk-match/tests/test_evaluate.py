@@ -10,8 +10,6 @@ from itk_match.evaluate import (
     parse_evaluations,
 )
 
-from tests.conftest import FakeChat
-
 
 def _groups(n: int) -> pl.DataFrame:
     return pl.DataFrame(
@@ -60,8 +58,8 @@ def test_batch_groups_keeps_whole_groups_together():
     assert sum(b.height for b in batches) == 10
 
 
-async def test_evaluate_groups_returns_one_row_per_group():
-    chat = FakeChat()
+async def test_evaluate_groups_returns_one_row_per_group(fake_chat):
+    chat = fake_chat
     frame = await evaluate_groups(_groups(3), chat, groups_per_batch=2)
 
     assert frame.get_column("group_id").to_list() == [0, 1, 2]
@@ -69,8 +67,8 @@ async def test_evaluate_groups_returns_one_row_per_group():
     assert len(chat.messages) == 2
 
 
-async def test_evaluate_groups_with_no_groups_makes_no_calls():
-    chat = FakeChat()
+async def test_evaluate_groups_with_no_groups_makes_no_calls(fake_chat):
+    chat = fake_chat
     frame = await evaluate_groups(_groups(0), chat)
     assert frame.height == 0
     assert frame.columns == ["group_id", "relatedness", "explanation"]

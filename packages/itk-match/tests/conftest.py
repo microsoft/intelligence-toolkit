@@ -79,6 +79,11 @@ def embedder() -> FakeEmbedder:
 
 
 @pytest.fixture()
+def fake_chat() -> FakeChat:
+    return FakeChat()
+
+
+@pytest.fixture()
 def dataset_one() -> Dataset:
     frame = pl.DataFrame({
         "employer_id": [1, 2, 3],

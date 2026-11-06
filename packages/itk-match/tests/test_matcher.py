@@ -4,8 +4,6 @@
 import pytest
 from itk_match import MatchConfig, Matcher, MatchResult
 
-from tests.conftest import FakeChat
-
 
 async def test_match_groups_identical_records_across_datasets(
     embedder, dataset_one, dataset_two
@@ -55,8 +53,8 @@ def test_regroup_requires_embeddings(dataset_one):
         Matcher.regroup(bare, MatchConfig())
 
 
-async def test_evaluate_and_integrate(embedder, dataset_one, dataset_two):
-    chat = FakeChat()
+async def test_evaluate_and_integrate(embedder, fake_chat, dataset_one, dataset_two):
+    chat = fake_chat
     matcher = Matcher(embedder, chat)
     result = await matcher.match(
         [dataset_one, dataset_two], MatchConfig(max_distance=0.2)

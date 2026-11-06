@@ -199,7 +199,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "intelligence_toolkit/tests/*" = ["S", "D", "ANN", "T201", "ASYNC", "ARG", "PTH", "TRY"]
-"packages/*/tests/*" = ["S", "D", "ANN", "T201", "ASYNC", "ARG", "PTH", "TRY"]
+"packages/*/tests/*" = ["S", "D", "ANN", "T201", "ASYNC", "ARG", "PTH", "TRY", "INP"]
 # "examples/*" = ["S", "D", "ANN", "T201", "PTH", "TRY", "PERF"]
 "*.ipynb" = ["S", "T201", "I001"]
 
