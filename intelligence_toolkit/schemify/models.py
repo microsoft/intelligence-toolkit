@@ -9,6 +9,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Awaitable, Callable, Optional
+from urllib.parse import urlsplit, urlunsplit
 import json
 
 
@@ -34,6 +35,17 @@ def _clean_text(s):
     if isinstance(s, str):
         return s.translate(_UNUSUAL_TERMINATORS)
     return s
+
+
+def _clean_url(url):
+    """Drop ``utm_*`` tracking parameters (e.g. ``?utm_source=openai`` added by
+    web search) while leaving the rest of the URL byte-for-byte unchanged."""
+    url = _clean_text(url)
+    if not isinstance(url, str) or "utm_" not in url.lower():
+        return url
+    parts = urlsplit(url)
+    kept = [p for p in parts.query.split("&") if p and not p.lower().startswith("utm_")]
+    return urlunsplit(parts._replace(query="&".join(kept)))
 
 
 # PDF sources sometimes arrive with extracted markdown tables as their "title".
@@ -63,7 +75,7 @@ class Citation:
     snippet: Optional[str] = None  # The actual text from the response that this citation supports
 
     def __post_init__(self):
-        self.url = _clean_text(self.url)
+        self.url = _clean_url(self.url)
         self.title = _clean_title(self.title)
         self.snippet = _clean_text(self.snippet)
 
@@ -77,10 +89,14 @@ class Citation:
 
     @classmethod
     def from_dict(cls, data: dict) -> "Citation":
+        retrieved_at = datetime.fromisoformat(data.get("retrieved_at", datetime.now().isoformat()))
+        if retrieved_at.tzinfo is not None:
+            # Datasets store naive local times; review verification writes UTC-aware ones.
+            retrieved_at = retrieved_at.astimezone().replace(tzinfo=None)
         return cls(
             url=data["url"],
             title=data["title"],
-            retrieved_at=datetime.fromisoformat(data.get("retrieved_at", datetime.now().isoformat())),
+            retrieved_at=retrieved_at,
             snippet=data.get("snippet"),
         )
 
@@ -190,6 +206,14 @@ class SourcedValue:
 
     def __post_init__(self):
         self.value = _clean_text(self.value)
+        # Citations differing only by stripped tracking parameters collapse here.
+        seen, unique = set(), []
+        for c in self.sources:
+            key = (c.url, c.snippet) if isinstance(c, Citation) else id(c)
+            if key not in seen:
+                seen.add(key)
+                unique.append(c)
+        self.sources = unique
 
     def to_dict(self) -> dict:
         return {
@@ -376,6 +400,30 @@ def _canonical_score(name, frequency):
     )
 
 
+_PLACEHOLDER_ALIASES = frozenset({
+    "none", "null", "n/a", "na", "nan", "unknown", "-", "—", "not applicable", "not specified",
+})
+
+
+def clean_alias(name) -> str:
+    """Normalise an alias; return "" for placeholders such as "None".
+
+    Collapses whitespace, trims stray separators and balances parentheses
+    left open by truncated extraction (``"Traffik Analysis Hub (TA Hub"``).
+    """
+    text = " ".join(str(name or "").split()).strip(" ,;")
+    if text.casefold() in _PLACEHOLDER_ALIASES:
+        return ""
+    depth, kept = 0, []
+    for ch in text:
+        if ch == ")" and depth == 0:
+            continue  # unmatched closing bracket
+        depth += (ch == "(") - (ch == ")")
+        kept.append(ch)
+    text = " ".join("".join(kept).split()) + ")" * depth
+    return text
+
+
 @dataclass
 class Record:
     """
@@ -501,6 +549,8 @@ class Record:
         }
         if self.completion_attempts:
             d["completion_attempts"] = self.completion_attempts
+        if self.manual_canonical:
+            d["manual_canonical"] = True
         return d
     
     def add_alias(self, name: str, count: int = 1):
@@ -508,8 +558,10 @@ class Record:
         Add a name variant as an alias and update counts.
         
         The canonical label is automatically updated to the most frequent variant.
+        Placeholder names ("None", "N/A") are ignored and unbalanced
+        parentheses are repaired.
         """
-        name_normalized = name.strip()
+        name_normalized = clean_alias(name)
         if not name_normalized:
             return
         
@@ -543,6 +595,13 @@ class Record:
         """
         if not self.alias_counts:
             return
+        # Names present only in ``aliases`` (e.g. loaded from JSON) or the
+        # label itself must be counted, otherwise the rebuild below drops them.
+        known = {k.casefold() for k in self.alias_counts}
+        for name in [self.label, *self.aliases]:
+            if name and name.casefold() not in known:
+                self.alias_counts[name] = 1
+                known.add(name.casefold())
         if getattr(self, "manual_canonical", False):
             # Still rebuild aliases list, but don't change canonical label.
             self.aliases = [
@@ -567,6 +626,39 @@ class Record:
             if name.upper() != self.label.upper()
         ]
     
+    def clean_aliases(self) -> list[tuple[str, str]]:
+        """Drop placeholder aliases, repair brackets and remove duplicates.
+
+        Returns ``(old, new)`` pairs for every changed alias; ``new`` is ""
+        when the alias was dropped.
+        """
+        changes: list[tuple[str, str]] = []
+        label_key = (self.label or "").casefold()
+        counts: dict[str, int] = {}
+        for name, count in self.alias_counts.items():
+            cleaned = clean_alias(name)
+            if cleaned != name and name.casefold() != label_key:
+                changes.append((name, cleaned))
+            if not cleaned:
+                continue
+            key = next((k for k in counts if k.casefold() == cleaned.casefold()), None)
+            counts[key or cleaned] = counts.get(key or cleaned, 0) + int(count or 1)
+        aliases: list[str] = []
+        for name in self.aliases:
+            cleaned = clean_alias(name)
+            if cleaned != name and (name, cleaned) not in changes:
+                changes.append((name, cleaned))
+            if (
+                not cleaned
+                or cleaned.casefold() == label_key
+                or any(a.casefold() == cleaned.casefold() for a in aliases)
+            ):
+                continue
+            aliases.append(cleaned)
+        self.alias_counts = counts
+        self.aliases = aliases
+        return changes
+
     def merge_from(self, other: "Record"):
         """
         Merge another record into this one.
@@ -703,6 +795,7 @@ class Record:
             attributes={k: AttributeValue.from_dict(v) for k, v in data.get("attributes", {}).items()},
             additional_attributes={k: AttributeValue.from_dict(v) for k, v in data.get("additional_attributes", {}).items()},
             completion_attempts=data.get("completion_attempts", {}),
+            manual_canonical=bool(data.get("manual_canonical", False)),
             created_at=datetime.fromisoformat(data.get("created_at", datetime.now().isoformat())),
             updated_at=datetime.fromisoformat(data.get("updated_at", datetime.now().isoformat())),
         )

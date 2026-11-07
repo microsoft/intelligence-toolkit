@@ -194,6 +194,22 @@ a:hover { text-decoration: underline; }
   display: flex; flex-direction: column; overflow: hidden;
 }
 
+/* Optional intro line (theme.intro); details (theme.introDetails) open from a header button */
+#intro-note {
+  margin: 0; padding: 6px 16px; flex-shrink: 0; font-size: 13px; line-height: 1.45;
+  color: var(--color-text); background: var(--color-accent-soft);
+  border-bottom: 1px solid var(--color-border);
+}
+#intro-details {
+  position: fixed; top: calc(var(--header-h) + 6px); right: 16px; z-index: 200;
+  width: min(440px, calc(100vw - 32px)); max-height: 70vh; overflow: auto;
+  padding: 12px 16px; font-size: 13px; line-height: 1.5; color: var(--color-text);
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+}
+#intro-details p { margin: 0 0 8px; }
+#intro-details p:last-child { margin-bottom: 0; }
+
 /* Summary strip */
 #summary-strip {
   display: flex; gap: 8px; padding: 10px 16px; flex-shrink: 0;
@@ -555,6 +571,7 @@ mark { background: var(--color-highlight); color: inherit; padding: 0 1px; borde
     <span class="app-title"><img class="app-logo" id="app-logo" alt="" hidden><span id="app-title-text">Schemify Dashboard</span></span>
     <span class="dataset-title" id="dataset-title"></span>
     <span class="record-badge" id="record-badge" style="display:none"></span>
+    <button class="load-btn" id="intro-toggle" type="button" aria-expanded="false" aria-controls="intro-details" hidden>About this map</button>
     <button class="load-btn" id="download-json-btn" title="Download filtered records as JSON" style="display:none">JSON</button>
     <button class="load-btn" id="download-csv-btn" title="Download filtered records as CSV" style="display:none">CSV</button>
   </header>
@@ -589,6 +606,8 @@ mark { background: var(--color-highlight); color: inherit; padding: 0 1px; borde
 
   <!-- Main -->
   <main id="main">
+    <p id="intro-note" hidden></p>
+    <div id="intro-details" role="region" aria-label="About this map" hidden></div>
     <div id="summary-strip"></div>
     <div id="tab-bar">
       <button class="tab-btn active" data-view="table">Table</button>
@@ -653,6 +672,30 @@ mark { background: var(--color-highlight); color: inherit; padding: 0 1px; borde
   if (fav && t.favicon) fav.href = t.favicon;
   window.SCHEMIFY_DATASET_LABEL = t.datasetLabel || 'records';
   window.SCHEMIFY_FOOTER = t.footer || null;
+  window.SCHEMIFY_LABELS = Object.assign({
+    entity: 'Entity',
+    sources: 'Sources',
+    sourcesHelp: 'Number of distinct web pages cited for this entry\'s values. It shows how much public documentation was found, not how accurate, effective or trustworthy the entry is.',
+  }, t.labels || {});
+  const intro = document.getElementById('intro-note');
+  if (intro && t.intro) { intro.textContent = t.intro; intro.hidden = false; }
+  if (t.introDetails) {
+    const toggle = document.getElementById('intro-toggle');
+    const details = document.getElementById('intro-details');
+    t.introDetails.split(/\n\s*\n/).forEach(para => {
+      const p = document.createElement('p'); p.textContent = para.trim(); details.appendChild(p);
+    });
+    const setOpen = open => {
+      details.hidden = !open;
+      toggle.setAttribute('aria-expanded', String(open));
+    };
+    toggle.hidden = false;
+    toggle.addEventListener('click', e => { e.stopPropagation(); setOpen(details.hidden); });
+    document.addEventListener('click', e => { if (!details.hidden && !details.contains(e.target)) setOpen(false); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && !details.hidden) { setOpen(false); toggle.focus(); }
+    });
+  }
 
   // Optionally restrict which views (tabs) are exposed. The default
   // (no `views` key, or an empty list) keeps all three. Names are
@@ -738,6 +781,18 @@ function getValueDef(attrName, value) {
   return (defs && defs[value]) || '';
 }
 
+// Internal table-column keys; display text comes from SCHEMIFY_LABELS.
+const ENTITY_COL = '\u0000entity';
+const SOURCES_COL = '\u0000sources';
+
+// Dataset noun from the theme's datasetLabel (e.g. "tools"), singular when n === 1.
+function datasetNoun(n) {
+  const plural = window.SCHEMIFY_DATASET_LABEL || 'records';
+  return n === 1 && plural.endsWith('s') ? plural.slice(0, -1) : plural;
+}
+
+function capitalize(s) { return s ? s[0].toUpperCase() + s.slice(1) : s; }
+
 // Description of a schema attribute (for attribute-name tooltips).
 function getAttrDef(attrName) {
   const attrs = (state.data && state.data.schema_attributes) || [];
@@ -805,10 +860,10 @@ function loadData(json) {
   state.facetAttrs = computeFacetAttrs(json);
   document.getElementById('download-json-btn').style.display = '';
   document.getElementById('download-csv-btn').style.display = '';
-  // Populate group-by buttons with schema attributes
+  // Group-by buttons: categorical attributes only (same set as the sidebar filters)
   const gbWrap = document.getElementById('group-by-wrap');
   gbWrap.innerHTML = '<span class="gb-label">Group by</span><button class="gb-btn active" data-group="">None</button>';
-  for (const attr of json.schema_attributes) {
+  for (const attr of json.schema_attributes.filter(a => state.facetAttrs.includes(a.name))) {
     const btn = document.createElement('button');
     btn.className = 'gb-btn';
     btn.dataset.group = attr.name;
@@ -1234,12 +1289,13 @@ function renderSummary() {
   // Count distinct values across all closed-set attributes
   const totalDistinctValues = Object.values(attrValueCounts).reduce((s, set) => s + set.size, 0);
 
+  const L = window.SCHEMIFY_LABELS;
   const tiles = [
-    { label: 'Entities', value: recs.length, tip: 'Distinct items in the dataset (e.g. tools, organizations).' },
+    { label: capitalize(datasetNoun(2)), value: recs.length, tip: 'Distinct items in the dataset (e.g. tools, organizations).' },
     { label: 'Attributes', value: schemaCount, tip: 'Schema fields describing each entity.' },
     { label: 'Completeness', value: avgCompleteness + '%', tip: 'Share of attribute cells with at least one value, across all entities.' },
     { label: 'Distinct Values', value: totalDistinctValues.toLocaleString(), tip: 'Unique values observed across closed-set attributes.' },
-    { label: 'Sources', value: totalUrls.size.toLocaleString(), tip: 'Total citations backing the values in this dataset.' },
+    { label: L.sources, value: totalUrls.size.toLocaleString(), tip: 'Distinct web pages cited across the whole dataset. ' + L.sourcesHelp },
   ];
 
   const strip = document.getElementById('summary-strip');
@@ -1281,20 +1337,21 @@ function renderTable() {
   container.innerHTML = '';
   const count = document.createElement('div');
   count.className = 'table-count';
-  count.textContent = `${state.filtered.length} entit${state.filtered.length === 1 ? 'y' : 'ies'}`;
+  count.textContent = `${state.filtered.length} ${datasetNoun(state.filtered.length)}`;
   container.appendChild(count);
   const table = document.createElement('table');
   table.id = 'data-table';
+  const L = window.SCHEMIFY_LABELS;
 
   // Thead
   const thead = document.createElement('thead');
   const headerRow = document.createElement('tr');
-  const cols = ['Entity', ...state.schemaAttrs, 'Sources'];
+  const cols = [ENTITY_COL, ...state.schemaAttrs, SOURCES_COL];
 
   for (const col of cols) {
     const th = document.createElement('th');
-    th.textContent = col;
-    th.title = getAttrDef(col) || col;
+    th.textContent = col === ENTITY_COL ? L.entity : col === SOURCES_COL ? L.sources : col;
+    th.title = col === SOURCES_COL ? L.sourcesHelp : (getAttrDef(col) || th.textContent);
     const arrow = document.createElement('span');
     arrow.className = 'sort-arrow';
     arrow.textContent = tableSortCol === col ? (tableSortDir === 'asc' ? ' ▲' : ' ▼') : ' ↕';
@@ -1316,8 +1373,8 @@ function renderTable() {
   if (tableSortCol) {
     recs.sort((a, b) => {
       let va, vb;
-      if (tableSortCol === 'Entity') { va = a.label; vb = b.label; }
-      else if (tableSortCol === 'Sources') { va = a._sourceCount; vb = b._sourceCount; }
+      if (tableSortCol === ENTITY_COL) { va = a.label; vb = b.label; }
+      else if (tableSortCol === SOURCES_COL) { va = a._sourceCount; vb = b._sourceCount; }
       else { va = a.attributes?.[tableSortCol]?.value || ''; vb = b.attributes?.[tableSortCol]?.value || ''; }
       if (typeof va === 'number') return tableSortDir === 'asc' ? va - vb : vb - va;
       return tableSortDir === 'asc' ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
@@ -1355,6 +1412,7 @@ function renderTable() {
     // Sources col
     const tdSrc = document.createElement('td');
     tdSrc.textContent = rec._sourceCount;
+    tdSrc.title = L.sourcesHelp;
     tr.appendChild(tdSrc);
 
     tbody.appendChild(tr);
@@ -1454,10 +1512,10 @@ function renderCardsStatus(shown, total) {
   status.innerHTML = '';
   const label = document.createElement('span');
   label.textContent = total === 0
-    ? 'No entities match the current filters.'
+    ? `No ${datasetNoun(2)} match the current filters.`
     : (shown < total
-        ? `Showing ${shown} of ${total} entities`
-        : `${total} entit${total === 1 ? 'y' : 'ies'}`);
+        ? `Showing ${shown} of ${total} ${datasetNoun(total)}`
+        : `${total} ${datasetNoun(total)}`);
   status.appendChild(label);
   if (shown < total) {
     const more = document.createElement('button');
@@ -2060,7 +2118,7 @@ function renderNetwork() {
     entityDot.className = 'legend-dot';
     entityDot.style.background = 'var(--color-primary)';
     entityItem.appendChild(entityDot);
-    entityItem.appendChild(document.createTextNode('Entity'));
+    entityItem.appendChild(document.createTextNode(window.SCHEMIFY_LABELS.entity));
     legend.appendChild(entityItem);
 
     for (const attrName of selectedAttrs) {

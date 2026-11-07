@@ -853,13 +853,14 @@ def check_ai_configuration(enforce_structured_output=False):
         "gpt-5.4",
         "gpt-5.4-mini",
         "gpt-5.4-nano",
+        "gpt-6-luna",
     ]
     if (
         enforce_structured_output
         and ai_configuration.model not in list_enforce_structured_output
     ):
         st.warning(
-            "Your current OpenAI model does not support this workflow. Please use the Settings page to set the OpenAI Model to `gpt-5.4-mini` (default), `gpt-5.4-nano`, or `gpt-5.4`."
+            "Your current OpenAI model does not support this workflow. Please use the Settings page to set the OpenAI Model to `gpt-6-luna` (default), `gpt-5.4-mini`, `gpt-5.4-nano`, or `gpt-5.4`."
         )
 
 

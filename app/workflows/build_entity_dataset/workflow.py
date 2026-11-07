@@ -6,17 +6,19 @@
 import json
 import os
 import time
-
+import zipfile
 import pandas as pd
 import streamlit as st
 
 import app.util.example_outputs_ui as example_outputs_ui
 import workflows.build_entity_dataset.variables as bed_variables
 import workflows.build_entity_dataset.functions as functions
+from workflows.build_entity_dataset.review_verification import render_review_verification
 from util import ui_components
 from util.session_variables import SessionVariables
 
 from intelligence_toolkit.build_entity_dataset import config
+from intelligence_toolkit.build_entity_dataset.api import load_theme_bundle, theme_dashboard_kwargs
 
 
 def get_intro():
@@ -318,12 +320,13 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
 
         with col_right:
             st.markdown("##### Research configuration")
+            models = ["gpt-6-luna", "gpt-5.4-nano", "gpt-5.4-mini", "gpt-5.4"]
             sv.bed_model.value = st.selectbox(
                 "Model",
-                ["gpt-5.4-nano", "gpt-5.4-mini", "gpt-5.4"],
-                index=["gpt-5.4-nano", "gpt-5.4-mini", "gpt-5.4"].index(sv.bed_model.value)
-                if sv.bed_model.value in ["gpt-5.4-nano", "gpt-5.4-mini", "gpt-5.4"]
-                else 1,
+                models,
+                index=models.index(sv.bed_model.value)
+                if sv.bed_model.value in models
+                else models.index(config.DEFAULT_MODEL),
                 help="Model used for both search and extraction.",
             )
             sv.bed_max_queries.value = st.number_input(
@@ -384,7 +387,9 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
             st.divider()
             prog = api.progress
 
-            if api.is_running:
+            if api.is_verifying_review:
+                st.info("Review-decision verification is running. Progress and pause controls are in Review dataset.")
+            elif api.is_running:
                 # Pull latest live counters from schemify before rendering.
                 refresh = getattr(api, "refresh_progress", None)
                 if callable(refresh):
@@ -808,6 +813,10 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                 with st.expander("Schema attributes", expanded=False):
                     schema_df = pd.DataFrame(schema)
                     st.dataframe(schema_df, use_container_width=True, hide_index=True)
+
+            render_review_verification(
+                api, api_key=functions.get_api_key(), model=sv.bed_model.value,
+            )
 
             # ── Verification (on demand) ──────────────────────
             count_fn = getattr(api, "count_unverified", None)
@@ -1616,6 +1625,62 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                             sv.bed_scope_dismissed.value = list(scope_dismissed | {entry["label"]})
                             st.rerun()
 
+            # ── Tidy values (within and across records) ───────────
+            with st.expander("Tidy values", expanded=False):
+                st.caption(
+                    "Research rounds can leave a record with several near-identical values "
+                    "(e.g. two descriptions), and different records with different spellings "
+                    "of the same name ('Acme' and 'Acme, Inc.'). Spelling variants are merged "
+                    "within each record and across the whole dataset, so each name has one "
+                    "spelling everywhere. Preview, then apply."
+                )
+                tidy_attrs = [a["name"] for a in (api.dataset_json or {}).get("schema_attributes", [])]
+                tidy_attr = st.selectbox("Attribute", tidy_attrs, key="bed_tidy_attr")
+                tv1, tv2 = st.columns(2)
+                if tv1.button("Preview spelling variants", key="bed_tidy_variants"):
+                    st.session_state["bed_tidy_variant_preview"] = api.value_variant_changes(tidy_attr)
+                    st.session_state.pop("bed_tidy_choices", None)
+                if tv2.button("Choose one value per record (AI)", key="bed_tidy_single"):
+                    if not functions.get_api_key():
+                        st.error("Set an OpenAI API key in Settings first.")
+                    else:
+                        with st.spinner("Choosing…"):
+                            try:
+                                st.session_state["bed_tidy_choices"] = api.select_single_values(
+                                    tidy_attr, api_key=functions.get_api_key(), model=sv.bed_model.value,
+                                )
+                                st.session_state.pop("bed_tidy_variant_preview", None)
+                            except Exception as e:  # noqa: BLE001
+                                st.error(f"Choice failed: {e}")
+                variant_preview = st.session_state.get("bed_tidy_variant_preview")
+                if variant_preview is not None:
+                    st.write(f"{len(variant_preview)} records would change.")
+                    if variant_preview:
+                        st.dataframe(pd.DataFrame([
+                            {"record": p["label"], "before": " | ".join(p["before"]),
+                             "after": " | ".join(p["after"])} for p in variant_preview
+                        ]), hide_index=True, use_container_width=True)
+                        if st.button("Merge variants", key="bed_tidy_variants_apply", type="primary"):
+                            n = api.merge_value_variants(tidy_attr)
+                            st.session_state.pop("bed_tidy_variant_preview", None)
+                            st.success(f"Updated {n} records.")
+                            st.rerun()
+                choices = st.session_state.get("bed_tidy_choices")
+                if choices is not None:
+                    usable = [c for c in choices if c.get("choice") is not None]
+                    st.write(f"{len(usable)} of {len(choices)} records have a choice.")
+                    if choices:
+                        st.dataframe(pd.DataFrame([
+                            {"record": c["label"], "keep": c.get("chosen"),
+                             "drop": " | ".join(c.get("dropped") or []), "reason": c.get("reason")}
+                            for c in choices
+                        ]), hide_index=True, use_container_width=True)
+                    if usable and st.button("Keep chosen values", key="bed_tidy_single_apply", type="primary"):
+                        n = api.apply_single_value_choices(tidy_attr, usable)
+                        st.session_state.pop("bed_tidy_choices", None)
+                        st.success(f"Updated {n} records.")
+                        st.rerun()
+
             # ── Relevance filter (explicit connection) ─────────
             rel = dict(getattr(api, "relevance_results", {}) or {})
             rel_dismissed = set(sv.bed_relevance_dismissed.value or [])
@@ -1844,24 +1909,30 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                 return entry.get("organization", "") + "::" + (ms.get("canonical_label") or "")
 
             visible_dedup: list[tuple[dict, dict]] = []
+            visible_alias_fixes: list[tuple[dict, dict]] = []
             for entry in (dedup_state.get("flagged") or []):
                 for ms in (entry.get("merge_sets") or []):
                     if _dedup_key(entry, ms) in dedup_dismissed:
                         continue
                     visible_dedup.append((entry, ms))
+                for ac in (entry.get("alias_corrections") or []):
+                    if f"alias::{ac.get('record_label')}::{ac.get('alias')}" in dedup_dismissed:
+                        continue
+                    visible_alias_fixes.append((entry, ac))
+            n_dedup_open = len(visible_dedup) + len(visible_alias_fixes)
             dedup_title = (
-                f"Audit duplicate clusters ({len(visible_dedup)} proposed merges)"
+                f"Audit duplicate clusters ({n_dedup_open} proposals)"
                 if dedup_state else
                 "Audit duplicate clusters"
             )
             with st.expander(dedup_title, expanded=False):
                 st.caption(
-                    "Scans for the under-merge pattern: multiple records "
-                    "from the same organisation that describe the same "
-                    "underlying tool but have labels too dissimilar for "
-                    "string matching. Each proposed merge collapses N "
-                    "records into one — review, then accept or dismiss. "
-                    "Nothing is applied automatically."
+                    "Finds records that describe the same tool under different "
+                    "names — grouped by shared organisation or a shared name/alias — "
+                    "and aliases attached to the wrong record. Each proposal "
+                    "is reviewed by AI; accept or dismiss it here. Nothing is "
+                    "applied automatically, and applied changes are logged in "
+                    "the dataset history."
                 )
                 dc1, dc2 = st.columns([3, 1])
                 run_dedup = dc1.button(
@@ -1898,14 +1969,42 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                 if dedup_state:
                     st.caption(
                         f"Total records: {dedup_state.get('total_records', 0)} "
-                        f"·  clusters scanned: {dedup_state.get('clusters', 0)} "
-                        f"·  proposed merges: {sum(len(e.get('merge_sets') or []) for e in (dedup_state.get('flagged') or []))}"
+                        f"·  groups scanned: {dedup_state.get('clusters', 0)} "
+                        f"·  proposed merges: {sum(len(e.get('merge_sets') or []) for e in (dedup_state.get('flagged') or []))} "
+                        f"·  misattached aliases: {sum(len(e.get('alias_corrections') or []) for e in (dedup_state.get('flagged') or []))}"
                     )
-                if not visible_dedup and dedup_state:
+                if not n_dedup_open and dedup_state:
                     st.success(
-                        "No remaining proposed merges — every audited "
-                        "cluster looks clean (or has been actioned)."
+                        "No remaining proposals — every audited "
+                        "group looks clean (or has been actioned)."
                     )
+                for ai, (entry, ac) in enumerate(visible_alias_fixes[:50]):
+                    akey = f"alias::{ac.get('record_label')}::{ac.get('alias')}"
+                    belongs = ac.get("belongs_to_label") or ""
+                    with st.container(border=True):
+                        st.markdown(
+                            f"Remove alias `{ac.get('alias')}` from **{ac.get('record_label')}**"
+                            + (f" (it names `{belongs}`)" if belongs else "")
+                            + f" ({entry.get('confidence', 0.0):.0%} confidence)"
+                        )
+                        if ac.get("rationale"):
+                            st.caption(ac["rationale"])
+                        ac1, ac2 = st.columns(2)
+                        if ac1.button("Remove alias", key=f"bed_dedup_alias_{ai}", type="primary"):
+                            if api.apply_alias_correction(
+                                ac.get("record_label", ""), ac.get("alias", ""),
+                                belongs_to_label=belongs, rationale=ac.get("rationale", ""),
+                            ):
+                                st.success("Alias removed.")
+                            else:
+                                st.warning("Alias not found — the record may have changed. Re-run the audit.")
+                            dedup_dismissed.add(akey)
+                            sv.bed_dedup_dismissed.value = list(dedup_dismissed)
+                            st.rerun()
+                        if ac2.button("Keep", key=f"bed_dedup_alias_keep_{ai}"):
+                            dedup_dismissed.add(akey)
+                            sv.bed_dedup_dismissed.value = list(dedup_dismissed)
+                            st.rerun()
                 for di, (entry, ms) in enumerate(visible_dedup[:50]):
                     org = entry.get("organization", "")
                     canonical = ms.get("canonical_label", "")
@@ -1918,7 +2017,7 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                             f"**{canonical}**  &nbsp;·&nbsp; "
                             f"absorb {len(members) - 1} other(s) "
                             f"({conf:.0%} confidence) "
-                            f"·  org: _{org}_"
+                            + (f"·  org: _{org}_" if org else f"·  _{entry.get('candidate_reason', '')}_")
                         )
                         if rationale:
                             st.caption(rationale)
@@ -1932,7 +2031,7 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                             type="primary",
                         ):
                             try:
-                                n_absorbed = api.apply_dedup_merge(canonical, members)
+                                n_absorbed = api.apply_dedup_merge(canonical, members, rationale)
                             except Exception as e:  # noqa: BLE001
                                 n_absorbed = 0
                                 st.error(f"Merge failed: {e}")
@@ -2261,6 +2360,56 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                 "that lets anyone explore the dataset in a browser (no server needed)."
             )
 
+            with st.expander("Reuse branding from a previous release or theme", expanded=False):
+                st.caption(
+                    "Upload a previous release ZIP, or a theme.js / theme.json with its logo and "
+                    "favicon, to apply exactly the same title, colours, views, labels, intro text "
+                    "and footer. Use this for every update so maps keep the same design."
+                )
+                theme_files = st.file_uploader(
+                    "Release ZIP or theme files",
+                    type=["zip", "js", "json", "png", "jpg", "jpeg", "svg", "ico"],
+                    accept_multiple_files=True,
+                    key="bed_theme_files",
+                )
+                bc1, bc2 = st.columns(2)
+                if theme_files and bc1.button("Apply branding", key="bed_theme_apply"):
+                    try:
+                        bundle = load_theme_bundle([(f.name, f.getvalue()) for f in theme_files])
+                    except (ValueError, KeyError, UnicodeDecodeError, zipfile.BadZipFile, json.JSONDecodeError) as e:
+                        st.error(f"Could not read branding: {e}")
+                    else:
+                        kw = theme_dashboard_kwargs(bundle)
+                        sv.bed_theme_bundle.value = bundle
+                        sv.bed_title.value = kw["title"]
+                        sv.bed_subtitle.value = kw["subtitle"]
+                        sv.bed_dataset_label.value = kw["dataset_label"]
+                        sv.bed_primary_color.value = kw["primary_color"]
+                        sv.bed_accent_color.value = kw["accent_color"]
+                        views = kw["views"] or ["table", "cards", "network"]
+                        sv.bed_view_table.value = "table" in views
+                        sv.bed_view_cards.value = "cards" in views
+                        sv.bed_view_network.value = "network" in views
+                        for widget_key in (
+                            "bed_view_table_cb", "bed_view_cards_cb", "bed_view_network_cb",
+                            "bed_label_entity", "bed_label_sources", "bed_label_sources_help",
+                            "bed_intro_note", "bed_intro_details",
+                        ):
+                            st.session_state.pop(widget_key, None)
+                        st.rerun()
+                if sv.bed_theme_bundle.value and bc2.button("Clear branding", key="bed_theme_clear"):
+                    sv.bed_theme_bundle.value = {}
+                    st.rerun()
+                if sv.bed_theme_bundle.value:
+                    loaded = sv.bed_theme_bundle.value
+                    st.success(
+                        f"Using branding: {loaded['theme'].get('title', '')} "
+                        f"(assets: {', '.join(loaded['assets']) or 'none'}). "
+                        "Edits below still apply; uploaded logo/favicon override the loaded ones."
+                    )
+            theme_kw = theme_dashboard_kwargs(sv.bed_theme_bundle.value) if sv.bed_theme_bundle.value else {}
+            theme_labels = theme_kw.get("labels") or {}
+
             tcol1, tcol2 = st.columns(2)
             with tcol1:
                 sv.bed_title.value = st.text_input(
@@ -2325,10 +2474,49 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                 )
                 selected_views = ["table"]
 
-            logo_bytes = logo_file.read() if logo_file else None
-            logo_filename = logo_file.name if logo_file else None
-            favicon_bytes = favicon_file.read() if favicon_file else None
-            favicon_filename = favicon_file.name if favicon_file else None
+            with st.expander("Column labels and intro note (optional)"):
+                lcol1, lcol2 = st.columns(2)
+                entity_label = lcol1.text_input(
+                    "Name column label", value=theme_labels.get("entity", "Entity"), key="bed_label_entity",
+                    help="Header of the first table column, e.g. 'Tool name'.",
+                )
+                sources_label = lcol2.text_input(
+                    "Citation-count column label", value=theme_labels.get("sources", "Sources"),
+                    key="bed_label_sources",
+                    help="Header of the column counting distinct cited web pages, e.g. 'References'.",
+                )
+                sources_help = st.text_input(
+                    "Citation-count explanation (tooltip)", value=theme_labels.get("sourcesHelp", ""),
+                    key="bed_label_sources_help",
+                    placeholder="Number of distinct web pages cited. It shows how much documentation was found, not how reliable the entry is.",
+                )
+                intro_note = st.text_input(
+                    "Intro line shown above the dashboard", value=theme_kw.get("intro") or "",
+                    key="bed_intro_note",
+                    help="Keep to one short sentence, e.g. scope and an endorsement disclaimer.",
+                )
+                intro_details = st.text_area(
+                    "'About this map' text (expandable)", value=theme_kw.get("intro_details") or "",
+                    key="bed_intro_details", height=100,
+                    help="Longer explanation shown when users click 'About this map'. Blank lines start paragraphs.",
+                )
+            display_kwargs = {
+                "labels": {"entity": entity_label, "sources": sources_label, "sourcesHelp": sources_help},
+                "intro": intro_note,
+                "intro_details": intro_details,
+            }
+            if theme_kw:
+                colors = dict(theme_kw.get("colors") or {})
+                colors.update(primary=sv.bed_primary_color.value, accent=sv.bed_accent_color.value)
+                display_kwargs.update(
+                    colors=colors,
+                    secondary_accent_color=theme_kw.get("secondary_accent_color"),
+                    footer=theme_kw.get("footer"),
+                )
+            logo_bytes = logo_file.read() if logo_file else theme_kw.get("logo_bytes")
+            logo_filename = logo_file.name if logo_file else theme_kw.get("logo_filename")
+            favicon_bytes = favicon_file.read() if favicon_file else theme_kw.get("favicon_bytes")
+            favicon_filename = favicon_file.name if favicon_file else theme_kw.get("favicon_filename")
 
             if st.button("Build & download web interface", type="primary"):
                 if not sv.bed_title.value:
@@ -2346,6 +2534,7 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                             favicon_bytes=favicon_bytes,
                             favicon_filename=favicon_filename,
                             views=selected_views,
+                            **display_kwargs,
                         )
                         st.download_button(
                             "Save dashboard.zip",
@@ -2392,6 +2581,7 @@ async def create(sv: bed_variables.SessionVariables, workflow=None):
                             favicon_bytes=favicon_bytes,
                             favicon_filename=favicon_filename,
                             views=selected_views,
+                            **display_kwargs,
                         )
                         safe = "".join(c if c.isalnum() or c in "-._" else "_" for c in version)
                         st.download_button(

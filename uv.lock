@@ -12,6 +12,7 @@ resolution-markers = [
 members = [
     "intelligence-toolkit",
     "itk-core",
+    "itk-match",
     "itk-query-text-data",
 ]
 
@@ -1039,6 +1040,28 @@ requires-dist = [
     { name = "tqdm", specifier = ">=4.66.0" },
 ]
 provides-extras = ["local"]
+
+[[package]]
+name = "itk-match"
+version = "0.1.0"
+source = { editable = "packages/itk-match" }
+dependencies = [
+    { name = "itk-core" },
+    { name = "numpy" },
+    { name = "polars" },
+    { name = "pydantic" },
+    { name = "rapidfuzz" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "itk-core", editable = "packages/itk-core" },
+    { name = "numpy", specifier = ">=1.26.4" },
+    { name = "polars", specifier = ">=0.20.10" },
+    { name = "pydantic", specifier = ">=2.0,<3.0" },
+    { name = "rapidfuzz", specifier = ">=3.0.0" },
+]
+
 
 [[package]]
 name = "itk-query-text-data"

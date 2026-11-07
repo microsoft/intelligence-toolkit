@@ -34,15 +34,17 @@ def _is_reasoning_model(model: str) -> bool:
     m = model.lower()
     if "chat" in m:
         return False
-    return m.startswith(("gpt-5", "o1", "o3", "o4"))
+    return m.startswith(("gpt-5", "gpt-6", "o1", "o3", "o4"))
 
 
 def _default_reasoning_effort(model: str) -> str | None:
     """Lowest reasoning effort the model accepts, or None to use the API default.
 
-    gpt-5.1+ accepts "none"; the original gpt-5 family's lowest is "minimal";
+    gpt-5.1+ and gpt-6 accept "none"; the original gpt-5 family's lowest is "minimal";
     o-series models only accept low/medium/high, so we leave their default.
     """
+    if model.lower().startswith("gpt-6"):
+        return "none"
     match = _GPT5_VERSION.match(model.lower())
     if match is None:
         return None

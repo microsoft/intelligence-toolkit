@@ -4,7 +4,7 @@
 
 cache_name = "build_entity_dataset"
 
-DEFAULT_MODEL = "gpt-5.4-mini"
+DEFAULT_MODEL = "gpt-6-luna"
 DEFAULT_MAX_QUERIES = 30
 DEFAULT_CONCURRENCY = 5
 DEFAULT_BUDGET = 10.0
