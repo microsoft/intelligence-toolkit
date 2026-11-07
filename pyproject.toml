@@ -215,6 +215,7 @@ convention = "numpy"
 # https://github.com/microsoft/pyright/blob/9f81564a4685ff5c55edd3959f9b39030f590b2f/docs/configuration.md#sample-pyprojecttoml-file
 [tool.pyright]
 # Type checking is enabled incrementally: widen `include` as modules are cleaned up.
+# Remaining directories are tracked in https://github.com/microsoft/intelligence-toolkit/issues/139
 include = ["packages/itk-core/src", "intelligence_toolkit/helpers"]
 typeCheckingMode = "basic"
 
