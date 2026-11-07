@@ -30,6 +30,9 @@ Output matches v1 on the characterization corpus (see `tests/test_qtd2_parity.py
 - Concept communities are deterministic regardless of `PYTHONHASHSEED`.
 - Importing does not call `nltk.download`.
 - Empty corpora and corpora with no concepts return empty results instead of crashing.
+- With live thematic analysis on, relevant chunks the model leaves out of every theme are kept in a final `"Other relevant chunks"` group (`"All relevant chunks"` when there are no themes) instead of being dropped from the report.
+
+The itk_core adapters are also hardened: `ItkEmbedder` aligns vectors to texts by content hash (not position) and fails loudly when one is missing, `OpenAILLM` strips the streaming cursor glyph before calling `on_token`, and malformed thematic-update or report-integration replies are logged and tolerated rather than raised.
 
 It is not published or bundled in the `intelligence-toolkit` wheel yet; `uv sync` installs it into the workspace through the root `dev` dependency group.
 
