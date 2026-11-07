@@ -52,3 +52,22 @@ scikit-learn or torch dependency and, like `itk-core`, is bundled into the
 `intelligence-toolkit` wheel rather than published on its own.
 
 Tests: `uv run pytest packages/itk-match/tests`.
+
+## Offline notebook demo
+
+Open [`examples/entity_matching/entity_matching.ipynb`](examples/entity_matching/entity_matching.ipynb)
+for a runnable, executed walkthrough of the public matching API using the two
+existing company-grievance inputs directly:
+[`company_grievances_input_data_1.csv`](../../example_outputs/match_entity_records/company_grievances/company_grievances_input_data_1.csv)
+and
+[`company_grievances_input_data_2.csv`](../../example_outputs/match_entity_records/company_grievances/company_grievances_input_data_2.csv).
+Each input has 2,000 records; no copied or newly generated datasets are needed.
+It covers column alignment, an offline character-trigram embedder, cosine/name
+thresholds, matched groups, unmatched records, and regrouping without re-embedding.
+The notebook includes setup instructions for Python 3.11/3.12, input/result
+integrity checks, and observed cross-source and source-only group counts. No API keys,
+model downloads, or paid calls are needed after installing dependencies.
+
+The custom embedder is a transparent lexical baseline, not a pretrained semantic
+model. Its thresholds are illustrative, and no identity accuracy is claimed:
+historical matching outputs are not used as ground truth.
