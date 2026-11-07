@@ -8,7 +8,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from itk_core.client import OpenAIClient
-from itk_core.local_embedder import LocalEmbedder
 from itk_core.openai_embedder import OpenAIEmbedder
 
 from itk_match.blocking import candidate_pairs
@@ -41,9 +40,12 @@ class Matcher:
     def from_openai(
         cls, configuration: OpenAIConfiguration, local_embeddings: bool = False
     ) -> Matcher:
-        embedder = (
-            LocalEmbedder() if local_embeddings else OpenAIEmbedder(configuration)
-        )
+        if local_embeddings:
+            from itk_core.local_embedder import LocalEmbedder
+
+            embedder = LocalEmbedder()
+        else:
+            embedder = OpenAIEmbedder(configuration)
         return cls(embedder, OpenAIClient(configuration).generate_chat_async)
 
     async def match(

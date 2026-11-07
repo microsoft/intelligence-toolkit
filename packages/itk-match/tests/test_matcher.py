@@ -1,8 +1,22 @@
 # Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project.
 #
+import subprocess
+import sys
+
 import pytest
 from itk_match import MatchConfig, Matcher, MatchResult
+
+
+def test_custom_matcher_does_not_import_optional_local_embedder():
+    script = (
+        "import sys\n"
+        "from itk_match import Matcher\n"
+        "Matcher(embedder=object())\n"
+        "assert 'itk_core.local_embedder' not in sys.modules\n"
+        "assert 'sentence_transformers' not in sys.modules\n"
+    )
+    subprocess.run([sys.executable, "-c", script], check=True, capture_output=True)
 
 
 async def test_match_groups_identical_records_across_datasets(
