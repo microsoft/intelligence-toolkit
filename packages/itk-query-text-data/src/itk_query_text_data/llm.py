@@ -48,11 +48,15 @@ class Embedder(Protocol):
 
 
 class _TokenRelay:
+    """Forwards streamed text to ``on_token`` without the client's cursor glyph."""
+
     def __init__(self, on_token: TokenHandler) -> None:
         self._on_token = on_token
 
     def on_llm_new_token(self, text: str) -> None:
-        self._on_token(text)
+        from itk_core.client import STREAM_CURSOR
+
+        self._on_token(text.removesuffix(STREAM_CURSOR))
 
 
 class OpenAILLM:
@@ -100,6 +104,21 @@ class ItkEmbedder:
         self._callbacks = callbacks
 
     async def embed(self, texts: Sequence[str]) -> list[list[float]]:
-        items = [{"hash": "", "text": text, "additional_details": {}} for text in texts]
+        from itk_core.utils import hash_text
+
+        hashes = [hash_text(text) for text in texts]
+        items = [
+            {"hash": text_hash, "text": text, "additional_details": {}}
+            for text_hash, text in dict(zip(hashes, texts, strict=True)).items()
+        ]
         results = await self._embedder.embed_store_many(items, self._callbacks)
-        return [list(item["vector"]) for item in results]
+        # The store may return items in any order (and may add cached ones),
+        # so align vectors by hash rather than by position.
+        by_hash = {item["hash"]: item["vector"] for item in results}
+        missing = [text_hash for text_hash in hashes if text_hash not in by_hash]
+        if missing:
+            msg = (
+                f"Embedder returned no vector for {len(missing)} of {len(texts)} texts"
+            )
+            raise ValueError(msg)
+        return [list(by_hash[text_hash]) for text_hash in hashes]

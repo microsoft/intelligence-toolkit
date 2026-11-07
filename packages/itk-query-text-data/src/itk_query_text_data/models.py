@@ -345,4 +345,6 @@ class AnalysisUpdated:
 
 Event = Progress | ChunksTested | AnalysisUpdated
 EventHandler = Callable[[Event], None]
+ProgressHandler = Callable[[Progress], None]
+"""Handler for steps that only report :class:`Progress`; any ``EventHandler`` also fits."""
 TokenHandler = Callable[[str], None]

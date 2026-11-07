@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from typing import TYPE_CHECKING, Any
 
 from itk_query_text_data import prompts, schemas
@@ -16,7 +17,10 @@ if TYPE_CHECKING:
     from itk_query_text_data.llm import LLM, Message
     from itk_query_text_data.models import Corpus, EventHandler, TokenHandler
 
+log = logging.getLogger(__name__)
+
 ALL_RELEVANT = "All relevant chunks"
+OTHER_RELEVANT = "Other relevant chunks"
 _COMMENTARY_CHUNKS_PER_THEME = 3
 
 
@@ -32,6 +36,18 @@ def _as_chunk_id(value: Any) -> int | None:
     if isinstance(value, float) and value.is_integer():
         return int(value)
     return None
+
+
+def _parse_update(response: str) -> dict[str, Any] | None:
+    try:
+        update = json.loads(response)
+    except json.JSONDecodeError:
+        log.warning("Ignoring thematic analysis update that is not valid JSON")
+        return None
+    if not isinstance(update, dict):
+        log.warning("Ignoring thematic analysis update that is not an object")
+        return None
+    return update
 
 
 def source_details(chunk_ids: Iterable[int], corpus: Corpus) -> str:
@@ -103,7 +119,6 @@ class ThematicAnalysis:
             f"{chunk_id}:\n\n{self._corpus[chunk_id].to_prompt()}"
             for chunk_id in self._pending
         )
-        self._pending = []
         current = {
             "points": self._points,
             "point_sources": self._point_sources,
@@ -118,8 +133,12 @@ class ThematicAnalysis:
             ),
             response_format=schemas.thematic_update_format,
         )
-        update = json.loads(response)
-        self._themes = {}
+        update = _parse_update(response)
+        if update is None:
+            # Keep the previous structure; the pending chunks are retried on
+            # the next update and are still reported by clustered_ids().
+            return
+        self._pending = []
         for point in update.get("updates", []):
             point_id = _as_chunk_id(point["point_id"]) or point["point_id"]
             if point["point_title"] or point_id not in self._points:
@@ -129,10 +148,12 @@ class ThematicAnalysis:
                 chunk_id = _as_chunk_id(raw_id)
                 if chunk_id in self._corpus and chunk_id not in sources_for_point:
                     sources_for_point.append(chunk_id)
-        for theme in update.get("themes", []):
-            self._themes[theme["theme_title"]] = [
+        self._themes = {
+            theme["theme_title"]: [
                 _as_chunk_id(point_id) or point_id for point_id in theme["point_ids"]
             ]
+            for theme in update.get("themes", [])
+        }
         if self._on_event is not None:
             self._on_event(AnalysisUpdated(self.structure, self.markdown()))
 
@@ -154,15 +175,28 @@ class ThematicAnalysis:
         return output
 
     def clustered_ids(self) -> dict[str, tuple[int, ...]]:
-        """Relevant chunk ids per theme, in order of first citation."""
+        """Relevant chunk ids per theme, in order of first citation.
+
+        Relevant chunks the analysis did not place under any theme are kept
+        in a final ``"Other relevant chunks"`` group (or ``"All relevant
+        chunks"`` when there are no themes at all), so no evidence is lost.
+        """
+        if not self._discovered:
+            return {}
         if not self.enabled:
-            return {ALL_RELEVANT: tuple(self._discovered)} if self._discovered else {}
-        clusters = {}
+            return {ALL_RELEVANT: tuple(self._discovered)}
+        clusters: dict[str, tuple[int, ...]] = {}
+        covered: set[int] = set()
         for title, point_ids in self._themes.items():
             ids: dict[int, None] = {}
             for point_id in point_ids:
                 ids.update(dict.fromkeys(self._point_sources.get(point_id, ())))
-            clusters[title] = tuple(ids)
+            if ids:
+                clusters[title] = tuple(ids)
+                covered.update(ids)
+        leftover = tuple(dict.fromkeys(c for c in self._discovered if c not in covered))
+        if leftover:
+            clusters[OTHER_RELEVANT if clusters else ALL_RELEVANT] = leftover
         return clusters
 
 

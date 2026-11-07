@@ -67,6 +67,19 @@ def _parse_theme(response: str) -> dict[str, Any] | None:
     return theme
 
 
+def _parse_report(response: str) -> dict[str, str]:
+    """The integrated report fields; all empty when the response is not a JSON object."""
+    try:
+        parsed = json.loads(response)
+    except json.JSONDecodeError:
+        log.warning("Report integration response is not valid JSON")
+        parsed = {}
+    if not isinstance(parsed, dict):
+        log.warning("Report integration response is not a JSON object")
+        parsed = {}
+    return {field: str(parsed.get(field, "")) for field in _REPORT_FIELDS}
+
+
 def _report_markdown(
     result: SearchResult, themes: list[dict[str, Any]], report: dict[str, str]
 ) -> str:
@@ -119,8 +132,7 @@ async def build_answer(result: SearchResult, corpus: Corpus, llm: LLM) -> Answer
         ),
         response_format=schemas.theme_integration_format,
     )
-    parsed = json.loads(integration)
-    report = {field: str(parsed.get(field, "")) for field in _REPORT_FIELDS}
+    report = _parse_report(integration)
 
     markdown, references = link_sources(
         _report_markdown(result, themes, report), corpus

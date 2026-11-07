@@ -6,15 +6,18 @@ from __future__ import annotations
 
 import json
 import re
-from collections.abc import Callable, Iterable
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from itk_core.defaults import CHUNK_SIZE
 from itk_core.text_splitter import TextSplitter
 
 from itk_query_text_data.models import Chunk, Corpus, Document, Progress
 
-EventHandler = Callable[[Progress], None]
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from itk_query_text_data.models import ProgressHandler
 
 
 def source_name(path: str | Path) -> str:
@@ -26,7 +29,7 @@ def source_name(path: str | Path) -> str:
 def read_documents(
     paths: Iterable[str | Path],
     *,
-    on_event: EventHandler | None = None,
+    on_event: ProgressHandler | None = None,
 ) -> list[Document]:
     """Read text, CSV, JSON and PDF files.
 
@@ -96,7 +99,7 @@ def load_documents(
     paths: Iterable[str | Path],
     chunk_size: int = CHUNK_SIZE,
     *,
-    on_event: EventHandler | None = None,
+    on_event: ProgressHandler | None = None,
 ) -> Corpus:
     """Read files and chunk them in one step."""
     return chunk_documents(read_documents(paths, on_event=on_event), chunk_size)

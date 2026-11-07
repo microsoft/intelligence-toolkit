@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
-from collections.abc import Callable
 from functools import cache
 
 import networkx as nx
@@ -18,9 +17,8 @@ from itk_query_text_data.models import (
     ConceptGraph,
     Corpus,
     Progress,
+    ProgressHandler,
 )
-
-EventHandler = Callable[[Progress], None]
 
 _NLTK_RESOURCES = {
     "brown": "corpora/brown",
@@ -63,7 +61,7 @@ def build_concept_graph(
     max_cluster_size: int = 25,
     min_edge_weight: int = 2,
     min_node_degree: int = 2,
-    on_event: EventHandler | None = None,
+    on_event: ProgressHandler | None = None,
 ) -> ConceptGraph:
     """Extract concepts per chunk, link co-occurring concepts and detect communities.
 
