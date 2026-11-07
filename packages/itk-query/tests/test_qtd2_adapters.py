@@ -5,12 +5,12 @@
 import asyncio
 import json
 
-import itk_query_text_data as qtd
+import itk_query as qtd
 import pytest
 from itk_core.client import STREAM_CURSOR
 from itk_core.utils import hash_text
-from itk_query_text_data.analysis import ALL_RELEVANT, OTHER_RELEVANT, ThematicAnalysis
-from itk_query_text_data.llm import _TokenRelay
+from itk_query.analysis import ALL_RELEVANT, OTHER_RELEVANT, ThematicAnalysis
+from itk_query.llm import _TokenRelay
 from qtd2_support import QUERY, FakeLLM, fake_vector
 
 # --- ItkEmbedder --------------------------------------------------------------

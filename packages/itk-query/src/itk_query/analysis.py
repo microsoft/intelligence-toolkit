@@ -8,14 +8,14 @@ import json
 import logging
 from typing import TYPE_CHECKING, Any
 
-from itk_query_text_data import prompts, schemas
-from itk_query_text_data.models import AnalysisUpdated, ThemeStructure
+from itk_query import prompts, schemas
+from itk_query.models import AnalysisUpdated, ThemeStructure
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from itk_query_text_data.llm import LLM, Message
-    from itk_query_text_data.models import Corpus, EventHandler, TokenHandler
+    from itk_query.llm import LLM, Message
+    from itk_query.models import Corpus, EventHandler, TokenHandler
 
 log = logging.getLogger(__name__)
 

@@ -12,12 +12,12 @@ from typing import TYPE_CHECKING
 from itk_core.defaults import CHUNK_SIZE
 from itk_core.text_splitter import TextSplitter
 
-from itk_query_text_data.models import Chunk, Corpus, Document, Progress
+from itk_query.models import Chunk, Corpus, Document, Progress
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from itk_query_text_data.models import ProgressHandler
+    from itk_query.models import ProgressHandler
 
 
 def source_name(path: str | Path) -> str:

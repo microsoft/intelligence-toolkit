@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from itk_core.base_embedder import BaseEmbedder
     from itk_core.openai_configuration import OpenAIConfiguration
 
-    from itk_query_text_data.models import TokenHandler
+    from itk_query.models import TokenHandler
 
 Message = dict[str, str]
 

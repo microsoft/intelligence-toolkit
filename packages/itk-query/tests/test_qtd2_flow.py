@@ -4,7 +4,7 @@
 
 import asyncio
 
-import itk_query_text_data as qtd
+import itk_query as qtd
 import pytest
 from qtd2_support import (
     CHUNK_SIZE,

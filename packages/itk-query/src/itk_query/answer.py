@@ -10,13 +10,13 @@ import logging
 import re
 from typing import TYPE_CHECKING, Any
 
-from itk_query_text_data import prompts, schemas
-from itk_query_text_data.analysis import source_details, system_message
-from itk_query_text_data.models import Answer
+from itk_query import prompts, schemas
+from itk_query.analysis import source_details, system_message
+from itk_query.models import Answer
 
 if TYPE_CHECKING:
-    from itk_query_text_data.llm import LLM
-    from itk_query_text_data.models import Corpus, SearchResult, TokenHandler
+    from itk_query.llm import LLM
+    from itk_query.models import Corpus, SearchResult, TokenHandler
 
 log = logging.getLogger(__name__)
 

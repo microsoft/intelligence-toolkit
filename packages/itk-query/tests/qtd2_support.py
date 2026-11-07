@@ -16,7 +16,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-import itk_query_text_data as qtd
+import itk_query as qtd
 import pytest
 
 HERE = Path(__file__).parent

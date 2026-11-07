@@ -9,7 +9,7 @@ import os
 import subprocess
 import sys
 
-import itk_query_text_data as qtd
+import itk_query as qtd
 import pytest
 from qtd2_support import (
     CHUNK_SIZE,
@@ -160,7 +160,7 @@ def test_import_does_not_download_nltk_data():
         "def fail(*args, **kwargs):\n"
         "    raise AssertionError('nltk.download called at import time')\n"
         "nltk.download = fail\n"
-        "import itk_query_text_data\n"
+        "import itk_query\n"
     )
     subprocess.run([sys.executable, "-c", script], check=True, cwd=REPO_ROOT)
 
@@ -169,7 +169,7 @@ _SNAPSHOT_SCRIPT = """
 import asyncio, json, sys
 from pathlib import Path
 sys.path.insert(0, sys.argv[1])
-import itk_query_text_data as qtd
+import itk_query as qtd
 from qtd2_support import CHUNK_SIZE, GRAPH_ARGS, QUERY, FakeEmbedder, FakeLLM, corpus_paths, search_config
 corpus = qtd.load_documents(corpus_paths(), CHUNK_SIZE)
 graph = qtd.build_concept_graph(corpus, **GRAPH_ARGS)
@@ -188,7 +188,7 @@ print(json.dumps({
 
 def test_results_do_not_depend_on_hash_seed():
     """v1 iterated over sets of strings, so its communities changed with PYTHONHASHSEED."""
-    tests_dir = str(REPO_ROOT / "packages" / "itk-query-text-data" / "tests")
+    tests_dir = str(REPO_ROOT / "packages" / "itk-query" / "tests")
     procs = [
         subprocess.Popen(
             [sys.executable, "-c", _SNAPSHOT_SCRIPT, tests_dir],

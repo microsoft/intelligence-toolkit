@@ -12,9 +12,9 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from itk_query_text_data import prompts
-from itk_query_text_data.analysis import ThematicAnalysis, system_message
-from itk_query_text_data.models import (
+from itk_query import prompts
+from itk_query.analysis import ThematicAnalysis, system_message
+from itk_query.models import (
     ChunksTested,
     Progress,
     RelevanceTest,
@@ -23,8 +23,8 @@ from itk_query_text_data.models import (
 )
 
 if TYPE_CHECKING:
-    from itk_query_text_data.llm import LLM, Embedder
-    from itk_query_text_data.models import ConceptGraph, Corpus, EventHandler
+    from itk_query.llm import LLM, Embedder
+    from itk_query.models import ConceptGraph, Corpus, EventHandler
 
 Embeddings = Mapping[int, Sequence[float]]
 

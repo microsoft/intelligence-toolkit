@@ -225,7 +225,7 @@ class ConceptGraph:
 
 @dataclass(frozen=True)
 class SearchConfig:
-    """Settings for :func:`itk_query_text_data.search`.
+    """Settings for :func:`itk_query.search`.
 
     Attributes
     ----------
@@ -305,7 +305,7 @@ class SearchResult:
 
     @property
     def summary(self) -> str:
-        from itk_query_text_data.search import format_search_summary
+        from itk_query.search import format_search_summary
 
         return format_search_summary(self.tests)
 

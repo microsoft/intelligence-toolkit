@@ -50,7 +50,10 @@ dependencies = [
     "pypdf>=5.1.0,<6.0.0",
     "poethepoet>=0.27.0,<1.0.0",
     "rapidfuzz>=3.0.0",
-    # Bundled itk_core / itk_match (packages/*) dependencies not listed above.
+    # Bundled itk_core / itk_match / itk_query (packages/*) dependencies not listed above.
+    # graspologic-native 1.3 changes Leiden partitions; itk_query's goldens are pinned to 1.2.x.
+    "graspologic-native>=1.2.1,<1.3",
+    "nltk>=3.8",
     "pandas>=2.0.0",
     "pylance>=0.18.2",
     "tqdm>=4.66.0",
@@ -70,14 +73,6 @@ dev = [
     "nbformat>=5.10.4,<6.0.0",
 ]
 
-# Workspace packages not bundled in the wheel; `uv sync` installs the default
-# dev group, so their tests run in CI and local checkouts.
-[dependency-groups]
-dev = ["itk-query-text-data"]
-
-[tool.uv.sources]
-itk-query-text-data = { workspace = true }
-
 [project.urls]
 source = "https://github.com/microsoft/intelligence-toolkit"
 issues = "https://github.com/microsoft/intelligence-toolkit/issues"
@@ -92,11 +87,11 @@ explicit = true
 requires = ["hatchling"]
 build-backend = "hatchling.build" 
 
-# itk_core and itk_match are developed in packages/* but shipped inside this
+# itk_core, itk_match and itk_query are developed in packages/* but shipped inside this
 # wheel; they are not published on their own (the PyPI name "itk-core" belongs to ITK).
 [tool.hatch.build.targets.wheel]
-packages = ["intelligence_toolkit", "packages/itk-core/src/itk_core", "packages/itk-match/src/itk_match"]
-dev-mode-dirs = [".", "packages/itk-core/src", "packages/itk-match/src"]
+packages = ["intelligence_toolkit", "packages/itk-core/src/itk_core", "packages/itk-match/src/itk_match", "packages/itk-query/src/itk_query"]
+dev-mode-dirs = [".", "packages/itk-core/src", "packages/itk-match/src", "packages/itk-query/src"]
 
 [tool.uv.workspace]
 members = [".", "packages/*"]
@@ -109,7 +104,7 @@ _pyright = "pyright"
 check_format = "ruff format . --check --preview"
 fix = "ruff check --fix . --preview"
 fix_unsafe = "ruff check --fix --unsafe-fixes . --preview"
-test_unit = "pytest ./intelligence_toolkit/tests/unit ./packages/itk-core/tests ./packages/itk-match/tests ./packages/itk-query-text-data/tests"
+test_unit = "pytest ./intelligence_toolkit/tests/unit ./packages/itk-core/tests ./packages/itk-match/tests ./packages/itk-query/tests"
 test_smoke = "pytest ./intelligence_toolkit/tests/smoke"
 # v1 query_text_data output depends on str hash order; goldens are pinned to seed 0.
 test_characterization = { cmd = "pytest ./intelligence_toolkit/tests/characterization", env = { PYTHONHASHSEED = "0" } }

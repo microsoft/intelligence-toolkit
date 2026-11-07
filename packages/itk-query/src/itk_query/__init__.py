@@ -36,17 +36,17 @@ Each step is a plain function over immutable records::
     )
 """
 
-from itk_query_text_data.analysis import generate_commentary
-from itk_query_text_data.answer import build_answer, condense_answer, link_sources
-from itk_query_text_data.concepts import build_concept_graph, extract_concepts
-from itk_query_text_data.documents import (
+from itk_query.analysis import generate_commentary
+from itk_query.answer import build_answer, condense_answer, link_sources
+from itk_query.concepts import build_concept_graph, extract_concepts
+from itk_query.documents import (
     chunk_documents,
     load_documents,
     read_documents,
     source_name,
 )
-from itk_query_text_data.llm import LLM, Embedder, ItkEmbedder, OpenAILLM
-from itk_query_text_data.models import (
+from itk_query.llm import LLM, Embedder, ItkEmbedder, OpenAILLM
+from itk_query.models import (
     AnalysisUpdated,
     Answer,
     Chunk,
@@ -62,7 +62,7 @@ from itk_query_text_data.models import (
     SearchResult,
     ThemeStructure,
 )
-from itk_query_text_data.search import (
+from itk_query.search import (
     embed_chunks,
     format_search_summary,
     rank_chunks,

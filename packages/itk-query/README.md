@@ -1,11 +1,11 @@
-# itk-query-text-data
+# itk-query
 
 Query Text Data (v2) for Intelligence Toolkit: concept graphs, relevance search and grounded answers over text corpora.
 
 Each step is a standalone function that takes and returns typed records, with no Streamlit or session state. For a runnable end-to-end walkthrough, see [example_notebooks/query_text_data_v2.ipynb](../../example_notebooks/query_text_data_v2.ipynb).
 
 ```python
-import itk_query_text_data as qtd
+import itk_query as qtd
 
 llm = qtd.OpenAILLM(openai_configuration)   # any object matching qtd.LLM
 embedder = qtd.ItkEmbedder(itk_embedder)     # any object matching qtd.Embedder
@@ -34,6 +34,6 @@ Output matches v1 on the characterization corpus (see `tests/test_qtd2_parity.py
 
 The itk_core adapters are also hardened: `ItkEmbedder` aligns vectors to texts by content hash (not position) and fails loudly when one is missing, `OpenAILLM` strips the streaming cursor glyph before calling `on_token`, and malformed thematic-update or report-integration replies are logged and tolerated rather than raised.
 
-It is not published or bundled in the `intelligence-toolkit` wheel yet; `uv sync` installs it into the workspace through the root `dev` dependency group.
+Like `itk-core` and `itk-match` it is not published on its own; it ships inside the `intelligence-toolkit` wheel and is importable from any workspace checkout.
 
-Tests: `uv run pytest packages/itk-query-text-data/tests` (set `UPDATE_GOLDEN=1` to regenerate `tests/golden`).
+Tests: `uv run pytest packages/itk-query/tests` (set `UPDATE_GOLDEN=1` to regenerate `tests/golden`).

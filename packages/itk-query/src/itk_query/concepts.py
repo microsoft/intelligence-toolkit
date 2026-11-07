@@ -11,7 +11,7 @@ from functools import cache
 import networkx as nx
 import numpy as np
 
-from itk_query_text_data.models import (
+from itk_query.models import (
     HUB_NODE,
     Community,
     ConceptGraph,

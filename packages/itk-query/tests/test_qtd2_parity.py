@@ -9,9 +9,9 @@ divergences are covered in ``test_qtd2_fixes.py``.
 import asyncio
 import json
 
-import itk_query_text_data as qtd
+import itk_query as qtd
 import pytest
-from itk_query_text_data.models import HUB_NODE
+from itk_query.models import HUB_NODE
 from qtd2_support import (
     CHUNK_SIZE,
     GRAPH_ARGS,
