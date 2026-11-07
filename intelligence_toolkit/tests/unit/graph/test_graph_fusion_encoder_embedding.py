@@ -145,6 +145,30 @@ def test_generate_embeddings_for_period_multiple_levels(simple_graph, node_list)
     assert embeddings.shape[0] == len(node_list)
 
 
+def test_generate_embeddings_for_period_level_segments(simple_graph, node_list, node_to_label):
+    embeddings = _generate_embeddings_for_period(
+        simple_graph,
+        node_list,
+        node_to_label,
+        correlation=True,
+        diaga=True,
+        laplacian=False,
+        max_level=1,
+    )
+    seg = embeddings.shape[1] // 2
+    level0, level1 = embeddings[:, :seg], embeddings[:, seg:]
+
+    # Root-level segment is L2-normalized for every node (rows follow node_list order)
+    norms = np.linalg.norm(level0, axis=1)
+    assert np.allclose(norms[norms > 0], 1.0)
+
+    # "A" keeps its parent cluster at level 1, so its level-1 segment is zeroed;
+    # nodes that split into a new cluster keep a non-zero segment
+    assert np.allclose(level1[node_list.index("A")], 0.0)
+    for node in ["B", "C", "D"]:
+        assert not np.allclose(level1[node_list.index(node)], 0.0)
+
+
 def test_generate_graph_fusion_encoder_embedding_single_period(simple_graph, node_to_label):
     period_to_graph = {"2020": simple_graph}
     

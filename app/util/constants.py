@@ -2,10 +2,13 @@
 # Licensed under the MIT license. See LICENSE file in the project.
 #
 
-# PDF Generation
-PDF_MARGIN_INCHES = 0.75
-PDF_ENCODING = "UTF-8"
-PDF_WKHTMLTOPDF_PATH = "C:\\Program Files\\wkhtmltopdf\\bin\\wkhtmltopdf.exe"
+# PDF settings live in the backend so the library and app share one definition
+from intelligence_toolkit.helpers.constants import (  # noqa: F401
+    PDF_ENCODING,
+    PDF_MARGIN_INCHES,
+    PDF_WKHTMLTOPDF_PATH,
+)
+
 MAX_SIZE_EMBEDDINGS_KEY = "max_embedding"
 LOCAL_EMBEDDING_MODEL_KEY = "local_embedding_model"
 
