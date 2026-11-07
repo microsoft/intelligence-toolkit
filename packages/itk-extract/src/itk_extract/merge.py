@@ -27,7 +27,9 @@ def merge(
     - Objects merge recursively.
     - Arrays concatenate in extraction order. With ``annotate_provenance``
       each object element gains ``source_id`` and ``chunk_id`` fields.
-    - Scalars that agree (ignoring ``None`` and empty strings) are kept.
+    - Scalars that agree are kept. ``None`` and empty strings are ordinary
+      values, as in the legacy extractor: a later empty value replaces an
+      earlier real one under ``last`` and is reported as a conflict.
       Scalars that disagree are resolved by ``policy`` and reported as a
       ``Conflict``; ``keep_all`` keeps every distinct value as a list.
     """
@@ -67,15 +69,14 @@ def _merge_values(
     if values and all(isinstance(v, list) for v in values):
         return _concat_lists(present, annotate)
 
-    non_empty = [(c, v) for c, v in present if not _is_empty(v)]
-    if not non_empty:
-        return values[-1] if values else None
-    distinct = _distinct(v for _, v in non_empty)
+    if not present:
+        return None
+    distinct = _distinct(values)
     if len(distinct) == 1:
         return distinct[0]
-    chosen = _resolve(policy, non_empty, distinct)
+    chosen = _resolve(policy, present, distinct)
     conflicts.append(
-        Conflict(".".join(path), chosen, tuple((c.id, v) for c, v in non_empty))
+        Conflict(".".join(path), chosen, tuple((c.id, v) for c, v in present))
     )
     return chosen
 
@@ -91,22 +92,18 @@ def _concat_lists(present: list[_Item], annotate: bool) -> list[Any]:
     return out
 
 
-def _resolve(policy: MergePolicy, non_empty: list[_Item], distinct: list[Any]) -> Any:
+def _resolve(policy: MergePolicy, present: list[_Item], distinct: list[Any]) -> Any:
     if policy == "first":
-        return non_empty[0][1]
+        return present[0][1]
     if policy == "keep_all":
         return distinct
     if policy == "majority":
-        keys = [_key(v) for _, v in non_empty]
+        keys = [_key(v) for _, v in present]
         counts = Counter(keys)
         best = max(counts.values())
         winner = next(k for k in reversed(keys) if counts[k] == best)
-        return next(v for _, v in non_empty if _key(v) == winner)
-    return non_empty[-1][1]
-
-
-def _is_empty(value: Any) -> bool:
-    return value is None or (isinstance(value, str) and not value.strip())
+        return next(v for _, v in present if _key(v) == winner)
+    return present[-1][1]
 
 
 def _key(value: Any) -> str:

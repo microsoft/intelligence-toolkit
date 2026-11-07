@@ -32,19 +32,31 @@ def test_provenance_can_be_switched_off_and_scalars_in_arrays_untouched() -> Non
     assert merged["tags"] == ["x", "y"]
 
 
-def test_agreeing_scalars_do_not_conflict_and_empties_are_ignored() -> None:
+def test_agreeing_scalars_do_not_conflict() -> None:
     merged, conflicts = merge([
         extraction("a#0", {"org": "Acme", "founded": None}),
-        extraction("b#0", {"org": "", "founded": 1999}),
-        extraction("c#0", {"org": "Acme"}),
+        extraction("b#0", {"org": "Acme", "founded": None}),
     ])
-    assert merged == {"org": "Acme", "founded": 1999}
+    assert merged == {"org": "Acme", "founded": None}
     assert conflicts == []
 
 
-def test_all_empty_keeps_last_value() -> None:
-    merged, _ = merge([extraction("a#0", {"x": None}), extraction("b#0", {"x": ""})])
+def test_empty_values_count_like_legacy_last_wins() -> None:
+    merged, conflicts = merge([
+        extraction("a#0", {"org": "Acme", "founded": 1999}),
+        extraction("b#0", {"org": "", "founded": None}),
+    ])
+    assert merged == {"org": "", "founded": None}
+    assert sorted(c.path for c in conflicts) == ["founded", "org"]
+
+
+def test_none_and_empty_string_differ() -> None:
+    merged, conflicts = merge([
+        extraction("a#0", {"x": None}),
+        extraction("b#0", {"x": ""}),
+    ])
     assert merged == {"x": ""}
+    assert [c.path for c in conflicts] == ["x"]
 
 
 def test_last_policy_reports_conflict() -> None:
