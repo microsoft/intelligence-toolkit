@@ -12,7 +12,9 @@ resolution-markers = [
 members = [
     "intelligence-toolkit",
     "itk-core",
+    "itk-extract",
     "itk-match",
+    "itk-query",
 ]
 
 [[package]]
@@ -828,11 +830,13 @@ dependencies = [
     { name = "duckdb" },
     { name = "future" },
     { name = "graspologic" },
+    { name = "graspologic-native" },
     { name = "jsonschema" },
     { name = "lancedb" },
     { name = "markdown2" },
     { name = "nest-asyncio" },
     { name = "networkx" },
+    { name = "nltk" },
     { name = "numpy" },
     { name = "openai" },
     { name = "pac-synth" },
@@ -889,6 +893,7 @@ requires-dist = [
     { name = "faker", marker = "extra == 'dev'", specifier = ">=28.0.0,<29.0.0" },
     { name = "future", specifier = ">=1.0.0,<2.0.0" },
     { name = "graspologic", specifier = ">=3.4.1,<4.0.0" },
+    { name = "graspologic-native", specifier = ">=1.2.1,<1.3" },
     { name = "ipykernel", marker = "extra == 'dev'", specifier = ">=6.29.5,<7.0.0" },
     { name = "jsonschema", specifier = ">=4.23.0,<5.0.0" },
     { name = "lancedb", specifier = "==0.14.0" },
@@ -896,6 +901,7 @@ requires-dist = [
     { name = "nbformat", marker = "extra == 'dev'", specifier = ">=5.10.4,<6.0.0" },
     { name = "nest-asyncio", specifier = ">=1.6.0,<2.0.0" },
     { name = "networkx", specifier = "==3.5" },
+    { name = "nltk", specifier = ">=3.8" },
     { name = "numpy", specifier = "==1.26.4" },
     { name = "openai", specifier = ">=1.37.1,<2.0.0" },
     { name = "pac-synth", specifier = "==0.0.8" },
@@ -1033,6 +1039,25 @@ requires-dist = [
 provides-extras = ["local"]
 
 [[package]]
+name = "itk-extract"
+version = "0.1.0"
+source = { editable = "packages/itk-extract" }
+dependencies = [
+    { name = "itk-core" },
+    { name = "jsonschema" },
+    { name = "polars" },
+    { name = "pydantic" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "itk-core", editable = "packages/itk-core" },
+    { name = "jsonschema", specifier = ">=4.0.0" },
+    { name = "polars", specifier = ">=0.20.10" },
+    { name = "pydantic", specifier = ">=2.0,<3.0" },
+]
+
+[[package]]
 name = "itk-match"
 version = "0.1.0"
 source = { editable = "packages/itk-match" }
@@ -1051,6 +1076,36 @@ requires-dist = [
     { name = "polars", specifier = ">=0.20.10" },
     { name = "pydantic", specifier = ">=2.0,<3.0" },
     { name = "rapidfuzz", specifier = ">=3.0.0" },
+]
+
+
+[[package]]
+name = "itk-query"
+version = "0.1.0"
+source = { editable = "packages/itk-query" }
+dependencies = [
+    { name = "graspologic-native" },
+    { name = "itk-core" },
+    { name = "networkx" },
+    { name = "nltk" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "pypdf" },
+    { name = "textblob" },
+    { name = "tiktoken" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "graspologic-native", specifier = ">=1.2.1,<1.3" },
+    { name = "itk-core", editable = "packages/itk-core" },
+    { name = "networkx", specifier = ">=3.0" },
+    { name = "nltk", specifier = ">=3.8" },
+    { name = "numpy", specifier = ">=1.26.4" },
+    { name = "pandas", specifier = ">=2.0.0" },
+    { name = "pypdf", specifier = ">=5.1.0,<6.0.0" },
+    { name = "textblob", specifier = ">=0.18.0" },
+    { name = "tiktoken", specifier = ">=0.7.0" },
 ]
 
 [[package]]
