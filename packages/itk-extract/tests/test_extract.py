@@ -15,8 +15,7 @@ from itk_extract.sources import from_texts
 
 if TYPE_CHECKING:
     from itk_extract.schema import RecordSchema
-
-    from .conftest import FakeBatchChat
+    from itk_extract_testing import FakeBatchChat
 
 
 def test_parse_reply_strips_fence(schema: RecordSchema) -> None:

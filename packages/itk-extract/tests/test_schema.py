@@ -5,8 +5,7 @@ from __future__ import annotations
 
 import pytest
 from itk_extract.schema import RecordSchema
-
-from .conftest import PEOPLE_SCHEMA
+from itk_extract_testing import PEOPLE_SCHEMA
 
 
 def test_array_paths_include_nested_arrays(schema: RecordSchema) -> None:

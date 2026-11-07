@@ -4,8 +4,7 @@
 from __future__ import annotations
 
 from itk_extract.merge import merge
-
-from .conftest import extraction
+from itk_extract_testing import extraction
 
 
 def test_empty_input() -> None:

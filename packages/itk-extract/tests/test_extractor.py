@@ -7,8 +7,7 @@ import json
 
 import pytest
 from itk_extract import ExtractConfig, Extractor, RecordSchema, from_texts
-
-from .conftest import PEOPLE_SCHEMA, FakeBatchChat
+from itk_extract_testing import PEOPLE_SCHEMA, FakeBatchChat
 
 
 async def test_end_to_end_merges_and_tabulates(

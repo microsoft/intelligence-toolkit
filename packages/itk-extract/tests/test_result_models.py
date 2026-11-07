@@ -7,8 +7,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 from itk_extract.models import Conflict, ExtractConfig, ExtractionError, ExtractResult
-
-from .conftest import chunk
+from itk_extract_testing import chunk
 
 if TYPE_CHECKING:
     from itk_extract.schema import RecordSchema
