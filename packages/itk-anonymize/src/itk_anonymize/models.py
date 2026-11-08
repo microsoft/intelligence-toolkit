@@ -55,10 +55,12 @@ class AnonymizeConfig(BaseModel):
     reporting_length: int = Field(
         4, ge=1, description="Longest attribute combination to count"
     )
-    percentile_percentage: float = Field(99.0, gt=0.0, le=100.0)
+    # pacsynth takes both percentiles as integers; the legacy float annotation
+    # only worked because callers passed whole numbers.
+    percentile_percentage: int = Field(99, ge=1, le=100)
     percentile_epsilon_proportion: float = Field(0.01, gt=0.0, lt=1.0)
     number_of_records_epsilon_proportion: float = Field(0.005, gt=0.0, lt=1.0)
-    weight_selection_percentile: float = Field(95.0, gt=0.0, le=100.0)
+    weight_selection_percentile: int = Field(95, ge=1, le=100)
     accuracy_mode: AccuracyModeName = "prioritize_long_combinations"
     fabrication_mode: FabricationModeName = "balanced"
     empty_value: str = Field("", description="Text treated as a missing value")

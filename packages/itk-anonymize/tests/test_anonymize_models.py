@@ -24,6 +24,16 @@ def test_config_defaults_match_legacy_signature() -> None:
     assert (config.attribute_separator, config.value_separator) == (";", ":")
 
 
+def test_percentiles_are_integers_as_pacsynth_requires() -> None:
+    config = AnonymizeConfig(
+        epsilon=1, percentile_percentage=90.0, weight_selection_percentile=80
+    )  # type: ignore[arg-type]
+    assert isinstance(config.percentile_percentage, int)
+    assert isinstance(config.weight_selection_percentile, int)
+    with pytest.raises(ValueError, match="percentile_percentage"):
+        AnonymizeConfig(epsilon=1, percentile_percentage=99.5)  # type: ignore[arg-type]
+
+
 def test_config_rejects_bad_values() -> None:
     with pytest.raises(ValueError, match="epsilon"):
         AnonymizeConfig(epsilon=0)
