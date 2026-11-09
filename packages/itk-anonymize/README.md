@@ -50,4 +50,16 @@ frames those charts are drawn from. The package has no pandas, Streamlit or
 Plotly dependency and, like `itk-core`, is bundled into the
 `intelligence-toolkit` wheel rather than published on its own.
 
+## Example notebook
+
+Open [`examples/anonymize_case_data/anonymize_case_data.ipynb`](examples/anonymize_case_data/anonymize_case_data.ipynb)
+for a walkthrough of the public API on the existing customer-complaints input,
+[`customer_complaints_prepared.csv`](../../example_outputs/anonymize_case_data/customer_complaints/customer_complaints_prepared.csv)
+(3,000 records, nine attributes). It prepares the records, reports their
+synthesizability, releases DP aggregates and synthetic records through pacsynth,
+shows both error reports, and answers top-attribute, time-series and flow
+questions from the released data, with optional plotly charts drawn from those
+frames. A second run at a smaller `epsilon` shows the privacy-utility trade-off.
+Outputs are not committed: differential privacy adds fresh noise on every run.
+
 Tests: `uv run pytest packages/itk-anonymize/tests`.
