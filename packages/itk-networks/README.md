@@ -74,8 +74,18 @@ Changed on purpose:
   limit. The seed is now `NetworkConfig.leiden_seed` (default 42).
 - Nearest neighbours uses `k = min(20, n)`, so fewer than 20 indexed nodes no
   longer raise.
-- Ties in component size break on the smallest member and nodes are sorted
-  before detection, so network ids are stable between runs.
+- Ties in component size break on the smallest member, and the subgraph handed
+  to the detector has its nodes and edges in sorted order. Leiden's partition
+  depends on insertion order, and the legacy projection iterated sets, so the
+  same inputs and seed gave different networks in different processes. The
+  package's partition is now reproducible.
+- Exposure paths are listed with flagged sources in sorted order (legacy took
+  them from a polars `unique()`, whose order varies between runs). The set of
+  paths is unchanged.
+- Exposure of an entity that some flagged network member cannot reach inside the
+  explore subgraph returns the reachable paths only; legacy raised
+  `NetworkXNoPath`. This happens whenever two entities were joined only through
+  an equality edge between attributes, which the explore subgraph does not keep.
 - Exposure: attribute steps report their true degree (legacy reused the
   previous entity's flag count), no flags gives an empty `Exposure`, and a
   selected entity outside the subgraph gives zero paths instead of raising.

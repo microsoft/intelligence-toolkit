@@ -56,8 +56,17 @@ def split_component(
     seed: int,
     detector: CommunityDetector,
 ) -> list[tuple[str, ...]]:
-    """Clusters of one oversized component, ordered like top-level components."""
-    subgraph = nx.Graph(projected.subgraph(nodes))
+    """Clusters of one oversized component, ordered like top-level components.
+
+    The subgraph is rebuilt with nodes and edges in sorted order: Leiden's result
+    depends on insertion order, and the projection's order comes from set
+    iteration, so without this the partition changes from process to process.
+    """
+    subgraph = nx.Graph()
+    subgraph.add_nodes_from(sorted(nodes))
+    subgraph.add_edges_from(
+        sorted(tuple(sorted(edge)) for edge in projected.subgraph(nodes).edges())
+    )
     assignment = detector.detect(subgraph, max_size, seed)
     missing = sorted(set(nodes) - set(assignment))
     if missing:

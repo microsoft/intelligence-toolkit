@@ -71,6 +71,21 @@ def test_split_component_rejects_partial_assignment():
         split_component(graph, (E("A"), E("B"), E("C")), 2, 0, Forgetful())
 
 
+def test_detector_sees_nodes_and_edges_in_sorted_order():
+    class Recording:
+        def detect(self, graph, max_size, seed):
+            self.nodes = list(graph.nodes())
+            self.edges = list(graph.edges())
+            return dict.fromkeys(graph.nodes(), 0)
+
+    graph = nx.Graph()
+    graph.add_edges_from([(E("C"), E("A")), (E("B"), E("C")), (E("A"), E("B"))])
+    detector = Recording()
+    split_component(graph, (E("C"), E("B"), E("A")), 2, 0, detector)
+    assert detector.nodes == [E("A"), E("B"), E("C")]
+    assert detector.edges == [(E("A"), E("B")), (E("A"), E("C")), (E("B"), E("C"))]
+
+
 def test_empty_projection_gives_no_networks():
     networks, membership = find_networks(nx.Graph(), NetworkConfig())
     assert networks == []
