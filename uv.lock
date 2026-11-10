@@ -12,6 +12,7 @@ resolution-markers = [
 members = [
     "intelligence-toolkit",
     "itk-anonymize",
+    "itk-compare",
     "itk-core",
     "itk-extract",
     "itk-match",
@@ -1011,6 +1012,23 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "polars", specifier = ">=0.20.10" },
+    { name = "pydantic", specifier = ">=2.0,<3.0" },
+]
+
+[[package]]
+name = "itk-compare"
+version = "0.1.0"
+source = { editable = "packages/itk-compare" }
+dependencies = [
+    { name = "itk-core" },
+    { name = "polars" },
+    { name = "pydantic" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "itk-core", editable = "packages/itk-core" },
     { name = "polars", specifier = ">=0.20.10" },
     { name = "pydantic", specifier = ">=2.0,<3.0" },
 ]
