@@ -15,6 +15,7 @@ members = [
     "itk-core",
     "itk-extract",
     "itk-match",
+    "itk-networks",
     "itk-query",
 ]
 
@@ -1094,6 +1095,38 @@ requires-dist = [
     { name = "rapidfuzz", specifier = ">=3.0.0" },
 ]
 
+
+[[package]]
+name = "itk-networks"
+version = "0.1.0"
+source = { editable = "packages/itk-networks" }
+dependencies = [
+    { name = "itk-core" },
+    { name = "networkx" },
+    { name = "numpy" },
+    { name = "polars" },
+    { name = "pydantic" },
+]
+
+[package.optional-dependencies]
+leiden = [
+    { name = "graspologic" },
+]
+sklearn = [
+    { name = "scikit-learn" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "graspologic", marker = "extra == 'leiden'", specifier = ">=3.4.1,<4.0.0" },
+    { name = "itk-core", editable = "packages/itk-core" },
+    { name = "networkx", specifier = ">=3.0" },
+    { name = "numpy", specifier = ">=1.26.4" },
+    { name = "polars", specifier = ">=0.20.10" },
+    { name = "pydantic", specifier = ">=2.0,<3.0" },
+    { name = "scikit-learn", marker = "extra == 'sklearn'", specifier = ">=1.5.0" },
+]
+provides-extras = ["leiden", "sklearn"]
 
 [[package]]
 name = "itk-query"
