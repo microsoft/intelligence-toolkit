@@ -92,6 +92,10 @@ Changed on purpose:
 - Null entity ids and null flag/group values are dropped before linking, like
   attributes already were. `flag` is always text.
 - `explore` ignores user-removed attributes as well as degree-trimmed ones.
+- `explore` visits neighbours in sorted order, so the simplified graph (whose
+  attribute merges depend on node order) is the same in every process. Legacy
+  iterated sets, so its simplified graph of a large network varied between
+  runs; the unsimplified subgraph is identical on both sides.
 - Inferred links are plain dicts of frozensets; report generation is async.
 
 Graph colours and the streamlit-agraph node payloads (`get_entity_graph`,
