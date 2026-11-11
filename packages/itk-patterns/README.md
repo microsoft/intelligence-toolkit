@@ -55,7 +55,7 @@ import an embedding model or call the network.
   sorted deterministically: patterns by `overall_score` descending, then
   period, then pattern; time series by pattern, then period; attribute counts
   by count descending, then value. `patterns_display` applies the legacy
-  rounding.
+  rounding (half to even, as Python's `round`).
 - `time_series` holds one series per distinct pattern. The legacy frame repeated
   a pattern's series once per period it was detected in.
 - Missing values are dropped at prepare time instead of surviving as `"nan"`

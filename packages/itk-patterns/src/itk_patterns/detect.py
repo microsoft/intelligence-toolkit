@@ -257,11 +257,18 @@ def score_patterns(
 
 
 def display_patterns(patterns: pl.DataFrame) -> pl.DataFrame:
-    """Legacy rounding: ``mean`` to whole numbers, both scores to two places."""
+    """Legacy rounding: ``mean`` to whole numbers, both scores to two places.
+
+    Rounds half to even, as Python's ``round`` did in the legacy workflow
+    (a mean of 54.5 shows as 54); polars' own ``round`` rounds half away.
+    """
+
+    def half_even(column: str, decimals: int) -> pl.Series:
+        values = np.round(patterns.get_column(column).to_numpy(), decimals)
+        return pl.Series(column, values, dtype=pl.Float64)
+
     return patterns.with_columns(
-        pl.col(MEAN).round(0),
-        pl.col(Z_SCORE).round(2),
-        pl.col(OVERALL_SCORE).round(2),
+        half_even(MEAN, 0), half_even(Z_SCORE, 2), half_even(OVERALL_SCORE, 2)
     )
 
 

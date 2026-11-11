@@ -202,19 +202,23 @@ def test_score_patterns_drops_constant_and_negative(counter):
 def test_display_patterns_rounds_like_legacy():
     frame = pl.DataFrame(
         {
-            PERIOD: ["P"],
-            PATTERN: ["a=1 & b=2"],
-            LENGTH: [2],
-            COUNT: [4],
-            MEAN: [2.4],
-            Z_SCORE: [1.23456],
-            DETECTIONS: [1],
-            OVERALL_SCORE: [0.98765],
+            PERIOD: ["P", "Q"],
+            PATTERN: ["a=1 & b=2", "a=1 & b=2"],
+            LENGTH: [2, 2],
+            COUNT: [4, 5],
+            MEAN: [2.4, 54.5],
+            Z_SCORE: [1.23456, 2.0],
+            DETECTIONS: [1, 1],
+            OVERALL_SCORE: [0.98765, 0.5],
         },
         schema=PATTERN_SCHEMA,
     )
-    shown = display_patterns(frame).row(0, named=True)
-    assert (shown[MEAN], shown[Z_SCORE], shown[OVERALL_SCORE]) == (2.0, 1.23, 0.99)
+    shown = display_patterns(frame)
+    first = shown.row(0, named=True)
+    assert (first[MEAN], first[Z_SCORE], first[OVERALL_SCORE]) == (2.0, 1.23, 0.99)
+    # half to even, as Python's round: 54.5 -> 54, not 55
+    assert shown.row(1, named=True)[MEAN] == 54.0
+    assert shown.schema == PATTERN_SCHEMA
 
 
 def test_detect_patterns_end_to_end(embedded, detection):
