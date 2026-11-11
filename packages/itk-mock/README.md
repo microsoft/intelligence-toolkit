@@ -81,8 +81,9 @@ repeatable; with a real model it fixes only the seed-record choice.
   omitted label gets a numbered default (`string_1`), which never reuses a
   label still present. New fields are required unless `required=False`, and
   `rename_field` keeps the field's required status. `set_enum_values` is new.
-- **Polars frames** instead of pandas. An array of primitives gets a `value`
-  column.
+- **Polars frames** instead of pandas. Columns follow the field order of the
+  records (pandas moved flattened `outer.inner` columns to the end), and an
+  array of primitives gets a `value` column rather than `0`.
 - **Deterministic merge.** Keys keep first-seen order and conflicts are kept on
   the result.
 - **Batch accounting.** Rounds count the batches actually generated, so a run
