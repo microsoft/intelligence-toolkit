@@ -52,12 +52,20 @@ def test_flatten_dots_nested_objects_and_keeps_lists() -> None:
     assert flatten(OBJECT["records"][0]) == {
         "name": "Ana",
         "age": 31,
-        "address.city": "Lakeside",
-        "address.geo.lat": 1.5,
         "tags": ["a", "b"],
         "orders": [{"sku": "x1"}, {"sku": "x2"}],
+        "address.city": "Lakeside",
+        "address.geo.lat": 1.5,
     }
-    assert flatten("a") == {"value": "a"}
+    assert list(flatten(OBJECT["records"][0])) == [
+        "name",
+        "age",
+        "tags",
+        "orders",
+        "address.city",
+        "address.geo.lat",
+    ]
+    assert flatten("a") == {"0": "a"}
 
 
 def test_extract_frame_unions_columns_in_first_seen_order() -> None:
@@ -66,10 +74,10 @@ def test_extract_frame_unions_columns_in_first_seen_order() -> None:
     assert frame.columns == [
         "name",
         "age",
-        "address.city",
-        "address.geo.lat",
         "tags",
         "orders",
+        "address.city",
+        "address.geo.lat",
         "nickname",
     ]
     assert frame.get_column("age").to_list() == [31.0, 40.5]
@@ -84,7 +92,7 @@ def test_to_frames_keys_by_dotted_path_and_handles_empty_arrays() -> None:
 
     assert list(frames) == ["records", "records.tags", "records.orders", "nothing"]
     assert frames["records.orders"].get_column("sku").to_list() == ["x1", "x2", "y1"]
-    assert frames["records.tags"].get_column("value").to_list() == ["a", "b"]
+    assert frames["records.tags"].get_column("0").to_list() == ["a", "b"]
     assert frames["nothing"].shape == (0, 0)
 
 

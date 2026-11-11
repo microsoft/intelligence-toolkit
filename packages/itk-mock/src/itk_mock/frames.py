@@ -12,7 +12,7 @@ import polars as pl
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-VALUE = "value"
+VALUE = "0"
 
 
 def records_at(data: Any, record_path: Sequence[str]) -> list[Any]:
@@ -31,20 +31,27 @@ def records_at(data: Any, record_path: Sequence[str]) -> list[Any]:
 
 
 def flatten(element: Any) -> dict[str, Any]:
-    """One flat row: nested objects become ``outer.inner`` keys, lists stay."""
+    """One flat row: nested objects become ``outer.inner`` keys, lists stay.
+
+    Column layout follows ``pandas.json_normalize``, which the workflow used:
+    top-level scalars and lists first, then the flattened nested objects, and
+    a single ``0`` column for an element that is not an object.
+    """
     if not isinstance(element, dict):
         return {VALUE: element}
-    row: dict[str, Any] = {}
+    row = {k: v for k, v in element.items() if not isinstance(v, dict)}
 
     def walk(node: dict[str, Any], prefix: str) -> None:
         for key, value in node.items():
-            name = f"{prefix}.{key}" if prefix else key
+            name = f"{prefix}.{key}"
             if isinstance(value, dict):
                 walk(value, name)
             else:
                 row[name] = value
 
-    walk(element, "")
+    for key, value in element.items():
+        if isinstance(value, dict):
+            walk(value, key)
     return row
 
 

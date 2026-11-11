@@ -11,7 +11,7 @@ text per record. Each stage is a module of plain functions:
 | 3 | `itk_mock.chat` | The `ChatFn` protocol: one async call taking messages, an optional JSON response schema and a temperature. `openai_chat` adapts itk-core's `OpenAIClient` and is the only place that imports it, lazily. |
 | 4 | `itk_mock.prompts` | The workflow's three prompts, word for word, and their message builders. |
 | 5 | `itk_mock.records` | `generate_records`: one unseeded batch, then rounds of batches seeded from sampled existing records with near-duplicate and close-relation targets. Also `merge_json_objects`, `sample_from_record_array` and `select_random_records`, all taking an explicit `random.Random`. |
-| 6 | `itk_mock.frames` | `to_frames`: one polars frame per record array, keyed by its dotted path. Nested objects become `outer.inner` columns; arrays stay as list columns and also get their own frame. |
+| 6 | `itk_mock.frames` | `to_frames`: one polars frame per record array, keyed by its dotted path. Nested objects become `outer.inner` columns after the others; arrays stay as list columns and also get their own frame. |
 | 7 | `itk_mock.texts` | `generate_texts`: one text per record, `parallelism` at a time, in input order. |
 
 `itk_mock.MockDataGenerator` strings these together. `generate_records` returns
@@ -82,9 +82,10 @@ repeatable; with a real model it fixes only the seed-record choice.
   the whole schema), bumped if that label is still present where it is added,
   so a delete can no longer lead to an overwrite. New fields are required unless `required=False`, and
   `rename_field` keeps the field's required status. `set_enum_values` is new.
-- **Polars frames** instead of pandas. Columns follow the field order of the
-  records (pandas moved flattened `outer.inner` columns to the end), and an
-  array of primitives gets a `value` column rather than `0`.
+- **Polars frames** instead of pandas, with the same column names and order
+  as the legacy `json_normalize` frames (flattened `outer.inner` columns after
+  the others, a `0` column for an array of primitives), so CSV exports keep
+  their layout.
 - **Deterministic merge.** Keys keep first-seen order and conflicts are kept on
   the result.
 - **Batch accounting.** Rounds count the batches actually generated, so a run
