@@ -98,4 +98,17 @@ Graph colours and the streamlit-agraph node payloads (`get_entity_graph`,
 `get_type_color`) stay with the Streamlit app; `explore.subgraph_frames`
 provides everything they need.
 
+## Example notebook
+
+Open [`examples/detect_entity_networks/detect_entity_networks.ipynb`](examples/detect_entity_networks/detect_entity_networks.ipynb)
+for a walkthrough of the public API on the existing company-grievances input,
+[`company_grievances_input.csv`](../../example_outputs/detect_entity_networks/company_grievances/company_grievances_input.csv)
+(12,000 rows, about 3,600 companies). It prepares the attribute, flag and group
+tables, indexes entity names with an offline character-trigram embedder, infers
+similar names at a threshold, identifies networks with `NetworkConfig`, re-runs
+`infer` and `identify` with other settings to show that nothing is re-embedded,
+explores one network as node and edge frames, reads the flag exposure of one
+entity, and shows the report prompt; the LLM call itself runs only when an OpenAI
+configuration is present. Outputs are not committed.
+
 Tests: `uv run pytest packages/itk-networks/tests`.
