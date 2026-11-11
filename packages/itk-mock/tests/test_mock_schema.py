@@ -76,6 +76,18 @@ def test_add_without_label_numbers_the_default_label(
     )
 
 
+def test_add_without_label_numbers_across_the_whole_schema(
+    boilerplate: dict[str, Any],
+) -> None:
+    sb.add_primitive_field(boilerplate, RECORDS)
+    obj = sb.add_object_field(boilerplate, RECORDS)
+    sb.add_array_field(boilerplate, RECORDS, "items", item_type=ArrayFieldType.OBJECT)
+
+    assert sb.add_primitive_field(boilerplate, ["records", obj]) == "string_2"
+    assert sb.add_primitive_field(boilerplate, ["records", "items"]) == "string_3"
+    assert sb.add_object_field(boilerplate, ["records", obj]) == "object_2"
+
+
 def test_add_without_label_never_overwrites_after_a_delete(
     boilerplate: dict[str, Any],
 ) -> None:
@@ -83,8 +95,8 @@ def test_add_without_label_never_overwrites_after_a_delete(
     sb.add_primitive_field(boilerplate, RECORDS)
     sb.delete_field(boilerplate, RECORDS, "string_1")
 
-    assert sb.add_primitive_field(boilerplate, RECORDS) == "string_1"
     assert sb.add_primitive_field(boilerplate, RECORDS) == "string_3"
+    assert sb.get_field(boilerplate, RECORDS, "string_2") is not None
 
 
 def test_add_optional_field_is_not_required(boilerplate: dict[str, Any]) -> None:

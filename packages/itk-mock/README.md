@@ -78,8 +78,9 @@ repeatable; with a real model it fixes only the seed-record choice.
   unknown path labels or overwrote fields. `set_additional_field_status` reports
   whether it changed anything.
 - **Labels.** A label passed to an `add_*` function is used as given; only an
-  omitted label gets a numbered default (`string_1`), which never reuses a
-  label still present. New fields are required unless `required=False`, and
+  omitted label gets the legacy numbered default (`string_1`, counted across
+  the whole schema), bumped if that label is still present where it is added,
+  so a delete can no longer lead to an overwrite. New fields are required unless `required=False`, and
   `rename_field` keeps the field's required status. `set_enum_values` is new.
 - **Polars frames** instead of pandas. Columns follow the field order of the
   records (pandas moved flattened `outer.inner` columns to the end), and an

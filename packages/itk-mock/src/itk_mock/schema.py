@@ -407,7 +407,7 @@ def _add(
 ) -> str:
     properties = get_properties(schema, nesting)
     if label is None:
-        label = _numbered_label(properties, default_label)
+        label = _numbered_label(schema, properties, default_label)
     elif not label:
         msg = "Field label must not be empty"
         raise SchemaEditError(msg)
@@ -420,11 +420,25 @@ def _add(
     return label
 
 
-def _numbered_label(properties: dict[str, Schema], base: str) -> str:
-    number = 1
+def _numbered_label(schema: Schema, properties: dict[str, Schema], base: str) -> str:
+    """``base_N``, N being one more than the ``base_*`` keys in the whole schema.
+
+    Bumped further while the label is taken where it is being added.
+    """
+    number = _count_labels(schema, base) + 1
     while f"{base}_{number}" in properties:
         number += 1
     return f"{base}_{number}"
+
+
+def _count_labels(node: Schema, base: str) -> int:
+    count = 0
+    for key, value in node.items():
+        if key.rsplit("_", 1)[0] == base and "_" in key:
+            count += 1
+        if isinstance(value, dict):
+            count += _count_labels(value, base)
+    return count
 
 
 def _move(schema: Schema, nesting: Sequence[str], label: str, step: int) -> None:
