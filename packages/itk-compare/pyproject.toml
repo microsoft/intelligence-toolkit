@@ -1,0 +1,27 @@
+[project]
+name = "itk-compare"
+version = "0.1.0"
+description = "Case group comparison for Intelligence Toolkit: group and attribute counts, ranks, temporal window deltas and AI group reports"
+authors = [
+    {name = "Dayenne Souza", email = "ddesouza@microsoft.com"},
+    {name = "Ha Trinh", email = "trinhha@microsoft.com"},
+    {name = "Darren Edge", email = "daedge@microsoft.com"}
+]
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "itk-core",
+    "polars>=0.20.10",
+    "pydantic>=2.0,<3.0",
+]
+
+[tool.uv.sources]
+itk-core = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/itk_compare"]
