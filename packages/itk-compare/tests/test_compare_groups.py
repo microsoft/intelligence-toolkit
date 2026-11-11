@@ -4,7 +4,11 @@
 from __future__ import annotations
 
 import polars as pl
-from itk_compare.groups import attribute_counts, group_counts, melt_attributes
+from itk_compare.groups import (
+    attribute_counts,
+    count_attribute_values,
+    group_counts,
+)
 from itk_compare.prepare import prepare_frame
 from itk_compare_testing import rows
 
@@ -31,13 +35,31 @@ def test_group_counts_over_two_columns_sorts_by_both():
     ]
 
 
-def test_melt_attributes_skips_missing_values(complaints: pl.DataFrame):
+def test_count_attribute_values_skips_missing_values(complaints: pl.DataFrame):
     prepared = prepare_frame(complaints, ["city"])
-    melted = melt_attributes(prepared, ["city"], ["price_issue", "quality_issue"])
-    assert melted.columns == ["city", "attribute_value"]
+    counted = count_attribute_values(
+        prepared, ["city"], ["price_issue", "quality_issue"], "n"
+    )
+    assert counted.columns == ["city", "attribute_value", "n"]
+    assert counted.schema["n"] == pl.Int64
     # 7 records x 2 aggregates, minus the two blank cells.
-    assert melted.height == 12
-    assert melted.filter(pl.col("attribute_value") == "price_issue:True").height == 4
+    assert counted["n"].sum() == 12
+    assert (
+        counted.filter(pl.col("attribute_value") == "price_issue:True")["n"].sum() == 4
+    )
+
+
+def test_count_attribute_values_merges_columns_rendering_the_same_text():
+    frame = pl.DataFrame({"g": ["x", "x"], "a": ["b:c", None], "a:b": [None, "c"]})
+    counted = count_attribute_values(frame, ["g"], ["a", "a:b"], "n")
+    assert rows(counted, "g", "attribute_value", "n") == [("x", "a:b:c", 2)]
+
+
+def test_count_attribute_values_without_aggregates_is_empty():
+    frame = pl.DataFrame({"g": ["x"]})
+    counted = count_attribute_values(frame, ["g"], [], "n")
+    assert counted.height == 0
+    assert counted.columns == ["g", "attribute_value", "n"]
 
 
 def test_attribute_counts_cross_every_group_with_every_value(complaints: pl.DataFrame):

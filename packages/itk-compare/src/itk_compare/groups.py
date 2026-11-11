@@ -40,31 +40,48 @@ def group_counts(frame: pl.DataFrame, groups: Sequence[str]) -> pl.DataFrame:
     )
 
 
-def melt_attributes(
-    frame: pl.DataFrame, id_columns: Sequence[str], aggregates: Sequence[str]
+def count_attribute_values(
+    frame: pl.DataFrame,
+    id_columns: Sequence[str],
+    aggregates: Sequence[str],
+    count_name: str,
 ) -> pl.DataFrame:
-    """One row per record and non-missing aggregate value, as ``attribute_value``."""
-    return (
-        _unpivot(frame, list(id_columns), list(aggregates))
-        .drop_nulls(subset=["value"])
-        .with_columns(
-            (pl.col("attribute") + ":" + pl.col("value").cast(pl.Utf8)).alias(
+    """Count each non-missing ``attribute:value`` per combination of ``id_columns``.
+
+    Counts one aggregate column at a time and builds the ``attribute_value``
+    text on the counted rows, not on every record, which is what keeps large
+    inputs fast. Returns ``id_columns``, ``attribute_value`` and ``count_name``.
+    """
+    ids = list(id_columns)
+    schema = {
+        **{c: frame.schema[c] for c in ids},
+        ATTRIBUTE_VALUE: pl.Utf8,
+        count_name: pl.Int64,
+    }
+    if not aggregates:
+        return pl.DataFrame(schema=schema)
+    lazy = frame.lazy()
+    parts = [
+        lazy.select([*ids, column])
+        .drop_nulls(subset=[column])
+        .group_by([*ids, column])
+        .agg(pl.len().cast(pl.Int64).alias(count_name))
+        .select([
+            *ids,
+            (pl.lit(f"{column}:") + pl.col(column).cast(pl.Utf8)).alias(
                 ATTRIBUTE_VALUE
-            )
-        )
-        .drop(["attribute", "value"])
-    )
-
-
-def _unpivot(frame: pl.DataFrame, index: list[str], on: list[str]) -> pl.DataFrame:
-    """``unpivot`` on polars >= 1.0, ``melt`` before it (the lock pins 0.20.10)."""
-    unpivot = getattr(frame, "unpivot", None)
-    if unpivot is not None:
-        return unpivot(
-            on=on, index=index, variable_name="attribute", value_name="value"
-        )
-    return frame.melt(
-        id_vars=index, value_vars=on, variable_name="attribute", value_name="value"
+            ),
+            count_name,
+        ])
+        for column in aggregates
+    ]
+    # collect_all runs the per-column counts in parallel. Summing again merges
+    # the rare case of two columns rendering the same ``attribute:value`` text
+    # (a column name that itself contains a colon).
+    return (
+        pl.concat(pl.collect_all(parts))
+        .group_by([*ids, ATTRIBUTE_VALUE])
+        .agg(pl.col(count_name).sum().cast(pl.Int64))
     )
 
 
@@ -79,11 +96,7 @@ def attribute_counts(
     """
     groups = list(groups)
     keys = [*groups, ATTRIBUTE_VALUE]
-    counted = (
-        melt_attributes(frame, groups, aggregates)
-        .group_by(keys)
-        .agg(pl.len().cast(pl.Int64).alias(GROUP_ATTRIBUTE_COUNT))
-    )
+    counted = count_attribute_values(frame, groups, aggregates, GROUP_ATTRIBUTE_COUNT)
     complete = (
         frame.select(groups)
         .unique()

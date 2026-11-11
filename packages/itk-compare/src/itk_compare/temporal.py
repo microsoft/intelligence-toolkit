@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 import polars as pl
 
-from itk_compare.groups import melt_attributes
+from itk_compare.groups import count_attribute_values
 from itk_compare.models import ATTRIBUTE_VALUE, window_columns
 
 if TYPE_CHECKING:
@@ -29,11 +29,14 @@ def window_counts(
     columns = window_columns(temporal)
     keys = [*groups, columns.window, ATTRIBUTE_VALUE]
     return (
-        melt_attributes(frame, [*groups, temporal], aggregates)
-        .drop_nulls(subset=[temporal])
+        count_attribute_values(
+            frame.drop_nulls(subset=[temporal]),
+            [*groups, temporal],
+            aggregates,
+            columns.count,
+        )
         .rename({temporal: columns.window})
-        .group_by(keys)
-        .agg(pl.len().cast(pl.Int64).alias(columns.count))
+        .select([*keys, columns.count])
         .sort(keys)
     )
 
