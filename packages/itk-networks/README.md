@@ -63,7 +63,7 @@ for the graspologic adapter and `itk-networks[sklearn]` for the parity index.
 ## Differences from `intelligence_toolkit.detect_entity_networks`
 
 Kept bit-for-bit: node names and the `==` encoding, text cleaning, equality
-edges, the flags frame, the trimming rule and three-hop projection, component
+edges, the flags frame, the embedder's vector precision (no float32 downcast), the trimming rule and three-hop projection, component
 ordering by size, network ids as list positions, entity record columns and
 rounding, the exposure summary, path grouping and markdown, the prompt text.
 
