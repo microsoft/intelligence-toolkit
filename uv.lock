@@ -16,6 +16,7 @@ members = [
     "itk-core",
     "itk-extract",
     "itk-match",
+    "itk-mock",
     "itk-networks",
     "itk-patterns",
     "itk-query",
@@ -1114,6 +1115,25 @@ requires-dist = [
     { name = "rapidfuzz", specifier = ">=3.0.0" },
 ]
 
+
+[[package]]
+name = "itk-mock"
+version = "0.1.0"
+source = { editable = "packages/itk-mock" }
+dependencies = [
+    { name = "itk-core" },
+    { name = "jsonschema" },
+    { name = "polars" },
+    { name = "pydantic" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "itk-core", editable = "packages/itk-core" },
+    { name = "jsonschema", specifier = ">=4.0.0" },
+    { name = "polars", specifier = ">=0.20.10" },
+    { name = "pydantic", specifier = ">=2.0,<3.0" },
+]
 
 [[package]]
 name = "itk-networks"
