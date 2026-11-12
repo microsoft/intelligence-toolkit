@@ -49,19 +49,21 @@ async def embed_nodes(
     callbacks: list[ProgressBatchCallback] | None = None,
     cache: bool = True,
 ) -> tuple[list[str], np.ndarray]:
-    """Return the sorted node texts and a float32 matrix with one row each."""
+    """Return the sorted node texts and a matrix with one row each.
+
+    The matrix keeps the embedder's precision (float64 for Python floats, as
+    the legacy workflow did), so neighbour distances match it bit for bit.
+    """
     pairs = nodes_to_embed(graph, node_types)
     texts = [node for node, _ in pairs]
     if not texts:
-        return [], np.zeros((0, 0), dtype=np.float32)
+        return [], np.zeros((0, 0))
     payload: list[Any] = [
         {"hash": hash_text(node), "text": node, "additional_details": {"type": kind}}
         for node, kind in pairs
     ]
     stored = await embedder.embed_store_many(payload, callbacks, cache)
-    by_text = {
-        item["text"]: np.asarray(item["vector"], dtype=np.float32) for item in stored
-    }
+    by_text = {item["text"]: np.asarray(item["vector"]) for item in stored}
     missing = [t for t in texts if t not in by_text]
     if missing:
         msg = f"Embedder returned no vector for {len(missing)} node(s)"

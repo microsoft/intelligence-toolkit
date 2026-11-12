@@ -31,9 +31,21 @@ async def test_embed_nodes_returns_aligned_matrix(graph):
     texts, matrix = await embed_nodes(graph, ["ENTITY"], embedder)
     assert texts == [E(n) for n in "ABCDEF"]
     assert matrix.shape == (6, 36)
-    assert matrix.dtype == np.float32
-    np.testing.assert_array_equal(matrix[2], np.asarray(letter_bag(E("C")), np.float32))
+    assert matrix.dtype == np.float64  # Python floats keep full precision
+    np.testing.assert_array_equal(matrix[2], np.asarray(letter_bag(E("C"))))
     assert embedder.calls == [texts]
+
+
+async def test_embed_nodes_keeps_the_embedder_dtype(graph):
+    class Float32(FakeEmbedder):
+        async def embed_store_many(self, data, callbacks=None, cache_data=True):
+            stored = await super().embed_store_many(data, callbacks, cache_data)
+            for item in stored:
+                item["vector"] = np.asarray(item["vector"], dtype=np.float32)
+            return stored
+
+    _, matrix = await embed_nodes(graph, ["ENTITY"], Float32())
+    assert matrix.dtype == np.float32
 
 
 async def test_embed_nodes_passes_type_in_additional_details(graph):

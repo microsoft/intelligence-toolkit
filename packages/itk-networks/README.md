@@ -63,7 +63,7 @@ for the graspologic adapter and `itk-networks[sklearn]` for the parity index.
 ## Differences from `intelligence_toolkit.detect_entity_networks`
 
 Kept bit-for-bit: node names and the `==` encoding, text cleaning, equality
-edges, the flags frame, the trimming rule and three-hop projection, component
+edges, the flags frame, the embedder's vector precision (no float32 downcast), the trimming rule and three-hop projection, component
 ordering by size, network ids as list positions, entity record columns and
 rounding, the exposure summary, path grouping and markdown, the prompt text.
 
@@ -92,10 +92,27 @@ Changed on purpose:
 - Null entity ids and null flag/group values are dropped before linking, like
   attributes already were. `flag` is always text.
 - `explore` ignores user-removed attributes as well as degree-trimmed ones.
+- `explore` visits neighbours in sorted order, so the simplified graph (whose
+  attribute merges depend on node order) is the same in every process. Legacy
+  iterated sets, so its simplified graph of a large network varied between
+  runs; the unsimplified subgraph is identical on both sides.
 - Inferred links are plain dicts of frozensets; report generation is async.
 
 Graph colours and the streamlit-agraph node payloads (`get_entity_graph`,
 `get_type_color`) stay with the Streamlit app; `explore.subgraph_frames`
 provides everything they need.
+
+## Example notebook
+
+Open [`examples/detect_entity_networks/detect_entity_networks.ipynb`](examples/detect_entity_networks/detect_entity_networks.ipynb)
+for a walkthrough of the public API on the existing company-grievances input,
+[`company_grievances_input.csv`](../../example_outputs/detect_entity_networks/company_grievances/company_grievances_input.csv)
+(12,000 rows, about 3,600 companies). It prepares the attribute, flag and group
+tables, indexes entity names with an offline character-trigram embedder, infers
+similar names at a threshold, identifies networks with `NetworkConfig`, re-runs
+`infer` and `identify` with other settings to show that nothing is re-embedded,
+explores one network as node and edge frames, reads the flag exposure of one
+entity, and shows the report prompt; the LLM call itself runs only when an OpenAI
+configuration is present. Outputs are not committed.
 
 Tests: `uv run pytest packages/itk-networks/tests`.

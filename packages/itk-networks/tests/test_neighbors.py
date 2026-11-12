@@ -6,6 +6,7 @@ import pytest
 from itk_core.progress import ProgressBatchCallback
 from itk_networks.neighbors import (
     BruteForceCosine,
+    SklearnNeighbors,
     infer_links,
     link_pairs,
     links_frame,
@@ -105,3 +106,21 @@ def test_link_pairs_and_frame_strip_entity_prefix():
     frame = links_frame(links)
     assert frame.columns == ["text", "similar"]
     assert frame.rows() == [("Abc", "Acme"), ("Acme", "Acme Co")]
+
+
+def test_sklearn_and_brute_force_infer_the_same_links_on_float64():
+    pytest.importorskip("sklearn")
+    rng = np.random.default_rng(7)
+    base = rng.normal(size=(12, 8))
+    # Near-duplicate rows with exactly tied distances, like count vectors have.
+    vectors = np.vstack([base, base[:4] * 2.0, base[:2] * 3.0])
+    texts = [f"t{i}" for i in range(vectors.shape[0])]
+    expected = link_pairs(
+        infer_links(texts, *BruteForceCosine().nearest(vectors, 5), 0.05)
+    )
+    actual = link_pairs(
+        infer_links(texts, *SklearnNeighbors().nearest(vectors, 5), 0.05)
+    )
+    assert vectors.dtype == np.float64
+    assert actual == expected
+    assert len(expected) == 8  # rows 0 and 1 form triples, rows 2 and 3 pairs
