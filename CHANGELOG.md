@@ -17,16 +17,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ```
 
 ## [Unreleased]
-### Added
-- `itk-query` workspace package (`packages/itk-query`, import name `itk_query`): a v2 rewrite of Query Text Data as standalone steps over typed records, with parity tests against the v1 characterization goldens. It keeps adjacent-chunk search within one source, drops citations to unknown chunks, is independent of `PYTHONHASHSEED`, and handles empty or concept-less corpora. The app still uses v1; v2 is bundled in the wheel alongside `itk_core` and `itk_match`.
-
 ### Changed
 - Extracted the shared AI core (`intelligence_toolkit.AI`, `helpers.decorators`, `helpers.progress_batch_callback`) into the `itk-core` workspace package (`packages/itk-core`, import name `itk_core`), which is bundled in the `intelligence-toolkit` wheel rather than published separately. Imports changed to `itk_core`, `itk_core.retry` and `itk_core.progress`; there are no compatibility shims.
 
 ### Removed
 - `VECTOR_STORE_MAX_RETRIES` and `VECTOR_STORE_MAX_RETRIES_WAIT_TIME` from `helpers.constants`.
+- Duplicate `app/util/df_functions.py` and `app/util/wkhtmltopdf.py`; the app now uses `intelligence_toolkit.helpers`. `quantize_datetime` and `quantize_numeric` moved to `helpers.df_functions`.
 
 ### Fixed
+- Anonymize Case Data no longer imports from the Streamlit `app` package, so it works when installed from PyPI.
+- Date quantization no longer uses bare `except:` blocks, which also swallowed `KeyboardInterrupt` and unrelated errors.
 - Query Text Data, Extract Record Data and Generate Mock Data now read the AI settings on every page run instead of once at import, so changes saved on the Settings page apply without restarting the app.
 
 ## [0.2.0] - 2026-10-14
