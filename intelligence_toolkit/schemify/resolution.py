@@ -1337,6 +1337,8 @@ class ResolutionEngine:
 
         # ── 1. Uppercase labels ────────────────────────────────────────
         for record in record_set.records:
+            if record.clean_aliases():
+                stats["aliases_cleaned"] = stats.get("aliases_cleaned", 0) + 1
             upper = (record.label or "").strip().upper()
             if upper and upper != record.label:
                 if record.label and record.label not in record.aliases:

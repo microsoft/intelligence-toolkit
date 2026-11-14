@@ -17,11 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ```
 
 ## [Unreleased]
-### Added
-- Example notebook for Build Entity Dataset (`example_notebooks/build_entity_dataset.ipynb`).
-- `WKHTMLTOPDF_PATH` environment variable to set the wkhtmltopdf location; the fallback path now depends on the OS.
-- CI runs on Python 3.11 and 3.12, adds report-only ruff and pyright (basic mode, scoped to `itk_core` and `helpers`) checks, and uploads a unit-test coverage report.
-
 ### Changed
 - Extracted the shared AI core (`intelligence_toolkit.AI`, `helpers.decorators`, `helpers.progress_batch_callback`) into the `itk-core` workspace package (`packages/itk-core`, import name `itk_core`), which is bundled in the `intelligence-toolkit` wheel rather than published separately. Imports changed to `itk_core`, `itk_core.retry` and `itk_core.progress`; there are no compatibility shims.
 

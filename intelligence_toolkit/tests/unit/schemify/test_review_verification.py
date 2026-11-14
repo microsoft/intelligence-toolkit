@@ -802,6 +802,24 @@ def test_copilot_failures_are_not_success_shaped(output):
         completion_from_events(output)
 
 
+def _tool_events(success):
+    request = {"type": "assistant.message",
+               "data": {"toolRequests": [{"toolCallId": "c1", "name": "web_fetch"}]}}
+    complete = {"type": "tool.execution_complete", "data": {"toolCallId": "c1", "success": success}}
+    return "\n".join([json.dumps(request), json.dumps(complete), events()])
+
+
+def test_copilot_tolerates_refused_tool_requests():
+    value, metadata = completion_from_events(_tool_events(success=False))
+    assert value == '{"items": []}'
+    assert metadata["refused_tool_requests"] == 1
+
+
+def test_copilot_rejects_tools_that_ran():
+    with pytest.raises(RuntimeError, match="ran a tool"):
+        completion_from_events(_tool_events(success=True))
+
+
 async def test_copilot_uses_stdin_and_no_tools():
     with patch("shutil.which", return_value="copilot"), patch("subprocess.run") as run:
         run.return_value.returncode = 0
