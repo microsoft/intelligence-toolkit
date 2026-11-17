@@ -594,6 +594,8 @@ def test_review_interface_starts_and_reopens_read_only_capture(monkeypatch, tmp_
     import streamlit as st
     from streamlit.testing.v1 import AppTest
 
+    # AppTest preserves button triggers across st.rerun(); drive refreshes below.
+    monkeypatch.setattr(st, "rerun", lambda: None)
     api = prepare_api(monkeypatch, tmp_path)
     before = fingerprint(api.dataset_json)
 
