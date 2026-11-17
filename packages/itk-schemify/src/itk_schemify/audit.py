@@ -134,11 +134,17 @@ def _extract_json_object(text: str) -> dict:
 
 
 def _run_openai(message: str, model: str, api_key: str | None) -> str:
-    from openai import OpenAI
+    from itk_core.client import OpenAIClient
+    from itk_core.openai_configuration import OpenAIConfiguration
 
-    client = OpenAI(api_key=api_key or os.environ.get("OPENAI_API_KEY"))
-    response = client.responses.create(
-        model=model,
+    client = OpenAIClient(
+        OpenAIConfiguration({
+            "api_key": api_key or os.environ.get("OPENAI_API_KEY"),
+            "model": model,
+            "api_type": "OpenAI",
+        })
+    )
+    response = client.generate_response(
         input=message,
         text={"format": {"type": "json_object"}},
     )

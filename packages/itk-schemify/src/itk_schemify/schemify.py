@@ -8,6 +8,7 @@ from typing import Any, Optional, Callable
 import logging
 import pandas as pd
 from IPython.display import display, HTML
+from itk_core.openai_configuration import OpenAIConfiguration
 
 from .models import (
     Record, RecordSet, SchemaAttribute, SchemifyConfig, AttributeValue,
@@ -72,16 +73,23 @@ class Schemify:
         ```
     """
     
-    def __init__(self, config: SchemifyConfig, search_provider: SearchProvider | None = None):
+    def __init__(
+        self,
+        config: SchemifyConfig,
+        search_provider: SearchProvider | None = None,
+        ai_configuration: OpenAIConfiguration | None = None,
+    ):
         """
         Initialize Schemify.
-        
+
         Args:
             config: Configuration options
             search_provider: Optional custom search provider (default: OpenAI web search)
+            ai_configuration: Optional itk-core connection settings
+                (default: OpenAI with ``config.api_key``)
         """
         self.config = config
-        self.llm = LLMClient(config)
+        self.llm = LLMClient(config, ai_configuration)
         
         # Initialize cache
         if config.cache_enabled:

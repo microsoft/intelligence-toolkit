@@ -5,16 +5,18 @@ Supports:
 - gpt-5.2 with Responses API for web search and reasoning control
 - Comprehensive usage tracking (input/output tokens, web searches)
 - Raw response logging for debugging and data preservation
+
+The connection and the retry policy come from itk-core's ``OpenAIClient``.
 """
 
-from openai import AsyncOpenAI
 from datetime import datetime
 from typing import Any, Optional
-import asyncio
 import json
 import logging
 import os
-import random as _random
+
+from itk_core.client import OpenAIClient
+from itk_core.openai_configuration import OpenAIConfiguration
 
 from .models import Citation, SchemifyConfig, BudgetExceededError
 
@@ -54,22 +56,36 @@ WEB_SEARCH_CALL_COST: dict[str, float] = {
 }
 DEFAULT_WEB_SEARCH_CALL_COST = 0.010  # Default for unknown models
 
+# 5-minute timeout per request (web search + reasoning needs headroom)
+REQUEST_TIMEOUT_SECONDS = 300.0
+
 
 class LLMClient:
     """
     LLM client with web search and structured output support.
     Uses the Responses API for reasoning control.
     Tracks all usage and saves raw responses.
+
+    Requests go through itk-core's ``OpenAIClient``, which owns the connection
+    and retries transient failures. Pass ``ai_configuration`` to use a
+    connection other than OpenAI with ``config.api_key``.
     """
-    
-    def __init__(self, config: SchemifyConfig):
+
+    def __init__(
+        self,
+        config: SchemifyConfig,
+        ai_configuration: OpenAIConfiguration | None = None,
+    ):
         self.config = config
-        self.client = AsyncOpenAI(
-            api_key=config.api_key,
-            timeout=300.0,       # 5-minute timeout per request (web search + reasoning needs headroom)
-            max_retries=0,       # We handle retries ourselves
+        self.client = OpenAIClient(
+            ai_configuration
+            or OpenAIConfiguration({
+                "api_key": config.api_key,
+                "model": config.completion_model,
+                "api_type": "OpenAI",
+            })
         )
-        
+
         # Detailed usage tracking
         self.input_tokens = 0
         self.output_tokens = 0
@@ -246,39 +262,12 @@ class LLMClient:
                 f"Estimated cost ${self.total_cost:.4f} exceeds budget ${self.config.max_budget:.2f}"
             )
     
-    @staticmethod
-    def _is_retryable(error: Exception) -> bool:
-        """Check if an error is retryable (rate limit, server error, timeout)."""
-        error_str = str(error).lower()
-        return any(s in error_str for s in [
-            'rate_limit', '429', '500', '502', '503', '504',
-            'timeout', 'connection', 'overloaded',
-        ])
-    
-    async def _retry_api_call(self, coro, max_retries: int = 5):
-        """Execute an async API call with exponential backoff retry.
-        
-        Uses up to max_retries attempts with exponential backoff.
-        Timeout and overload errors get longer waits (up to 120s).
-        """
-        for attempt in range(max_retries + 1):
-            try:
-                return await coro()
-            except BudgetExceededError:
-                raise  # Never retry budget errors
-            except Exception as e:
-                if attempt == max_retries or not self._is_retryable(e):
-                    raise
-                error_str = str(e).lower()
-                is_timeout = 'timeout' in error_str
-                # Longer backoff for timeouts/overload; shorter for rate limits
-                if is_timeout or 'overloaded' in error_str:
-                    delay = min(5.0 * (2 ** attempt) + _random.uniform(0, 3), 120.0)
-                else:
-                    delay = min(1.0 * (2 ** attempt) + _random.uniform(0, 1), 60.0)
-                self._log_with_context(f"Retry {attempt + 1}/{max_retries} after {delay:.1f}s: {e}")
-                await asyncio.sleep(delay)
-    
+    async def _create_response(self, **kwargs: Any) -> Any:
+        """Send one Responses API request; itk-core retries transient failures."""
+        return await self.client.generate_response_async(
+            timeout=REQUEST_TIMEOUT_SECONDS, **kwargs
+        )
+
     async def web_search_completion(
         self,
         prompt: str,
@@ -317,7 +306,7 @@ class LLMClient:
         }
         if self.config.reasoning_effort == "none":
             call_kwargs["temperature"] = self.config.temperature
-        response = await self._retry_api_call(lambda: self.client.responses.create(**call_kwargs))
+        response = await self._create_response(**call_kwargs)
         
         # Track usage
         self._track_usage(response, is_web_search=True)
@@ -423,7 +412,7 @@ class LLMClient:
                 }
             }
         
-        response = await self._retry_api_call(lambda: self.client.responses.create(**kwargs))
+        response = await self._create_response(**kwargs)
         
         # Track usage
         self._track_usage(response)
@@ -473,7 +462,7 @@ class LLMClient:
         }
         if self.config.reasoning_effort == "none":
             simple_kwargs["temperature"] = self.config.temperature
-        response = await self._retry_api_call(lambda: self.client.responses.create(**simple_kwargs))
+        response = await self._create_response(**simple_kwargs)
         
         # Track usage
         self._track_usage(response)

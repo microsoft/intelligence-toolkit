@@ -5,9 +5,8 @@ entities in a category from public web sources, proposes a schema for them,
 extracts cited attribute values, resolves duplicates, and audits the result.
 
 This package is a standalone copy of the `intelligence_toolkit.schemify` module,
-with four fixes listed below. It does not depend on the rest of Intelligence Toolkit.
-It calls OpenAI through its own `itk_schemify.llm` client; moving that onto
-`itk-core` is planned as a separate change. The app and
+with the differences listed below. Its only toolkit dependency is `itk-core`,
+whose `OpenAIClient` sends every model request. The app and
 `intelligence_toolkit.build_entity_dataset` still use the original module.
 
 ```python
@@ -19,6 +18,11 @@ await schemify.initialize(
     guidance="Focus on widely deployed systems with active communities",
 )
 ```
+
+By default requests go to OpenAI with `config.api_key`. To use other connection
+settings, pass an `itk_core` `OpenAIConfiguration` as
+`Schemify(config, ai_configuration=...)`. Schemify relies on the Responses API
+and its `web_search` tool, and has not been run against Azure OpenAI.
 
 ## Differences from `intelligence_toolkit.schemify`
 
@@ -34,6 +38,11 @@ await schemify.initialize(
 - **No pointless completion retries.** With caching on, `complete_all` stops
   retrying an entity after a call that filled nothing, since a retry would
   re-read the same cached page.
+- **Requests go through `itk-core`.** Transient failures (rate limits, timeouts,
+  connection and 5xx errors) are retried up to 4 times with exponential backoff,
+  honouring `Retry-After`, instead of up to 5 times on errors whose message
+  contained a status code. A request that still fails raises
+  `itk_core.errors.LLMError` rather than the OpenAI SDK error.
 
 ## Command line
 

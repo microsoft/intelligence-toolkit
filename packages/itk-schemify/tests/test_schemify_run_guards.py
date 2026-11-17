@@ -32,7 +32,7 @@ def _config(**overrides) -> SchemifyConfig:
 
 
 class FakeResponses:
-    """Stands in for ``client.responses``: records each request, replies with fixed JSON."""
+    """Stands in for itk-core's client: records each request, replies with fixed JSON."""
 
     def __init__(self, reply: dict, input_tokens: int = 1_000_000):
         self.requests: list[dict] = []
@@ -55,7 +55,7 @@ class FakeResponses:
 def _llm(reply: dict | None = None, **config) -> tuple[LLMClient, FakeResponses]:
     llm = LLMClient(_config(**config))
     responses = FakeResponses(reply or {"ok": True})
-    llm.client = SimpleNamespace(responses=responses)
+    llm.client = SimpleNamespace(generate_response_async=responses.create)
     return llm, responses
 
 
