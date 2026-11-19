@@ -1162,7 +1162,7 @@ requires-dist = [
     { name = "itk-core", editable = "packages/itk-core" },
     { name = "networkx", specifier = ">=3.0" },
     { name = "numpy", specifier = ">=1.26.4" },
-    { name = "polars", specifier = ">=0.20.10" },
+    { name = "polars", specifier = ">=0.20.10,<2" },
     { name = "pydantic", specifier = ">=2.0,<3.0" },
     { name = "scikit-learn", marker = "extra == 'sklearn'", specifier = ">=1.5.0" },
 ]

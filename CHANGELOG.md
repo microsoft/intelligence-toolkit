@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Extracted the shared AI core (`intelligence_toolkit.AI`, `helpers.decorators`, `helpers.progress_batch_callback`) into the `itk-core` workspace package (`packages/itk-core`, import name `itk_core`), which is bundled in the `intelligence-toolkit` wheel rather than published separately. Imports changed to `itk_core`, `itk_core.retry` and `itk_core.progress`; there are no compatibility shims.
+- `itk-core`, `itk-match`, `itk-networks` and `itk-query` now allow Python 3.13 and 3.14 (`requires-python = ">=3.11,<3.15"`), so pip can install them from a checkout on those versions. The `intelligence-toolkit` app and the other packages still require Python below 3.13.
+- `itk-networks` requires `polars<2`: polars 2 removes the `columns` argument of `DataFrame.pivot` that entity record grouping uses.
 
 ### Removed
 - `VECTOR_STORE_MAX_RETRIES` and `VECTOR_STORE_MAX_RETRIES_WAIT_TIME` from `helpers.constants`.
