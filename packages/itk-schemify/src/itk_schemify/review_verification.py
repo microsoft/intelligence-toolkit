@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol
 
 from jsonschema import ValidationError, validate
-from openai import OpenAIError
+from itk_core.errors import LLMError
 
 from .public_sources import PublicSourceRetriever, RetrievedSource
 
@@ -1030,7 +1030,7 @@ async def verify_proposals(
                         RuntimeError,
                         OSError,
                         subprocess.SubprocessError,
-                        OpenAIError,
+                        LLMError,
                         ValidationError,
                     ) as exc:
                         logger.warning(

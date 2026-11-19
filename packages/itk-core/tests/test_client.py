@@ -7,6 +7,7 @@ import pytest
 from itk_core.classes import LLMCallback
 from itk_core.client import OpenAIClient
 from itk_core.defaults import DEFAULT_EMBEDDING_MODEL, EMBEDDING_TIMEOUT_SECONDS
+from itk_core.errors import LLMError
 from itk_core.openai_configuration import OpenAIConfiguration
 
 
@@ -254,5 +255,51 @@ async def test_openai_client_generate_embedding_async(openai_config):
         
         client = OpenAIClient(openai_config)
         result = await client.generate_embedding_async("test text")
-        
+
         assert result == [0.4, 0.5, 0.6]
+
+
+def test_openai_client_generate_response_defaults_to_configured_model(openai_config):
+    with patch("itk_core.client.OpenAI") as mock_class, \
+         patch("itk_core.client.AsyncOpenAI"):
+        mock_client = MagicMock()
+        mock_class.return_value = mock_client
+        mock_client.responses.create.return_value = "response"
+
+        client = OpenAIClient(openai_config)
+
+        assert client.generate_response(input="Hello") == "response"
+        mock_client.responses.create.assert_called_once_with(input="Hello", model="gpt-4")
+
+
+@pytest.mark.asyncio
+async def test_openai_client_generate_response_async_passes_request_through(openai_config):
+    with patch("itk_core.client.OpenAI"), \
+         patch("itk_core.client.AsyncOpenAI") as mock_async_class:
+        mock_async_client = MagicMock()
+        mock_async_class.return_value = mock_async_client
+        mock_async_client.responses.create = AsyncMock(return_value="response")
+
+        client = OpenAIClient(openai_config)
+        result = await client.generate_response_async(
+            model="gpt-5.2", input="Hello", tools=[{"type": "web_search"}]
+        )
+
+        assert result == "response"
+        mock_async_client.responses.create.assert_awaited_once_with(
+            model="gpt-5.2", input="Hello", tools=[{"type": "web_search"}]
+        )
+
+
+@pytest.mark.asyncio
+async def test_openai_client_generate_response_async_wraps_failures(openai_config):
+    with patch("itk_core.client.OpenAI"), \
+         patch("itk_core.client.AsyncOpenAI") as mock_async_class:
+        mock_async_client = MagicMock()
+        mock_async_class.return_value = mock_async_client
+        mock_async_client.responses.create = AsyncMock(side_effect=ValueError("bad request"))
+
+        client = OpenAIClient(openai_config)
+
+        with pytest.raises(LLMError, match="bad request"):
+            await client.generate_response_async(input="Hello")
