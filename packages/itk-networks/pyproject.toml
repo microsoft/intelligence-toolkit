@@ -9,12 +9,13 @@ authors = [
 ]
 readme = "README.md"
 license = {text = "MIT"}
-requires-python = ">=3.11,<3.13"
+requires-python = ">=3.11,<3.15"
 dependencies = [
     "itk-core",
     "networkx>=3.0",
     "numpy>=1.26.4",
-    "polars>=0.20.10",
+    # polars 2 removes the `columns` argument of DataFrame.pivot
+    "polars>=0.20.10,<2",
     "pydantic>=2.0,<3.0",
 ]
 
