@@ -14,6 +14,7 @@ members = [
     "itk-anonymize",
     "itk-compare",
     "itk-core",
+    "itk-entities",
     "itk-extract",
     "itk-match",
     "itk-mock",
@@ -1075,6 +1076,25 @@ requires-dist = [
     { name = "tqdm", specifier = ">=4.66.0" },
 ]
 provides-extras = ["local"]
+
+[[package]]
+name = "itk-entities"
+version = "0.1.0"
+source = { editable = "packages/itk-entities" }
+dependencies = [
+    { name = "itk-core" },
+    { name = "itk-schemify" },
+    { name = "openai" },
+    { name = "pandas" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "itk-core", editable = "packages/itk-core" },
+    { name = "itk-schemify", editable = "packages/itk-schemify" },
+    { name = "openai", specifier = ">=1.37.1,<2.0.0" },
+    { name = "pandas", specifier = ">=2.0.0" },
+]
 
 [[package]]
 name = "itk-extract"
