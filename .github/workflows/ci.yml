@@ -77,6 +77,8 @@ jobs:
 
     env:
       PACKAGES: itk-core itk-match itk-networks itk-query
+      # setup-uv already creates .venv; replace it with a clean Python 3.13 one.
+      UV_VENV_CLEAR: "1"
 
     steps:
       - name: Checkout repository
