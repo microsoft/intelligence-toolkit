@@ -7,7 +7,7 @@ import markdown2
 import pdfkit
 import streamlit as st
 from app.javascript.styles import style_pdf
-from app.util.wkhtmltopdf import config_pdfkit, pdfkit_options
+from intelligence_toolkit.helpers.wkhtmltopdf import config_pdfkit, pdfkit_options
 
 # itk-label
 text_label = "Report generated using Intelligence Toolkit (https://aka.ms/itk)"

@@ -6,7 +6,13 @@
 import os
 
 PDF_ENCODING = "UTF-8"
-PDF_WKHTMLTOPDF_PATH = "C:\\Program Files\\wkhtmltopdf\\bin\\wkhtmltopdf.exe"
+# Fallback location when wkhtmltopdf is not on PATH; override with WKHTMLTOPDF_PATH
+PDF_WKHTMLTOPDF_PATH = os.environ.get(
+    "WKHTMLTOPDF_PATH",
+    "C:\\Program Files\\wkhtmltopdf\\bin\\wkhtmltopdf.exe"
+    if os.name == "nt"
+    else "/usr/bin/wkhtmltopdf",
+)
 PDF_MARGIN_INCHES = 0.75
 ATTRIBUTE_VALUE_SEPARATOR = "=="
 
