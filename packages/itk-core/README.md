@@ -2,7 +2,7 @@
 
 Shared AI core for Intelligence Toolkit workflows:
 
-- `itk_core.client` / `itk_core.base_chat` / `itk_core.utils`: OpenAI and Azure OpenAI chat, with transient-only retry, streaming and bounded concurrency.
+- `itk_core.client` / `itk_core.base_chat` / `itk_core.utils`: OpenAI and Azure OpenAI chat, with transient-only retry, streaming and bounded concurrency. `OpenAIClient.generate_response` / `generate_response_async` send a Responses API request under the same retry policy and return the SDK response.
 - `itk_core.openai_embedder` / `itk_core.local_embedder`: embedders backed by a LanceDB `VectorStore` cache.
 - `itk_core.errors`: typed `LLMError` and `EmbeddingError`.
 - `itk_core.usage`: token usage of every chat and embedding call, reported to callbacks you register.

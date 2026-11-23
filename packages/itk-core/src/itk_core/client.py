@@ -245,6 +245,32 @@ class OpenAIClient:
             raise LLMError(msg) from e
 
     @retry_transient()
+    def generate_response(self, **kwargs: Any) -> Any:
+        """Send one Responses API request and return the SDK response object.
+
+        ``kwargs`` go to ``responses.create`` as given (tools, reasoning, text
+        format, timeout); ``model`` defaults to the configured model.
+        """
+        kwargs.setdefault("model", self.configuration.model)
+        try:
+            return self._client.responses.create(**kwargs)
+        except Exception as e:
+            log.warning("Response request failed: %s", e)
+            msg = f"Problem in OpenAI response. {e}"
+            raise LLMError(msg) from e
+
+    @retry_transient()
+    async def generate_response_async(self, **kwargs: Any) -> Any:
+        """Async version of ``generate_response``."""
+        kwargs.setdefault("model", self.configuration.model)
+        try:
+            return await self._async_client.responses.create(**kwargs)
+        except Exception as e:
+            log.warning("Async response request failed: %s", e)
+            msg = f"Problem in OpenAI response. {e}"
+            raise LLMError(msg) from e
+
+    @retry_transient()
     def generate_embedding(
         self, text: str, model: str = DEFAULT_EMBEDDING_MODEL
     ) -> list[float]:
