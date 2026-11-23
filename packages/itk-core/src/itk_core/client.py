@@ -18,6 +18,7 @@ from .defaults import (
 )
 from .errors import EmbeddingError, LLMError, retry_transient
 from .openai_configuration import OpenAIConfiguration
+from .usage import has_usage_callbacks, report_usage
 
 log = logging.getLogger(__name__)
 
@@ -144,6 +145,14 @@ class OpenAIClient:
             call_kwargs["temperature"] = temperature
         return call_kwargs
 
+    def _chat_call_kwargs(self, kwargs: dict[str, Any], stream: bool) -> dict[str, Any]:
+        call_kwargs = self._build_call_kwargs(kwargs)
+        # A streamed response only carries token usage when asked to, so ask
+        # only while someone is listening.
+        if stream and has_usage_callbacks():
+            call_kwargs.setdefault("stream_options", {"include_usage": True})
+        return call_kwargs
+
     @staticmethod
     def _chunk_delta(chunk) -> str:
         # Azure can emit chunks with no choices (e.g. content-filter results).
@@ -178,16 +187,22 @@ class OpenAIClient:
                 model=self.configuration.model,
                 messages=messages,
                 stream=stream,
-                **self._build_call_kwargs(kwargs),
+                **self._chat_call_kwargs(kwargs, stream),
             )
             if not stream:
+                report_usage(
+                    "chat", self.configuration.model, getattr(response, "usage", None)
+                )
                 return self._message_content(response)
 
             full_response = ""
+            usage = None
             for chunk in response:
+                usage = getattr(chunk, "usage", None) or usage
                 delta = self._chunk_delta(chunk)
                 full_response += delta
                 self._notify(callbacks, full_response, delta)
+            report_usage("chat", self.configuration.model, usage)
             return full_response
         except Exception as e:
             log.warning("Chat completion failed: %s", e)
@@ -207,16 +222,22 @@ class OpenAIClient:
                 model=self.configuration.model,
                 messages=messages,
                 stream=stream,
-                **self._build_call_kwargs(kwargs),
+                **self._chat_call_kwargs(kwargs, stream),
             )
             if not stream:
+                report_usage(
+                    "chat", self.configuration.model, getattr(response, "usage", None)
+                )
                 return self._message_content(response)
 
             full_response = ""
+            usage = None
             async for chunk in response:
+                usage = getattr(chunk, "usage", None) or usage
                 delta = self._chunk_delta(chunk)
                 full_response += delta
                 self._notify(callbacks, full_response, delta)
+            report_usage("chat", self.configuration.model, usage)
             return full_response
         except Exception as e:
             log.warning("Async chat completion failed: %s", e)
@@ -260,17 +281,20 @@ class OpenAIClient:
         except Exception as e:
             msg = f"Problem in embedding generation. {e}"
             raise EmbeddingError(msg) from e
+        report_usage("embedding", model, getattr(embedding, "usage", None))
         return embedding.data[0].embedding
 
     @retry_transient()
     def generate_embeddings(self, text: list[str], model: str = DEFAULT_EMBEDDING_MODEL):
         try:
-            return self._client.embeddings.create(
+            embeddings = self._client.embeddings.create(
                 input=text, model=model, timeout=EMBEDDING_TIMEOUT_SECONDS
             )
         except Exception as e:
             msg = f"Problem in embedding generation. {e}"
             raise EmbeddingError(msg) from e
+        report_usage("embedding", model, getattr(embeddings, "usage", None))
+        return embeddings
 
     @retry_transient()
     async def generate_embedding_async(
@@ -283,4 +307,5 @@ class OpenAIClient:
         except Exception as e:
             msg = f"Problem in embedding generation. {e}"
             raise EmbeddingError(msg) from e
+        report_usage("embedding", model, getattr(embedding, "usage", None))
         return embedding.data[0].embedding

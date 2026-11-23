@@ -9,26 +9,53 @@ on:
 
 
 jobs:
-  build:
+  lint:
     runs-on: ubuntu-latest
-
-    env:
-      python-version: "3.11"
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v2
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: ${{ env.python-version }}
+          python-version: "3.11"
+
+      - name: Sync dependencies
+        run: uv sync --extra dev
+
+      - name: Ruff lint
+        # Report-only until the existing lint backlog is cleared
+        continue-on-error: true
+        run: uv run ruff check . --preview --output-format=github
+
+      - name: Type check
+        # Report-only: pyright basic mode currently flags ~40 existing errors in itk_core
+        continue-on-error: true
+        run: uv run pyright
+
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ matrix.python-version }}
 
       - name: Sync dependencies
         run: uv sync --extra dev
 
       - name: Unit tests
-        run: uv run poe test_unit
+        run: uv run poe test_unit --cov=intelligence_toolkit --cov=itk_core --cov-report=xml --cov-report=term
 
       - name: Smoke tests
         run: uv run poe test_smoke
@@ -36,7 +63,48 @@ jobs:
       - name: Characterization tests
         run: uv run poe test_characterization
 
+      - name: Upload coverage report
+        if: matrix.python-version == '3.11'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+
+  packages-py313:
+    # itk-core, itk-match, itk-networks and itk-query allow newer Python than the
+    # app does, so they are installed on their own here, outside the workspace lock.
+    runs-on: ubuntu-latest
+
+    env:
+      PACKAGES: itk-core itk-match itk-networks itk-query
+      # setup-uv already creates .venv; replace it with a clean Python 3.13 one.
+      UV_VENV_CLEAR: "1"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install packages
+        run: |
+          uv venv
+          uv pip install $(printf './packages/%s ' $PACKAGES) \
+            "pytest>=8.2.2,<9.0.0" "pytest-asyncio>=0.23.7,<1.0.0" \
+            "pytest-mock>=3.14.0,<4.0.0" "faker>=28.0.0,<29.0.0"
+
+      - name: Unit tests
+        run: uv run --no-project pytest $(printf './packages/%s/tests ' $PACKAGES)
+
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Verify Docker build
         run: docker build .
-
-
