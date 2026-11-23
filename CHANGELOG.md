@@ -26,8 +26,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - `VECTOR_STORE_MAX_RETRIES` and `VECTOR_STORE_MAX_RETRIES_WAIT_TIME` from `helpers.constants`.
+- Duplicate `app/util/df_functions.py` and `app/util/wkhtmltopdf.py`; the app now uses `intelligence_toolkit.helpers`. `quantize_datetime` and `quantize_numeric` moved to `helpers.df_functions`.
 
 ### Fixed
+- Anonymize Case Data no longer imports from the Streamlit `app` package, so it works when installed from PyPI.
+- Date quantization no longer uses bare `except:` blocks, which also swallowed `KeyboardInterrupt` and unrelated errors.
 - Query Text Data, Extract Record Data and Generate Mock Data now read the AI settings on every page run instead of once at import, so changes saved on the Settings page apply without restarting the app.
 
 ## [0.2.0] - 2026-10-14
